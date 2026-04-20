@@ -60,7 +60,7 @@ class AdministratorNotifications::AccountNotificationMailer < AdministratorNotif
 
   def captain_document_sync_content_changed(document)
     subject = 'Captain document content updated during auto-sync'
-    action_url = "#{ENV.fetch('FRONTEND_URL', nil)}/app/accounts/#{Current.account.id}/captain/documents"
+    action_url = "#{ENV.fetch('FRONTEND_URL', nil)}/app/accounts/#{Current.account.id}/captain/#{document.assistant_id}/documents"
     meta = {
       'document_name' => document.name,
       'document_url' => document.external_link,
