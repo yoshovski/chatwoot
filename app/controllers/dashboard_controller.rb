@@ -45,6 +45,7 @@ class DashboardController < ActionController::Base
 
   def set_global_config
     @global_config = GlobalConfig.get(*GLOBAL_CONFIG_KEYS).merge(app_config)
+    @global_config['INSTALLATION_PRICING_PLAN'] = 'enterprise' if ChatwootApp.enterprise?
   end
 
   def set_dashboard_scripts
