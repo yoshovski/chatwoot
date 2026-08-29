@@ -43,7 +43,7 @@ class ChatwootHub
   end
 
   def self.pricing_plan_quantity
-    return 99999 if ChatwootApp.enterprise?
+    return 99_999 if ChatwootApp.enterprise?
 
     0
   end

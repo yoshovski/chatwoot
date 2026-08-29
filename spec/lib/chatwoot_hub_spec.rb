@@ -23,13 +23,11 @@ describe ChatwootHub do
         .merge(described_class.instance_metrics).to_json, { content_type: :json, accept: :json })
     end
 
-    it 'will not send instance metrics when telemetry is disabled' do
-      version = '1.1.1'
+    it 'will not sync with the hub when telemetry is disabled' do
       with_modified_env DISABLE_TELEMETRY: 'true' do
-        allow(RestClient).to receive(:post).and_return({ version: version }.to_json)
-        expect(described_class.sync_with_hub['version']).to eq version
-        expect(RestClient).to have_received(:post).with(described_class.ping_url,
-                                                        described_class.instance_config.to_json, { content_type: :json, accept: :json })
+        allow(RestClient).to receive(:post)
+        expect(described_class.sync_with_hub).to be_nil
+        expect(RestClient).not_to have_received(:post)
       end
     end
 
