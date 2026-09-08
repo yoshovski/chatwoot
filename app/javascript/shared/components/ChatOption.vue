@@ -30,12 +30,15 @@ export default {
 
 <template>
   <li
-    class="option"
+    class="option transition-colors hover:bg-n-alpha-2 hover:border-n-slate-8"
     :class="{ 'is-selected': isSelected }"
     :style="isSelected ? { backgroundColor: widgetColor } : undefined"
   >
-    <button class="option-button button" @click="onClick">
-      <span :style="isSelected ? { color: widgetTextColor } : undefined">
+    <button class="option-button" @click="onClick">
+      <span
+        class="text-n-slate-12"
+        :style="isSelected ? { color: widgetTextColor } : undefined"
+      >
         {{ action.title }}
       </span>
     </button>

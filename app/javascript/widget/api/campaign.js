@@ -10,11 +10,13 @@ const triggerCampaign = async ({
   campaignId,
   websiteToken,
   customAttributes,
+  selectedResponse,
 }) => {
   const urlData = endPoints.triggerCampaign({
     websiteToken,
     campaignId,
     customAttributes,
+    selectedResponse,
   });
   await API.post(
     urlData.url,

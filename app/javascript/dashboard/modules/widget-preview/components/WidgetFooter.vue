@@ -64,7 +64,7 @@ const activeStarters = computed(() =>
       </div>
       <button
         v-if="config.isDefaultScreen"
-        class="inline-flex items-center justify-between px-3 py-2 mt-2 font-medium leading-6 rounded-lg"
+        class="inline-flex items-center justify-between px-3 py-2 mt-2 font-medium leading-6 rounded-lg shadow-sm outline outline-1 outline-n-container transition-[filter,box-shadow] hover:brightness-95 hover:shadow"
         :style="{ backgroundColor: config.color, color: config.textColor }"
       >
         <span class="pr-2 text-xs">

@@ -23,6 +23,14 @@ export default {
       type: Boolean,
       default: false,
     },
+    agentName: {
+      type: String,
+      default: '',
+    },
+    showAgentName: {
+      type: Boolean,
+      default: false,
+    },
   },
   emits: ['optionSelect'],
   setup() {
@@ -52,6 +60,9 @@ export default {
         class="text-n-slate-12"
       />
     </h4>
+    <div v-if="showAgentName" class="agent-name !my-0 px-0.5 text-n-slate-11">
+      {{ agentName }}
+    </div>
     <ul v-if="!hideFields" class="flex w-full flex-col items-end gap-2 px-1">
       <ChatOption
         v-for="option in options"

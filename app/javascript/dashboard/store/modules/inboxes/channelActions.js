@@ -10,8 +10,8 @@ const appendFormDataValue = (formData, key, value) => {
       return;
     }
 
-    value.forEach((item, index) => {
-      appendFormDataValue(formData, `${key}[${index}]`, item);
+    value.forEach(item => {
+      appendFormDataValue(formData, `${key}[]`, item);
     });
     return;
   }

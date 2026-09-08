@@ -28,6 +28,8 @@ export default {
       type: Object,
       default: () => {},
     },
+    agentName: { type: String, default: '' },
+    showAgentName: { type: Boolean, default: false },
   },
   setup() {
     const { formatMessage, getPlainText, truncateMessage, highlightContent } =
@@ -118,6 +120,8 @@ export default {
         :title="message"
         :options="messageContentAttributes.items"
         :hide-fields="!!messageContentAttributes.submitted_values"
+        :agent-name="agentName"
+        :show-agent-name="showAgentName"
         @option-select="onOptionSelect"
       />
     </div>

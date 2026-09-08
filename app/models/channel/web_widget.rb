@@ -50,6 +50,7 @@ class Channel::WebWidget < ApplicationRecord
                     { selected_feature_flags: [] }].freeze
 
   before_validation :validate_pre_chat_options
+  before_validation :normalize_conversation_starters
   before_validation :normalize_widget_colors
   before_validation :normalize_legacy_widget_style
   validates :website_url, presence: true
@@ -121,6 +122,19 @@ class Channel::WebWidget < ApplicationRecord
 
   def normalize_legacy_widget_style
     self.widget_style = 'standard' if widget_style == 'flat'
+  end
+
+  def normalize_conversation_starters
+    return unless conversation_starters.is_a?(Array)
+
+    self.conversation_starters = conversation_starters.map do |option|
+      next option unless option.is_a?(Hash)
+
+      normalized_option = option.stringify_keys
+      normalized_option['enabled'] = true if normalized_option['enabled'] == 'true'
+      normalized_option['enabled'] = false if normalized_option['enabled'] == 'false'
+      normalized_option
+    end
   end
 
   def normalize_widget_colors

@@ -1,5 +1,5 @@
 <script>
-import { mapActions } from 'vuex';
+import { mapActions, mapGetters } from 'vuex';
 import { useRouter } from 'vue-router';
 import PreChatForm from '../components/PreChat/Form.vue';
 import configMixin from '../mixins/configMixin';
@@ -14,6 +14,11 @@ export default {
   setup() {
     const router = useRouter();
     return { router };
+  },
+  computed: {
+    ...mapGetters({
+      selectedCampaignResponse: 'campaign/getSelectedResponse',
+    }),
   },
   mounted() {
     // Register event listener for conversation creation
@@ -50,6 +55,7 @@ export default {
         emitter.emit('execute-campaign', {
           campaignId: activeCampaignId,
           customAttributes: conversationCustomAttributes,
+          selectedResponse: this.selectedCampaignResponse,
         });
         this.$store.dispatch('contacts/update', {
           user: {

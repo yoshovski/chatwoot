@@ -33,7 +33,7 @@ const startConversation = () => {
     <AvailabilityContainer :agents="availableAgents" show-header show-avatars />
 
     <button
-      class="inline-flex self-start items-center gap-1 px-3 py-2 font-medium rounded-lg"
+      class="inline-flex self-start items-center gap-1 px-3 py-2 font-medium rounded-lg shadow-sm outline outline-1 outline-n-container transition-[filter,box-shadow] hover:brightness-95 hover:shadow focus-visible:outline-2 focus-visible:outline-n-slate-8"
       :style="{ backgroundColor: widgetColor, color: widgetTextColor }"
       @click="startConversation"
     >
