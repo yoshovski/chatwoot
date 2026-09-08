@@ -12,6 +12,7 @@
 #  pre_chat_form_enabled :boolean          default(FALSE)
 #  pre_chat_form_options :jsonb
 #  reply_time            :integer          default("in_a_few_minutes")
+#  reply_time_message    :string
 #  website_token         :string
 #  website_url           :string
 #  welcome_tagline       :string
@@ -39,7 +40,7 @@ class Channel::WebWidget < ApplicationRecord
 
   self.table_name = 'channel_web_widgets'
   EDITABLE_ATTRS = [:website_url, :widget_color, :widget_text_color, :widget_icon_color, :widget_height, :widget_style,
-                    :welcome_title, :welcome_tagline, :reply_time, :pre_chat_form_enabled,
+                    :welcome_title, :welcome_tagline, :reply_time, :reply_time_message, :pre_chat_form_enabled,
                     :continuity_via_email, :hmac_mandatory, :allowed_domains,
                     { conversation_starters: [:id, :title, :enabled] },
                     { pre_chat_form_options: [:pre_chat_message, :require_email,
@@ -58,6 +59,7 @@ class Channel::WebWidget < ApplicationRecord
   validates :widget_height,
             numericality: { only_integer: true, greater_than_or_equal_to: 320, less_than_or_equal_to: 900 }
   validates :widget_style, inclusion: { in: %w[standard] }
+  validates :reply_time_message, length: { maximum: 120 }, allow_blank: true
   validate :validate_conversation_starters
   has_many :portals, foreign_key: 'channel_web_widget_id', dependent: :nullify, inverse_of: :channel_web_widget
 
@@ -72,7 +74,7 @@ class Channel::WebWidget < ApplicationRecord
             :column => 'feature_flags',
             :check_for_column => false
 
-  enum reply_time: { in_a_few_minutes: 0, in_a_few_hours: 1, in_a_day: 2 }
+  enum reply_time: { in_a_few_minutes: 0, in_a_few_hours: 1, in_a_day: 2, immediately: 3 }
 
   def name
     'Website'

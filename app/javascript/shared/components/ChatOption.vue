@@ -32,20 +32,22 @@ export default {
   <li
     class="option"
     :class="{ 'is-selected': isSelected }"
-    :style="{ backgroundColor: widgetColor, borderColor: widgetColor }"
+    :style="isSelected ? { backgroundColor: widgetColor } : undefined"
   >
     <button class="option-button button" @click="onClick">
-      <span :style="{ color: widgetTextColor }">{{ action.title }}</span>
+      <span :style="isSelected ? { color: widgetTextColor } : undefined">
+        {{ action.title }}
+      </span>
     </button>
   </li>
 </template>
 
 <style scoped lang="scss">
 .option {
-  @apply rounded-[5rem] border border-solid border-n-brand ltr:float-left rtl:float-right m-1 max-w-full;
+  @apply rounded-xl border border-solid border-n-strong m-0 max-w-full bg-n-background text-n-slate-12;
 
   .option-button {
-    @apply bg-transparent border-0 cursor-pointer h-auto leading-normal ltr:text-left rtl:text-right whitespace-normal rounded-[2rem] min-h-[2.5rem];
+    @apply bg-transparent border-0 cursor-pointer h-auto leading-normal text-center whitespace-normal rounded-xl min-h-[2.75rem] px-4 py-2.5;
 
     span {
       display: inline-block;

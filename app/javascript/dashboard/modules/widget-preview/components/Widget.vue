@@ -36,6 +36,10 @@ const props = defineProps({
     type: String,
     default: '',
   },
+  replyTimeMessage: {
+    type: String,
+    default: '',
+  },
   color: {
     type: String,
     default: '',
@@ -118,7 +122,11 @@ const widgetScript = computed(() => {
 });
 
 const replyTimeText = computed(() => {
+  if (props.replyTimeMessage.trim()) return props.replyTimeMessage.trim();
+
   switch (props.replyTime) {
+    case 'immediately':
+      return t('INBOX_MGMT.WIDGET_BUILDER.REPLY_TIME.IMMEDIATELY');
     case 'in_a_few_minutes':
       return t('INBOX_MGMT.WIDGET_BUILDER.REPLY_TIME.IN_A_FEW_MINUTES');
     case 'in_a_day':

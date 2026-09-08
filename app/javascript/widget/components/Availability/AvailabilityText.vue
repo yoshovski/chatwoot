@@ -25,6 +25,10 @@ const props = defineProps({
     type: String,
     default: 'in_a_few_minutes',
   },
+  replyTimeMessage: {
+    type: String,
+    default: '',
+  },
   isOnline: {
     type: Boolean,
     required: true,
@@ -58,6 +62,8 @@ const allDayClosed = computed(() => {
 });
 
 const replyTimeMessage = computed(() => {
+  if (props.replyTimeMessage.trim()) return props.replyTimeMessage.trim();
+
   const replyTimeKey = `REPLY_TIME.${props.replyTime.toUpperCase()}`;
   return t(replyTimeKey);
 });

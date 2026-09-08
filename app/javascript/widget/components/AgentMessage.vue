@@ -67,6 +67,9 @@ export default {
       const { content_type: type = '' } = this.message;
       return type;
     },
+    isCampaignMessage() {
+      return !!this.message.campaign_id;
+    },
     agentName() {
       if (this.message.sender) {
         return this.message.sender.available_name || this.message.sender.name;
@@ -175,7 +178,9 @@ export default {
       <div class="avatar-wrap">
         <div class="user-thumbnail-box">
           <Avatar
-            v-if="message.showAvatar || hasRecordedResponse"
+            v-if="
+              !isCampaignMessage && (message.showAvatar || hasRecordedResponse)
+            "
             :src="avatarUrl"
             :size="24"
             :name="agentName"
@@ -247,7 +252,9 @@ export default {
           </div>
         </div>
         <p
-          v-if="message.showAvatar || hasRecordedResponse"
+          v-if="
+            !isCampaignMessage && (message.showAvatar || hasRecordedResponse)
+          "
           class="agent-name text-n-slate-11"
         >
           {{ agentName }}

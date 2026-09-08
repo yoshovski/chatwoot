@@ -43,16 +43,16 @@ export default {
 </script>
 
 <template>
-  <div
-    class="chat-bubble agent max-w-64 !py-2 !px-4 rounded-lg overflow-hidden mt-1 bg-n-background dark:bg-n-solid-3"
-  >
-    <h4 class="text-n-slate-12 text-sm font-normal my-1 leading-[1.5]">
+  <div class="flex max-w-[90%] flex-col gap-3 mt-1">
+    <h4
+      class="chat-bubble agent !py-3 !px-4 rounded-2xl bg-n-alpha-2 dark:bg-n-solid-3 text-n-slate-12 text-sm font-normal leading-[1.5]"
+    >
       <div
         v-dompurify-html="formatMessage(title, false)"
         class="text-n-slate-12"
       />
     </h4>
-    <ul v-if="!hideFields" class="w-full">
+    <ul v-if="!hideFields" class="flex w-full flex-col items-end gap-2 px-1">
       <ChatOption
         v-for="option in options"
         :key="option.id"
