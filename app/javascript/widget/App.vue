@@ -130,6 +130,7 @@ export default {
       'initCampaigns',
       'executeCampaign',
       'resetCampaign',
+      'selectResponse',
     ]),
     ...mapActions('agent', ['fetchAvailableAgents']),
     setWidgetColorVariables(widgetColor, widgetTextColor) {
@@ -198,21 +199,33 @@ export default {
       });
     },
     registerCampaignEvents() {
-      emitter.on(ON_CAMPAIGN_MESSAGE_CLICK, () => {
-        if (this.shouldShowPreChatForm) {
-          this.router.replace({ name: 'prechat-form' });
-        } else {
-          this.router.replace({ name: 'messages' });
-          emitter.emit('execute-campaign', {
-            campaignId: this.activeCampaign.id,
-          });
+      emitter.on(
+        ON_CAMPAIGN_MESSAGE_CLICK,
+        ({ campaignId, selectedResponse }) => {
+          this.selectResponse(selectedResponse);
+
+          if (this.shouldShowPreChatForm) {
+            this.router.replace({ name: 'prechat-form' });
+          } else {
+            this.router.replace({ name: 'messages' });
+            emitter.emit('execute-campaign', {
+              campaignId,
+              selectedResponse,
+            });
+          }
+          this.unsetUnreadView();
         }
-        this.unsetUnreadView();
-      });
+      );
       emitter.on('execute-campaign', campaignDetails => {
-        const { customAttributes, campaignId } = campaignDetails;
+        const { customAttributes, campaignId, selectedResponse } =
+          campaignDetails;
         const { websiteToken } = window.chatwootWebChannel;
-        this.executeCampaign({ campaignId, websiteToken, customAttributes });
+        this.executeCampaign({
+          campaignId,
+          websiteToken,
+          customAttributes,
+          selectedResponse,
+        });
         this.router.replace({ name: 'messages' });
       });
       emitter.on('snooze-campaigns', () => {

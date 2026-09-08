@@ -1,5 +1,11 @@
 class Campaigns::CampaignConversationBuilder
-  pattr_initialize [:contact_inbox_id!, :campaign_display_id!, :conversation_additional_attributes, :custom_attributes]
+  pattr_initialize [
+    :contact_inbox_id!,
+    :campaign_display_id!,
+    :conversation_additional_attributes,
+    :custom_attributes,
+    :selected_response
+  ]
 
   def perform
     @contact_inbox = ContactInbox.find(@contact_inbox_id)
@@ -12,8 +18,9 @@ class Campaigns::CampaignConversationBuilder
       raise 'Conversation already present' if @contact_inbox.reload.conversations.present?
 
       @conversation = ::Conversation.create!(conversation_params)
-      Messages::MessageBuilder.new(@campaign.sender, @conversation, message_params).perform
+      @message = Messages::MessageBuilder.new(@campaign.sender, @conversation, message_params).perform
     end
+    submit_selected_response
     @conversation
   rescue StandardError => e
     Rails.logger.info(e.message)
@@ -31,7 +38,7 @@ class Campaigns::CampaignConversationBuilder
       values = response.with_indifferent_access
       next if values[:enabled] == false || values[:title].blank?
 
-      { title: values[:title], value: values[:title] }
+      { id: values[:id], title: values[:title], value: values[:title] }.compact
     end
     if items.present?
       params[:content_type] = 'input_select'
@@ -39,6 +46,17 @@ class Campaigns::CampaignConversationBuilder
     end
 
     ActionController::Parameters.new(params)
+  end
+
+  def submit_selected_response
+    selected_values = selected_response&.with_indifferent_access
+    return if selected_values.blank?
+
+    selected_item = @message.content_attributes['items']&.find do |item|
+      values = item.with_indifferent_access
+      (selected_values[:id].present? && values[:id].to_s == selected_values[:id].to_s) || values[:title] == selected_values[:title]
+    end
+    @message.update!(submitted_values: [selected_item]) if selected_item
   end
 
   def conversation_params

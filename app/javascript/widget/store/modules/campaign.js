@@ -15,6 +15,7 @@ const state = {
     isError: false,
   },
   activeCampaign: {},
+  selectedResponse: null,
 };
 
 const resetCampaignTimers = (
@@ -37,6 +38,7 @@ export const getters = {
   getCampaigns: $state => $state.records,
   getUIFlags: $state => $state.uiFlags,
   getActiveCampaign: $state => $state.activeCampaign,
+  getSelectedResponse: $state => $state.selectedResponse,
 };
 
 export const actions = {
@@ -124,7 +126,7 @@ export const actions = {
 
   executeCampaign: async (
     { commit },
-    { campaignId, websiteToken, customAttributes }
+    { campaignId, websiteToken, customAttributes, selectedResponse }
   ) => {
     try {
       commit(
@@ -132,7 +134,12 @@ export const actions = {
         { isCreating: true },
         { root: true }
       );
-      await triggerCampaign({ campaignId, websiteToken, customAttributes });
+      await triggerCampaign({
+        campaignId,
+        websiteToken,
+        customAttributes,
+        selectedResponse,
+      });
       commit('setCampaignExecuted', true);
       commit('setActiveCampaign', {});
     } catch (error) {
@@ -153,6 +160,9 @@ export const actions = {
       commit('setError', true);
     }
   },
+  selectResponse: ({ commit }, response) => {
+    commit('setSelectedResponse', response);
+  },
 };
 
 export const mutations = {
@@ -162,6 +172,10 @@ export const mutations = {
   },
   setActiveCampaign($state, data) {
     $state.activeCampaign = data;
+    $state.selectedResponse = null;
+  },
+  setSelectedResponse($state, data) {
+    $state.selectedResponse = data;
   },
   setError($state, value) {
     $state.uiFlags.isError = value;

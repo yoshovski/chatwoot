@@ -84,9 +84,12 @@ export default {
     isSenderExist(sender) {
       return sender && !isEmptyObject(sender);
     },
-    onClickMessage() {
+    onClickMessage(selectedResponse = null) {
       if (this.campaignId) {
-        emitter.emit(ON_CAMPAIGN_MESSAGE_CLICK, this.campaignId);
+        emitter.emit(ON_CAMPAIGN_MESSAGE_CLICK, {
+          campaignId: this.campaignId,
+          selectedResponse,
+        });
       } else {
         emitter.emit(ON_UNREAD_MESSAGE_CLICK);
       }
@@ -112,7 +115,7 @@ export default {
         <span class="agent--name">{{ agentName }}</span>
         <span class="company--name">{{ companyName }}</span>
       </div>
-      <button class="block w-full p-4 text-start" @click="onClickMessage">
+      <button class="block w-full p-4 text-start" @click="onClickMessage()">
         <div
           v-dompurify-html="formatMessage(message, false)"
           class="message-content"
@@ -127,7 +130,7 @@ export default {
           :key="response.id || response.title"
           type="button"
           class="flex items-center justify-between gap-3 rounded-lg px-1 py-2 text-start text-sm font-medium text-n-slate-12 hover:bg-n-alpha-2"
-          @click="onClickMessage"
+          @click="onClickMessage(response)"
         >
           <span>{{ response.title }}</span>
           <i class="i-lucide-chevron-right size-4 shrink-0" />
