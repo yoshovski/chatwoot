@@ -4,6 +4,7 @@ import {
   SET_REFERRER_HOST,
   SET_WIDGET_APP_CONFIG,
   SET_WIDGET_COLOR,
+  SET_WIDGET_TEXT_COLOR,
   TOGGLE_WIDGET_OPEN,
   SET_ROUTE_UPDATE_STATE,
 } from '../types';
@@ -18,6 +19,7 @@ const state = {
   referrerHost: '',
   showPopoutButton: false,
   widgetColor: '',
+  widgetTextColor: '',
   widgetStyle: 'standard',
   darkMode: 'light',
   isUpdatingRoute: false,
@@ -36,6 +38,7 @@ export const getters = {
   getHideMessageBubble: $state => $state.hideMessageBubble,
   getIsWidgetOpen: $state => $state.isWidgetOpen,
   getWidgetColor: $state => $state.widgetColor,
+  getWidgetTextColor: $state => $state.widgetTextColor,
   getReferrerHost: $state => $state.referrerHost,
   isWidgetStyleFlat: $state => $state.widgetStyle === 'flat',
   darkMode: $state => $state.darkMode,
@@ -91,6 +94,9 @@ export const actions = {
   setWidgetColor({ commit }, widgetColor) {
     commit(SET_WIDGET_COLOR, widgetColor);
   },
+  setWidgetTextColor({ commit }, widgetTextColor) {
+    commit(SET_WIDGET_TEXT_COLOR, widgetTextColor);
+  },
   setColorScheme({ commit }, darkMode) {
     commit(SET_COLOR_SCHEME, darkMode);
   },
@@ -131,6 +137,9 @@ export const mutations = {
   },
   [SET_WIDGET_COLOR]($state, widgetColor) {
     $state.widgetColor = widgetColor;
+  },
+  [SET_WIDGET_TEXT_COLOR]($state, widgetTextColor) {
+    $state.widgetTextColor = widgetTextColor;
   },
   [SET_REFERRER_HOST]($state, referrerHost) {
     $state.referrerHost = referrerHost;

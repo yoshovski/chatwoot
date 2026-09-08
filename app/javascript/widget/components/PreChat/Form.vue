@@ -2,7 +2,6 @@
 import CustomButton from 'shared/components/Button.vue';
 import Spinner from 'shared/components/Spinner.vue';
 import { mapGetters } from 'vuex';
-import { getContrastingTextColor } from '@chatwoot/utils';
 import { isEmptyObject } from 'widget/helpers/utils';
 import { getRegexp } from 'shared/helpers/Validators';
 import { useMessageFormatter } from 'shared/composables/useMessageFormatter';
@@ -48,6 +47,7 @@ export default {
   computed: {
     ...mapGetters({
       widgetColor: 'appConfig/getWidgetColor',
+      widgetTextColor: 'appConfig/getWidgetTextColor',
       isCreating: 'conversation/getIsCreating',
       isConversationRouting: 'appConfig/getIsUpdatingRoute',
       activeCampaign: 'campaign/getActiveCampaign',
@@ -55,9 +55,6 @@ export default {
     }),
     isCreatingConversation() {
       return this.isCreating || this.isConversationRouting;
-    },
-    textColor() {
-      return getContrastingTextColor(this.widgetColor);
     },
     hasActiveCampaign() {
       return !isEmptyObject(this.activeCampaign);
@@ -319,7 +316,7 @@ export default {
       class="mt-3 mb-5 font-medium flex items-center justify-center gap-2"
       block
       :bg-color="widgetColor"
-      :text-color="textColor"
+      :text-color="widgetTextColor"
       :disabled="isCreatingConversation"
     >
       <Spinner v-if="isCreatingConversation" class="p-0" />

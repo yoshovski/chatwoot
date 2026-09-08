@@ -2,7 +2,6 @@
 import { mapGetters } from 'vuex';
 import { useVuelidate } from '@vuelidate/core';
 import { required, email } from '@vuelidate/validators';
-import { getContrastingTextColor } from '@chatwoot/utils';
 
 import FluentIcon from 'shared/components/FluentIcon/Index.vue';
 import Spinner from 'shared/components/Spinner.vue';
@@ -34,10 +33,8 @@ export default {
   computed: {
     ...mapGetters({
       widgetColor: 'appConfig/getWidgetColor',
+      widgetTextColor: 'appConfig/getWidgetTextColor',
     }),
-    textColor() {
-      return getContrastingTextColor(this.widgetColor);
-    },
     hasSubmitted() {
       return (
         this.messageContentAttributes &&
@@ -93,7 +90,7 @@ export default {
         :style="{
           background: widgetColor,
           borderColor: widgetColor,
-          color: textColor,
+          color: widgetTextColor,
         }"
       >
         <FluentIcon v-if="!isUpdating" icon="chevron-right" />

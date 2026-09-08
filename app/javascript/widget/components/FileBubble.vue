@@ -19,6 +19,10 @@ export default {
       type: String,
       default: '',
     },
+    widgetTextColor: {
+      type: String,
+      default: '',
+    },
     isUserBubble: {
       type: Boolean,
       default: false,
@@ -37,6 +41,7 @@ export default {
       return getContrastingTextColor(this.widgetColor);
     },
     textColor() {
+      if (this.widgetTextColor) return this.widgetTextColor;
       return this.isUserBubble && this.widgetColor
         ? this.contrastingTextColor
         : '';

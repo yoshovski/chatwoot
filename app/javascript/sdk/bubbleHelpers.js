@@ -25,7 +25,13 @@ export const setBubbleText = bubbleText => {
   }
 };
 
-export const createBubbleIcon = ({ className, path, target }) => {
+export const createBubbleIcon = ({
+  className,
+  path,
+  target,
+  iconColor,
+  textColor,
+}) => {
   let bubbleClassName = `${className} woot-elements--${window.$chatwoot.position}`;
   const bubbleIcon = document.createElementNS(
     'http://www.w3.org/2000/svg',
@@ -43,7 +49,7 @@ export const createBubbleIcon = ({ className, path, target }) => {
     'path'
   );
   bubblePath.setAttributeNS(null, 'd', path);
-  bubblePath.setAttributeNS(null, 'fill', '#FFFFFF');
+  bubblePath.style.fill = iconColor;
 
   bubbleIcon.appendChild(bubblePath);
   target.appendChild(bubbleIcon);
@@ -52,6 +58,7 @@ export const createBubbleIcon = ({ className, path, target }) => {
     const textNode = document.createElement('div');
     textNode.id = 'woot-widget--expanded__text';
     textNode.innerText = '';
+    textNode.style.color = textColor;
     target.appendChild(textNode);
     bubbleClassName += ' woot-widget--expanded';
   }

@@ -5,7 +5,6 @@ import { CSAT_RATINGS, CSAT_DISPLAY_TYPES } from 'shared/constants/messages';
 import FluentIcon from 'shared/components/FluentIcon/Index.vue';
 import StarRating from 'shared/components/StarRating.vue';
 import { useMessageFormatter } from 'shared/composables/useMessageFormatter';
-import { getContrastingTextColor } from '@chatwoot/utils';
 
 export default {
   components: {
@@ -45,7 +44,10 @@ export default {
     };
   },
   computed: {
-    ...mapGetters({ widgetColor: 'appConfig/getWidgetColor' }),
+    ...mapGetters({
+      widgetColor: 'appConfig/getWidgetColor',
+      widgetTextColor: 'appConfig/getWidgetTextColor',
+    }),
     isRatingSubmitted() {
       return this.messageContentAttributes?.csat_survey_response?.rating;
     },
@@ -57,9 +59,6 @@ export default {
       if (!(this.selectedRating && this.feedback)) return true;
       if (this.isUpdating) return true;
       return false;
-    },
-    textColor() {
-      return getContrastingTextColor(this.widgetColor);
     },
     title() {
       return this.isRatingSubmitted
@@ -172,7 +171,7 @@ export default {
         :style="{
           background: widgetColor,
           borderColor: widgetColor,
-          color: textColor,
+          color: widgetTextColor,
         }"
       >
         <Spinner v-if="isUpdating && feedback" />

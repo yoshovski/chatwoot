@@ -22,6 +22,7 @@ import { useRouter } from 'vue-router';
 import { useAvailability } from 'widget/composables/useAvailability';
 import { SDK_SET_BUBBLE_VISIBILITY } from '../shared/constants/sharedFrameEvents';
 import { emitter } from 'shared/helpers/mitt';
+import { getWidgetForegroundColor } from 'shared/helpers/colorHelper';
 
 export default {
   name: 'App',
@@ -90,10 +91,14 @@ export default {
     },
   },
   mounted() {
-    const { websiteToken, locale, widgetColor } = window.chatwootWebChannel;
+    const { websiteToken, locale, widgetColor, widgetTextColor } =
+      window.chatwootWebChannel;
+    const resolvedWidgetTextColor =
+      widgetTextColor || getWidgetForegroundColor(widgetColor);
     this.setLocale(locale);
     this.setWidgetColor(widgetColor);
-    this.setWidgetColorVariable(widgetColor);
+    this.setWidgetTextColor(resolvedWidgetTextColor);
+    this.setWidgetColorVariables(widgetColor, resolvedWidgetTextColor);
     setHeader(window.authToken);
     if (this.isIFrame) {
       this.registerListeners();
@@ -116,6 +121,7 @@ export default {
       'setAppConfig',
       'setReferrerHost',
       'setWidgetColor',
+      'setWidgetTextColor',
       'setBubbleVisibility',
       'setColorScheme',
     ]),
@@ -126,11 +132,17 @@ export default {
       'resetCampaign',
     ]),
     ...mapActions('agent', ['fetchAvailableAgents']),
-    setWidgetColorVariable(widgetColor) {
+    setWidgetColorVariables(widgetColor, widgetTextColor) {
       if (widgetColor) {
         document.documentElement.style.setProperty(
           '--widget-color',
           widgetColor
+        );
+      }
+      if (widgetTextColor) {
+        document.documentElement.style.setProperty(
+          '--widget-text-color',
+          widgetTextColor
         );
       }
     },

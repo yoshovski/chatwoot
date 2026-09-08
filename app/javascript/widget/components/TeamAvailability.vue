@@ -12,6 +12,7 @@ const props = defineProps({
 const emit = defineEmits(['startConversation']);
 
 const widgetColor = useMapGetter('appConfig/getWidgetColor');
+const widgetTextColor = useMapGetter('appConfig/getWidgetTextColor');
 
 const startConversation = () => {
   emit('startConversation');
@@ -32,8 +33,8 @@ const startConversation = () => {
     <AvailabilityContainer :agents="availableAgents" show-header show-avatars />
 
     <button
-      class="inline-flex items-center gap-1 font-medium text-n-slate-12"
-      :style="{ color: widgetColor }"
+      class="inline-flex self-start items-center gap-1 px-3 py-2 font-medium rounded-lg"
+      :style="{ backgroundColor: widgetColor, color: widgetTextColor }"
       @click="startConversation"
     >
       <span>

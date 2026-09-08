@@ -106,7 +106,7 @@
 
 .woot-widget-bubble.woot-widget--expanded div {
   align-items: center;
-  color: #fff;
+  color: var(--widget-text-color, #fff);
   display: flex;
   font-family:
     system-ui,
@@ -129,7 +129,7 @@
 
 .woot-widget-bubble.woot-widget--expanded.woot-widget-bubble-color--lighter
   div {
-  color: var(--s-700);
+  color: var(--widget-text-color, var(--s-700));
 }
 
 .woot-widget-bubble.woot-widget--expanded svg {
@@ -178,7 +178,7 @@
 
 .woot--close::before,
 .woot--close::after {
-  background-color: #fff;
+  background-color: var(--widget-icon-color, #fff);
   content: ' ';
   display: inline;
   height: 24px;
@@ -190,7 +190,7 @@
 
 .woot-widget-bubble-color--lighter.woot--close::before,
 .woot-widget-bubble-color--lighter.woot--close::after {
-  background-color: var(--s-700);
+  background-color: var(--widget-icon-color, var(--s-700));
 }
 
 .woot--close::before {
@@ -342,8 +342,8 @@
   .woot-widget-holder {
     border-radius: 16px;
     bottom: 104px;
-    height: calc(90% - 64px - 20px);
-    max-height: 640px !important;
+    height: min(var(--widget-height, 640px), calc(100vh - 124px));
+    max-height: 900px !important;
     min-height: 250px !important;
     width: 400px !important;
   }

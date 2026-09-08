@@ -1,13 +1,23 @@
 import { toHex, mix, getLuminance, getContrast } from 'color2k';
 
 export const isWidgetColorLighter = color => {
-  const colorToCheck = color.replace('#', '');
+  const colorWithoutHash = color.replace('#', '');
+  const colorToCheck =
+    colorWithoutHash.length === 3
+      ? colorWithoutHash
+          .split('')
+          .map(character => `${character}${character}`)
+          .join('')
+      : colorWithoutHash;
   const c_r = parseInt(colorToCheck.substr(0, 2), 16);
   const c_g = parseInt(colorToCheck.substr(2, 2), 16);
   const c_b = parseInt(colorToCheck.substr(4, 2), 16);
   const brightness = (c_r * 299 + c_g * 587 + c_b * 114) / 1000;
   return brightness > 225;
 };
+
+export const getWidgetForegroundColor = color =>
+  isWidgetColorLighter(color) ? '#37546d' : '#FFFFFF';
 
 export const adjustColorForContrast = (color, backgroundColor) => {
   const targetRatio = 3.1;

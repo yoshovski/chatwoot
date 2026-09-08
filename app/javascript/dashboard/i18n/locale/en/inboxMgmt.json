@@ -1325,6 +1325,15 @@
           "IN_A_DAY": "In a day"
         },
         "WIDGET_COLOR_LABEL": "Widget Color",
+        "WIDGET_TEXT_COLOR": "Text Color",
+        "WIDGET_ICON_COLOR": "Launcher Icon Color",
+        "WIDGET_LOOK": "Widget Look",
+        "WIDGET_HEIGHT": "Widget Height (px)",
+        "WIDGET_HEIGHT_HELP": "Controls the open widget height on desktop. Mobile remains full screen.",
+        "WIDGET_STYLE": {
+          "ROUNDED": "Rounded",
+          "MINIMAL": "Minimal"
+        },
         "WIDGET_BUBBLE": "Bubble",
         "WIDGET_BUBBLE_POSITION_LABEL": "Position:",
         "WIDGET_BUBBLE_TYPE_LABEL": "Type:",

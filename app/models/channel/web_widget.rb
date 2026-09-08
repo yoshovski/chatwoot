@@ -16,6 +16,10 @@
 #  welcome_tagline       :string
 #  welcome_title         :string
 #  widget_color          :string           default("#1f93ff")
+#  widget_height         :integer          default(640), not null
+#  widget_icon_color     :string
+#  widget_style          :string           default("standard"), not null
+#  widget_text_color     :string
 #  created_at            :datetime         not null
 #  updated_at            :datetime         not null
 #  account_id            :integer
@@ -31,7 +35,8 @@ class Channel::WebWidget < ApplicationRecord
   include FlagShihTzu
 
   self.table_name = 'channel_web_widgets'
-  EDITABLE_ATTRS = [:website_url, :widget_color, :welcome_title, :welcome_tagline, :reply_time, :pre_chat_form_enabled,
+  EDITABLE_ATTRS = [:website_url, :widget_color, :widget_text_color, :widget_icon_color, :widget_height, :widget_style,
+                    :welcome_title, :welcome_tagline, :reply_time, :pre_chat_form_enabled,
                     :continuity_via_email, :hmac_mandatory, :allowed_domains,
                     { pre_chat_form_options: [:pre_chat_message, :require_email,
                                               { pre_chat_fields:
@@ -42,6 +47,11 @@ class Channel::WebWidget < ApplicationRecord
   before_validation :validate_pre_chat_options
   validates :website_url, presence: true
   validates :widget_color, presence: true
+  validates :widget_text_color, :widget_icon_color,
+            format: { with: /\A#(?:[0-9a-f]{3}|[0-9a-f]{6})\z/i }, allow_blank: true
+  validates :widget_height,
+            numericality: { only_integer: true, greater_than_or_equal_to: 320, less_than_or_equal_to: 900 }
+  validates :widget_style, inclusion: { in: %w[standard flat] }
   has_many :portals, foreign_key: 'channel_web_widget_id', dependent: :nullify, inverse_of: :channel_web_widget
 
   has_secure_token :website_token

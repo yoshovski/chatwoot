@@ -27,7 +27,8 @@ const getStatusText = computed(() => {
   <div class="relative flex flex-col w-full px-4">
     <div
       v-if="config.isDefaultScreen"
-      class="p-4 rounded-md shadow-sm bg-n-background dark:bg-n-solid-2"
+      class="p-4 shadow-sm bg-n-background dark:bg-n-solid-2"
+      :class="config.widgetStyle === 'flat' ? 'rounded-none' : 'rounded-xl'"
     >
       <div class="flex items-center justify-between">
         <div>
@@ -44,8 +45,8 @@ const getStatusText = computed(() => {
       </div>
       <button
         v-if="config.isDefaultScreen"
-        class="inline-flex items-center justify-between px-2 py-1 mt-1 -ml-2 font-medium leading-6 bg-transparent rounded-md text-n-slate-12 dark:bg-transparent"
-        :style="{ color: config.color }"
+        class="inline-flex items-center justify-between px-3 py-2 mt-2 font-medium leading-6 rounded-lg"
+        :style="{ backgroundColor: config.color, color: config.textColor }"
       >
         <span class="pr-2 text-xs">
           {{
