@@ -23,10 +23,19 @@ class Campaigns::CampaignConversationBuilder
   private
 
   def message_params
-    ActionController::Parameters.new({
-                                       content: @campaign.message,
-                                       campaign_id: @campaign.id
-                                     })
+    params = {
+      content: @campaign.message,
+      campaign_id: @campaign.id
+    }
+    items = @campaign.suggested_responses.filter_map do |response|
+      values = response.with_indifferent_access
+      next if values[:enabled] == false || values[:title].blank?
+
+      { title: values[:title], value: values[:title] }
+    end
+    params.merge!(content_type: 'input_select', content_attributes: { items: items }) if items.present?
+
+    ActionController::Parameters.new(params)
   end
 
   def conversation_params

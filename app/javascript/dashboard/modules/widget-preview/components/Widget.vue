@@ -52,9 +52,9 @@ const props = defineProps({
     type: Number,
     default: 640,
   },
-  widgetStyle: {
-    type: String,
-    default: 'standard',
+  conversationStarters: {
+    type: Array,
+    default: () => [],
   },
   widgetBubblePosition: {
     type: String,
@@ -138,7 +138,7 @@ const getWidgetConfig = computed(() => ({
   replyTime: replyTimeText.value,
   color: props.color,
   textColor: props.textColor,
-  widgetStyle: props.widgetStyle,
+  conversationStarters: props.conversationStarters,
 }));
 
 const widgetPreviewStyle = computed(() => ({
@@ -195,12 +195,7 @@ const handleToggleWidget = () => {
       >
         <div
           v-if="isWidgetVisible"
-          class="widget-wrapper flex flex-shrink-0 flex-col justify-between bg-n-slate-2 dark:bg-n-solid-1 w-80 mb-4"
-          :class="
-            widgetStyle === 'flat'
-              ? 'outline outline-1 outline-n-weak'
-              : 'rounded-2xl shadow-md'
-          "
+          class="widget-wrapper flex flex-shrink-0 flex-col justify-between bg-n-slate-2 dark:bg-n-solid-1 w-80 mb-4 rounded-2xl shadow-md"
           :style="widgetPreviewStyle"
         >
           <WidgetHead :config="getWidgetConfig" />
@@ -232,13 +227,12 @@ const handleToggleWidget = () => {
 
         <div class="flex w-[320px]" :style="getBubblePositionStyle">
           <button
-            class="relative flex items-center justify-center cursor-pointer"
-            :class="[
+            class="relative flex items-center justify-center cursor-pointer rounded-full shadow-[0_0.375rem_1.125rem_rgba(0,0,0,0.18),0_0.75rem_2rem_rgba(0,0,0,0.12)] hover:shadow-[0_0.5rem_1.375rem_rgba(0,0,0,0.2),0_1rem_2.5rem_rgba(0,0,0,0.14)]"
+            :class="
               isBubbleExpanded
                 ? 'w-auto font-medium text-base h-12 px-4'
-                : 'w-16 h-16',
-              widgetStyle === 'flat' ? 'rounded-none' : 'rounded-full',
-            ]"
+                : 'w-16 h-16'
+            "
             :style="{ background: props.color, color: props.textColor }"
             @click="handleToggleWidget"
           >

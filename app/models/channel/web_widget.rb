@@ -5,6 +5,7 @@
 #  id                    :integer          not null, primary key
 #  allowed_domains       :text             default("")
 #  continuity_via_email  :boolean          default(TRUE), not null
+#  conversation_starters :jsonb            not null
 #  feature_flags         :integer          default(7), not null
 #  hmac_mandatory        :boolean          default(FALSE)
 #  hmac_token            :string
@@ -38,6 +39,7 @@ class Channel::WebWidget < ApplicationRecord
   EDITABLE_ATTRS = [:website_url, :widget_color, :widget_text_color, :widget_icon_color, :widget_height, :widget_style,
                     :welcome_title, :welcome_tagline, :reply_time, :pre_chat_form_enabled,
                     :continuity_via_email, :hmac_mandatory, :allowed_domains,
+                    { conversation_starters: [:id, :title, :enabled] },
                     { pre_chat_form_options: [:pre_chat_message, :require_email,
                                               { pre_chat_fields:
                                                 [:field_type, :label, :placeholder, :name, :enabled, :type, :enabled, :required,
@@ -45,13 +47,16 @@ class Channel::WebWidget < ApplicationRecord
                     { selected_feature_flags: [] }].freeze
 
   before_validation :validate_pre_chat_options
+  before_validation :normalize_widget_colors
+  before_validation :normalize_legacy_widget_style
   validates :website_url, presence: true
   validates :widget_color, presence: true
   validates :widget_text_color, :widget_icon_color,
             format: { with: /\A#(?:[0-9a-f]{3}|[0-9a-f]{6})\z/i }, allow_blank: true
   validates :widget_height,
             numericality: { only_integer: true, greater_than_or_equal_to: 320, less_than_or_equal_to: 900 }
-  validates :widget_style, inclusion: { in: %w[standard flat] }
+  validates :widget_style, inclusion: { in: %w[standard] }
+  validate :validate_conversation_starters
   has_many :portals, foreign_key: 'channel_web_widget_id', dependent: :nullify, inverse_of: :channel_web_widget
 
   has_secure_token :website_token
@@ -108,6 +113,45 @@ class Channel::WebWidget < ApplicationRecord
         }
       ]
     }
+  end
+
+  def normalize_legacy_widget_style
+    self.widget_style = 'standard' if widget_style == 'flat'
+  end
+
+  def normalize_widget_colors
+    self.widget_text_color = normalize_hex_color(widget_text_color)
+    self.widget_icon_color = normalize_hex_color(widget_icon_color)
+  end
+
+  def normalize_hex_color(color)
+    return color unless color.is_a?(String)
+
+    value = color.strip
+    value = "##{value}" unless value.start_with?('#')
+    value = value[0, 7] if value.match?(/\A#[0-9a-f]{8}\z/i)
+    value = value[0, 4] if value.match?(/\A#[0-9a-f]{4}\z/i)
+    value.downcase
+  end
+
+  def validate_conversation_starters
+    validate_ordered_text_options(conversation_starters, :conversation_starters)
+  end
+
+  def validate_ordered_text_options(options, attribute)
+    unless options.is_a?(Array)
+      errors.add(attribute, 'must be a list')
+      return
+    end
+
+    errors.add(attribute, 'can contain at most 10 items') if options.size > 10
+    invalid_item = options.any? do |option|
+      next true unless option.is_a?(Hash)
+
+      values = option.with_indifferent_access
+      values[:title].blank? || values[:title].length > 120 || ![true, false, nil].include?(values[:enabled])
+    end
+    errors.add(attribute, 'contains an invalid item') if invalid_item
   end
 
   def create_contact_inbox(additional_attributes = {})

@@ -18,6 +18,7 @@
         widgetIconColor: <%= @web_widget.widget_icon_color.to_json.html_safe %>,
         widgetHeight: <%= @web_widget.widget_height %>,
         widgetStyle: '<%= @web_widget.widget_style %>',
+        conversationStarters: <%= @web_widget.conversation_starters.to_json.html_safe %>,
         portal: <%= @web_widget.inbox.portal.to_json.html_safe %>,
         enabledFeatures: <%= @web_widget.selected_feature_flags.to_json.html_safe %>,
         enabledLanguages: <%= available_locales_with_name.to_json.html_safe %>,

@@ -23,9 +23,8 @@ const isDefaultScreen = computed(() => {
 
 <template>
   <div
-    class="flex-shrink-0 transition-[max-height] duration-300"
+    class="flex-shrink-0 rounded-t-2xl transition-[max-height] duration-300"
     :class="[
-      config.widgetStyle === 'flat' ? 'rounded-none' : 'rounded-t-2xl',
       isDefaultScreen
         ? 'bg-n-slate-2 dark:bg-n-solid-1 px-4 py-5'
         : 'bg-n-slate-2 dark:bg-n-solid-1 p-4',

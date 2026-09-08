@@ -1,6 +1,7 @@
 json.id resource.display_id
 json.title resource.title
 json.description resource.description
+json.suggested_responses resource.suggested_responses
 json.account_id resource.account_id
 json.inbox do
   json.partial! 'api/v1/models/inbox', formats: [:json], resource: resource.inbox

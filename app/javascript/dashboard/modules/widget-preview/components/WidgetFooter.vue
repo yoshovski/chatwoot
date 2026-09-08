@@ -21,14 +21,34 @@ const getStatusText = computed(() => {
     ? t('INBOX_MGMT.WIDGET_BUILDER.BODY.TEAM_AVAILABILITY.ONLINE')
     : t('INBOX_MGMT.WIDGET_BUILDER.BODY.TEAM_AVAILABILITY.OFFLINE');
 });
+
+const activeStarters = computed(() =>
+  (props.config.conversationStarters || []).filter(
+    starter => starter.enabled !== false && starter.title
+  )
+);
 </script>
 
 <template>
-  <div class="relative flex flex-col w-full px-4">
+  <div class="relative flex flex-col w-full gap-2 px-4">
+    <div
+      v-if="config.isDefaultScreen && activeStarters.length"
+      class="flex flex-col gap-1 rounded-xl bg-n-background p-2 shadow-sm outline outline-1 outline-n-container"
+    >
+      <button
+        v-for="starter in activeStarters"
+        :key="starter.id"
+        type="button"
+        class="flex items-center justify-between gap-2 rounded-lg px-3 py-2 text-start text-xs font-medium"
+        :style="{ backgroundColor: config.color, color: config.textColor }"
+      >
+        <span>{{ starter.title }}</span>
+        <FluentIcon icon="arrow-right" size="14" />
+      </button>
+    </div>
     <div
       v-if="config.isDefaultScreen"
-      class="p-4 shadow-sm bg-n-background dark:bg-n-solid-2"
-      :class="config.widgetStyle === 'flat' ? 'rounded-none' : 'rounded-xl'"
+      class="p-4 shadow-sm bg-n-background dark:bg-n-solid-2 rounded-xl"
     >
       <div class="flex items-center justify-between">
         <div>
