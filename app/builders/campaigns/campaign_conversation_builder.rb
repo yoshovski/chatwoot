@@ -49,13 +49,10 @@ class Campaigns::CampaignConversationBuilder
   end
 
   def submit_selected_response
-    selected_values = selected_response&.with_indifferent_access
-    return if selected_values.blank?
+    selected_title = selected_response&.with_indifferent_access&.[](:title)
+    return if selected_title.blank?
 
-    selected_item = @message.content_attributes['items']&.find do |item|
-      values = item.with_indifferent_access
-      (selected_values[:id].present? && values[:id].to_s == selected_values[:id].to_s) || values[:title] == selected_values[:title]
-    end
+    selected_item = @message.content_attributes['items']&.find { |item| item.with_indifferent_access[:title] == selected_title }
     @message.update!(submitted_values: [selected_item]) if selected_item
   end
 
