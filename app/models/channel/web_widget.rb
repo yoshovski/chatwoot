@@ -35,6 +35,8 @@ class Channel::WebWidget < ApplicationRecord
   include Channelable
   include FlagShihTzu
 
+  ORDERED_TEXT_OPTION_ENABLED_VALUES = [true, false, nil].freeze
+
   self.table_name = 'channel_web_widgets'
   EDITABLE_ATTRS = [:website_url, :widget_color, :widget_text_color, :widget_icon_color, :widget_height, :widget_style,
                     :welcome_title, :welcome_tagline, :reply_time, :pre_chat_form_enabled,
@@ -145,13 +147,15 @@ class Channel::WebWidget < ApplicationRecord
     end
 
     errors.add(attribute, 'can contain at most 10 items') if options.size > 10
-    invalid_item = options.any? do |option|
-      next true unless option.is_a?(Hash)
-
-      values = option.with_indifferent_access
-      values[:title].blank? || values[:title].length > 120 || ![true, false, nil].include?(values[:enabled])
-    end
+    invalid_item = options.any? { |option| invalid_ordered_text_option?(option) }
     errors.add(attribute, 'contains an invalid item') if invalid_item
+  end
+
+  def invalid_ordered_text_option?(option)
+    return true unless option.is_a?(Hash)
+
+    values = option.with_indifferent_access
+    values[:title].blank? || values[:title].length > 120 || ORDERED_TEXT_OPTION_ENABLED_VALUES.exclude?(values[:enabled])
   end
 
   def create_contact_inbox(additional_attributes = {})

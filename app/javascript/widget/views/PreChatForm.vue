@@ -41,7 +41,7 @@ export default {
       contactCustomAttributes,
       conversationCustomAttributes,
     }) {
-      const starter = this.$route.query.starter;
+      const starter = this.$route?.query?.starter;
       // Contact custom attributes are sent within the same request that
       // identifies the contact. A separate update call would race the contact
       // merge on the server (matching email/phone) and write the values to

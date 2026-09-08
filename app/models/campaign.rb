@@ -33,6 +33,8 @@
 #  index_campaigns_on_scheduled_at     (scheduled_at)
 #
 class Campaign < ApplicationRecord
+  ORDERED_TEXT_OPTION_ENABLED_VALUES = [true, false, nil].freeze
+
   include UrlHelper
   validates :account_id, presence: true
   validates :inbox_id, presence: true
@@ -168,13 +170,15 @@ class Campaign < ApplicationRecord
     end
 
     errors.add(:suggested_responses, 'can contain at most 10 items') if suggested_responses.size > 10
-    invalid_item = suggested_responses.any? do |option|
-      next true unless option.is_a?(Hash)
-
-      values = option.with_indifferent_access
-      values[:title].blank? || values[:title].length > 120 || ![true, false, nil].include?(values[:enabled])
-    end
+    invalid_item = suggested_responses.any? { |option| invalid_suggested_response?(option) }
     errors.add(:suggested_responses, 'contains an invalid item') if invalid_item
+  end
+
+  def invalid_suggested_response?(option)
+    return true unless option.is_a?(Hash)
+
+    values = option.with_indifferent_access
+    values[:title].blank? || values[:title].length > 120 || ORDERED_TEXT_OPTION_ENABLED_VALUES.exclude?(values[:enabled])
   end
 
   # creating db triggers

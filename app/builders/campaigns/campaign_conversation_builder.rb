@@ -33,7 +33,10 @@ class Campaigns::CampaignConversationBuilder
 
       { title: values[:title], value: values[:title] }
     end
-    params.merge!(content_type: 'input_select', content_attributes: { items: items }) if items.present?
+    if items.present?
+      params[:content_type] = 'input_select'
+      params[:content_attributes] = { items: items }
+    end
 
     ActionController::Parameters.new(params)
   end
