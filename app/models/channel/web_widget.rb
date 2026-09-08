@@ -130,6 +130,8 @@ class Channel::WebWidget < ApplicationRecord
     return color unless color.is_a?(String)
 
     value = color.strip
+    return if value.blank? || value == 'null'
+
     value = "##{value}" unless value.start_with?('#')
     value = value[0, 7] if value.match?(/\A#[0-9a-f]{8}\z/i)
     value = value[0, 4] if value.match?(/\A#[0-9a-f]{4}\z/i)

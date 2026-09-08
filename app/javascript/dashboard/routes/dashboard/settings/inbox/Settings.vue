@@ -745,10 +745,10 @@ export default {
             widget_color: this.inbox.widget_color,
             widget_text_color: this.isWidgetTextColorCustom
               ? this.widgetTextColor
-              : null,
+              : '',
             widget_icon_color: this.isWidgetIconColorCustom
               ? this.widgetIconColor
-              : null,
+              : '',
             widget_height: this.widgetHeight,
             conversation_starters: serializeOrderedTextOptions(
               this.conversationStarters
