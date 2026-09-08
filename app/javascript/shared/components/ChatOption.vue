@@ -17,6 +17,7 @@ export default {
   computed: {
     ...mapGetters({
       widgetColor: 'appConfig/getWidgetColor',
+      widgetTextColor: 'appConfig/getWidgetTextColor',
     }),
   },
   methods: {
@@ -31,10 +32,10 @@ export default {
   <li
     class="option"
     :class="{ 'is-selected': isSelected }"
-    :style="{ borderColor: widgetColor }"
+    :style="{ backgroundColor: widgetColor, borderColor: widgetColor }"
   >
     <button class="option-button button" @click="onClick">
-      <span :style="{ color: widgetColor }">{{ action.title }}</span>
+      <span :style="{ color: widgetTextColor }">{{ action.title }}</span>
     </button>
   </li>
 </template>

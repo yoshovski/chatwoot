@@ -47,6 +47,7 @@ import Widget from 'dashboard/modules/widget-preview/components/Widget.vue';
 import AccessToken from 'dashboard/routes/dashboard/settings/profile/AccessToken.vue';
 import { copyTextToClipboard } from 'shared/helpers/clipboard';
 import { META_RESTRICTION_STATUS_URL } from 'dashboard/constants/globals';
+import { getWidgetForegroundColor } from 'shared/helpers/colorHelper';
 
 export default {
   components: {
@@ -120,6 +121,12 @@ export default {
       widgetBubblePosition: 'right',
       widgetBubbleType: 'standard',
       widgetBubbleLauncherTitle: '',
+      widgetTextColor: '#ffffff',
+      widgetIconColor: '#ffffff',
+      isWidgetTextColorCustom: false,
+      isWidgetIconColorCustom: false,
+      widgetHeight: 640,
+      widgetStyle: 'standard',
     };
   },
   computed: {
@@ -434,6 +441,16 @@ export default {
     },
   },
   watch: {
+    'inbox.widget_color'(widgetColor) {
+      if (!widgetColor) return;
+      const automaticContrastColor = getWidgetForegroundColor(widgetColor);
+      if (!this.isWidgetTextColorCustom) {
+        this.widgetTextColor = automaticContrastColor;
+      }
+      if (!this.isWidgetIconColorCustom) {
+        this.widgetIconColor = automaticContrastColor;
+      }
+    },
     $route(to, from) {
       if (to.name === 'settings_inbox_show') {
         const inboxChanged = to.params.inboxId !== from.params.inboxId;
@@ -560,6 +577,17 @@ export default {
       this.channelWelcomeTagline = this.inbox.welcome_tagline || '';
       this.selectedFeatureFlags = this.inbox.selected_feature_flags || [];
       this.replyTime = this.inbox.reply_time;
+      const automaticContrastColor = getWidgetForegroundColor(
+        this.inbox.widget_color
+      );
+      this.widgetTextColor =
+        this.inbox.widget_text_color || automaticContrastColor;
+      this.widgetIconColor =
+        this.inbox.widget_icon_color || automaticContrastColor;
+      this.isWidgetTextColorCustom = !!this.inbox.widget_text_color;
+      this.isWidgetIconColorCustom = !!this.inbox.widget_icon_color;
+      this.widgetHeight = this.inbox.widget_height || 640;
+      this.widgetStyle = this.inbox.widget_style || 'standard';
       this.locktoSingleConversation = this.inbox.lock_to_single_conversation;
       this.selectedPortalSlug = this.inbox.help_center
         ? this.inbox.help_center.slug
@@ -695,6 +723,14 @@ export default {
           business_name: this.businessName || null,
           channel: {
             widget_color: this.inbox.widget_color,
+            widget_text_color: this.isWidgetTextColorCustom
+              ? this.widgetTextColor
+              : null,
+            widget_icon_color: this.isWidgetIconColorCustom
+              ? this.widgetIconColor
+              : null,
+            widget_height: this.widgetHeight,
+            widget_style: this.widgetStyle,
             website_url: this.channelWebsiteUrl,
             webhook_url: this.webhookUrl,
             welcome_title: this.channelWelcomeTitle || '',
@@ -1111,6 +1147,76 @@ export default {
               </SettingsFieldSection>
               <SettingsFieldSection
                 :label="
+                  $t(
+                    'INBOX_MGMT.WIDGET_BUILDER.WIDGET_OPTIONS.WIDGET_TEXT_COLOR'
+                  )
+                "
+              >
+                <div class="justify-start">
+                  <ColorPicker
+                    v-model="widgetTextColor"
+                    @update:model-value="isWidgetTextColorCustom = true"
+                  />
+                </div>
+              </SettingsFieldSection>
+              <SettingsFieldSection
+                :label="
+                  $t(
+                    'INBOX_MGMT.WIDGET_BUILDER.WIDGET_OPTIONS.WIDGET_ICON_COLOR'
+                  )
+                "
+              >
+                <div class="justify-start">
+                  <ColorPicker
+                    v-model="widgetIconColor"
+                    @update:model-value="isWidgetIconColorCustom = true"
+                  />
+                </div>
+              </SettingsFieldSection>
+              <SettingsFieldSection
+                :label="
+                  $t('INBOX_MGMT.WIDGET_BUILDER.WIDGET_OPTIONS.WIDGET_LOOK')
+                "
+              >
+                <SelectInput
+                  v-model="widgetStyle"
+                  :options="[
+                    {
+                      label: $t(
+                        'INBOX_MGMT.WIDGET_BUILDER.WIDGET_OPTIONS.WIDGET_STYLE.ROUNDED'
+                      ),
+                      value: 'standard',
+                    },
+                    {
+                      label: $t(
+                        'INBOX_MGMT.WIDGET_BUILDER.WIDGET_OPTIONS.WIDGET_STYLE.MINIMAL'
+                      ),
+                      value: 'flat',
+                    },
+                  ]"
+                />
+              </SettingsFieldSection>
+              <SettingsFieldSection
+                :label="
+                  $t('INBOX_MGMT.WIDGET_BUILDER.WIDGET_OPTIONS.WIDGET_HEIGHT')
+                "
+                :help-text="
+                  $t(
+                    'INBOX_MGMT.WIDGET_BUILDER.WIDGET_OPTIONS.WIDGET_HEIGHT_HELP'
+                  )
+                "
+              >
+                <woot-input
+                  v-model.number="widgetHeight"
+                  type="number"
+                  min="320"
+                  max="900"
+                  step="10"
+                  class="max-w-40 [&>input]:!mb-0"
+                />
+              </SettingsFieldSection>
+              <SettingsFieldSection
+                :label="
                   $t('INBOX_MGMT.WIDGET_BUILDER.WIDGET_OPTIONS.WIDGET_BUBBLE')
                 "
               >
@@ -1384,6 +1490,10 @@ export default {
                 is-online
                 :reply-time="replyTime"
                 :color="inbox.widget_color"
+                :text-color="widgetTextColor"
+                :icon-color="widgetIconColor"
+                :widget-height="widgetHeight"
+                :widget-style="widgetStyle"
                 :widget-bubble-position="widgetBubblePosition"
                 :widget-bubble-launcher-title="widgetBubbleLauncherTitle"
                 :widget-bubble-type="widgetBubbleType"

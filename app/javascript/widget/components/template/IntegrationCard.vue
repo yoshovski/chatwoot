@@ -2,7 +2,6 @@
 import IntegrationAPIClient from 'widget/api/integration';
 import FluentIcon from 'shared/components/FluentIcon/Index.vue';
 import { buildDyteURL } from 'shared/helpers/IntegrationHelper';
-import { getContrastingTextColor } from '@chatwoot/utils';
 import { mapGetters } from 'vuex';
 
 export default {
@@ -19,10 +18,10 @@ export default {
     return { isLoading: false, dyteAuthToken: '', isSDKMounted: false };
   },
   computed: {
-    ...mapGetters({ widgetColor: 'appConfig/getWidgetColor' }),
-    textColor() {
-      return getContrastingTextColor(this.widgetColor);
-    },
+    ...mapGetters({
+      widgetColor: 'appConfig/getWidgetColor',
+      widgetTextColor: 'appConfig/getWidgetTextColor',
+    }),
     meetingLink() {
       return buildDyteURL(this.dyteAuthToken);
     },
@@ -58,7 +57,7 @@ export default {
       :style="{
         background: widgetColor,
         borderColor: widgetColor,
-        color: textColor,
+        color: widgetTextColor,
       }"
       @click="joinTheCall"
     >

@@ -15,8 +15,11 @@ defineProps({
           class="items-end flex justify-end ml-auto mb-1 mt-0 max-w-[85%] text-right"
         >
           <div
-            class="rounded-[1.25rem] rounded-br-[0.25rem] text-white dark:text-white text-sm px-4 py-3"
-            :style="{ background: config.color }"
+            class="rounded-[1.25rem] rounded-br-[0.25rem] text-sm px-4 py-3"
+            :style="{
+              background: config.color,
+              color: config.textColor,
+            }"
           >
             <p class="m-0">
               {{ $t('INBOX_MGMT.WIDGET_BUILDER.BODY.USER_MESSAGE') }}
