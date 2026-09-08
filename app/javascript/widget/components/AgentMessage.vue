@@ -67,6 +67,9 @@ export default {
       const { content_type: type = '' } = this.message;
       return type;
     },
+    isOptions() {
+      return this.contentType === 'input_select';
+    },
     isCampaignMessage() {
       return !!this.message.campaign_id;
     },
@@ -175,8 +178,8 @@ export default {
     }"
   >
     <div v-if="!isASubmittedForm" class="agent-message">
-      <div class="avatar-wrap">
-        <div class="user-thumbnail-box">
+      <div class="avatar-wrap" :class="{ '!self-start !mt-4': isOptions }">
+        <div class="user-thumbnail-box" :class="{ '!mt-0': isOptions }">
           <Avatar
             v-if="
               !isCampaignMessage && (message.showAvatar || hasRecordedResponse)
@@ -208,6 +211,12 @@ export default {
               :message-id="message.id"
               :message-type="messageType"
               :message="message.content"
+              :agent-name="agentName"
+              :show-agent-name="
+                isOptions &&
+                !isCampaignMessage &&
+                (message.showAvatar || hasRecordedResponse)
+              "
             />
             <div
               v-if="hasAttachments"
@@ -246,6 +255,7 @@ export default {
           </div>
           <div class="flex flex-col justify-end">
             <MessageReplyButton
+              v-if="!isOptions"
               class="transition-opacity delay-75 opacity-0 group-hover:opacity-100 sm:opacity-0"
               @click="toggleReply"
             />
@@ -253,7 +263,9 @@ export default {
         </div>
         <p
           v-if="
-            !isCampaignMessage && (message.showAvatar || hasRecordedResponse)
+            !isOptions &&
+            !isCampaignMessage &&
+            (message.showAvatar || hasRecordedResponse)
           "
           class="agent-name text-n-slate-11"
         >
