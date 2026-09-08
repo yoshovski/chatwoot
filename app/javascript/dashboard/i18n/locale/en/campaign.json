@@ -34,6 +34,15 @@
             "PLACEHOLDER": "Please enter the message of campaign",
             "ERROR": "Message is required"
           },
+          "SUGGESTIONS": {
+            "LABEL": "Suggested replies",
+            "HELP": "Add optional buttons visitors can use to reply. Enabled buttons appear in this order.",
+            "ADD": "Add reply",
+            "EMPTY": "No suggested replies yet. The campaign will send as a regular message.",
+            "PLACEHOLDER": "Enter a suggested reply",
+            "REORDER": "Reorder suggested reply",
+            "DELETE": "Delete suggested reply"
+          },
           "INBOX": {
             "LABEL": "Select Inbox",
             "PLACEHOLDER": "Select Inbox",

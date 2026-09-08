@@ -42,12 +42,29 @@ import { LOCAL_STORAGE_KEYS } from 'dashboard/constants/localStorage';
 import { LocalStorage } from 'shared/helpers/localStorage';
 import Editor from 'dashboard/components-next/Editor/Editor.vue';
 import ColorPicker from 'dashboard/components-next/colorpicker/ColorPicker.vue';
+import OrderedTextList from 'dashboard/components-next/ordered-text-list/OrderedTextList.vue';
 import SelectInput from 'dashboard/components-next/select/Select.vue';
 import Widget from 'dashboard/modules/widget-preview/components/Widget.vue';
 import AccessToken from 'dashboard/routes/dashboard/settings/profile/AccessToken.vue';
 import { copyTextToClipboard } from 'shared/helpers/clipboard';
 import { META_RESTRICTION_STATUS_URL } from 'dashboard/constants/globals';
 import { getWidgetForegroundColor } from 'shared/helpers/colorHelper';
+
+const normalizeOrderedTextOptions = options =>
+  (options || []).map((option, index) => ({
+    id: option.id || `saved-${index}`,
+    title: option.title || '',
+    enabled: option.enabled !== false,
+  }));
+
+const serializeOrderedTextOptions = options =>
+  options
+    .map(option => ({
+      id: option.id,
+      title: option.title.trim(),
+      enabled: option.enabled,
+    }))
+    .filter(option => option.title);
 
 export default {
   components: {
@@ -79,6 +96,7 @@ export default {
     Editor,
     Avatar,
     ColorPicker,
+    OrderedTextList,
     SelectInput,
     AccountHealth,
     WhatsappManualMigrationDialog,
@@ -126,7 +144,7 @@ export default {
       isWidgetTextColorCustom: false,
       isWidgetIconColorCustom: false,
       widgetHeight: 640,
-      widgetStyle: 'standard',
+      conversationStarters: [],
     };
   },
   computed: {
@@ -587,7 +605,9 @@ export default {
       this.isWidgetTextColorCustom = !!this.inbox.widget_text_color;
       this.isWidgetIconColorCustom = !!this.inbox.widget_icon_color;
       this.widgetHeight = this.inbox.widget_height || 640;
-      this.widgetStyle = this.inbox.widget_style || 'standard';
+      this.conversationStarters = normalizeOrderedTextOptions(
+        this.inbox.conversation_starters
+      );
       this.locktoSingleConversation = this.inbox.lock_to_single_conversation;
       this.selectedPortalSlug = this.inbox.help_center
         ? this.inbox.help_center.slug
@@ -730,7 +750,9 @@ export default {
               ? this.widgetIconColor
               : null,
             widget_height: this.widgetHeight,
-            widget_style: this.widgetStyle,
+            conversation_starters: serializeOrderedTextOptions(
+              this.conversationStarters
+            ),
             website_url: this.channelWebsiteUrl,
             webhook_url: this.webhookUrl,
             welcome_title: this.channelWelcomeTitle || '',
@@ -1175,25 +1197,40 @@ export default {
               </SettingsFieldSection>
               <SettingsFieldSection
                 :label="
-                  $t('INBOX_MGMT.WIDGET_BUILDER.WIDGET_OPTIONS.WIDGET_LOOK')
+                  $t(
+                    'INBOX_MGMT.WIDGET_BUILDER.WIDGET_OPTIONS.CONVERSATION_STARTERS.LABEL'
+                  )
                 "
+                :help-text="
+                  $t(
+                    'INBOX_MGMT.WIDGET_BUILDER.WIDGET_OPTIONS.CONVERSATION_STARTERS.HELP'
+                  )
+                "
+                class="[&>div]:!items-start"
               >
-                <SelectInput
-                  v-model="widgetStyle"
-                  :options="[
-                    {
-                      label: $t(
-                        'INBOX_MGMT.WIDGET_BUILDER.WIDGET_OPTIONS.WIDGET_STYLE.ROUNDED'
-                      ),
-                      value: 'standard',
-                    },
-                    {
-                      label: $t(
-                        'INBOX_MGMT.WIDGET_BUILDER.WIDGET_OPTIONS.WIDGET_STYLE.MINIMAL'
-                      ),
-                      value: 'flat',
-                    },
-                  ]"
+                <OrderedTextList
+                  v-model="conversationStarters"
+                  :add-label="
+                    $t(
+                      'INBOX_MGMT.WIDGET_BUILDER.WIDGET_OPTIONS.CONVERSATION_STARTERS.ADD'
+                    )
+                  "
+                  :empty-label="
+                    $t(
+                      'INBOX_MGMT.WIDGET_BUILDER.WIDGET_OPTIONS.CONVERSATION_STARTERS.EMPTY'
+                    )
+                  "
+                  :placeholder="
+                    $t(
+                      'INBOX_MGMT.WIDGET_BUILDER.WIDGET_OPTIONS.CONVERSATION_STARTERS.PLACEHOLDER'
+                    )
+                  "
+                  :reorder-label="
+                    $t('INBOX_MGMT.WIDGET_BUILDER.WIDGET_OPTIONS.REORDER')
+                  "
+                  :delete-label="
+                    $t('INBOX_MGMT.WIDGET_BUILDER.WIDGET_OPTIONS.DELETE')
+                  "
                 />
               </SettingsFieldSection>
               <SettingsFieldSection
@@ -1493,7 +1530,7 @@ export default {
                 :text-color="widgetTextColor"
                 :icon-color="widgetIconColor"
                 :widget-height="widgetHeight"
-                :widget-style="widgetStyle"
+                :conversation-starters="conversationStarters"
                 :widget-bubble-position="widgetBubblePosition"
                 :widget-bubble-launcher-title="widgetBubbleLauncherTitle"
                 :widget-bubble-type="widgetBubbleType"

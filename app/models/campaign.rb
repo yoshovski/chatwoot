@@ -10,6 +10,7 @@
 #  enabled                            :boolean          default(TRUE)
 #  message                            :text             not null
 #  scheduled_at                       :datetime
+#  suggested_responses                :jsonb            not null
 #  started_at                         :datetime
 #  completed_at                       :datetime
 #  template_params                    :jsonb
@@ -32,6 +33,8 @@
 #  index_campaigns_on_scheduled_at     (scheduled_at)
 #
 class Campaign < ApplicationRecord
+  ORDERED_TEXT_OPTION_ENABLED_VALUES = [true, false, nil].freeze
+
   include UrlHelper
   validates :account_id, presence: true
   validates :inbox_id, presence: true
@@ -42,6 +45,7 @@ class Campaign < ApplicationRecord
   validate :prevent_completed_campaign_from_update, on: :update
   validate :sender_must_belong_to_account
   validate :inbox_must_belong_to_account
+  validate :validate_suggested_responses
 
   belongs_to :account
   belongs_to :inbox
@@ -157,6 +161,24 @@ class Campaign < ApplicationRecord
 
   def prevent_completed_campaign_from_update
     errors.add :status, 'The campaign is already completed' if !campaign_status_changed? && completed?
+  end
+
+  def validate_suggested_responses
+    unless suggested_responses.is_a?(Array)
+      errors.add(:suggested_responses, 'must be a list')
+      return
+    end
+
+    errors.add(:suggested_responses, 'can contain at most 10 items') if suggested_responses.size > 10
+    invalid_item = suggested_responses.any? { |option| invalid_suggested_response?(option) }
+    errors.add(:suggested_responses, 'contains an invalid item') if invalid_item
+  end
+
+  def invalid_suggested_response?(option)
+    return true unless option.is_a?(Hash)
+
+    values = option.with_indifferent_access
+    values[:title].blank? || values[:title].length > 120 || ORDERED_TEXT_OPTION_ENABLED_VALUES.exclude?(values[:enabled])
   end
 
   # creating db triggers

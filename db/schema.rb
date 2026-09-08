@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_09_08_060000) do
+ActiveRecord::Schema[7.1].define(version: 2026_09_08_070000) do
   # These extensions should be enabled to support this database
   enable_extension "pg_stat_statements"
   enable_extension "pg_trgm"
@@ -389,6 +389,7 @@ ActiveRecord::Schema[7.1].define(version: 2026_09_08_060000) do
     t.jsonb "template_params"
     t.datetime "started_at"
     t.datetime "completed_at"
+    t.jsonb "suggested_responses", default: [], null: false
     t.index ["account_id"], name: "index_campaigns_on_account_id"
     t.index ["campaign_status"], name: "index_campaigns_on_campaign_status"
     t.index ["campaign_type"], name: "index_campaigns_on_campaign_type"
@@ -730,6 +731,7 @@ ActiveRecord::Schema[7.1].define(version: 2026_09_08_060000) do
     t.string "widget_icon_color"
     t.integer "widget_height", default: 640, null: false
     t.string "widget_style", default: "standard", null: false
+    t.jsonb "conversation_starters", default: [], null: false
     t.index ["hmac_token"], name: "index_channel_web_widgets_on_hmac_token", unique: true
     t.index ["website_token"], name: "index_channel_web_widgets_on_website_token", unique: true
   end

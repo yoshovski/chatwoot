@@ -41,6 +41,7 @@ export default {
       contactCustomAttributes,
       conversationCustomAttributes,
     }) {
+      const starter = this.$route?.query?.starter;
       // Contact custom attributes are sent within the same request that
       // identifies the contact. A separate update call would race the contact
       // merge on the server (matching email/phone) and write the values to
@@ -64,7 +65,7 @@ export default {
         this.$store.dispatch('conversation/createConversation', {
           fullName: fullName,
           emailAddress: emailAddress,
-          message: message,
+          message: typeof starter === 'string' ? starter : message,
           phoneNumber: phoneNumber,
           customAttributes: conversationCustomAttributes,
           contactCustomAttributes: contactCustomAttributes,

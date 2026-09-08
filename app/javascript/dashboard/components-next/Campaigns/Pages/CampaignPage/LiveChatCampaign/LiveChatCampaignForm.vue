@@ -11,6 +11,7 @@ import Input from 'dashboard/components-next/input/Input.vue';
 import Button from 'dashboard/components-next/button/Button.vue';
 import ComboBox from 'dashboard/components-next/combobox/ComboBox.vue';
 import Editor from 'dashboard/components-next/Editor/Editor.vue';
+import OrderedTextList from 'dashboard/components-next/ordered-text-list/OrderedTextList.vue';
 
 const props = defineProps({
   mode: {
@@ -49,6 +50,7 @@ const initialState = {
   triggerOnlyDuringBusinessHours: false,
   endPoint: '',
   timeOnPage: 10,
+  suggestedResponses: [],
 };
 
 const state = reactive({ ...initialState });
@@ -110,7 +112,8 @@ const formErrors = computed(() => ({
   sender: getErrorMessage('senderId', 'SENT_BY'),
 }));
 
-const resetState = () => Object.assign(state, initialState);
+const resetState = () =>
+  Object.assign(state, initialState, { suggestedResponses: [] });
 
 const handleCancel = () => emit('cancel');
 
@@ -143,6 +146,13 @@ const prepareCampaignDetails = () => ({
     url: state.endPoint,
     time_on_page: state.timeOnPage,
   },
+  suggested_responses: state.suggestedResponses
+    .map(option => ({
+      id: option.id,
+      title: option.title.trim(),
+      enabled: option.enabled,
+    }))
+    .filter(option => option.title),
 });
 
 const handleSubmit = async () => {
@@ -167,6 +177,7 @@ const updateStateFromCampaign = campaign => {
     enabled,
     trigger_only_during_business_hours: triggerOnlyDuringBusinessHours,
     trigger_rules: { url: endPoint, time_on_page: timeOnPage },
+    suggested_responses: suggestedResponses = [],
   } = campaign;
 
   Object.assign(state, {
@@ -178,6 +189,11 @@ const updateStateFromCampaign = campaign => {
     triggerOnlyDuringBusinessHours,
     endPoint,
     timeOnPage,
+    suggestedResponses: suggestedResponses.map((option, index) => ({
+      id: option.id || `saved-${index}`,
+      title: option.title || '',
+      enabled: option.enabled !== false,
+    })),
   });
 };
 
@@ -221,6 +237,27 @@ defineExpose({ prepareCampaignDetails, isSubmitDisabled });
       :message="formErrors.message"
       :message-type="formErrors.message ? 'error' : 'info'"
     />
+
+    <div class="flex flex-col gap-2">
+      <div>
+        <h4 class="m-0 text-sm font-medium text-n-slate-12">
+          {{ t('CAMPAIGN.LIVE_CHAT.CREATE.FORM.SUGGESTIONS.LABEL') }}
+        </h4>
+        <p class="m-0 mt-1 text-xs text-n-slate-11">
+          {{ t('CAMPAIGN.LIVE_CHAT.CREATE.FORM.SUGGESTIONS.HELP') }}
+        </p>
+      </div>
+      <OrderedTextList
+        v-model="state.suggestedResponses"
+        :add-label="t('CAMPAIGN.LIVE_CHAT.CREATE.FORM.SUGGESTIONS.ADD')"
+        :empty-label="t('CAMPAIGN.LIVE_CHAT.CREATE.FORM.SUGGESTIONS.EMPTY')"
+        :placeholder="
+          t('CAMPAIGN.LIVE_CHAT.CREATE.FORM.SUGGESTIONS.PLACEHOLDER')
+        "
+        :reorder-label="t('CAMPAIGN.LIVE_CHAT.CREATE.FORM.SUGGESTIONS.REORDER')"
+        :delete-label="t('CAMPAIGN.LIVE_CHAT.CREATE.FORM.SUGGESTIONS.DELETE')"
+      />
+    </div>
 
     <div class="flex flex-col gap-1">
       <label for="inbox" class="mb-0.5 text-sm font-medium text-n-slate-12">

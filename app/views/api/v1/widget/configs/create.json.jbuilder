@@ -24,6 +24,7 @@ json.website_channel_config do
   json.widget_icon_color @web_widget.widget_icon_color
   json.widget_height @web_widget.widget_height
   json.widget_style @web_widget.widget_style
+  json.conversation_starters @web_widget.conversation_starters
   json.working_hours @web_widget.inbox.working_hours
   json.working_hours_enabled @web_widget.inbox.working_hours_enabled
 end
