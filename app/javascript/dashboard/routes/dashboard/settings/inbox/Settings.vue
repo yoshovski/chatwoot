@@ -128,6 +128,7 @@ export default {
       channelWelcomeTagline: '',
       selectedFeatureFlags: [],
       replyTime: '',
+      replyTimeMessage: '',
       selectedTabIndex: 0,
       selectedPortalSlug: '',
       showBusinessNameInput: false,
@@ -595,6 +596,7 @@ export default {
       this.channelWelcomeTagline = this.inbox.welcome_tagline || '';
       this.selectedFeatureFlags = this.inbox.selected_feature_flags || [];
       this.replyTime = this.inbox.reply_time;
+      this.replyTimeMessage = this.inbox.reply_time_message || '';
       const automaticContrastColor = getWidgetForegroundColor(
         this.inbox.widget_color
       );
@@ -759,6 +761,7 @@ export default {
             welcome_tagline: this.channelWelcomeTagline || '',
             selectedFeatureFlags: this.selectedFeatureFlags,
             reply_time: this.replyTime || 'in_a_few_minutes',
+            reply_time_message: this.replyTimeMessage?.trim() || '',
             continuity_via_email:
               this.isInboundEmailEnabled && this.continuityViaEmail,
           },
@@ -1343,6 +1346,12 @@ export default {
                   v-model="replyTime"
                   :options="[
                     {
+                      value: 'immediately',
+                      label: $t(
+                        'INBOX_MGMT.ADD.WEBSITE_CHANNEL.REPLY_TIME.IMMEDIATELY'
+                      ),
+                    },
+                    {
                       value: 'in_a_few_minutes',
                       label: $t(
                         'INBOX_MGMT.ADD.WEBSITE_CHANNEL.REPLY_TIME.IN_A_FEW_MINUTES'
@@ -1361,6 +1370,26 @@ export default {
                       ),
                     },
                   ]"
+                />
+                <woot-input
+                  v-model="replyTimeMessage"
+                  :label="
+                    $t(
+                      'INBOX_MGMT.ADD.WEBSITE_CHANNEL.REPLY_TIME.CUSTOM_MESSAGE_LABEL'
+                    )
+                  "
+                  :placeholder="
+                    $t(
+                      'INBOX_MGMT.ADD.WEBSITE_CHANNEL.REPLY_TIME.CUSTOM_MESSAGE_PLACEHOLDER'
+                    )
+                  "
+                  :help-text="
+                    $t(
+                      'INBOX_MGMT.ADD.WEBSITE_CHANNEL.REPLY_TIME.CUSTOM_MESSAGE_HELP_TEXT'
+                    )
+                  "
+                  maxlength="120"
+                  class="mt-3 [&>input]:!mb-0"
                 />
               </SettingsFieldSection>
 
@@ -1526,6 +1555,7 @@ export default {
                 :logo="avatarUrl"
                 is-online
                 :reply-time="replyTime"
+                :reply-time-message="replyTimeMessage"
                 :color="inbox.widget_color"
                 :text-color="widgetTextColor"
                 :icon-color="widgetIconColor"

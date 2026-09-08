@@ -30,6 +30,10 @@ export default {
       type: Number,
       default: null,
     },
+    suggestedResponses: {
+      type: Array,
+      default: () => [],
+    },
   },
   setup() {
     const { formatMessage, getPlainText, truncateMessage, highlightContent } =
@@ -93,8 +97,11 @@ export default {
 
 <template>
   <div class="chat-bubble-wrap">
-    <button class="chat-bubble agent bg-white" @click="onClickMessage">
-      <div v-if="showSender" class="row--agent-block">
+    <div
+      class="chat-bubble agent overflow-hidden bg-white !p-0"
+      :class="{ '!max-w-[92%]': suggestedResponses.length }"
+    >
+      <div v-if="showSender && !campaignId" class="row--agent-block">
         <Avatar
           :src="avatarUrl"
           :size="20"
@@ -105,11 +112,28 @@ export default {
         <span class="agent--name">{{ agentName }}</span>
         <span class="company--name">{{ companyName }}</span>
       </div>
+      <button class="block w-full p-4 text-start" @click="onClickMessage">
+        <div
+          v-dompurify-html="formatMessage(message, false)"
+          class="message-content"
+        />
+      </button>
       <div
-        v-dompurify-html="formatMessage(message, false)"
-        class="message-content"
-      />
-    </button>
+        v-if="suggestedResponses.length"
+        class="mx-4 mb-4 flex flex-col border-t border-n-weak pt-2"
+      >
+        <button
+          v-for="response in suggestedResponses"
+          :key="response.id || response.title"
+          type="button"
+          class="flex items-center justify-between gap-3 rounded-lg px-1 py-2 text-start text-sm font-medium text-n-slate-12 hover:bg-n-alpha-2"
+          @click="onClickMessage"
+        >
+          <span>{{ response.title }}</span>
+          <i class="i-lucide-chevron-right size-4 shrink-0" />
+        </button>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -119,7 +143,7 @@ export default {
 }
 
 .row--agent-block {
-  @apply items-center flex text-left pb-2 text-xs;
+  @apply items-center flex text-left px-4 pt-4 text-xs;
 
   .agent--name {
     @apply font-medium ml-1;

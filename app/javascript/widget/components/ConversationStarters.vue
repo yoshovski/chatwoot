@@ -1,6 +1,5 @@
 <script setup>
 import { computed } from 'vue';
-import { useMapGetter } from 'dashboard/composables/store';
 
 const props = defineProps({
   starters: { type: Array, default: () => [] },
@@ -8,8 +7,6 @@ const props = defineProps({
 
 const emit = defineEmits(['select']);
 
-const widgetColor = useMapGetter('appConfig/getWidgetColor');
-const widgetTextColor = useMapGetter('appConfig/getWidgetTextColor');
 const activeStarters = computed(() =>
   props.starters.filter(starter => starter.enabled !== false && starter.title)
 );
@@ -18,14 +15,13 @@ const activeStarters = computed(() =>
 <template>
   <div
     v-show="activeStarters.length"
-    class="flex flex-col gap-1 rounded-xl bg-n-background p-2 shadow outline outline-1 outline-n-container dark:bg-n-solid-2"
+    class="flex flex-col overflow-hidden rounded-2xl bg-n-background shadow-sm outline outline-1 outline-n-container dark:bg-n-solid-2"
   >
     <button
       v-for="starter in activeStarters"
       :key="starter.id"
       type="button"
-      class="flex w-full items-center justify-between gap-3 rounded-lg px-3 py-2.5 text-start text-sm font-medium"
-      :style="{ backgroundColor: widgetColor, color: widgetTextColor }"
+      class="flex w-full items-center justify-between gap-3 px-4 py-4 text-start text-sm font-medium text-n-slate-12 transition-colors hover:bg-n-alpha-2 [&:not(:last-child)]:border-b [&:not(:last-child)]:border-n-weak"
       @click="emit('select', starter.title)"
     >
       <span>{{ starter.title }}</span>

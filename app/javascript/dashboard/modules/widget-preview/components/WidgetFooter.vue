@@ -33,14 +33,13 @@ const activeStarters = computed(() =>
   <div class="relative flex flex-col w-full gap-2 px-4">
     <div
       v-if="config.isDefaultScreen && activeStarters.length"
-      class="flex flex-col gap-1 rounded-xl bg-n-background p-2 shadow-sm outline outline-1 outline-n-container"
+      class="flex flex-col overflow-hidden rounded-2xl bg-n-background shadow-sm outline outline-1 outline-n-container"
     >
       <button
         v-for="starter in activeStarters"
         :key="starter.id"
         type="button"
-        class="flex items-center justify-between gap-2 rounded-lg px-3 py-2 text-start text-xs font-medium"
-        :style="{ backgroundColor: config.color, color: config.textColor }"
+        class="flex items-center justify-between gap-2 px-4 py-3.5 text-start text-xs font-medium text-n-slate-12 transition-colors hover:bg-n-alpha-2 [&:not(:last-child)]:border-b [&:not(:last-child)]:border-n-weak"
       >
         <span>{{ starter.title }}</span>
         <FluentIcon icon="arrow-right" size="14" />

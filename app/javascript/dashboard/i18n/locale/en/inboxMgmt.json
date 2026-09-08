@@ -124,10 +124,14 @@
         },
         "REPLY_TIME": {
           "TITLE": "Set Reply time",
+          "IMMEDIATELY": "We reply immediately",
           "IN_A_FEW_MINUTES": "In a few minutes",
           "IN_A_FEW_HOURS": "In a few hours",
           "IN_A_DAY": "In a day",
-          "HELP_TEXT": "This reply time will be displayed on the live chat widget"
+          "HELP_TEXT": "This reply time will be displayed on the live chat widget",
+          "CUSTOM_MESSAGE_LABEL": "Custom reply time text",
+          "CUSTOM_MESSAGE_PLACEHOLDER": "Leave blank to use the selected reply time",
+          "CUSTOM_MESSAGE_HELP_TEXT": "Optionally replace the selected reply time with your own message."
         },
         "WIDGET_COLOR": {
           "LABEL": "Widget Color",
@@ -1320,6 +1324,7 @@
         },
         "REPLY_TIME": {
           "LABEL": "Reply Time",
+          "IMMEDIATELY": "We reply immediately",
           "IN_A_FEW_MINUTES": "In a few minutes",
           "IN_A_FEW_HOURS": "In a few hours",
           "IN_A_DAY": "In a day"
@@ -1371,6 +1376,7 @@
         "CHAT": "Chat mode"
       },
       "REPLY_TIME": {
+        "IMMEDIATELY": "We reply immediately",
         "IN_A_FEW_MINUTES": "Typically replies in a few minutes",
         "IN_A_FEW_HOURS": "Typically replies in a few hours",
         "IN_A_DAY": "Typically replies in a day"

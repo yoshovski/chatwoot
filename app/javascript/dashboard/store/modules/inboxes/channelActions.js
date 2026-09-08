@@ -3,6 +3,30 @@ import InboxesAPI from '../../../api/inboxes';
 import AnalyticsHelper from '../../../helper/AnalyticsHelper';
 import { ACCOUNT_EVENTS } from '../../../helper/AnalyticsHelper/events';
 
+const appendFormDataValue = (formData, key, value) => {
+  if (Array.isArray(value)) {
+    if (!value.length) {
+      formData.append(`${key}[]`, '');
+      return;
+    }
+
+    value.forEach((item, index) => {
+      appendFormDataValue(formData, `${key}[${index}]`, item);
+    });
+    return;
+  }
+
+  const isFile = typeof File !== 'undefined' && value instanceof File;
+  if (value && typeof value === 'object' && !isFile) {
+    Object.entries(value).forEach(([nestedKey, nestedValue]) => {
+      appendFormDataValue(formData, `${key}[${nestedKey}]`, nestedValue);
+    });
+    return;
+  }
+
+  formData.append(key, value ?? '');
+};
+
 export const buildInboxData = inboxParams => {
   const formData = new FormData();
   const { channel = {}, ...inboxProperties } = inboxParams;
@@ -21,7 +45,7 @@ export const buildInboxData = inboxParams => {
     }
   }
   Object.keys(channelParams).forEach(key => {
-    formData.append(`channel[${key}]`, channel[key]);
+    appendFormDataValue(formData, `channel[${key}]`, channel[key]);
   });
   return formData;
 };
