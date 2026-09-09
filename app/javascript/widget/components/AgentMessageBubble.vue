@@ -1,4 +1,5 @@
 <script>
+import { mapGetters } from 'vuex';
 import { useMessageFormatter } from 'shared/composables/useMessageFormatter';
 import ChatCard from 'shared/components/ChatCard.vue';
 import ChatForm from 'shared/components/ChatForm.vue';
@@ -42,6 +43,19 @@ export default {
     };
   },
   computed: {
+    ...mapGetters({ lastMessage: 'conversation/getLastMessage' }),
+    // Choices are an invitation to answer the newest question. Once anything has been said since,
+    // they are stale, and a history scrolled back through with a dozen live-looking chip sets in
+    // it is worse than no chips at all.
+    isLatestMessage() {
+      return this.lastMessage?.id === this.messageId;
+    },
+    hideOptions() {
+      return (
+        !!this.messageContentAttributes.submitted_values ||
+        !this.isLatestMessage
+      );
+    },
     isTemplate() {
       return this.messageType === 3;
     },
@@ -119,7 +133,7 @@ export default {
       <ChatOptions
         :title="message"
         :options="messageContentAttributes.items"
-        :hide-fields="!!messageContentAttributes.submitted_values"
+        :hide-fields="hideOptions"
         :agent-name="agentName"
         :show-agent-name="showAgentName"
         @option-select="onOptionSelect"
