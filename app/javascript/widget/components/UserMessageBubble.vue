@@ -29,7 +29,7 @@ export default {
 <template>
   <div
     v-dompurify-html="formatMessage(message, false)"
-    class="chat-bubble user"
+    class="message-content chat-bubble user"
     :style="{ background: widgetColor, color: widgetTextColor }"
   />
 </template>
