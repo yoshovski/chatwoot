@@ -4,17 +4,11 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="robots" content="noindex, nofollow" />
-    <title><%= @inbox.name %></title>
-    <%# widget_color is only validated for presence, and this page is public, so it is only let
-        into the stylesheet when it really is a hex colour. %>
-    <% accent = @web_widget.widget_color.to_s[/\A#(?:[0-9a-f]{3}|[0-9a-f]{6})\z/i] || '#3b82f6' %>
+    <title><%= @account.name %></title>
+    <% brand_name = @global_config['BRAND_NAME'].presence || @global_config['INSTALLATION_NAME'] %>
     <style>
       :root {
-        --accent: <%= accent %>;
-        --ground: #0f1218;
-        --ground-2: #161b24;
-        --ink: #f2f5fa;
-        --ink-muted: #98a2b6;
+        --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
       }
 
       * { box-sizing: border-box; }
@@ -22,73 +16,107 @@
       body {
         margin: 0;
         min-height: 100vh;
-        background: var(--ground);
-        color: var(--ink);
         font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        padding: 48px 24px;
         overflow: hidden;
       }
 
-      /* The accent is the inbox's own widget colour, which may be anything including white --
-         so it is spent on a soft glow over a dark ground rather than on text or fills. */
+      /* One fixed backdrop, in the side that contrasts with the widget colour. */
+      body.backdrop-dark {
+        --ink: #ffffff;
+        --ink-muted: rgba(255, 255, 255, 0.6);
+        --mark-bg: rgba(255, 255, 255, 0.14);
+        --mark-border: rgba(255, 255, 255, 0.24);
+        --calm: rgba(4, 12, 16, 0.72);
+        --grain-opacity: 0.16;
+        background:
+          radial-gradient(58% 62% at 8% 6%, #0e7490 0%, transparent 62%),
+          radial-gradient(52% 58% at 96% 30%, #0f766e 0%, transparent 60%),
+          radial-gradient(48% 54% at 70% 108%, #b45309 0%, transparent 58%),
+          radial-gradient(60% 60% at 26% 96%, #155e75 0%, transparent 64%),
+          #061014;
+      }
+
+      body.backdrop-light {
+        --ink: #141a1c;
+        --ink-muted: rgba(20, 26, 28, 0.58);
+        --mark-bg: rgba(0, 0, 0, 0.07);
+        --mark-border: rgba(0, 0, 0, 0.14);
+        --calm: rgba(255, 255, 255, 0.78);
+        --grain-opacity: 0.1;
+        background:
+          radial-gradient(58% 62% at 8% 6%, #a5e8ef 0%, transparent 62%),
+          radial-gradient(52% 58% at 96% 30%, #b7e6d9 0%, transparent 60%),
+          radial-gradient(48% 54% at 70% 108%, #f8dcae 0%, transparent 58%),
+          radial-gradient(60% 60% at 26% 96%, #cfe6ee 0%, transparent 64%),
+          #eef2f1;
+      }
+
+      /* Large gradients band on real screens; the grain breaks that up. */
       body::before {
         content: "";
         position: fixed;
-        inset: -20% -20% auto -20%;
-        height: 70vh;
-        background: radial-gradient(60% 60% at 50% 0%, var(--accent), transparent 70%);
-        opacity: 0.16;
+        inset: 0;
+        background-image: var(--grain);
+        opacity: var(--grain-opacity);
+        mix-blend-mode: overlay;
         pointer-events: none;
       }
 
+      /* The middle is held back so the widget sits on the calmest part of the frame. */
       body::after {
         content: "";
         position: fixed;
         inset: 0;
-        background:
-          linear-gradient(180deg, transparent 40%, var(--ground) 100%),
-          repeating-linear-gradient(90deg, rgba(255,255,255,0.03) 0 1px, transparent 1px 72px),
-          repeating-linear-gradient(0deg, rgba(255,255,255,0.03) 0 1px, transparent 1px 72px);
+        background: radial-gradient(42% 48% at 50% 52%, var(--calm) 0%, transparent 72%);
         pointer-events: none;
       }
 
-      .stage {
-        position: relative;
+      .brandmark {
+        position: fixed;
+        top: 28px;
+        inset-inline-start: 32px;
         z-index: 1;
-        text-align: center;
-        max-width: 34rem;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        color: var(--ink);
       }
 
-      .avatar {
-        width: 56px;
-        height: 56px;
+      .brandmark .mark {
+        width: 40px;
+        height: 40px;
         border-radius: 50%;
         object-fit: cover;
-        background: var(--ground-2);
-        border: 1px solid rgba(255, 255, 255, 0.12);
-      }
-
-      h1 {
-        font-size: 1.75rem;
+        background: var(--mark-bg);
+        border: 1px solid var(--mark-border);
+        display: grid;
+        place-items: center;
+        font-size: 16px;
         font-weight: 600;
-        letter-spacing: -0.02em;
-        margin: 20px 0 8px;
-        text-wrap: balance;
       }
 
-      p {
-        margin: 0;
+      .brandmark .name {
+        font-size: 20px;
+        font-weight: 600;
+        letter-spacing: -0.01em;
+      }
+
+      .poweredby {
+        position: fixed;
+        bottom: 24px;
+        inset-inline-start: 32px;
+        z-index: 1;
+        font-size: 13px;
+        letter-spacing: 0.02em;
         color: var(--ink-muted);
-        line-height: 1.6;
       }
 
-      /* On desktop the widget is lifted out of its corner and centred on the backdrop. The
-         specificity clears sdk.css's own !important rules; the hidden state is left alone so the
-         widget can still animate away if it is closed. */
+      .poweredby a { color: inherit; text-decoration: none; }
+      .poweredby a:hover { text-decoration: underline; }
+
+      /* On desktop the widget is lifted out of its fixed corner and centred. The specificity
+         clears sdk.css's own !important rules; the hidden state is left alone so the widget can
+         still animate away when it is closed. */
       @media only screen and (min-width: 667px) {
         body .woot-widget-holder.woot-elements--right:not(.woot--hide),
         body .woot-widget-holder.woot-elements--left:not(.woot--hide) {
@@ -106,14 +134,24 @@
       }
     </style>
   </head>
-  <body>
-    <div class="stage">
+  <body class="backdrop-<%= @backdrop %>">
+    <div class="brandmark">
       <% if @inbox.try(:avatar_url).present? %>
-        <img class="avatar" src="<%= @inbox.avatar_url %>" alt="" />
+        <img class="mark" src="<%= @inbox.avatar_url %>" alt="" />
+      <% else %>
+        <span class="mark"><%= @account.name.to_s.first.to_s.upcase %></span>
       <% end %>
-      <h1><%= @inbox.name %></h1>
-      <p>Ask anything you would ask the team — product questions, availability, pricing, orders.</p>
+      <span class="name"><%= @account.name %></span>
     </div>
+
+    <p class="poweredby">
+      Powered by
+      <% if @global_config['WIDGET_BRAND_URL'].present? %>
+        <a href="<%= @global_config['WIDGET_BRAND_URL'] %>" target="_blank" rel="noopener nofollow noreferrer"><%= brand_name %></a>
+      <% else %>
+        <%= brand_name %>
+      <% end %>
+    </p>
 
     <script>
       window.chatwootSettings = {
