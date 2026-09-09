@@ -57,6 +57,7 @@ class Channel::WebWidget < ApplicationRecord
   before_validation :normalize_widget_colors
   before_validation :normalize_legacy_widget_style
   before_validation :normalize_demo_slug
+  before_validation :ensure_demo_slug
   validates :website_url, presence: true
   validates :widget_color, presence: true
   validates :widget_text_color, :widget_icon_color,
@@ -139,6 +140,23 @@ class Channel::WebWidget < ApplicationRecord
   # Blank is stored as nil so the unique index does not treat two empty slugs as a collision.
   def normalize_demo_slug
     self.demo_slug = demo_slug.to_s.strip.downcase.presence
+  end
+
+  # Switching demo mode on should hand over a shareable link, not a naming task, so the slug is
+  # derived from the inbox name. It stays editable for anyone who wants to choose their own.
+  def ensure_demo_slug
+    return unless demo_mode_enabled?
+    return if demo_slug.present?
+
+    self.demo_slug = generate_demo_slug
+  end
+
+  def generate_demo_slug
+    base = inbox&.name.to_s.parameterize.first(40)
+    base = 'demo' if base.length < 2
+    return base if self.class.where(demo_slug: base).where.not(id: id).none?
+
+    "#{base}-#{SecureRandom.alphanumeric(4).downcase}"
   end
 
   def normalize_conversation_starters

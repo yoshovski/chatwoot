@@ -12,9 +12,9 @@ describe '/demo', type: :request do
     end
 
     it 'renders the demo page for the demo slug' do
-      web_widget.update!(demo_slug: 'scanixx-storefront')
+      web_widget.update!(demo_slug: 'scanixx-website')
 
-      get '/demo/scanixx-storefront'
+      get '/demo/scanixx-website'
 
       expect(response).to be_successful
       expect(response.body).to include(web_widget.website_token)

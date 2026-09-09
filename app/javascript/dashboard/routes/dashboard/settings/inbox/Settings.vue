@@ -1539,6 +1539,7 @@ export default {
               <SettingsFieldSection
                 v-if="isAWebWidgetInbox && demoModeEnabled"
                 :label="$t('INBOX_MGMT.SETTINGS_POPUP.DEMO_SLUG')"
+                :help-text="$t('INBOX_MGMT.SETTINGS_POPUP.DEMO_SLUG_HINT')"
               >
                 <woot-input
                   v-model="demoSlug"
