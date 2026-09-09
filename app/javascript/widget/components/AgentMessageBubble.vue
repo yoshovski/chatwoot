@@ -128,6 +128,7 @@ export default {
     </div>
     <ChatForm
       v-if="isForm && !messageContentAttributes.submitted_values"
+      :title="message"
       :items="messageContentAttributes.items"
       :button-label="messageContentAttributes.button_label"
       :submitted-values="messageContentAttributes.submitted_values"

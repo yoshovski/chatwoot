@@ -4,6 +4,10 @@ import { shouldOutlineWidgetButton } from 'shared/helpers/colorHelper';
 
 export default {
   props: {
+    title: {
+      type: String,
+      default: '',
+    },
     buttonLabel: {
       type: String,
       default: '',
@@ -88,6 +92,11 @@ export default {
   <div
     class="form chat-bubble agent w-full p-4 bg-n-background dark:bg-n-solid-3"
   >
+    <!-- A form's content says what it is for. Without it the visitor gets bare fields, since
+         nothing else in the bubble explains them. -->
+    <p v-if="title" class="mb-3 mt-0 text-n-slate-12">
+      {{ title }}
+    </p>
     <form @submit.prevent="onSubmit">
       <div
         v-for="item in items"
