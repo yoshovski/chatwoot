@@ -1,6 +1,7 @@
 <script setup>
 import { computed } from 'vue';
 import BaseBubble from './Base.vue';
+import FormattedContent from './Text/FormattedContent.vue';
 import { useI18n } from 'vue-i18n';
 import { CONTENT_TYPES } from '../constants.js';
 import { useMessageContext } from '../provider.js';
@@ -49,7 +50,7 @@ const formValues = computed(() => {
 
 <template>
   <BaseBubble class="px-4 py-3" data-bubble-name="csat">
-    <span v-dompurify-html="content" :title="content" />
+    <FormattedContent :content="content" />
     <dl v-if="formValues.length" class="mt-4">
       <template v-for="item in formValues" :key="item.title">
         <dt class="text-n-slate-11 italic mt-2">
