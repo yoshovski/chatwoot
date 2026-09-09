@@ -40,6 +40,8 @@ import DyteBubble from './bubbles/Dyte.vue';
 import LocationBubble from './bubbles/Location.vue';
 import CSATBubble from './bubbles/CSAT.vue';
 import FormBubble from './bubbles/Form.vue';
+import CardsBubble from './bubbles/Cards.vue';
+import ArticleBubble from './bubbles/Article.vue';
 import VoiceCallBubble from './bubbles/VoiceCall.vue';
 import WhatsappFlowResponseBubble from './bubbles/WhatsappFlowResponse.vue';
 import WhatsappReferral from './bubbles/Text/WhatsappReferral.vue';
@@ -310,6 +312,16 @@ const componentToRender = computed(() => {
     [CONTENT_TYPES.INPUT_SELECT, CONTENT_TYPES.FORM].includes(props.contentType)
   ) {
     return FormBubble;
+  }
+
+  // Rich replies reach the visitor as cards and article lists; without these the agent sees only
+  // the plain content string, which is just the first item's title.
+  if (props.contentType === CONTENT_TYPES.CARDS) {
+    return CardsBubble;
+  }
+
+  if (props.contentType === CONTENT_TYPES.ARTICLE) {
+    return ArticleBubble;
   }
 
   if (props.contentType === CONTENT_TYPES.VOICE_CALL) {
