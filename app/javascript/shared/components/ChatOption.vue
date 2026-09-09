@@ -30,7 +30,7 @@ export default {
 
 <template>
   <li
-    class="option transition-colors hover:bg-n-alpha-2 hover:border-n-slate-8"
+    class="option"
     :class="{ 'is-selected': isSelected }"
     :style="isSelected ? { backgroundColor: widgetColor } : undefined"
   >
@@ -47,10 +47,16 @@ export default {
 
 <style scoped lang="scss">
 .option {
-  @apply rounded-xl border border-solid border-n-strong m-0 max-w-full bg-n-background text-n-slate-12;
+  @apply rounded-full border border-solid border-n-strong m-0 max-w-full bg-n-background text-n-slate-12 transition-colors;
+
+  // The hover has to live here rather than as utility classes on the element: both carry the same
+  // specificity as this rule, and the scoped stylesheet is injected last, so it wins.
+  &:hover:not(.is-selected) {
+    @apply bg-n-slate-3 border-n-slate-8;
+  }
 
   .option-button {
-    @apply bg-transparent border-0 cursor-pointer h-auto leading-normal text-center whitespace-normal rounded-xl min-h-[2.75rem] px-4 py-2.5;
+    @apply bg-transparent border-0 cursor-pointer h-auto text-sm leading-snug text-start whitespace-normal rounded-full px-3.5 py-1.5;
 
     span {
       display: inline-block;

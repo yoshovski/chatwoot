@@ -63,7 +63,10 @@ export default {
     <div v-if="showAgentName" class="agent-name !my-0 px-0.5 text-n-slate-11">
       {{ agentName }}
     </div>
-    <ul v-if="!hideFields" class="flex w-full flex-col items-end gap-2 px-1">
+    <ul
+      v-if="!hideFields"
+      class="flex w-full flex-row flex-wrap justify-end gap-1.5 px-1"
+    >
       <ChatOption
         v-for="option in options"
         :key="option.id"
