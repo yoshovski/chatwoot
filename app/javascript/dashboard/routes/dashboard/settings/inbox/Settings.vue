@@ -121,6 +121,7 @@ export default {
       locktoSingleConversation: false,
       allowMessagesAfterResolved: true,
       demoModeEnabled: false,
+      demoSlug: '',
       continuityViaEmail: true,
       selectedInboxName: '',
       channelWebsiteUrl: '',
@@ -182,7 +183,12 @@ export default {
       );
     },
     demoUrl() {
-      return `${window.location.origin}/demo/${this.inbox.website_token}`;
+      const id = this.demoSlug.trim() || this.inbox.website_token;
+      return `${window.location.origin}/demo/${id}`;
+    },
+    isDemoSlugInvalid() {
+      const slug = this.demoSlug.trim();
+      return !!slug && !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug);
     },
     demoModeDescription() {
       const description = this.$t(
@@ -604,6 +610,7 @@ export default {
         this.inbox.allow_messages_after_resolved;
       this.continuityViaEmail = this.inbox.continuity_via_email;
       this.demoModeEnabled = this.inbox.demo_mode_enabled;
+      this.demoSlug = this.inbox.demo_slug || '';
       this.channelWebsiteUrl = this.inbox.website_url;
       this.channelWelcomeTitle = this.inbox.welcome_title;
       this.channelWelcomeTagline = this.inbox.welcome_tagline || '';
@@ -778,6 +785,7 @@ export default {
             continuity_via_email:
               this.isInboundEmailEnabled && this.continuityViaEmail,
             demo_mode_enabled: this.demoModeEnabled,
+            demo_slug: this.demoSlug.trim() || null,
           },
         };
         if (this.avatarFile) {
@@ -1527,6 +1535,24 @@ export default {
                 :header="$t('INBOX_MGMT.SETTINGS_POPUP.ENABLE_DEMO_MODE')"
                 :description="demoModeDescription"
               />
+
+              <SettingsFieldSection
+                v-if="isAWebWidgetInbox && demoModeEnabled"
+                :label="$t('INBOX_MGMT.SETTINGS_POPUP.DEMO_SLUG')"
+              >
+                <woot-input
+                  v-model="demoSlug"
+                  class="[&>input]:!mb-0"
+                  :placeholder="
+                    $t('INBOX_MGMT.SETTINGS_POPUP.DEMO_SLUG_PLACEHOLDER')
+                  "
+                  :error="
+                    isDemoSlugInvalid
+                      ? $t('INBOX_MGMT.SETTINGS_POPUP.DEMO_SLUG_ERROR')
+                      : ''
+                  "
+                />
+              </SettingsFieldSection>
 
               <SettingsToggleSection
                 v-if="isAWebWidgetInbox && showContinuityToggle"

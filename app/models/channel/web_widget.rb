@@ -7,6 +7,7 @@
 #  continuity_via_email  :boolean          default(TRUE), not null
 #  conversation_starters :jsonb            not null
 #  demo_mode_enabled     :boolean          default(FALSE), not null
+#  demo_slug             :string
 #  feature_flags         :integer          default(7), not null
 #  hmac_mandatory        :boolean          default(FALSE)
 #  hmac_token            :string
@@ -29,6 +30,7 @@
 #
 # Indexes
 #
+#  index_channel_web_widgets_on_demo_slug      (demo_slug) UNIQUE
 #  index_channel_web_widgets_on_hmac_token     (hmac_token) UNIQUE
 #  index_channel_web_widgets_on_website_token  (website_token) UNIQUE
 #
@@ -42,7 +44,7 @@ class Channel::WebWidget < ApplicationRecord
   self.table_name = 'channel_web_widgets'
   EDITABLE_ATTRS = [:website_url, :widget_color, :widget_text_color, :widget_icon_color, :widget_height, :widget_style,
                     :welcome_title, :welcome_tagline, :reply_time, :reply_time_message, :pre_chat_form_enabled,
-                    :continuity_via_email, :hmac_mandatory, :allowed_domains, :demo_mode_enabled,
+                    :continuity_via_email, :hmac_mandatory, :allowed_domains, :demo_mode_enabled, :demo_slug,
                     { conversation_starters: [:id, :title, :enabled] },
                     { pre_chat_form_options: [:pre_chat_message, :require_email,
                                               { pre_chat_fields:
@@ -54,6 +56,7 @@ class Channel::WebWidget < ApplicationRecord
   before_validation :normalize_conversation_starters
   before_validation :normalize_widget_colors
   before_validation :normalize_legacy_widget_style
+  before_validation :normalize_demo_slug
   validates :website_url, presence: true
   validates :widget_color, presence: true
   validates :widget_text_color, :widget_icon_color,
@@ -62,6 +65,14 @@ class Channel::WebWidget < ApplicationRecord
             numericality: { only_integer: true, greater_than_or_equal_to: 320, less_than_or_equal_to: 900 }
   validates :widget_style, inclusion: { in: %w[standard] }
   validates :reply_time_message, length: { maximum: 120 }, allow_blank: true
+  # The slug is the shareable part of the demo URL, so it is kept to a shape that survives being
+  # pasted into a chat or an email, and unique across the instance since the route is not scoped
+  # to an account.
+  validates :demo_slug,
+            format: { with: /\A[a-z0-9]+(?:-[a-z0-9]+)*\z/ },
+            length: { minimum: 2, maximum: 50 },
+            uniqueness: true,
+            allow_nil: true
   validate :validate_conversation_starters
   has_many :portals, foreign_key: 'channel_web_widget_id', dependent: :nullify, inverse_of: :channel_web_widget
 
@@ -123,6 +134,11 @@ class Channel::WebWidget < ApplicationRecord
 
   def normalize_legacy_widget_style
     self.widget_style = 'standard' if widget_style == 'flat'
+  end
+
+  # Blank is stored as nil so the unique index does not treat two empty slugs as a collision.
+  def normalize_demo_slug
+    self.demo_slug = demo_slug.to_s.strip.downcase.presence
   end
 
   def normalize_conversation_starters

@@ -12,13 +12,13 @@ class DemosController < ActionController::Base
 
   private
 
+  # The slug is what gets sent to a client; the website token keeps working so a demo can be
+  # shared the moment the switch is flipped, without having to name it first.
   def set_web_widget
-    @web_widget = ::Channel::WebWidget.find_by!(
-      website_token: params[:website_token],
-      demo_mode_enabled: true
-    )
+    demos = ::Channel::WebWidget.where(demo_mode_enabled: true)
+    @web_widget = demos.find_by(demo_slug: params[:id]) || demos.find_by(website_token: params[:id])
+    return head :not_found if @web_widget.blank?
+
     @inbox = @web_widget.inbox
-  rescue ActiveRecord::RecordNotFound
-    head :not_found
   end
 end

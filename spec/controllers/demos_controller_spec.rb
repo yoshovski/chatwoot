@@ -3,9 +3,18 @@ require 'rails_helper'
 describe '/demo', type: :request do
   let(:web_widget) { create(:channel_widget, demo_mode_enabled: true) }
 
-  describe 'GET /demo/:website_token' do
-    it 'renders the demo page when demo mode is enabled' do
+  describe 'GET /demo/:id' do
+    it 'renders the demo page for the website token when demo mode is enabled' do
       get "/demo/#{web_widget.website_token}"
+
+      expect(response).to be_successful
+      expect(response.body).to include(web_widget.website_token)
+    end
+
+    it 'renders the demo page for the demo slug' do
+      web_widget.update!(demo_slug: 'scanixx-storefront')
+
+      get '/demo/scanixx-storefront'
 
       expect(response).to be_successful
       expect(response.body).to include(web_widget.website_token)
