@@ -1,7 +1,7 @@
 <script>
 import { mapGetters } from 'vuex';
 import { useMessageFormatter } from 'shared/composables/useMessageFormatter';
-import ChatCard from 'shared/components/ChatCard.vue';
+import ChatCards from 'shared/components/ChatCards.vue';
 import ChatForm from 'shared/components/ChatForm.vue';
 import ChatOptions from 'shared/components/ChatOptions.vue';
 import ChatArticle from './template/Article.vue';
@@ -13,7 +13,7 @@ export default {
   name: 'AgentMessageBubble',
   components: {
     ChatArticle,
-    ChatCard,
+    ChatCards,
     ChatForm,
     ChatOptions,
     EmailInput,
@@ -148,19 +148,7 @@ export default {
     />
     <!-- Products arrive as one message carrying every card, so they read as a carousel rather
          than a column the visitor has to scroll the whole conversation past. -->
-    <div
-      v-if="isCards"
-      class="card-carousel flex items-stretch gap-2 overflow-x-auto snap-x snap-mandatory pb-2"
-    >
-      <ChatCard
-        v-for="item in messageContentAttributes.items"
-        :key="item.title"
-        :media-url="item.media_url"
-        :title="item.title"
-        :description="item.description"
-        :actions="item.actions"
-      />
-    </div>
+    <ChatCards v-if="isCards" :items="messageContentAttributes.items" />
     <div v-if="isArticle">
       <ChatArticle :items="messageContentAttributes.items" />
     </div>
@@ -173,17 +161,3 @@ export default {
     />
   </div>
 </template>
-
-<style scoped lang="scss">
-.card-carousel {
-  scrollbar-width: thin;
-
-  &::-webkit-scrollbar {
-    height: 0.375rem;
-  }
-
-  &::-webkit-scrollbar-thumb {
-    @apply rounded-full bg-n-slate-6;
-  }
-}
-</style>
