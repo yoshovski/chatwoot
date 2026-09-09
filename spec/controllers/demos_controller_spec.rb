@@ -33,5 +33,23 @@ describe '/demo', type: :request do
 
       expect(response).to have_http_status(:not_found)
     end
+
+    it 'shows the account name and takes the backdrop that contrasts with the widget colour' do
+      web_widget.account.update!(name: 'Scanixx')
+      web_widget.update!(widget_color: '#ffffff')
+
+      get "/demo/#{web_widget.website_token}"
+
+      expect(response.body).to include('Scanixx')
+      expect(response.body).to include('backdrop-dark')
+    end
+
+    it 'takes the light backdrop for a dark widget colour' do
+      web_widget.update!(widget_color: '#111827')
+
+      get "/demo/#{web_widget.website_token}"
+
+      expect(response.body).to include('backdrop-light')
+    end
   end
 end
