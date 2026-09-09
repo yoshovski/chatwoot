@@ -5,6 +5,7 @@ import { CSAT_RATINGS, CSAT_DISPLAY_TYPES } from 'shared/constants/messages';
 import FluentIcon from 'shared/components/FluentIcon/Index.vue';
 import StarRating from 'shared/components/StarRating.vue';
 import { useMessageFormatter } from 'shared/composables/useMessageFormatter';
+import { shouldOutlineWidgetButton } from 'shared/helpers/colorHelper';
 
 export default {
   components: {
@@ -48,6 +49,20 @@ export default {
       widgetColor: 'appConfig/getWidgetColor',
       widgetTextColor: 'appConfig/getWidgetTextColor',
     }),
+    isOutlined() {
+      return shouldOutlineWidgetButton(this.widgetColor);
+    },
+    buttonStyle() {
+      if (this.isOutlined) {
+        return undefined;
+      }
+
+      return {
+        background: this.widgetColor,
+        borderColor: this.widgetColor,
+        color: this.widgetTextColor,
+      };
+    },
     isRatingSubmitted() {
       return this.messageContentAttributes?.csat_survey_response?.rating;
     },
@@ -168,11 +183,8 @@ export default {
       <button
         class="button small"
         :disabled="isButtonDisabled"
-        :style="{
-          background: widgetColor,
-          borderColor: widgetColor,
-          color: widgetTextColor,
-        }"
+        :class="{ 'is-outlined': isOutlined }"
+        :style="buttonStyle"
       >
         <Spinner v-if="isUpdating && feedback" />
         <FluentIcon v-else icon="chevron-right" />
