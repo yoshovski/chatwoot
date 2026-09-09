@@ -117,7 +117,9 @@
 
     <script>
       window.chatwootSettings = {
-        hideMessageBubble: <%= @open_on_load %>,
+        // The launcher stays visible even though the widget opens by itself: closing it has to
+        // leave something to click, and the bubble is part of what the client is being shown.
+        hideMessageBubble: false,
         position: 'right',
         locale: 'en',
         useBrowserLanguage: true,

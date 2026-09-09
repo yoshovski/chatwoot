@@ -5,8 +5,8 @@ class DemosController < ActionController::Base
   before_action :set_web_widget
 
   def show
-    # `?open=false` leaves the widget closed and the bubble visible, which is how a campaign's
-    # proactive message and its reply suggestions get demoed.
+    # `?open=false` leaves the widget closed, which is how a campaign's proactive message and its
+    # reply suggestions get demoed.
     @open_on_load = params[:open] != 'false'
   end
 
