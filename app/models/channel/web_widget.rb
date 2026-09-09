@@ -6,6 +6,8 @@
 #  allowed_domains       :text             default("")
 #  continuity_via_email  :boolean          default(TRUE), not null
 #  conversation_starters :jsonb            not null
+#  demo_mode_enabled     :boolean          default(FALSE), not null
+#  demo_slug             :string
 #  feature_flags         :integer          default(7), not null
 #  hmac_mandatory        :boolean          default(FALSE)
 #  hmac_token            :string
@@ -28,6 +30,7 @@
 #
 # Indexes
 #
+#  index_channel_web_widgets_on_demo_slug      (demo_slug) UNIQUE
 #  index_channel_web_widgets_on_hmac_token     (hmac_token) UNIQUE
 #  index_channel_web_widgets_on_website_token  (website_token) UNIQUE
 #
@@ -41,7 +44,7 @@ class Channel::WebWidget < ApplicationRecord
   self.table_name = 'channel_web_widgets'
   EDITABLE_ATTRS = [:website_url, :widget_color, :widget_text_color, :widget_icon_color, :widget_height, :widget_style,
                     :welcome_title, :welcome_tagline, :reply_time, :reply_time_message, :pre_chat_form_enabled,
-                    :continuity_via_email, :hmac_mandatory, :allowed_domains,
+                    :continuity_via_email, :hmac_mandatory, :allowed_domains, :demo_mode_enabled, :demo_slug,
                     { conversation_starters: [:id, :title, :enabled] },
                     { pre_chat_form_options: [:pre_chat_message, :require_email,
                                               { pre_chat_fields:
@@ -53,6 +56,8 @@ class Channel::WebWidget < ApplicationRecord
   before_validation :normalize_conversation_starters
   before_validation :normalize_widget_colors
   before_validation :normalize_legacy_widget_style
+  before_validation :normalize_demo_slug
+  before_validation :ensure_demo_slug
   validates :website_url, presence: true
   validates :widget_color, presence: true
   validates :widget_text_color, :widget_icon_color,
@@ -61,6 +66,14 @@ class Channel::WebWidget < ApplicationRecord
             numericality: { only_integer: true, greater_than_or_equal_to: 320, less_than_or_equal_to: 900 }
   validates :widget_style, inclusion: { in: %w[standard] }
   validates :reply_time_message, length: { maximum: 120 }, allow_blank: true
+  # The slug is the shareable part of the demo URL, so it is kept to a shape that survives being
+  # pasted into a chat or an email, and unique across the instance since the route is not scoped
+  # to an account.
+  validates :demo_slug,
+            format: { with: /\A[a-z0-9]+(?:-[a-z0-9]+)*\z/ },
+            length: { minimum: 2, maximum: 50 },
+            uniqueness: true,
+            allow_nil: true
   validate :validate_conversation_starters
   has_many :portals, foreign_key: 'channel_web_widget_id', dependent: :nullify, inverse_of: :channel_web_widget
 
@@ -122,6 +135,41 @@ class Channel::WebWidget < ApplicationRecord
 
   def normalize_legacy_widget_style
     self.widget_style = 'standard' if widget_style == 'flat'
+  end
+
+  # Blank is stored as nil so the unique index does not treat two empty slugs as a collision.
+  def normalize_demo_slug
+    self.demo_slug = demo_slug.to_s.strip.downcase.presence
+  end
+
+  # Switching demo mode on should hand over a shareable link, not a naming task, so the slug is
+  # derived from the inbox name. It stays editable for anyone who wants to choose their own.
+  def ensure_demo_slug
+    return unless demo_mode_enabled?
+    return if demo_slug.present?
+
+    self.demo_slug = generate_demo_slug
+  end
+
+  # The link goes to the client, so it is built from the account name -- their own brand -- rather
+  # than from the inbox name, which is an internal label. A second demo for the same account falls
+  # back to the inbox name to tell the two apart.
+  def generate_demo_slug
+    base = account&.name.to_s.parameterize.first(40).presence || 'demo'
+    base = 'demo' if base.length < 2
+    inbox_part = inbox&.name.to_s.parameterize.first(40)
+
+    [base, "#{base}-#{inbox_part}"].each do |candidate|
+      return candidate if demo_slug_available?(candidate)
+    end
+
+    "#{base}-#{SecureRandom.alphanumeric(4).downcase}"
+  end
+
+  def demo_slug_available?(candidate)
+    return false if candidate.length < 2 || candidate.end_with?('-')
+
+    self.class.where(demo_slug: candidate).where.not(id: id).none?
   end
 
   def normalize_conversation_starters

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_09_08_180000) do
+ActiveRecord::Schema[7.1].define(version: 2026_09_09_130000) do
   # These extensions should be enabled to support this database
   enable_extension "pg_stat_statements"
   enable_extension "pg_trgm"
@@ -733,6 +733,9 @@ ActiveRecord::Schema[7.1].define(version: 2026_09_08_180000) do
     t.integer "widget_height", default: 640, null: false
     t.string "widget_style", default: "standard", null: false
     t.jsonb "conversation_starters", default: [], null: false
+    t.boolean "demo_mode_enabled", default: false, null: false
+    t.string "demo_slug"
+    t.index ["demo_slug"], name: "index_channel_web_widgets_on_demo_slug", unique: true
     t.index ["hmac_token"], name: "index_channel_web_widgets_on_hmac_token", unique: true
     t.index ["website_token"], name: "index_channel_web_widgets_on_website_token", unique: true
   end
