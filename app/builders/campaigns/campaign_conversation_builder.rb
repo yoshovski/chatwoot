@@ -18,9 +18,9 @@ class Campaigns::CampaignConversationBuilder
       raise 'Conversation already present' if @contact_inbox.reload.conversations.present?
 
       @conversation = ::Conversation.create!(conversation_params)
-      @message = Messages::MessageBuilder.new(@campaign.sender, @conversation, message_params).perform
+      Messages::MessageBuilder.new(@campaign.sender, @conversation, message_params).perform
     end
-    submit_selected_response
+    create_selected_response_message
     @conversation
   rescue StandardError => e
     Rails.logger.info(e.message)
@@ -34,26 +34,49 @@ class Campaigns::CampaignConversationBuilder
       content: @campaign.message,
       campaign_id: @campaign.id
     }
-    items = @campaign.suggested_responses.filter_map do |response|
-      values = response.with_indifferent_access
-      next if values[:enabled] == false || values[:title].blank?
-
-      { id: values[:id], title: values[:title], value: values[:title] }.compact
-    end
-    if items.present?
+    # The visitor already picked a suggestion in the campaign bubble, so it is sent as their reply
+    # below. Repeating the options here would invite them to answer the same question twice.
+    if selected_item.blank? && suggested_response_items.present?
       params[:content_type] = 'input_select'
-      params[:content_attributes] = { items: items }
+      params[:content_attributes] = { items: suggested_response_items }
     end
 
     ActionController::Parameters.new(params)
   end
 
-  def submit_selected_response
-    selected_title = selected_response&.with_indifferent_access&.[](:title)
-    return if selected_title.blank?
+  # ContentAttributeValidator only allows :title and :value on input_select items, so the
+  # campaign's own response id is deliberately dropped here.
+  def suggested_response_items
+    @suggested_response_items ||= @campaign.suggested_responses.filter_map do |response|
+      values = response.with_indifferent_access
+      next if values[:enabled] == false || values[:title].blank?
 
-    selected_item = @message.content_attributes['items']&.find { |item| item.with_indifferent_access[:title] == selected_title }
-    @message.update!(submitted_values: [selected_item]) if selected_item
+      { title: values[:title], value: values[:title] }
+    end
+  end
+
+  # The selection arrives from the public widget events endpoint, so it is only honoured when it
+  # matches one of the campaign's own suggestions.
+  def selected_item
+    return @selected_item if defined?(@selected_item)
+
+    title = selected_response.is_a?(Hash) ? selected_response.with_indifferent_access[:title].presence : nil
+    @selected_item = title && suggested_response_items.find { |item| item[:title] == title }
+  end
+
+  # The selection has to land as a real incoming message: that is what agents, agent bots and
+  # automations react to. Recording it on the campaign message alone would leave the conversation
+  # without a visitor reply and nothing would answer it.
+  def create_selected_response_message
+    return if selected_item.blank?
+
+    @conversation.messages.create!(
+      account_id: @conversation.account_id,
+      inbox_id: @conversation.inbox_id,
+      sender: @contact_inbox.contact,
+      message_type: :incoming,
+      content: selected_item[:title]
+    )
   end
 
   def conversation_params
