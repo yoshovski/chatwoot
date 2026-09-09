@@ -38,6 +38,13 @@ describe('agent identity rendering', () => {
           showAvatar: true,
         },
       },
+      // AgentMessage reads the conversation's last message to decide whether a message's reply
+      // choices are still live.
+      global: {
+        mocks: {
+          $store: { getters: { 'conversation/getLastMessage': {} } },
+        },
+      },
     });
     const agentName = wrapper.find('.agent-name');
 
