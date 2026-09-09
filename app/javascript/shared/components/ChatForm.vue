@@ -1,5 +1,6 @@
 <script>
 import { mapGetters } from 'vuex';
+import { shouldOutlineWidgetButton } from 'shared/helpers/colorHelper';
 
 export default {
   props: {
@@ -28,6 +29,20 @@ export default {
       widgetColor: 'appConfig/getWidgetColor',
       widgetTextColor: 'appConfig/getWidgetTextColor',
     }),
+    isOutlined() {
+      return shouldOutlineWidgetButton(this.widgetColor);
+    },
+    buttonStyle() {
+      if (this.isOutlined) {
+        return undefined;
+      }
+
+      return {
+        background: this.widgetColor,
+        borderColor: this.widgetColor,
+        color: this.widgetTextColor,
+      };
+    },
     isFormValid() {
       return this.items.reduce((acc, { name }) => {
         return !!this.formValues[name] && acc;
@@ -136,12 +151,9 @@ export default {
       <button
         v-if="!submittedValues.length"
         class="button block"
+        :class="{ 'is-outlined': isOutlined }"
         type="submit"
-        :style="{
-          background: widgetColor,
-          borderColor: widgetColor,
-          color: widgetTextColor,
-        }"
+        :style="buttonStyle"
         @click="onSubmitClick"
       >
         {{ buttonLabel || $t('COMPONENTS.FORM_BUBBLE.SUBMIT') }}

@@ -152,6 +152,18 @@ blockquote {
     @apply no-underline border-n-brand brightness-125;
   }
 
+  // A widget colour too light to fill a button leaves it invisible against the message bubble it
+  // sits on. Those installs get an outlined button, which also gives it a hover worth the name --
+  // brightness has nothing to work with on a near-white fill.
+  &.is-outlined {
+    @apply bg-n-background border-n-strong text-n-slate-12 transition-colors;
+
+    &:focus,
+    &:hover {
+      @apply bg-n-slate-3 border-n-slate-8 brightness-100;
+    }
+  }
+
   &[disabled],
   &:disabled,
   &.disabled {

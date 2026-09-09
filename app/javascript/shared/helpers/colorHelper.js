@@ -19,6 +19,12 @@ export const isWidgetColorLighter = color => {
 export const getWidgetForegroundColor = color =>
   isWidgetColorLighter(color) ? '#37546d' : '#FFFFFF';
 
+// Buttons inside message bubbles are filled with the widget colour. When that colour is this
+// light it disappears into the near-white bubble behind it, leaving what looks like bare text,
+// so those installs get an outlined button instead.
+export const shouldOutlineWidgetButton = color =>
+  !color || isWidgetColorLighter(color);
+
 export const adjustColorForContrast = (color, backgroundColor) => {
   const targetRatio = 3.1;
   const MAX_ITERATIONS = 20;
