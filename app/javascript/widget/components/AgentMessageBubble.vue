@@ -132,7 +132,12 @@ export default {
       :submitted-values="messageContentAttributes.submitted_values"
       @submit="onFormSubmit"
     />
-    <div v-if="isCards">
+    <!-- Products arrive as one message carrying every card, so they read as a carousel rather
+         than a column the visitor has to scroll the whole conversation past. -->
+    <div
+      v-if="isCards"
+      class="card-carousel flex items-stretch gap-2 overflow-x-auto snap-x snap-mandatory pb-2"
+    >
       <ChatCard
         v-for="item in messageContentAttributes.items"
         :key="item.title"
@@ -154,3 +159,17 @@ export default {
     />
   </div>
 </template>
+
+<style scoped lang="scss">
+.card-carousel {
+  scrollbar-width: thin;
+
+  &::-webkit-scrollbar {
+    height: 0.375rem;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    @apply rounded-full bg-n-slate-6;
+  }
+}
+</style>
