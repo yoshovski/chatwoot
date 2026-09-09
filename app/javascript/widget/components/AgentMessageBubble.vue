@@ -1,5 +1,4 @@
 <script>
-import { mapGetters } from 'vuex';
 import { useMessageFormatter } from 'shared/composables/useMessageFormatter';
 import ChatCards from 'shared/components/ChatCards.vue';
 import ChatForm from 'shared/components/ChatForm.vue';
@@ -31,6 +30,7 @@ export default {
     },
     agentName: { type: String, default: '' },
     showAgentName: { type: Boolean, default: false },
+    hideOptions: { type: Boolean, default: false },
   },
   setup() {
     const { formatMessage, getPlainText, truncateMessage, highlightContent } =
@@ -43,19 +43,6 @@ export default {
     };
   },
   computed: {
-    ...mapGetters({ lastMessage: 'conversation/getLastMessage' }),
-    // Choices are an invitation to answer the newest question. Once anything has been said since,
-    // they are stale, and a history scrolled back through with a dozen live-looking chip sets in
-    // it is worse than no chips at all.
-    isLatestMessage() {
-      return this.lastMessage?.id === this.messageId;
-    },
-    hideOptions() {
-      return (
-        !!this.messageContentAttributes.submitted_values ||
-        !this.isLatestMessage
-      );
-    },
     isTemplate() {
       return this.messageType === 3;
     },

@@ -1,4 +1,5 @@
 <script>
+import { mapGetters } from 'vuex';
 import UserMessage from 'widget/components/UserMessage.vue';
 import AgentMessageBubble from 'widget/components/AgentMessageBubble.vue';
 import MessageReplyButton from 'widget/components/MessageReplyButton.vue';
@@ -66,6 +67,18 @@ export default {
     contentType() {
       const { content_type: type = '' } = this.message;
       return type;
+    },
+    ...mapGetters({ lastMessage: 'conversation/getLastMessage' }),
+    isLatestMessage() {
+      return this.lastMessage?.id === this.message.id;
+    },
+    // Choices answer the newest question, so they go once anything has been said since. A message
+    // whose choices are gone is an ordinary message and gets the reply control like any other.
+    hideOptions() {
+      return (
+        !!this.messageContentAttributes?.submitted_values ||
+        !this.isLatestMessage
+      );
     },
     isOptions() {
       return this.contentType === 'input_select';
@@ -212,6 +225,7 @@ export default {
               :message-type="messageType"
               :message="message.content"
               :agent-name="agentName"
+              :hide-options="hideOptions"
               :show-agent-name="
                 isOptions &&
                 !isCampaignMessage &&
@@ -255,7 +269,7 @@ export default {
           </div>
           <div class="flex flex-col justify-end">
             <MessageReplyButton
-              v-if="!isOptions"
+              v-if="!isOptions || hideOptions"
               class="transition-opacity delay-75 opacity-0 group-hover:opacity-100 sm:opacity-0"
               @click="toggleReply"
             />
