@@ -151,12 +151,25 @@ class Channel::WebWidget < ApplicationRecord
     self.demo_slug = generate_demo_slug
   end
 
+  # The link goes to the client, so it is built from the account name -- their own brand -- rather
+  # than from the inbox name, which is an internal label. A second demo for the same account falls
+  # back to the inbox name to tell the two apart.
   def generate_demo_slug
-    base = inbox&.name.to_s.parameterize.first(40)
+    base = account&.name.to_s.parameterize.first(40).presence || 'demo'
     base = 'demo' if base.length < 2
-    return base if self.class.where(demo_slug: base).where.not(id: id).none?
+    inbox_part = inbox&.name.to_s.parameterize.first(40)
+
+    [base, "#{base}-#{inbox_part}"].each do |candidate|
+      return candidate if demo_slug_available?(candidate)
+    end
 
     "#{base}-#{SecureRandom.alphanumeric(4).downcase}"
+  end
+
+  def demo_slug_available?(candidate)
+    return false if candidate.length < 2 || candidate.end_with?('-')
+
+    self.class.where(demo_slug: candidate).where.not(id: id).none?
   end
 
   def normalize_conversation_starters
