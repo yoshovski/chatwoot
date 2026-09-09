@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title><%= @inbox.name %></title>
+    <%# widget_color is only validated for presence, and this page is public, so it is only let
+        into the stylesheet when it really is a hex colour. %>
+    <% accent = @web_widget.widget_color.to_s[/\A#(?:[0-9a-f]{3}|[0-9a-f]{6})\z/i] || '#3b82f6' %>
+    <style>
+      :root {
+        --accent: <%= accent %>;
+        --ground: #0f1218;
+        --ground-2: #161b24;
+        --ink: #f2f5fa;
+        --ink-muted: #98a2b6;
+      }
+
+      * { box-sizing: border-box; }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background: var(--ground);
+        color: var(--ink);
+        font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 48px 24px;
+        overflow: hidden;
+      }
+
+      /* The accent is the inbox's own widget colour, which may be anything including white --
+         so it is spent on a soft glow over a dark ground rather than on text or fills. */
+      body::before {
+        content: "";
+        position: fixed;
+        inset: -20% -20% auto -20%;
+        height: 70vh;
+        background: radial-gradient(60% 60% at 50% 0%, var(--accent), transparent 70%);
+        opacity: 0.16;
+        pointer-events: none;
+      }
+
+      body::after {
+        content: "";
+        position: fixed;
+        inset: 0;
+        background:
+          linear-gradient(180deg, transparent 40%, var(--ground) 100%),
+          repeating-linear-gradient(90deg, rgba(255,255,255,0.03) 0 1px, transparent 1px 72px),
+          repeating-linear-gradient(0deg, rgba(255,255,255,0.03) 0 1px, transparent 1px 72px);
+        pointer-events: none;
+      }
+
+      .stage {
+        position: relative;
+        z-index: 1;
+        text-align: center;
+        max-width: 34rem;
+      }
+
+      .avatar {
+        width: 56px;
+        height: 56px;
+        border-radius: 50%;
+        object-fit: cover;
+        background: var(--ground-2);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+      }
+
+      h1 {
+        font-size: 1.75rem;
+        font-weight: 600;
+        letter-spacing: -0.02em;
+        margin: 20px 0 8px;
+        text-wrap: balance;
+      }
+
+      p {
+        margin: 0;
+        color: var(--ink-muted);
+        line-height: 1.6;
+      }
+
+      /* On desktop the widget is lifted out of its corner and centred on the backdrop. The
+         specificity clears sdk.css's own !important rules; the hidden state is left alone so the
+         widget can still animate away if it is closed. */
+      @media only screen and (min-width: 667px) {
+        body .woot-widget-holder.woot-elements--right:not(.woot--hide),
+        body .woot-widget-holder.woot-elements--left:not(.woot--hide) {
+          top: 50% !important;
+          bottom: auto !important;
+          left: 50% !important;
+          right: auto !important;
+          transform: translate(-50%, -50%) !important;
+          border-radius: 16px;
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        * { transition-duration: 1ms !important; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="stage">
+      <% if @inbox.try(:avatar_url).present? %>
+        <img class="avatar" src="<%= @inbox.avatar_url %>" alt="" />
+      <% end %>
+      <h1><%= @inbox.name %></h1>
+      <p>Ask anything you would ask the team — product questions, availability, pricing, orders.</p>
+    </div>
+
+    <script>
+      window.chatwootSettings = {
+        hideMessageBubble: <%= @open_on_load %>,
+        position: 'right',
+        locale: 'en',
+        useBrowserLanguage: true,
+      };
+
+      (function (d, t) {
+        var BASE_URL = '';
+        var g = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+        g.src = BASE_URL + '/packs/js/sdk.js';
+        g.async = true;
+        s.parentNode.insertBefore(g, s);
+        g.onload = function () {
+          window.chatwootSDK.run({
+            websiteToken: '<%= j @web_widget.website_token %>',
+            baseUrl: BASE_URL,
+          });
+        };
+      })(document, 'script');
+
+      window.addEventListener('chatwoot:ready', function () {
+        if (<%= @open_on_load %>) {
+          window.$chatwoot.toggle('open');
+        }
+      });
+    </script>
+  </body>
+</html>

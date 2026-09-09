@@ -32,6 +32,7 @@ Rails.application.routes.draw do
     get '/app/accounts/:account_id/onboarding/inbox-setup', to: 'dashboard#index', as: 'app_onboarding_inbox_setup'
 
     resource :widget, only: [:show]
+    get '/demo/:website_token', to: 'demos#show', as: :inbox_demo
     namespace :survey do
       resources :responses, only: [:show]
     end

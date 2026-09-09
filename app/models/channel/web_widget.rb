@@ -6,6 +6,7 @@
 #  allowed_domains       :text             default("")
 #  continuity_via_email  :boolean          default(TRUE), not null
 #  conversation_starters :jsonb            not null
+#  demo_mode_enabled     :boolean          default(FALSE), not null
 #  feature_flags         :integer          default(7), not null
 #  hmac_mandatory        :boolean          default(FALSE)
 #  hmac_token            :string
@@ -41,7 +42,7 @@ class Channel::WebWidget < ApplicationRecord
   self.table_name = 'channel_web_widgets'
   EDITABLE_ATTRS = [:website_url, :widget_color, :widget_text_color, :widget_icon_color, :widget_height, :widget_style,
                     :welcome_title, :welcome_tagline, :reply_time, :reply_time_message, :pre_chat_form_enabled,
-                    :continuity_via_email, :hmac_mandatory, :allowed_domains,
+                    :continuity_via_email, :hmac_mandatory, :allowed_domains, :demo_mode_enabled,
                     { conversation_starters: [:id, :title, :enabled] },
                     { pre_chat_form_options: [:pre_chat_message, :require_email,
                                               { pre_chat_fields:

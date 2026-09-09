@@ -120,6 +120,7 @@ export default {
       businessName: '',
       locktoSingleConversation: false,
       allowMessagesAfterResolved: true,
+      demoModeEnabled: false,
       continuityViaEmail: true,
       selectedInboxName: '',
       channelWebsiteUrl: '',
@@ -179,6 +180,17 @@ export default {
       return this.$t(
         'INBOX_MGMT.SETTINGS_POPUP.ENABLE_CONTINUITY_VIA_EMAIL_SUB_TEXT'
       );
+    },
+    demoUrl() {
+      return `${window.location.origin}/demo/${this.inbox.website_token}`;
+    },
+    demoModeDescription() {
+      const description = this.$t(
+        'INBOX_MGMT.SETTINGS_POPUP.ENABLE_DEMO_MODE_SUB_TEXT'
+      );
+      return this.demoModeEnabled
+        ? `${description} ${this.demoUrl}`
+        : description;
     },
     selectedTabKey() {
       return this.tabs[this.selectedTabIndex]?.key;
@@ -591,6 +603,7 @@ export default {
       this.allowMessagesAfterResolved =
         this.inbox.allow_messages_after_resolved;
       this.continuityViaEmail = this.inbox.continuity_via_email;
+      this.demoModeEnabled = this.inbox.demo_mode_enabled;
       this.channelWebsiteUrl = this.inbox.website_url;
       this.channelWelcomeTitle = this.inbox.welcome_title;
       this.channelWelcomeTagline = this.inbox.welcome_tagline || '';
@@ -764,6 +777,7 @@ export default {
             reply_time_message: this.replyTimeMessage?.trim() || '',
             continuity_via_email:
               this.isInboundEmailEnabled && this.continuityViaEmail,
+            demo_mode_enabled: this.demoModeEnabled,
           },
         };
         if (this.avatarFile) {
@@ -1505,6 +1519,13 @@ export default {
                     'INBOX_MGMT.SETTINGS_POPUP.ALLOW_MESSAGES_AFTER_RESOLVED_SUB_TEXT'
                   )
                 "
+              />
+
+              <SettingsToggleSection
+                v-if="isAWebWidgetInbox"
+                v-model="demoModeEnabled"
+                :header="$t('INBOX_MGMT.SETTINGS_POPUP.ENABLE_DEMO_MODE')"
+                :description="demoModeDescription"
               />
 
               <SettingsToggleSection
