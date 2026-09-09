@@ -195,9 +195,9 @@ export default {
         <div v-if="hasReplyTo" class="flex mt-2 mb-1 text-xs">
           <ReplyToChip :reply-to="replyTo" />
         </div>
-        <div class="flex w-full gap-1">
+        <div class="flex w-full gap-1 min-w-0">
           <div
-            class="space-y-2"
+            class="space-y-2 min-w-0"
             :class="{
               'w-full':
                 contentType === 'form' &&

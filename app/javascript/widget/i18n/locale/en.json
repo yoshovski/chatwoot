@@ -10,6 +10,10 @@
     "MESSAGE_BUBBLE": {
       "RETRY": "Send message again",
       "ERROR_MESSAGE": "Couldn't send, try again"
+    },
+    "CARD_CAROUSEL": {
+      "PREVIOUS": "Previous products",
+      "NEXT": "More products"
     }
   },
   "THUMBNAIL": {
