@@ -17,6 +17,17 @@
     .message-wrap {
       @apply flex-grow flex-shrink-0 ltr:ml-2 rtl:mr-2 max-w-[90%];
     }
+
+    // A carousel is a rail, not a bubble. Held to the bubble's width it cuts the next card in
+    // half, which reads as a clipped layout rather than as something to scroll, so it runs to
+    // the edge of the conversation instead.
+    &.has-carousel {
+      @apply max-w-full;
+
+      .message-wrap {
+        @apply max-w-full;
+      }
+    }
   }
 
   &.is-typing .messages-wrap div:last-child {

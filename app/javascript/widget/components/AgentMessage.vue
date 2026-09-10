@@ -83,6 +83,9 @@ export default {
     isOptions() {
       return this.contentType === 'input_select';
     },
+    isCards() {
+      return this.contentType === 'cards';
+    },
     isCampaignMessage() {
       return !!this.message.campaign_id;
     },
@@ -190,7 +193,11 @@ export default {
       'has-response': hasRecordedResponse || isASubmittedForm,
     }"
   >
-    <div v-if="!isASubmittedForm" class="agent-message">
+    <div
+      v-if="!isASubmittedForm"
+      class="agent-message"
+      :class="{ 'has-carousel': isCards }"
+    >
       <div class="avatar-wrap" :class="{ '!self-start !mt-4': isOptions }">
         <div class="user-thumbnail-box" :class="{ '!mt-0': isOptions }">
           <Avatar
