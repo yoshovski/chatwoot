@@ -28,7 +28,9 @@
       <link class="favicon" rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
       <link rel="manifest" href="/manifest.json">
     <% end %>
-    <link rel="icon" type="image/png" sizes="512x512" href="<%= @global_config['LOGO_THUMBNAIL'] %>">
+<%# No type attribute: the thumbnail can be a PNG or an SVG, and declaring the wrong one makes
+    a nosniff response unusable as an icon. The browser takes the type from the response. %>
+    <link rel="icon" sizes="512x512" href="<%= @global_config['LOGO_THUMBNAIL'] %>">
     <%= csrf_meta_tags %>
     <script>
       window.chatwootConfig = {
