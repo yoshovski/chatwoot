@@ -1,7 +1,7 @@
 # #
 # # This action will publish Chatwoot EE docker image.
-# # This is set to run against merges to develop, master
-# # and when tags are created.
+# # Publish on master updates, version tags, or manual dispatch.
+# # Develop merges run CI; publish a version tag when an image is needed.
 # #
 
 name: Publish Chatwoot EE docker images
@@ -9,7 +9,6 @@ name: Publish Chatwoot EE docker images
 on:
   push:
     branches:
-      - develop
       - master
     tags:
       - v*
