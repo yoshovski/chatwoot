@@ -23,6 +23,8 @@ def lab_users(account_id)
   end
 end
 
+# The complete request sequence must share one rollback transaction.
+# rubocop:disable Metrics/BlockLength
 ActiveRecord::Base.transaction do
   ids = %w[CWAI_VALIDATION_ACCOUNT_A CWAI_VALIDATION_ACCOUNT_B].map { |key| Integer(ENV.fetch(key)) }
   accounts = ids.map { |id| Account.create!(id: id, name: 'Synthetic CWAI validation', locale: 'en') }
@@ -52,8 +54,35 @@ ActiveRecord::Base.transaction do
   validator.request(:patch, "#{prefix}/entries/#{entry['id']}/state", users[0], 200, { enabled: false })
   bot = AgentBot.create!(account: accounts.last, name: 'Other account bot', outgoing_url: 'https://example.test')
   validator.request(:post, "#{prefix}/agents", users[0], 404, { chatwoot_agent_bot_id: bot.id })
+  own_bot = AgentBot.create!(account: accounts.first, name: 'Own lab bot', outgoing_url: 'https://example.test')
+  available = validator.request(:get, "#{prefix}/agents", users[1], 200)
+  raise 'Bot list leaked foreign bots or credentials' unless available == [{ 'id' => own_bot.id, 'name' => own_bot.name }]
+
+  agent = validator.request(:post, "#{prefix}/agents", users[0], 201, { chatwoot_agent_bot_id: own_bot.id })
+  validator.request(:put, "#{prefix}/agents/#{agent['id']}/bases/#{base['id']}", users[0], 204)
+  attached = validator.request(:get, "#{prefix}/bases/#{base['id']}/agents", users[1], 200)
+  raise 'Agent attachment failed' unless attached.first['id'] == agent['id']
+
+  csv_path = "#{prefix}/bases/#{base['id']}/csv"
+  csv = "question,answer\nCSV?,Exact from Rails\n"
+  preview = validator.request(:post, "#{csv_path}/preview", users[1], 200, { csv: csv })
+  raise 'Member cannot preview CSV' unless preview['valid']
+
+  validator.request(:post, "#{csv_path}/import", users[1], 401, { csv: csv })
+  imported = validator.request(:post, "#{csv_path}/import", users[0], 200, { csv: csv })
+  raise 'CSV import failed' unless imported['created'] == 1
+
+  validator.request(:get, csv_path, users[1], 200)
+  raise 'CSV download MIME failed' unless session.response.media_type == 'text/csv'
+  raise 'CSV download text failed' unless session.response.body.include?('Exact from Rails')
+
+  validator.request(:get, "#{prefix}/bases/#{base['id']}/export", users[1], 200)
+  raise 'ZIP download failed' unless session.response.media_type == 'application/zip' && session.response.body.start_with?('PK')
+
   accounts.first.disable_features!('native_ai_knowledge')
   validator.request(:get, "#{prefix}/bases", users[0], 401)
   puts 'PASS: Rails membership, role, feature flag, bot ownership, parameter rejection and signed service proxy'
   raise ActiveRecord::Rollback
 end
+
+# rubocop:enable Metrics/BlockLength

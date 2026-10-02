@@ -2,7 +2,8 @@ class Api::V1::Accounts::AiAgents::KnowledgeController < Api::V1::Accounts::Base
   wrap_parameters false
 
   UUID_PATTERN = /\A[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\z/i
-  READ_ACTIONS = %w[index show entries sources entry_revisions source_revisions agent_bases jobs retrieve validate_citations original].freeze
+  READ_ACTIONS = %w[index show entries sources entry_revisions source_revisions agent_bases jobs retrieve validate_citations original preview_csv
+                    export_csv export_archive available_agents base_agents].freeze
   ENTRY_FIELDS = %w[question answer source_id source_revision_id provenance review_state].freeze
   SOURCE_FIELDS = %w[name text source_url provenance original_base64 filename media_type].freeze
   PAYLOAD_FIELDS = {
@@ -10,7 +11,7 @@ class Api::V1::Accounts::AiAgents::KnowledgeController < Api::V1::Accounts::Base
     'edit_entry' => ENTRY_FIELDS + %w[expected_version], 'create_source' => SOURCE_FIELDS,
     'edit_source' => SOURCE_FIELDS + %w[expected_version], 'entry_state' => %w[enabled],
     'source_state' => %w[enabled], 'review_entry' => %w[review_state], 'retrieve' => %w[query top_k],
-    'validate_citations' => %w[binding_ids], 'ensure_agent' => %w[chatwoot_agent_bot_id]
+    'preview_csv' => %w[csv], 'import_csv' => %w[csv], 'validate_citations' => %w[binding_ids], 'ensure_agent' => %w[chatwoot_agent_bot_id]
   }.freeze
 
   before_action :authorize_knowledge
@@ -123,6 +124,30 @@ class Api::V1::Accounts::AiAgents::KnowledgeController < Api::V1::Accounts::Base
     forward(:post, "/bases/#{params[:base_id]}/citations/validate")
   end
 
+  def available_agents
+    render json: Current.account.agent_bots.select(:id, :name).map { |bot| { id: bot.id, name: bot.name } }
+  end
+
+  def base_agents
+    forward(:get, "/bases/#{params[:base_id]}/agents")
+  end
+
+  def preview_csv
+    forward(:post, "/bases/#{params[:base_id]}/csv/preview")
+  end
+
+  def import_csv
+    forward(:post, "/bases/#{params[:base_id]}/csv/import")
+  end
+
+  def export_csv
+    forward(:get, "/bases/#{params[:base_id]}/csv")
+  end
+
+  def export_archive
+    forward(:get, "/bases/#{params[:base_id]}/export")
+  end
+
   private
 
   def authorize_knowledge
@@ -159,8 +184,11 @@ class Api::V1::Accounts::AiAgents::KnowledgeController < Api::V1::Accounts::Base
     )
     if response.code == 204
       head :no_content
-    elsif action_name == 'original' && response.code == 200
-      send_data response.body, type: 'application/octet-stream', disposition: 'attachment'
+    elsif %w[original export_csv export_archive].include?(action_name) && response.code == 200
+      type, filename = { 'original' => ['application/octet-stream', 'original.bin'],
+                         'export_csv' => ['text/csv; charset=utf-8', 'faqs.csv'],
+                         'export_archive' => ['application/zip', 'knowledge.zip'] }.fetch(action_name)
+      send_data response.body, type: type, filename: filename, disposition: 'attachment'
     else
       render json: response.parsed_response, status: response.code
     end

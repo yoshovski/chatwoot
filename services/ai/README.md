@@ -56,7 +56,9 @@ The service API is `/v1/knowledge`; its authenticated schemas are visible in
 `/docs`. It supports base creation/state, attachments, source/entry revisions,
 optimistic edits (`expected_version`), review/state changes, rebuild, job status and
 retry, retrieval and citation validation. The service is private infrastructure;
-expose the Rails proxy to users. CWAI-3 adds native FAQ screens and CSV import/export.
+expose the Rails proxy to users. The native Knowledge library lives at
+`/app/accounts/:account_id/knowledge`, independently of Captain and edition.
+Its sidebar and API remain hidden/denied unless `native_ai_knowledge` is enabled.
 
 ## Isolated lab setup
 
@@ -126,3 +128,43 @@ rollback: stop API/workers and restore the previous database and original-files
 snapshot together when reverting a schema. Rebuilding Dify never changes the
 canonical backups. A previous service image can use the unchanged initial schema;
 the published Chatwoot v1 tag is not rewritten or replaced by this work.
+
+## Native library and portability (CWAI-3)
+
+Administrators create/rename/disable bases, add/edit/review/disable manual FAQs,
+maintain source text and original files, and reuse bases across account-owned
+agents. Members can browse, inspect immutable history, preview CSV and download
+exports/originals. Disable takes effect at the canonical retrieval gate immediately;
+indexing remains asynchronous. Failed indexing can be rebuilt from the base screen.
+Source uploads retain original bytes; text extraction is a later phase. The library
+never enumerates or imports integration-owned Shopify catalog indexes.
+
+CSV endpoints under `/bases/{base_id}` are `POST csv/preview` (read scope),
+`POST csv/import` (write scope), and `GET csv`. Upload JSON is `{ "csv": "..." }`.
+UTF-8 (optional BOM), RFC-style quoted fields, exact multiline text and whitespace
+are supported. Required columns: `question,answer`. Optional columns:
+`id,version,enabled,review_state,source_id,source_revision_id,provenance`.
+No unknown/duplicate headers or extra columns are accepted. Limits: 1,000 records
+and 5 MiB per import; each question/answer is 1–100,000 characters. Preview never
+writes. Import revalidates all rows inside one base-locked transaction; any invalid
+row rejects the entire import. IDs cannot refer to another account/base. Existing
+IDs require the current exported version; unchanged rows create no revisions/jobs.
+New UUIDs and exported versions are retained. Boolean values are exactly
+`true`/`false`; review values are `approved`/`draft`; provenance is a JSON object.
+Source ID and immutable source revision must both belong to this base. Omitted
+state/provenance columns use documented create defaults (enabled, approved, `{}`),
+so use the complete exported header when editing existing records. Large exports
+can be partitioned into import batches retaining the header. Treat canonical CSV
+as text when opening in spreadsheets to preserve wording and avoid formula coercion.
+
+`GET /bases/{base_id}/export` downloads a ZIP containing `manifest.json`,
+`faqs.csv`, and deduplicated `originals/{source_id}/{sha256}.bin` files. Manifest
+schema version 1 contains base metadata, all entries/sources and immutable revision
+history (including actor, provenance, exact text, original filenames/media types
+and checksums). Original paths inside the archive are generated, never user paths.
+It excludes tenant bindings, filesystem storage keys, signing/Dify credentials,
+remote dataset/document/segment mappings and indexing jobs. User-authored provenance
+is preserved as supplied. Export takes a consistent base-locked snapshot and is
+bounded to 100 MiB of uncompressed canonical data/originals. ZIP restoration is not
+an API in this phase; CSV supports FAQ exchange, while the ZIP preserves the full
+canonical content for future restore/migration tooling.

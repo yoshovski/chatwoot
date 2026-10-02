@@ -5,11 +5,16 @@ new service-owned datasets and synthetic records. No existing dataset is importe
 """
 
 import base64
+import csv
+import io
+import json
 import os
 import subprocess
 import sys
 import time
+import zipfile
 from datetime import UTC, datetime
+from uuid import uuid4
 
 import httpx
 import jwt
@@ -78,7 +83,8 @@ def request(method, path, body=None, account=account_a, expected=200, action=Non
     if action is None:
         action = (
             "knowledge:read"
-            if method == "GET" or path.endswith(("/retrieve", "/citations/validate"))
+            if method == "GET"
+            or path.endswith(("/retrieve", "/citations/validate", "/csv/preview"))
             else "knowledge:write"
         )
     result = client.request(
@@ -403,6 +409,136 @@ assert request("POST", f"/bases/{bid}/retrieve", {"query": question})["records"]
 request("PATCH", f"/bases/{bid}", {"enabled": True})
 drain()
 check("base disable/re-enable and original records survive all indexing operations")
+# CWAI-3 portability works from canonical rows, independent of remote indexing.
+exact = request(
+    "POST",
+    f"/bases/{bid}/entries",
+    {
+        "question": "  CSV naïve?\nsecond line  ",
+        "answer": '=exact,"answer"\r\n with spaces  ',
+        "review_state": "draft",
+        "provenance": {"origin": "csv-lab", "page": 7},
+    },
+    expected=201,
+)
+request("PATCH", f"/entries/{exact['id']}/state", {"enabled": False})
+snapshot = request("GET", f"/bases/{bid}/entries")
+headers = {"Authorization": "Bearer " + token()}
+exported = client.get(PREFIX + f"/bases/{bid}/csv", headers=headers)
+assert exported.status_code == 200 and exported.headers["content-type"].startswith("text/csv")
+rows = list(csv.DictReader(io.StringIO(exported.text, newline="")))
+row = next(row for row in rows if row["id"] == exact["id"])
+assert (
+    row["question"] == exact["revision"]["question"]
+    and row["answer"] == exact["revision"]["answer"]
+)
+assert row["enabled"] == "false" and row["review_state"] == "draft"
+previewed = request(
+    "POST", f"/bases/{bid}/csv/preview", {"csv": exported.text}, action="knowledge:read"
+)
+assert previewed["valid"] and len(previewed["rows"]) == len(snapshot)
+counts = request("POST", f"/bases/{bid}/csv/import", {"csv": exported.text})
+assert counts == {"created": 0, "updated": 0, "unchanged": len(snapshot)}
+assert request("GET", f"/bases/{bid}/entries") == snapshot
+check("CSV round-trip preserves exact wording, IDs, versions and state")
+
+bad_csv = "question,answer,enabled\nGood?,Good,true\nBad?,Bad,yes\n"
+assert not request("POST", f"/bases/{bid}/csv/preview", {"csv": bad_csv}, action="knowledge:read")[
+    "valid"
+]
+request("POST", f"/bases/{bid}/csv/import", {"csv": bad_csv}, expected=422)
+request("POST", f"/bases/{bid}/csv/import", {"csv": exported.text}, account=account_b, expected=404)
+assert request("GET", f"/bases/{bid}/entries") == snapshot
+other = request("POST", "/bases", {"name": "CSV isolation"}, account=account_b, expected=201)
+assert not request(
+    "POST", f"/bases/{other['id']}/csv/preview", {"csv": exported.text}, account=account_b
+)["valid"]
+request(
+    "POST",
+    f"/bases/{other['id']}/csv/import",
+    {"csv": exported.text},
+    account=account_b,
+    expected=422,
+)
+request(
+    "POST",
+    f"/bases/{bid}/csv/preview",
+    {"csv": "question,answer,tenant_id\nQ,A,other"},
+    expected=422,
+)
+request(
+    "POST", f"/bases/{bid}/csv/preview", {"csv": "question,question,answer\nQ,Q,A"}, expected=422
+)
+request(
+    "POST",
+    f"/bases/{bid}/csv/import",
+    {"csv": "question,answer\nQ,A"},
+    expected=403,
+    action="knowledge:read",
+)
+check("CSV preview is read-only; invalid and unauthorized imports never write partial rows")
+
+# New explicit IDs are retained. Stale revisions invalidate the entire import.
+new_id = str(uuid4())
+new_csv = (
+    f"id,version,question,answer,enabled,review_state\n{new_id},3,Imported?,Exact,false,draft\n"
+)
+request("POST", f"/bases/{bid}/csv/import", {"csv": new_csv})
+created = next(row for row in request("GET", f"/bases/{bid}/entries") if row["id"] == new_id)
+assert created["version"] == 3 and not created["enabled"] and created["review_state"] == "draft"
+request(
+    "PUT", f"/entries/{new_id}", {"question": "Edited?", "answer": "New", "expected_version": 3}
+)
+request("POST", f"/bases/{bid}/csv/import", {"csv": new_csv}, expected=422)
+check("CSV creates portable IDs and rejects stale exported versions")
+
+archive_response = client.get(PREFIX + f"/bases/{bid}/export", headers=headers)
+assert (
+    archive_response.status_code == 200
+    and archive_response.headers["content-type"] == "application/zip"
+)
+with zipfile.ZipFile(io.BytesIO(archive_response.content)) as archive:
+    manifest = json.loads(archive.read("manifest.json"))
+    assert manifest["schema_version"] == 1 and manifest["base"]["id"] == bid
+    source_revs = [r for r in manifest["source_revisions"] if r["parent_id"] == sid]
+    assert len(source_revs) == 2
+    assert all(
+        archive.read(r["original_file"]) == b"Synthetic original\x00\xff\n" for r in source_revs
+    )
+    assert any(
+        r["provenance"] == {"origin": "csv-lab", "page": 7} for r in manifest["entry_revisions"]
+    )
+    assert archive.read("faqs.csv").decode("utf-8").startswith("id,version,question,answer")
+    forbidden = {
+        "tenant_id",
+        "credential_ref",
+        "original_key",
+        "dataset_id",
+        "document_id",
+        "batch_id",
+        "segment_ids",
+        "projection_id",
+        "epoch",
+    }
+
+    def check_keys(value):
+        if isinstance(value, dict):
+            assert not forbidden.intersection(value)
+            for child in value.values():
+                check_keys(child)
+        elif isinstance(value, list):
+            for child in value:
+                check_keys(child)
+
+    check_keys(manifest)
+summary = request("GET", f"/bases/{bid}")
+assert (
+    summary["faq_count"] == len(request("GET", f"/bases/{bid}/entries"))
+    and summary["source_count"] == 1
+)
+assert summary["index_status"] in {"ready", "processing"}
+check("portable ZIP preserves provenance and originals without private paths or remote mappings")
+
 print(
     f"ACCEPTANCE {mode}: {len(passed)} groups passed; synthetic accounts {account_a}, {account_b}"
 )
