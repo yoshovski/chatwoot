@@ -27,6 +27,8 @@ The inherited Heroku review-app deployment check runs only in the upstream repos
 
 The first CI dependency audit flagged inherited `rack-proxy 0.7.7` against GHSA-42qh-8mx8-7wqm. Resolve the compatible pair to `vite_ruby 3.11.1` and `rack-proxy 2.0.1`; the newer Vite gem permits the newer proxy. The upstream advisory explicitly identifies 1.0.0–1.0.2 and does not assess pre-1.0 versions, while the advisory database accepts only patched versions >=1.0.3. This update satisfies the audit rather than asserting exploitability of the old deployment. [Upstream advisory](https://github.com/ncr/rack-proxy/security/advisories/GHSA-42qh-8mx8-7wqm).
 
+The Vite gem also requires a matching JavaScript plugin: update `vite-plugin-ruby` to `^5.2.5`. A preliminary gem-load smoke check missed this configuration requirement; CI's Rails boot exposed it. The gem/plugin compatibility check now passes locally. Keep both lockfiles synchronized and retain the compatibility gate.
+
 ## Validation recorded
 
 - Node 24.19.0; pnpm 10.2.0; frozen-lockfile dependency install.
@@ -34,6 +36,7 @@ The first CI dependency audit flagged inherited `rack-proxy 0.7.7` against GHSA-
 - ESLint on all 50 custom JavaScript/Vue files: zero errors; three existing dynamic-translation-key warnings.
 - Ruby 3.4.4 syntax validation on 29 custom Ruby/Jbuilder files: passed.
 - Bundler 2.5.16 regenerated the targeted Vite/proxy lock entries; dependency audit reports no vulnerabilities, and both updated gems load successfully on Ruby 3.4.4. CI repeats validation using the frozen application bundle.
+- Vite Ruby's configuration compatibility check passes with the updated JavaScript plugin requirement.
 - Both deployed custom release and upstream 4.18.0 are ancestors of the merged baseline.
 - Working diff whitespace/conflict checks passed.
 
