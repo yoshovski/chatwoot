@@ -63,6 +63,35 @@ Rails.application.routes.draw do
           resources :agents, only: [:index, :create, :update, :destroy] do
             post :bulk_create, on: :collection
           end
+          namespace :ai_agents do
+            scope :knowledge, controller: :knowledge do
+              get 'bases', action: :index
+              post 'bases', action: :create
+              get 'bases/:base_id', action: :show
+              patch 'bases/:base_id', action: :update
+              post 'bases/:base_id/rebuild', action: :rebuild
+              get 'bases/:base_id/entries', action: :entries
+              post 'bases/:base_id/entries', action: :create_entry
+              put 'entries/:entry_id', action: :edit_entry
+              patch 'entries/:entry_id/state', action: :entry_state
+              patch 'entries/:entry_id/review', action: :review_entry
+              get 'entries/:entry_id/revisions', action: :entry_revisions
+              get 'bases/:base_id/sources', action: :sources
+              post 'bases/:base_id/sources', action: :create_source
+              put 'sources/:source_id', action: :edit_source
+              patch 'sources/:source_id/state', action: :source_state
+              get 'sources/:source_id/revisions', action: :source_revisions
+              get 'source-revisions/:revision_id/original', action: :original
+              post 'agents', action: :ensure_agent
+              get 'agents/:agent_id/bases', action: :agent_bases
+              put 'agents/:agent_id/bases/:base_id', action: :attach
+              delete 'agents/:agent_id/bases/:base_id', action: :detach
+              get 'bases/:base_id/jobs', action: :jobs
+              post 'jobs/:job_id/retry', action: :retry_job
+              post 'bases/:base_id/retrieve', action: :retrieve
+              post 'bases/:base_id/citations/validate', action: :validate_citations
+            end
+          end
           namespace :captain do
             resource :preferences, only: [:show, :update]
             resources :assistants do

@@ -74,6 +74,12 @@ en:
       cannot_revoke_current: You cannot revoke the current session.
 
   errors:
+    ai_knowledge:
+      invalid_bot_id: Agent bot ID must be a positive integer
+      invalid_identifier: Invalid knowledge identifier
+      unexpected_parameters: Unexpected knowledge parameters
+      invalid_parameter_shape: Invalid knowledge parameter shape
+      unavailable: Knowledge service is temporarily unavailable
     account:
       not_authorized: You are not authorized to access this account
       email_limit_exceeded: The daily email limit for this account has been reached

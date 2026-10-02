@@ -279,3 +279,7 @@
   enabled: false
   premium: true
   column: feature_flags_ext_1
+- name: native_ai_knowledge
+  display_name: Native AI Knowledge
+  enabled: false
+  column: feature_flags_ext_1
