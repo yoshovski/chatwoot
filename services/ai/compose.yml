@@ -1,0 +1,44 @@
+services:
+  ai-db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: cwai
+      POSTGRES_PASSWORD: ${CWAI_DB_PASSWORD:?Set CWAI_DB_PASSWORD}
+      POSTGRES_DB: cwai
+    volumes:
+      - knowledge-db:/var/lib/postgresql/data
+    healthcheck:
+      test: [CMD-SHELL, 'pg_isready -U cwai -d cwai']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+  migrate:
+    build: .
+    env_file: .env
+    command: [alembic, upgrade, head]
+    depends_on:
+      ai-db:
+        condition: service_healthy
+  api:
+    build: .
+    env_file: .env
+    ports:
+      - '127.0.0.1:${CWAI_API_PORT:-8010}:8000'
+    volumes:
+      - originals:/data/originals
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+  worker:
+    build: .
+    env_file: .env
+    command: [cwai-worker]
+    profiles: [indexing]
+    volumes:
+      - originals:/data/originals
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+volumes:
+  knowledge-db:
+  originals:

@@ -1,0 +1,65 @@
+name: AI knowledge foundation
+permissions:
+  contents: read
+on:
+  pull_request:
+    paths:
+      - 'services/ai/**'
+      - '.github/workflows/ai_knowledge.yml'
+  push:
+    branches: [develop]
+    paths:
+      - 'services/ai/**'
+      - '.github/workflows/ai_knowledge.yml'
+  workflow_dispatch:
+
+jobs:
+  knowledge-acceptance:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: cwai
+          POSTGRES_PASSWORD: cwai-test-only
+          POSTGRES_DB: cwai
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    defaults:
+      run:
+        working-directory: services/ai
+    env:
+      CWAI_ENABLED: 'true'
+      CWAI_DATABASE_URL: postgresql+psycopg://cwai:cwai-test-only@localhost:5432/cwai
+      CWAI_INSTALLATION_ID: cwai-ci
+      CWAI_SIGNING_KEY: cwai-ci-signing-secret-not-for-real-environments
+      CWAI_ORIGINALS_PATH: /tmp/cwai-originals
+      CWAI_VALIDATION_ALLOW: 'true'
+      CWAI_DIFY_CONNECTIONS: '{"fixture-a":{"url":"http://localhost:8011/v1","api_key":"fixture-a","embedding_provider":"fixture","embedding_model":"fixture"},"fixture-b":{"url":"http://localhost:8011/v1","api_key":"fixture-b","embedding_provider":"fixture","embedding_model":"fixture"}}'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: '0.11.19'
+          python-version: '3.12'
+      - run: uv sync --frozen --extra dev
+      - run: uv run --frozen ruff check .
+      - run: uv run --frozen ruff format --check .
+      - run: uv run --frozen alembic upgrade head
+      - run: uv run --frozen alembic check
+      - name: Build service container
+        run: docker build -t cwai-knowledge:ci .
+      - name: Validate tenant isolation, canonical revisions and indexing recovery
+        run: |
+          uv run --frozen uvicorn --app-dir validation dify_fixture:app --port 8011 --no-access-log &
+          fixture_pid=$!
+          trap 'kill "$fixture_pid"' EXIT
+          for attempt in $(seq 1 30); do
+            if curl -fsS http://localhost:8011/health > /dev/null; then break; fi
+            sleep 1
+          done
+          uv run --frozen python validation/run.py fixture
