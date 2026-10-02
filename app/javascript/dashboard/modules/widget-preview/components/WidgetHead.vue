@@ -23,12 +23,12 @@ const isDefaultScreen = computed(() => {
 
 <template>
   <div
-    class="rounded-t-lg flex-shrink-0 transition-[max-height] duration-300"
-    :class="
+    class="flex-shrink-0 rounded-t-2xl transition-[max-height] duration-300"
+    :class="[
       isDefaultScreen
         ? 'bg-n-slate-2 dark:bg-n-solid-1 px-4 py-5'
-        : 'bg-n-slate-2 dark:bg-n-solid-1 p-4'
-    "
+        : 'bg-n-slate-2 dark:bg-n-solid-1 p-4',
+    ]"
   >
     <div class="relative top-px">
       <div class="flex items-center justify-start">

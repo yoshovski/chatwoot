@@ -11,6 +11,7 @@ const createConversation = params => {
         name: params.fullName,
         email: params.emailAddress,
         phone_number: params.phoneNumber,
+        custom_attributes: params.contactCustomAttributes,
       },
       message: {
         content: params.message,
@@ -99,13 +100,19 @@ const getCampaigns = token => ({
     website_token: token,
   },
 });
-const triggerCampaign = ({ websiteToken, campaignId, customAttributes }) => ({
+const triggerCampaign = ({
+  websiteToken,
+  campaignId,
+  customAttributes,
+  selectedResponse,
+}) => ({
   url: '/api/v1/widget/events',
   data: {
     name: 'campaign.triggered',
     event_info: {
       campaign_id: campaignId,
       custom_attributes: customAttributes,
+      ...(selectedResponse && { selected_response: selectedResponse }),
       ...generateEventParams(),
     },
   },

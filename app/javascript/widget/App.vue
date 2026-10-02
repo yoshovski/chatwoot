@@ -22,6 +22,7 @@ import { useRouter } from 'vue-router';
 import { useAvailability } from 'widget/composables/useAvailability';
 import { SDK_SET_BUBBLE_VISIBILITY } from '../shared/constants/sharedFrameEvents';
 import { emitter } from 'shared/helpers/mitt';
+import { getWidgetForegroundColor } from 'shared/helpers/colorHelper';
 
 export default {
   name: 'App',
@@ -66,10 +67,21 @@ export default {
         ? getLanguageDirection(this.$root.$i18n.locale)
         : false;
     },
+    isUnreadOrCampaignView() {
+      return ['unread-messages', 'campaigns'].includes(this.$route.name);
+    },
   },
   watch: {
     activeCampaign() {
       this.setCampaignView();
+    },
+    // Keep the notification dot in sync with the unread count. The SDK ignores
+    // dot updates while the bubble is hidden, so refresh it when it is back.
+    unreadMessageCount() {
+      this.handleUnreadNotificationDot();
+    },
+    hideMessageBubble() {
+      this.handleUnreadNotificationDot();
     },
     isRTL: {
       immediate: true,
@@ -79,10 +91,14 @@ export default {
     },
   },
   mounted() {
-    const { websiteToken, locale, widgetColor } = window.chatwootWebChannel;
+    const { websiteToken, locale, widgetColor, widgetTextColor } =
+      window.chatwootWebChannel;
+    const resolvedWidgetTextColor =
+      widgetTextColor || getWidgetForegroundColor(widgetColor);
     this.setLocale(locale);
     this.setWidgetColor(widgetColor);
-    this.setWidgetColorVariable(widgetColor);
+    this.setWidgetTextColor(resolvedWidgetTextColor);
+    this.setWidgetColorVariables(widgetColor, resolvedWidgetTextColor);
     setHeader(window.authToken);
     if (this.isIFrame) {
       this.registerListeners();
@@ -105,6 +121,7 @@ export default {
       'setAppConfig',
       'setReferrerHost',
       'setWidgetColor',
+      'setWidgetTextColor',
       'setBubbleVisibility',
       'setColorScheme',
     ]),
@@ -113,13 +130,20 @@ export default {
       'initCampaigns',
       'executeCampaign',
       'resetCampaign',
+      'selectResponse',
     ]),
     ...mapActions('agent', ['fetchAvailableAgents']),
-    setWidgetColorVariable(widgetColor) {
+    setWidgetColorVariables(widgetColor, widgetTextColor) {
       if (widgetColor) {
         document.documentElement.style.setProperty(
           '--widget-color',
           widgetColor
+        );
+      }
+      if (widgetTextColor) {
+        document.documentElement.style.setProperty(
+          '--widget-text-color',
+          widgetTextColor
         );
       }
     },
@@ -175,21 +199,33 @@ export default {
       });
     },
     registerCampaignEvents() {
-      emitter.on(ON_CAMPAIGN_MESSAGE_CLICK, () => {
-        if (this.shouldShowPreChatForm) {
-          this.router.replace({ name: 'prechat-form' });
-        } else {
-          this.router.replace({ name: 'messages' });
-          emitter.emit('execute-campaign', {
-            campaignId: this.activeCampaign.id,
-          });
+      emitter.on(
+        ON_CAMPAIGN_MESSAGE_CLICK,
+        ({ campaignId, selectedResponse }) => {
+          this.selectResponse(selectedResponse);
+
+          if (this.shouldShowPreChatForm) {
+            this.router.replace({ name: 'prechat-form' });
+          } else {
+            this.router.replace({ name: 'messages' });
+            emitter.emit('execute-campaign', {
+              campaignId,
+              selectedResponse,
+            });
+          }
+          this.unsetUnreadView();
         }
-        this.unsetUnreadView();
-      });
+      );
       emitter.on('execute-campaign', campaignDetails => {
-        const { customAttributes, campaignId } = campaignDetails;
+        const { customAttributes, campaignId, selectedResponse } =
+          campaignDetails;
         const { websiteToken } = window.chatwootWebChannel;
-        this.executeCampaign({ campaignId, websiteToken, customAttributes });
+        this.executeCampaign({
+          campaignId,
+          websiteToken,
+          customAttributes,
+          selectedResponse,
+        });
         this.router.replace({ name: 'messages' });
       });
       emitter.on('snooze-campaigns', () => {
@@ -214,25 +250,26 @@ export default {
     },
     setUnreadView() {
       const { unreadMessageCount } = this;
-      if (!this.showUnreadMessagesDialog) {
-        this.handleUnreadNotificationDot();
-      } else if (
-        this.isIFrame &&
-        unreadMessageCount > 0 &&
-        !this.isWidgetOpen
-      ) {
+      if (!this.showUnreadMessagesDialog || !this.isIFrame) return;
+
+      // The unread view marks the widget as open, so only the route tells us it
+      // is already on screen. Resize it, else the new message gets cut off.
+      if (this.$route.name === 'unread-messages') {
+        this.setIframeHeight(true);
+        return;
+      }
+
+      if (unreadMessageCount > 0 && !this.isWidgetOpen) {
         this.router.replace({ name: 'unread-messages' }).then(() => {
           this.setIframeHeight(true);
           IFrameHelper.sendMessage({ event: 'setUnreadMode' });
         });
-        this.handleUnreadNotificationDot();
       }
     },
     unsetUnreadView() {
       if (this.isIFrame) {
         IFrameHelper.sendMessage({ event: 'resetUnreadMode' });
         this.setIframeHeight(false);
-        this.handleUnreadNotificationDot();
       }
     },
     handleUnreadNotificationDot() {
@@ -374,6 +411,7 @@ export default {
       'is-widget-right': isRightAligned,
       'is-bubble-hidden': hideMessageBubble,
       'is-flat-design': isWidgetStyleFlat,
+      'bg-n-slate-2 dark:bg-n-solid-1': !isUnreadOrCampaignView,
       dark: prefersDarkMode,
     }"
   >

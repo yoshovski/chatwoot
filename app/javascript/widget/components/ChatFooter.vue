@@ -1,6 +1,5 @@
 <script>
 import { mapActions, mapGetters } from 'vuex';
-import { getContrastingTextColor } from '@chatwoot/utils';
 import CustomButton from 'shared/components/Button.vue';
 import FooterReplyTo from 'widget/components/FooterReplyTo.vue';
 import ChatInputWrap from 'widget/components/ChatInputWrap.vue';
@@ -10,6 +9,8 @@ import { useRouter } from 'vue-router';
 import { IFrameHelper } from '../helpers/utils';
 import { CHATWOOT_ON_START_CONVERSATION } from '../constants/sdkEvents';
 import { emitter } from 'shared/helpers/mitt';
+
+const TRANSCRIPT_COOLDOWN_MS = 15000;
 
 export default {
   components: {
@@ -24,19 +25,20 @@ export default {
   data() {
     return {
       inReplyTo: null,
+      isSendingTranscript: false,
+      transcriptCooldown: false,
+      transcriptCooldownTimer: null,
     };
   },
   computed: {
     ...mapGetters({
       conversationAttributes: 'conversationAttributes/getConversationParams',
       widgetColor: 'appConfig/getWidgetColor',
+      widgetTextColor: 'appConfig/getWidgetTextColor',
       conversationSize: 'conversation/getConversationSize',
       currentUser: 'contacts/getCurrentUser',
       isWidgetStyleFlat: 'appConfig/isWidgetStyleFlat',
     }),
-    textColor() {
-      return getContrastingTextColor(this.widgetColor);
-    },
     hideReplyBox() {
       const { allowMessagesAfterResolved } = window.chatwootWebChannel;
       const { status } = this.conversationAttributes;
@@ -56,6 +58,9 @@ export default {
   },
   mounted() {
     emitter.on(BUS_EVENTS.TOGGLE_REPLY_TO_MESSAGE, this.toggleReplyTo);
+  },
+  beforeUnmount() {
+    clearTimeout(this.transcriptCooldownTimer);
   },
   methods: {
     ...mapActions('conversation', ['sendMessage', 'sendAttachment']),
@@ -90,19 +95,35 @@ export default {
     toggleReplyTo(message) {
       this.inReplyTo = message;
     },
+    startTranscriptCooldown() {
+      this.transcriptCooldown = true;
+      clearTimeout(this.transcriptCooldownTimer);
+      this.transcriptCooldownTimer = setTimeout(() => {
+        this.transcriptCooldown = false;
+      }, TRANSCRIPT_COOLDOWN_MS);
+    },
     async sendTranscript() {
-      if (this.hasEmail) {
-        try {
-          await sendEmailTranscript();
-          emitter.emit(BUS_EVENTS.SHOW_ALERT, {
-            message: this.$t('EMAIL_TRANSCRIPT.SEND_EMAIL_SUCCESS'),
-            type: 'success',
-          });
-        } catch (error) {
-          emitter.$emit(BUS_EVENTS.SHOW_ALERT, {
-            message: this.$t('EMAIL_TRANSCRIPT.SEND_EMAIL_ERROR'),
-          });
-        }
+      if (
+        !this.hasEmail ||
+        this.isSendingTranscript ||
+        this.transcriptCooldown
+      ) {
+        return;
+      }
+      this.isSendingTranscript = true;
+      try {
+        await sendEmailTranscript();
+        this.startTranscriptCooldown();
+        emitter.emit(BUS_EVENTS.SHOW_ALERT, {
+          message: this.$t('EMAIL_TRANSCRIPT.SEND_EMAIL_SUCCESS'),
+          type: 'success',
+        });
+      } catch (error) {
+        emitter.emit(BUS_EVENTS.SHOW_ALERT, {
+          message: this.$t('EMAIL_TRANSCRIPT.SEND_EMAIL_ERROR'),
+        });
+      } finally {
+        this.isSendingTranscript = false;
       }
     },
   },
@@ -135,7 +156,7 @@ export default {
       class="font-medium"
       block
       :bg-color="widgetColor"
-      :text-color="textColor"
+      :text-color="widgetTextColor"
       @click="startNewConversation"
     >
       {{ $t('START_NEW_CONVERSATION') }}
@@ -144,6 +165,7 @@ export default {
       v-if="showEmailTranscriptButton"
       type="clear"
       class="font-normal"
+      :disabled="isSendingTranscript || transcriptCooldown"
       @click="sendTranscript"
     >
       {{ $t('EMAIL_TRANSCRIPT.BUTTON_TEXT') }}

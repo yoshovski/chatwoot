@@ -12,12 +12,20 @@ export default {
   computed: {
     ...mapGetters({ campaign: 'campaign/getActiveCampaign' }),
     messages() {
-      const { sender, id: campaignId, message: content } = this.campaign;
+      const {
+        sender,
+        id: campaignId,
+        message: content,
+        suggested_responses: suggestedResponses = [],
+      } = this.campaign;
       return [
         {
           content,
           sender,
           campaignId,
+          suggestedResponses: suggestedResponses.filter(
+            response => response.enabled !== false && response.title
+          ),
         },
       ];
     },

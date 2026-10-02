@@ -23,6 +23,14 @@ export default {
       type: Boolean,
       default: false,
     },
+    agentName: {
+      type: String,
+      default: '',
+    },
+    showAgentName: {
+      type: Boolean,
+      default: false,
+    },
   },
   emits: ['optionSelect'],
   setup() {
@@ -43,16 +51,22 @@ export default {
 </script>
 
 <template>
-  <div
-    class="chat-bubble agent max-w-64 !py-2 !px-4 rounded-lg overflow-hidden mt-1 bg-n-background dark:bg-n-solid-3"
-  >
-    <h4 class="text-n-slate-12 text-sm font-normal my-1 leading-[1.5]">
+  <div class="flex max-w-[90%] flex-col gap-3 mt-1">
+    <h4
+      class="chat-bubble agent !py-3 !px-4 rounded-2xl bg-n-background dark:bg-n-solid-3 text-n-slate-12 text-sm font-normal leading-[1.5]"
+    >
       <div
         v-dompurify-html="formatMessage(title, false)"
-        class="text-n-slate-12"
+        class="message-content text-n-slate-12"
       />
     </h4>
-    <ul v-if="!hideFields" class="w-full">
+    <div v-if="showAgentName" class="agent-name !my-0 px-0.5 text-n-slate-11">
+      {{ agentName }}
+    </div>
+    <ul
+      v-if="!hideFields"
+      class="flex w-full flex-row flex-wrap justify-end gap-1.5 px-1"
+    >
       <ChatOption
         v-for="option in options"
         :key="option.id"

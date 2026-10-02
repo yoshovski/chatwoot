@@ -1,6 +1,5 @@
 <script>
 import { useMessageFormatter } from 'shared/composables/useMessageFormatter';
-import { getContrastingTextColor } from '@chatwoot/utils';
 
 export default {
   name: 'UserMessageBubble',
@@ -13,6 +12,10 @@ export default {
       type: String,
       default: '',
     },
+    widgetTextColor: {
+      type: String,
+      default: '',
+    },
   },
   setup() {
     const { formatMessage } = useMessageFormatter();
@@ -20,29 +23,24 @@ export default {
       formatMessage,
     };
   },
-  computed: {
-    textColor() {
-      return getContrastingTextColor(this.widgetColor);
-    },
-  },
 };
 </script>
 
 <template>
   <div
     v-dompurify-html="formatMessage(message, false)"
-    class="chat-bubble user"
-    :style="{ background: widgetColor, color: textColor }"
+    class="message-content chat-bubble user"
+    :style="{ background: widgetColor, color: widgetTextColor }"
   />
 </template>
 
 <style lang="scss" scoped>
-.chat-bubble.user::v-deep {
-  p code {
+.chat-bubble.user {
+  :deep(p code) {
     @apply bg-n-alpha-2 dark:bg-n-alpha-1 text-white;
   }
 
-  pre {
+  :deep(pre) {
     @apply text-white bg-n-alpha-2 dark:bg-n-alpha-1;
 
     code {
@@ -50,7 +48,7 @@ export default {
     }
   }
 
-  blockquote {
+  :deep(blockquote) {
     @apply bg-transparent border-n-slate-7 ltr:border-l-2 rtl:border-r-2 border-solid;
 
     p {

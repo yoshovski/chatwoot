@@ -33,9 +33,8 @@ import {
   getAlertAudio,
   initOnEvents,
 } from 'shared/helpers/AudioNotificationHelper';
-import { isFlatWidgetStyle } from './settingsHelper';
+import { getWidgetStyle, isFlatWidgetStyle } from './settingsHelper';
 import { popoutChatWindow } from '../widget/helpers/popoutHelper';
-import addHours from 'date-fns/addHours';
 
 const updateAuthCookie = (cookieContent, baseDomain = '') =>
   setCookieWithDomain('cw_conversation', cookieContent, {
@@ -43,7 +42,7 @@ const updateAuthCookie = (cookieContent, baseDomain = '') =>
   });
 
 const updateCampaignReadStatus = baseDomain => {
-  const expireBy = addHours(new Date(), 1);
+  const expireBy = new Date(Date.now() + 60 * 60 * 1000);
   setCookieWithDomain('cw_snooze_campaigns_till', Number(expireBy), {
     expires: expireBy,
     baseDomain,
@@ -154,6 +153,11 @@ export const IFrameHelper = {
 
   events: {
     loaded: message => {
+      const { channelConfig } = message.config;
+      const widgetStyle = getWidgetStyle(
+        channelConfig.widgetStyle || window.$chatwoot.widgetStyle
+      );
+      window.$chatwoot.widgetStyle = widgetStyle;
       updateAuthCookie(message.config.authToken, window.$chatwoot.baseDomain);
       window.$chatwoot.hasLoaded = true;
       const campaignsSnoozedTill = Cookies.get('cw_snooze_campaigns_till');
@@ -162,7 +166,7 @@ export const IFrameHelper = {
         position: window.$chatwoot.position,
         hideMessageBubble: window.$chatwoot.hideMessageBubble,
         showPopoutButton: window.$chatwoot.showPopoutButton,
-        widgetStyle: window.$chatwoot.widgetStyle,
+        widgetStyle,
         darkMode: window.$chatwoot.darkMode,
         showUnreadMessagesDialog: window.$chatwoot.showUnreadMessagesDialog,
         campaignsSnoozedTill,
@@ -175,7 +179,11 @@ export const IFrameHelper = {
         enableEndConversation: window.$chatwoot.enableEndConversation,
       });
       IFrameHelper.onLoad({
-        widgetColor: message.config.channelConfig.widgetColor,
+        widgetColor: channelConfig.widgetColor,
+        widgetTextColor: channelConfig.widgetTextColor,
+        widgetIconColor: channelConfig.widgetIconColor,
+        widgetHeight: channelConfig.widgetHeight,
+        widgetStyle,
       });
       IFrameHelper.toggleCloseButton();
 
@@ -296,10 +304,35 @@ export const IFrameHelper = {
     IFrameHelper.sendMessage('push-event', { eventName });
   },
 
-  onLoad: ({ widgetColor }) => {
+  onLoad: ({
+    widgetColor,
+    widgetTextColor,
+    widgetIconColor,
+    widgetHeight,
+    widgetStyle,
+  }) => {
     const iframe = IFrameHelper.getAppFrame();
+    const fallbackForeground = isWidgetColorLighter(widgetColor)
+      ? '#37546d'
+      : '#ffffff';
+    const textColor = widgetTextColor || fallbackForeground;
+    const iconColor = widgetIconColor || fallbackForeground;
     iframe.style.visibility = '';
     iframe.setAttribute('id', `chatwoot_live_chat_widget`);
+    widgetHolder.style.setProperty(
+      '--widget-height',
+      `${widgetHeight || 640}px`
+    );
+    widgetHolder.style.setProperty('--widget-icon-color', iconColor);
+    chatBubble.style.setProperty('--widget-text-color', textColor);
+    chatBubble.style.setProperty('--widget-icon-color', iconColor);
+    closeBubble.style.setProperty('--widget-icon-color', iconColor);
+
+    if (isFlatWidgetStyle(widgetStyle)) {
+      addClasses(widgetHolder, 'woot-widget-holder--flat');
+    } else {
+      removeClasses(widgetHolder, 'woot-widget-holder--flat');
+    }
 
     if (IFrameHelper.getBubbleHolder().length) {
       return;
@@ -324,6 +357,8 @@ export const IFrameHelper = {
       className,
       path: bubbleSVG,
       target: chatBubble,
+      iconColor,
+      textColor,
     });
 
     addClasses(closeBubble, closeBtnClassName);

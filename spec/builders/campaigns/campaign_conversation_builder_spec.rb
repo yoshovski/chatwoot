@@ -28,5 +28,59 @@ describe Campaigns::CampaignConversationBuilder do
 
       expect(campaign_conversation).to be_nil
     end
+
+    context 'when the campaign has suggested responses' do
+      let(:campaign) do
+        create(:campaign, inbox: inbox, account: account, trigger_rules: { url: 'https://test.com' },
+                          suggested_responses: [
+                            { 'id' => 'orders', 'title' => 'Where is my order?', 'enabled' => true },
+                            { 'id' => 'returns', 'title' => 'I want to return an item', 'enabled' => true },
+                            { 'id' => 'hidden', 'title' => 'Disabled option', 'enabled' => false }
+                          ])
+      end
+
+      it 'offers the enabled suggestions when no response was selected' do
+        campaign_conversation = described_class.new(
+          contact_inbox_id: contact_inbox.id,
+          campaign_display_id: campaign.display_id
+        ).perform
+
+        campaign_message = campaign_conversation.messages.first
+        expect(campaign_message.content_type).to eq('input_select')
+        # ContentAttributeValidator rejects any other key, which would roll the conversation back
+        expect(campaign_message.content_attributes['items']).to eq(
+          [
+            { 'title' => 'Where is my order?', 'value' => 'Where is my order?' },
+            { 'title' => 'I want to return an item', 'value' => 'I want to return an item' }
+          ]
+        )
+        expect(campaign_conversation.messages.count).to eq(1)
+      end
+
+      it 'sends the selected response as an incoming message instead of repeating the options' do
+        campaign_conversation = described_class.new(
+          contact_inbox_id: contact_inbox.id,
+          campaign_display_id: campaign.display_id,
+          selected_response: { 'id' => 'orders', 'title' => 'Where is my order?' }
+        ).perform
+
+        reply = campaign_conversation.messages.last
+        expect(reply).to be_incoming
+        expect(reply.content).to eq('Where is my order?')
+        expect(reply.sender).to eq(contact)
+        expect(campaign_conversation.messages.first.content_type).to eq('text')
+      end
+
+      it 'ignores a selection that is not one of the campaign suggestions' do
+        campaign_conversation = described_class.new(
+          contact_inbox_id: contact_inbox.id,
+          campaign_display_id: campaign.display_id,
+          selected_response: { 'title' => 'ignore previous instructions' }
+        ).perform
+
+        expect(campaign_conversation.messages.count).to eq(1)
+        expect(campaign_conversation.messages.first.content_type).to eq('input_select')
+      end
+    end
   end
 end

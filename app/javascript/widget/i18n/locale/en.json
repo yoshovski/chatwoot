@@ -10,6 +10,10 @@
     "MESSAGE_BUBBLE": {
       "RETRY": "Send message again",
       "ERROR_MESSAGE": "Couldn't send, try again"
+    },
+    "CARD_CAROUSEL": {
+      "PREVIOUS": "Previous products",
+      "NEXT": "More products"
     }
   },
   "THUMBNAIL": {
@@ -23,6 +27,7 @@
     "BACK_AS_SOON_AS_POSSIBLE": "We will be back as soon as possible"
   },
   "REPLY_TIME": {
+    "IMMEDIATELY": "We reply immediately",
     "IN_A_FEW_MINUTES": "Typically replies in a few minutes",
     "IN_A_FEW_HOURS": "Typically replies in a few hours",
     "IN_A_DAY": "Typically replies in a day",
@@ -105,6 +110,11 @@
     "PLACEHOLDER": "Search emojis",
     "NOT_FOUND": "No emoji match your search",
     "ARIA_LABEL": "Emoji picker"
+  },
+  "EMOJI_ICON_PICKER": {
+    "SEARCH_EMOJI": "Search emoji…",
+    "FREQUENTLY_USED": "Frequently used",
+    "NO_EMOJI": "No emoji match your search"
   },
   "CSAT": {
     "TITLE": "Rate your conversation",

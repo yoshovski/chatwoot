@@ -75,6 +75,7 @@ export default {
         :sender="message.sender"
         :message="getMessageContent(message)"
         :campaign-id="message.campaignId"
+        :suggested-responses="message.suggestedResponses"
       />
     </div>
 

@@ -21,13 +21,33 @@ const getStatusText = computed(() => {
     ? t('INBOX_MGMT.WIDGET_BUILDER.BODY.TEAM_AVAILABILITY.ONLINE')
     : t('INBOX_MGMT.WIDGET_BUILDER.BODY.TEAM_AVAILABILITY.OFFLINE');
 });
+
+const activeStarters = computed(() =>
+  (props.config.conversationStarters || []).filter(
+    starter => starter.enabled !== false && starter.title
+  )
+);
 </script>
 
 <template>
-  <div class="relative flex flex-col w-full px-4">
+  <div class="relative flex flex-col w-full gap-2 px-4">
+    <div
+      v-if="config.isDefaultScreen && activeStarters.length"
+      class="flex flex-col overflow-hidden rounded-2xl bg-n-background shadow-sm outline outline-1 outline-n-container"
+    >
+      <button
+        v-for="starter in activeStarters"
+        :key="starter.id"
+        type="button"
+        class="flex items-center justify-between gap-2 px-4 py-3.5 text-start text-xs font-medium text-n-slate-12 transition-colors hover:bg-n-alpha-2 [&:not(:last-child)]:border-b [&:not(:last-child)]:border-n-weak"
+      >
+        <span>{{ starter.title }}</span>
+        <FluentIcon icon="arrow-right" size="14" />
+      </button>
+    </div>
     <div
       v-if="config.isDefaultScreen"
-      class="p-4 rounded-md shadow-sm bg-n-background dark:bg-n-solid-2"
+      class="p-4 shadow-sm bg-n-background dark:bg-n-solid-2 rounded-xl"
     >
       <div class="flex items-center justify-between">
         <div>
@@ -44,8 +64,8 @@ const getStatusText = computed(() => {
       </div>
       <button
         v-if="config.isDefaultScreen"
-        class="inline-flex items-center justify-between px-2 py-1 mt-1 -ml-2 font-medium leading-6 bg-transparent rounded-md text-n-slate-12 dark:bg-transparent"
-        :style="{ color: config.color }"
+        class="inline-flex items-center justify-between px-3 py-2 mt-2 font-medium leading-6 rounded-lg shadow-sm outline outline-1 outline-n-container transition-[filter,box-shadow] hover:brightness-95 hover:shadow"
+        :style="{ backgroundColor: config.color, color: config.textColor }"
       >
         <span class="pr-2 text-xs">
           {{

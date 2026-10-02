@@ -37,15 +37,15 @@ class ChatwootHub
   end
 
   def self.pricing_plan
-    return 'community' unless ChatwootApp.enterprise?
+    return 'enterprise' if ChatwootApp.enterprise?
 
-    InstallationConfig.find_by(name: 'INSTALLATION_PRICING_PLAN')&.value || 'community'
+    'community'
   end
 
   def self.pricing_plan_quantity
-    return 0 unless ChatwootApp.enterprise?
+    return 99_999 if ChatwootApp.enterprise?
 
-    InstallationConfig.find_by(name: 'INSTALLATION_PRICING_PLAN_QUANTITY')&.value || 0
+    0
   end
 
   def self.support_config
@@ -83,6 +83,8 @@ class ChatwootHub
   end
 
   def self.sync_with_hub
+    return if ENV['DISABLE_TELEMETRY'] == 'true'
+
     begin
       info = instance_config
       info = info.merge(instance_metrics) unless ENV['DISABLE_TELEMETRY']
@@ -106,12 +108,24 @@ class ChatwootHub
   end
 
   def self.send_push(fcm_options)
-    info = { fcm_options: fcm_options }
-    RestClient.post(push_notification_url, info.merge(instance_config).to_json, { content_type: :json, accept: :json })
+    send_push_with_response(fcm_options)
   rescue *ExceptionList::REST_CLIENT_EXCEPTIONS => e
     Rails.logger.error "Exception: #{e.message}"
   rescue StandardError => e
     ChatwootExceptionTracker.new(e).capture_exception
+  end
+
+  def self.send_push_with_response(fcm_options)
+    project_id = ENV['FIREBASE_PROJECT_ID'].presence || GlobalConfigService.load('FIREBASE_PROJECT_ID', '')
+    credentials = ENV['FIREBASE_CREDENTIALS'].presence || GlobalConfigService.load('FIREBASE_CREDENTIALS', '')
+
+    if project_id.present? && credentials.present?
+      fcm_service = Notification::FcmService.new(project_id, credentials)
+      fcm_service.fcm_client.send_v1(fcm_options)
+    elsif ActiveModel::Type::Boolean.new.cast(ENV.fetch('ENABLE_PUSH_RELAY_SERVER', true))
+      info = { fcm_options: fcm_options }
+      RestClient.post(push_notification_url, info.merge(instance_config).to_json, { content_type: :json, accept: :json })
+    end
   end
 
   def self.emit_event(event_name, event_data)

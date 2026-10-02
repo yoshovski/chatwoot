@@ -10,6 +10,9 @@
 #  enabled                            :boolean          default(TRUE)
 #  message                            :text             not null
 #  scheduled_at                       :datetime
+#  suggested_responses                :jsonb            not null
+#  started_at                         :datetime
+#  completed_at                       :datetime
 #  template_params                    :jsonb
 #  title                              :string           not null
 #  trigger_only_during_business_hours :boolean          default(FALSE)
@@ -30,6 +33,8 @@
 #  index_campaigns_on_scheduled_at     (scheduled_at)
 #
 class Campaign < ApplicationRecord
+  ORDERED_TEXT_OPTION_ENABLED_VALUES = [true, false, nil].freeze
+
   include UrlHelper
   validates :account_id, presence: true
   validates :inbox_id, presence: true
@@ -40,6 +45,7 @@ class Campaign < ApplicationRecord
   validate :prevent_completed_campaign_from_update, on: :update
   validate :sender_must_belong_to_account
   validate :inbox_must_belong_to_account
+  validate :validate_suggested_responses
 
   belongs_to :account
   belongs_to :inbox
@@ -47,21 +53,45 @@ class Campaign < ApplicationRecord
 
   enum campaign_type: { ongoing: 0, one_off: 1 }
   # TODO : enabled attribute is unneccessary . lets move that to the campaign status with additional statuses like draft, disabled etc.
-  enum campaign_status: { active: 0, completed: 1 }
+  enum campaign_status: { active: 0, completed: 1, processing: 2 }
 
   has_many :conversations, dependent: :nullify, autosave: true
 
   before_validation :ensure_correct_campaign_attributes
+  before_update :set_completed_at, if: :marking_completed?
   after_commit :set_display_id, unless: :display_id?
+  after_destroy_commit :invalidate_filtered_unread_count_filters
 
   def trigger!
     return unless one_off?
-    return if completed?
+    return unless feature_enabled?
+    return unless mark_processing!
 
     execute_campaign
   end
 
   private
+
+  def feature_enabled?
+    inbox.inbox_type != 'Whatsapp' || account.feature_enabled?(:whatsapp_campaign)
+  end
+
+  def mark_processing!
+    # Multiple scheduler jobs can pick the same active campaign; lock before flipping status to avoid duplicate sends.
+    with_lock do
+      next if completed? || processing?
+
+      update!(campaign_status: :processing, started_at: Time.current)
+    end
+  end
+
+  def marking_completed?
+    will_save_change_to_campaign_status? && completed?
+  end
+
+  def set_completed_at
+    self.completed_at ||= Time.current
+  end
 
   def execute_campaign
     case inbox.inbox_type
@@ -70,8 +100,17 @@ class Campaign < ApplicationRecord
     when 'Sms'
       Sms::OneoffSmsCampaignService.new(campaign: self).perform
     when 'Whatsapp'
-      Whatsapp::OneoffCampaignService.new(campaign: self).perform if account.feature_enabled?(:whatsapp_campaign)
+      Whatsapp::OneoffCampaignService.new(campaign: self).perform
     end
+  end
+
+  def invalidate_filtered_unread_count_filters
+    filters_changed = ::Conversations::UnreadCounts::FilteredCountInvalidator.new(account).conversation_changed!
+    dispatch_account_cache_invalidated if filters_changed
+  end
+
+  def dispatch_account_cache_invalidated
+    Rails.configuration.dispatcher.dispatch(ACCOUNT_CACHE_INVALIDATED, Time.zone.now, account: account, cache_keys: account.cache_keys)
   end
 
   def set_display_id
@@ -124,8 +163,27 @@ class Campaign < ApplicationRecord
     errors.add :status, 'The campaign is already completed' if !campaign_status_changed? && completed?
   end
 
+  def validate_suggested_responses
+    unless suggested_responses.is_a?(Array)
+      errors.add(:suggested_responses, 'must be a list')
+      return
+    end
+
+    errors.add(:suggested_responses, 'can contain at most 10 items') if suggested_responses.size > 10
+    invalid_item = suggested_responses.any? { |option| invalid_suggested_response?(option) }
+    errors.add(:suggested_responses, 'contains an invalid item') if invalid_item
+  end
+
+  def invalid_suggested_response?(option)
+    return true unless option.is_a?(Hash)
+
+    values = option.with_indifferent_access
+    values[:title].blank? || values[:title].length > 120 || ORDERED_TEXT_OPTION_ENABLED_VALUES.exclude?(values[:enabled])
+  end
+
   # creating db triggers
   trigger.before(:insert).for_each(:row) do
     "NEW.display_id := nextval('camp_dpid_seq_' || NEW.account_id);"
   end
 end
+Campaign.include_mod_with('Campaign')

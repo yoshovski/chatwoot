@@ -1,4 +1,5 @@
 <script>
+import { mapGetters } from 'vuex';
 import UserMessage from 'widget/components/UserMessage.vue';
 import AgentMessageBubble from 'widget/components/AgentMessageBubble.vue';
 import MessageReplyButton from 'widget/components/MessageReplyButton.vue';
@@ -66,6 +67,27 @@ export default {
     contentType() {
       const { content_type: type = '' } = this.message;
       return type;
+    },
+    ...mapGetters({ lastMessage: 'conversation/getLastMessage' }),
+    isLatestMessage() {
+      return this.lastMessage?.id === this.message.id;
+    },
+    // Choices answer the newest question, so they go once anything has been said since. A message
+    // whose choices are gone is an ordinary message and gets the reply control like any other.
+    hideOptions() {
+      return (
+        !!this.messageContentAttributes?.submitted_values ||
+        !this.isLatestMessage
+      );
+    },
+    isOptions() {
+      return this.contentType === 'input_select';
+    },
+    isCards() {
+      return this.contentType === 'cards';
+    },
+    isCampaignMessage() {
+      return !!this.message.campaign_id;
     },
     agentName() {
       if (this.message.sender) {
@@ -171,11 +193,17 @@ export default {
       'has-response': hasRecordedResponse || isASubmittedForm,
     }"
   >
-    <div v-if="!isASubmittedForm" class="agent-message">
-      <div class="avatar-wrap">
-        <div class="user-thumbnail-box">
+    <div
+      v-if="!isASubmittedForm"
+      class="agent-message"
+      :class="{ 'has-carousel': isCards }"
+    >
+      <div class="avatar-wrap" :class="{ '!self-start !mt-4': isOptions }">
+        <div class="user-thumbnail-box" :class="{ '!mt-0': isOptions }">
           <Avatar
-            v-if="message.showAvatar || hasRecordedResponse"
+            v-if="
+              !isCampaignMessage && (message.showAvatar || hasRecordedResponse)
+            "
             :src="avatarUrl"
             :size="24"
             :name="agentName"
@@ -187,9 +215,9 @@ export default {
         <div v-if="hasReplyTo" class="flex mt-2 mb-1 text-xs">
           <ReplyToChip :reply-to="replyTo" />
         </div>
-        <div class="flex w-full gap-1">
+        <div class="flex w-full gap-1 min-w-0">
           <div
-            class="space-y-2"
+            class="space-y-2 min-w-0"
             :class="{
               'w-full':
                 contentType === 'form' &&
@@ -203,6 +231,13 @@ export default {
               :message-id="message.id"
               :message-type="messageType"
               :message="message.content"
+              :agent-name="agentName"
+              :hide-options="hideOptions"
+              :show-agent-name="
+                isOptions &&
+                !isCampaignMessage &&
+                (message.showAvatar || hasRecordedResponse)
+              "
             />
             <div
               v-if="hasAttachments"
@@ -241,16 +276,22 @@ export default {
           </div>
           <div class="flex flex-col justify-end">
             <MessageReplyButton
+              v-if="!isOptions || hideOptions"
               class="transition-opacity delay-75 opacity-0 group-hover:opacity-100 sm:opacity-0"
               @click="toggleReply"
             />
           </div>
         </div>
         <p
-          v-if="message.showAvatar || hasRecordedResponse"
-          v-dompurify-html="agentName"
+          v-if="
+            !isOptions &&
+            !isCampaignMessage &&
+            (message.showAvatar || hasRecordedResponse)
+          "
           class="agent-name text-n-slate-11"
-        />
+        >
+          {{ agentName }}
+        </p>
       </div>
     </div>
 
