@@ -17,6 +17,17 @@
     .message-wrap {
       @apply flex-grow flex-shrink-0 ltr:ml-2 rtl:mr-2 max-w-[90%];
     }
+
+    // A carousel is a rail, not a bubble. Held to the bubble's width it cuts the next card in
+    // half, which reads as a clipped layout rather than as something to scroll, so it runs to
+    // the edge of the conversation instead.
+    &.has-carousel {
+      @apply max-w-full;
+
+      .message-wrap {
+        @apply max-w-full;
+      }
+    }
   }
 
   &.is-typing .messages-wrap div:last-child {
@@ -49,7 +60,7 @@
 
   .agent-message-wrap {
     + .agent-message-wrap {
-      @apply mt-0.5;
+      @apply mt-1.5;
 
       .agent-message .chat-bubble {
         @apply ltr:rounded-tl-[0.25rem] rtl:rounded-tr-[0.25rem];
@@ -61,7 +72,7 @@
     }
 
     &.has-response + .user-message-wrap {
-      @apply mt-0.5;
+      @apply mt-1.5;
 
       .chat-bubble {
         @apply ltr:rounded-tr-[0.25rem] rtl:rounded-tl-[0.25rem];
@@ -105,7 +116,7 @@
 
   .user-message-wrap {
     + .user-message-wrap {
-      @apply mt-0.5;
+      @apply mt-1.5;
 
       .user-message .chat-bubble {
         @apply ltr:rounded-tr-[0.25rem] rtl:rounded-tl-[0.25rem];

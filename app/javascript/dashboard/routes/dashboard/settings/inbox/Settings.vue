@@ -4,6 +4,8 @@ import { shouldBeUrl } from 'shared/helpers/Validators';
 import { useAlert } from 'dashboard/composables';
 import { useVuelidate } from '@vuelidate/core';
 import Avatar from 'next/avatar/Avatar.vue';
+import Banner from 'dashboard/components-next/banner/Banner.vue';
+import Icon from 'dashboard/components-next/icon/Icon.vue';
 import SettingIntroBanner from 'dashboard/components/widgets/SettingIntroBanner.vue';
 import SettingsToggleSection from 'dashboard/components-next/Settings/SettingsToggleSection.vue';
 import SettingsFieldSection from 'dashboard/components-next/Settings/SettingsFieldSection.vue';
@@ -21,31 +23,61 @@ import PreChatFormSettings from './PreChatForm/Settings.vue';
 import WeeklyAvailability from './components/WeeklyAvailability.vue';
 import GreetingsEditor from 'shared/components/GreetingsEditor.vue';
 import ConfigurationPage from './settingsPage/ConfigurationPage.vue';
+import VoiceConfigurationPage from './settingsPage/VoiceConfigurationPage.vue';
+import WhatsappCallingPage from './settingsPage/WhatsappCallingPage.vue';
 import CustomerSatisfactionPage from './settingsPage/CustomerSatisfactionPage.vue';
 import CollaboratorsPage from './settingsPage/CollaboratorsPage.vue';
 import BotConfiguration from './components/BotConfiguration.vue';
 import AccountHealth from './components/AccountHealth.vue';
+import TwilioHealth from './components/TwilioHealth.vue';
+import WhatsappManualMigrationDialog from './components/WhatsappManualMigrationDialog.vue';
+import WhatsappManualMigrationBanner from './components/WhatsappManualMigrationBanner.vue';
 import { FEATURE_FLAGS } from '../../../../featureFlags';
 import SenderNameExamplePreview from './components/SenderNameExamplePreview.vue';
 import LockToSingleConversationPreview from './components/LockToSingleConversationPreview.vue';
 import NextButton from 'dashboard/components-next/button/Button.vue';
 import SpinnerLoader from 'dashboard/components-next/spinner/Spinner.vue';
-import { INBOX_TYPES } from 'dashboard/helper/inbox';
-import { getInboxIconByType } from 'dashboard/helper/inbox';
+import {
+  getInboxIconByType,
+  getInboxIdentifier,
+  INBOX_TYPES,
+} from 'dashboard/helper/inbox';
 import { LOCAL_STORAGE_KEYS } from 'dashboard/constants/localStorage';
 import { LocalStorage } from 'shared/helpers/localStorage';
 import Editor from 'dashboard/components-next/Editor/Editor.vue';
 import ColorPicker from 'dashboard/components-next/colorpicker/ColorPicker.vue';
+import OrderedTextList from 'dashboard/components-next/ordered-text-list/OrderedTextList.vue';
 import SelectInput from 'dashboard/components-next/select/Select.vue';
 import Widget from 'dashboard/modules/widget-preview/components/Widget.vue';
 import AccessToken from 'dashboard/routes/dashboard/settings/profile/AccessToken.vue';
 import { copyTextToClipboard } from 'shared/helpers/clipboard';
+import { META_RESTRICTION_STATUS_URL } from 'dashboard/constants/globals';
+import { getWidgetForegroundColor } from 'shared/helpers/colorHelper';
+
+const normalizeOrderedTextOptions = options =>
+  (options || []).map((option, index) => ({
+    id: option.id || `saved-${index}`,
+    title: option.title || '',
+    enabled: option.enabled !== false,
+  }));
+
+const serializeOrderedTextOptions = options =>
+  options
+    .map(option => ({
+      id: option.id,
+      title: option.title.trim(),
+      enabled: option.enabled,
+    }))
+    .filter(option => option.title);
 
 export default {
   components: {
+    Banner,
     BotConfiguration,
     CollaboratorsPage,
     ConfigurationPage,
+    VoiceConfigurationPage,
+    WhatsappCallingPage,
     CustomerSatisfactionPage,
     FacebookReauthorize,
     GreetingsEditor,
@@ -68,10 +100,15 @@ export default {
     Editor,
     Avatar,
     ColorPicker,
+    OrderedTextList,
     SelectInput,
     AccountHealth,
+    TwilioHealth,
+    WhatsappManualMigrationDialog,
+    WhatsappManualMigrationBanner,
     Widget,
     AccessToken,
+    Icon,
   },
   mixins: [inboxMixin],
   setup() {
@@ -88,6 +125,8 @@ export default {
       businessName: '',
       locktoSingleConversation: false,
       allowMessagesAfterResolved: true,
+      demoModeEnabled: false,
+      demoSlug: '',
       continuityViaEmail: true,
       selectedInboxName: '',
       channelWebsiteUrl: '',
@@ -96,6 +135,7 @@ export default {
       channelWelcomeTagline: '',
       selectedFeatureFlags: [],
       replyTime: '',
+      replyTimeMessage: '',
       selectedTabIndex: 0,
       selectedPortalSlug: '',
       showBusinessNameInput: false,
@@ -103,9 +143,16 @@ export default {
       isLoadingHealth: false,
       healthError: null,
       isRegisteringWebhook: false,
+      isTransferringWhatsAppToManual: false,
       widgetBubblePosition: 'right',
       widgetBubbleType: 'standard',
       widgetBubbleLauncherTitle: '',
+      widgetTextColor: '#ffffff',
+      widgetIconColor: '#ffffff',
+      isWidgetTextColorCustom: false,
+      isWidgetIconColorCustom: false,
+      widgetHeight: 640,
+      conversationStarters: [],
     };
   },
   computed: {
@@ -113,6 +160,7 @@ export default {
       accountId: 'getCurrentAccountId',
       isFeatureEnabledonAccount: 'accounts/isFeatureEnabledonAccount',
       isOnChatwootCloud: 'globalConfig/isOnChatwootCloud',
+      isMetaMessageSendingDisabled: 'globalConfig/isMetaMessageSendingDisabled',
       uiFlags: 'inboxes/getUIFlags',
       portals: 'portals/allPortals',
     }),
@@ -139,11 +187,34 @@ export default {
         'INBOX_MGMT.SETTINGS_POPUP.ENABLE_CONTINUITY_VIA_EMAIL_SUB_TEXT'
       );
     },
+    demoUrl() {
+      const id = this.demoSlug.trim() || this.inbox.website_token;
+      return `${window.location.origin}/demo/${id}`;
+    },
+    isDemoSlugInvalid() {
+      const slug = this.demoSlug.trim();
+      return !!slug && !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug);
+    },
+    demoModeDescription() {
+      const description = this.$t(
+        'INBOX_MGMT.SETTINGS_POPUP.ENABLE_DEMO_MODE_SUB_TEXT'
+      );
+      return this.demoModeEnabled
+        ? `${description} ${this.demoUrl}`
+        : description;
+    },
     selectedTabKey() {
       return this.tabs[this.selectedTabIndex]?.key;
     },
+    // AccountHealth renders the structured provider error; TwilioHealth only needs the message.
+    healthErrorMessage() {
+      return this.healthError?.message || '';
+    },
     shouldShowWhatsAppConfiguration() {
       return this.isAWhatsAppCloudChannel;
+    },
+    shouldShowTwilioHealth() {
+      return this.isATwilioChannel && this.inbox.medium === 'sms';
     },
     whatsAppAPIProviderName() {
       if (this.isAWhatsAppCloudChannel) {
@@ -169,19 +240,17 @@ export default {
         },
       ];
 
-      if (!this.isAVoiceChannel) {
-        visibleToAllChannelTabs = [
-          ...visibleToAllChannelTabs,
-          {
-            key: 'business-hours',
-            name: this.$t('INBOX_MGMT.TABS.BUSINESS_HOURS'),
-          },
-          {
-            key: 'csat',
-            name: this.$t('INBOX_MGMT.TABS.CSAT'),
-          },
-        ];
-      }
+      visibleToAllChannelTabs = [
+        ...visibleToAllChannelTabs,
+        {
+          key: 'business-hours',
+          name: this.$t('INBOX_MGMT.TABS.BUSINESS_HOURS'),
+        },
+        {
+          key: 'csat',
+          name: this.$t('INBOX_MGMT.TABS.CSAT'),
+        },
+      ];
 
       if (this.isAWebWidgetInbox) {
         visibleToAllChannelTabs = [
@@ -197,7 +266,6 @@ export default {
         this.isATwilioChannel ||
         this.isALineChannel ||
         this.isAPIInbox ||
-        this.isAVoiceChannel ||
         (this.isAnEmailChannel && !this.inbox.provider) ||
         this.shouldShowWhatsAppConfiguration ||
         this.isAWebWidgetInbox
@@ -232,6 +300,50 @@ export default {
         ];
       }
 
+      if (this.shouldShowTwilioHealth) {
+        visibleToAllChannelTabs = [
+          ...visibleToAllChannelTabs,
+          {
+            key: 'twilio-health',
+            name: this.$t('INBOX_MGMT.TABS.ACCOUNT_HEALTH'),
+          },
+        ];
+      }
+
+      if (
+        this.isATwilioChannel &&
+        this.inbox.phone_number &&
+        this.inbox.medium === 'sms' &&
+        this.isFeatureEnabledonAccount(
+          this.accountId,
+          FEATURE_FLAGS.CHANNEL_VOICE
+        )
+      ) {
+        visibleToAllChannelTabs = [
+          ...visibleToAllChannelTabs,
+          {
+            key: 'voice-configuration',
+            name: this.$t('INBOX_MGMT.TABS.VOICE'),
+          },
+        ];
+      }
+
+      if (
+        this.isAWhatsAppCloudChannel &&
+        this.isFeatureEnabledonAccount(
+          this.accountId,
+          FEATURE_FLAGS.CHANNEL_VOICE
+        )
+      ) {
+        visibleToAllChannelTabs = [
+          ...visibleToAllChannelTabs,
+          {
+            key: 'calls-configuration',
+            name: this.$t('INBOX_MGMT.TABS.CALLS'),
+          },
+        ];
+      }
+
       return visibleToAllChannelTabs;
     },
     currentInboxId() {
@@ -241,8 +353,12 @@ export default {
       return this.$store.getters['inboxes/getInbox'](this.currentInboxId);
     },
     inboxIcon() {
-      const { medium, channel_type: type } = this.inbox;
-      return getInboxIconByType(type, medium, 'line');
+      const {
+        medium,
+        channel_type: type,
+        voice_enabled: voiceEnabled,
+      } = this.inbox;
+      return getInboxIconByType(type, medium, 'line', voiceEnabled);
     },
     bannerMaxWidth() {
       const narrowTabs = ['collaborators', 'bot-configuration'];
@@ -254,18 +370,10 @@ export default {
       return 'max-w-7xl';
     },
     inboxName() {
-      if (this.isATwilioSMSChannel || this.isATwilioWhatsAppChannel) {
-        return `${this.inbox.name} (${
-          this.inbox.messaging_service_sid || this.inbox.phone_number
-        })`;
-      }
-      if (this.isAWhatsAppChannel) {
-        return `${this.inbox.name} (${this.inbox.phone_number})`;
-      }
-      if (this.isAnEmailChannel) {
-        return `${this.inbox.name} (${this.inbox.email})`;
-      }
       return this.inbox.name;
+    },
+    inboxIdentifier() {
+      return getInboxIdentifier(this.inbox);
     },
     canLocktoSingleConversation() {
       return (
@@ -302,6 +410,12 @@ export default {
     },
     instagramUnauthorized() {
       return this.isAnInstagramChannel && this.inbox.reauthorization_required;
+    },
+    showInstagramRestrictionSettingsBanner() {
+      return this.isMetaMessageSendingDisabled && this.isAnInstagramChannel;
+    },
+    metaRestrictionStatusUrl() {
+      return META_RESTRICTION_STATUS_URL;
     },
     tiktokUnauthorized() {
       return this.isATiktokChannel && this.inbox.reauthorization_required;
@@ -356,17 +470,40 @@ export default {
         this.healthData.throughput?.level === 'NOT_APPLICABLE'
       );
     },
+    showWhatsAppManualMigration() {
+      return (
+        this.isAWhatsAppCloudChannel &&
+        this.isEmbeddedSignupWhatsApp &&
+        this.healthData?.is_on_biz_app === false &&
+        this.healthError?.type !== 'authorization' &&
+        this.isFeatureEnabledonAccount(
+          this.accountId,
+          FEATURE_FLAGS.WHATSAPP_MANUAL_TRANSFER
+        )
+      );
+    },
     widgetBuilderStorageKey() {
       return `${LOCAL_STORAGE_KEYS.WIDGET_BUILDER}${this.inbox.id}`;
     },
   },
   watch: {
+    'inbox.widget_color'(widgetColor) {
+      if (!widgetColor) return;
+      const automaticContrastColor = getWidgetForegroundColor(widgetColor);
+      if (!this.isWidgetTextColorCustom) {
+        this.widgetTextColor = automaticContrastColor;
+      }
+      if (!this.isWidgetIconColorCustom) {
+        this.widgetIconColor = automaticContrastColor;
+      }
+    },
     $route(to, from) {
       if (to.name === 'settings_inbox_show') {
         const inboxChanged = to.params.inboxId !== from.params.inboxId;
         if (inboxChanged) {
           this.syncInboxData();
           this.setTabFromRouteParam();
+          this.openWhatsAppManualMigrationIfRequested();
         }
       }
     },
@@ -377,6 +514,7 @@ export default {
           this.fetchHealthData();
           this.$nextTick(() => {
             this.setTabFromRouteParam();
+            this.openWhatsAppManualMigrationIfRequested();
           });
         } else {
           this.selectedFeatureFlags = newInbox?.selected_feature_flags || [];
@@ -387,8 +525,52 @@ export default {
   },
   mounted() {
     this.fetchSharedData();
+    this.openWhatsAppManualMigrationIfRequested();
   },
   methods: {
+    openWhatsAppManualMigrationDialog() {
+      this.$refs.whatsappManualMigrationDialog?.open();
+    },
+    openWhatsAppManualMigrationIfRequested() {
+      if (
+        this.showWhatsAppManualMigration &&
+        this.$route.query.migration === 'whatsapp_manual'
+      ) {
+        this.$nextTick(() => {
+          this.openWhatsAppManualMigrationDialog();
+        });
+      }
+    },
+    async transferWhatsAppToManualSetup(form) {
+      this.isTransferringWhatsAppToManual = true;
+      try {
+        const providerConfig = { ...(this.inbox.provider_config || {}) };
+        delete providerConfig.source;
+        const payload = {
+          id: this.inbox.id,
+          formData: false,
+          channel: {
+            provider_config: {
+              ...providerConfig,
+              phone_number_id: form.phoneNumberId,
+              business_account_id: form.wabaId,
+              api_key: form.accessToken,
+            },
+          },
+        };
+        await this.$store.dispatch('inboxes/updateInbox', payload);
+        useAlert(
+          this.$t('INBOX_MGMT.SETTINGS_POPUP.WHATSAPP_MANUAL_TRANSFER_SUCCESS')
+        );
+        this.$refs.whatsappManualMigrationDialog?.close();
+      } catch (error) {
+        useAlert(
+          this.$t('INBOX_MGMT.SETTINGS_POPUP.WHATSAPP_MANUAL_TRANSFER_ERROR')
+        );
+      } finally {
+        this.isTransferringWhatsAppToManual = false;
+      }
+    },
     async copyWebhookSecret(value) {
       await copyTextToClipboard(value);
       useAlert(
@@ -436,11 +618,27 @@ export default {
       this.allowMessagesAfterResolved =
         this.inbox.allow_messages_after_resolved;
       this.continuityViaEmail = this.inbox.continuity_via_email;
+      this.demoModeEnabled = this.inbox.demo_mode_enabled;
+      this.demoSlug = this.inbox.demo_slug || '';
       this.channelWebsiteUrl = this.inbox.website_url;
       this.channelWelcomeTitle = this.inbox.welcome_title;
       this.channelWelcomeTagline = this.inbox.welcome_tagline || '';
       this.selectedFeatureFlags = this.inbox.selected_feature_flags || [];
       this.replyTime = this.inbox.reply_time;
+      this.replyTimeMessage = this.inbox.reply_time_message || '';
+      const automaticContrastColor = getWidgetForegroundColor(
+        this.inbox.widget_color
+      );
+      this.widgetTextColor =
+        this.inbox.widget_text_color || automaticContrastColor;
+      this.widgetIconColor =
+        this.inbox.widget_icon_color || automaticContrastColor;
+      this.isWidgetTextColorCustom = !!this.inbox.widget_text_color;
+      this.isWidgetIconColorCustom = !!this.inbox.widget_icon_color;
+      this.widgetHeight = this.inbox.widget_height || 640;
+      this.conversationStarters = normalizeOrderedTextOptions(
+        this.inbox.conversation_starters
+      );
       this.locktoSingleConversation = this.inbox.lock_to_single_conversation;
       this.selectedPortalSlug = this.inbox.help_center
         ? this.inbox.help_center.slug
@@ -463,7 +661,7 @@ export default {
     async fetchHealthData() {
       if (!this.inbox) return;
 
-      if (!this.isAWhatsAppCloudChannel) {
+      if (!this.isAWhatsAppCloudChannel && !this.shouldShowTwilioHealth) {
         return;
       }
 
@@ -473,9 +671,24 @@ export default {
         const response = await InboxHealthAPI.getHealthStatus(this.inbox.id);
         this.healthData = response.data;
       } catch (error) {
-        this.healthError = error.message || 'Failed to fetch health data';
+        const apiError = error.response?.data?.error;
+        this.healthError =
+          typeof apiError === 'object'
+            ? apiError
+            : {
+                type: 'generic',
+                message: apiError || error.message,
+              };
       } finally {
         this.isLoadingHealth = false;
+      }
+    },
+    goToWhatsAppConfiguration() {
+      const configurationTabIndex = this.tabs.findIndex(
+        tab => tab.key === 'configuration'
+      );
+      if (configurationTabIndex !== -1) {
+        this.onTabChange(configurationTabIndex);
       }
     },
     async registerWebhook() {
@@ -487,8 +700,10 @@ export default {
         useAlert(this.$t('INBOX_MGMT.ACCOUNT_HEALTH.WEBHOOK.REGISTER_SUCCESS'));
         await this.fetchHealthData();
       } catch (error) {
+        // Same as the health fetch: the provider's own message is the actionable part.
         useAlert(
-          error.message ||
+          error.response?.data?.error ||
+            error.message ||
             this.$t('INBOX_MGMT.ACCOUNT_HEALTH.WEBHOOK.REGISTER_ERROR')
         );
       } finally {
@@ -560,14 +775,27 @@ export default {
           business_name: this.businessName || null,
           channel: {
             widget_color: this.inbox.widget_color,
+            widget_text_color: this.isWidgetTextColorCustom
+              ? this.widgetTextColor
+              : '',
+            widget_icon_color: this.isWidgetIconColorCustom
+              ? this.widgetIconColor
+              : '',
+            widget_height: this.widgetHeight,
+            conversation_starters: serializeOrderedTextOptions(
+              this.conversationStarters
+            ),
             website_url: this.channelWebsiteUrl,
             webhook_url: this.webhookUrl,
             welcome_title: this.channelWelcomeTitle || '',
             welcome_tagline: this.channelWelcomeTagline || '',
             selectedFeatureFlags: this.selectedFeatureFlags,
             reply_time: this.replyTime || 'in_a_few_minutes',
+            reply_time_message: this.replyTimeMessage?.trim() || '',
             continuity_via_email:
               this.isInboundEmailEnabled && this.continuityViaEmail,
+            demo_mode_enabled: this.demoModeEnabled,
+            demo_slug: this.demoSlug.trim() || null,
           },
         };
         if (this.avatarFile) {
@@ -640,6 +868,7 @@ export default {
     <SettingIntroBanner
       :header-image="inbox.avatarUrl"
       :header-title="inboxName"
+      :header-identifier="inboxIdentifier"
     >
       <woot-tabs
         class="[&_ul]:p-0 top-px relative"
@@ -701,6 +930,35 @@ export default {
           :content="$t('INBOX_MGMT.ADD.INSTAGRAM.DUPLICATE_INBOX_BANNER')"
           class="mx-6 mb-4"
           :class="bannerMaxWidth"
+        />
+        <Banner
+          v-if="showInstagramRestrictionSettingsBanner"
+          color="amber"
+          class="mx-6 mb-4 max-w-4xl"
+        >
+          <div class="flex items-start gap-3 text-start">
+            <Icon
+              icon="i-lucide-triangle-alert"
+              class="flex-shrink-0 size-4 mt-0.5"
+            />
+            <span>
+              {{ $t('INBOX_MGMT.ADD.INSTAGRAM.SETTINGS_RESTRICTED_WARNING') }}
+              <a
+                :href="metaRestrictionStatusUrl"
+                class="link underline"
+                rel="noopener noreferrer nofollow"
+                target="_blank"
+              >
+                {{ $t('INBOX_MGMT.ADD.INSTAGRAM.STATUS_LINK') }}
+              </a>
+            </span>
+          </div>
+        </Banner>
+        <WhatsappManualMigrationBanner
+          v-if="showWhatsAppManualMigration"
+          class="mx-6 mb-6"
+          :class="bannerMaxWidth"
+          @start="openWhatsAppManualMigrationDialog"
         />
 
         <div
@@ -812,7 +1070,6 @@ export default {
             </SettingsFieldSection>
 
             <SettingsFieldSection
-              v-if="!isAVoiceChannel"
               :label="$t('INBOX_MGMT.HELP_CENTER.LABEL')"
               :help-text="$t('INBOX_MGMT.HELP_CENTER.SUB_TEXT')"
             >
@@ -948,6 +1205,91 @@ export default {
               </SettingsFieldSection>
               <SettingsFieldSection
                 :label="
+                  $t(
+                    'INBOX_MGMT.WIDGET_BUILDER.WIDGET_OPTIONS.WIDGET_TEXT_COLOR'
+                  )
+                "
+              >
+                <div class="justify-start">
+                  <ColorPicker
+                    v-model="widgetTextColor"
+                    @update:model-value="isWidgetTextColorCustom = true"
+                  />
+                </div>
+              </SettingsFieldSection>
+              <SettingsFieldSection
+                :label="
+                  $t(
+                    'INBOX_MGMT.WIDGET_BUILDER.WIDGET_OPTIONS.WIDGET_ICON_COLOR'
+                  )
+                "
+              >
+                <div class="justify-start">
+                  <ColorPicker
+                    v-model="widgetIconColor"
+                    @update:model-value="isWidgetIconColorCustom = true"
+                  />
+                </div>
+              </SettingsFieldSection>
+              <SettingsFieldSection
+                :label="
+                  $t(
+                    'INBOX_MGMT.WIDGET_BUILDER.WIDGET_OPTIONS.CONVERSATION_STARTERS.LABEL'
+                  )
+                "
+                :help-text="
+                  $t(
+                    'INBOX_MGMT.WIDGET_BUILDER.WIDGET_OPTIONS.CONVERSATION_STARTERS.HELP'
+                  )
+                "
+                class="[&>div]:!items-start"
+              >
+                <OrderedTextList
+                  v-model="conversationStarters"
+                  :add-label="
+                    $t(
+                      'INBOX_MGMT.WIDGET_BUILDER.WIDGET_OPTIONS.CONVERSATION_STARTERS.ADD'
+                    )
+                  "
+                  :empty-label="
+                    $t(
+                      'INBOX_MGMT.WIDGET_BUILDER.WIDGET_OPTIONS.CONVERSATION_STARTERS.EMPTY'
+                    )
+                  "
+                  :placeholder="
+                    $t(
+                      'INBOX_MGMT.WIDGET_BUILDER.WIDGET_OPTIONS.CONVERSATION_STARTERS.PLACEHOLDER'
+                    )
+                  "
+                  :reorder-label="
+                    $t('INBOX_MGMT.WIDGET_BUILDER.WIDGET_OPTIONS.REORDER')
+                  "
+                  :delete-label="
+                    $t('INBOX_MGMT.WIDGET_BUILDER.WIDGET_OPTIONS.DELETE')
+                  "
+                />
+              </SettingsFieldSection>
+              <SettingsFieldSection
+                :label="
+                  $t('INBOX_MGMT.WIDGET_BUILDER.WIDGET_OPTIONS.WIDGET_HEIGHT')
+                "
+                :help-text="
+                  $t(
+                    'INBOX_MGMT.WIDGET_BUILDER.WIDGET_OPTIONS.WIDGET_HEIGHT_HELP'
+                  )
+                "
+              >
+                <woot-input
+                  v-model.number="widgetHeight"
+                  type="number"
+                  min="320"
+                  max="900"
+                  step="10"
+                  class="max-w-40 [&>input]:!mb-0"
+                />
+              </SettingsFieldSection>
+              <SettingsFieldSection
+                :label="
                   $t('INBOX_MGMT.WIDGET_BUILDER.WIDGET_OPTIONS.WIDGET_BUBBLE')
                 "
               >
@@ -1037,6 +1379,12 @@ export default {
                   v-model="replyTime"
                   :options="[
                     {
+                      value: 'immediately',
+                      label: $t(
+                        'INBOX_MGMT.ADD.WEBSITE_CHANNEL.REPLY_TIME.IMMEDIATELY'
+                      ),
+                    },
+                    {
                       value: 'in_a_few_minutes',
                       label: $t(
                         'INBOX_MGMT.ADD.WEBSITE_CHANNEL.REPLY_TIME.IN_A_FEW_MINUTES'
@@ -1055,6 +1403,26 @@ export default {
                       ),
                     },
                   ]"
+                />
+                <woot-input
+                  v-model="replyTimeMessage"
+                  :label="
+                    $t(
+                      'INBOX_MGMT.ADD.WEBSITE_CHANNEL.REPLY_TIME.CUSTOM_MESSAGE_LABEL'
+                    )
+                  "
+                  :placeholder="
+                    $t(
+                      'INBOX_MGMT.ADD.WEBSITE_CHANNEL.REPLY_TIME.CUSTOM_MESSAGE_PLACEHOLDER'
+                    )
+                  "
+                  :help-text="
+                    $t(
+                      'INBOX_MGMT.ADD.WEBSITE_CHANNEL.REPLY_TIME.CUSTOM_MESSAGE_HELP_TEXT'
+                    )
+                  "
+                  maxlength="120"
+                  class="mt-3 [&>input]:!mb-0"
                 />
               </SettingsFieldSection>
 
@@ -1173,6 +1541,32 @@ export default {
               />
 
               <SettingsToggleSection
+                v-if="isAWebWidgetInbox"
+                v-model="demoModeEnabled"
+                :header="$t('INBOX_MGMT.SETTINGS_POPUP.ENABLE_DEMO_MODE')"
+                :description="demoModeDescription"
+              />
+
+              <SettingsFieldSection
+                v-if="isAWebWidgetInbox && demoModeEnabled"
+                :label="$t('INBOX_MGMT.SETTINGS_POPUP.DEMO_SLUG')"
+                :help-text="$t('INBOX_MGMT.SETTINGS_POPUP.DEMO_SLUG_HINT')"
+              >
+                <woot-input
+                  v-model="demoSlug"
+                  class="[&>input]:!mb-0"
+                  :placeholder="
+                    $t('INBOX_MGMT.SETTINGS_POPUP.DEMO_SLUG_PLACEHOLDER')
+                  "
+                  :error="
+                    isDemoSlugInvalid
+                      ? $t('INBOX_MGMT.SETTINGS_POPUP.DEMO_SLUG_ERROR')
+                      : ''
+                  "
+                />
+              </SettingsFieldSection>
+
+              <SettingsToggleSection
                 v-if="isAWebWidgetInbox && showContinuityToggle"
                 v-model="continuityViaEmail"
                 :header="
@@ -1220,7 +1614,12 @@ export default {
                 :logo="avatarUrl"
                 is-online
                 :reply-time="replyTime"
+                :reply-time-message="replyTimeMessage"
                 :color="inbox.widget_color"
+                :text-color="widgetTextColor"
+                :icon-color="widgetIconColor"
+                :widget-height="widgetHeight"
+                :conversation-starters="conversationStarters"
                 :widget-bubble-position="widgetBubblePosition"
                 :widget-bubble-launcher-title="widgetBubbleLauncherTitle"
                 :widget-bubble-type="widgetBubbleType"
@@ -1240,6 +1639,18 @@ export default {
         >
           <ConfigurationPage :inbox="inbox" />
         </div>
+        <div
+          v-if="selectedTabKey === 'voice-configuration'"
+          class="mx-6 max-w-4xl"
+        >
+          <VoiceConfigurationPage :inbox="inbox" />
+        </div>
+        <div
+          v-if="selectedTabKey === 'calls-configuration'"
+          class="mx-6 max-w-4xl"
+        >
+          <WhatsappCallingPage :inbox="inbox" />
+        </div>
         <div v-if="selectedTabKey === 'csat'">
           <CustomerSatisfactionPage :inbox="inbox" />
         </div>
@@ -1255,10 +1666,29 @@ export default {
         <div v-if="selectedTabKey === 'whatsapp-health'">
           <AccountHealth
             :health-data="healthData"
+            :health-error="healthError"
+            :is-embedded-signup="isEmbeddedSignupWhatsApp"
+            :is-registering-webhook="isRegisteringWebhook"
+            @register-webhook="registerWebhook"
+            @go-to-configuration="goToWhatsAppConfiguration"
+          />
+        </div>
+        <div v-if="selectedTabKey === 'twilio-health'">
+          <TwilioHealth
+            :health-data="healthData"
+            :is-loading="isLoadingHealth"
+            :error="healthErrorMessage"
             :is-registering-webhook="isRegisteringWebhook"
             @register-webhook="registerWebhook"
           />
         </div>
+        <WhatsappManualMigrationDialog
+          v-if="showWhatsAppManualMigration"
+          ref="whatsappManualMigrationDialog"
+          :inbox="inbox"
+          :is-loading="isTransferringWhatsAppToManual"
+          @reconnect="transferWhatsAppToManualSetup"
+        />
       </div>
     </section>
   </div>

@@ -31,6 +31,7 @@ export function useAvailability(agents = []) {
       channelConfig.value.timezone ||
       DEFAULT_TIMEZONE,
     replyTime: channelConfig.value.replyTime || DEFAULT_REPLY_TIME,
+    replyTimeMessage: channelConfig.value.replyTimeMessage || '',
   }));
 
   const currentTime = computed(() => new Date());

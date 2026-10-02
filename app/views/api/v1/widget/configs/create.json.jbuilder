@@ -13,6 +13,7 @@ json.website_channel_config do
   json.pre_chat_form_enabled @web_widget.pre_chat_form_enabled
   json.pre_chat_form_options @web_widget.pre_chat_form_options
   json.reply_time @web_widget.reply_time
+  json.reply_time_message @web_widget.reply_time_message
   json.timezone @web_widget.inbox.timezone
   json.utc_off_set ActiveSupport::TimeZone[@web_widget.inbox.timezone].now.formatted_offset
   json.website_name @web_widget.inbox.name
@@ -20,6 +21,11 @@ json.website_channel_config do
   json.welcome_tagline @web_widget.welcome_tagline
   json.welcome_title @web_widget.welcome_title
   json.widget_color @web_widget.widget_color
+  json.widget_text_color @web_widget.widget_text_color
+  json.widget_icon_color @web_widget.widget_icon_color
+  json.widget_height @web_widget.widget_height
+  json.widget_style @web_widget.widget_style
+  json.conversation_starters @web_widget.conversation_starters
   json.working_hours @web_widget.inbox.working_hours
   json.working_hours_enabled @web_widget.inbox.working_hours_enabled
 end

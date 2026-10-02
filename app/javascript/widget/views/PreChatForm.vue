@@ -1,9 +1,8 @@
 <script>
-import { mapActions } from 'vuex';
+import { mapActions, mapGetters } from 'vuex';
 import { useRouter } from 'vue-router';
 import PreChatForm from '../components/PreChat/Form.vue';
 import configMixin from '../mixins/configMixin';
-import { isEmptyObject } from 'widget/helpers/utils';
 import { ON_CONVERSATION_CREATED } from '../constants/widgetBusEvents';
 import { emitter } from 'shared/helpers/mitt';
 
@@ -15,6 +14,11 @@ export default {
   setup() {
     const router = useRouter();
     return { router };
+  },
+  computed: {
+    ...mapGetters({
+      selectedCampaignResponse: 'campaign/getSelectedResponse',
+    }),
   },
   mounted() {
     // Register event listener for conversation creation
@@ -42,16 +46,23 @@ export default {
       contactCustomAttributes,
       conversationCustomAttributes,
     }) {
+      const starter = this.$route?.query?.starter;
+      // Contact custom attributes are sent within the same request that
+      // identifies the contact. A separate update call would race the contact
+      // merge on the server (matching email/phone) and write the values to
+      // the destroyed contact, silently losing them.
       if (activeCampaignId) {
         emitter.emit('execute-campaign', {
           campaignId: activeCampaignId,
           customAttributes: conversationCustomAttributes,
+          selectedResponse: this.selectedCampaignResponse,
         });
         this.$store.dispatch('contacts/update', {
           user: {
             email: emailAddress,
             name: fullName,
             phone_number: phoneNumber,
+            custom_attributes: contactCustomAttributes,
           },
         });
       } else {
@@ -60,16 +71,11 @@ export default {
         this.$store.dispatch('conversation/createConversation', {
           fullName: fullName,
           emailAddress: emailAddress,
-          message: message,
+          message: typeof starter === 'string' ? starter : message,
           phoneNumber: phoneNumber,
           customAttributes: conversationCustomAttributes,
+          contactCustomAttributes: contactCustomAttributes,
         });
-      }
-      if (!isEmptyObject(contactCustomAttributes)) {
-        this.$store.dispatch(
-          'contacts/setCustomAttributes',
-          contactCustomAttributes
-        );
       }
     },
   },

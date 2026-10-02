@@ -4,7 +4,8 @@ import Spinner from 'shared/components/Spinner.vue';
 import { CSAT_RATINGS, CSAT_DISPLAY_TYPES } from 'shared/constants/messages';
 import FluentIcon from 'shared/components/FluentIcon/Index.vue';
 import StarRating from 'shared/components/StarRating.vue';
-import { getContrastingTextColor } from '@chatwoot/utils';
+import { useMessageFormatter } from 'shared/composables/useMessageFormatter';
+import { shouldOutlineWidgetButton } from 'shared/helpers/colorHelper';
 
 export default {
   components: {
@@ -30,6 +31,10 @@ export default {
       default: '',
     },
   },
+  setup() {
+    const { formatMessage } = useMessageFormatter();
+    return { formatMessage };
+  },
   data() {
     return {
       email: '',
@@ -40,7 +45,24 @@ export default {
     };
   },
   computed: {
-    ...mapGetters({ widgetColor: 'appConfig/getWidgetColor' }),
+    ...mapGetters({
+      widgetColor: 'appConfig/getWidgetColor',
+      widgetTextColor: 'appConfig/getWidgetTextColor',
+    }),
+    isOutlined() {
+      return shouldOutlineWidgetButton(this.widgetColor);
+    },
+    buttonStyle() {
+      if (this.isOutlined) {
+        return undefined;
+      }
+
+      return {
+        background: this.widgetColor,
+        borderColor: this.widgetColor,
+        color: this.widgetTextColor,
+      };
+    },
     isRatingSubmitted() {
       return this.messageContentAttributes?.csat_survey_response?.rating;
     },
@@ -49,15 +71,17 @@ export default {
         ?.feedback_message;
     },
     isButtonDisabled() {
-      return !(this.selectedRating && this.feedback);
-    },
-    textColor() {
-      return getContrastingTextColor(this.widgetColor);
+      if (!(this.selectedRating && this.feedback)) return true;
+      if (this.isUpdating) return true;
+      return false;
     },
     title() {
       return this.isRatingSubmitted
         ? this.$t('CSAT.SUBMITTED_TITLE')
         : this.message || this.$t('CSAT.TITLE');
+    },
+    formattedTitle() {
+      return this.formatMessage(this.title, false);
     },
     isEmojiType() {
       return this.displayType === CSAT_DISPLAY_TYPES.EMOJI;
@@ -79,14 +103,16 @@ export default {
 
   methods: {
     buttonClass(rating) {
+      const isLocked = this.isFeedbackSubmitted || this.isUpdating;
       return [
         { selected: rating.value === this.selectedRating },
-        { disabled: this.isRatingSubmitted },
-        { hover: this.isRatingSubmitted },
+        { disabled: isLocked },
+        { hover: isLocked },
         'emoji-button',
       ];
     },
     async onSubmit() {
+      if (this.isUpdating) return;
       this.isUpdating = true;
       try {
         await this.$store.dispatch('message/update', {
@@ -106,10 +132,12 @@ export default {
     },
 
     selectRating(rating) {
+      if (this.isFeedbackSubmitted || this.isUpdating) return;
       this.selectedRating = rating.value;
       this.onSubmit();
     },
     selectStarRating(value) {
+      if (this.isFeedbackSubmitted || this.isUpdating) return;
       this.selectedRating = value;
       this.onSubmit();
     },
@@ -122,9 +150,10 @@ export default {
     class="customer-satisfaction w-full bg-n-background dark:bg-n-solid-3 shadow-[0_0.25rem_6px_rgba(50,50,93,0.08),0_1px_3px_rgba(0,0,0,0.05)] ltr:rounded-bl-[0.25rem] rtl:rounded-br-[0.25rem] rounded-lg inline-block leading-[1.5] mt-1 border-t-2 border-t-n-brand border-solid"
     :style="{ borderColor: widgetColor }"
   >
-    <h6 class="text-n-slate-12 text-sm font-medium pt-5 px-2.5 text-center">
-      {{ title }}
-    </h6>
+    <h6
+      v-dompurify-html="formattedTitle"
+      class="text-n-slate-12 text-sm font-medium pt-5 px-2.5 text-center prose prose-bubble"
+    />
     <div v-if="isEmojiType" class="ratings flex justify-around py-5 px-4">
       <button
         v-for="rating in ratings"
@@ -138,7 +167,7 @@ export default {
     <StarRating
       v-else-if="isStarType"
       :selected-rating="selectedRating"
-      :is-disabled="isRatingSubmitted"
+      :is-disabled="isFeedbackSubmitted || isUpdating"
       @select-rating="selectStarRating"
     />
     <form
@@ -154,14 +183,11 @@ export default {
       <button
         class="button small"
         :disabled="isButtonDisabled"
-        :style="{
-          background: widgetColor,
-          borderColor: widgetColor,
-          color: textColor,
-        }"
+        :class="{ 'is-outlined': isOutlined }"
+        :style="buttonStyle"
       >
         <Spinner v-if="isUpdating && feedback" />
-        <FluentIcon v-else icon="chevron-right" />
+        <FluentIcon v-else icon="chevron-right" class="rtl:rotate-180" />
       </button>
     </form>
   </div>

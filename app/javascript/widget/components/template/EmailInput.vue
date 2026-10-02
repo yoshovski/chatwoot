@@ -2,10 +2,10 @@
 import { mapGetters } from 'vuex';
 import { useVuelidate } from '@vuelidate/core';
 import { required, email } from '@vuelidate/validators';
-import { getContrastingTextColor } from '@chatwoot/utils';
 
 import FluentIcon from 'shared/components/FluentIcon/Index.vue';
 import Spinner from 'shared/components/Spinner.vue';
+import { shouldOutlineWidgetButton } from 'shared/helpers/colorHelper';
 
 export default {
   components: {
@@ -34,9 +34,21 @@ export default {
   computed: {
     ...mapGetters({
       widgetColor: 'appConfig/getWidgetColor',
+      widgetTextColor: 'appConfig/getWidgetTextColor',
     }),
-    textColor() {
-      return getContrastingTextColor(this.widgetColor);
+    isOutlined() {
+      return shouldOutlineWidgetButton(this.widgetColor);
+    },
+    buttonStyle() {
+      if (this.isOutlined) {
+        return undefined;
+      }
+
+      return {
+        background: this.widgetColor,
+        borderColor: this.widgetColor,
+        color: this.widgetTextColor,
+      };
     },
     hasSubmitted() {
       return (
@@ -90,13 +102,14 @@ export default {
       <button
         class="button small"
         :disabled="v$.email.$invalid"
-        :style="{
-          background: widgetColor,
-          borderColor: widgetColor,
-          color: textColor,
-        }"
+        :class="{ 'is-outlined': isOutlined }"
+        :style="buttonStyle"
       >
-        <FluentIcon v-if="!isUpdating" icon="chevron-right" />
+        <FluentIcon
+          v-if="!isUpdating"
+          icon="chevron-right"
+          class="rtl:rotate-180"
+        />
         <Spinner v-else class="mx-2" />
       </button>
     </form>

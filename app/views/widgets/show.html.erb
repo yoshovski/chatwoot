@@ -4,6 +4,7 @@
     <title><%= @global_config['INSTALLATION_NAME'] %></title>
     <%= csrf_meta_tags %>
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0" />
+    <meta name="robots" content="noindex">
     <script>
       window.chatwootWebChannel = {
         avatarUrl: '<%= @web_widget.inbox.avatar_url %>',
@@ -14,10 +15,16 @@
         welcomeTagline: <%= @web_widget.welcome_tagline.to_json.html_safe %>,
         welcomeTitle: '<%= @web_widget.welcome_title %>',
         widgetColor: '<%= @web_widget.widget_color %>',
+        widgetTextColor: <%= @web_widget.widget_text_color.to_json.html_safe %>,
+        widgetIconColor: <%= @web_widget.widget_icon_color.to_json.html_safe %>,
+        widgetHeight: <%= @web_widget.widget_height %>,
+        widgetStyle: '<%= @web_widget.widget_style %>',
+        conversationStarters: <%= @web_widget.conversation_starters.to_json.html_safe %>,
         portal: <%= @web_widget.inbox.portal.to_json.html_safe %>,
         enabledFeatures: <%= @web_widget.selected_feature_flags.to_json.html_safe %>,
         enabledLanguages: <%= available_locales_with_name.to_json.html_safe %>,
         replyTime: '<%= @web_widget.reply_time %>',
+        replyTimeMessage: <%= @web_widget.reply_time_message.to_json.html_safe %>,
         preChatFormEnabled: <%= @web_widget.pre_chat_form_enabled %>,
         preChatFormOptions: <%= @web_widget.pre_chat_form_options.to_json.html_safe %>,
         workingHoursEnabled: <%= @web_widget.inbox.working_hours_enabled %>,

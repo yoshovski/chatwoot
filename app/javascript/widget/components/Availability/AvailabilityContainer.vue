@@ -50,6 +50,9 @@ const utcOffset = computed(
 const replyTime = computed(
   () => inboxConfig.value.replyTime || 'in_a_few_minutes'
 );
+const replyTimeMessage = computed(
+  () => inboxConfig.value.replyTimeMessage || ''
+);
 
 // If online or in working hours
 const isAvailable = computed(
@@ -77,6 +80,7 @@ const headerText = computed(() =>
         :working-hours-enabled="workingHoursEnabled"
         :has-online-agents="hasOnlineAgents"
         :reply-time="replyTime"
+        :reply-time-message="replyTimeMessage"
         :is-online="isOnline"
         :is-in-working-hours="isInWorkingHours"
         :class="textClasses"

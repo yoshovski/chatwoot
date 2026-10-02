@@ -45,6 +45,7 @@ export default {
   computed: {
     ...mapGetters({
       widgetColor: 'appConfig/getWidgetColor',
+      widgetTextColor: 'appConfig/getWidgetTextColor',
     }),
 
     isInProgress() {
@@ -126,6 +127,7 @@ export default {
               :message="message.content"
               :status="message.status"
               :widget-color="widgetColor"
+              :widget-text-color="widgetTextColor"
             />
             <div
               v-if="hasAttachments"
@@ -156,6 +158,7 @@ export default {
                   :url="attachment.data_url"
                   :is-in-progress="isInProgress"
                   :widget-color="widgetColor"
+                  :widget-text-color="widgetTextColor"
                   is-user-bubble
                 />
               </div>

@@ -1,6 +1,6 @@
 <script>
 import { useMessageFormatter } from 'shared/composables/useMessageFormatter';
-import ChatCard from 'shared/components/ChatCard.vue';
+import ChatCards from 'shared/components/ChatCards.vue';
 import ChatForm from 'shared/components/ChatForm.vue';
 import ChatOptions from 'shared/components/ChatOptions.vue';
 import ChatArticle from './template/Article.vue';
@@ -12,7 +12,7 @@ export default {
   name: 'AgentMessageBubble',
   components: {
     ChatArticle,
-    ChatCard,
+    ChatCards,
     ChatForm,
     ChatOptions,
     EmailInput,
@@ -28,6 +28,9 @@ export default {
       type: Object,
       default: () => {},
     },
+    agentName: { type: String, default: '' },
+    showAgentName: { type: Boolean, default: false },
+    hideOptions: { type: Boolean, default: false },
   },
   setup() {
     const { formatMessage, getPlainText, truncateMessage, highlightContent } =
@@ -99,7 +102,7 @@ export default {
     >
       <div
         v-dompurify-html="formatMessage(message, false)"
-        class="message-content text-n-slate-12"
+        class="message-content text-n-slate-12 [&>ul:not(:last-child)]:mb-4 [&>ol:not(:last-child)]:mb-4"
       />
       <EmailInput
         v-if="isTemplateEmail"
@@ -117,27 +120,23 @@ export default {
       <ChatOptions
         :title="message"
         :options="messageContentAttributes.items"
-        :hide-fields="!!messageContentAttributes.submitted_values"
+        :hide-fields="hideOptions"
+        :agent-name="agentName"
+        :show-agent-name="showAgentName"
         @option-select="onOptionSelect"
       />
     </div>
     <ChatForm
       v-if="isForm && !messageContentAttributes.submitted_values"
+      :title="message"
       :items="messageContentAttributes.items"
       :button-label="messageContentAttributes.button_label"
       :submitted-values="messageContentAttributes.submitted_values"
       @submit="onFormSubmit"
     />
-    <div v-if="isCards">
-      <ChatCard
-        v-for="item in messageContentAttributes.items"
-        :key="item.title"
-        :media-url="item.media_url"
-        :title="item.title"
-        :description="item.description"
-        :actions="item.actions"
-      />
-    </div>
+    <!-- Products arrive as one message carrying every card, so they read as a carousel rather
+         than a column the visitor has to scroll the whole conversation past. -->
+    <ChatCards v-if="isCards" :items="messageContentAttributes.items" />
     <div v-if="isArticle">
       <ChatArticle :items="messageContentAttributes.items" />
     </div>

@@ -18,6 +18,7 @@ Metrics/ClassLength:
   Exclude:
     - 'app/models/message.rb'
     - 'app/models/conversation.rb'
+    - 'config/initializers/rack_attack.rb'
 
 Metrics/MethodLength:
   Max: 19
@@ -100,6 +101,7 @@ Rails/ApplicationController:
   Exclude:
     - 'app/controllers/api/v1/widget/messages_controller.rb'
     - 'app/controllers/dashboard_controller.rb'
+    - 'app/controllers/demos_controller.rb'
     - 'app/controllers/widget_tests_controller.rb'
     - 'app/controllers/widgets_controller.rb'
     - 'app/controllers/platform_controller.rb'

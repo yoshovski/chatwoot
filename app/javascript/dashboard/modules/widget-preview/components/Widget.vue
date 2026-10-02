@@ -36,9 +36,29 @@ const props = defineProps({
     type: String,
     default: '',
   },
+  replyTimeMessage: {
+    type: String,
+    default: '',
+  },
   color: {
     type: String,
     default: '',
+  },
+  textColor: {
+    type: String,
+    default: '',
+  },
+  iconColor: {
+    type: String,
+    default: '',
+  },
+  widgetHeight: {
+    type: Number,
+    default: 640,
+  },
+  conversationStarters: {
+    type: Array,
+    default: () => [],
   },
   widgetBubblePosition: {
     type: String,
@@ -102,7 +122,11 @@ const widgetScript = computed(() => {
 });
 
 const replyTimeText = computed(() => {
+  if (props.replyTimeMessage.trim()) return props.replyTimeMessage.trim();
+
   switch (props.replyTime) {
+    case 'immediately':
+      return t('INBOX_MGMT.WIDGET_BUILDER.REPLY_TIME.IMMEDIATELY');
     case 'in_a_few_minutes':
       return t('INBOX_MGMT.WIDGET_BUILDER.REPLY_TIME.IN_A_FEW_MINUTES');
     case 'in_a_day':
@@ -121,6 +145,12 @@ const getWidgetConfig = computed(() => ({
   isOnline: props.isOnline,
   replyTime: replyTimeText.value,
   color: props.color,
+  textColor: props.textColor,
+  conversationStarters: props.conversationStarters,
+}));
+
+const widgetPreviewStyle = computed(() => ({
+  height: `${Math.min(props.widgetHeight, 640)}px`,
 }));
 
 const getBubblePositionStyle = computed(() => ({
@@ -173,7 +203,8 @@ const handleToggleWidget = () => {
       >
         <div
           v-if="isWidgetVisible"
-          class="widget-wrapper flex flex-1 flex-shrink-0 flex-col justify-between rounded-lg shadow-md bg-n-slate-2 dark:bg-n-solid-1 h-[31.25rem] w-80 mb-4"
+          class="widget-wrapper flex flex-shrink-0 flex-col justify-between bg-n-slate-2 dark:bg-n-solid-1 w-80 mb-4 rounded-2xl shadow-md"
+          :style="widgetPreviewStyle"
         >
           <WidgetHead :config="getWidgetConfig" />
           <div>
@@ -204,31 +235,37 @@ const handleToggleWidget = () => {
 
         <div class="flex w-[320px]" :style="getBubblePositionStyle">
           <button
-            class="relative flex items-center justify-center rounded-full cursor-pointer"
-            :style="{ background: props.color }"
+            class="relative flex items-center justify-center cursor-pointer rounded-full shadow-[0_0.375rem_1.125rem_rgba(0,0,0,0.18),0_0.75rem_2rem_rgba(0,0,0,0.12)] hover:shadow-[0_0.5rem_1.375rem_rgba(0,0,0,0.2),0_1rem_2.5rem_rgba(0,0,0,0.14)]"
             :class="
               isBubbleExpanded
-                ? 'w-auto font-medium text-base text-white dark:text-white h-12 px-4'
+                ? 'w-auto font-medium text-base h-12 px-4'
                 : 'w-16 h-16'
             "
+            :style="{ background: props.color, color: props.textColor }"
             @click="handleToggleWidget"
           >
-            <img
+            <svg
               v-if="!isWidgetVisible"
-              src="~dashboard/assets/images/bubble-logo.svg"
-              alt=""
-              draggable="false"
+              viewBox="0 0 240 240"
               class="w-6 h-6 mx-auto"
-            />
+              aria-hidden="true"
+            >
+              <path
+                d="M240.808 240.808H122.123C56.6994 240.808 3.45695 187.562 3.45695 122.122C3.45695 56.7031 56.6994 3.45697 122.124 3.45697C187.566 3.45697 240.808 56.7031 240.808 122.122V240.808Z"
+                :fill="iconColor"
+              />
+            </svg>
             <div v-if="isBubbleExpanded" class="ltr:pl-2.5 rtl:pr-2.5">
               {{ getWidgetBubbleLauncherTitle }}
             </div>
             <div v-if="isWidgetVisible" class="relative">
               <div
-                class="absolute w-0.5 h-8 rotate-45 -translate-y-1/2 bg-white"
+                class="absolute w-0.5 h-8 rotate-45 -translate-y-1/2"
+                :style="{ backgroundColor: iconColor }"
               />
               <div
-                class="absolute w-0.5 h-8 -rotate-45 -translate-y-1/2 bg-white"
+                class="absolute w-0.5 h-8 -rotate-45 -translate-y-1/2"
+                :style="{ backgroundColor: iconColor }"
               />
             </div>
           </button>

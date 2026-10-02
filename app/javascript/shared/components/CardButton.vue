@@ -1,7 +1,7 @@
 <script>
 import { mapGetters } from 'vuex';
-import { getContrastingTextColor } from '@chatwoot/utils';
 import { IFrameHelper } from 'widget/helpers/utils';
+import { shouldOutlineWidgetButton } from 'shared/helpers/colorHelper';
 
 export default {
   components: {},
@@ -14,12 +14,24 @@ export default {
   computed: {
     ...mapGetters({
       widgetColor: 'appConfig/getWidgetColor',
+      widgetTextColor: 'appConfig/getWidgetTextColor',
     }),
-    textColor() {
-      return getContrastingTextColor(this.widgetColor);
-    },
     isLink() {
       return this.action.type === 'link';
+    },
+    isOutlined() {
+      return shouldOutlineWidgetButton(this.widgetColor);
+    },
+    buttonStyle() {
+      if (this.isOutlined) {
+        return undefined;
+      }
+
+      return {
+        background: this.widgetColor,
+        borderColor: this.widgetColor,
+        color: this.widgetTextColor,
+      };
     },
   },
   methods: {
@@ -43,12 +55,9 @@ export default {
     v-if="isLink"
     :key="action.uri"
     class="action-button button"
+    :class="{ 'is-outlined': isOutlined }"
     :href="action.uri"
-    :style="{
-      background: widgetColor,
-      borderColor: widgetColor,
-      color: textColor,
-    }"
+    :style="buttonStyle"
     target="_blank"
     rel="noopener nofollow noreferrer"
   >
@@ -57,8 +66,9 @@ export default {
   <button
     v-else
     :key="action.payload"
-    class="action-button button !bg-n-background dark:!bg-n-alpha-black1 text-n-brand"
-    :style="{ borderColor: widgetColor, color: widgetColor }"
+    class="action-button button"
+    :class="{ 'is-outlined': isOutlined }"
+    :style="buttonStyle"
     @click="onClick"
   >
     {{ action.text }}

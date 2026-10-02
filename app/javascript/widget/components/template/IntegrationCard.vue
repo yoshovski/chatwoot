@@ -2,8 +2,8 @@
 import IntegrationAPIClient from 'widget/api/integration';
 import FluentIcon from 'shared/components/FluentIcon/Index.vue';
 import { buildDyteURL } from 'shared/helpers/IntegrationHelper';
-import { getContrastingTextColor } from '@chatwoot/utils';
 import { mapGetters } from 'vuex';
+import { shouldOutlineWidgetButton } from 'shared/helpers/colorHelper';
 
 export default {
   components: {
@@ -19,9 +19,23 @@ export default {
     return { isLoading: false, dyteAuthToken: '', isSDKMounted: false };
   },
   computed: {
-    ...mapGetters({ widgetColor: 'appConfig/getWidgetColor' }),
-    textColor() {
-      return getContrastingTextColor(this.widgetColor);
+    ...mapGetters({
+      widgetColor: 'appConfig/getWidgetColor',
+      widgetTextColor: 'appConfig/getWidgetTextColor',
+    }),
+    isOutlined() {
+      return shouldOutlineWidgetButton(this.widgetColor);
+    },
+    buttonStyle() {
+      if (this.isOutlined) {
+        return undefined;
+      }
+
+      return {
+        background: this.widgetColor,
+        borderColor: this.widgetColor,
+        color: this.widgetTextColor,
+      };
     },
     meetingLink() {
       return buildDyteURL(this.dyteAuthToken);
@@ -55,11 +69,8 @@ export default {
       class="button join-call-button"
       color-scheme="secondary"
       :is-loading="isLoading"
-      :style="{
-        background: widgetColor,
-        borderColor: widgetColor,
-        color: textColor,
-      }"
+      :class="{ 'is-outlined': isOutlined }"
+      :style="buttonStyle"
       @click="joinTheCall"
     >
       <FluentIcon icon="video-add" class="rtl:ml-2 ltr:mr-2" />
