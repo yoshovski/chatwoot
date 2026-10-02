@@ -582,6 +582,20 @@ const menuItems = computed(() => {
         },
       ],
     },
+    ...(isFeatureEnabledonAccount.value(
+      accountId.value,
+      FEATURE_FLAGS.NATIVE_AI_KNOWLEDGE
+    )
+      ? [
+          {
+            name: 'Knowledge',
+            label: t('SIDEBAR.KNOWLEDGE'),
+            icon: 'i-lucide-library',
+            to: accountScopedRoute('native_knowledge_index'),
+            activeOn: ['native_knowledge_index', 'native_knowledge_show'],
+          },
+        ]
+      : []),
     ...(isCallsAvailable.value
       ? [
           {

@@ -82,6 +82,12 @@ Rails.application.routes.draw do
               patch 'sources/:source_id/state', action: :source_state
               get 'sources/:source_id/revisions', action: :source_revisions
               get 'source-revisions/:revision_id/original', action: :original
+              get 'agents', action: :available_agents
+              get 'bases/:base_id/agents', action: :base_agents
+              post 'bases/:base_id/csv/preview', action: :preview_csv
+              post 'bases/:base_id/csv/import', action: :import_csv
+              get 'bases/:base_id/csv', action: :export_csv
+              get 'bases/:base_id/export', action: :export_archive
               post 'agents', action: :ensure_agent
               get 'agents/:agent_id/bases', action: :agent_bases
               put 'agents/:agent_id/bases/:base_id', action: :attach

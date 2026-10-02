@@ -415,7 +415,8 @@
     "DOCS": "Read docs",
     "SECURITY": "Security",
     "CAPTAIN_AI": "Captain",
-    "CONVERSATION_WORKFLOW": "Conversation Workflow"
+    "CONVERSATION_WORKFLOW": "Conversation Workflow",
+    "KNOWLEDGE": "Knowledge"
   },
   "DATA_IMPORTS": {
     "HEADER": "Data",

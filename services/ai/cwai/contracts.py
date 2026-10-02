@@ -102,3 +102,7 @@ class EntryEdit(EntryCreate):
 
 class SourceEdit(SourceCreate):
     expected_version: int = Field(gt=0)
+
+
+class CSVUpload(Contract):
+    csv: str = Field(min_length=1, max_length=5 * 1024 * 1024)

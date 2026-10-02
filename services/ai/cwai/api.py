@@ -2,8 +2,9 @@ from uuid import UUID
 
 from fastapi import Depends, FastAPI, HTTPException, Response
 from fastapi.responses import JSONResponse
-from sqlalchemy import delete, select, text, update
+from sqlalchemy import delete, func, select, text, update
 from sqlalchemy.dialects.postgresql import insert as pg_insert
+from sqlalchemy.exc import IntegrityError
 
 from cwai import schema as s
 from cwai.auth import Scope, read_scope, write_scope
@@ -13,6 +14,7 @@ from cwai.contracts import (
     BaseCreate,
     BaseUpdate,
     Citations,
+    CSVUpload,
     EntryCreate,
     EntryEdit,
     Retrieval,
@@ -23,6 +25,7 @@ from cwai.contracts import (
 )
 from cwai.db import engine
 from cwai.dify import Dify, ProjectionError
+from cwai.portability import export_archive, export_csv, import_csv, preview
 from cwai.store import (
     CONTENT,
     add,
@@ -106,11 +109,57 @@ def view(conn, kind, item):
     }
 
 
+def base_summary(conn, base):
+    summary = public(base)
+    states = []
+    for kind, (table, _, key, _) in CONTENT.items():
+        scoped = (table.c.tenant_id == base["tenant_id"]) & (table.c.base_id == base["id"])
+        summary["faq_count" if kind == "faq" else "source_count"] = conn.scalar(
+            select(func.count()).select_from(table).where(scoped)
+        )
+        joined = table.join(
+            s.projections,
+            (s.projections.c.base_id == table.c.base_id) & (s.projections.c.kind == kind),
+        ).join(
+            s.jobs,
+            (s.jobs.c[key] == table.c.id)
+            & (s.jobs.c.generation == table.c.generation)
+            & (s.jobs.c.projection_id == s.projections.c.id)
+            & (s.jobs.c.epoch == s.projections.c.epoch),
+        )
+        query = select(s.jobs.c.state).select_from(joined).where(scoped, table.c.enabled.is_(True))
+        if kind == "faq":
+            query = query.outerjoin(s.sources, s.sources.c.id == table.c.source_id).where(
+                table.c.review_state == "approved",
+                (table.c.source_id.is_(None)) | s.sources.c.enabled.is_(True),
+            )
+        states.extend(conn.scalars(query.distinct()))
+    summary["agent_count"] = conn.scalar(
+        select(func.count())
+        .select_from(s.attachments)
+        .where(
+            s.attachments.c.tenant_id == base["tenant_id"], s.attachments.c.base_id == base["id"]
+        )
+    )
+    summary["index_status"] = (
+        "disabled"
+        if not base["enabled"]
+        else "failed"
+        if "failed" in states
+        else "processing"
+        if any(state != "done" for state in states)
+        else "ready"
+        if states
+        else "empty"
+    )
+    return summary
+
+
 @app.get(PREFIX + "/bases")
 def list_bases(auth: Scope = Depends(read_scope)):
     with engine().connect() as conn:
         return [
-            public(dict(row))
+            base_summary(conn, dict(row))
             for row in conn.execute(
                 select(s.bases)
                 .where(
@@ -133,7 +182,7 @@ def create_base(payload: BaseCreate, auth: Scope = Depends(write_scope)):
 @app.get(PREFIX + "/bases/{base_id}")
 def show_base(base_id: UUID, auth: Scope = Depends(read_scope)):
     with engine().connect() as conn:
-        return public(owned(conn, s.bases, auth.tenant_id, base_id))
+        return base_summary(conn, owned(conn, s.bases, auth.tenant_id, base_id))
 
 
 @app.patch(PREFIX + "/bases/{base_id}")
@@ -511,3 +560,59 @@ def validate_citations(base_id: UUID, payload: Citations, auth: Scope = Depends(
                 raise HTTPException(409, "Knowledge citation is no longer current")
             records.append(content)
         return {"records": records}
+
+
+@app.post(PREFIX + "/bases/{base_id}/csv/preview")
+def preview_csv(base_id: UUID, payload: CSVUpload, auth: Scope = Depends(read_scope)):
+    with engine().begin() as conn:
+        base = owned(conn, s.bases, auth.tenant_id, base_id, lock=True)
+        return preview(conn, base, payload.csv)
+
+
+@app.post(PREFIX + "/bases/{base_id}/csv/import")
+def upload_csv(base_id: UUID, payload: CSVUpload, auth: Scope = Depends(write_scope)):
+    try:
+        with engine().begin() as conn:
+            base = owned(conn, s.bases, auth.tenant_id, base_id, lock=True)
+            return import_csv(conn, base, payload.csv, auth.actor)
+    except IntegrityError:
+        raise HTTPException(409, "Knowledge changed; preview again before importing") from None
+
+
+@app.get(PREFIX + "/bases/{base_id}/csv")
+def download_csv(base_id: UUID, auth: Scope = Depends(read_scope)):
+    with engine().begin() as conn:
+        base = owned(conn, s.bases, auth.tenant_id, base_id, lock=True)
+        return Response(
+            export_csv(conn, base),
+            media_type="text/csv",
+            headers={"Content-Disposition": 'attachment; filename="faqs.csv"'},
+        )
+
+
+@app.get(PREFIX + "/bases/{base_id}/export")
+def download_archive(base_id: UUID, auth: Scope = Depends(read_scope)):
+    with engine().begin() as conn:
+        base = owned(conn, s.bases, auth.tenant_id, base_id, lock=True)
+        return Response(
+            export_archive(conn, base),
+            media_type="application/zip",
+            headers={"Content-Disposition": 'attachment; filename="knowledge.zip"'},
+        )
+
+
+@app.get(PREFIX + "/bases/{base_id}/agents")
+def base_agents(base_id: UUID, auth: Scope = Depends(read_scope)):
+    with engine().connect() as conn:
+        base = owned(conn, s.bases, auth.tenant_id, base_id)
+        return [
+            public(dict(row))
+            for row in conn.execute(
+                select(s.agents)
+                .join(s.attachments, s.agents.c.id == s.attachments.c.agent_id)
+                .where(
+                    s.attachments.c.tenant_id == auth.tenant_id,
+                    s.attachments.c.base_id == base["id"],
+                )
+            ).mappings()
+        ]
