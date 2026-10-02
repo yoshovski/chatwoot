@@ -23,6 +23,8 @@ Two merge conflicts required resolution:
 
 Upstream trailing spaces in `config/cable.yml` and `config/features.yml` were removed.
 
+The inherited Heroku review-app deployment check runs only in the upstream repository. This fork uses lab candidates and has no corresponding upstream Heroku review app; backend, frontend and image-build checks remain enabled.
+
 ## Validation recorded
 
 - Node 24.19.0; pnpm 10.2.0; frozen-lockfile dependency install.
