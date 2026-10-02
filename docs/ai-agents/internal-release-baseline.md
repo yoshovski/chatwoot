@@ -21,7 +21,7 @@ Two merge conflicts required resolution:
 - `ChatSendButton.vue`: retain custom light-color contrast fallback and combine it with upstream RTL icon mirroring.
 - `db/schema.rb`: retain the latest custom schema version `2026_09_09_130000`; automatic merge retains upstream schema additions and custom columns/indexes. No migration timestamp was renumbered.
 
-An upstream trailing space in `config/cable.yml` was removed.
+Upstream trailing spaces in `config/cable.yml` and `config/features.yml` were removed.
 
 ## Validation recorded
 
