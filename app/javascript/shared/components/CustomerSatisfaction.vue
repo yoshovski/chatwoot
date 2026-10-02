@@ -187,7 +187,7 @@ export default {
         :style="buttonStyle"
       >
         <Spinner v-if="isUpdating && feedback" />
-        <FluentIcon v-else icon="chevron-right" />
+        <FluentIcon v-else icon="chevron-right" class="rtl:rotate-180" />
       </button>
     </form>
   </div>
