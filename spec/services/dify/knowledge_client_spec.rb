@@ -48,6 +48,24 @@ RSpec.describe Dify::KnowledgeClient do
     expect(retrieval).to have_been_requested.once
   end
 
+  it 'finds documents and replaces a native chunk without invoking the text splitter' do
+    stub_request(:get, "#{root}/dataset-one/documents").with(query: { keyword: 'Captain FAQ 1.', limit: 2 })
+                                                       .to_return(body: '{"data":[{"id":"doc-one"}]}')
+    stub_request(:get, "#{root}/dataset-one/documents/doc-one").to_return(body: '{"indexing_status":"completed"}')
+    stub_request(:get, "#{root}/dataset-one/documents/doc-one/segments").with(query: { limit: 2 })
+                                                                        .to_return(body: '{"data":[{"id":"chunk-one"}],"total":1}')
+    update = stub_request(:post, "#{root}/dataset-one/documents/doc-one/segments/chunk-one")
+             .with(body: { segment: { content: "question: Example\nanswer: Exact answer", enabled: true } })
+             .to_return(body: '{"data":{"id":"chunk-one"}}')
+
+    expect(client.documents(dataset_id: 'dataset-one', keyword: 'Captain FAQ 1.')['data'].first['id']).to eq('doc-one')
+    expect(client.document(dataset_id: 'dataset-one', document_id: 'doc-one')['indexing_status']).to eq('completed')
+    expect(client.segments(dataset_id: 'dataset-one', document_id: 'doc-one')['total']).to eq(1)
+    expect(client.update_segment(dataset_id: 'dataset-one', document_id: 'doc-one', segment_id: 'chunk-one',
+                                 content: "question: Example\nanswer: Exact answer", enabled: true)['data']['id']).to eq('chunk-one')
+    expect(update).to have_been_requested.once
+  end
+
   it 'preserves an inaccessible dataset status without exposing the server response' do
     stub_request(:get, "#{root}/foreign-dataset").to_return(status: 404, body: 'private-test-key client content')
 

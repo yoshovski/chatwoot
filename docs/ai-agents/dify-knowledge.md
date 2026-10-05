@@ -37,3 +37,30 @@ list from `assistant.dify_dataset_ids`, never from model output or browser param
 Before a lab release, verify that the installed Dify version supports the configured
 embedding provider and the required hybrid, reranking and metadata retrieval options.
 Use synthetic documents for acceptance checks and keep private configuration in lab records.
+
+## FAQ ingestion
+
+Captain FAQ saves enqueue a Dify sync instead of an embedding job. Configure the account's
+Dify workspace first; unconfigured accounts do not enqueue knowledge writes. FAQ suggestion
+saves no longer enqueue embeddings either. Duplicate search is replaced in the search task.
+
+Each FAQ has an indexed `dify_document_id`. The sync creates a short, single-chunk placeholder
+document, persists its ID, and waits for indexing through bounded job retries. Dify's native
+segment API replaces that chunk with `question: …` and `answer: …` on separate lines. The full
+FAQ never goes through Dify's text splitter or cleaning rules. Edits update the same chunk;
+deletes remove the document. Moving an FAQ to another assistant deletes its old document and
+creates one in the destination dataset. Dataset IDs come from the assistant's server records.
+
+Retries recover document creation by its stable FAQ ID name if a response was lost, skip
+unchanged completed chunks, and log exhausted failures by FAQ ID and HTTP status without
+private content. A document with an unexpected chunk count fails explicitly.
+
+Backfill existing FAQs for a configured assistant:
+
+```sh
+bundle exec rake captain:dify:backfill_faqs ASSISTANT_ID=123
+```
+
+The task can be run again safely: it reuses document IDs and updates only changed or failed
+chunks. It does not alter the question or answer in Captain. Native search remains in place
+until the separate search replacement task is released.

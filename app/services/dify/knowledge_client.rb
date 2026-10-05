@@ -47,6 +47,22 @@ class Dify::KnowledgeClient
     request(:delete, "datasets/#{dataset_id}/documents/#{document_id}")
   end
 
+  def documents(dataset_id:, keyword:)
+    request(:get, "datasets/#{dataset_id}/documents", params: { keyword: keyword, limit: 2 })
+  end
+
+  def document(dataset_id:, document_id:)
+    request(:get, "datasets/#{dataset_id}/documents/#{document_id}")
+  end
+
+  def segments(dataset_id:, document_id:)
+    request(:get, "datasets/#{dataset_id}/documents/#{document_id}/segments", params: { limit: 2 })
+  end
+
+  def update_segment(dataset_id:, document_id:, segment_id:, **attributes)
+    request(:post, "datasets/#{dataset_id}/documents/#{document_id}/segments/#{segment_id}", { segment: attributes })
+  end
+
   def indexing_status(dataset_id:, batch:)
     request(:get, "datasets/#{dataset_id}/documents/#{batch}/indexing-status")
   end
@@ -57,10 +73,11 @@ class Dify::KnowledgeClient
 
   private
 
-  def request(method, path, payload = nil, multipart: false)
+  def request(method, path, payload = nil, multipart: false, params: {})
     response = @connection.run_request(method, path, nil, nil) do |request|
       request.headers['Content-Type'] = 'application/json' unless multipart
       request.body = multipart ? payload : payload&.to_json
+      request.params.update(params)
     end
     raise Error.new("Dify request failed (HTTP #{response.status})", status: response.status) unless response.success?
 
