@@ -8,6 +8,7 @@ class Captain::Tools::SearchDocumentationService < Captain::Tools::BaseTool
 
   def execute(query:)
     Rails.logger.info { "#{self.class.name}: #{query}" }
+    return search_knowledge(query) if assistant.account.dify_knowledge_enabled?
 
     translated_query = Captain::Llm::TranslateQueryService
                        .new(account: assistant.account)
@@ -21,6 +22,13 @@ class Captain::Tools::SearchDocumentationService < Captain::Tools::BaseTool
   end
 
   private
+
+  def search_knowledge(query)
+    passages = Captain::Knowledge::Search.new(assistant, actor: @user).search(query)
+    return 'No knowledge found for the given query' if passages.empty?
+
+    passages.map(&:to_tool_result).join
+  end
 
   def format_response(response)
     formatted_response = "

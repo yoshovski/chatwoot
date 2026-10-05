@@ -17,6 +17,7 @@ class Captain::Tools::SearchReplyDocumentationService < RubyLLM::Tool
 
   def execute(query:)
     Rails.logger.info { "#{self.class.name}: #{query}" }
+    return search_knowledge(query) if @account.dify_knowledge_enabled?
 
     translated_query = Captain::Llm::TranslateQueryService
                        .new(account: @account)
@@ -29,6 +30,16 @@ class Captain::Tools::SearchReplyDocumentationService < RubyLLM::Tool
   end
 
   private
+
+  def search_knowledge(query)
+    assistants = @assistant ? [@assistant] : @account.captain_assistants.to_a
+    passages = assistants.flat_map { |assistant| Captain::Knowledge::Search.new(assistant).search(query) }
+                         .sort_by { |passage| -passage.score }.uniq { |passage| [passage.kind, passage.document_id, passage.content] }.first(5)
+    passages = Captain::Knowledge::Search.within_budget(passages)
+    return 'No knowledge found for the given query' if passages.empty?
+
+    passages.map(&:to_tool_result).join
+  end
 
   def search_responses(query)
     if @assistant.present?

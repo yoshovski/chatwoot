@@ -18,7 +18,7 @@ RSpec.describe Captain::Tools::FaqLookupTool, type: :model do
 
   describe '#description' do
     it 'returns the correct description' do
-      expect(tool.description).to eq('Search FAQ responses using semantic similarity to find relevant answers')
+      expect(tool.description).to eq('Search FAQs, documents and connected product knowledge to find relevant answers')
     end
   end
 
@@ -27,7 +27,7 @@ RSpec.describe Captain::Tools::FaqLookupTool, type: :model do
       expect(tool.parameters).to have_key(:query)
       expect(tool.parameters[:query].name).to eq(:query)
       expect(tool.parameters[:query].type).to eq('string')
-      expect(tool.parameters[:query].description).to eq('The question or topic to search for in the FAQ database')
+      expect(tool.parameters[:query].description).to eq('The question or topic to search for in the knowledge base')
     end
   end
 

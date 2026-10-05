@@ -1,9 +1,10 @@
 class Captain::Tools::FaqLookupTool < Captain::Tools::BasePublicTool
-  description 'Search FAQ responses using semantic similarity to find relevant answers'
-  param :query, type: 'string', desc: 'The question or topic to search for in the FAQ database'
+  description 'Search FAQs, documents and connected product knowledge to find relevant answers'
+  param :query, type: 'string', desc: 'The question or topic to search for in the knowledge base'
 
   def perform(tool_context, query:)
     log_tool_usage('searching', { query: query })
+    return search_knowledge(tool_context, query) if @assistant.account.dify_knowledge_enabled?
 
     # Use existing vector search on approved responses
     responses = @assistant.responses.approved.search(query).includes(:documentable).to_a
@@ -19,6 +20,30 @@ class Captain::Tools::FaqLookupTool < Captain::Tools::BasePublicTool
   end
 
   private
+
+  def search_knowledge(tool_context, query)
+    passages = Captain::Knowledge::Search.new(@assistant).search(query)
+    return "No relevant knowledge found for: #{query}" if passages.empty?
+
+    record_knowledge_sources(tool_context, passages)
+    log_tool_usage('found_results', { query: query, count: passages.size })
+    passages.map { |passage| format_passage(tool_context, passage) }.join
+  end
+
+  def record_knowledge_sources(tool_context, passages)
+    record_retrieved_sources(tool_context, passages.select { |passage| passage.kind == 'faq' }.map(&:record))
+    metadata = tool_context.state[:cw_metadata] ||= {}
+    document_ids = passages.select { |passage| passage.kind == 'document' }.map { |passage| passage.record.id }
+    metadata[:document_ids] = Array(metadata[:document_ids]) | document_ids
+  end
+
+  def format_passage(tool_context, passage)
+    result = "\nKnowledge result:\nTitle: #{passage.title}\n#{passage.content}\n"
+    if @assistant.citations_enabled? && passage.customer_visible_source_url.present?
+      result += "Citation index: #{citation_index_for_document(tool_context, passage.source_document.id)}\n"
+    end
+    result
+  end
 
   def safe_to_run_after_new_customer_message?
     true
@@ -44,7 +69,7 @@ class Captain::Tools::FaqLookupTool < Captain::Tools::BasePublicTool
 
   def format_response(tool_context, response)
     formatted_response = "
-        FAQ result:
+        Knowledge result:
         "
     if @assistant.citations_enabled? && response.customer_visible_source_url.present?
       formatted_response += "
@@ -60,12 +85,16 @@ class Captain::Tools::FaqLookupTool < Captain::Tools::BasePublicTool
   end
 
   def citation_index(tool_context, response)
+    citation_index_for_document(tool_context, response.documentable_id)
+  end
+
+  def citation_index_for_document(tool_context, document_id)
     citation_document_ids = tool_context.state[Captain::Assistant::CITATION_SOURCES_STATE_KEY] ||= {}
-    existing_index = citation_document_ids.find { |_index, document_id| document_id == response.documentable_id }&.first
+    existing_index = citation_document_ids.find { |_index, source_id| source_id == document_id }&.first
     return existing_index if existing_index.present?
 
     next_citation_index = citation_document_ids.size + 1
-    citation_document_ids[next_citation_index] = response.documentable_id
+    citation_document_ids[next_citation_index] = document_id
     next_citation_index
   end
 end
