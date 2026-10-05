@@ -35,8 +35,7 @@ class Captain::Tools::SearchReplyDocumentationService < RubyLLM::Tool
     assistants = @assistant ? [@assistant] : @account.captain_assistants.to_a
     passages = assistants.flat_map { |assistant| Captain::Knowledge::Search.new(assistant).search(query) }
                          .sort_by { |passage| -passage.score }.uniq { |passage| [passage.kind, passage.document_id, passage.content] }.first(5)
-    total = 0
-    passages.select! { |passage| (total += passage.content.length) <= Captain::Knowledge::Search::TOTAL_CHARS }
+    passages = Captain::Knowledge::Search.within_budget(passages)
     return 'No knowledge found for the given query' if passages.empty?
 
     passages.map(&:to_tool_result).join

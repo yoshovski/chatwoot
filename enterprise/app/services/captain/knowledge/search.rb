@@ -37,8 +37,12 @@ class Captain::Knowledge::Search
     raise Error, "Captain knowledge search failed (HTTP #{response.code})" unless response.code == 200
 
     passages = response.parsed_response.fetch('passages').filter_map { |passage| canonical_passage(passage, datasets) }
+    self.class.within_budget(passages)
+  end
+
+  def self.within_budget(passages)
     total = 0
-    passages.select { |passage| (total += passage.content.length) <= TOTAL_CHARS }
+    passages.take_while { |passage| (total += passage.content.length) <= TOTAL_CHARS }
   end
 
   private
