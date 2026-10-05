@@ -23,7 +23,7 @@ class Captain::Llm::ConversationFaqService < Llm::BaseAiService
     @assistant = assistant
     @conversation = conversation
     @content = Captain::Llm::ConversationFaqContentService.new(assistant, conversation).generate
-    @embedding_service = Captain::Llm::EmbeddingService.new(account_id: conversation.account_id)
+    @embedding_service = Captain::Llm::EmbeddingService.new(account_id: conversation.account_id) unless conversation.account.dify_knowledge_enabled?
   end
 
   def generate_suggestions
@@ -41,7 +41,7 @@ class Captain::Llm::ConversationFaqService < Llm::BaseAiService
   end
 
   def route_candidate(faq)
-    embedding = embedding_service.get_embedding(candidate_text(faq))
+    embedding = embedding_service&.get_embedding(candidate_text(faq))
 
     return discard_observation(faq) if matching_record(approved_faqs, faq, embedding)
     return discard_observation(faq) if matching_record(dismissed_suggestions_for_language, faq, embedding)
@@ -59,11 +59,13 @@ class Captain::Llm::ConversationFaqService < Llm::BaseAiService
   end
 
   def matching_record(relation, faq, embedding)
-    likely_matches(relation, embedding).find { |record| same_faq?(faq, record) }
+    likely_matches(relation, embedding, faq).find { |record| same_faq?(faq, record) }
   end
 
-  def likely_matches(relation, embedding)
+  def likely_matches(relation, embedding, faq)
     return [] unless relation.exists?
+
+    return Captain::Knowledge::FaqMatches.new(assistant).candidates(relation, candidate_text(faq)) if conversation.account.dify_knowledge_enabled?
 
     ApplicationRecord.transaction do
       # Force an exact search because IVFFlat can miss matches after relation filters.

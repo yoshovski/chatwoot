@@ -158,6 +158,28 @@ the published Chatwoot v1 tag is not rewritten or replaced by this work.
 
 ## Native library and portability (CWAI-3)
 
+## Captain search integration (CWAI-24)
+
+For Dify-configured accounts, Captain's `faq_lookup`, v1 chat, Copilot chat and
+reply suggestions use `Captain::Knowledge::Search` and the signed shared search
+endpoint. Dataset IDs come from the assistant's server-managed configuration.
+FAQ hits map to approved account/assistant-owned records; document hits map to
+available records. Deleted records are discarded before model context is built.
+FAQ wording comes from the current canonical record, including while a Dify edit
+is pending. Search context stays within 8,000 characters per passage and 24,000
+characters overall. Unconfigured accounts retain their existing search path.
+
+Approved FAQ duplicate candidates come from Dify at a 0.7 reranking score followed
+by the existing LLM identity check. Unpublished open/dismissed suggestions remain
+local: PostgreSQL full-text ranking selects at most five language-scoped candidates
+for that identity check. Neither path requests legacy Captain vector embeddings;
+Dify still uses its configured embedding and reranking models for retrieval.
+Catalog selection is added by the Shopify connection/sync tasks (CWAI-26/27),
+when the connection and sync are enabled. Product knowledge is not enabled by an
+unverified assistant configuration value.
+
+## Native library and portability (CWAI-3)
+
 Administrators create/rename/disable bases, add/edit/review/disable manual FAQs,
 maintain source text and original files, and reuse bases across account-owned
 agents. Members can browse, inspect immutable history, preview CSV and download
