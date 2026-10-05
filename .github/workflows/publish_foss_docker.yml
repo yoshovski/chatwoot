@@ -1,17 +1,12 @@
 # #
 # # This action will publish Chatwoot CE docker image.
-# # Publish on master updates, version tags, or manual dispatch.
-# # Develop merges run CI; publish a version tag when an image is needed.
+# # Manual dispatch only: the lab deploys the EE image (publish_ee_docker.yml),
+# # so version tags no longer build the -ce image.
 # #
 
 name: Publish Chatwoot CE docker images
 
 on:
-  push:
-    branches:
-      - master
-    tags:
-      - v*
   workflow_dispatch:
 
 permissions:

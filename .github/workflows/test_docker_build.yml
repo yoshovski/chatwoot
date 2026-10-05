@@ -1,10 +1,8 @@
 name: Test Docker Build
 
+# Images are built only for version tags (publish_ee_docker.yml).
+# Run this by hand when a Dockerfile change needs a trial build.
 on:
-  pull_request:
-    branches:
-      - develop
-      - master
   workflow_dispatch:
 
 permissions:
