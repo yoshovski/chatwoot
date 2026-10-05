@@ -109,9 +109,9 @@ RSpec.describe Captain::Tools::FaqLookupTool, type: :model do
         expect(result).to include('Citation index: 1')
         expect(repeated_result).to include('Citation index: 1')
         expect(result).not_to include('https://help.example.com/password')
-        expect(result.scan('Citation index: 1').size).to eq(2)
-        expect(result).not_to include('Citation index: 2')
-        expect(tool_context.state[Captain::Assistant::CITATION_SOURCES_STATE_KEY]).to eq(1 => document.id)
+        expect(result.scan('Citation index: 1').size).to eq(1)
+        expect(result).to include('Citation index: 2')
+        expect(tool_context.state[Captain::Assistant::CITATION_SOURCES_STATE_KEY]).to eq(1 => "faq:#{response1.id}", 2 => "faq:#{response2.id}")
       end
 
       it 'does not cite document URLs containing credentials' do

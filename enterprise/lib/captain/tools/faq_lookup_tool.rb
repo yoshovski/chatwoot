@@ -40,7 +40,9 @@ class Captain::Tools::FaqLookupTool < Captain::Tools::BasePublicTool
   def format_passage(tool_context, passage)
     result = "\nKnowledge result:\nTitle: #{passage.title}\n#{passage.content}\n"
     if @assistant.citations_enabled? && passage.customer_visible_source_url.present?
-      result += "Citation index: #{citation_index_for_document(tool_context, passage.source_document.id)}\n"
+      details = tool_context.state[Captain::Assistant::CITATION_DETAILS_STATE_KEY] ||= {}
+      details[passage.source_reference] = passage.citation_detail
+      result += "Citation index: #{citation_index_for_source(tool_context, passage.source_reference)}\n"
     end
     result
   end
@@ -85,16 +87,16 @@ class Captain::Tools::FaqLookupTool < Captain::Tools::BasePublicTool
   end
 
   def citation_index(tool_context, response)
-    citation_index_for_document(tool_context, response.documentable_id)
+    citation_index_for_source(tool_context, "faq:#{response.id}")
   end
 
-  def citation_index_for_document(tool_context, document_id)
+  def citation_index_for_source(tool_context, reference)
     citation_document_ids = tool_context.state[Captain::Assistant::CITATION_SOURCES_STATE_KEY] ||= {}
-    existing_index = citation_document_ids.find { |_index, source_id| source_id == document_id }&.first
+    existing_index = citation_document_ids.find { |_index, source| source == reference }&.first
     return existing_index if existing_index.present?
 
     next_citation_index = citation_document_ids.size + 1
-    citation_document_ids[next_citation_index] = document_id
+    citation_document_ids[next_citation_index] = reference
     next_citation_index
   end
 end

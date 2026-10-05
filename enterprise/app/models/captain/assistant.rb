@@ -19,6 +19,7 @@
 class Captain::Assistant < ApplicationRecord
   DESCRIPTION_LENGTH_LIMIT = 500
   CITATION_SOURCES_STATE_KEY = :captain_v2_citation_sources
+  CITATION_DETAILS_STATE_KEY = :captain_v2_citation_details
   AUTO_RESOLVE_MODES = %w[disabled legacy evaluated].freeze
   DEFAULT_INACTIVITY_THRESHOLD_MINUTES = 60
   MINIMUM_INACTIVITY_THRESHOLD_MINUTES = 5
@@ -150,12 +151,8 @@ class Captain::Assistant < ApplicationRecord
     assistant_event_data
   end
 
-  def customer_visible_citation_urls(citation_document_ids)
-    citation_documents = documents.where(id: citation_document_ids.values).index_by(&:id)
-    citation_urls = citation_document_ids.transform_values do |document_id|
-      citation_documents[document_id.to_i]&.customer_visible_source_url
-    end
-    citation_urls.compact.transform_keys(&:to_i)
+  def customer_visible_citation_urls(citation_sources, details: {})
+    Captain::Knowledge::CitationSources.new(self).urls(citation_sources, details: details)
   end
 
   def citations_enabled?
@@ -166,7 +163,8 @@ class Captain::Assistant < ApplicationRecord
     return {} unless citations_enabled?
 
     citation_document_ids = run_result&.context&.dig(:state, CITATION_SOURCES_STATE_KEY) || {}
-    customer_visible_citation_urls(citation_document_ids)
+    details = run_result&.context&.dig(:state, CITATION_DETAILS_STATE_KEY) || {}
+    customer_visible_citation_urls(citation_document_ids, details: details)
   end
 
   private

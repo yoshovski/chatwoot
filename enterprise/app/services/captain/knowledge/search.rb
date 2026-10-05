@@ -3,13 +3,25 @@ class Captain::Knowledge::Search
   PASSAGE_CHARS = 8000
   TOTAL_CHARS = 24_000
 
-  Passage = Struct.new(:kind, :title, :content, :score, :record, :document_id, keyword_init: true) do
+  Passage = Struct.new(:kind, :title, :content, :score, :record, :document_id, :dataset_id, :source_url, keyword_init: true) do
     def source_document
       record.is_a?(Captain::AssistantResponse) ? record.documentable : record
     end
 
     def customer_visible_source_url
-      source_document.customer_visible_source_url if source_document.is_a?(Captain::Document)
+      source_url
+    end
+
+    def source_reference
+      case kind
+      when 'faq' then "faq:#{record.id}"
+      when 'document' then "doc:#{record.id}"
+      when 'extra' then "extra:#{document_id}"
+      end
+    end
+
+    def citation_detail
+      { dataset_id: dataset_id, url: source_url }
     end
 
     def to_tool_result
@@ -64,8 +76,12 @@ class Captain::Knowledge::Search
     return if %w[faq document].include?(kind) && record.nil?
 
     title, content = canonical_text(record, passage)
-    Passage.new(kind: kind, title: title.truncate(90), content: content.truncate(PASSAGE_CHARS),
-                score: passage.fetch('score'), record: record, document_id: document_id)
+    result = Passage.new(kind: kind, title: title.truncate(90), content: content.truncate(PASSAGE_CHARS),
+                         score: passage.fetch('score'), record: record, document_id: document_id, dataset_id: passage.fetch('dataset_id'))
+    result.source_url = Captain::Knowledge::CitationSources.new(@assistant).url(
+      result.source_reference, { dataset_id: result.dataset_id, url: passage['url'] }
+    )
+    result
   end
 
   def canonical_text(record, passage)
