@@ -25,6 +25,7 @@ from cwai.contracts import (
 )
 from cwai.db import engine
 from cwai.dify import Dify, ProjectionError
+from cwai.knowledge_search import router as search_router
 from cwai.portability import export_archive, export_csv, import_csv, preview
 from cwai.store import (
     CONTENT,
@@ -45,6 +46,7 @@ from cwai.store import (
 
 app = FastAPI(title="Chatwoot AI knowledge service", version="0.1.0")
 PREFIX = "/v1/knowledge"
+app.include_router(search_router)
 
 
 @app.exception_handler(ProjectionError)

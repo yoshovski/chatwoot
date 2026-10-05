@@ -49,6 +49,7 @@ jobs:
       - run: uv sync --frozen --extra dev
       - run: uv run --frozen ruff check .
       - run: uv run --frozen ruff format --check .
+      - run: uv run --frozen python -m unittest discover -s validation -p 'test_knowledge_search.py'
       - run: uv run --frozen alembic upgrade head
       - run: uv run --frozen alembic check
       - name: Build service container

@@ -99,6 +99,33 @@ uv run --frozen uvicorn cwai.api:app --port 8010 --no-access-log
 uv run --frozen cwai-worker
 ```
 
+## Shared Captain knowledge search (CWAI-23)
+
+`POST /v1/knowledge/search` is a private Rails-to-service endpoint using the same
+signed `knowledge:read` credential. JSON contains `account_id`, `query`, optional
+`keywords`, and `datasets`: objects with `dataset_id`, `kind` (`faq`, `document`,
+`catalog`, `extra`) and optional `limit` (default 6, maximum 20). Rails chooses the
+datasets; the service checks the account against the signed binding and uses that
+account's configured Dify connection. It never enumerates or selects knowledge bases.
+
+Configure `reranking_provider` and `reranking_model` on the server-owned Dify
+connection. The lab uses the compatible provider with `voyage/rerank-2.5`.
+Datasets are searched in parallel with hybrid retrieval and the same reranker.
+`CWAI_KNOWLEDGE_SEARCH_SCORE_THRESHOLD` defaults to 0.35 and is controlled by the
+server, not the caller. An unrelated live query scored about 0.32 at the initial 0.3
+threshold; relevant synthetic passages scored 0.79–0.95. Full evaluation tuning
+remains necessary. Queries are normalized and capped at the installed Dify API's
+250-character limit, which is below the original workflow's 420-character ceiling.
+
+The response is `{status, query, passages}`. Each passage has a citation index,
+kind, dataset/document IDs, title, content, URL, product handle and score. Native
+Q&A pairs include both their question and answer. Results are ranked, deduplicated,
+and limited to five passages, 8,000 characters each and 24,000 characters total.
+Below-threshold matches return `no_match`; remote failures return an error rather
+than a false no-match result. No source download or complete-document fetch occurs.
+Captain chat integration remains CWAI-24; the existing native library retrieval
+and its canonical visibility checks are unchanged.
+
 ## Validation and recovery
 
 `validation/run.py` requires `CWAI_VALIDATION_ALLOW=true` and a disposable database.

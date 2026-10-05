@@ -156,3 +156,23 @@ class Dify:
                 },
             },
         )["records"]
+
+    def search(self, dataset_id, query, top_k):
+        return self.request(
+            "POST",
+            f"datasets/{dataset_id}/retrieve",
+            json={
+                "query": query,
+                "retrieval_model": {
+                    "search_method": "hybrid_search",
+                    "reranking_enable": True,
+                    "reranking_mode": "reranking_model",
+                    "reranking_model": {
+                        "reranking_provider_name": self.config.reranking_provider,
+                        "reranking_model_name": self.config.reranking_model,
+                    },
+                    "top_k": top_k,
+                    "score_threshold_enabled": False,
+                },
+            },
+        )["records"]
