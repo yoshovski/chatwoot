@@ -1,3 +1,7 @@
 Rails.application.config.to_prepare do
-  Captain::Assistant.prepend Captain::Dify::Assistant if ChatwootApp.enterprise?
+  if ChatwootApp.enterprise?
+    Captain::Assistant.prepend Captain::Dify::Assistant
+    Captain::AssistantResponse.prepend Captain::Dify::AssistantResponse
+    Captain::FaqSuggestion.prepend Captain::Dify::FaqSuggestion
+  end
 end
