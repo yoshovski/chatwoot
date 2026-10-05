@@ -156,8 +156,6 @@ snapshot together when reverting a schema. Rebuilding Dify never changes the
 canonical backups. A previous service image can use the unchanged initial schema;
 the published Chatwoot v1 tag is not rewritten or replaced by this work.
 
-## Native library and portability (CWAI-3)
-
 ## Captain search integration (CWAI-24)
 
 For Dify-configured accounts, Captain's `faq_lookup`, v1 chat, Copilot chat and
