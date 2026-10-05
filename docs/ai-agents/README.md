@@ -5,6 +5,7 @@ The Huly project **CWAI — Chatwoot AI Agents** tracks this initiative.
 - [Architecture and phased delivery](architecture.md).
 - [Internal release baseline and lab gates](internal-release-baseline.md).
 - [Captain lab baseline and private evaluation records](captain-lab-bench.md).
+- [Dify workspace binding](dify-knowledge.md).
 - [Canonical knowledge service, scoped API and lab validation](../../services/ai/README.md).
 - [Huly architecture document](https://pm.yoshovski.com/workbench/yoshovski/document/architecture-and-phased-release-plan-chatwoot-ai-agents-6abf135fae4c92239df5cfba).
 
