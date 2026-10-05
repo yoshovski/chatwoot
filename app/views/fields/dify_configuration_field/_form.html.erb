@@ -1,0 +1,11 @@
+<div class="field-unit__label"><%= f.label field.attribute %></div>
+<div class="field-unit__field">
+  <p class="mb-3 text-xs text-n-slate-10"><%= t('super_admin.dify_configuration.helper_text') %></p>
+  <% AccountDifyKnowledge::CONFIGURATION_FIELDS.each do |name| %>
+    <%= label_tag "account_dify_configuration_#{name}", t("super_admin.dify_configuration.#{name}") %>
+    <%= text_field_tag "account[dify_configuration][#{name}]", field.data[name], id: "account_dify_configuration_#{name}", class: 'mb-3 block w-full' %>
+  <% end %>
+  <%= label_tag 'account_dify_configuration_knowledge_api_key', t('super_admin.dify_configuration.knowledge_api_key') %>
+  <%= password_field_tag 'account[dify_configuration][knowledge_api_key]', nil, id: 'account_dify_configuration_knowledge_api_key', autocomplete: 'new-password', class: 'block w-full' %>
+  <p class="mt-2 text-xs text-n-slate-10"><%= t('super_admin.dify_configuration.key_hint') %></p>
+</div>
