@@ -11,20 +11,23 @@ RSpec.describe Captain::Dify::FaqSyncService do
   end
   let(:response) { create(:captain_assistant_response, assistant: assistant, embedding: nil) }
   let(:client) { instance_double(Dify::KnowledgeClient) }
-  let(:content) { "question: #{response.question}\nanswer: #{response.answer}" }
-  let(:completed) { { 'id' => 'chunk-id', 'content' => content, 'enabled' => true, 'status' => 'completed' } }
+  let(:content) { response.question }
+  let(:completed) { { 'id' => 'chunk-id', 'content' => content, 'answer' => response.answer, 'enabled' => true, 'status' => 'completed' } }
 
   before do
     allow(account).to receive(:dify_knowledge_client).and_return(client)
     allow(client).to receive(:documents).and_return('data' => [])
     allow(client).to receive(:create_by_text).and_return('document' => { 'id' => 'doc-id' })
-    allow(client).to receive(:document).and_return('indexing_status' => 'completed')
+    allow(client).to receive(:document).and_return('doc_form' => 'qa_model', 'indexing_status' => 'completed')
     allow(client).to receive(:segments).and_return('total' => 1, 'data' => [{ 'id' => 'chunk-id', 'content' => 'placeholder' }])
-    allow(client).to receive(:update_segment) { |**attributes| { 'data' => completed.merge('content' => attributes.fetch(:content)) } }
+    allow(client).to receive(:update_segment) do |**attributes|
+      { 'data' => completed.merge('content' => attributes.fetch(:content), 'answer' => attributes.fetch(:answer)) }
+    end
   end
 
-  it 'persists the document ID across an indexing retry and then writes the full FAQ as one chunk' do
-    allow(client).to receive(:document).and_return({ 'indexing_status' => 'indexing' }, { 'indexing_status' => 'completed' })
+  it 'persists the document ID across an indexing retry and then writes the exact question and answer' do
+    allow(client).to receive(:document).and_return({ 'doc_form' => 'qa_model', 'indexing_status' => 'indexing' },
+                                                   { 'doc_form' => 'qa_model', 'indexing_status' => 'completed' })
     service = described_class.new(response)
 
     expect { service.perform }.to raise_error(described_class::IndexingPending)
@@ -33,7 +36,7 @@ RSpec.describe Captain::Dify::FaqSyncService do
 
     expect(client).to have_received(:create_by_text).once
     expect(client).to have_received(:update_segment).with(dataset_id: 'faq-id', document_id: 'doc-id', segment_id: 'chunk-id',
-                                                          content: content, enabled: true).once
+                                                          content: content, answer: response.answer, enabled: true).once
   end
 
   it 'recovers a document created before its HTTP response was lost' do
@@ -50,8 +53,8 @@ RSpec.describe Captain::Dify::FaqSyncService do
 
     described_class.new(response).perform
 
-    expect(client).to have_received(:create_by_text).with(hash_including(text: "Captain FAQ #{response.id}."))
-    expect(client).to have_received(:update_segment).with(hash_including(content: content))
+    expect(client).to have_received(:create_by_text).with(hash_including(doc_form: 'qa_model'))
+    expect(client).to have_received(:update_segment).with(hash_including(content: content, answer: response.answer))
   end
 
   it 'can run a backfill twice without duplicating documents or reindexing unchanged completed chunks' do
@@ -73,10 +76,17 @@ RSpec.describe Captain::Dify::FaqSyncService do
     expect(client).not_to have_received(:create_by_text)
   end
 
-  it 'fails explicitly on an unexpected chunk count instead of silently accepting split content' do
-    allow(client).to receive(:segments).and_return('total' => 2, 'data' => [])
+  it 'replaces multiple generated staging chunks with a single exact source pair' do
+    allow(client).to receive(:segments).and_return({ 'total' => 2, 'data' => [{ 'id' => 'seed-one' }, { 'id' => 'seed-two' }] },
+                                                   { 'total' => 0, 'data' => [] })
+    allow(client).to receive(:delete_segment)
+    allow(client).to receive(:create_segments).and_return('data' => [completed])
 
-    expect { described_class.new(response).perform }.to raise_error(Dify::KnowledgeClient::Error, 'Expected exactly one Dify FAQ chunk')
+    described_class.new(response).perform
+
+    expect(client).to have_received(:delete_segment).twice
+    expect(client).to have_received(:create_segments).with(dataset_id: 'faq-id', document_id: 'doc-id',
+                                                           segments: [{ content: response.question, answer: response.answer }])
     expect(response.reload.dify_document_id).to eq('doc-id')
     expect(client).not_to have_received(:update_segment)
   end

@@ -47,8 +47,8 @@ class Dify::KnowledgeClient
     request(:delete, "datasets/#{dataset_id}/documents/#{document_id}")
   end
 
-  def documents(dataset_id:, keyword:)
-    request(:get, "datasets/#{dataset_id}/documents", params: { keyword: keyword, limit: 2 })
+  def documents(dataset_id:, keyword:, page: nil, limit: 2)
+    request(:get, "datasets/#{dataset_id}/documents", params: { keyword: keyword, limit: limit, page: page }.compact)
   end
 
   def document(dataset_id:, document_id:)
@@ -61,6 +61,14 @@ class Dify::KnowledgeClient
 
   def update_segment(dataset_id:, document_id:, segment_id:, **attributes)
     request(:post, "datasets/#{dataset_id}/documents/#{document_id}/segments/#{segment_id}", { segment: attributes })
+  end
+
+  def create_segments(dataset_id:, document_id:, segments:)
+    request(:post, "datasets/#{dataset_id}/documents/#{document_id}/segments", { segments: segments })
+  end
+
+  def delete_segment(dataset_id:, document_id:, segment_id:)
+    request(:delete, "datasets/#{dataset_id}/documents/#{document_id}/segments/#{segment_id}")
   end
 
   def indexing_status(dataset_id:, batch:)

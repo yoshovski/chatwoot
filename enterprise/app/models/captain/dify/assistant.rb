@@ -1,7 +1,8 @@
 module Captain::Dify::Assistant
   extend ActiveSupport::Concern
 
-  CONFIGURATION_KEYS = %w[dify_faq_dataset_id dify_docs_dataset_id dify_extra_dataset_ids].freeze
+  CONFIGURATION_KEYS = %w[dify_faq_dataset_id dify_docs_dataset_id dify_extra_dataset_ids
+                          dify_faq_qa_dataset_id dify_legacy_faq_dataset_id].freeze
 
   prepended do
     after_create_commit :provision_dify_datasets, if: -> { account.dify_knowledge_enabled? }
