@@ -6,6 +6,7 @@ module Captain::Dify::Assistant
   prepended do
     after_create_commit :provision_dify_datasets, if: -> { account.dify_knowledge_enabled? }
     before_destroy :delete_dify_faq_documents
+    before_destroy :delete_dify_documents
   end
 
   def client_config
@@ -32,6 +33,12 @@ module Captain::Dify::Assistant
   end
 
   private
+
+  def delete_dify_documents
+    documents.where("metadata->>'dify_document_id' IS NOT NULL").find_each do |document|
+      Captain::Dify::DeleteDocumentJob.perform_later(document.id, account_id, config.fetch('dify_docs_dataset_id'), document.dify_document_id)
+    end
+  end
 
   def delete_dify_faq_documents
     responses.where.not(dify_document_id: nil).find_each do |response|
