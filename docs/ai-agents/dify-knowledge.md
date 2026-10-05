@@ -64,3 +64,27 @@ bundle exec rake captain:dify:backfill_faqs ASSISTANT_ID=123
 The task can be run again safely: it reuses document IDs and updates only changed or failed
 chunks. It does not alter the question or answer in Captain. Native search remains in place
 until the separate search replacement task is released.
+
+## Documents and PDFs
+
+In configured accounts, parsed website and markdown content goes to the assistant's
+Documents dataset with parent-child chunking. Captain stays in progress while Dify indexes;
+polling marks it Ready only when the current content is completed and enabled. A fingerprint
+prevents an older poll from marking a newer edit Ready. Exhausted retries and indexing errors
+set a failed sync status with a safe error code. Metadata holds the Dify document ID,
+indexing state and the submitted fingerprint.
+
+PDF processing enqueues a direct multipart upload to Dify and never initializes an OpenAI
+client. Dify extracts the PDF text; PDF FAQ generation is disabled. A missing workspace
+configuration fails explicitly. Website and markdown FAQ generation continues after indexing.
+Periodic website sync updates the existing Dify document; unchanged completed documents are
+reused. Deletion removes the Dify document and its Captain-generated FAQs.
+
+Backfill existing documents for one configured assistant:
+
+```sh
+bundle exec rake captain:dify:backfill_documents ASSISTANT_ID=123
+```
+
+Repeated runs reuse document IDs and fingerprints. An interrupted create is recovered by
+its stable document name and resubmitted with current content before becoming Ready.

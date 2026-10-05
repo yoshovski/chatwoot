@@ -325,22 +325,22 @@ RSpec.describe Captain::Document, type: :model do
         end
       end
 
-      it 'enqueues when created available without content' do
+      it 'does not generate FAQs for a PDF created available without content' do
         document = build_pdf_document(status: :available, content: nil)
 
         expect do
           document.save!
-        end.to have_enqueued_job(Captain::Documents::ResponseBuilderJob)
+        end.not_to have_enqueued_job(Captain::Documents::ResponseBuilderJob)
       end
 
-      it 'enqueues when status transitions to available' do
+      it 'does not generate FAQs when a PDF becomes available' do
         document = build_pdf_document(status: :in_progress, content: nil)
         document.save!
         clear_enqueued_jobs
 
         expect do
           document.update!(status: :available)
-        end.to have_enqueued_job(Captain::Documents::ResponseBuilderJob)
+        end.not_to have_enqueued_job(Captain::Documents::ResponseBuilderJob)
       end
 
       it 'does not enqueue when content updates without status change' do

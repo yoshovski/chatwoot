@@ -118,7 +118,7 @@ RSpec.describe Captain::Documents::CrawlJob, type: :job do
         pdf_service = instance_double(Captain::Llm::PdfProcessingService)
         expect(Captain::Llm::PdfProcessingService).to receive(:new).with(pdf_document).and_return(pdf_service)
         expect(pdf_service).to receive(:process)
-        expect(pdf_document).to receive(:update!).with(status: :available)
+        expect(pdf_document).not_to receive(:update!).with(status: :available)
 
         described_class.perform_now(pdf_document)
       end
