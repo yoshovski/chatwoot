@@ -92,6 +92,45 @@ class Retrieval(Contract):
     top_k: int = Field(default=5, ge=1, le=20)
 
 
+class SearchDataset(Contract):
+    dataset_id: str = Field(pattern=r"^[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}$")
+    kind: Literal["faq", "document", "catalog", "extra"]
+    limit: int = Field(default=6, ge=1, le=20)
+
+
+class KnowledgeSearch(Contract):
+    account_id: int = Field(gt=0)
+    query: str = Field(min_length=1, max_length=10_000)
+    keywords: str = Field(default="", max_length=420)
+    datasets: list[SearchDataset] = Field(min_length=1, max_length=20)
+
+    @model_validator(mode="after")
+    def unique_datasets(self):
+        if not self.query.strip():
+            raise ValueError("Query must contain text")
+        if len({dataset.dataset_id for dataset in self.datasets}) != len(self.datasets):
+            raise ValueError("Supply each dataset only once")
+        return self
+
+
+class KnowledgePassage(Contract):
+    id: int
+    kind: Literal["faq", "document", "catalog", "extra"]
+    dataset_id: str
+    document_id: str
+    title: str
+    content: str = Field(max_length=8000)
+    url: str | None
+    handle: str | None
+    score: float
+
+
+class KnowledgeSearchResult(Contract):
+    status: Literal["ok", "no_match"]
+    query: str
+    passages: list[KnowledgePassage] = Field(max_length=5)
+
+
 class Citations(Contract):
     binding_ids: list[str] = Field(min_length=1, max_length=20)
 
