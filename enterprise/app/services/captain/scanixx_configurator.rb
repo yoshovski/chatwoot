@@ -1,5 +1,18 @@
+# rubocop:disable Metrics/ClassLength
 class Captain::ScanixxConfigurator
   PRODUCT_NAME = 'Scanixx equipment, drones and accessories'.freeze
+
+  LINK_ALLOWLIST = [
+    'https://scanixx.com/',
+    'https://www.scanixx.com/',
+    'https://api.whatsapp.com/send/'
+  ].freeze
+
+  IMAGE_ALLOWLIST = [
+    'https://cdn.shopify.com/',
+    'https://scanixx.com/cdn/',
+    'https://www.scanixx.com/cdn/'
+  ].freeze
 
   DESCRIPTION = 'Official Scanixx assistant on scanixx.com, a US drone retailer. ' \
                 'Give accurate support and act as a knowledgeable, low-pressure sales representative ' \
@@ -144,6 +157,8 @@ class Captain::ScanixxConfigurator
     config['product_cards'] = true
     config['suggested_replies'] = true
     config['max_suggested_replies'] = 3
+    config['link_allowlist'] = configured_link_allowlist
+    config['image_allowlist'] = configured_image_allowlist
 
     assistant.update!(
       description: DESCRIPTION,
@@ -151,6 +166,33 @@ class Captain::ScanixxConfigurator
       guardrails: GUARDRAILS,
       config: config
     )
+  end
+
+  def configured_link_allowlist
+    list = LINK_ALLOWLIST.dup
+    hook = account.hooks.find_by(app_id: 'shopify')
+    if hook&.shopify_connected? && hook.reference_id.present?
+      domain = hook.reference_id.downcase.strip
+      list << "https://#{domain}/"
+      list << "https://www.#{domain}/" unless domain.start_with?('www.')
+      if hook.shopify_storefront_url.present?
+        sf_url = hook.shopify_storefront_url.strip
+        sf_url = "https://#{sf_url}" unless sf_url.start_with?('http://', 'https://')
+        list << "#{sf_url.chomp('/')}/"
+      end
+    end
+    list.uniq
+  end
+
+  def configured_image_allowlist
+    list = IMAGE_ALLOWLIST.dup
+    hook = account.hooks.find_by(app_id: 'shopify')
+    if hook&.shopify_connected? && hook.reference_id.present?
+      domain = hook.reference_id.downcase.strip
+      list << "https://#{domain}/cdn/"
+      list << "https://www.#{domain}/cdn/" unless domain.start_with?('www.')
+    end
+    list.uniq
   end
 
   def create_or_update_quote_scenario!
@@ -172,3 +214,4 @@ class Captain::ScanixxConfigurator
     end
   end
 end
+# rubocop:enable Metrics/ClassLength

@@ -5,7 +5,9 @@ json.config resource.client_config.merge(
   'send_inactivity_resolution_message' => resource.send_inactivity_resolution_message?,
   'suggested_replies' => resource.suggested_replies?,
   'max_suggested_replies' => resource.max_suggested_replies,
-  'product_cards' => resource.product_cards?
+  'product_cards' => resource.product_cards?,
+  'link_allowlist' => resource.link_allowlist,
+  'image_allowlist' => resource.image_allowlist
 )
 json.created_at resource.created_at.to_i
 json.description resource.description

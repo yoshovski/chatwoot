@@ -61,7 +61,8 @@ class Captain::Assistant < ApplicationRecord
 
   store_accessor :config, :temperature, :feature_faq, :feature_memory, :feature_contact_attributes, :product_name,
                  :auto_resolve_mode, :auto_resolve_after, :send_inactivity_resolution_message, :response_window,
-                 :continue_while_waiting, :suggested_replies, :max_suggested_replies, :product_cards
+                 :continue_while_waiting, :suggested_replies, :max_suggested_replies, :product_cards,
+                 :link_allowlist, :image_allowlist
 
   BOOLEAN_CONFIG_KEYS = %w[
     feature_faq
@@ -78,6 +79,7 @@ class Captain::Assistant < ApplicationRecord
   before_validation :normalize_auto_resolve_after
   before_validation :normalize_boolean_config_attributes
   before_validation :normalize_max_suggested_replies
+  before_validation :normalize_allowlists
 
   validates :name, presence: true
   validates :description, presence: true, length: { maximum: DESCRIPTION_LENGTH_LIMIT }
@@ -264,8 +266,50 @@ class Captain::Assistant < ApplicationRecord
     ActiveModel::Type::Boolean.new.cast(config['product_cards']) == true
   end
 
+  def link_allowlist
+    configured = Array(config&.dig('link_allowlist')).map(&:to_s).map(&:strip).reject(&:blank?)
+    return configured if configured.present?
+
+    default_link_allowlist
+  end
+
   def image_allowlist
-    Array(config&.dig('image_allowlist')).reject(&:blank?)
+    configured = Array(config&.dig('image_allowlist')).map(&:to_s).map(&:strip).reject(&:blank?)
+    return configured if configured.present?
+
+    default_image_allowlist
+  end
+
+  def default_link_allowlist
+    list = []
+    hook = account.hooks.find_by(app_id: 'shopify')
+    if hook&.shopify_connected? && hook.reference_id.present?
+      domain = hook.reference_id.downcase.strip
+      list << "https://#{domain}/"
+      list << "https://www.#{domain}/" unless domain.start_with?('www.')
+      if hook.shopify_storefront_url.present?
+        sf_url = hook.shopify_storefront_url.strip
+        sf_url = "https://#{sf_url}" unless sf_url.start_with?('http://', 'https://')
+        list << "#{sf_url.chomp('/')}/"
+      end
+    end
+    list << 'https://scanixx.com/'
+    list << 'https://www.scanixx.com/'
+    list << 'https://api.whatsapp.com/send/'
+    list.uniq
+  end
+
+  def default_image_allowlist
+    list = ['https://cdn.shopify.com/']
+    hook = account.hooks.find_by(app_id: 'shopify')
+    if hook&.shopify_connected? && hook.reference_id.present?
+      domain = hook.reference_id.downcase.strip
+      list << "https://#{domain}/cdn/"
+      list << "https://www.#{domain}/cdn/" unless domain.start_with?('www.')
+    end
+    list << 'https://scanixx.com/cdn/'
+    list << 'https://www.scanixx.com/cdn/'
+    list.uniq
   end
 
   private
@@ -305,6 +349,19 @@ class Captain::Assistant < ApplicationRecord
 
     count = Integer(config['max_suggested_replies'].to_s, exception: false)
     self.max_suggested_replies = count.clamp(MINIMUM_MAX_SUGGESTED_REPLIES, MAXIMUM_MAX_SUGGESTED_REPLIES) if count
+  end
+
+  def normalize_allowlists
+    return unless config.is_a?(Hash)
+
+    normalize_allowlist_key('link_allowlist')
+    normalize_allowlist_key('image_allowlist')
+  end
+
+  def normalize_allowlist_key(key)
+    return unless config.key?(key)
+
+    config[key] = Array(config[key]).map(&:to_s).map(&:strip).reject(&:blank?).uniq
   end
 
   def validate_response_window
