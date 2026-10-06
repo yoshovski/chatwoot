@@ -260,11 +260,12 @@ RSpec.describe Captain::InboxPendingConversationsResolutionJob, type: :job do
       expect(resolvable_pending_conversation.reload.status).to eq('open')
     end
 
-    it 'creates a private note with the reason' do
+    it 'creates the handoff team note and adds needs-human label' do
       described_class.perform_now(inbox)
 
       private_note = resolvable_pending_conversation.messages.where(private: true).last
-      expect(private_note.content).to eq("Auto-handoff: #{handoff_reason}")
+      expect(private_note.content).to include('🔔 **Needs your reply**')
+      expect(resolvable_pending_conversation.reload.label_list).to include('needs-human')
     end
 
     it 'creates handoff message with configured content' do

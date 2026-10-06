@@ -115,17 +115,30 @@ class Captain::InboxPendingConversationsResolutionJob < ApplicationJob
     )
   end
 
-  def handoff_conversation(conversation, reason)
+  def handoff_conversation(conversation, _reason)
+    handoff_service = Captain::Conversation::HandoffService.new(
+      conversation: conversation,
+      assistant: captain_assistant
+    )
+    return if handoff_service.handoff_active?
+
     handed_off = with_inference_activity_context(conversation, CAPTAIN_INFERENCE_HANDOFF_ACTIVITY_REASON) do
       perform_locked_transition(conversation) do
         conversation.bot_handoff!(dispatch_event: false)
-        create_private_note(conversation, "Auto-handoff: #{reason}")
         create_handoff_message(conversation)
       end
     end
     return unless handed_off
 
     conversation.dispatch_bot_handoff_event
+    handoff_service.apply_extras!
+    emit_inference_handoff_event(conversation)
+    send_out_of_office_message_if_applicable(conversation.reload)
+  rescue ActiveRecord::RecordNotFound
+    nil
+  end
+
+  def emit_inference_handoff_event(conversation)
     Captain::ConversationEvents.handed_off(
       conversation: conversation,
       assistant: captain_assistant,
@@ -133,9 +146,6 @@ class Captain::InboxPendingConversationsResolutionJob < ApplicationJob
       reason_category: :pending_clarification,
       at: Time.current
     )
-    send_out_of_office_message_if_applicable(conversation.reload)
-  rescue ActiveRecord::RecordNotFound
-    nil
   end
 
   def perform_locked_transition(conversation)

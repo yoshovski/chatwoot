@@ -1,5 +1,6 @@
 class Captain::Conversation::OwnershipService
   HUMAN_ACTIVE_LABEL = 'human-active'.freeze
+  NEEDS_HUMAN_LABEL = 'needs-human'.freeze
   WAITING_INSTRUCTION = 'A human handoff is already active, but no human has replied publicly yet. ' \
                         'Continue helping with answerable questions. Don\'t hand off again or promise a response time. ' \
                         'If asked when someone will answer, say the team has been notified and the customer may keep sending details.'.freeze
@@ -45,6 +46,29 @@ class Captain::Conversation::OwnershipService
     labels.include?(HUMAN_ACTIVE_LABEL) || conversation.cached_label_list_array.include?(HUMAN_ACTIVE_LABEL)
   end
 
+  def needs_human_label?
+    return false if conversation.blank?
+
+    labels = conversation.label_list.to_a
+    labels.include?(NEEDS_HUMAN_LABEL) || conversation.cached_label_list_array&.include?(NEEDS_HUMAN_LABEL)
+  end
+
+  def add_needs_human_label!
+    return if conversation.blank?
+    return if needs_human_label?
+
+    conversation.add_labels(NEEDS_HUMAN_LABEL)
+  end
+
+  def clear_needs_human_label!
+    return if conversation.blank?
+
+    current_labels = conversation.label_list.to_a
+    return unless current_labels.include?(NEEDS_HUMAN_LABEL)
+
+    conversation.update_labels(current_labels - [NEEDS_HUMAN_LABEL])
+  end
+
   def human_public_reply?
     since_time = returned_to_ai_at || conversation.status_changed_at || conversation.created_at
     conversation.messages
@@ -66,14 +90,14 @@ class Captain::Conversation::OwnershipService
     return if conversation.blank? || assistant.blank?
     return unless captain_configured_for_inbox?
 
-    clear_human_active_label!
+    clear_handoff_labels!
     set_returned_to_ai_flag!
   end
 
   def handle_resolved!
     return if conversation.blank?
 
-    clear_human_active_label!
+    clear_handoff_labels!
     clear_returned_to_ai_attributes!
   end
 
@@ -146,5 +170,16 @@ class Captain::Conversation::OwnershipService
     return unless current_labels.include?(HUMAN_ACTIVE_LABEL)
 
     conversation.update_labels(current_labels - [HUMAN_ACTIVE_LABEL])
+  end
+
+  def clear_handoff_labels!
+    return if conversation.blank?
+
+    current_labels = conversation.label_list.to_a
+    to_remove = [HUMAN_ACTIVE_LABEL, NEEDS_HUMAN_LABEL]
+    remaining = current_labels - to_remove
+    return if current_labels == remaining
+
+    conversation.update_labels(remaining)
   end
 end

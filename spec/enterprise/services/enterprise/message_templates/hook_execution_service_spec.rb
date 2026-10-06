@@ -175,6 +175,8 @@ RSpec.describe MessageTemplates::HookExecutionService do
         create(:message, conversation: conversation, message_type: :incoming, account: account)
 
         expect(conversation.reload.status).to eq('open')
+        expect(conversation.label_list).to include('needs-human')
+        expect(conversation.messages.where(private: true).last.content).to include('🔔 **Needs your reply**')
       end
 
       it 'emits a usage limit handoff event' do
