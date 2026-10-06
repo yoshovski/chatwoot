@@ -7,6 +7,7 @@ import { required, minLength } from '@vuelidate/validators';
 import Input from 'dashboard/components-next/input/Input.vue';
 import Button from 'dashboard/components-next/button/Button.vue';
 import Editor from 'dashboard/components-next/Editor/Editor.vue';
+import Avatar from 'dashboard/components-next/avatar/Avatar.vue';
 
 const props = defineProps({
   assistant: {
@@ -15,7 +16,7 @@ const props = defineProps({
   },
 });
 
-const emit = defineEmits(['submit']);
+const emit = defineEmits(['submit', 'delete-avatar']);
 
 const { t } = useI18n();
 
@@ -23,6 +24,8 @@ const initialState = {
   name: '',
   description: '',
   productName: '',
+  avatar: null,
+  avatarUrl: '',
   features: {
     conversationFaqs: false,
     memories: false,
@@ -55,6 +58,8 @@ const updateStateFromAssistant = assistant => {
   const { config = {} } = assistant;
   state.name = assistant.name;
   state.description = assistant.description;
+  state.avatarUrl = assistant.avatar_url || '';
+  state.avatar = null;
   state.productName = config.product_name;
   state.features = {
     conversationFaqs: config.feature_faq || false,
@@ -62,6 +67,17 @@ const updateStateFromAssistant = assistant => {
     citations: config.feature_citation || false,
     contactAttributes: config.feature_contact_attributes || false,
   };
+};
+
+const handleImageUpload = ({ file, url }) => {
+  state.avatar = file;
+  state.avatarUrl = url;
+};
+
+const handleAvatarDelete = () => {
+  state.avatar = null;
+  state.avatarUrl = '';
+  emit('delete-avatar');
 };
 
 const handleBasicInfoUpdate = async () => {
@@ -85,6 +101,10 @@ const handleBasicInfoUpdate = async () => {
     },
   };
 
+  if (state.avatar) {
+    payload.avatar = state.avatar;
+  }
+
   emit('submit', payload);
 };
 
@@ -99,6 +119,21 @@ watch(
 
 <template>
   <div class="flex flex-col gap-6">
+    <div class="mb-2 flex flex-col items-start">
+      <span class="mb-2 text-sm font-medium text-n-slate-12">
+        {{ t('CAPTAIN.ASSISTANTS.FORM.AVATAR.LABEL') }}
+      </span>
+      <Avatar
+        :src="state.avatarUrl"
+        :name="state.name"
+        :size="68"
+        allow-upload
+        icon-name="i-lucide-bot-message-square"
+        @upload="handleImageUpload"
+        @delete="handleAvatarDelete"
+      />
+    </div>
+
     <Input
       v-model="state.name"
       :label="t('CAPTAIN.ASSISTANTS.FORM.NAME.LABEL')"

@@ -27,5 +27,14 @@ export function useAssistantSettings() {
     }
   };
 
-  return { assistantId, assistant, updateAssistant };
+  const deleteAssistantAvatar = async () => {
+    try {
+      await store.dispatch('captainAssistants/deleteAvatar', assistantId.value);
+      useAlert(t('CAPTAIN.ASSISTANTS.AVATAR.SUCCESS_DELETE'));
+    } catch (error) {
+      useAlert(error?.message || t('CAPTAIN.ASSISTANTS.AVATAR.ERROR_DELETE'));
+    }
+  };
+
+  return { assistantId, assistant, updateAssistant, deleteAssistantAvatar };
 }

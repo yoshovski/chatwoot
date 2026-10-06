@@ -1,7 +1,7 @@
-class Api::V1::Accounts::Captain::AssistantsController < Api::V1::Accounts::BaseController
+class Api::V1::Accounts::Captain::AssistantsController < Api::V1::Accounts::BaseController # rubocop:disable Metrics/ClassLength
   before_action -> { check_authorization(Captain::Assistant) }
 
-  before_action :set_assistant, only: [:show, :update, :destroy, :playground, :metrics, :faq_stats, :summary, :drilldown]
+  before_action :set_assistant, only: [:show, :update, :destroy, :playground, :metrics, :faq_stats, :summary, :drilldown, :avatar]
 
   def index
     @assistants = account_assistants.ordered
@@ -25,6 +25,12 @@ class Api::V1::Accounts::Captain::AssistantsController < Api::V1::Accounts::Base
   def destroy
     @assistant.destroy
     head :no_content
+  end
+
+  def avatar
+    @assistant.avatar.purge if @assistant.avatar.attached?
+    @assistant.reload
+    render :show
   end
 
   def playground
@@ -124,23 +130,23 @@ class Api::V1::Accounts::Captain::AssistantsController < Api::V1::Accounts::Base
     @account_assistants ||= Captain::Assistant.for_account(Current.account.id)
   end
 
-  def assistant_params
-    assistant_config_attributes = [
+  def assistant_config_attributes
+    attributes = [
       :product_name, :feature_faq, :feature_memory, :feature_citation,
       :feature_contact_attributes, :welcome_message, :handoff_message,
       :resolution_message, :instructions, :temperature, :auto_resolve_mode,
       :response_window
     ]
-    if Current.account.feature_enabled?('captain_integration_v2')
-      assistant_config_attributes += [:auto_resolve_after, :send_inactivity_resolution_message]
-    end
+    attributes += [:auto_resolve_after, :send_inactivity_resolution_message] if Current.account.feature_enabled?('captain_integration_v2')
+    attributes
+  end
 
-    permitted = params.require(:assistant).permit(:name, :description,
+  def assistant_params
+    permitted = params.require(:assistant).permit(:name, :description, :avatar,
                                                   config: assistant_config_attributes)
 
     # Handle array parameters separately to allow partial updates
     permitted[:response_guidelines] = params[:assistant][:response_guidelines] if params[:assistant].key?(:response_guidelines)
-
     permitted[:guardrails] = params[:assistant][:guardrails] if params[:assistant].key?(:guardrails)
 
     permit_audience_config(permitted)

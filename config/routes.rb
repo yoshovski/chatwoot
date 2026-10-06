@@ -107,6 +107,7 @@ Rails.application.routes.draw do
                 get :faq_stats
                 get :summary
                 get :drilldown
+                delete :avatar
               end
               resource :stats, only: [], controller: :assistant_stats do
                 get :overview

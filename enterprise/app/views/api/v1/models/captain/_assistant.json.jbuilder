@@ -9,5 +9,7 @@ json.description resource.description
 json.guardrails resource.guardrails
 json.id resource.id
 json.name resource.name
+json.avatar_url resource.avatar_url.presence || resource.default_avatar_url
+json.has_custom_avatar resource.avatar.attached?
 json.response_guidelines resource.response_guidelines
 json.updated_at resource.updated_at.to_i
