@@ -1,5 +1,9 @@
 class SuperAdmin::ShopifyRequestsController < SuperAdmin::ApplicationController
-  before_action :fetch_hook, only: [:show, :approve, :sync_status, :rotate_tool_key]
+  before_action :fetch_hook,
+                only: [
+                  :show, :approve, :sync_status, :rotate_tool_key,
+                  :provision_catalog, :import_catalog, :pause_catalog, :resume_catalog
+                ]
 
   def index
     @hooks = Integrations::Hook.where(app_id: 'shopify').includes(:account).order(created_at: :desc)
@@ -12,6 +16,12 @@ class SuperAdmin::ShopifyRequestsController < SuperAdmin::ApplicationController
       @sat_tenant = sat_client.tenant(@hook.shopify_sat_tenant_id)
     rescue ShopifyAgentTools::AdminClient::Error => e
       @sat_error = e.message
+    end
+
+    begin
+      @catalog_status = sat_client.catalog_status(@hook.shopify_sat_tenant_id)
+    rescue ShopifyAgentTools::AdminClient::Error => e
+      @catalog_error = e.message
     end
   end
 
@@ -28,13 +38,52 @@ class SuperAdmin::ShopifyRequestsController < SuperAdmin::ApplicationController
   end
 
   def sync_status
+    refresh_sat_state_and_catalog if @hook.shopify_sat_tenant_id.present?
+
+    redirect_to super_admin_shopify_request_path(@hook), notice: I18n.t('super_admin.shopify_requests.status_synced')
+  rescue ShopifyAgentTools::AdminClient::Error => e
+    redirect_to super_admin_shopify_request_path(@hook), alert: "Shopify Agent Tools error: #{e.message}"
+  end
+
+  def provision_catalog
     if @hook.shopify_sat_tenant_id.present?
-      tenant = sat_client.tenant(@hook.shopify_sat_tenant_id)
-      apply_tenant_sync(tenant)
+      ensure_catalog_provisioned
       @hook.save!
     end
 
-    redirect_to super_admin_shopify_request_path(@hook), notice: I18n.t('super_admin.shopify_requests.status_synced')
+    redirect_to super_admin_shopify_request_path(@hook), notice: I18n.t('super_admin.shopify_requests.catalog_provisioned')
+  rescue ShopifyAgentTools::AdminClient::Error => e
+    redirect_to super_admin_shopify_request_path(@hook), alert: "Shopify Agent Tools error: #{e.message}"
+  end
+
+  def import_catalog
+    sat_client.start_catalog_import(@hook.shopify_sat_tenant_id) if @hook.shopify_sat_tenant_id.present?
+
+    redirect_to super_admin_shopify_request_path(@hook), notice: I18n.t('super_admin.shopify_requests.catalog_imported')
+  rescue ShopifyAgentTools::AdminClient::Error => e
+    redirect_to super_admin_shopify_request_path(@hook), alert: "Shopify Agent Tools error: #{e.message}"
+  end
+
+  def pause_catalog
+    if @hook.shopify_sat_tenant_id.present?
+      sat_client.pause_catalog_sync(@hook.shopify_sat_tenant_id)
+      @hook.settings = @hook.settings.to_h.merge('catalog_sync_enabled' => false)
+      @hook.save!
+    end
+
+    redirect_to super_admin_shopify_request_path(@hook), notice: I18n.t('super_admin.shopify_requests.catalog_paused')
+  rescue ShopifyAgentTools::AdminClient::Error => e
+    redirect_to super_admin_shopify_request_path(@hook), alert: "Shopify Agent Tools error: #{e.message}"
+  end
+
+  def resume_catalog
+    if @hook.shopify_sat_tenant_id.present?
+      sat_client.resume_catalog_sync(@hook.shopify_sat_tenant_id)
+      @hook.settings = @hook.settings.to_h.merge('catalog_sync_enabled' => true)
+      @hook.save!
+    end
+
+    redirect_to super_admin_shopify_request_path(@hook), notice: I18n.t('super_admin.shopify_requests.catalog_resumed')
   rescue ShopifyAgentTools::AdminClient::Error => e
     redirect_to super_admin_shopify_request_path(@hook), alert: "Shopify Agent Tools error: #{e.message}"
   end
@@ -131,6 +180,59 @@ class SuperAdmin::ShopifyRequestsController < SuperAdmin::ApplicationController
   def disconnected_state?(status, shopify_state)
     %w[reauthorization_required uninstalled].include?(status) ||
       %w[reauthorization_required uninstalled].include?(shopify_state)
+  end
+
+  def refresh_sat_state_and_catalog
+    tenant = sat_client.tenant(@hook.shopify_sat_tenant_id)
+    apply_tenant_sync(tenant)
+    ensure_catalog_provisioned if @hook.shopify_connected? && @hook.shopify_catalog_dataset_id.blank?
+    sync_catalog_status
+    @hook.save!
+  end
+
+  def sync_catalog_status
+    status = sat_client.catalog_status(@hook.shopify_sat_tenant_id)
+    return unless status
+
+    @hook.settings = @hook.settings.to_h.merge('catalog_sync_enabled' => status['sync_enabled'] != false)
+    if status['documents_failed'].to_i.positive?
+      Rails.logger.warn("[Shopify Catalog] Tenant #{@hook.shopify_sat_tenant_id} has #{status['documents_failed']} failed products")
+    end
+  rescue ShopifyAgentTools::AdminClient::Error => e
+    Rails.logger.info("[Shopify] Catalog status sync skipped: #{e.message}")
+  end
+
+  def ensure_catalog_provisioned
+    return @hook.shopify_catalog_dataset_id if @hook.shopify_catalog_dataset_id.present?
+    return if @hook.shopify_sat_tenant_id.blank?
+
+    dataset = provision_or_fetch_dataset
+    attach_catalog_dataset(dataset)
+    @hook.shopify_catalog_dataset_id
+  end
+
+  def provision_or_fetch_dataset
+    sat_client.provision_dify_dataset(@hook.shopify_sat_tenant_id)
+  rescue ShopifyAgentTools::AdminClient::Error => e
+    raise unless e.status == 409
+
+    sat_client.dify_dataset(@hook.shopify_sat_tenant_id)
+  end
+
+  def attach_catalog_dataset(dataset)
+    return unless dataset && dataset['dataset_id'].present?
+
+    @hook.settings = @hook.settings.to_h.merge(
+      'catalog_dataset_id' => dataset['dataset_id'],
+      'catalog_sync_enabled' => dataset['sync_enabled'] != false
+    )
+    trigger_catalog_import
+  end
+
+  def trigger_catalog_import
+    sat_client.start_catalog_import(@hook.shopify_sat_tenant_id)
+  rescue ShopifyAgentTools::AdminClient::Error => e
+    Rails.logger.warn("[Shopify Catalog] Import start failed: #{e.message}")
   end
 
   def fetch_hook

@@ -74,6 +74,18 @@
       </div>
 
       <div>
+        <span class="text-xs font-semibold text-slate-500 uppercase block mb-1">Catalog Dataset ID</span>
+        <span class="font-mono text-xs text-slate-700"><%= @hook.shopify_catalog_dataset_id.presence || 'Not provisioned' %></span>
+      </div>
+
+      <div>
+        <span class="text-xs font-semibold text-slate-500 uppercase block mb-1">Catalog Sync Status</span>
+        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-800">
+          <%= @hook.shopify_catalog_client_status(@catalog_status).humanize %>
+        </span>
+      </div>
+
+      <div>
         <span class="text-xs font-semibold text-slate-500 uppercase block mb-1">Encrypted SAT Tool Key</span>
         <% if @hook.settings.to_h['encrypted_tool_key'].present? %>
           <span class="inline-flex items-center text-xs text-emerald-700 font-medium">
@@ -142,15 +154,43 @@
 
   <!-- Operational Actions -->
   <% if @hook.shopify_sat_tenant_id.present? %>
+    <% if @catalog_status.present? && @catalog_status['documents_failed'].to_i.positive? %>
+      <div class="bg-amber-50 border border-amber-200 rounded-lg p-4 text-xs text-amber-800 flex items-start gap-3">
+        <svg class="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+        <div>
+          <h4 class="font-semibold text-amber-900 mb-1">Catalog Sync Alert: <%= @catalog_status['documents_failed'] %> product document(s) failed</h4>
+          <p>Some products encountered errors during Dify catalog ingestion. Client-facing interfaces show general sync status only without error details. Inspect the diagnostics below or queue a fresh import.</p>
+        </div>
+      </div>
+    <% end %>
+
     <div class="bg-white border border-slate-100 rounded-lg p-6 shadow-sm">
       <h2 class="text-base font-semibold text-slate-800 mb-2">Shopify Agent Tools Operations</h2>
       <p class="text-xs text-slate-600 mb-4">
-        Perform tenant management tasks against the SAT API.
+        Perform tenant and catalog management tasks against the SAT API.
       </p>
 
       <div class="flex flex-wrap items-center gap-4">
         <%= form_with url: sync_status_super_admin_shopify_request_path(@hook), method: :post, local: true do %>
           <%= submit_tag 'Sync Status from SAT', class: 'px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded text-sm font-medium border border-slate-200 cursor-pointer' %>
+        <% end %>
+
+        <%= form_with url: provision_catalog_super_admin_shopify_request_path(@hook), method: :post, local: true do %>
+          <%= submit_tag (@hook.shopify_catalog_dataset_id.present? ? 'Re-provision Dify Catalog' : 'Provision Dify Catalog & Import'), class: 'px-4 py-2 bg-brand-50 hover:bg-brand-100 text-brand-800 rounded text-sm font-medium border border-brand-200 cursor-pointer' %>
+        <% end %>
+
+        <%= form_with url: import_catalog_super_admin_shopify_request_path(@hook), method: :post, local: true do %>
+          <%= submit_tag 'Queue Catalog Import', class: 'px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded text-sm font-medium border border-slate-200 cursor-pointer' %>
+        <% end %>
+
+        <% if @catalog_status.present? && @catalog_status['sync_enabled'] == false %>
+          <%= form_with url: resume_catalog_super_admin_shopify_request_path(@hook), method: :post, local: true do %>
+            <%= submit_tag 'Resume Catalog Sync', class: 'px-4 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 rounded text-sm font-medium border border-emerald-200 cursor-pointer' %>
+          <% end %>
+        <% else %>
+          <%= form_with url: pause_catalog_super_admin_shopify_request_path(@hook), method: :post, local: true do %>
+            <%= submit_tag 'Pause Catalog Sync', class: 'px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded text-sm font-medium border border-slate-200 cursor-pointer' %>
+          <% end %>
         <% end %>
 
         <%= form_with url: rotate_tool_key_super_admin_shopify_request_path(@hook), method: :post, local: true do %>
@@ -161,6 +201,13 @@
   <% end %>
 
   <!-- SAT Diagnostic Info -->
+  <% if @catalog_status.present? %>
+    <div class="bg-white border border-slate-100 rounded-lg p-6 shadow-sm">
+      <h2 class="text-base font-semibold text-slate-800 mb-2">Live Catalog Sync Status</h2>
+      <pre class="bg-slate-50 p-4 rounded text-xs font-mono text-slate-700 overflow-x-auto border border-slate-200"><%= JSON.pretty_generate(@catalog_status) %></pre>
+    </div>
+  <% end %>
+
   <% if @sat_tenant.present? %>
     <div class="bg-white border border-slate-100 rounded-lg p-6 shadow-sm">
       <h2 class="text-base font-semibold text-slate-800 mb-2">Live SAT Tenant Diagnostics</h2>

@@ -49,6 +49,30 @@ class ShopifyAgentTools::AdminClient
     request(:delete, "v1/admin/tenants/#{tenant_id}")
   end
 
+  def provision_dify_dataset(tenant_id)
+    request(:post, "v1/admin/tenants/#{tenant_id}/dify/provision")
+  end
+
+  def dify_dataset(tenant_id)
+    request(:get, "v1/admin/tenants/#{tenant_id}/dify")
+  end
+
+  def start_catalog_import(tenant_id)
+    request(:post, "v1/admin/tenants/#{tenant_id}/catalog/import")
+  end
+
+  def catalog_status(tenant_id)
+    request(:get, "v1/admin/tenants/#{tenant_id}/catalog/status")
+  end
+
+  def pause_catalog_sync(tenant_id)
+    request(:post, "v1/admin/tenants/#{tenant_id}/catalog/pause")
+  end
+
+  def resume_catalog_sync(tenant_id)
+    request(:post, "v1/admin/tenants/#{tenant_id}/catalog/resume")
+  end
+
   private
 
   def request(method, path, payload = nil, params: {})

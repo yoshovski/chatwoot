@@ -42,7 +42,7 @@ class Captain::Knowledge::Search
   def search(query, kinds: nil)
     @assistant.ensure_dify_datasets!
     datasets = configured_datasets
-    datasets.select! { |dataset| kinds.include?(dataset[:kind]) } if kinds
+    datasets.select! { |dataset| kinds.include?(dataset[:kind]) || (dataset[:kind] == 'catalog' && kinds.include?('product')) } if kinds
     response = AiAgents::KnowledgeClient.new(account: @account, actor: @actor).request(
       method: :post, path: '/v1/knowledge/search', action: 'knowledge:read',
       payload: { account_id: @account.id, query: query, datasets: datasets }
@@ -61,23 +61,44 @@ class Captain::Knowledge::Search
   private
 
   def configured_datasets
-    [
+    datasets = [
       { dataset_id: @assistant.config.fetch('dify_faq_dataset_id'), kind: 'faq', limit: 6 },
       { dataset_id: @assistant.config.fetch('dify_docs_dataset_id'), kind: 'document', limit: 6 },
       *@assistant.config.fetch('dify_extra_dataset_ids', []).map { |id| { dataset_id: id, kind: 'extra', limit: 6 } }
     ]
+    catalog = shopify_catalog_dataset
+    datasets << catalog if catalog
+    datasets
+  end
+
+  def shopify_catalog_dataset
+    hook = @account.hooks.find_by(app_id: 'shopify')
+    return unless hook&.shopify_connected? && hook.shopify_catalog_sync_enabled? && hook.shopify_catalog_dataset_id.present?
+
+    { dataset_id: hook.shopify_catalog_dataset_id, kind: 'catalog', limit: 6 }
   end
 
   def canonical_passage(passage, datasets)
     kind = passage.fetch('kind')
-    return unless datasets.any? { |dataset| dataset[:dataset_id] == passage.fetch('dataset_id') && dataset[:kind] == kind }
+    return unless passage_matched?(datasets, passage.fetch('dataset_id'), kind)
 
     document_id = passage.fetch('document_id')
     record = canonical_record(kind, document_id)
     return if %w[faq document].include?(kind) && record.nil?
 
+    build_passage(passage, kind, document_id, record)
+  end
+
+  def passage_matched?(datasets, dataset_id, kind)
+    datasets.any? do |dataset|
+      dataset[:dataset_id] == dataset_id &&
+        (dataset[:kind] == kind || (dataset[:kind] == 'catalog' && %w[catalog product].include?(kind)))
+    end
+  end
+
+  def build_passage(passage, kind, document_id, record)
     title, content = canonical_text(record, passage)
-    handle = passage['handle'] || passage.dig('metadata', 'handle')
+    handle = passage['handle'] || passage.dig('metadata', 'handle') || passage.dig('metadata', 'product_handle')
     result = Passage.new(kind: kind, title: title.truncate(90), content: content.truncate(PASSAGE_CHARS),
                          score: passage.fetch('score'), record: record, document_id: document_id, dataset_id: passage.fetch('dataset_id'),
                          handle: handle)

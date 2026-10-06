@@ -71,6 +71,108 @@ RSpec.describe Integrations::Hook do
     end
   end
 
+  describe 'Shopify catalog and SAT attributes' do
+    let(:account) { create(:account) }
+    let(:hook) do
+      build(:integrations_hook, :shopify, account: account, reference_id: 'my-store.myshopify.com', status: :enabled)
+    end
+
+    before do
+      allow(GlobalConfigService).to receive(:load)
+        .with('ENABLE_SHOPIFY_INTEGRATION', 'false')
+        .and_return(true)
+      account.enable_features!('shopify_integration')
+    end
+
+    describe '#shopify_catalog_dataset_id' do
+      it 'reads and writes catalog dataset ID' do
+        hook.shopify_catalog_dataset_id = 'catalog-ds-99'
+        expect(hook.shopify_catalog_dataset_id).to eq('catalog-ds-99')
+        expect(hook.settings['catalog_dataset_id']).to eq('catalog-ds-99')
+      end
+    end
+
+    describe '#shopify_catalog_sync_enabled?' do
+      it 'defaults to true when unspecified' do
+        expect(hook.shopify_catalog_sync_enabled?).to be true
+      end
+
+      it 'returns false when explicitly disabled' do
+        hook.settings = { 'catalog_sync_enabled' => false }
+        expect(hook.shopify_catalog_sync_enabled?).to be false
+      end
+    end
+
+    describe '#shopify_catalog_client_status' do
+      it 'returns needs_reconnect when state requires reconnection' do
+        hook.settings = { 'state' => 'needs_reconnect' }
+        expect(hook.shopify_catalog_client_status).to eq('needs_reconnect')
+      end
+
+      it 'returns off when hook is not connected' do
+        hook.settings = { 'state' => 'requested' }
+        expect(hook.shopify_catalog_client_status).to eq('off')
+      end
+
+      context 'when hook is connected' do
+        before do
+          hook.settings = { 'state' => 'connected', 'sat_tenant_id' => 'sat-1' }
+        end
+
+        it 'returns importing when state is importing' do
+          hook.settings = hook.settings.merge('state' => 'importing')
+          expect(hook.shopify_catalog_client_status).to eq('importing')
+        end
+
+        it 'returns off when catalog sync is disabled' do
+          hook.settings = hook.settings.merge('catalog_sync_enabled' => false)
+          expect(hook.shopify_catalog_client_status).to eq('off')
+        end
+
+        it 'returns on when catalog dataset id is present' do
+          hook.settings = hook.settings.merge('catalog_dataset_id' => 'ds-1')
+          expect(hook.shopify_catalog_client_status).to eq('on')
+        end
+
+        it 'evaluates live SAT status correctly' do
+          importing_status = {
+            'configured' => true,
+            'sync_enabled' => true,
+            'documents_synced' => 0,
+            'processing_jobs' => 1
+          }
+          expect(hook.shopify_catalog_client_status(importing_status)).to eq('importing')
+
+          on_status = {
+            'configured' => true,
+            'sync_enabled' => true,
+            'documents_synced' => 15,
+            'processing_jobs' => 0
+          }
+          expect(hook.shopify_catalog_client_status(on_status)).to eq('on')
+
+          paused_status = {
+            'configured' => true,
+            'sync_enabled' => false,
+            'documents_synced' => 15
+          }
+          expect(hook.shopify_catalog_client_status(paused_status)).to eq('off')
+        end
+
+        it 'logs failed product counts without exposing errors' do
+          status_with_failures = {
+            'configured' => true,
+            'sync_enabled' => true,
+            'documents_synced' => 10,
+            'documents_failed' => 2
+          }
+          expect(Rails.logger).to receive(:warn).with(/failed products during sync/)
+          expect(hook.shopify_catalog_client_status(status_with_failures)).to eq('on')
+        end
+      end
+    end
+  end
+
   describe 'scopes' do
     let(:account) { create(:account) }
     let(:inbox) { create(:inbox, account: account) }

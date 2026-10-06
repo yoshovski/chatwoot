@@ -1,7 +1,7 @@
 class Api::V1::Accounts::Integrations::ShopifyController < Api::V1::Accounts::Integrations::BaseController
   include Shopify::IntegrationHelper
   before_action :setup_shopify_context, only: [:orders]
-  before_action :fetch_hook, only: [:orders, :destroy, :sync_status]
+  before_action :fetch_hook, only: [:orders, :destroy, :sync_status, :pause_catalog, :resume_catalog]
   before_action :check_authorization, only: [:destroy]
   before_action :validate_contact, only: [:orders]
 
@@ -31,10 +31,30 @@ class Api::V1::Accounts::Integrations::ShopifyController < Api::V1::Accounts::In
   end
 
   def sync_status
+    catalog_status = refresh_sat_state_and_catalog if @hook.shopify_sat_tenant_id.present?
+    render json: hook_payload(@hook, catalog_status_data: catalog_status)
+  rescue ShopifyAgentTools::AdminClient::Error => e
+    render json: { error: e.message }, status: :unprocessable_entity
+  end
+
+  def pause_catalog
     if @hook.shopify_sat_tenant_id.present?
       sat_client = ShopifyAgentTools::AdminClient.new
-      tenant = sat_client.tenant(@hook.shopify_sat_tenant_id)
-      apply_sat_status(tenant)
+      sat_client.pause_catalog_sync(@hook.shopify_sat_tenant_id)
+      @hook.settings = @hook.settings.to_h.merge('catalog_sync_enabled' => false)
+      @hook.save!
+    end
+
+    render json: hook_payload(@hook)
+  rescue ShopifyAgentTools::AdminClient::Error => e
+    render json: { error: e.message }, status: :unprocessable_entity
+  end
+
+  def resume_catalog
+    if @hook.shopify_sat_tenant_id.present?
+      sat_client = ShopifyAgentTools::AdminClient.new
+      sat_client.resume_catalog_sync(@hook.shopify_sat_tenant_id)
+      @hook.settings = @hook.settings.to_h.merge('catalog_sync_enabled' => true)
       @hook.save!
     end
 
@@ -158,20 +178,80 @@ class Api::V1::Accounts::Integrations::ShopifyController < Api::V1::Accounts::In
            status: :unprocessable_entity
   end
 
-  def hook_payload(hook)
-    return { id: nil, state: 'disconnected', enabled: false } if hook.nil?
+  def hook_payload(hook, catalog_status_data: nil)
+    return { id: nil, state: 'disconnected', enabled: false, catalog_status: nil } if hook.nil?
 
-    {
+    payload = {
       id: hook.id,
       state: hook.shopify_state,
       shop_domain: hook.reference_id,
       storefront_url: hook.shopify_storefront_url,
       install_url: hook.settings.to_h['install_url'],
       sat_tenant_id: hook.shopify_sat_tenant_id,
+      catalog_dataset_id: hook.shopify_catalog_dataset_id,
+      catalog_status: hook.shopify_catalog_client_status(catalog_status_data),
+      catalog_sync_enabled: hook.shopify_catalog_sync_enabled?,
       enabled: hook.enabled?,
       approved_at: hook.settings.to_h['approved_at'],
       requested_at: hook.settings.to_h['requested_at']
     }
+    payload.merge(hook: payload)
+  end
+
+  def refresh_sat_state_and_catalog
+    sat_client = ShopifyAgentTools::AdminClient.new
+    apply_sat_status(sat_client.tenant(@hook.shopify_sat_tenant_id))
+    ensure_catalog_provisioned(sat_client) if @hook.shopify_connected? && @hook.shopify_catalog_dataset_id.blank?
+    status = fetch_catalog_status(sat_client)
+    @hook.save!
+    status
+  end
+
+  def fetch_catalog_status(sat_client)
+    status = sat_client.catalog_status(@hook.shopify_sat_tenant_id)
+    return unless status
+
+    @hook.settings = @hook.settings.to_h.merge('catalog_sync_enabled' => status['sync_enabled'] != false)
+    if status['documents_failed'].to_i.positive?
+      Rails.logger.warn("[Shopify Catalog] Tenant #{@hook.shopify_sat_tenant_id} has #{status['documents_failed']} failed products")
+    end
+    status
+  rescue ShopifyAgentTools::AdminClient::Error => e
+    Rails.logger.info("[Shopify] Catalog status query skipped: #{e.message}")
+    nil
+  end
+
+  def ensure_catalog_provisioned(sat_client)
+    return @hook.shopify_catalog_dataset_id if @hook.shopify_catalog_dataset_id.present?
+    return unless @hook.shopify_sat_tenant_id.present? && @hook.shopify_connected?
+
+    dataset = provision_or_fetch_dataset(sat_client)
+    attach_catalog_dataset(dataset, sat_client)
+    @hook.shopify_catalog_dataset_id
+  end
+
+  def provision_or_fetch_dataset(sat_client)
+    sat_client.provision_dify_dataset(@hook.shopify_sat_tenant_id)
+  rescue ShopifyAgentTools::AdminClient::Error => e
+    raise unless e.status == 409
+
+    sat_client.dify_dataset(@hook.shopify_sat_tenant_id)
+  end
+
+  def attach_catalog_dataset(dataset, sat_client)
+    return unless dataset && dataset['dataset_id'].present?
+
+    @hook.settings = @hook.settings.to_h.merge(
+      'catalog_dataset_id' => dataset['dataset_id'],
+      'catalog_sync_enabled' => dataset['sync_enabled'] != false
+    )
+    trigger_catalog_import(sat_client)
+  end
+
+  def trigger_catalog_import(sat_client)
+    sat_client.start_catalog_import(@hook.shopify_sat_tenant_id)
+  rescue ShopifyAgentTools::AdminClient::Error => e
+    Rails.logger.warn("[Shopify Catalog] Import start failed: #{e.message}")
   end
 
   def apply_sat_status(tenant)
