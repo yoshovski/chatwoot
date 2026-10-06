@@ -43,24 +43,30 @@ class Captain::Conversation::ProductCardsBuilder
   end
 
   def filter_citation_urls(citation_urls)
-    return citation_urls unless products? && citation_urls.is_a?(Hash)
+    return {} if citation_urls.blank?
+    return citation_urls unless citation_urls.is_a?(Hash)
+
+    urls = sanitizer.filter_citation_urls(citation_urls)
+    return urls unless products?
 
     shown_urls = all_shown_product_urls
     handles_patterns = shown_handles.map { |h| "/products/#{h.downcase}" }
 
-    citation_urls.reject do |_idx, url|
+    urls.reject do |_idx, url|
       citation_matches_product?(url, shown_urls, handles_patterns)
     end
   end
 
   def clean_prose_content(content)
-    return content unless products?
+    text = content.dup
+    text = strip_product_urls(text) if products?
+    text = sanitizer.sanitize_prose(text)
 
-    text = strip_images(content.dup)
-    text = strip_product_urls(text)
-    text = normalize_whitespace_and_punctuation(text)
-
-    text.presence || fallback_prose_text
+    if products? && text.blank?
+      fallback_prose_text
+    else
+      text
+    end
   end
 
   def post_messages!(preserve_waiting_since: false, agent_name: nil)
@@ -80,12 +86,6 @@ class Captain::Conversation::ProductCardsBuilder
     shown_urls.any? { |su| su.casecmp?(url.to_s) } || handles_patterns.any? { |pat| url_str.include?(pat) }
   end
 
-  def strip_images(text)
-    text.gsub(/!\[[^\]]*\]\([^\)]+\)/, '')
-        .gsub(/!\[[^\]]*\]/, '')
-        .gsub(/<img\b[^>]*>/i, '')
-  end
-
   def strip_product_urls(text)
     all_shown_product_urls.compact_blank.each do |url|
       escaped = Regexp.escape(url)
@@ -98,14 +98,6 @@ class Captain::Conversation::ProductCardsBuilder
     end
 
     text
-  end
-
-  def normalize_whitespace_and_punctuation(text)
-    text.gsub(/:\s*([.!?,])/, '\1')
-        .gsub(/[ \t]+([.!?,])/, '\1')
-        .gsub(/[ \t]{2,}/, ' ')
-        .gsub(/\n{3,}/, "\n\n")
-        .strip
   end
 
   def fallback_prose_text
@@ -202,17 +194,26 @@ class Captain::Conversation::ProductCardsBuilder
     if image_url.present? && allowed_image_url?(image_url)
       @cards_items << build_card_payload(title, description, image_url, product_url)
     else
-      @article_items << { 'title' => title, 'description' => description, 'link' => product_url }
+      @article_items << build_article_payload(title, description, product_url)
     end
   end
 
   def build_card_payload(title, description, image_url, product_url)
+    actions = []
+    actions << { 'type' => 'link', 'text' => 'View product', 'uri' => product_url } if product_url.present? && allowed_link_url?(product_url)
+
     {
       'title' => title,
       'description' => description,
       'media_url' => image_url,
-      'actions' => [{ 'type' => 'link', 'text' => 'View product', 'uri' => product_url }]
+      'actions' => actions
     }
+  end
+
+  def build_article_payload(title, description, product_url)
+    payload = { 'title' => title, 'description' => description }
+    payload['link'] = product_url if product_url.present? && allowed_link_url?(product_url)
+    payload
   end
 
   def load_cached_products
@@ -307,28 +308,16 @@ class Captain::Conversation::ProductCardsBuilder
     "#{base_url.chomp('/')}/products/#{handle}"
   end
 
+  def sanitizer
+    @sanitizer ||= Captain::Conversation::ReplySanitizer.new(assistant: @assistant)
+  end
+
   def allowed_image_url?(url)
-    return false if url.blank?
-
-    allowlist = configured_image_allowlist.presence || default_image_allowlist
-    allowlist.any? { |prefix| url.start_with?(prefix) }
+    sanitizer.allowed_image_url?(url)
   end
 
-  def configured_image_allowlist
-    @assistant.image_allowlist
-  end
-
-  def default_image_allowlist
-    list = ['https://cdn.shopify.com/']
-    hook = shopify_hook
-    if hook&.reference_id.present?
-      domain = hook.reference_id.downcase.strip
-      list << "https://#{domain}/cdn/"
-      list << "https://www.#{domain}/cdn/" unless domain.start_with?('www.')
-    end
-    list << 'https://scanixx.com/cdn/'
-    list << 'https://www.scanixx.com/cdn/'
-    list.uniq
+  def allowed_link_url?(url)
+    sanitizer.allowed_link_url?(url)
   end
 
   def sanitize_product_stock!(product)

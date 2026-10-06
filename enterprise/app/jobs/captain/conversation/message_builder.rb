@@ -57,8 +57,10 @@ module Captain::Conversation::MessageBuilder
   end
 
   def create_v1_message(preserve_waiting_since: false)
-    validate_message_content!(@response['response'])
-    create_outgoing_message(@response['response'], agent_name: @response['agent_name'], preserve_waiting_since: preserve_waiting_since)
+    sanitizer = Captain::Conversation::ReplySanitizer.new(assistant: @assistant)
+    content = sanitizer.sanitize_prose(@response['response'])
+    validate_message_content!(content)
+    create_outgoing_message(content, agent_name: @response['agent_name'], preserve_waiting_since: preserve_waiting_since)
   end
 
   def validate_message_content!(content)
