@@ -45,7 +45,12 @@ RSpec.describe ShopifyAgentTools::AdminClient do
       stub_request(:put, "#{api_url}/v1/admin/tenants/sat-123/shopify")
         .with(
           headers: { 'Authorization' => "Bearer #{admin_key}", 'Content-Type' => 'application/json' },
-          body: { client_id: 'client_id_x', client_secret: 'client_secret_y', storefront_base_url: 'https://acme.com' }.to_json
+          body: {
+            shop_domain: 'acme.myshopify.com',
+            client_id: 'client_id_x',
+            client_secret: 'client_secret_y',
+            storefront_base_url: 'https://acme.com'
+          }.to_json
         )
         .to_return(
           status: 200,
@@ -53,7 +58,13 @@ RSpec.describe ShopifyAgentTools::AdminClient do
           headers: { 'Content-Type' => 'application/json' }
         )
 
-      result = client.configure_shopify('sat-123', client_id: 'client_id_x', client_secret: 'client_secret_y', storefront_base_url: 'https://acme.com')
+      result = client.configure_shopify(
+        'sat-123',
+        shop_domain: 'acme.myshopify.com',
+        client_id: 'client_id_x',
+        client_secret: 'client_secret_y',
+        storefront_base_url: 'https://acme.com'
+      )
       expect(result['install_url']).to include('oauth/authorize')
     end
   end

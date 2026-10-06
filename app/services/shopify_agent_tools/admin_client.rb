@@ -34,8 +34,10 @@ class ShopifyAgentTools::AdminClient
     request(:post, 'v1/admin/tenants', { name: name, slug: slug, shop_domain: shop_domain })
   end
 
-  def configure_shopify(tenant_id, client_id:, client_secret:, storefront_base_url: nil)
+  def configure_shopify(tenant_id, client_id:, client_secret:, shop_domain: nil, storefront_base_url: nil)
+    shop_domain ||= tenant(tenant_id)['shop_domain'] if tenant_id.present?
     payload = {
+      shop_domain: shop_domain,
       client_id: client_id,
       client_secret: client_secret,
       storefront_base_url: storefront_base_url
@@ -82,17 +84,32 @@ class ShopifyAgentTools::AdminClient
   private
 
   def request(method, path, payload = nil, params: {})
-    response = @connection.run_request(method, path, nil, nil) do |req|
-      req.headers['Content-Type'] = 'application/json' if payload
-      req.body = payload.to_json if payload
-      req.params.update(params) if params.present?
-    end
-
-    raise Error.new("SAT request failed (HTTP #{response.status})", status: response.status) unless response.success?
+    response = execute_request(method, path, payload, params)
+    raise Error.new(build_error_message(response), status: response.status) unless response.success?
 
     JSON.parse(response.body) unless response.body.to_s.empty?
   rescue Faraday::Error, JSON::ParserError => e
     raise Error, "SAT request failed: #{e.message}"
+  end
+
+  def execute_request(method, path, payload, params)
+    @connection.run_request(method, path, nil, nil) do |req|
+      req.headers['Content-Type'] = 'application/json' if payload
+      req.body = payload.to_json if payload
+      req.params.update(params) if params.present?
+    end
+  end
+
+  def build_error_message(response)
+    detail = extract_error_detail(response.body)
+    detail.present? ? "SAT request failed (HTTP #{response.status}): #{detail}" : "SAT request failed (HTTP #{response.status})"
+  end
+
+  def extract_error_detail(body)
+    parsed = JSON.parse(body)
+    parsed['detail'] if parsed.is_a?(Hash)
+  rescue JSON::ParserError
+    nil
   end
 
   def global_config(key)

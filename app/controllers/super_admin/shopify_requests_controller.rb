@@ -29,7 +29,13 @@ class SuperAdmin::ShopifyRequestsController < SuperAdmin::ApplicationController 
     return redirect_with_alert('credentials_required') if credentials_blank?
 
     tenant_id = ensure_sat_tenant_id
-    config = sat_client.configure_shopify(tenant_id, client_id: client_id, client_secret: client_secret, storefront_base_url: storefront_base_url)
+    config = sat_client.configure_shopify(
+      tenant_id,
+      shop_domain: @hook.reference_id,
+      client_id: client_id,
+      client_secret: client_secret,
+      storefront_base_url: storefront_base_url
+    )
     update_hook_on_approval(tenant_id, config['install_url'])
 
     redirect_to super_admin_shopify_request_path(@hook), notice: I18n.t('super_admin.shopify_requests.approved')
