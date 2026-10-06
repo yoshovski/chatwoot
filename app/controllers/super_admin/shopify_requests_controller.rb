@@ -159,13 +159,15 @@ class SuperAdmin::ShopifyRequestsController < SuperAdmin::ApplicationController 
 
   def apply_tenant_sync(tenant)
     status = tenant['status'].to_s
+    shopify_status = tenant['shopify_status'].to_s
     shopify_state = tenant.dig('shopify_connection', 'state').to_s
+    states = [status, shopify_status, shopify_state]
 
-    if status == 'connected' || shopify_state == 'connected'
+    if states.include?('connected')
       mark_hook_connected(tenant)
-    elsif status == 'importing'
+    elsif states.include?('importing')
       @hook.settings = @hook.settings.to_h.merge('state' => 'importing')
-    elsif disconnected_state?(status, shopify_state)
+    elsif disconnected_state?(*states)
       mark_hook_needs_reconnect
     end
   end
@@ -183,9 +185,8 @@ class SuperAdmin::ShopifyRequestsController < SuperAdmin::ApplicationController 
     @hook.status = :disabled
   end
 
-  def disconnected_state?(status, shopify_state)
-    %w[reauthorization_required uninstalled].include?(status) ||
-      %w[reauthorization_required uninstalled].include?(shopify_state)
+  def disconnected_state?(*states)
+    states.flatten.compact.map(&:to_s).any? { |s| %w[reauthorization_required uninstalled].include?(s) }
   end
 
   def refresh_sat_state_and_catalog
