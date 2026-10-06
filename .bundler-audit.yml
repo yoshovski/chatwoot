@@ -28,4 +28,6 @@ ignore:
   # Built-in tool names are fixed; custom tools use bounded slugs and override normalization.
   # Patched 2.0 releases need an ai-agents migration (currently constrained to RubyLLM 1.x).
   # Remove when a supported patched RubyLLM/ai-agents combination is adopted.
+  - CVE-2026-67987
+  - CVE-2026-67989
   - CVE-2026-67991
