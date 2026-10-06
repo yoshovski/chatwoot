@@ -21,7 +21,11 @@ RSpec.describe ShopifyAgentTools::AdminClient do
     it 'posts to v1/admin/tenants and returns parsed JSON' do
       stub_request(:post, "#{api_url}/v1/admin/tenants")
         .with(
-          headers: { 'Authorization' => "Bearer #{admin_key}", 'Content-Type' => 'application/json' },
+          headers: {
+            'Authorization' => "Bearer #{admin_key}",
+            'X-Admin-Key' => admin_key,
+            'Content-Type' => 'application/json'
+          },
           body: { name: 'Acme', slug: 'acme-store', shop_domain: 'acme.myshopify.com' }.to_json
         )
         .to_return(
