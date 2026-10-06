@@ -205,4 +205,3 @@ describe('agent identity rendering', () => {
     );
   });
 });
-

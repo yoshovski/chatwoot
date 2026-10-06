@@ -167,6 +167,7 @@ class Captain::Conversation::ResponseBuilderJob < ApplicationJob # rubocop:disab
         "[CAPTAIN][ResponseBuilderJob] V1 handoff requested for account=#{account.id} conversation=#{@conversation.display_id} " \
         "source=#{@response&.dig('action_source') || 'legacy'} reason=#{@response&.dig('action_reason')}"
       )
+      apply_handoff_extras
       create_handoff_message
       @conversation.bot_handoff!
       report_v1_handoff_not_executed if conversation_pending?
@@ -252,5 +253,12 @@ class Captain::Conversation::ResponseBuilderJob < ApplicationJob # rubocop:disab
                    .captain_response_triggering
                    .exists?(['messages.id > ?', @responding_to_message_id])
     end
+  end
+
+  def apply_handoff_extras
+    Captain::Conversation::HandoffService.new(
+      conversation: @conversation,
+      assistant: @assistant
+    ).apply_extras!
   end
 end

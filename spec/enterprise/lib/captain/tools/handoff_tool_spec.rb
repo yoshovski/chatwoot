@@ -37,6 +37,15 @@ RSpec.describe Captain::Tools::HandoffTool, type: :model do
   end
 
   describe '#perform' do
+    before do
+      stub_request(:post, %r{/chat/completions})
+        .to_return(
+          status: 200,
+          body: { choices: [{ message: { content: "Wants: help\nDetails: drone\nNext: reply" } }] }.to_json,
+          headers: { 'Content-Type' => 'application/json' }
+        )
+    end
+
     context 'when conversation exists' do
       context 'when Captain is responding to a customer message' do
         let(:responding_to_message) do
@@ -135,6 +144,10 @@ RSpec.describe Captain::Tools::HandoffTool, type: :model do
           create(:message, conversation: conversation, account: account, inbox: inbox, message_type: :incoming)
         end
 
+        before do
+          account.disable_features!(:captain_integration_v2)
+        end
+
         it 'uses the legacy handoff without a lock or stale-message guard' do
           responding_to_message
           create(:message, conversation: conversation, account: account, inbox: inbox, message_type: :incoming)
@@ -167,13 +180,24 @@ RSpec.describe Captain::Tools::HandoffTool, type: :model do
           tool.perform(tool_context, reason: reason)
 
           created_message = Message.last
-          expect(created_message.content).to eq(reason)
-          expect(created_message.message_type).to eq('outgoing')
-          expect(created_message.private).to be true
-          expect(created_message.sender).to eq(assistant)
-          expect(created_message.account).to eq(account)
-          expect(created_message.inbox).to eq(inbox)
-          expect(created_message.conversation).to eq(conversation)
+          expect(created_message).to have_attributes(
+            content: "🔔 **Needs your reply**\nSummary unavailable, read the thread above.",
+            message_type: 'outgoing',
+            private: true,
+            sender: assistant,
+            account: account,
+            inbox: inbox,
+            conversation: conversation
+          )
+          expect(conversation.reload.label_list).to include('needs-human')
+        end
+
+        it 'generates LLM summary note when transcript messages exist' do
+          create(:message, conversation: conversation, account: account, inbox: inbox, message_type: :incoming, content: 'Do you carry drones?')
+          tool.perform(tool_context, reason: 'Customer needs specialized support')
+
+          created_message = Message.last
+          expect(created_message.content).to eq("🔔 **Needs your reply**\nWants: help\nDetails: drone\nNext: reply")
         end
 
         it 'triggers bot handoff on conversation' do
@@ -248,14 +272,15 @@ RSpec.describe Captain::Tools::HandoffTool, type: :model do
       end
 
       context 'without reason provided' do
-        it 'creates a private note with nil content and hands off conversation' do
+        it 'creates a private team note and hands off conversation' do
           expect do
             result = tool.perform(tool_context)
             expect(result).to eq('Conversation handed off to human support team')
           end.to change(Message, :count).by(1)
 
           created_message = Message.last
-          expect(created_message.content).to be_nil
+          expect(created_message.content).to eq("🔔 **Needs your reply**\nSummary unavailable, read the thread above.")
+          expect(conversation.reload.label_list).to include('needs-human')
         end
 
         it 'logs tool usage with default reason' do
@@ -267,10 +292,10 @@ RSpec.describe Captain::Tools::HandoffTool, type: :model do
           tool.perform(tool_context)
         end
 
-        it 'does not record a handoff note id since the empty note never renders' do
+        it 'records a handoff note id for session capture' do
           tool.perform(tool_context)
 
-          expect(tool_context.state[:cw_metadata]).to be_nil
+          expect(tool_context.state[:cw_metadata][:handoff_note_id]).to eq(Message.last.id)
         end
       end
 

@@ -351,9 +351,7 @@ onMounted(async () => {
                   )
                 }}
               </p>
-              <p
-                class="text-xs text-amber-700/80 dark:text-amber-400/70 mt-1"
-              >
+              <p class="text-xs text-amber-700/80 dark:text-amber-400/70 mt-1">
                 {{ t('INTEGRATION_SETTINGS.SHOPIFY.STATE.REQUESTED_HELP') }}
               </p>
             </div>
