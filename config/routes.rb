@@ -447,10 +447,12 @@ Rails.application.routes.draw do
                 post :add_participant_to_meeting
               end
             end
-            resource :shopify, controller: 'shopify', only: [:destroy] do
+            resource :shopify, controller: 'shopify', only: [:show, :destroy] do
               collection do
                 post :auth
                 get :orders
+                post :request_connection
+                post :sync_status
               end
             end
             resource :linear, controller: 'linear', only: [] do
@@ -787,6 +789,13 @@ Rails.application.routes.draw do
       resources :platform_apps, only: [:index, :new, :create, :show, :edit, :update, :destroy]
       resources :platform_banners
       resource :instance_status, only: [:show]
+      resources :shopify_requests, only: [:index, :show] do
+        member do
+          post :approve
+          post :sync_status
+          post :rotate_tool_key
+        end
+      end
 
       resource :settings, only: [:show] do
         get :refresh, on: :collection

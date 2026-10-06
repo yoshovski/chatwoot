@@ -706,3 +706,8 @@ en:
         button: 'Resend confirmation email'
         sent: 'Confirmation email sent.'
         already_confirmed: 'User is already confirmed.'
+    shopify_requests:
+      credentials_required: 'Client ID and Client Secret are required'
+      approved: 'Shopify request approved and custom app install URL generated.'
+      status_synced: 'Status refreshed from Shopify Agent Tools.'
+      tool_key_rotated: 'Tool key successfully rotated.'

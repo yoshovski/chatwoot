@@ -85,6 +85,65 @@ class Integrations::Hook < ApplicationRecord
     app_id == 'shopify'
   end
 
+  def shopify_state
+    return nil unless shopify?
+
+    settings.to_h['state'].presence || (enabled? ? 'connected' : 'disconnected')
+  end
+
+  def shopify_sat_tenant_id
+    return nil unless shopify?
+
+    settings.to_h['sat_tenant_id']
+  end
+
+  def shopify_storefront_url
+    return nil unless shopify?
+
+    settings.to_h['storefront_url'].presence || (reference_id.present? ? "https://#{reference_id}" : nil)
+  end
+
+  def shopify_sat_managed?
+    shopify? && (settings.to_h['sat_tenant_id'].present? || settings.to_h['state'].present?)
+  end
+
+  def shopify_connected?
+    shopify? && shopify_state == 'connected'
+  end
+
+  def shopify_tool_key
+    return nil unless shopify?
+
+    encrypted = settings.to_h['encrypted_tool_key']
+    return nil if encrypted.blank?
+
+    self.class.decrypt_shopify_tool_key(encrypted)
+  end
+
+  def shopify_tool_key=(value)
+    return unless shopify?
+
+    self.settings = settings.to_h.merge('encrypted_tool_key' => value.present? ? self.class.encrypt_shopify_tool_key(value) : nil)
+  end
+
+  def self.encrypt_shopify_tool_key(value)
+    shopify_tool_key_encryptor.encrypt_and_sign(value)
+  end
+
+  def self.decrypt_shopify_tool_key(encrypted_value)
+    shopify_tool_key_encryptor.decrypt_and_verify(encrypted_value)
+  rescue ActiveSupport::MessageEncryptor::InvalidMessage
+    nil
+  end
+
+  def self.shopify_tool_key_encryptor
+    @shopify_tool_key_encryptor ||= begin
+      key_generator = ActiveSupport::KeyGenerator.new(Rails.application.secret_key_base)
+      key = key_generator.generate_key('shopify_sat_tool_key', 32)
+      ActiveSupport::MessageEncryptor.new(key, cipher: 'aes-256-gcm')
+    end
+  end
+
   def disable
     update(status: 'disabled')
   end

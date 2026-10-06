@@ -19,7 +19,26 @@
         "TITLE": "How to use the Shopify Integration?",
         "BODY": "With this integration, your Shopify store ***{storeDomain}*** is connected to your Chatwoot workspace. Here's what you can do:\n\n**Track orders in conversations:** When you open a conversation, the Shopify sidebar will automatically display recent orders for the customer based on their email address. This gives your support team instant context without switching tabs.\n\n**Access order details:** View order status, fulfillment status, and total amount directly within the conversation panel."
       },
-      "ERROR": "There was an error connecting to Shopify. Please try again or contact support if the issue persists."
+      "ERROR": "There was an error connecting to Shopify. Please try again or contact support if the issue persists.",
+      "STATE": {
+        "REQUESTED_TITLE": "Connection Requested",
+        "REQUESTED_DESCRIPTION": "Your request to connect {shopDomain} has been submitted. A Super Admin will review the request and configure custom app credentials.",
+        "PENDING_INSTALL_TITLE": "Approval Received",
+        "PENDING_INSTALL_DESCRIPTION": "Your custom app connection has been approved. Complete the installation on your Shopify store using the button below.",
+        "INSTALL_BUTTON": "Install on Shopify",
+        "IMPORTING_TITLE": "Syncing Catalog",
+        "IMPORTING_DESCRIPTION": "Shopify Agent Tools is importing your product catalog and data.",
+        "CONNECTED_TITLE": "Shopify Connected",
+        "CONNECTED_DESCRIPTION": "Your store {shopDomain} is connected and ready for Captain AI tools and product citations.",
+        "NEEDS_RECONNECT_TITLE": "Reconnection Required",
+        "NEEDS_RECONNECT_DESCRIPTION": "The Shopify connection needs reauthorization. Please reconnect or reinstall.",
+        "CHECK_STATUS": "Check Status",
+        "REFRESH": "Refresh Status",
+        "STATUS_REFRESHED": "Shopify status refreshed successfully",
+        "DISCONNECT": "Disconnect",
+        "DISCONNECT_TITLE": "Disconnect Shopify Store",
+        "DISCONNECT_MESSAGE": "Are you sure you want to disconnect this Shopify store? This will also remove the custom app connection and tool access."
+      }
     },
     "HEADER": "Integrations",
     "DESCRIPTION": "Chatwoot integrates with multiple tools and services to improve your team's efficiency. Explore the list below to configure your favorite apps.",

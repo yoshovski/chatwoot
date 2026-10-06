@@ -260,7 +260,7 @@ shopify:
   i18n_key: shopify
   hook_type: account
   allow_multiple_hooks: false
-  visible_properties: []
+  visible_properties: ['state', 'shop_domain', 'storefront_url', 'install_url', 'sat_tenant_id', 'approved_at', 'requested_at']
 
 leadsquared:
   id: leadsquared
