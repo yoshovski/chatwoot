@@ -41,6 +41,11 @@ Here's the metadata we have about the current conversation and the contact assoc
 {% endif -%}
 {% endif -%}
 
+{% if ownership_instruction -%}
+# Ownership & Handoff State
+{{ ownership_instruction }}
+
+{% endif -%}
 
 {% if response_guidelines.size > 0 -%}
 # Response Guidelines

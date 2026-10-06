@@ -31,6 +31,7 @@ const initialState = {
     memories: false,
     citations: false,
     contactAttributes: false,
+    continueWhileWaiting: false,
   },
 };
 
@@ -66,6 +67,7 @@ const updateStateFromAssistant = assistant => {
     memories: config.feature_memory || false,
     citations: config.feature_citation || false,
     contactAttributes: config.feature_contact_attributes || false,
+    continueWhileWaiting: config.continue_while_waiting || false,
   };
 };
 
@@ -98,6 +100,7 @@ const handleBasicInfoUpdate = async () => {
       feature_memory: state.features.memories,
       feature_citation: state.features.citations,
       feature_contact_attributes: state.features.contactAttributes,
+      continue_while_waiting: state.features.continueWhileWaiting,
     },
   };
 
@@ -180,6 +183,10 @@ watch(
         <label class="flex items-center gap-2">
           <input v-model="state.features.contactAttributes" type="checkbox" />
           {{ t('CAPTAIN.ASSISTANTS.FORM.FEATURES.ALLOW_CONTACT_ATTRIBUTES') }}
+        </label>
+        <label class="flex items-center gap-2">
+          <input v-model="state.features.continueWhileWaiting" type="checkbox" />
+          {{ t('CAPTAIN.ASSISTANTS.FORM.FEATURES.CONTINUE_WHILE_WAITING') }}
         </label>
       </div>
     </div>

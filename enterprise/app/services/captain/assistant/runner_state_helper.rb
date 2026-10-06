@@ -34,9 +34,18 @@ module Captain::Assistant::RunnerStateHelper
     state[:conversation][:label_list] = @conversation.label_list.to_a
     state[:channel_type] = @conversation.inbox&.channel_type
     state[:message_length_limit] = Captain::MessageLengthLimit.for(@conversation)
+    enrich_associated_state!(state)
+    state[:ownership_instruction] = ownership_instruction
+  end
+
+  def enrich_associated_state!(state)
     state[:contact] = slice_attrs(@conversation.contact, CONTACT_STATE_ATTRIBUTES) if @conversation.contact
     state[:campaign] = slice_attrs(@conversation.campaign, CAMPAIGN_STATE_ATTRIBUTES) if @conversation.campaign
     state[:contact_inbox] = slice_attrs(@conversation.contact_inbox, CONTACT_INBOX_STATE_ATTRIBUTES) if @conversation.contact_inbox
+  end
+
+  def ownership_instruction
+    ownership_service.prompt_instruction if respond_to?(:ownership_service, true)
   end
 
   def slice_attrs(record, keys)
