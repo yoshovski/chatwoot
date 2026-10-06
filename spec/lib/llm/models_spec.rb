@@ -37,6 +37,16 @@ RSpec.describe Llm::Models do
         %w[gpt-4.1-mini gpt-5-mini gpt-4.1 gpt-5.1 gpt-5.2]
       )
     end
+
+    it 'includes gpt-6-luna in assistant and copilot models' do
+      expect(described_class.models_for('assistant')).to include('gpt-6-luna')
+      expect(described_class.models_for('copilot')).to include('gpt-6-luna')
+      expect(described_class.model_config('gpt-6-luna')).to include(
+        'provider' => 'openai',
+        'display_name' => 'GPT-6 Luna',
+        'credit_multiplier' => 1
+      )
+    end
   end
 
   describe '.models' do
