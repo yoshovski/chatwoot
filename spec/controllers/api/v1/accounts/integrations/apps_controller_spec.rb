@@ -228,17 +228,13 @@ RSpec.describe 'Integration Apps API', type: :request do
         )
       end
 
-      it 'returns not found for Shopify when either feature gate is disabled' do
-        account.enable_features('shopify_integration')
-        allow(GlobalConfigService).to receive(:load)
-          .with('ENABLE_SHOPIFY_INTEGRATION', 'false')
-          .and_return(false)
-
+      it 'returns details for Shopify for admin' do
         get api_v1_account_integrations_app_url(account_id: account.id, id: 'shopify'),
             headers: admin.create_new_auth_token,
             as: :json
 
-        expect(response).to have_http_status(:not_found)
+        expect(response).to have_http_status(:success)
+        expect(response.parsed_body['id']).to eq('shopify')
       end
     end
   end

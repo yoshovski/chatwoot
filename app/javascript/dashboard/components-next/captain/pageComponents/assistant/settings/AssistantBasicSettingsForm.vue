@@ -16,7 +16,7 @@ const props = defineProps({
   },
 });
 
-const emit = defineEmits(['submit', 'delete-avatar']);
+const emit = defineEmits(['submit', 'deleteAvatar']);
 
 const { t } = useI18n();
 
@@ -89,7 +89,7 @@ const handleImageUpload = ({ file, url }) => {
 const handleAvatarDelete = () => {
   state.avatar = null;
   state.avatarUrl = '';
-  emit('delete-avatar');
+  emit('deleteAvatar');
 };
 
 const handleBasicInfoUpdate = async () => {
@@ -201,7 +201,10 @@ watch(
           {{ t('CAPTAIN.ASSISTANTS.FORM.FEATURES.ALLOW_CONTACT_ATTRIBUTES') }}
         </label>
         <label class="flex items-center gap-2">
-          <input v-model="state.features.continueWhileWaiting" type="checkbox" />
+          <input
+            v-model="state.features.continueWhileWaiting"
+            type="checkbox"
+          />
           {{ t('CAPTAIN.ASSISTANTS.FORM.FEATURES.CONTINUE_WHILE_WAITING') }}
         </label>
       </div>
@@ -223,7 +226,9 @@ watch(
           min="1"
           max="5"
           :label="t('CAPTAIN.ASSISTANTS.FORM.REPLY_STYLE.MAX_BUTTONS_LABEL')"
-          :placeholder="t('CAPTAIN.ASSISTANTS.FORM.REPLY_STYLE.MAX_BUTTONS_PLACEHOLDER')"
+          :placeholder="
+            t('CAPTAIN.ASSISTANTS.FORM.REPLY_STYLE.MAX_BUTTONS_PLACEHOLDER')
+          "
           class="max-w-xs"
         />
         <label class="flex items-center gap-2">
