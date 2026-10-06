@@ -453,6 +453,8 @@ Rails.application.routes.draw do
                 get :orders
                 post :request_connection
                 post :sync_status
+                post :pause_catalog
+                post :resume_catalog
               end
             end
             resource :linear, controller: 'linear', only: [] do
@@ -794,6 +796,10 @@ Rails.application.routes.draw do
           post :approve
           post :sync_status
           post :rotate_tool_key
+          post :provision_catalog
+          post :import_catalog
+          post :pause_catalog
+          post :resume_catalog
         end
       end
 

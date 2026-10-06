@@ -711,3 +711,7 @@ en:
       approved: 'Shopify request approved and custom app install URL generated.'
       status_synced: 'Status refreshed from Shopify Agent Tools.'
       tool_key_rotated: 'Tool key successfully rotated.'
+      catalog_provisioned: 'Shopify catalog dataset provisioned and full import queued.'
+      catalog_imported: 'Shopify catalog import queued successfully.'
+      catalog_paused: 'Shopify catalog synchronization paused.'
+      catalog_resumed: 'Shopify catalog synchronization resumed.'

@@ -94,6 +94,99 @@ RSpec.describe ShopifyAgentTools::AdminClient do
     end
   end
 
+  describe '#provision_dify_dataset' do
+    it 'posts to v1/admin/tenants/:id/dify/provision and returns dataset payload' do
+      stub_request(:post, "#{api_url}/v1/admin/tenants/sat-123/dify/provision")
+        .with(headers: { 'Authorization' => "Bearer #{admin_key}" })
+        .to_return(
+          status: 200,
+          body: { dataset_id: 'dataset-xyz', sync_enabled: true, mode: 'managed' }.to_json,
+          headers: { 'Content-Type' => 'application/json' }
+        )
+
+      result = client.provision_dify_dataset('sat-123')
+      expect(result['dataset_id']).to eq('dataset-xyz')
+      expect(result['sync_enabled']).to be true
+    end
+  end
+
+  describe '#dify_dataset' do
+    it 'gets v1/admin/tenants/:id/dify' do
+      stub_request(:get, "#{api_url}/v1/admin/tenants/sat-123/dify")
+        .with(headers: { 'Authorization' => "Bearer #{admin_key}" })
+        .to_return(
+          status: 200,
+          body: { dataset_id: 'dataset-xyz', sync_enabled: true }.to_json,
+          headers: { 'Content-Type' => 'application/json' }
+        )
+
+      result = client.dify_dataset('sat-123')
+      expect(result['dataset_id']).to eq('dataset-xyz')
+    end
+  end
+
+  describe '#start_catalog_import' do
+    it 'posts to v1/admin/tenants/:id/catalog/import' do
+      stub_request(:post, "#{api_url}/v1/admin/tenants/sat-123/catalog/import")
+        .with(headers: { 'Authorization' => "Bearer #{admin_key}" })
+        .to_return(
+          status: 202,
+          body: { job_id: 'job-1', status: 'queued' }.to_json,
+          headers: { 'Content-Type' => 'application/json' }
+        )
+
+      result = client.start_catalog_import('sat-123')
+      expect(result['job_id']).to eq('job-1')
+      expect(result['status']).to eq('queued')
+    end
+  end
+
+  describe '#catalog_status' do
+    it 'gets v1/admin/tenants/:id/catalog/status' do
+      stub_request(:get, "#{api_url}/v1/admin/tenants/sat-123/catalog/status")
+        .with(headers: { 'Authorization' => "Bearer #{admin_key}" })
+        .to_return(
+          status: 200,
+          body: { configured: true, sync_enabled: true, documents_synced: 10, documents_failed: 0 }.to_json,
+          headers: { 'Content-Type' => 'application/json' }
+        )
+
+      result = client.catalog_status('sat-123')
+      expect(result['configured']).to be true
+      expect(result['documents_synced']).to eq(10)
+    end
+  end
+
+  describe '#pause_catalog_sync' do
+    it 'posts to v1/admin/tenants/:id/catalog/pause' do
+      stub_request(:post, "#{api_url}/v1/admin/tenants/sat-123/catalog/pause")
+        .with(headers: { 'Authorization' => "Bearer #{admin_key}" })
+        .to_return(
+          status: 200,
+          body: { dataset_id: 'dataset-xyz', sync_enabled: false }.to_json,
+          headers: { 'Content-Type' => 'application/json' }
+        )
+
+      result = client.pause_catalog_sync('sat-123')
+      expect(result['sync_enabled']).to be false
+    end
+  end
+
+  describe '#resume_catalog_sync' do
+    it 'posts to v1/admin/tenants/:id/catalog/resume' do
+      stub_request(:post, "#{api_url}/v1/admin/tenants/sat-123/catalog/resume")
+        .with(headers: { 'Authorization' => "Bearer #{admin_key}" })
+        .to_return(
+          status: 200,
+          body: { dataset_id: 'dataset-xyz', sync_enabled: true }.to_json,
+          headers: { 'Content-Type' => 'application/json' }
+        )
+
+      result = client.resume_catalog_sync('sat-123')
+      expect(result['sync_enabled']).to be true
+    end
+  end
+
   describe 'error handling' do
     it 'raises Error with status on HTTP error' do
       stub_request(:get, "#{api_url}/v1/admin/tenants/unknown")

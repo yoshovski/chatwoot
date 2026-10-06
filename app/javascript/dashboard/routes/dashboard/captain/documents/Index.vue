@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onUnmounted, ref, nextTick, watch } from 'vue';
+import { computed, onMounted, onUnmounted, ref, nextTick, watch } from 'vue';
 import { useTimeoutPoll } from '@vueuse/core';
 import { useMapGetter, useStore } from 'dashboard/composables/store';
 import { useRoute } from 'vue-router';
@@ -23,6 +23,7 @@ import DocumentPageEmptyState from 'dashboard/components-next/captain/pageCompon
 import FeatureSpotlightPopover from 'dashboard/components-next/feature-spotlight/FeatureSpotlightPopover.vue';
 import LimitBanner from 'dashboard/components-next/captain/pageComponents/document/LimitBanner.vue';
 import CaptainDocumentAPI from 'dashboard/api/captain/document';
+import shopifyAPI from 'dashboard/api/integrations/shopify';
 import { useI18n } from 'vue-i18n';
 
 const route = useRoute();
@@ -297,6 +298,40 @@ const hasActiveDocumentFilters = computed(
     Boolean(searchQuery.value.trim())
 );
 
+const shopifyHook = ref(null);
+
+const shopifyCatalogStatus = computed(() => {
+  return shopifyHook.value?.catalog_status || null;
+});
+
+const shopifyCatalogStatusLabel = computed(() => {
+  switch (shopifyCatalogStatus.value) {
+    case 'on':
+      return t('CAPTAIN.DOCUMENTS.SHOPIFY_CATALOG.STATUS.ON');
+    case 'importing':
+      return t('CAPTAIN.DOCUMENTS.SHOPIFY_CATALOG.STATUS.IMPORTING');
+    case 'needs_reconnect':
+      return t('CAPTAIN.DOCUMENTS.SHOPIFY_CATALOG.STATUS.NEEDS_RECONNECT');
+    case 'off':
+      return t('CAPTAIN.DOCUMENTS.SHOPIFY_CATALOG.STATUS.OFF');
+    default:
+      return shopifyCatalogStatus.value || '';
+  }
+});
+
+const fetchShopifyStatus = async () => {
+  try {
+    const { data } = await shopifyAPI.getStatus();
+    shopifyHook.value = data.hook || data;
+  } catch {
+    shopifyHook.value = null;
+  }
+};
+
+onMounted(() => {
+  fetchShopifyStatus();
+});
+
 watch(
   selectedAssistantId,
   async () => {
@@ -381,6 +416,39 @@ onUnmounted(() => {
 
     <template #paywall>
       <CaptainPaywall />
+    </template>
+
+    <template #controls>
+      <div
+        v-if="shopifyCatalogStatus"
+        class="flex items-center gap-2 px-4 py-2.5 text-xs rounded-lg border border-n-weak bg-n-alpha-2 text-n-slate-11 mb-4"
+      >
+        <span
+          class="w-2 h-2 rounded-full flex-shrink-0"
+          :class="{
+            'bg-emerald-500': shopifyCatalogStatus === 'on',
+            'bg-amber-500 animate-pulse': shopifyCatalogStatus === 'importing',
+            'bg-ruby-500': shopifyCatalogStatus === 'needs_reconnect',
+            'bg-n-slate-7': shopifyCatalogStatus === 'off',
+          }"
+        />
+        <span class="text-n-slate-12">
+          <strong class="font-medium">
+            {{ $t('CAPTAIN.DOCUMENTS.SHOPIFY_CATALOG.LABEL') }}:
+          </strong>
+          {{ shopifyCatalogStatusLabel }} —
+          {{ $t('CAPTAIN.DOCUMENTS.SHOPIFY_CATALOG.DESCRIPTION') }}
+        </span>
+        <router-link
+          :to="{
+            name: 'settings_integrations_shopify',
+            params: { accountId: route.params.accountId },
+          }"
+          class="font-medium text-brand-600 hover:text-brand-700 ms-auto hover:underline"
+        >
+          {{ $t('CAPTAIN.DOCUMENTS.SHOPIFY_CATALOG.LINK') }}
+        </router-link>
+      </div>
     </template>
 
     <template #body>

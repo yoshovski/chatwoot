@@ -38,6 +38,21 @@
         "DISCONNECT": "Disconnect",
         "DISCONNECT_TITLE": "Disconnect Shopify Store",
         "DISCONNECT_MESSAGE": "Are you sure you want to disconnect this Shopify store? This will also remove the custom app connection and tool access."
+      },
+      "CATALOG": {
+        "TITLE": "Product Catalog Sync",
+        "DESCRIPTION": "Product knowledge is searched together with your documents and FAQs when connected.",
+        "STATUS_TITLE": "Catalog Sync",
+        "PAUSE_BUTTON": "Pause Sync",
+        "RESUME_BUTTON": "Resume Sync",
+        "PAUSED_SUCCESS": "Shopify catalog sync paused successfully",
+        "RESUMED_SUCCESS": "Shopify catalog sync resumed successfully",
+        "STATUS": {
+          "ON": "On",
+          "IMPORTING": "Importing",
+          "NEEDS_RECONNECT": "Needs reconnect",
+          "OFF": "Off"
+        }
       }
     },
     "HEADER": "Integrations",
@@ -1133,6 +1148,17 @@
     "DOCUMENTS": {
       "HEADER": "Documents",
       "ADD_NEW": "Create a new document",
+      "SHOPIFY_CATALOG": {
+        "LABEL": "Shopify catalog",
+        "DESCRIPTION": "searched together with your documents and FAQs",
+        "LINK": "Integrations",
+        "STATUS": {
+          "ON": "On",
+          "IMPORTING": "Importing",
+          "NEEDS_RECONNECT": "Needs reconnect",
+          "OFF": "Off"
+        }
+      },
       "FAQ_COUNT": "{n} FAQ | {n} FAQs",
       "USED_IN_CONVERSATIONS": "Used in {n} conversation | Used in {n} conversations",
       "NO_USED_CONVERSATIONS": "No conversations found for this document.",

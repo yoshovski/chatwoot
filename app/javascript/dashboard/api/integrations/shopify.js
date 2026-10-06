@@ -25,6 +25,14 @@ class ShopifyAPI extends ApiClient {
     return axios.delete(this.url);
   }
 
+  pauseCatalog() {
+    return axios.post(`${this.url}/pause_catalog`);
+  }
+
+  resumeCatalog() {
+    return axios.post(`${this.url}/resume_catalog`);
+  }
+
   getOrders(contactId) {
     return axios.get(`${this.url}/orders`, {
       params: { contact_id: contactId },

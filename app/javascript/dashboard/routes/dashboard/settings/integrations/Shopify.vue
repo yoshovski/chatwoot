@@ -71,14 +71,64 @@ const closeDisconnectDialog = () => {
   }
 };
 
+const isTogglingCatalog = ref(false);
+
+const catalogStatus = computed(() => {
+  return (
+    shopifyHook.value?.catalog_status ||
+    (currentState.value === 'connected' ? 'on' : 'off')
+  );
+});
+
+const catalogStatusLabel = computed(() => {
+  switch (catalogStatus.value) {
+    case 'on':
+      return t('INTEGRATION_SETTINGS.SHOPIFY.CATALOG.STATUS.ON');
+    case 'importing':
+      return t('INTEGRATION_SETTINGS.SHOPIFY.CATALOG.STATUS.IMPORTING');
+    case 'needs_reconnect':
+      return t('INTEGRATION_SETTINGS.SHOPIFY.CATALOG.STATUS.NEEDS_RECONNECT');
+    case 'off':
+      return t('INTEGRATION_SETTINGS.SHOPIFY.CATALOG.STATUS.OFF');
+    default:
+      return catalogStatus.value;
+  }
+});
+
 const fetchShopifyStatus = async () => {
   try {
     const { data } = await shopifyAPI.getStatus();
-    shopifyHook.value = data.hook;
+    shopifyHook.value = data.hook || data;
   } catch (error) {
     shopifyHook.value = null;
   } finally {
     integrationLoaded.value = true;
+  }
+};
+
+const handlePauseCatalog = async () => {
+  try {
+    isTogglingCatalog.value = true;
+    const { data } = await shopifyAPI.pauseCatalog();
+    shopifyHook.value = data.hook || data;
+    useAlert(t('INTEGRATION_SETTINGS.SHOPIFY.CATALOG.PAUSED_SUCCESS'));
+  } catch (error) {
+    useAlert(error.response?.data?.error || error.message);
+  } finally {
+    isTogglingCatalog.value = false;
+  }
+};
+
+const handleResumeCatalog = async () => {
+  try {
+    isTogglingCatalog.value = true;
+    const { data } = await shopifyAPI.resumeCatalog();
+    shopifyHook.value = data.hook || data;
+    useAlert(t('INTEGRATION_SETTINGS.SHOPIFY.CATALOG.RESUMED_SUCCESS'));
+  } catch (error) {
+    useAlert(error.response?.data?.error || error.message);
+  } finally {
+    isTogglingCatalog.value = false;
   }
 };
 
@@ -97,7 +147,7 @@ const handleStoreUrlSubmit = async () => {
     const { data } = await shopifyAPI.requestConnection({
       shopDomain: cleanUrl,
     });
-    shopifyHook.value = data.hook;
+    shopifyHook.value = data.hook || data;
     await store.dispatch('integrations/get', 'shopify');
     hideStoreUrlModal();
     if (dialogRef.value) {
@@ -114,7 +164,7 @@ const handleSyncStatus = async () => {
   try {
     isSyncing.value = true;
     const { data } = await shopifyAPI.syncStatus();
-    shopifyHook.value = data.hook;
+    shopifyHook.value = data.hook || data;
     await store.dispatch('integrations/get', 'shopify');
     useAlert(t('INTEGRATION_SETTINGS.SHOPIFY.STATE.STATUS_REFRESHED'));
   } catch (error) {
@@ -306,6 +356,58 @@ onMounted(async () => {
                 )
               }}
             </p>
+          </div>
+
+          <!-- Catalog Knowledge Sync Status -->
+          <div
+            v-if="currentState === 'connected' || currentState === 'importing'"
+            class="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-lg border border-n-weak bg-n-alpha-1 gap-4"
+          >
+            <div>
+              <div class="flex items-center gap-2 mb-1">
+                <span
+                  class="w-2 h-2 rounded-full"
+                  :class="{
+                    'bg-emerald-500': catalogStatus === 'on',
+                    'bg-purple-500': catalogStatus === 'importing',
+                    'bg-amber-500': catalogStatus === 'needs_reconnect',
+                    'bg-slate-400': catalogStatus === 'off',
+                  }"
+                />
+                <h4
+                  class="text-xs font-semibold text-n-slate-12 uppercase tracking-wide"
+                >
+                  {{ t('INTEGRATION_SETTINGS.SHOPIFY.CATALOG.STATUS_TITLE') }}:
+                  <span class="text-n-slate-12 font-bold">{{
+                    catalogStatusLabel
+                  }}</span>
+                </h4>
+              </div>
+              <p class="text-xs text-n-slate-11">
+                {{ t('INTEGRATION_SETTINGS.SHOPIFY.CATALOG.DESCRIPTION') }}
+              </p>
+            </div>
+            <div
+              v-if="currentState === 'connected'"
+              class="flex items-center gap-2 flex-shrink-0"
+            >
+              <Button
+                v-if="catalogStatus === 'off'"
+                variant="outline"
+                size="sm"
+                :is-loading="isTogglingCatalog"
+                :label="t('INTEGRATION_SETTINGS.SHOPIFY.CATALOG.RESUME_BUTTON')"
+                @click="handleResumeCatalog"
+              />
+              <Button
+                v-else-if="catalogStatus === 'on'"
+                variant="outline"
+                size="sm"
+                :is-loading="isTogglingCatalog"
+                :label="t('INTEGRATION_SETTINGS.SHOPIFY.CATALOG.PAUSE_BUTTON')"
+                @click="handlePauseCatalog"
+              />
+            </div>
           </div>
 
           <!-- Action Buttons -->

@@ -14,7 +14,7 @@
 #  inbox_id     :integer
 #  reference_id :string
 #
-class Integrations::Hook < ApplicationRecord
+class Integrations::Hook < ApplicationRecord # rubocop:disable Metrics/ClassLength
   include Reauthorizable
 
   attr_readonly :app_id, :account_id, :inbox_id, :hook_type
@@ -111,6 +111,33 @@ class Integrations::Hook < ApplicationRecord
     shopify? && shopify_state == 'connected'
   end
 
+  def shopify_catalog_dataset_id
+    return nil unless shopify?
+
+    settings.to_h['catalog_dataset_id']
+  end
+
+  def shopify_catalog_dataset_id=(value)
+    return unless shopify?
+
+    self.settings = settings.to_h.merge('catalog_dataset_id' => value.presence)
+  end
+
+  def shopify_catalog_sync_enabled?
+    return false unless shopify?
+
+    settings.to_h.fetch('catalog_sync_enabled', true) != false
+  end
+
+  def shopify_catalog_client_status(sat_status = nil)
+    return nil unless shopify?
+    return 'needs_reconnect' if shopify_state == 'needs_reconnect'
+    return 'importing' if shopify_state == 'importing'
+    return 'off' unless shopify_connected?
+
+    status_from_sat(sat_status) || fallback_catalog_status
+  end
+
   def shopify_tool_key
     return nil unless shopify?
 
@@ -164,6 +191,34 @@ class Integrations::Hook < ApplicationRecord
   end
 
   private
+
+  def status_from_sat(sat_status)
+    return unless sat_status.is_a?(Hash)
+
+    log_failed_products(sat_status)
+    return 'off' if sat_status['sync_enabled'] == false
+    return 'importing' if sat_importing?(sat_status)
+    return 'on' if sat_status['sync_enabled'] == true && (sat_status['configured'] == true || shopify_catalog_dataset_id.present?)
+
+    nil
+  end
+
+  def sat_importing?(sat_status)
+    sat_status['documents_synced'].to_i.zero? &&
+      (sat_status['processing_jobs'].to_i.positive? || sat_status['queued_jobs'].to_i.positive? || sat_status['active_job_kind'].present?)
+  end
+
+  def log_failed_products(sat_status)
+    return unless sat_status['documents_failed'].to_i.positive?
+
+    Rails.logger.warn("[Shopify Catalog] Tenant #{shopify_sat_tenant_id} has #{sat_status['documents_failed']} failed products during sync")
+  end
+
+  def fallback_catalog_status
+    return 'off' unless shopify_catalog_sync_enabled?
+
+    shopify_catalog_dataset_id.present? ? 'on' : 'importing'
+  end
 
   def ensure_feature_enabled
     return if shopify? && disabled?
