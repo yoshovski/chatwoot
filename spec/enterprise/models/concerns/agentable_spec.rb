@@ -216,6 +216,21 @@ RSpec.describe Concerns::Agentable do
       expect(schema_hash.dig(:properties, :suggested_replies, :maxItems)).to eq(4)
     end
 
+    it 'returns schema with product_handles when product_cards requested' do
+      schema = dummy_instance.send(:agent_response_schema, product_cards: true)
+      expect(schema).not_to eq(Captain::ResponseSchema)
+      schema_hash = schema.new.to_json_schema[:schema]
+      expect(schema_hash.dig(:properties, :product_handles, :maxItems)).to eq(5)
+      expect(schema_hash.dig(:properties, :product_handles, :items, :type)).to eq('string')
+    end
+
+    it 'returns schema with both suggested_replies and product_handles when both requested' do
+      schema = dummy_instance.send(:agent_response_schema, suggested_replies: true, max_suggested_replies: 2, product_cards: true)
+      schema_hash = schema.new.to_json_schema[:schema]
+      expect(schema_hash.dig(:properties, :suggested_replies, :maxItems)).to eq(2)
+      expect(schema_hash.dig(:properties, :product_handles, :maxItems)).to eq(5)
+    end
+
     it 'defines complete structured response parts with nested citation indexes' do
       schema = Captain::ResponseSchema.new.to_json_schema[:schema]
       response_parts = schema.dig(:properties, :response_parts)

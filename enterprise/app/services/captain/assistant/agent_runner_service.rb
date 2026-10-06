@@ -155,10 +155,17 @@ class Captain::Assistant::AgentRunnerService
     @assistant.suggested_replies?
   end
 
+  def product_cards_enabled?
+    return false if reply_suggestion?
+
+    @assistant.product_cards?
+  end
+
   def response_schema_for_runner
     Captain::ResponseSchema.for(
       suggested_replies: suggested_replies_enabled?,
-      max_suggested_replies: @assistant.max_suggested_replies
+      max_suggested_replies: @assistant.max_suggested_replies,
+      product_cards: product_cards_enabled?
     )
   end
 

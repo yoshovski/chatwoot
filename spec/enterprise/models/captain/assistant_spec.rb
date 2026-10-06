@@ -385,4 +385,29 @@ RSpec.describe Captain::Assistant, type: :model do
       expect(assistant.max_suggested_replies).to eq(4)
     end
   end
+
+  describe 'product cards configuration' do
+    it 'defaults to false' do
+      expect(assistant.product_cards?).to be(false)
+    end
+
+    it 'reads boolean cast for product_cards?' do
+      assistant.config['product_cards'] = 'true'
+      expect(assistant.product_cards?).to be(true)
+
+      assistant.config['product_cards'] = false
+      expect(assistant.product_cards?).to be(false)
+    end
+
+    it 'normalizes product_cards in boolean config attributes' do
+      assistant.config['product_cards'] = '1'
+      assistant.validate
+      expect(assistant.config['product_cards']).to be(true)
+    end
+
+    it 'reads image_allowlist from config' do
+      assistant.config['image_allowlist'] = ['https://cdn.shopify.com/', '']
+      expect(assistant.image_allowlist).to eq(['https://cdn.shopify.com/'])
+    end
+  end
 end

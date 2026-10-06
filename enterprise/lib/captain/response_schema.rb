@@ -14,15 +14,20 @@ class Captain::ResponseSchema < RubyLLM::Schema
     end
   end
 
-  def self.for(suggested_replies: false, max_suggested_replies: 3)
-    return self unless suggested_replies
+  def self.for(suggested_replies: false, max_suggested_replies: 3, product_cards: false)
+    return self unless suggested_replies || product_cards
 
     limit = (max_suggested_replies || 3).to_i.clamp(1, 5)
+    cache_key = "#{suggested_replies}:#{limit}:#{product_cards}"
     @schema_cache ||= {}
-    @schema_cache[limit] ||= build_schema_with_suggestions(limit)
+    @schema_cache[cache_key] ||= build_schema(
+      suggested_replies: suggested_replies,
+      limit: limit,
+      product_cards: product_cards
+    )
   end
 
-  def self.build_schema_with_suggestions(limit)
+  def self.build_schema(suggested_replies:, limit:, product_cards:)
     RubyLLM::Schema.create do
       name 'CaptainResponse'
       string :reasoning, description: "Agent's thought process"
@@ -37,8 +42,13 @@ class Captain::ResponseSchema < RubyLLM::Schema
           end
         end
       end
-      Captain::ResponseSchema.define_suggested_replies(self, limit)
+      Captain::ResponseSchema.define_suggested_replies(self, limit) if suggested_replies
+      Captain::ResponseSchema.define_product_handles(self) if product_cards
     end
+  end
+
+  def self.build_schema_with_suggestions(limit)
+    build_schema(suggested_replies: true, limit: limit, product_cards: false)
   end
 
   def self.define_suggested_replies(builder, limit)
@@ -46,6 +56,15 @@ class Captain::ResponseSchema < RubyLLM::Schema
                   description: "0 to #{limit} short, specific next actions for the customer, each at most 80 characters. Empty array if none apply.",
                   max_items: limit do
       string max_length: 80
+    end
+  end
+
+  def self.define_product_handles(builder)
+    builder.array :product_handles,
+                  description: 'Up to 5 product handles to display as product cards, ordered best fit first. ' \
+                               'Include only products returned by product tools in this turn. Empty array if none apply.',
+                  max_items: 5 do
+      string
     end
   end
 end

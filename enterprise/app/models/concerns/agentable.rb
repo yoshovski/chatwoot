@@ -28,7 +28,8 @@ module Concerns::Agentable
         message_length_limit: state[:message_length_limit],
         ownership_instruction: state[:ownership_instruction],
         suggested_replies_enabled: state[:suggested_replies_enabled],
-        max_suggested_replies: state[:max_suggested_replies]
+        max_suggested_replies: state[:max_suggested_replies],
+        product_cards_enabled: state[:product_cards_enabled]
       )
     end
 
@@ -66,10 +67,11 @@ module Concerns::Agentable
     InstallationConfig.find_by(name: 'CAPTAIN_OPEN_AI_MODEL')&.value
   end
 
-  def agent_response_schema(suggested_replies: false, max_suggested_replies: 3)
+  def agent_response_schema(suggested_replies: false, max_suggested_replies: 3, product_cards: false)
     Captain::ResponseSchema.for(
       suggested_replies: suggested_replies,
-      max_suggested_replies: max_suggested_replies
+      max_suggested_replies: max_suggested_replies,
+      product_cards: product_cards
     )
   end
 

@@ -36,6 +36,7 @@ const initialState = {
   replyStyle: {
     suggestedReplies: false,
     maxSuggestedReplies: 3,
+    productCards: false,
   },
 };
 
@@ -76,6 +77,7 @@ const updateStateFromAssistant = assistant => {
   state.replyStyle = {
     suggestedReplies: config.suggested_replies || false,
     maxSuggestedReplies: config.max_suggested_replies ?? 3,
+    productCards: config.product_cards || false,
   };
 };
 
@@ -114,6 +116,7 @@ const handleBasicInfoUpdate = async () => {
         5,
         Math.max(1, Number(state.replyStyle.maxSuggestedReplies) || 3)
       ),
+      product_cards: Boolean(state.replyStyle.productCards),
     },
   };
 
@@ -223,6 +226,10 @@ watch(
           :placeholder="t('CAPTAIN.ASSISTANTS.FORM.REPLY_STYLE.MAX_BUTTONS_PLACEHOLDER')"
           class="max-w-xs"
         />
+        <label class="flex items-center gap-2">
+          <input v-model="state.replyStyle.productCards" type="checkbox" />
+          {{ t('CAPTAIN.ASSISTANTS.FORM.REPLY_STYLE.PRODUCT_CARDS') }}
+        </label>
       </div>
     </div>
 
