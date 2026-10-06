@@ -57,9 +57,11 @@ class Captain::Assistant < ApplicationRecord
   has_many :assigned_conversations, as: :ai_assignee, class_name: '::Conversation', foreign_key: :assignee_agent_bot_id,
                                     dependent: :nullify, inverse_of: :ai_assignee
 
+  PRODUCT_CACHE_STATE_KEY = :captain_v2_product_cache
+
   store_accessor :config, :temperature, :feature_faq, :feature_memory, :feature_contact_attributes, :product_name,
                  :auto_resolve_mode, :auto_resolve_after, :send_inactivity_resolution_message, :response_window,
-                 :continue_while_waiting, :suggested_replies, :max_suggested_replies
+                 :continue_while_waiting, :suggested_replies, :max_suggested_replies, :product_cards
 
   BOOLEAN_CONFIG_KEYS = %w[
     feature_faq
@@ -69,6 +71,7 @@ class Captain::Assistant < ApplicationRecord
     continue_while_waiting
     send_inactivity_resolution_message
     suggested_replies
+    product_cards
   ].freeze
 
   before_validation :set_default_auto_resolve_mode, on: :create
@@ -253,6 +256,16 @@ class Captain::Assistant < ApplicationRecord
     return DEFAULT_MAX_SUGGESTED_REPLIES if val.blank?
 
     val.to_i.clamp(MINIMUM_MAX_SUGGESTED_REPLIES, MAXIMUM_MAX_SUGGESTED_REPLIES)
+  end
+
+  def product_cards?
+    return false if config.blank?
+
+    ActiveModel::Type::Boolean.new.cast(config['product_cards']) == true
+  end
+
+  def image_allowlist
+    Array(config&.dig('image_allowlist')).reject(&:blank?)
   end
 
   private

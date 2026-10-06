@@ -811,6 +811,87 @@ RSpec.describe Captain::Conversation::ResponseBuilderJob, type: :job do
         end
       end
 
+      context 'with product cards' do
+        let(:t40_product) do
+          {
+            'handle' => 'agras-t40',
+            'title' => 'DJI Agras T40',
+            'price' => '19999.00',
+            'product_url' => 'https://scanixx.myshopify.com/products/agras-t40',
+            'image_url' => 'https://cdn.shopify.com/t40.jpg',
+            'description' => 'Flagship agricultural spraying drone.'
+          }
+        end
+        let(:no_img_product) do
+          {
+            'handle' => 'no-img-item',
+            'title' => 'Drone Battery Charger',
+            'price' => '599.00',
+            'product_url' => 'https://scanixx.myshopify.com/products/no-img-item',
+            'image_url' => nil,
+            'description' => 'Fast charger.'
+          }
+        end
+        let(:product_cards_run_result) do
+          Agents::RunResult.new(
+            output: {
+              'response_parts' => [{ 'text' => 'Check out https://scanixx.myshopify.com/products/agras-t40 for details.', 'citation_indexes' => [] }],
+              'response' => 'Check out https://scanixx.myshopify.com/products/agras-t40 for details.',
+              'product_handles' => %w[agras-t40 no-img-item unrelated-handle],
+              'suggested_replies' => ['Track order']
+            },
+            context: {
+              state: {
+                Captain::Assistant::PRODUCT_HANDLES_STATE_KEY => Set.new(%w[agras-t40 no-img-item]),
+                Captain::Assistant::PRODUCT_CACHE_STATE_KEY => {
+                  'agras-t40' => t40_product,
+                  'no-img-item' => no_img_product
+                }
+              }
+            }
+          )
+        end
+
+        before do
+          assistant.update!(config: assistant.config.merge('product_cards' => true, 'suggested_replies' => true, 'max_suggested_replies' => 3))
+          allow(mock_agent_runner_service).to receive(:last_run_result).and_return(product_cards_run_result)
+          allow(mock_agent_runner_service).to receive(:generate_response).and_return(product_cards_run_result.output)
+        end
+
+        it 'posts cards for products with images and suppresses suggestion buttons' do
+          described_class.perform_now(conversation, assistant)
+
+          primary_msg = conversation.messages.outgoing.first
+          cards_msg = conversation.messages.find_by(content_type: 'cards')
+
+          expect(primary_msg.content_type).to eq('text')
+          expect(primary_msg.content).not_to include('https://scanixx.myshopify.com/products/agras-t40')
+          expect(cards_msg).to be_present
+          expect(cards_msg.content_attributes['items'].size).to eq(1)
+          expect(cards_msg.content_attributes['items'].first['media_url']).to eq('https://cdn.shopify.com/t40.jpg')
+        end
+
+        it 'posts articles for products without images' do
+          described_class.perform_now(conversation, assistant)
+
+          article_msg = conversation.messages.find_by(content_type: 'article')
+
+          expect(article_msg).to be_present
+          expect(article_msg.content_attributes['items'].size).to eq(1)
+          expect(article_msg.content_attributes['items'].first['link']).to eq('https://scanixx.myshopify.com/products/no-img-item')
+        end
+
+        it 'does not post cards or articles when product_cards is disabled' do
+          assistant.update!(config: assistant.config.merge('product_cards' => false))
+
+          expect do
+            described_class.perform_now(conversation, assistant)
+          end.to change { conversation.messages.count }.by(1)
+
+          expect(conversation.messages.where(content_type: %w[cards article])).to be_empty
+        end
+      end
+
       it 'emits a response completed event' do
         expect(Captain::ConversationEvents).to receive(:response_completed)
           .with(conversation: conversation, assistant: assistant, message: kind_of(Message), at: kind_of(Time))

@@ -53,6 +53,16 @@ module Captain::Tools::ShopifyToolHelpers
     )
   end
 
+  def cache_products(tool_context, products)
+    return if tool_context&.state.nil?
+
+    cached = tool_context.state[Captain::Assistant::PRODUCT_CACHE_STATE_KEY] ||= {}
+    Array(products).select { |p| p.is_a?(Hash) && p['handle'].present? }.each do |p|
+      cached[p['handle'].to_s.strip.downcase] = p
+    end
+    tool_context.state[:cached_products] = cached
+  end
+
   def sanitize_handles(handles)
     Array(handles).compact.map(&:to_s).map(&:strip).reject(&:blank?)
   end

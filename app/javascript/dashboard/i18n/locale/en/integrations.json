@@ -890,7 +890,8 @@
           "TITLE": "Reply style",
           "SUGGESTED_REPLIES": "Offer suggested reply buttons to the customer",
           "MAX_BUTTONS_LABEL": "Maximum buttons",
-          "MAX_BUTTONS_PLACEHOLDER": "Enter maximum buttons (1-5)"
+          "MAX_BUTTONS_PLACEHOLDER": "Enter maximum buttons (1-5)",
+          "PRODUCT_CARDS": "Show product cards in replies"
         },
         "AUDIENCE": {
           "EVERYONE": {

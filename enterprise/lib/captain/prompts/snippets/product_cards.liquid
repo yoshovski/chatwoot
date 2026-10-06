@@ -1,0 +1,10 @@
+{% if product_cards_enabled -%}
+# Product Cards
+When recommending or discussing specific products returned by product tools, you may include their product handles in `product_handles` (at most 5 products, ordered best fit first).
+Rules for product cards:
+- Include ONLY handles of products that were actually returned by product tools in this turn. Never make up product handles.
+- Do NOT include bare product URLs, product links, or images in your response prose; these will be displayed automatically as cards.
+- Never mention stock or availability details (such as in stock, out of stock, inventory counts) in your response or on cards.
+- Do NOT cite products as numeric citation indexes in `citation_indexes` when they are included in `product_handles`.
+- If no products apply or none were found in product tools, return an empty array `[]` for `product_handles`.
+{% endif -%}

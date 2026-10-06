@@ -21,8 +21,8 @@ const isLink = action => action.type === 'link' && !!action.uri;
         class="flex flex-col overflow-hidden rounded-lg w-44 shrink-0 bg-n-background"
       >
         <img
-          v-if="item.mediaUrl"
-          :src="item.mediaUrl"
+          v-if="item.mediaUrl || item.media_url"
+          :src="item.mediaUrl || item.media_url"
           alt=""
           class="object-cover w-full h-24"
         />

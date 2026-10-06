@@ -1,3 +1,4 @@
+# rubocop:disable Metrics/ModuleLength
 module Captain::Conversation::MessageBuilder
   private
 
@@ -26,15 +27,33 @@ module Captain::Conversation::MessageBuilder
   def create_messages(preserve_waiting_since: false)
     return create_v1_message(preserve_waiting_since: preserve_waiting_since) unless captain_v2_enabled?
 
+    cards_builder = Captain::Conversation::ProductCardsBuilder.new(
+      assistant: @assistant,
+      conversation: @conversation,
+      response: @response,
+      run_result: @run_result
+    )
+
+    primary_message = create_v2_primary_message(cards_builder, preserve_waiting_since: preserve_waiting_since)
+    cards_builder.post_messages!(preserve_waiting_since: preserve_waiting_since, agent_name: @response['agent_name'])
+    primary_message
+  end
+
+  def create_v2_primary_message(cards_builder, preserve_waiting_since: false)
     response_parts = Captain::Assistant::ResponseParts.from_response(@response)
-    citation_urls = @assistant.trusted_citation_urls(@run_result)
-    message_content = response_parts.customer_message_content(citation_urls: citation_urls)
+    citation_urls = cards_builder.filter_citation_urls(@assistant.trusted_citation_urls(@run_result))
+    message_content = cards_builder.clean_prose_content(response_parts.customer_message_content(citation_urls: citation_urls))
     validate_message_content!(message_content)
 
     suggestions = extract_suggested_replies
-    extra_attrs = suggestion_button_attributes(message_content, suggestions)
-    create_outgoing_message(message_content, agent_name: @response['agent_name'], response_parts: response_parts.to_a,
-                                             preserve_waiting_since: preserve_waiting_since, extra_attrs: extra_attrs)
+    extra_attrs = suggestion_button_attributes(message_content, suggestions, cards_builder: cards_builder)
+    create_outgoing_message(
+      message_content,
+      agent_name: @response['agent_name'],
+      response_parts: response_parts.to_a,
+      preserve_waiting_since: preserve_waiting_since,
+      extra_attrs: extra_attrs
+    )
   end
 
   def create_v1_message(preserve_waiting_since: false)
@@ -64,8 +83,8 @@ module Captain::Conversation::MessageBuilder
     )
   end
 
-  def suggestion_button_attributes(message_content, suggestions)
-    return {} unless eligible_for_suggestion_buttons?(message_content, suggestions)
+  def suggestion_button_attributes(message_content, suggestions, cards_builder: nil)
+    return {} unless eligible_for_suggestion_buttons?(message_content, suggestions, cards_builder: cards_builder)
 
     {
       content_type: 'input_select',
@@ -84,9 +103,9 @@ module Captain::Conversation::MessageBuilder
     clean.presence && clean.length <= 80 ? clean : nil
   end
 
-  def eligible_for_suggestion_buttons?(message_content, suggestions)
+  def eligible_for_suggestion_buttons?(message_content, suggestions, cards_builder: nil)
     return false if suggestions.blank? || waiting_for_human? || handoff_active_or_requested?
-    return false if contains_links?(message_content) || contains_cards?
+    return false if contains_links?(message_content) || contains_cards?(cards_builder)
 
     true
   end
@@ -103,7 +122,10 @@ module Captain::Conversation::MessageBuilder
     content.to_s.match?(%r{https?://|\[.*?\]\(.*?\)}i)
   end
 
-  def contains_cards?
+  def contains_cards?(cards_builder = nil)
+    return true if cards_builder&.has_products?
+
     @response.is_a?(Hash) && (@response['cards'].present? || @response['content_type'] == 'cards')
   end
 end
+# rubocop:enable Metrics/ModuleLength

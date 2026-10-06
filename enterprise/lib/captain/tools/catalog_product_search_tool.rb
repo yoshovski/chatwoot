@@ -39,6 +39,7 @@ class Captain::Tools::CatalogProductSearchTool < Captain::Tools::BasePublicTool
     products.each { |product| sanitize_product_stock!(product) }
     returned_handles = products.filter_map { |product| product['handle'] }
     record_product_handles(tool_context, returned_handles)
+    cache_products(tool_context, products)
     log_tool_usage('found_products', { query: query, count: products.size, handles: returned_handles })
     format_products(tool_context, products)
   end
