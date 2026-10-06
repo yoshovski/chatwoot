@@ -153,6 +153,12 @@ class Integrations::Hook < ApplicationRecord # rubocop:disable Metrics/ClassLeng
     self.settings = settings.to_h.merge('encrypted_tool_key' => value.present? ? self.class.encrypt_shopify_tool_key(value) : nil)
   end
 
+  def shopify_sat_client
+    return nil unless shopify? && shopify_tool_key.present?
+
+    ShopifyAgentTools::Client.new(tool_key: shopify_tool_key)
+  end
+
   def self.encrypt_shopify_tool_key(value)
     shopify_tool_key_encryptor.encrypt_and_sign(value)
   end
