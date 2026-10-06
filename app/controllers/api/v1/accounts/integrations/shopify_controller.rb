@@ -1,9 +1,47 @@
 class Api::V1::Accounts::Integrations::ShopifyController < Api::V1::Accounts::Integrations::BaseController
   include Shopify::IntegrationHelper
   before_action :setup_shopify_context, only: [:orders]
-  before_action :fetch_hook, except: [:auth]
+  before_action :fetch_hook, only: [:orders, :destroy, :sync_status]
   before_action :check_authorization, only: [:destroy]
   before_action :validate_contact, only: [:orders]
+
+  def show
+    hook = Integrations::Hook.find_by(account: Current.account, app_id: 'shopify')
+    render json: hook_payload(hook)
+  end
+
+  def request_connection
+    shop_domain = Shopify::ShopDomain.normalize(params[:shop_domain])
+    unless Shopify::ShopDomain.valid?(shop_domain)
+      return render json: { error: 'Please enter a valid Shopify store URL (e.g. your-store.myshopify.com)' },
+                    status: :unprocessable_entity
+    end
+
+    hook = Integrations::Hook.find_or_initialize_by(account: Current.account, app_id: 'shopify')
+    hook.reference_id = shop_domain
+    hook.status = :disabled
+    hook.settings = hook.settings.to_h.merge(
+      'state' => 'requested',
+      'shop_domain' => shop_domain,
+      'requested_at' => Time.current.iso8601
+    )
+    hook.save!
+
+    render json: hook_payload(hook)
+  end
+
+  def sync_status
+    if @hook.shopify_sat_tenant_id.present?
+      sat_client = ShopifyAgentTools::AdminClient.new
+      tenant = sat_client.tenant(@hook.shopify_sat_tenant_id)
+      apply_sat_status(tenant)
+      @hook.save!
+    end
+
+    render json: hook_payload(@hook)
+  rescue ShopifyAgentTools::AdminClient::Error => e
+    render json: { error: e.message }, status: :unprocessable_entity
+  end
 
   def auth
     shop_domain = params[:shop_domain]
@@ -23,6 +61,8 @@ class Api::V1::Accounts::Integrations::ShopifyController < Api::V1::Accounts::In
   end
 
   def orders
+    return render json: { orders: [], disabled: true } if @hook.shopify_sat_managed?
+
     customers = fetch_customers
     return render json: { orders: [] } if customers.empty?
 
@@ -33,6 +73,14 @@ class Api::V1::Accounts::Integrations::ShopifyController < Api::V1::Accounts::In
   end
 
   def destroy
+    if @hook.shopify_sat_tenant_id.present?
+      begin
+        ShopifyAgentTools::AdminClient.new.delete_tenant(@hook.shopify_sat_tenant_id)
+      rescue ShopifyAgentTools::AdminClient::Error => e
+        Rails.logger.warn("[Shopify] Failed to delete SAT tenant #{@hook.shopify_sat_tenant_id}: #{e.message}")
+      end
+    end
+
     @hook.destroy!
     head :ok
   rescue StandardError => e
@@ -108,5 +156,39 @@ class Api::V1::Accounts::Integrations::ShopifyController < Api::V1::Accounts::In
 
     render json: { error: 'Contact information missing' },
            status: :unprocessable_entity
+  end
+
+  def hook_payload(hook)
+    return { id: nil, state: 'disconnected', enabled: false } if hook.nil?
+
+    {
+      id: hook.id,
+      state: hook.shopify_state,
+      shop_domain: hook.reference_id,
+      storefront_url: hook.shopify_storefront_url,
+      install_url: hook.settings.to_h['install_url'],
+      sat_tenant_id: hook.shopify_sat_tenant_id,
+      enabled: hook.enabled?,
+      approved_at: hook.settings.to_h['approved_at'],
+      requested_at: hook.settings.to_h['requested_at']
+    }
+  end
+
+  def apply_sat_status(tenant)
+    status = tenant['status'].to_s
+    shopify_state = tenant.dig('shopify_connection', 'state').to_s
+
+    if status == 'connected' || shopify_state == 'connected'
+      @hook.settings = @hook.settings.to_h.merge(
+        'state' => 'connected',
+        'storefront_url' => tenant['storefront_base_url'].presence || @hook.shopify_storefront_url
+      )
+      @hook.status = :enabled
+    elsif status == 'importing'
+      @hook.settings = @hook.settings.to_h.merge('state' => 'importing')
+    elsif %w[reauthorization_required uninstalled].include?(status) || %w[reauthorization_required uninstalled].include?(shopify_state)
+      @hook.settings = @hook.settings.to_h.merge('state' => 'needs_reconnect')
+      @hook.status = :disabled
+    end
   end
 end

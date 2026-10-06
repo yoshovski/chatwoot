@@ -1,0 +1,174 @@
+<% content_for(:title) do %>Shopify Request: <%= @hook.reference_id %><% end %>
+
+<header class="main-content__header" role="banner">
+  <div>
+    <div class="mb-2">
+      <%= link_to '← Back to Shopify Connection Requests', super_admin_shopify_requests_path, class: 'text-xs text-slate-500 hover:text-slate-800' %>
+    </div>
+    <h1 class="main-content__page-title" id="page-title">
+      Shopify Request: <span class="font-mono text-xl"><%= @hook.reference_id %></span>
+    </h1>
+  </div>
+</header>
+
+<section class="main-content__body space-y-6">
+  <!-- Status and Overview -->
+  <div class="bg-white border border-slate-100 rounded-lg p-6 shadow-sm">
+    <h2 class="text-base font-semibold text-slate-800 mb-4">Request Overview</h2>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+      <div>
+        <span class="text-xs font-semibold text-slate-500 uppercase block mb-1">Account</span>
+        <%= link_to @hook.account.name, super_admin_account_path(@hook.account), class: 'text-brand-600 hover:underline font-medium' %>
+        <span class="text-xs text-slate-500 ml-1">(ID: <%= @hook.account_id %>)</span>
+      </div>
+
+      <div>
+        <span class="text-xs font-semibold text-slate-500 uppercase block mb-1">Shop Domain</span>
+        <span class="font-mono text-slate-800 font-medium"><%= @hook.reference_id %></span>
+      </div>
+
+      <div>
+        <span class="text-xs font-semibold text-slate-500 uppercase block mb-1">Connection State</span>
+        <% case @hook.shopify_state %>
+        <% when 'requested' %>
+          <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
+            Requested (Awaiting Admin Approval)
+          </span>
+        <% when 'pending_install' %>
+          <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+            Pending Client Install
+          </span>
+        <% when 'importing' %>
+          <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+            Importing Catalog
+          </span>
+        <% when 'connected' %>
+          <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800">
+            Connected & Active
+          </span>
+        <% when 'needs_reconnect' %>
+          <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-rose-100 text-rose-800">
+            Needs Reconnect
+          </span>
+        <% else %>
+          <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-700">
+            <%= @hook.shopify_state.humanize %>
+          </span>
+        <% end %>
+      </div>
+
+      <div>
+        <span class="text-xs font-semibold text-slate-500 uppercase block mb-1">Storefront URL</span>
+        <% if @hook.shopify_storefront_url.present? %>
+          <a href="<%= @hook.shopify_storefront_url %>" target="_blank" rel="noopener noreferrer" class="text-brand-600 hover:underline">
+            <%= @hook.shopify_storefront_url %>
+          </a>
+        <% else %>
+          <span class="text-slate-400">—</span>
+        <% end %>
+      </div>
+
+      <div>
+        <span class="text-xs font-semibold text-slate-500 uppercase block mb-1">SAT Tenant ID</span>
+        <span class="font-mono text-xs text-slate-700"><%= @hook.shopify_sat_tenant_id.presence || 'Not provisioned' %></span>
+      </div>
+
+      <div>
+        <span class="text-xs font-semibold text-slate-500 uppercase block mb-1">Encrypted SAT Tool Key</span>
+        <% if @hook.settings.to_h['encrypted_tool_key'].present? %>
+          <span class="inline-flex items-center text-xs text-emerald-700 font-medium">
+            <svg class="w-4 h-4 mr-1 text-emerald-600" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l5-5z" clip-rule="evenodd"/></svg>
+            Stored securely at rest (AES-256-GCM)
+          </span>
+        <% else %>
+          <span class="text-xs text-slate-400">Not provisioned</span>
+        <% end %>
+      </div>
+
+      <% if @hook.settings.to_h['approved_at'].present? %>
+        <div>
+          <span class="text-xs font-semibold text-slate-500 uppercase block mb-1">Approved By</span>
+          <span class="text-slate-700 text-xs"><%= @hook.settings['approved_by_email'].presence || "Super Admin ##{@hook.settings['approved_by_id']}" %></span>
+          <span class="text-slate-400 text-xs">(<%= @hook.settings['approved_at'] %>)</span>
+        </div>
+      <% end %>
+
+      <% if @hook.settings.to_h['install_url'].present? %>
+        <div class="md:col-span-2 mt-2 pt-3 border-t border-slate-100">
+          <span class="text-xs font-semibold text-slate-500 uppercase block mb-1">Generated Install URL</span>
+          <div class="flex items-center gap-2">
+            <input type="text" readonly value="<%= @hook.settings['install_url'] %>" class="w-full font-mono text-xs bg-slate-50 border border-slate-200 rounded px-3 py-1.5 text-slate-700 select-all" />
+            <a href="<%= @hook.settings['install_url'] %>" target="_blank" rel="noopener noreferrer" class="px-3 py-1.5 text-xs bg-slate-100 text-slate-700 rounded border border-slate-200 hover:bg-slate-200 whitespace-nowrap">
+              Open URL
+            </a>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  </div>
+
+  <!-- Approval / Provisioning Form -->
+  <div class="bg-white border border-slate-100 rounded-lg p-6 shadow-sm">
+    <h2 class="text-base font-semibold text-slate-800 mb-2">
+      <%= @hook.shopify_sat_tenant_id.present? ? 'Update Custom App Credentials' : 'Approve Request & Provision Custom App' %>
+    </h2>
+    <p class="text-xs text-slate-600 mb-4">
+      Configure the Shopify Custom App credentials obtained from the partner/custom app dashboard for <code class="font-mono font-semibold"><%= @hook.reference_id %></code>.
+      Submitting this form provisions the tenant in Shopify Agent Tools and generates the installation URL for the merchant.
+    </p>
+
+    <%= form_with url: approve_super_admin_shopify_request_path(@hook), method: :post, local: true, class: 'space-y-4' do |f| %>
+      <div>
+        <%= f.label :client_id, 'Custom App Client ID', class: 'block text-xs font-semibold text-slate-700 uppercase mb-1' %>
+        <%= f.text_field :client_id, required: true, placeholder: 'e.g. 8d3b5b14e27f8a...', class: 'w-full text-sm font-mono border border-slate-200 rounded px-3 py-2 text-slate-800 focus:outline-none focus:border-brand-500' %>
+      </div>
+
+      <div>
+        <%= f.label :client_secret, 'Custom App Client Secret', class: 'block text-xs font-semibold text-slate-700 uppercase mb-1' %>
+        <%= f.password_field :client_secret, required: true, placeholder: 'shpss_...', class: 'w-full text-sm font-mono border border-slate-200 rounded px-3 py-2 text-slate-800 focus:outline-none focus:border-brand-500' %>
+      </div>
+
+      <div>
+        <%= f.label :storefront_base_url, 'Storefront Base URL (Optional)', class: 'block text-xs font-semibold text-slate-700 uppercase mb-1' %>
+        <%= f.text_field :storefront_base_url, value: @hook.shopify_storefront_url.presence || "https://#{@hook.reference_id}", placeholder: 'https://store.example.com', class: 'w-full text-sm border border-slate-200 rounded px-3 py-2 text-slate-800 focus:outline-none focus:border-brand-500' %>
+        <p class="text-xs text-slate-500 mt-1">Used for product citation links in Captain knowledge base answers. Defaults to https://<%= @hook.reference_id %>.</p>
+      </div>
+
+      <div>
+        <%= f.submit (@hook.shopify_sat_tenant_id.present? ? 'Save Credentials & Update SAT Tenant' : 'Approve & Provision SAT Tenant'), class: 'button cursor-pointer' %>
+      </div>
+    <% end %>
+  </div>
+
+  <!-- Operational Actions -->
+  <% if @hook.shopify_sat_tenant_id.present? %>
+    <div class="bg-white border border-slate-100 rounded-lg p-6 shadow-sm">
+      <h2 class="text-base font-semibold text-slate-800 mb-2">Shopify Agent Tools Operations</h2>
+      <p class="text-xs text-slate-600 mb-4">
+        Perform tenant management tasks against the SAT API.
+      </p>
+
+      <div class="flex flex-wrap items-center gap-4">
+        <%= form_with url: sync_status_super_admin_shopify_request_path(@hook), method: :post, local: true do %>
+          <%= submit_tag 'Sync Status from SAT', class: 'px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded text-sm font-medium border border-slate-200 cursor-pointer' %>
+        <% end %>
+
+        <%= form_with url: rotate_tool_key_super_admin_shopify_request_path(@hook), method: :post, local: true do %>
+          <%= submit_tag 'Rotate SAT Tool Key', data: { confirm: 'Are you sure you want to rotate the tool key? Existing active sessions using the old key will need the new key.' }, class: 'px-4 py-2 bg-amber-50 hover:bg-amber-100 text-amber-800 rounded text-sm font-medium border border-amber-200 cursor-pointer' %>
+        <% end %>
+      </div>
+    </div>
+  <% end %>
+
+  <!-- SAT Diagnostic Info -->
+  <% if @sat_tenant.present? %>
+    <div class="bg-white border border-slate-100 rounded-lg p-6 shadow-sm">
+      <h2 class="text-base font-semibold text-slate-800 mb-2">Live SAT Tenant Diagnostics</h2>
+      <pre class="bg-slate-50 p-4 rounded text-xs font-mono text-slate-700 overflow-x-auto border border-slate-200"><%= JSON.pretty_generate(@sat_tenant) %></pre>
+    </div>
+  <% elsif @sat_error.present? %>
+    <div class="bg-rose-50 border border-rose-200 rounded-lg p-4 text-xs text-rose-800">
+      <strong>Failed to query Shopify Agent Tools:</strong> <%= @sat_error %>
+    </div>
+  <% end %>
+</section>

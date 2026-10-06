@@ -8,12 +8,22 @@ class Captain::Knowledge::CitationSources
   end
 
   def url(reference, detail = nil)
+    return product_url(reference) if reference.to_s.start_with?('product:')
+
     document = source_document(reference)
     return document_url(document) if document
-    return unless reference.to_s.start_with?('extra:') && detail
-    return unless @assistant.config.fetch('dify_extra_dataset_ids', []).include?(detail.fetch(:dataset_id) { detail['dataset_id'] })
 
-    allowed_url(detail.fetch(:url) { detail['url'] })
+    extra_url(reference, detail)
+  end
+
+  def product_url(reference)
+    handle = reference.to_s.delete_prefix('product:').strip
+    return if handle.blank?
+
+    base_url = connected_storefront_url
+    return if base_url.blank?
+
+    "#{base_url.chomp('/')}/products/#{handle}"
   end
 
   def source_document(reference)
@@ -45,6 +55,22 @@ class Captain::Knowledge::CitationSources
 
   private
 
+  def extra_url(reference, detail)
+    return unless reference.to_s.start_with?('extra:') && detail
+    return unless @assistant.config.fetch('dify_extra_dataset_ids', []).include?(detail.fetch(:dataset_id) { detail['dataset_id'] })
+
+    allowed_url(detail.fetch(:url) { detail['url'] })
+  end
+
+  def connected_storefront_url
+    hook = @assistant.account.hooks.find_by(app_id: 'shopify')
+    return unless hook&.shopify_connected?
+
+    url = hook.shopify_storefront_url.presence || "https://#{hook.reference_id}"
+    url = "https://#{url}" unless url.to_s.start_with?('http://', 'https://')
+    url
+  end
+
   def source_identity(reference)
     return ['doc', reference] if reference.to_s.match?(/\A\d+\z/)
 
@@ -53,7 +79,9 @@ class Captain::Knowledge::CitationSources
   end
 
   def owned_document?(document)
-    document.is_a?(Captain::Document) && document.account_id == @assistant.account_id && document.assistant_id == @assistant.id
+    document.present? && document.is_a?(Captain::Document) &&
+      document.account_id == @assistant.account_id &&
+      document.assistant_id == @assistant.id
   end
 
   def document_url(document)

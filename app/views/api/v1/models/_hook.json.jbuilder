@@ -5,6 +5,8 @@ json.inbox resource.inbox&.slice(:id, :name)
 json.account_id resource.account_id
 json.hook_type resource.hook_type
 
+json.sat_managed resource.shopify_sat_managed? if resource.app_id == 'shopify'
+
 if Current.account_user&.administrator?
   visible_properties = resource.app&.visible_properties || []
   settings = (resource.settings || {}).select { |key, _| visible_properties.include?(key.to_s) }

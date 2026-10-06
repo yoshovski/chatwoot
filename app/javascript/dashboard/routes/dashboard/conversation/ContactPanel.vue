@@ -52,9 +52,12 @@ const shopifyIntegration = useFunctionGetter(
   'shopify'
 );
 
-const isShopifyFeatureEnabled = computed(
-  () => shopifyIntegration.value.enabled
-);
+const isShopifyFeatureEnabled = computed(() => {
+  if (!shopifyIntegration.value?.enabled) return false;
+  const hook = shopifyIntegration.value?.hooks?.[0];
+  if (hook?.sat_managed) return false;
+  return true;
+});
 
 const { isCloudFeatureEnabled } = useAccount();
 
