@@ -812,6 +812,10 @@
           "FEATURES": "Features",
           "TOOLS": "Tools "
         },
+        "AVATAR": {
+          "LABEL": "Photo",
+          "HELP_TEXT": "Upload a photo for this assistant"
+        },
         "NAME": {
           "LABEL": "Name",
           "PLACEHOLDER": "Enter assistant name",
@@ -929,6 +933,10 @@
         "SUCCESS_MESSAGE": "The assistant has been successfully updated",
         "ERROR_MESSAGE": "There was an error updating the assistant, please try again.",
         "NOT_FOUND": "Could not find the assistant. Please try again."
+      },
+      "AVATAR": {
+        "SUCCESS_DELETE": "Assistant photo deleted successfully",
+        "ERROR_DELETE": "There was an error deleting the assistant photo, please try again."
       },
       "SETTINGS": {
         "HEADER": "Settings",

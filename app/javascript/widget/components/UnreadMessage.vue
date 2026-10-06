@@ -57,8 +57,14 @@ export default {
         ? this.inboxAvatarUrl
         : '/assets/images/chatwoot_bot.png';
       if (this.isSenderExist(this.sender)) {
-        const { avatar_url: avatarUrl } = this.sender;
-        return avatarUrl;
+        const { avatar_url: avatarUrl, type } = this.sender;
+        if (avatarUrl) {
+          return avatarUrl;
+        }
+        if (type === 'captain_assistant') {
+          return '/assets/images/dashboard/captain/logo.svg';
+        }
+        return displayImage;
       }
       return displayImage;
     },

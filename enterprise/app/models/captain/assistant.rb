@@ -194,6 +194,7 @@ class Captain::Assistant < ApplicationRecord
     {
       id: id,
       name: name,
+      available_name: name,
       avatar_url: avatar_url.presence || default_avatar_url,
       description: description,
       created_at: created_at,

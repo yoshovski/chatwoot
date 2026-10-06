@@ -113,8 +113,16 @@ export default {
         return displayImage;
       }
 
-      if (this.message.sender) {
+      if (this.message.sender?.avatar_url) {
         return this.message.sender.avatar_url;
+      }
+
+      if (this.message.sender?.type === 'captain_assistant') {
+        return '/assets/images/dashboard/captain/logo.svg';
+      }
+
+      if (this.message.sender) {
+        return this.message.sender.avatar_url || displayImage;
       }
 
       return (

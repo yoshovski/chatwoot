@@ -201,6 +201,19 @@ RSpec.describe 'Api::V1::Accounts::Captain::Assistants', type: :request do
         expect(json_response[:guardrails]).to eq(['Updated guardrail'])
       end
 
+      it 'attaches an avatar when uploaded' do
+        file = fixture_file_upload(Rails.root.join('spec/assets/avatar.png'), 'image/png')
+
+        patch "/api/v1/accounts/#{account.id}/captain/assistants/#{assistant.id}",
+              params: { assistant: { avatar: file } },
+              headers: admin.create_new_auth_token
+
+        expect(response).to have_http_status(:success)
+        expect(assistant.reload.avatar).to be_attached
+        expect(json_response[:avatar_url]).to be_present
+        expect(json_response[:has_custom_avatar]).to be(true)
+      end
+
       it 'updates only response_guidelines when only that is provided' do
         assistant.update!(response_guidelines: ['Original guideline'], guardrails: ['Original guardrail'])
         original_name = assistant.name
@@ -384,6 +397,43 @@ RSpec.describe 'Api::V1::Accounts::Captain::Assistants', type: :request do
         end.to change(Captain::Assistant, :count).by(-1)
 
         expect(response).to have_http_status(:no_content)
+      end
+    end
+  end
+
+  describe 'DELETE /api/v1/accounts/{account.id}/captain/assistants/{id}/avatar' do
+    let(:assistant) { create(:captain_assistant, account: account) }
+
+    context 'when it is an un-authenticated user' do
+      it 'does not delete the assistant avatar' do
+        delete "/api/v1/accounts/#{account.id}/captain/assistants/#{assistant.id}/avatar",
+               as: :json
+        expect(response).to have_http_status(:unauthorized)
+      end
+    end
+
+    context 'when it is an agent' do
+      it 'does not delete the assistant avatar' do
+        delete "/api/v1/accounts/#{account.id}/captain/assistants/#{assistant.id}/avatar",
+               headers: agent.create_new_auth_token,
+               as: :json
+        expect(response).to have_http_status(:unauthorized)
+      end
+    end
+
+    context 'when it is an admin' do
+      it 'purges the assistant avatar' do
+        assistant.avatar.attach(io: Rails.root.join('spec/assets/avatar.png').open, filename: 'avatar.png', content_type: 'image/png')
+        expect(assistant.avatar).to be_attached
+
+        delete "/api/v1/accounts/#{account.id}/captain/assistants/#{assistant.id}/avatar",
+               headers: admin.create_new_auth_token,
+               as: :json
+
+        expect(response).to have_http_status(:success)
+        expect(assistant.reload.avatar).not_to be_attached
+        expect(json_response[:has_custom_avatar]).to be(false)
+        expect(json_response[:avatar_url]).to eq(assistant.default_avatar_url)
       end
     end
   end
