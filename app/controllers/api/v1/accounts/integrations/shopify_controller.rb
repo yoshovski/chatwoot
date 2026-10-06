@@ -256,19 +256,29 @@ class Api::V1::Accounts::Integrations::ShopifyController < Api::V1::Accounts::In
 
   def apply_sat_status(tenant)
     status = tenant['status'].to_s
+    shopify_status = tenant['shopify_status'].to_s
     shopify_state = tenant.dig('shopify_connection', 'state').to_s
+    states = [status, shopify_status, shopify_state]
 
-    if status == 'connected' || shopify_state == 'connected'
-      @hook.settings = @hook.settings.to_h.merge(
-        'state' => 'connected',
-        'storefront_url' => tenant['storefront_base_url'].presence || @hook.shopify_storefront_url
-      )
-      @hook.status = :enabled
-    elsif status == 'importing'
+    if states.include?('connected')
+      mark_hook_connected(tenant)
+    elsif states.include?('importing')
       @hook.settings = @hook.settings.to_h.merge('state' => 'importing')
-    elsif %w[reauthorization_required uninstalled].include?(status) || %w[reauthorization_required uninstalled].include?(shopify_state)
-      @hook.settings = @hook.settings.to_h.merge('state' => 'needs_reconnect')
-      @hook.status = :disabled
+    elsif states.any? { |s| %w[reauthorization_required uninstalled].include?(s) }
+      mark_hook_needs_reconnect
     end
+  end
+
+  def mark_hook_connected(tenant)
+    @hook.settings = @hook.settings.to_h.merge(
+      'state' => 'connected',
+      'storefront_url' => tenant['storefront_base_url'].presence || @hook.shopify_storefront_url
+    )
+    @hook.status = :enabled
+  end
+
+  def mark_hook_needs_reconnect
+    @hook.settings = @hook.settings.to_h.merge('state' => 'needs_reconnect')
+    @hook.status = :disabled
   end
 end
