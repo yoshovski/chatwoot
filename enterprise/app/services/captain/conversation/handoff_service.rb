@@ -35,6 +35,19 @@ class Captain::Conversation::HandoffService
     end
   end
 
+  def trigger_contact_capture_form!(triggering_message: nil)
+    return nil if conversation.blank?
+
+    contact_capture_service.post_form_if_needed!(triggering_message: triggering_message)
+  end
+
+  def contact_capture_service
+    @contact_capture_service ||= Captain::Conversation::ContactCaptureService.new(
+      conversation: conversation,
+      assistant: assistant
+    )
+  end
+
   private
 
   def persist_extras!

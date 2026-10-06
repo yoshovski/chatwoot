@@ -53,12 +53,16 @@ module Enterprise::MessageTemplates::HookExecutionService
       conversation: conversation,
       assistant: inbox.captain_assistant
     )
-    return if handoff_service.handoff_active?
+    if handoff_service.handoff_active?
+      handoff_service.trigger_contact_capture_form!(triggering_message: message)
+      return
+    end
 
     Rails.logger.info("Captain limit exceeded, performing handoff mid-conversation for conversation: #{conversation.id}")
     create_usage_limit_transfer_message
     conversation.bot_handoff!
     handoff_service.apply_extras!
+    handoff_service.trigger_contact_capture_form!(triggering_message: message)
     emit_usage_limit_handoff_event
     send_out_of_office_message_after_handoff
   end

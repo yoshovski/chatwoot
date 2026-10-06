@@ -162,7 +162,7 @@ describe CaptainListener do
         listener.message_updated(event)
       end
 
-      it 'does not schedule response for form submissions' do
+      it 'does not schedule response for form submissions but handles form submission' do
         form_message = create(
           :message,
           account: account,
@@ -178,6 +178,9 @@ describe CaptainListener do
         form_event = Events::Base.new(:message_updated, Time.current, message: form_message)
 
         expect(Captain::Conversation::ResponseSchedulerService).not_to receive(:new)
+        contact_capture_service = instance_double(Captain::Conversation::ContactCaptureService)
+        expect(Captain::Conversation::ContactCaptureService).to receive(:new).with(conversation: conversation).and_return(contact_capture_service)
+        expect(contact_capture_service).to receive(:handle_form_submission!).with(form_message)
 
         listener.message_updated(form_event)
       end
@@ -186,6 +189,20 @@ describe CaptainListener do
 
   describe '#message_created' do
     let(:conversation) { create(:conversation, account: account, inbox: inbox) }
+
+    it 'captures typed email for incoming messages' do
+      contact = create(:contact, account: account, email: nil)
+      conversation.update!(contact: contact)
+      message = create(:message, account: account, inbox: inbox, conversation: conversation,
+                                 message_type: :incoming, content: 'my email is user@example.com')
+      event = Events::Base.new(:message_created, Time.current, message: message)
+
+      contact_capture_service = instance_double(Captain::Conversation::ContactCaptureService)
+      expect(Captain::Conversation::ContactCaptureService).to receive(:new).with(conversation: conversation).and_return(contact_capture_service)
+      expect(contact_capture_service).to receive(:capture_typed_email!).with(message)
+
+      listener.message_created(event)
+    end
 
     it 'calls OwnershipService#record_human_takeover! for outgoing public human messages' do
       message = create(:message, account: account, inbox: inbox, conversation: conversation,
