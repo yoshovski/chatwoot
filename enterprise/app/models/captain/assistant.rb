@@ -189,6 +189,34 @@ class Captain::Assistant < ApplicationRecord
     state&.dig(PRODUCT_HANDLES_STATE_KEY) || state&.dig(:product_handles)
   end
 
+  def prompt_context
+    {
+      name: name,
+      description: description,
+      product_name: config['product_name'] || 'this product',
+      citation_enabled: citations_enabled?,
+      scenarios: scenarios.enabled.map do |scenario|
+        {
+          title: scenario.title,
+          key: scenario.handoff_key,
+          description: scenario.description
+        }
+      end,
+      response_guidelines: response_guidelines || [],
+      guardrails: guardrails || []
+    }
+  end
+
+  def default_avatar_url
+    "#{ENV.fetch('FRONTEND_URL', nil)}/assets/images/dashboard/captain/logo.svg"
+  end
+
+  def continue_while_waiting?
+    return false if config.blank?
+
+    ActiveModel::Type::Boolean.new.cast(config['continue_while_waiting']) == true
+  end
+
   private
 
   def assistant_event_data
@@ -242,34 +270,6 @@ class Captain::Assistant < ApplicationRecord
 
     tools.concat(account.captain_custom_tools.enabled.map { |custom_tool| custom_tool.tool(self) })
     tools
-  end
-
-  def prompt_context
-    {
-      name: name,
-      description: description,
-      product_name: config['product_name'] || 'this product',
-      citation_enabled: citations_enabled?,
-      scenarios: scenarios.enabled.map do |scenario|
-        {
-          title: scenario.title,
-          key: scenario.handoff_key,
-          description: scenario.description
-        }
-      end,
-      response_guidelines: response_guidelines || [],
-      guardrails: guardrails || []
-    }
-  end
-
-  def default_avatar_url
-    "#{ENV.fetch('FRONTEND_URL', nil)}/assets/images/dashboard/captain/logo.svg"
-  end
-
-  def continue_while_waiting?
-    return false if config.blank?
-
-    ActiveModel::Type::Boolean.new.cast(config['continue_while_waiting']) == true
   end
 end
 # rubocop:enable Metrics/ClassLength
