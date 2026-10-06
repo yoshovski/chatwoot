@@ -95,7 +95,12 @@ class Captain::Conversation::ResponseBuilderJob < ApplicationJob # rubocop:disab
     if v2_handoff_tool_fired?
       process_v2_handoff_response
     elsif v1_handoff_requested?
-      delegate_ownership_service.waiting? ? process_standard_response : process_v1_handoff_request
+      if delegate_ownership_service.waiting?
+        trigger_handoff_contact_form
+        process_standard_response
+      else
+        process_v1_handoff_request
+      end
     elsif may_reply?
       process_standard_response
     end
@@ -172,6 +177,7 @@ class Captain::Conversation::ResponseBuilderJob < ApplicationJob # rubocop:disab
       @conversation.bot_handoff!
       report_v1_handoff_not_executed if conversation_pending?
       send_out_of_office_message_if_applicable
+      trigger_handoff_contact_form
     end
   end
 
@@ -180,6 +186,7 @@ class Captain::Conversation::ResponseBuilderJob < ApplicationJob # rubocop:disab
     # waiting_since so this message doesn't clear the timestamp it left in place.
     I18n.with_locale(@assistant.account.locale) do
       create_handoff_message(preserve_waiting_since: true)
+      trigger_handoff_contact_form
     end
   end
 
@@ -260,5 +267,14 @@ class Captain::Conversation::ResponseBuilderJob < ApplicationJob # rubocop:disab
       conversation: @conversation,
       assistant: @assistant
     ).apply_extras!
+  end
+
+  def trigger_handoff_contact_form
+    triggering_message = @conversation.messages.where(id: @responding_to_message_id).first ||
+                         @conversation.messages.incoming.last
+    Captain::Conversation::HandoffService.new(
+      conversation: @conversation,
+      assistant: @assistant
+    ).trigger_contact_capture_form!(triggering_message: triggering_message)
   end
 end

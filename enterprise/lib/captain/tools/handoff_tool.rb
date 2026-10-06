@@ -53,11 +53,8 @@ class Captain::Tools::HandoffTool < Captain::Tools::BasePublicTool
   def trigger_handoff(tool_context, conversation, reason_category)
     return trigger_legacy_handoff(tool_context, conversation, reason_category) unless captain_v2_enabled?
 
-    handoff_service = Captain::Conversation::HandoffService.new(
-      conversation: conversation,
-      assistant: @assistant
-    )
-    return :already_active if handoff_service.handoff_active?
+    handoff_service = Captain::Conversation::HandoffService.new(conversation: conversation, assistant: @assistant)
+    return handle_already_active_handoff(handoff_service, tool_context) if handoff_service.handoff_active?
 
     note = nil
     handoff_result = conversation.with_lock do
@@ -75,12 +72,14 @@ class Captain::Tools::HandoffTool < Captain::Tools::BasePublicTool
     :completed
   end
 
+  def handle_already_active_handoff(handoff_service, tool_context)
+    handoff_service.trigger_contact_capture_form!(triggering_message: tool_context.message)
+    :already_active
+  end
+
   def trigger_legacy_handoff(tool_context, conversation, reason_category)
-    handoff_service = Captain::Conversation::HandoffService.new(
-      conversation: conversation,
-      assistant: @assistant
-    )
-    return :already_active if handoff_service.handoff_active?
+    handoff_service = Captain::Conversation::HandoffService.new(conversation: conversation, assistant: @assistant)
+    return handle_already_active_handoff(handoff_service, tool_context) if handoff_service.handoff_active?
 
     note = handoff_service.apply_extras!(lock: false)
     record_handoff_note(tool_context, note) if note.present?

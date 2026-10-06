@@ -4,6 +4,9 @@ class CaptainListener < BaseListener
   def message_created(event)
     message = event.data[:message]
     return if message.blank?
+
+    handle_incoming_message(message) if message.incoming?
+
     return unless message.human_response? && !message.private?
 
     ownership_service(message.conversation).record_human_takeover!
@@ -15,6 +18,7 @@ class CaptainListener < BaseListener
 
     handle_csat_update(message) if message.input_csat?
     handle_suggestion_button_click(message) if message.input_select?
+    handle_contact_form_submission(message) if message.form? && message.submitted_values.present?
   end
 
   def conversation_status_changed(event)
@@ -105,5 +109,21 @@ class CaptainListener < BaseListener
 
   def tracker(conversation)
     Captain::ConversationOutcomeTracker.new(conversation: conversation)
+  end
+
+  def contact_capture_service(conversation)
+    Captain::Conversation::ContactCaptureService.new(conversation: conversation)
+  end
+
+  def handle_incoming_message(message)
+    return if message.conversation.blank?
+
+    contact_capture_service(message.conversation).capture_typed_email!(message)
+  end
+
+  def handle_contact_form_submission(message)
+    return if message.conversation.blank?
+
+    contact_capture_service(message.conversation).handle_form_submission!(message)
   end
 end
