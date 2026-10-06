@@ -153,6 +153,7 @@ const handleStoreUrlSubmit = async () => {
     if (dialogRef.value) {
       dialogRef.value.close();
     }
+    useAlert(t('INTEGRATION_SETTINGS.SHOPIFY.STATE.REQUEST_SUBMITTED_SUCCESS'));
   } catch (error) {
     storeUrlError.value = error.response?.data?.error || error.message;
   } finally {
@@ -286,8 +287,9 @@ onMounted(async () => {
             <div>
               <span
                 v-if="currentState === 'requested'"
-                class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300"
+                class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300"
               >
+                <i class="i-lucide-clock text-xs" />
                 {{ t('INTEGRATION_SETTINGS.SHOPIFY.STATE.REQUESTED_TITLE') }}
               </span>
               <span
@@ -321,16 +323,48 @@ onMounted(async () => {
             </div>
           </div>
 
-          <!-- Description Box for State -->
-          <div class="rounded-lg bg-n-alpha-2 p-4 text-sm text-n-slate-11">
-            <p v-if="currentState === 'requested'">
-              {{
-                t('INTEGRATION_SETTINGS.SHOPIFY.STATE.REQUESTED_DESCRIPTION', {
-                  shopDomain,
-                })
-              }}
-            </p>
-            <p v-else-if="currentState === 'pending_install'">
+          <!-- In-Progress State Banner -->
+          <div
+            v-if="currentState === 'requested'"
+            class="flex items-start gap-4 p-5 rounded-xl border border-amber-200 dark:border-amber-800/40 bg-amber-50/60 dark:bg-amber-950/20"
+          >
+            <div
+              class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300"
+            >
+              <i class="i-lucide-clock text-xl" />
+            </div>
+            <div class="flex flex-col gap-1">
+              <h4
+                class="text-sm font-semibold text-amber-900 dark:text-amber-200"
+              >
+                {{ t('INTEGRATION_SETTINGS.SHOPIFY.STATE.REQUESTED_TITLE') }}
+              </h4>
+              <p
+                class="text-sm text-amber-800/90 dark:text-amber-300/80 leading-relaxed"
+              >
+                {{
+                  t(
+                    'INTEGRATION_SETTINGS.SHOPIFY.STATE.REQUESTED_DESCRIPTION',
+                    {
+                      shopDomain,
+                    }
+                  )
+                }}
+              </p>
+              <p
+                class="text-xs text-amber-700/80 dark:text-amber-400/70 mt-1"
+              >
+                {{ t('INTEGRATION_SETTINGS.SHOPIFY.STATE.REQUESTED_HELP') }}
+              </p>
+            </div>
+          </div>
+
+          <!-- Description Box for Other States -->
+          <div
+            v-else
+            class="rounded-lg bg-n-alpha-2 p-4 text-sm text-n-slate-11"
+          >
+            <p v-if="currentState === 'pending_install'">
               {{
                 t(
                   'INTEGRATION_SETTINGS.SHOPIFY.STATE.PENDING_INSTALL_DESCRIPTION'

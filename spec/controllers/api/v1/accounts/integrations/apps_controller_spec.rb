@@ -73,18 +73,14 @@ RSpec.describe 'Integration Apps API', type: :request do
         expect(slack_app['action']).to include('client_id=client_id')
       end
 
-      it 'omits Shopify when the installation switch is disabled' do
-        account.enable_features('shopify_integration')
-        allow(GlobalConfigService).to receive(:load)
-          .with('ENABLE_SHOPIFY_INTEGRATION', 'false')
-          .and_return(false)
-
+      it 'includes Shopify in active apps for admin' do
         get api_v1_account_integrations_apps_url(account),
             headers: admin.create_new_auth_token,
             as: :json
 
         shopify_app = response.parsed_body['payload'].find { |app| app['id'] == 'shopify' }
-        expect(shopify_app).to be_nil
+        expect(shopify_app).not_to be_nil
+        expect(shopify_app['id']).to eq('shopify')
       end
 
       it 'returns visible hook settings for openai app for admins' do
@@ -152,20 +148,13 @@ RSpec.describe 'Integration Apps API', type: :request do
         expect(app['name']).to eql('Slack')
       end
 
-      it 'returns not found for Shopify when the client ID is missing' do
-        account.enable_features('shopify_integration')
-        allow(GlobalConfigService).to receive(:load)
-          .with('ENABLE_SHOPIFY_INTEGRATION', 'false')
-          .and_return(true)
-        allow(GlobalConfigService).to receive(:load)
-          .with('SHOPIFY_CLIENT_ID', nil)
-          .and_return(nil)
-
+      it 'returns details for Shopify' do
         get api_v1_account_integrations_app_url(account_id: account.id, id: 'shopify'),
             headers: agent.create_new_auth_token,
             as: :json
 
-        expect(response).to have_http_status(:not_found)
+        expect(response).to have_http_status(:success)
+        expect(response.parsed_body['id']).to eq('shopify')
       end
 
       it 'will not return sensitive information for openai app for agents' do

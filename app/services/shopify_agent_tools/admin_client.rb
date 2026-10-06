@@ -16,7 +16,13 @@ class ShopifyAgentTools::AdminClient
 
     raise Error, 'Shopify Agent Tools admin key is missing' if @admin_key.blank?
 
-    @connection = Faraday.new(url: @api_url, headers: { 'Authorization' => "Bearer #{@admin_key}" }) do |connection|
+    @connection = Faraday.new(
+      url: @api_url,
+      headers: {
+        'Authorization' => "Bearer #{@admin_key}",
+        'X-Admin-Key' => @admin_key
+      }
+    ) do |connection|
       connection.request :retry, max: 2, interval: 0.5, backoff_factor: 2, methods: %i[get delete], retry_statuses: [429, 502, 503, 504]
       connection.options.open_timeout = 5
       connection.options.timeout = 30
