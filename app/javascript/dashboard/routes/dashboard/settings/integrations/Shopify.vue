@@ -371,7 +371,7 @@ onMounted(async () => {
                     'bg-emerald-500': catalogStatus === 'on',
                     'bg-purple-500': catalogStatus === 'importing',
                     'bg-amber-500': catalogStatus === 'needs_reconnect',
-                    'bg-slate-400': catalogStatus === 'off'
+                    'bg-slate-400': catalogStatus === 'off',
                   }"
                 />
                 <h4
