@@ -35,6 +35,10 @@ models:
     provider: openai
     display_name: 'GPT-5.2'
     credit_multiplier: 3
+  gpt-6-luna:
+    provider: openai
+    display_name: 'GPT-6 Luna'
+    credit_multiplier: 1
   claude-haiku-4.5:
     provider: anthropic
     display_name: 'Claude Haiku 4.5'
@@ -102,6 +106,7 @@ features:
         gpt-4.1,
         gpt-5.1,
         gpt-5.2,
+        gpt-6-luna,
         claude-haiku-4.5,
         claude-sonnet-4.5,
         gemini-3-flash,
@@ -116,6 +121,7 @@ features:
         gpt-4.1,
         gpt-5.1,
         gpt-5.2,
+        gpt-6-luna,
         claude-haiku-4.5,
         claude-sonnet-4.5,
         gemini-3-flash,
