@@ -32,9 +32,24 @@ class Captain::Tools::FaqLookupTool < Captain::Tools::BasePublicTool
 
   def record_knowledge_sources(tool_context, passages)
     record_retrieved_sources(tool_context, passages.select { |passage| passage.kind == 'faq' }.map(&:record))
+    record_document_ids(tool_context, passages)
+    record_catalog_handles(tool_context, passages)
+  end
+
+  def record_document_ids(tool_context, passages)
     metadata = tool_context.state[:cw_metadata] ||= {}
     document_ids = passages.select { |passage| passage.kind == 'document' }.map { |passage| passage.record.id }
     metadata[:document_ids] = Array(metadata[:document_ids]) | document_ids
+  end
+
+  def record_catalog_handles(tool_context, passages)
+    catalog_handles = passages.select { |p| %w[catalog product].include?(p.kind) }.filter_map(&:handle)
+    return if catalog_handles.blank?
+
+    tool_context.state[:product_handles] = (Array(tool_context.state[:product_handles]) | catalog_handles)
+    tool_context.state[Captain::Assistant::PRODUCT_HANDLES_STATE_KEY] = (
+      Array(tool_context.state[Captain::Assistant::PRODUCT_HANDLES_STATE_KEY]) | catalog_handles
+    )
   end
 
   def format_passage(tool_context, passage)

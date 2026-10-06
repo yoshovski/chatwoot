@@ -3,12 +3,14 @@ class Captain::Knowledge::CitationSources
     @assistant = assistant
   end
 
-  def urls(references, details: {})
-    references.transform_values { |reference| url(reference, details[reference] || details[reference.to_s]) }.compact.transform_keys(&:to_i)
+  def urls(references, details: {}, allowed_product_handles: nil)
+    references.transform_values do |reference|
+      url(reference, details[reference] || details[reference.to_s], allowed_product_handles: allowed_product_handles)
+    end.compact.transform_keys(&:to_i)
   end
 
-  def url(reference, detail = nil)
-    return product_url(reference) if reference.to_s.start_with?('product:')
+  def url(reference, detail = nil, allowed_product_handles: nil)
+    return product_url(reference, allowed_handles: allowed_product_handles) if reference.to_s.start_with?('product:')
 
     document = source_document(reference)
     return document_url(document) if document
@@ -16,9 +18,10 @@ class Captain::Knowledge::CitationSources
     extra_url(reference, detail)
   end
 
-  def product_url(reference)
+  def product_url(reference, allowed_handles: nil)
     handle = reference.to_s.delete_prefix('product:').strip
     return if handle.blank?
+    return if allowed_handles.present? && allowed_handles.map(&:to_s).map(&:downcase).exclude?(handle.downcase)
 
     base_url = connected_storefront_url
     return if base_url.blank?

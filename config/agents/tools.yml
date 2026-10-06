@@ -39,3 +39,18 @@
   title: 'Handoff to Human'
   description: 'Hand off the conversation to a human agent'
   icon: 'user-switch'
+
+- id: catalog_product_search
+  title: 'Search Products'
+  description: 'Search active products in the Shopify catalog with live prices, variants and links'
+  icon: 'search'
+
+- id: browse_catalog
+  title: 'Browse Catalog'
+  description: 'Browse Shopify product collections and categories in the store catalog'
+  icon: 'tag'
+
+- id: track_order
+  title: 'Track Order'
+  description: 'Track a customer order using order number and matching email'
+  icon: 'checkmark'

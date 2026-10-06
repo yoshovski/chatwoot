@@ -108,6 +108,13 @@ RSpec.describe Captain::Knowledge::CitationSources do
         2 => 'https://store.myshopify.com/products/item-two'
       )
     end
+
+    it 'filters out product handles that are not in allowed_product_handles' do
+      references = { '1' => 'product:item-one', '2' => 'product:item-two' }
+      expect(citation_sources.urls(references, allowed_product_handles: ['item-one'])).to eq(
+        1 => 'https://store.myshopify.com/products/item-one'
+      )
+    end
   end
 end
 # rubocop:enable RSpec/VerifiedDoubles

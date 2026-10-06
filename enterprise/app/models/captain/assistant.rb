@@ -16,10 +16,13 @@
 #
 #  index_captain_assistants_on_account_id  (account_id)
 #
+# rubocop:disable Metrics/ClassLength
 class Captain::Assistant < ApplicationRecord
   DESCRIPTION_LENGTH_LIMIT = 500
   CITATION_SOURCES_STATE_KEY = :captain_v2_citation_sources
   CITATION_DETAILS_STATE_KEY = :captain_v2_citation_details
+  PRODUCT_HANDLES_STATE_KEY = :captain_v2_product_handles
+  SHOPIFY_TOOL_IDS = %w[catalog_product_search browse_catalog track_order].freeze
   AUTO_RESOLVE_MODES = %w[disabled legacy evaluated].freeze
   DEFAULT_INACTIVITY_THRESHOLD_MINUTES = 60
   MINIMUM_INACTIVITY_THRESHOLD_MINUTES = 5
@@ -128,8 +131,16 @@ class Captain::Assistant < ApplicationRecord
     send_inactivity_resolution_message
   end
 
+  def shopify_tools_available?
+    hook = account.hooks.find_by(app_id: 'shopify')
+    return false unless hook&.shopify_connected? && hook.shopify_tool_key.present?
+
+    hook.shopify_catalog_client_status == 'on'
+  end
+
   def available_agent_tools
     tools = self.class.built_in_agent_tools.dup
+    tools.reject! { |tool| SHOPIFY_TOOL_IDS.include?(tool[:id]) } unless shopify_tools_available?
 
     custom_tools = account.captain_custom_tools.enabled.map(&:to_tool_metadata)
     tools.concat(custom_tools)
@@ -151,8 +162,12 @@ class Captain::Assistant < ApplicationRecord
     assistant_event_data
   end
 
-  def customer_visible_citation_urls(citation_sources, details: {})
-    Captain::Knowledge::CitationSources.new(self).urls(citation_sources, details: details)
+  def customer_visible_citation_urls(citation_sources, details: {}, allowed_product_handles: nil)
+    Captain::Knowledge::CitationSources.new(self).urls(
+      citation_sources,
+      details: details,
+      allowed_product_handles: allowed_product_handles
+    )
   end
 
   def citations_enabled?
@@ -164,7 +179,13 @@ class Captain::Assistant < ApplicationRecord
 
     citation_document_ids = run_result&.context&.dig(:state, CITATION_SOURCES_STATE_KEY) || {}
     details = run_result&.context&.dig(:state, CITATION_DETAILS_STATE_KEY) || {}
-    customer_visible_citation_urls(citation_document_ids, details: details)
+    product_handles = run_result_product_handles(run_result)
+    customer_visible_citation_urls(citation_document_ids, details: details, allowed_product_handles: product_handles)
+  end
+
+  def run_result_product_handles(run_result)
+    state = run_result&.context&.dig(:state)
+    state&.dig(PRODUCT_HANDLES_STATE_KEY) || state&.dig(:product_handles)
   end
 
   private
@@ -206,11 +227,19 @@ class Captain::Assistant < ApplicationRecord
   end
 
   def agent_tools
-    [
+    tools = [
       self.class.resolve_tool_class('faq_lookup').new(self),
-      self.class.resolve_tool_class('handoff').new(self),
-      *account.captain_custom_tools.enabled.map { |custom_tool| custom_tool.tool(self) }
+      self.class.resolve_tool_class('handoff').new(self)
     ]
+
+    if shopify_tools_available?
+      tools << self.class.resolve_tool_class('catalog_product_search').new(self)
+      tools << self.class.resolve_tool_class('browse_catalog').new(self)
+      tools << self.class.resolve_tool_class('track_order').new(self)
+    end
+
+    tools.concat(account.captain_custom_tools.enabled.map { |custom_tool| custom_tool.tool(self) })
+    tools
   end
 
   def prompt_context
@@ -235,3 +264,4 @@ class Captain::Assistant < ApplicationRecord
     "#{ENV.fetch('FRONTEND_URL', nil)}/assets/images/dashboard/captain/logo.svg"
   end
 end
+# rubocop:enable Metrics/ClassLength
