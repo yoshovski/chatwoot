@@ -58,8 +58,18 @@ class Captain::Assistant < ApplicationRecord
                  :auto_resolve_mode, :auto_resolve_after, :send_inactivity_resolution_message, :response_window,
                  :continue_while_waiting
 
+  BOOLEAN_CONFIG_KEYS = %w[
+    feature_faq
+    feature_memory
+    feature_citation
+    feature_contact_attributes
+    continue_while_waiting
+    send_inactivity_resolution_message
+  ].freeze
+
   before_validation :set_default_auto_resolve_mode, on: :create
   before_validation :normalize_auto_resolve_after
+  before_validation :normalize_boolean_config_attributes
 
   validates :name, presence: true
   validates :description, presence: true, length: { maximum: DESCRIPTION_LENGTH_LIMIT }
@@ -125,7 +135,10 @@ class Captain::Assistant < ApplicationRecord
   def send_inactivity_resolution_message
     return true unless account.feature_enabled?('captain_integration_v2')
 
-    config.fetch('send_inactivity_resolution_message', true)
+    val = config.fetch('send_inactivity_resolution_message', true)
+    return true if val.nil?
+
+    ActiveModel::Type::Boolean.new.cast(val)
   end
 
   def send_inactivity_resolution_message?
@@ -237,6 +250,16 @@ class Captain::Assistant < ApplicationRecord
 
     # Keep API values aligned with the five minute options available in the settings UI.
     self.auto_resolve_after = (threshold.fdiv(INACTIVITY_THRESHOLD_STEP_MINUTES).round * INACTIVITY_THRESHOLD_STEP_MINUTES)
+  end
+
+  def normalize_boolean_config_attributes
+    return unless config.is_a?(Hash)
+
+    BOOLEAN_CONFIG_KEYS.each do |key|
+      next unless config.key?(key)
+
+      config[key] = ActiveModel::Type::Boolean.new.cast(config[key])
+    end
   end
 
   def validate_response_window
