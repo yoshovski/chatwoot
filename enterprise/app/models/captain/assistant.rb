@@ -29,6 +29,9 @@ class Captain::Assistant < ApplicationRecord
   MAXIMUM_INACTIVITY_THRESHOLD_MINUTES = 1.day.in_minutes.to_i
   INACTIVITY_THRESHOLD_STEP_MINUTES = 5
   RESPONSE_WINDOWS = %w[always business_hours outside_business_hours].freeze
+  DEFAULT_MAX_SUGGESTED_REPLIES = 3
+  MINIMUM_MAX_SUGGESTED_REPLIES = 1
+  MAXIMUM_MAX_SUGGESTED_REPLIES = 5
 
   include Avatarable
   include Concerns::CaptainToolsHelpers
@@ -56,7 +59,7 @@ class Captain::Assistant < ApplicationRecord
 
   store_accessor :config, :temperature, :feature_faq, :feature_memory, :feature_contact_attributes, :product_name,
                  :auto_resolve_mode, :auto_resolve_after, :send_inactivity_resolution_message, :response_window,
-                 :continue_while_waiting
+                 :continue_while_waiting, :suggested_replies, :max_suggested_replies
 
   BOOLEAN_CONFIG_KEYS = %w[
     feature_faq
@@ -65,11 +68,13 @@ class Captain::Assistant < ApplicationRecord
     feature_contact_attributes
     continue_while_waiting
     send_inactivity_resolution_message
+    suggested_replies
   ].freeze
 
   before_validation :set_default_auto_resolve_mode, on: :create
   before_validation :normalize_auto_resolve_after
   before_validation :normalize_boolean_config_attributes
+  before_validation :normalize_max_suggested_replies
 
   validates :name, presence: true
   validates :description, presence: true, length: { maximum: DESCRIPTION_LENGTH_LIMIT }
@@ -83,6 +88,13 @@ class Captain::Assistant < ApplicationRecord
               only_integer: true,
               greater_than_or_equal_to: MINIMUM_INACTIVITY_THRESHOLD_MINUTES,
               less_than_or_equal_to: MAXIMUM_INACTIVITY_THRESHOLD_MINUTES
+            },
+            allow_nil: true
+  validates :max_suggested_replies,
+            numericality: {
+              only_integer: true,
+              greater_than_or_equal_to: MINIMUM_MAX_SUGGESTED_REPLIES,
+              less_than_or_equal_to: MAXIMUM_MAX_SUGGESTED_REPLIES
             },
             allow_nil: true
 
@@ -230,6 +242,19 @@ class Captain::Assistant < ApplicationRecord
     ActiveModel::Type::Boolean.new.cast(config['continue_while_waiting']) == true
   end
 
+  def suggested_replies?
+    return false if config.blank?
+
+    ActiveModel::Type::Boolean.new.cast(config['suggested_replies']) == true
+  end
+
+  def max_suggested_replies
+    val = config&.dig('max_suggested_replies')
+    return DEFAULT_MAX_SUGGESTED_REPLIES if val.blank?
+
+    val.to_i.clamp(MINIMUM_MAX_SUGGESTED_REPLIES, MAXIMUM_MAX_SUGGESTED_REPLIES)
+  end
+
   private
 
   def assistant_event_data
@@ -260,6 +285,13 @@ class Captain::Assistant < ApplicationRecord
 
       config[key] = ActiveModel::Type::Boolean.new.cast(config[key])
     end
+  end
+
+  def normalize_max_suggested_replies
+    return if config.blank? || config['max_suggested_replies'].blank?
+
+    count = Integer(config['max_suggested_replies'].to_s, exception: false)
+    self.max_suggested_replies = count.clamp(MINIMUM_MAX_SUGGESTED_REPLIES, MAXIMUM_MAX_SUGGESTED_REPLIES) if count
   end
 
   def validate_response_window

@@ -119,7 +119,8 @@ class Captain::Assistant::AgentRunnerService
     scenario_agents = @runtime_configuration.scenarios.map do |scenario|
       scenario.agent(
         runtime_configuration: @runtime_configuration,
-        runtime_agent_name: @runtime_configuration.agent_name_for(scenario)
+        runtime_agent_name: @runtime_configuration.agent_name_for(scenario),
+        response_schema: response_schema_for_runner
       )
     end
 
@@ -128,17 +129,36 @@ class Captain::Assistant::AgentRunnerService
 
   def default_agent_graph
     assistant_agent = build_assistant_agent
-    scenario_agents = @assistant.scenarios.enabled.map(&:agent)
+    scenario_agents = @assistant.scenarios.enabled.map do |scenario|
+      scenario.agent(response_schema: response_schema_for_runner)
+    end
 
     wire_agents(assistant_agent, scenario_agents)
   end
 
   def build_assistant_agent(runtime_configuration: nil)
-    agent = @assistant.agent(runtime_configuration: runtime_configuration)
+    agent = @assistant.agent(
+      runtime_configuration: runtime_configuration,
+      response_schema: response_schema_for_runner
+    )
     return agent unless waiting_for_human?
 
     agent.clone(
       tools: agent.tools.reject { |tool| tool.is_a?(Captain::Tools::HandoffTool) }
+    )
+  end
+
+  def suggested_replies_enabled?
+    return false if reply_suggestion?
+    return false if waiting_for_human?
+
+    @assistant.suggested_replies?
+  end
+
+  def response_schema_for_runner
+    Captain::ResponseSchema.for(
+      suggested_replies: suggested_replies_enabled?,
+      max_suggested_replies: @assistant.max_suggested_replies
     )
   end
 

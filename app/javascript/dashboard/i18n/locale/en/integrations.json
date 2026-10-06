@@ -886,6 +886,12 @@
           "ALLOW_CONTACT_ATTRIBUTES": "Allow access to contact information",
           "CONTINUE_WHILE_WAITING": "Keep answering while waiting for a human until takeover"
         },
+        "REPLY_STYLE": {
+          "TITLE": "Reply style",
+          "SUGGESTED_REPLIES": "Offer suggested reply buttons to the customer",
+          "MAX_BUTTONS_LABEL": "Maximum buttons",
+          "MAX_BUTTONS_PLACEHOLDER": "Enter maximum buttons (1-5)"
+        },
         "AUDIENCE": {
           "EVERYONE": {
             "LABEL": "Everyone",

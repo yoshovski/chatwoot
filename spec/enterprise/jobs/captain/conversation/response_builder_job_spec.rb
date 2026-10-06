@@ -560,6 +560,86 @@ RSpec.describe Captain::Conversation::ResponseBuilderJob, type: :job do
         expect(account.usage_limits[:captain][:responses][:consumed]).to eq(1)
       end
 
+      context 'with suggested replies' do
+        before do
+          assistant.config['suggested_replies'] = true
+          assistant.config['max_suggested_replies'] = 3
+          assistant.save!
+        end
+
+        it 'creates an input_select message when suggestions are present and eligible' do
+          allow(mock_agent_runner_service).to receive(:generate_response).and_return({
+                                                                                       'response_parts' => v2_response_parts,
+                                                                                       'response' => 'Hey, welcome to Captain V2',
+                                                                                       'suggested_replies' => ['Track order', 'Return item']
+                                                                                     })
+
+          described_class.perform_now(conversation, assistant)
+
+          last_message = conversation.messages.last
+          expect(last_message.content_type).to eq('input_select')
+          expect(last_message.content_attributes['items']).to eq([
+                                                                   { 'title' => 'Track order', 'value' => 'Track order' },
+                                                                   { 'title' => 'Return item', 'value' => 'Return item' }
+                                                                 ])
+        end
+
+        it 'falls back to text message when response contains markdown links' do
+          link_parts = [{ 'text' => 'Check our [guide](https://example.com)', 'citation_indexes' => [] }]
+          allow(mock_agent_runner_service).to receive(:generate_response).and_return({
+                                                                                       'response_parts' => link_parts,
+                                                                                       'response' => 'Check our [guide](https://example.com)',
+                                                                                       'suggested_replies' => ['Track order']
+                                                                                     })
+
+          described_class.perform_now(conversation, assistant)
+
+          last_message = conversation.messages.last
+          expect(last_message.content_type).to eq('text')
+        end
+
+        it 'falls back to text message when response contains cards' do
+          allow(mock_agent_runner_service).to receive(:generate_response).and_return({
+                                                                                       'response_parts' => v2_response_parts,
+                                                                                       'response' => 'Hey, welcome to Captain V2',
+                                                                                       'cards' => [{ 'title' => 'Product 1' }],
+                                                                                       'suggested_replies' => ['Track order']
+                                                                                     })
+
+          described_class.perform_now(conversation, assistant)
+
+          last_message = conversation.messages.last
+          expect(last_message.content_type).to eq('text')
+        end
+
+        it 'includes customer selection from input_select in previous message history' do
+          create(
+            :message,
+            conversation: conversation,
+            sender: assistant,
+            content_type: :input_select,
+            message_type: :outgoing,
+            content: 'Choose an option',
+            content_attributes: {
+              'items' => [{ 'title' => 'Track order', 'value' => 'Track order' }],
+              'submitted_values' => [{ 'title' => 'Track order', 'value' => 'Track order' }]
+            }
+          )
+
+          expect(mock_agent_runner_service).to receive(:generate_response).with(
+            message_history: array_including(
+              { role: 'assistant', content: 'Choose an option' },
+              { role: 'user', content: 'Track order' }
+            )
+          ).and_return({
+                         'response_parts' => v2_response_parts,
+                         'response' => 'Hey, welcome to Captain V2'
+                       })
+
+          described_class.perform_now(conversation, assistant)
+        end
+      end
+
       context 'with structured citations' do
         before do
           allow(Resolv).to receive(:getaddresses).and_return(['93.184.216.34'])
@@ -1010,6 +1090,8 @@ RSpec.describe Captain::Conversation::ResponseBuilderJob, type: :job do
       let(:image_attachment) { message_with_image.attachments.create!(account: account, file_type: :image, external_url: 'https://example.com/error.jpg') }
 
       before do
+        allow(account).to receive(:feature_enabled?).and_return(false)
+        allow(account).to receive(:feature_enabled?).with('captain_integration_v2').and_return(false)
         image_attachment
       end
 
@@ -1037,6 +1119,8 @@ RSpec.describe Captain::Conversation::ResponseBuilderJob, type: :job do
     let(:mock_message_builder) { instance_double(Captain::OpenAiMessageBuilderService) }
 
     before do
+      allow(account).to receive(:feature_enabled?).and_return(false)
+      allow(account).to receive(:feature_enabled?).with('captain_integration_v2').and_return(false)
       create(:message, conversation: conversation, content: 'Hello with image', message_type: :incoming)
       allow(Captain::Llm::AssistantChatService).to receive(:new).and_return(mock_llm_chat_service)
       allow(Captain::OpenAiMessageBuilderService).to receive(:new).with(message: anything).and_return(mock_message_builder)

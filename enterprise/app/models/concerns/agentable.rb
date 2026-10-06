@@ -3,14 +3,14 @@ module Concerns::Agentable
 
   DEFAULT_TEMPERATURE = 0.5
 
-  def agent(runtime_configuration: nil, runtime_agent_name: nil)
+  def agent(runtime_configuration: nil, runtime_agent_name: nil, response_schema: nil)
     Agents::Agent.new(
       name: runtime_agent_name || agent_name,
       instructions: ->(context) { agent_instructions(context, runtime_configuration: runtime_configuration) },
       tools: agent_tools,
       model: agent_model,
       temperature: temperature.presence&.to_f || DEFAULT_TEMPERATURE,
-      response_schema: agent_response_schema
+      response_schema: response_schema || agent_response_schema
     )
   end
 
@@ -26,7 +26,9 @@ module Concerns::Agentable
         contact: config['feature_contact_attributes'].present? ? state[:contact] : nil,
         campaign: state[:campaign] || {},
         message_length_limit: state[:message_length_limit],
-        ownership_instruction: state[:ownership_instruction]
+        ownership_instruction: state[:ownership_instruction],
+        suggested_replies_enabled: state[:suggested_replies_enabled],
+        max_suggested_replies: state[:max_suggested_replies]
       )
     end
 
@@ -64,8 +66,11 @@ module Concerns::Agentable
     InstallationConfig.find_by(name: 'CAPTAIN_OPEN_AI_MODEL')&.value
   end
 
-  def agent_response_schema
-    Captain::ResponseSchema
+  def agent_response_schema(suggested_replies: false, max_suggested_replies: 3)
+    Captain::ResponseSchema.for(
+      suggested_replies: suggested_replies,
+      max_suggested_replies: max_suggested_replies
+    )
   end
 
   def format_current_time(timezone)

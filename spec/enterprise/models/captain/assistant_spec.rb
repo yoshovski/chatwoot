@@ -357,4 +357,32 @@ RSpec.describe Captain::Assistant, type: :model do
       expect(instructions).not_to include('# Human Handoff Protocol', scenario.title, "handoff_to_#{scenario.handoff_key}")
     end
   end
+
+  describe 'suggested replies configuration' do
+    it 'defaults to false and 3 max replies' do
+      expect(assistant.suggested_replies?).to be(false)
+      expect(assistant.max_suggested_replies).to eq(3)
+    end
+
+    it 'reads boolean cast for suggested_replies?' do
+      assistant.config['suggested_replies'] = 'true'
+      expect(assistant.suggested_replies?).to be(true)
+
+      assistant.config['suggested_replies'] = false
+      expect(assistant.suggested_replies?).to be(false)
+    end
+
+    it 'clamps max_suggested_replies between 1 and 5' do
+      assistant.max_suggested_replies = 10
+      assistant.validate
+      expect(assistant.max_suggested_replies).to eq(5)
+
+      assistant.max_suggested_replies = 0
+      assistant.validate
+      expect(assistant.max_suggested_replies).to eq(1)
+
+      assistant.max_suggested_replies = 4
+      expect(assistant.max_suggested_replies).to eq(4)
+    end
+  end
 end

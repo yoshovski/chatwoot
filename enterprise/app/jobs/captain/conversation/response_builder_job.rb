@@ -11,6 +11,7 @@ class Captain::Conversation::ResponseBuilderJob < ApplicationJob # rubocop:disab
 
   def perform(conversation, assistant, responding_to_message_id = nil)
     @conversation = conversation
+    @account = conversation.account
     @inbox = conversation.inbox
     @assistant = assistant
     @responding_to_message_id = responding_to_message_id if captain_v2_enabled?
@@ -47,7 +48,13 @@ class Captain::Conversation::ResponseBuilderJob < ApplicationJob # rubocop:disab
     delegate_ownership_service.may_reply?
   end
 
-  delegate :account, :inbox, to: :@conversation
+  def account
+    @account || @conversation.account
+  end
+
+  def inbox
+    @inbox || @conversation.inbox
+  end
 
   def generate_and_process_response
     message_history = collect_previous_messages

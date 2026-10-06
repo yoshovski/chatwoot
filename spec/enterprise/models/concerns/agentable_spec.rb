@@ -37,6 +37,7 @@ RSpec.describe Concerns::Agentable do
   let(:mock_agents_agent) { instance_double(Agents::Agent) }
 
   before do
+    account.disable_features!('captain_integration_v2')
     InstallationConfig.where(name: 'CAPTAIN_OPEN_AI_MODEL').destroy_all
     allow(Agents::Agent).to receive(:new).and_return(mock_agents_agent)
     allow(Captain::PromptRenderer).to receive(:render).and_return('rendered_template')
@@ -206,6 +207,13 @@ RSpec.describe Concerns::Agentable do
   describe '#agent_response_schema' do
     it 'returns Captain::ResponseSchema' do
       expect(dummy_instance.send(:agent_response_schema)).to eq(Captain::ResponseSchema)
+    end
+
+    it 'returns schema with suggested_replies when requested' do
+      schema = dummy_instance.send(:agent_response_schema, suggested_replies: true, max_suggested_replies: 4)
+      expect(schema).not_to eq(Captain::ResponseSchema)
+      schema_hash = schema.new.to_json_schema[:schema]
+      expect(schema_hash.dig(:properties, :suggested_replies, :maxItems)).to eq(4)
     end
 
     it 'defines complete structured response parts with nested citation indexes' do

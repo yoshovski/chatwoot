@@ -118,6 +118,70 @@ describe CaptainListener do
         csat_received_at: response.created_at
       )
     end
+
+    context 'when suggestion button is clicked on an input_select message' do
+      let(:conversation) { create(:conversation, account: account, inbox: inbox, status: :pending) }
+      let(:message) do
+        create(
+          :message,
+          account: account,
+          inbox: inbox,
+          conversation: conversation,
+          sender: assistant,
+          content_type: :input_select,
+          message_type: :outgoing,
+          content_attributes: {
+            'items' => [{ 'title' => 'Track Order', 'value' => 'Track Order' }],
+            'submitted_values' => [{ 'title' => 'Track Order', 'value' => 'Track Order' }]
+          }
+        )
+      end
+      let(:event) { Events::Base.new(:message_updated, Time.current, message: message) }
+
+      before do
+        create(:captain_inbox, captain_assistant: assistant, inbox: inbox)
+        conversation.update!(status: :pending)
+        conversation.inbox.reload
+      end
+
+      it 'schedules Captain response and marks suggestion as handled' do
+        scheduler = instance_double(Captain::Conversation::ResponseSchedulerService, perform: true)
+        expect(Captain::Conversation::ResponseSchedulerService).to receive(:new).with(message: message).and_return(scheduler)
+
+        listener.message_updated(event)
+
+        expect(message.reload.content_attributes['captain_suggestion_handled']).to be(true)
+      end
+
+      it 'does not schedule response if already handled' do
+        message.content_attributes['captain_suggestion_handled'] = true
+        message.save!
+
+        expect(Captain::Conversation::ResponseSchedulerService).not_to receive(:new)
+
+        listener.message_updated(event)
+      end
+
+      it 'does not schedule response for form submissions' do
+        form_message = create(
+          :message,
+          account: account,
+          inbox: inbox,
+          conversation: conversation,
+          content_type: :form,
+          message_type: :outgoing,
+          content_attributes: {
+            'items' => [{ 'name' => 'email', 'label' => 'Email', 'type' => 'text' }],
+            'submitted_values' => [{ 'name' => 'email', 'value' => 'test@example.com' }]
+          }
+        )
+        form_event = Events::Base.new(:message_updated, Time.current, message: form_message)
+
+        expect(Captain::Conversation::ResponseSchedulerService).not_to receive(:new)
+
+        listener.message_updated(form_event)
+      end
+    end
   end
 
   describe '#message_created' do
