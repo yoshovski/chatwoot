@@ -11,12 +11,10 @@ class CaptainListener < BaseListener
 
   def message_updated(event)
     message = event.data[:message]
-    return unless message.input_csat?
+    return if message.blank?
 
-    response = CsatSurveyResponse.find_by(message: message)
-    return unless response
-
-    tracker(message.conversation).record_csat(response: response)
+    handle_csat_update(message) if message.input_csat?
+    handle_suggestion_button_click(message) if message.input_select?
   end
 
   def conversation_status_changed(event)
@@ -49,6 +47,57 @@ class CaptainListener < BaseListener
   end
 
   private
+
+  def handle_csat_update(message)
+    response = CsatSurveyResponse.find_by(message: message)
+    return unless response
+
+    tracker(message.conversation).record_csat(response: response)
+  end
+
+  def handle_suggestion_button_click(message)
+    return unless suggestion_click_processable?(message)
+    return unless claim_suggestion_click(message)
+
+    conversation = message.conversation
+    track_captain_eligibility(conversation, conversation.inbox.captain_assistant)
+    Captain::Conversation::ResponseSchedulerService.new(message: message).perform
+  end
+
+  def suggestion_click_processable?(message)
+    return false if message.content_attributes&.dig('captain_suggestion_handled')
+    return false if message.selected_option_text.blank?
+
+    conversation = message.conversation
+    captain_active_for_conversation?(conversation) && ownership_service(conversation).may_reply?
+  end
+
+  def captain_active_for_conversation?(conversation)
+    return false if conversation.blank?
+
+    inbox = conversation.inbox
+    inbox&.captain_assistant.present? && !inbox.external_bot_active?
+  end
+
+  def claim_suggestion_click(message)
+    message.with_lock do
+      return false if message.content_attributes&.dig('captain_suggestion_handled')
+
+      attrs = message.content_attributes.to_h.deep_dup
+      attrs['captain_suggestion_handled'] = true
+      message.update_columns(content_attributes: attrs) # rubocop:disable Rails/SkipsModelValidations
+      true
+    end
+  end
+
+  def track_captain_eligibility(conversation, assistant)
+    return unless conversation.account.feature_enabled?('captain_integration_v2')
+
+    Captain::ConversationOutcomeTracker.new(
+      conversation: conversation,
+      assistant: assistant
+    ).record_eligibility(at: Time.current)
+  end
 
   def ownership_service(conversation)
     Captain::Conversation::OwnershipService.new(conversation: conversation)

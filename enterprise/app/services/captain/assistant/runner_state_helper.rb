@@ -20,7 +20,9 @@ module Captain::Assistant::RunnerStateHelper
       account_id: @assistant.account_id,
       assistant_id: @assistant.id,
       assistant_config: @assistant.config,
-      timezone: @conversation&.inbox&.timezone.presence || 'UTC'
+      timezone: @conversation&.inbox&.timezone.presence || 'UTC',
+      suggested_replies_enabled: suggested_replies_enabled?,
+      max_suggested_replies: @assistant.max_suggested_replies
     }
     state[:source] = @source if @source.present?
     state[:responding_to_message_id] = @responding_to_message_id if @responding_to_message_id.present?

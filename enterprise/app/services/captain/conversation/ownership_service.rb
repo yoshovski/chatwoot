@@ -117,7 +117,10 @@ class Captain::Conversation::OwnershipService
   end
 
   def captain_configured_for_inbox?
-    conversation.inbox.captain_assistant_id == assistant.id || conversation.inbox.captain_assistant == assistant
+    inbox = conversation.inbox
+    return true if inbox.blank? || (inbox.captain_inbox.blank? && inbox.captain_assistant.blank?)
+
+    inbox.captain_inbox&.captain_assistant_id == assistant.id || inbox.captain_assistant == assistant
   end
 
   def custom_attributes

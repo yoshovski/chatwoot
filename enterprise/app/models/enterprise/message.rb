@@ -27,7 +27,22 @@ module Enterprise::Message
     self.class.captain_response_triggering.exists?(id: id)
   end
 
+  def selected_option_text
+    return nil unless input_select?
+
+    item = first_submitted_option
+    return nil unless item.is_a?(Hash)
+
+    item = item.with_indifferent_access
+    item[:title].presence || item[:value].presence
+  end
+
   private
+
+  def first_submitted_option
+    submitted = content_attributes&.dig('submitted_values')
+    submitted.is_a?(Array) ? submitted.first : submitted
+  end
 
   def reopen_resolved_conversation
     assistant = conversation.inbox.captain_assistant

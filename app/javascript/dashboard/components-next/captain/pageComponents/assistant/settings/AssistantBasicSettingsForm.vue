@@ -33,6 +33,10 @@ const initialState = {
     contactAttributes: false,
     continueWhileWaiting: false,
   },
+  replyStyle: {
+    suggestedReplies: false,
+    maxSuggestedReplies: 3,
+  },
 };
 
 const state = reactive({ ...initialState });
@@ -69,6 +73,10 @@ const updateStateFromAssistant = assistant => {
     contactAttributes: config.feature_contact_attributes || false,
     continueWhileWaiting: config.continue_while_waiting || false,
   };
+  state.replyStyle = {
+    suggestedReplies: config.suggested_replies || false,
+    maxSuggestedReplies: config.max_suggested_replies ?? 3,
+  };
 };
 
 const handleImageUpload = ({ file, url }) => {
@@ -101,6 +109,11 @@ const handleBasicInfoUpdate = async () => {
       feature_citation: state.features.citations,
       feature_contact_attributes: state.features.contactAttributes,
       continue_while_waiting: state.features.continueWhileWaiting,
+      suggested_replies: Boolean(state.replyStyle.suggestedReplies),
+      max_suggested_replies: Math.min(
+        5,
+        Math.max(1, Number(state.replyStyle.maxSuggestedReplies) || 3)
+      ),
     },
   };
 
@@ -188,6 +201,28 @@ watch(
           <input v-model="state.features.continueWhileWaiting" type="checkbox" />
           {{ t('CAPTAIN.ASSISTANTS.FORM.FEATURES.CONTINUE_WHILE_WAITING') }}
         </label>
+      </div>
+    </div>
+
+    <div class="flex flex-col gap-2">
+      <label class="text-sm font-medium text-n-slate-12">
+        {{ t('CAPTAIN.ASSISTANTS.FORM.REPLY_STYLE.TITLE') }}
+      </label>
+      <div class="flex flex-col gap-3">
+        <label class="flex items-center gap-2">
+          <input v-model="state.replyStyle.suggestedReplies" type="checkbox" />
+          {{ t('CAPTAIN.ASSISTANTS.FORM.REPLY_STYLE.SUGGESTED_REPLIES') }}
+        </label>
+        <Input
+          v-if="state.replyStyle.suggestedReplies"
+          v-model="state.replyStyle.maxSuggestedReplies"
+          type="number"
+          min="1"
+          max="5"
+          :label="t('CAPTAIN.ASSISTANTS.FORM.REPLY_STYLE.MAX_BUTTONS_LABEL')"
+          :placeholder="t('CAPTAIN.ASSISTANTS.FORM.REPLY_STYLE.MAX_BUTTONS_PLACEHOLDER')"
+          class="max-w-xs"
+        />
       </div>
     </div>
 

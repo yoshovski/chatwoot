@@ -4,12 +4,14 @@ class Captain::Conversation::MessageHistoryBuilderService
   pattr_initialize [:conversation!]
 
   def perform
-    conversation_messages_for_context.filter_map do |message|
+    conversation_messages_for_context.flat_map do |message|
       message_hash = message_hash_for_context(message)
-      next if message_hash.blank?
+      next [] if message_hash.blank?
 
       message_hash[:agent_name] = message.additional_attributes['agent_name'] if message.additional_attributes&.dig('agent_name').present?
-      message_hash
+      result = [message_hash]
+      result << { role: 'user', content: message.selected_option_text } if message.selected_option_text.present?
+      result
     end
   end
 
