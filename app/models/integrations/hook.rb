@@ -132,6 +132,7 @@ class Integrations::Hook < ApplicationRecord # rubocop:disable Metrics/ClassLeng
   def shopify_catalog_client_status(sat_status = nil)
     return nil unless shopify?
     return 'needs_reconnect' if shopify_state == 'needs_reconnect'
+    return 'importing' if shopify_state == 'importing'
     return 'off' unless shopify_connected?
 
     status_from_sat(sat_status) || fallback_catalog_status
@@ -214,7 +215,6 @@ class Integrations::Hook < ApplicationRecord # rubocop:disable Metrics/ClassLeng
   end
 
   def fallback_catalog_status
-    return 'importing' if shopify_state == 'importing'
     return 'off' unless shopify_catalog_sync_enabled?
 
     shopify_catalog_dataset_id.present? ? 'on' : 'importing'
