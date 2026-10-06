@@ -4,7 +4,7 @@ require 'spec_helper'
 require 'active_support/all'
 
 module Captain; end
-class Captain::AssistantResponse; end unless defined?(Captain::AssistantResponse)
+Captain.const_set(:AssistantResponse, Class.new) unless defined?(Captain::AssistantResponse)
 module Captain::Knowledge; end
 
 require_relative '../../../../../enterprise/app/services/captain/knowledge/search'

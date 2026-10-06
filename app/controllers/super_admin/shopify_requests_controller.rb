@@ -1,4 +1,4 @@
-class SuperAdmin::ShopifyRequestsController < SuperAdmin::ApplicationController
+class SuperAdmin::ShopifyRequestsController < SuperAdmin::ApplicationController # rubocop:disable Metrics/ClassLength
   before_action :fetch_hook,
                 only: [
                   :show, :approve, :sync_status, :rotate_tool_key,

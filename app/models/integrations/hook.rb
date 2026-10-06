@@ -14,7 +14,7 @@
 #  inbox_id     :integer
 #  reference_id :string
 #
-class Integrations::Hook < ApplicationRecord
+class Integrations::Hook < ApplicationRecord # rubocop:disable Metrics/ClassLength
   include Reauthorizable
 
   attr_readonly :app_id, :account_id, :inbox_id, :hook_type

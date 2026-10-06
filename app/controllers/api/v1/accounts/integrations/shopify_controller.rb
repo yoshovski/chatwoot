@@ -1,4 +1,4 @@
-class Api::V1::Accounts::Integrations::ShopifyController < Api::V1::Accounts::Integrations::BaseController
+class Api::V1::Accounts::Integrations::ShopifyController < Api::V1::Accounts::Integrations::BaseController # rubocop:disable Metrics/ClassLength
   include Shopify::IntegrationHelper
   before_action :setup_shopify_context, only: [:orders]
   before_action :fetch_hook, only: [:orders, :destroy, :sync_status, :pause_catalog, :resume_catalog]
