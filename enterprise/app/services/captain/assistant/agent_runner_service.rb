@@ -115,7 +115,7 @@ class Captain::Assistant::AgentRunnerService
 
     return default_agent_graph unless @runtime_configuration
 
-    assistant_agent = @assistant.agent(runtime_configuration: @runtime_configuration)
+    assistant_agent = build_assistant_agent(runtime_configuration: @runtime_configuration)
     scenario_agents = @runtime_configuration.scenarios.map do |scenario|
       scenario.agent(
         runtime_configuration: @runtime_configuration,
@@ -127,10 +127,32 @@ class Captain::Assistant::AgentRunnerService
   end
 
   def default_agent_graph
-    assistant_agent = @assistant.agent
+    assistant_agent = build_assistant_agent
     scenario_agents = @assistant.scenarios.enabled.map(&:agent)
 
     wire_agents(assistant_agent, scenario_agents)
+  end
+
+  def build_assistant_agent(runtime_configuration: nil)
+    agent = @assistant.agent(runtime_configuration: runtime_configuration)
+    return agent unless waiting_for_human?
+
+    agent.clone(
+      tools: agent.tools.reject { |tool| tool.is_a?(Captain::Tools::HandoffTool) }
+    )
+  end
+
+  def waiting_for_human?
+    return false unless @conversation
+
+    ownership_service.waiting?
+  end
+
+  def ownership_service
+    @ownership_service ||= Captain::Conversation::OwnershipService.new(
+      conversation: @conversation,
+      assistant: @assistant
+    )
   end
 
   def wire_agents(assistant_agent, scenario_agents)

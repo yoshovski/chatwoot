@@ -1,4 +1,4 @@
-class Captain::Conversation::ResponseBuilderJob < ApplicationJob
+class Captain::Conversation::ResponseBuilderJob < ApplicationJob # rubocop:disable Metrics/ClassLength
   include Captain::Conversation::V1ActionClassifier
   include Captain::Conversation::V1FalsePromiseHandler
   include Captain::Conversation::V2LifecycleEvents
@@ -15,7 +15,8 @@ class Captain::Conversation::ResponseBuilderJob < ApplicationJob
     @assistant = assistant
     @responding_to_message_id = responding_to_message_id if captain_v2_enabled?
 
-    return log_non_pending unless conversation_pending?
+    @conversation.reload
+    return log_non_pending unless may_reply?
 
     Current.executed_by = @assistant
 
@@ -35,6 +36,17 @@ class Captain::Conversation::ResponseBuilderJob < ApplicationJob
 
   private
 
+  def delegate_ownership_service
+    Captain::Conversation::OwnershipService.new(
+      conversation: @conversation,
+      assistant: @assistant
+    )
+  end
+
+  def may_reply?
+    delegate_ownership_service.may_reply?
+  end
+
   delegate :account, :inbox, to: :@conversation
 
   def generate_and_process_response
@@ -42,8 +54,8 @@ class Captain::Conversation::ResponseBuilderJob < ApplicationJob
     @response = Captain::Llm::AssistantChatService.new(assistant: @assistant, conversation: @conversation).generate_response(
       message_history: message_history
     )
-    classify_v1_response_action(message_history) if conversation_pending?
-    repair_v1_false_promise_response(message_history) if conversation_pending?
+    classify_v1_response_action(message_history) if may_reply?
+    repair_v1_false_promise_response(message_history) if may_reply?
     process_response
   end
 
@@ -76,8 +88,8 @@ class Captain::Conversation::ResponseBuilderJob < ApplicationJob
     if v2_handoff_tool_fired?
       process_v2_handoff_response
     elsif v1_handoff_requested?
-      process_v1_handoff_request
-    elsif conversation_pending?
+      delegate_ownership_service.waiting? ? process_standard_response : process_v1_handoff_request
+    elsif may_reply?
       process_standard_response
     end
   end
@@ -93,16 +105,21 @@ class Captain::Conversation::ResponseBuilderJob < ApplicationJob
   end
 
   def process_standard_response
+    @conversation.reload
+    return unless may_reply?
+
     message = nil
     ActiveRecord::Base.transaction do
       next if captain_v2_enabled? && newer_customer_message_arrived?
 
-      message = create_messages
+      preserve_waiting = delegate_ownership_service.waiting?
+      message = create_messages(preserve_waiting_since: preserve_waiting)
       Rails.logger.info("[CAPTAIN][ResponseBuilderJob] Incrementing response usage for #{account.id}")
       account.increment_response_usage
     end
     return unless message
 
+    delegate_ownership_service.clear_returned_to_ai_flag!
     capture_assistant_session(result_message: message, credits_consumed: 1.0)
     record_v2_response_completed(message) if captain_v2_enabled?
   end

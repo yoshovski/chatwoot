@@ -39,14 +39,32 @@ class Captain::Llm::AssistantChatService < Llm::BaseAiService
   end
 
   def system_message
+    config = @assistant.config.merge(
+      'timezone' => inbox_timezone,
+      'ownership_instruction' => ownership_instruction
+    )
+
     {
       role: 'system',
       content: Captain::Llm::SystemPromptsService.assistant_response_generator(
-        @assistant.name, @assistant.config['product_name'], @assistant.config.merge('timezone' => inbox_timezone),
+        @assistant.name, @assistant.config['product_name'], config,
         contact: contact_attributes,
         custom_tools: custom_tools_metadata
       )
     }
+  end
+
+  def ownership_instruction
+    return nil unless @conversation
+
+    ownership_service.prompt_instruction
+  end
+
+  def ownership_service
+    @ownership_service ||= Captain::Conversation::OwnershipService.new(
+      conversation: @conversation,
+      assistant: @assistant
+    )
   end
 
   def custom_tools_metadata

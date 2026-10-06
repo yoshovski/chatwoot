@@ -135,7 +135,7 @@ class Api::V1::Accounts::Captain::AssistantsController < Api::V1::Accounts::Base
       :product_name, :feature_faq, :feature_memory, :feature_citation,
       :feature_contact_attributes, :welcome_message, :handoff_message,
       :resolution_message, :instructions, :temperature, :auto_resolve_mode,
-      :response_window
+      :response_window, :continue_while_waiting
     ]
     attributes += [:auto_resolve_after, :send_inactivity_resolution_message] if Current.account.feature_enabled?('captain_integration_v2')
     attributes

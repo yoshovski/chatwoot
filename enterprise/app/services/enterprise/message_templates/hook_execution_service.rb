@@ -9,7 +9,7 @@ module Enterprise::MessageTemplates::HookExecutionService
     # otherwise the coverage denominator only ever contains conversations
     # Captain was already about to answer.
     track_captain_eligibility
-    return unless conversation.pending?
+    return unless captain_may_reply?
     return perform_handoff unless inbox.captain_active?
 
     Captain::Conversation::ResponseSchedulerService.new(message: message).perform
@@ -76,7 +76,16 @@ module Enterprise::MessageTemplates::HookExecutionService
   end
 
   def captain_handling_conversation?
-    conversation.pending? && captain_assistant_configured?
+    captain_may_reply?
+  end
+
+  def captain_may_reply?
+    return false unless captain_assistant_configured?
+
+    Captain::Conversation::OwnershipService.new(
+      conversation: conversation,
+      assistant: inbox.captain_assistant
+    ).may_reply?
   end
 
   def captain_assistant_configured?

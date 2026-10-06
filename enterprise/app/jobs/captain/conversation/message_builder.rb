@@ -27,19 +27,20 @@ module Captain::Conversation::MessageBuilder
     Captain::OpenAiMessageBuilderService.new(message: message).generate_content
   end
 
-  def create_messages
-    return create_v1_message unless captain_v2_enabled?
+  def create_messages(preserve_waiting_since: false)
+    return create_v1_message(preserve_waiting_since: preserve_waiting_since) unless captain_v2_enabled?
 
     response_parts = Captain::Assistant::ResponseParts.from_response(@response)
     citation_urls = @assistant.trusted_citation_urls(@run_result)
     message_content = response_parts.customer_message_content(citation_urls: citation_urls)
     validate_message_content!(message_content)
-    create_outgoing_message(message_content, agent_name: @response['agent_name'], response_parts: response_parts.to_a)
+    create_outgoing_message(message_content, agent_name: @response['agent_name'], response_parts: response_parts.to_a,
+                                             preserve_waiting_since: preserve_waiting_since)
   end
 
-  def create_v1_message
+  def create_v1_message(preserve_waiting_since: false)
     validate_message_content!(@response['response'])
-    create_outgoing_message(@response['response'], agent_name: @response['agent_name'])
+    create_outgoing_message(@response['response'], agent_name: @response['agent_name'], preserve_waiting_since: preserve_waiting_since)
   end
 
   def validate_message_content!(content)

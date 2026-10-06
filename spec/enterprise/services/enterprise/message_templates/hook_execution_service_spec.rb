@@ -245,6 +245,25 @@ RSpec.describe MessageTemplates::HookExecutionService do
         create(:message, conversation: conversation, message_type: :incoming, account: account)
       end.to change(ConversationOutcome, :count).by(1)
     end
+
+    context 'when continue_while_waiting is enabled' do
+      before do
+        assistant.update!(config: { 'continue_while_waiting' => true })
+      end
+
+      it 'schedules captain response job when open and not taken over' do
+        expect(Captain::Conversation::ResponseBuilderJob).to receive(:perform_later).with(conversation, assistant)
+
+        create(:message, conversation: conversation, message_type: :incoming, account: account)
+      end
+
+      it 'does not schedule captain response job when taken over with human-active label' do
+        conversation.update_labels(['human-active'])
+        expect(Captain::Conversation::ResponseBuilderJob).not_to receive(:perform_later)
+
+        create(:message, conversation: conversation, message_type: :incoming, account: account)
+      end
+    end
   end
 
   context 'when the contact is inside the assistant audience' do

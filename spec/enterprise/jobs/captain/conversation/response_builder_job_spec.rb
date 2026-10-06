@@ -359,6 +359,27 @@ RSpec.describe Captain::Conversation::ResponseBuilderJob, type: :job do
           described_class.perform_now(conversation, assistant)
         end.not_to(change { conversation.messages.outgoing.count })
       end
+
+      it 'sends a response when open if continue_while_waiting is enabled and not taken over' do
+        assistant.update!(config: { 'continue_while_waiting' => true })
+        conversation.open!
+
+        expect(mock_llm_chat_service).to receive(:generate_response)
+        expect do
+          described_class.perform_now(conversation, assistant)
+        end.to change { conversation.messages.outgoing.count }.by(1)
+      end
+
+      it 'does not send a response when open if human has taken over with human-active label' do
+        assistant.update!(config: { 'continue_while_waiting' => true })
+        conversation.open!
+        conversation.update_labels(['human-active'])
+
+        expect(mock_llm_chat_service).not_to receive(:generate_response)
+        expect do
+          described_class.perform_now(conversation, assistant)
+        end.not_to(change { conversation.messages.outgoing.count })
+      end
     end
 
     context 'when captain_v2 is enabled' do

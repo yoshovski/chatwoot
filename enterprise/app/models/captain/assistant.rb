@@ -55,7 +55,8 @@ class Captain::Assistant < ApplicationRecord
                                     dependent: :nullify, inverse_of: :ai_assignee
 
   store_accessor :config, :temperature, :feature_faq, :feature_memory, :feature_contact_attributes, :product_name,
-                 :auto_resolve_mode, :auto_resolve_after, :send_inactivity_resolution_message, :response_window
+                 :auto_resolve_mode, :auto_resolve_after, :send_inactivity_resolution_message, :response_window,
+                 :continue_while_waiting
 
   before_validation :set_default_auto_resolve_mode, on: :create
   before_validation :normalize_auto_resolve_after
@@ -263,6 +264,12 @@ class Captain::Assistant < ApplicationRecord
 
   def default_avatar_url
     "#{ENV.fetch('FRONTEND_URL', nil)}/assets/images/dashboard/captain/logo.svg"
+  end
+
+  def continue_while_waiting?
+    return false if config.blank?
+
+    ActiveModel::Type::Boolean.new.cast(config['continue_while_waiting']) == true
   end
 end
 # rubocop:enable Metrics/ClassLength

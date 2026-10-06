@@ -119,4 +119,50 @@ describe CaptainListener do
       )
     end
   end
+
+  describe '#message_created' do
+    let(:conversation) { create(:conversation, account: account, inbox: inbox) }
+
+    it 'calls OwnershipService#record_human_takeover! for outgoing public human messages' do
+      message = create(:message, account: account, inbox: inbox, conversation: conversation,
+                                 message_type: :outgoing, private: false, sender: user)
+      event = Events::Base.new(:message_created, Time.current, message: message)
+
+      ownership_service = instance_double(Captain::Conversation::OwnershipService)
+      expect(Captain::Conversation::OwnershipService).to receive(:new).with(conversation: conversation).and_return(ownership_service)
+      expect(ownership_service).to receive(:record_human_takeover!)
+
+      listener.message_created(event)
+    end
+  end
+
+  describe '#conversation_status_changed' do
+    let(:conversation) { create(:conversation, account: account, inbox: inbox, status: :pending) }
+    let(:event) { Events::Base.new(:conversation_status_changed, Time.current, conversation: conversation) }
+
+    it 'calls OwnershipService#handle_returned_to_ai! when conversation is pending' do
+      ownership_service = instance_double(Captain::Conversation::OwnershipService)
+      expect(Captain::Conversation::OwnershipService).to receive(:new).with(conversation: conversation).and_return(ownership_service)
+      expect(ownership_service).to receive(:handle_returned_to_ai!)
+
+      listener.conversation_status_changed(event)
+    end
+  end
+
+  describe '#assignee_changed' do
+    let(:conversation) { create(:conversation, account: account, inbox: inbox, assignee_id: nil) }
+    let(:event) { Events::Base.new(:assignee_changed, Time.current, conversation: conversation) }
+
+    before do
+      create(:captain_inbox, captain_assistant: assistant, inbox: inbox)
+    end
+
+    it 'calls OwnershipService#handle_returned_to_ai! when assignee is blank and captain is active' do
+      ownership_service = instance_double(Captain::Conversation::OwnershipService)
+      expect(Captain::Conversation::OwnershipService).to receive(:new).with(conversation: conversation).and_return(ownership_service)
+      expect(ownership_service).to receive(:handle_returned_to_ai!)
+
+      listener.assignee_changed(event)
+    end
+  end
 end
