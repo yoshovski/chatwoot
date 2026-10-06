@@ -2,7 +2,7 @@ module Captain::Dify::Assistant
   extend ActiveSupport::Concern
 
   CONFIGURATION_KEYS = %w[dify_faq_dataset_id dify_docs_dataset_id dify_extra_dataset_ids
-                          dify_faq_qa_dataset_id dify_legacy_faq_dataset_id].freeze
+                          dify_faq_qa_dataset_id dify_legacy_faq_dataset_id dify_citation_allowed_origins].freeze
 
   prepended do
     after_create_commit :provision_dify_datasets, if: -> { account.dify_knowledge_enabled? }
@@ -33,7 +33,23 @@ module Captain::Dify::Assistant
     self.config = config.merge('dify_extra_dataset_ids' => dataset_ids.uniq)
   end
 
+  # Platform-approved citation origins. Dataset metadata cannot approve its own URLs.
+  def dify_citation_allowed_origins=(origins)
+    raise ArgumentError, 'Expected an array of public HTTP origins' unless origins.is_a?(Array) && origins.all? do |origin|
+      public_citation_origin?(origin)
+    end
+
+    self.config = config.merge('dify_citation_allowed_origins' => origins.uniq)
+  end
+
   private
+
+  def public_citation_origin?(origin)
+    return false unless origin.is_a?(String)
+
+    origin == Captain::Knowledge::CitationSources.origin_for(origin) &&
+      Captain::Document.new(external_link: origin).customer_visible_source_url.present?
+  end
 
   def delete_dify_documents
     documents.where("metadata->>'dify_document_id' IS NOT NULL").find_each do |document|

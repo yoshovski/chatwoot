@@ -172,7 +172,7 @@ RSpec.describe Captain::Assistant::SessionCaptureService do
           used_faq_ids: [used_faq.id],
           document_ids: [cited_document.id, retrieved_document.id]
         },
-        Captain::Assistant::CITATION_SOURCES_STATE_KEY => { 1 => cited_document.id, 2 => retrieved_document.id }
+        Captain::Assistant::CITATION_SOURCES_STATE_KEY => { 1 => "faq:#{cited_faq.id}", 2 => "doc:#{retrieved_document.id}" }
       }
       run_result.output = {
         'response_parts' => [{ 'text' => 'Reset your password from settings.', 'citation_indexes' => [1] }],

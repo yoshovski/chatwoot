@@ -176,6 +176,24 @@ Catalog selection is added by the Shopify connection/sync tasks (CWAI-26/27),
 when the connection and sync are enabled. Product knowledge is not enabled by an
 unverified assistant configuration value.
 
+## Captain citations (CWAI-25)
+
+Tool state stores typed `faq:<id>`, `doc:<id>` and `extra:<Dify document id>`
+references. Reply links are resolved from account/assistant-owned records;
+deleted records lose their links immediately. Generated FAQs cite their original
+website page. Manual FAQs without a public source and private file URLs have no
+link. The session's existing `cited_document_ids` remains a list of resolved
+Captain document IDs for the current session inspector API.
+
+Extra-base URLs and an attachment's optional server-managed `metadata.source_url`
+need an exact approved origin in `dify_citation_allowed_origins`. Set it through
+the platform console with `assistant.dify_citation_allowed_origins = [...]` and
+save; the client API cannot read or change it. Origins include the scheme and
+non-default port, contain no path, and must resolve publicly. Credential URLs,
+private addresses and raw PDF URLs stay excluded. Extras must also belong to a
+configured extra dataset. Product references/URLs follow CWAI-26/27's approved
+Shopify connection and enabled catalog; they are not active in this candidate.
+
 ## Native library and portability (CWAI-3)
 
 Administrators create/rename/disable bases, add/edit/review/disable manual FAQs,
