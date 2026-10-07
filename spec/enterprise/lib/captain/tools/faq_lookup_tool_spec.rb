@@ -27,7 +27,7 @@ RSpec.describe Captain::Tools::FaqLookupTool, type: :model do
       expect(tool.parameters).to have_key(:query)
       expect(tool.parameters[:query].name).to eq(:query)
       expect(tool.parameters[:query].type).to eq('string')
-      expect(tool.parameters[:query].description).to eq('The question or topic to search for in the knowledge base')
+      expect(tool.parameters[:query].description).to start_with('A short search of a few key words')
     end
   end
 

@@ -56,6 +56,17 @@ RSpec.describe Captain::Conversation::ResponseBuilderJob, type: :job do
         expect(conversation.messages.last.content).to eq('Hey, welcome to Captain Specs')
       end
 
+      it 'shows Captain typing while it replies' do
+        allow(Rails.configuration.dispatcher).to receive(:dispatch).and_call_original
+
+        described_class.perform_now(conversation, assistant)
+
+        [Events::Types::CONVERSATION_TYPING_ON, Events::Types::CONVERSATION_TYPING_OFF].each do |event|
+          expect(Rails.configuration.dispatcher).to have_received(:dispatch)
+            .with(event, anything, conversation: conversation, user: assistant, is_private: false)
+        end
+      end
+
       it 'does not emit captain lifecycle events' do
         expect(Captain::ConversationEvents).not_to receive(:response_completed)
 

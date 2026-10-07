@@ -7,6 +7,11 @@ import { useDarkMode } from 'widget/composables/useDarkMode';
 import { MESSAGE_TYPE } from 'shared/constants/messages';
 import { mapActions, mapGetters } from 'vuex';
 
+// A reply taller than the window is anchored at its start, so a product card
+// that follows the answer doesn't push the answer out of view.
+const REPLY_TOP_OFFSET = 16;
+const MAX_LIVE_MESSAGES = 3;
+
 export default {
   name: 'ConversationWrap',
   components: {
@@ -66,8 +71,17 @@ export default {
   },
   updated() {
     if (this.previousConversationSize !== this.conversationSize) {
+      const newMessages = this.conversationSize - this.previousConversationSize;
+      const isLiveUpdate =
+        this.previousConversationSize > 0 &&
+        newMessages > 0 &&
+        newMessages <= MAX_LIVE_MESSAGES;
       this.previousConversationSize = this.conversationSize;
-      this.scrollToBottom();
+      if (isLiveUpdate) {
+        this.scrollToLatestReply();
+      } else {
+        this.scrollToBottom();
+      }
     }
   },
   unmounted() {
@@ -79,6 +93,34 @@ export default {
       const container = this.$el;
       container.scrollTop = container.scrollHeight - this.previousScrollHeight;
       this.previousScrollHeight = 0;
+    },
+    scrollToLatestReply() {
+      const replyStart = this.latestReplyStart();
+      if (!replyStart) {
+        this.scrollToBottom();
+        return;
+      }
+
+      const container = this.$el;
+      const replyTop =
+        replyStart.getBoundingClientRect().top -
+        container.getBoundingClientRect().top +
+        container.scrollTop;
+      const fitsInView =
+        container.scrollHeight - replyTop <= container.clientHeight;
+      container.scrollTop = fitsInView
+        ? container.scrollHeight
+        : replyTop - REPLY_TOP_OFFSET;
+    },
+    latestReplyStart() {
+      const messages = this.groupedMessages.flatMap(group => group.messages);
+      const reversedIncomingIndex = [...messages]
+        .reverse()
+        .findIndex(message => message.message_type === MESSAGE_TYPE.INCOMING);
+      if (reversedIncomingIndex <= 0) return null;
+
+      const replyStart = messages[messages.length - reversedIncomingIndex];
+      return this.$el.querySelector(`#cwmsg-${replyStart.id}`);
     },
     handleScroll() {
       if (

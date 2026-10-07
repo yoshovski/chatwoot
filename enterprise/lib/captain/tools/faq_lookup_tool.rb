@@ -2,7 +2,8 @@ class Captain::Tools::FaqLookupTool < Captain::Tools::BasePublicTool
   include Captain::Tools::SourceIndexing
 
   description 'Search FAQs, documents and connected product knowledge to find relevant answers'
-  param :query, type: 'string', desc: 'The question or topic to search for in the knowledge base'
+  param :query, type: 'string', desc: 'A short search of a few key words, such as "opening hours" or "Agras T100 battery". ' \
+                                      'Leave out the store name and filler words.'
 
   def perform(tool_context, query:)
     log_tool_usage('searching', { query: query })

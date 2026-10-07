@@ -221,12 +221,31 @@ const formatArguments = args => {
     .join(', ');
 };
 
-const toolStep = call => {
+// Search tools number each result ("Source index: N") and start with "No …"
+// when nothing matched. Older runs have neither, so they show no count.
+const SOURCE_INDEX_PATTERN = /Source index: \d+/g;
+const NO_RESULTS_PATTERN = /^No (relevant|products)/;
+
+const resultCount = toolResult => {
+  if (typeof toolResult !== 'string') return null;
+  const count = (toolResult.match(SOURCE_INDEX_PATTERN) || []).length;
+  if (count) return count;
+  return NO_RESULTS_PATTERN.test(toolResult.trim()) ? 0 : null;
+};
+
+const toolStep = (call, toolResult) => {
   const known = toolSteps.value[toolKey(call.name)];
+  const count = resultCount(toolResult);
+  const results =
+    count === null
+      ? null
+      : t('CONVERSATION.CAPTAIN_GENERATION.RESULTS', { count }, count);
   return {
     icon: known?.icon || 'i-ph-wrench',
     label: known?.label || humanizeToolName(call.name),
-    detail: formatArguments(call.arguments),
+    detail: [formatArguments(call.arguments), results]
+      .filter(Boolean)
+      .join(' · '),
   };
 };
 
@@ -237,6 +256,11 @@ const steps = computed(() => {
   const runContext = session.value?.runContext;
   const result = [];
   let currentAgent = null;
+  const toolResults = Object.fromEntries(
+    (Array.isArray(runContext) ? runContext : [])
+      .filter(entry => entry?.role === 'tool')
+      .map(entry => [entry.toolCallId, entry.content])
+  );
 
   (Array.isArray(runContext) ? runContext : []).forEach(entry => {
     if (entry?.role !== 'assistant') return;
@@ -259,7 +283,7 @@ const steps = computed(() => {
       // the agent_name change above already yields a handoff step for them.
       if (call.name?.startsWith('handoff_to_')) return;
 
-      result.push(toolStep(call));
+      result.push(toolStep(call, toolResults[call.id]));
     });
   });
 

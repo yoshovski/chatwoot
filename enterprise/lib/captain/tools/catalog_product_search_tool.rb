@@ -5,7 +5,7 @@ class Captain::Tools::CatalogProductSearchTool < Captain::Tools::BasePublicTool
   include Captain::Tools::SourceIndexing
 
   description 'Search active products in the Shopify catalog with live prices, variants and links'
-  param :query, type: 'string', desc: 'The product title, SKU, keywords or description to search for'
+  param :query, type: 'string', desc: 'The product name, SKU or a few key words, such as "DB2160" or "Agras T100 battery"'
   param :limit, type: 'integer', desc: 'Maximum number of products to return (default: 3, at most 10)', required: false
 
   def perform(tool_context, query:, limit: 3)

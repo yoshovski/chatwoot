@@ -117,6 +117,7 @@
       "OPEN_SOURCE": "Open source",
       "TIMELINE": "Steps",
       "STEP_HANDOFF": "Handed off to {name}",
+      "RESULTS": "No results | {count} result | {count} results",
       "TOOLS": {
         "FAQ_LOOKUP": "Searched the knowledge base",
         "PRODUCT_SEARCH": "Searched products",

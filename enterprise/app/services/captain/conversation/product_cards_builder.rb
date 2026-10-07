@@ -5,6 +5,8 @@ class Captain::Conversation::ProductCardsBuilder
   MAX_CARDS = 10
   MAX_TITLE_LENGTH = 80
   MAX_DESCRIPTION_LENGTH = 200
+  # Products shown as cards within this many recent messages are not shown again.
+  RECENT_MESSAGES = 10
 
   attr_reader :assistant, :conversation, :response, :run_result
 
@@ -146,7 +148,17 @@ class Captain::Conversation::ProductCardsBuilder
     allowed_handles = allowed_run_handles
     return [] if raw_handles.blank? || allowed_handles.blank?
 
-    filter_matching_handles(raw_handles, allowed_handles)
+    recent_handles = recently_shown_handles
+    filter_matching_handles(raw_handles, allowed_handles).reject do |handle|
+      recent_handles.any? { |recent| recent.casecmp?(handle) }
+    end
+  end
+
+  def recently_shown_handles
+    recent_ids = @conversation.messages.reorder(id: :desc).limit(RECENT_MESSAGES).select(:id)
+    @conversation.messages.where(id: recent_ids, content_type: %w[cards article])
+                 .pluck(:additional_attributes)
+                 .flat_map { |attributes| Array(attributes&.dig('product_handles')) }
   end
 
   def raw_response_handles
@@ -356,7 +368,7 @@ class Captain::Conversation::ProductCardsBuilder
       content_type: content_type,
       content_attributes: { items: items },
       preserve_waiting_since: preserve_waiting_since,
-      additional_attributes: additional_attrs
+      additional_attributes: additional_attrs.merge(product_handles: shown_handles)
     )
   end
 end
