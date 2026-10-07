@@ -91,6 +91,7 @@ class Captain::Conversation::OwnershipService
     return unless captain_configured_for_inbox?
 
     clear_handoff_labels!
+    reset_contact_form_guard!
     set_returned_to_ai_flag!
   end
 
@@ -98,6 +99,7 @@ class Captain::Conversation::OwnershipService
     return if conversation.blank?
 
     clear_handoff_labels!
+    reset_contact_form_guard!
     clear_returned_to_ai_attributes!
   end
 
@@ -170,6 +172,10 @@ class Captain::Conversation::OwnershipService
     return unless current_labels.include?(HUMAN_ACTIVE_LABEL)
 
     conversation.update_labels(current_labels - [HUMAN_ACTIVE_LABEL])
+  end
+
+  def reset_contact_form_guard!
+    Captain::Conversation::ContactCaptureService.new(conversation: conversation, assistant: assistant).reset_form_guard!
   end
 
   def clear_handoff_labels!

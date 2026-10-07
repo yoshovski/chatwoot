@@ -97,6 +97,8 @@ class Captain::Conversation::ResponseBuilderJob < ApplicationJob # rubocop:disab
       process_v2_handoff_response
     elsif v1_handoff_requested?
       delegate_ownership_service.waiting? ? process_v1_handoff_while_waiting : process_v1_handoff_request
+    elsif v2_handoff_declared?
+      process_v2_declared_handoff
     elsif may_reply?
       process_standard_response
     end
@@ -170,6 +172,7 @@ class Captain::Conversation::ResponseBuilderJob < ApplicationJob # rubocop:disab
 
   def v2_handoff_tool_fired? = @response['handoff_tool_called']
   def v2_handoff_tool_completed? = @v2_handoff_tool_completed == true
+  def v2_handoff_declared? = @response['handoff_requested'] == true
 
   def process_v1_handoff
     I18n.with_locale(@assistant.account.locale) do
@@ -190,10 +193,34 @@ class Captain::Conversation::ResponseBuilderJob < ApplicationJob # rubocop:disab
     # HandoffTool already ran bot_handoff! + OOO inside the agent loop. Preserve
     # waiting_since so this message doesn't clear the timestamp it left in place.
     I18n.with_locale(@assistant.account.locale) do
-      create_messages(preserve_waiting_since: true) if deliverable_v2_handoff_answer?
-      create_handoff_message(preserve_waiting_since: true)
+      answer = create_messages(preserve_waiting_since: true) if deliverable_v2_handoff_answer?
+      # A delivered answer already tells the customer a colleague will continue.
+      @handoff_message = answer || create_handoff_message(preserve_waiting_since: true)
       trigger_handoff_contact_form
     end
+  end
+
+  # The agent declared a handoff in its answer but never called the handoff tool,
+  # so the customer was promised a colleague nobody was told about. Deliver the
+  # answer, then run the handoff the tool would have run. While a handoff is
+  # already waiting for a human, the answer is all that is needed.
+  def process_v2_declared_handoff
+    return process_standard_response unless conversation_pending?
+
+    I18n.with_locale(@assistant.account.locale) do
+      Rails.logger.info(
+        "[CAPTAIN][ResponseBuilderJob] Handoff declared without the handoff tool for account=#{account.id} " \
+        "conversation=#{@conversation.display_id}"
+      )
+      @handoff_message = create_messages
+      apply_handoff_extras
+      @conversation.bot_handoff!
+      record_v2_declared_handoff
+      send_out_of_office_message_if_applicable
+      trigger_handoff_contact_form
+    end
+
+    capture_assistant_session(result_message: @handoff_message, credits_consumed: 0.0)
   end
 
   def deliverable_v2_handoff_answer?

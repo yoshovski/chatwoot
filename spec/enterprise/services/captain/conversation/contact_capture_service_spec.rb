@@ -176,6 +176,18 @@ RSpec.describe Captain::Conversation::ContactCaptureService, type: :service do
     end
   end
 
+  describe '#reset_form_guard!' do
+    it 'clears the guard for every combination of missing fields' do
+      allow(Redis::Alfred).to receive(:delete)
+
+      service.reset_form_guard!
+
+      %w[name email email_name].each do |fields|
+        expect(Redis::Alfred).to have_received(:delete).with("captain:contact_form:#{conversation.id}:#{fields}")
+      end
+    end
+  end
+
   describe '#handle_form_submission!' do
     let!(:form_message) do
       create(

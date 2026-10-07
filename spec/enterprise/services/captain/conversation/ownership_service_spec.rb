@@ -103,6 +103,7 @@ RSpec.describe Captain::Conversation::OwnershipService do
   describe '#handle_returned_to_ai!' do
     before do
       conversation.update_labels(['human-active'])
+      allow(Redis::Alfred).to receive(:delete)
     end
 
     it 'removes human-active label and sets returned_to_ai flags' do
@@ -111,12 +112,19 @@ RSpec.describe Captain::Conversation::OwnershipService do
       expect(conversation.custom_attributes['captain_returned_to_ai']).to be true
       expect(conversation.custom_attributes['captain_returned_to_ai_at']).to be_present
     end
+
+    it 'lets the next handoff offer the contact form again' do
+      service.handle_returned_to_ai!
+
+      expect(Redis::Alfred).to have_received(:delete).with("captain:contact_form:#{conversation.id}:email_name")
+    end
   end
 
   describe '#handle_resolved!' do
     before do
       conversation.update_labels(['human-active'])
       conversation.update!(custom_attributes: { 'captain_returned_to_ai' => true, 'captain_returned_to_ai_at' => Time.current.iso8601 })
+      allow(Redis::Alfred).to receive(:delete)
     end
 
     it 'removes human-active label and clears returned_to_ai attributes' do
@@ -124,6 +132,12 @@ RSpec.describe Captain::Conversation::OwnershipService do
       expect(conversation.label_list).not_to include('human-active')
       expect(conversation.custom_attributes['captain_returned_to_ai']).to be_nil
       expect(conversation.custom_attributes['captain_returned_to_ai_at']).to be_nil
+    end
+
+    it 'lets the next handoff offer the contact form again' do
+      service.handle_resolved!
+
+      expect(Redis::Alfred).to have_received(:delete).with("captain:contact_form:#{conversation.id}:email_name")
     end
   end
 

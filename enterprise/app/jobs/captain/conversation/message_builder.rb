@@ -113,7 +113,7 @@ module Captain::Conversation::MessageBuilder
   end
 
   def handoff_active_or_requested?
-    try(:v2_handoff_tool_fired?) || try(:v1_handoff_requested?) || try(:v2_handoff_tool_completed?)
+    try(:v2_handoff_tool_fired?) || try(:v1_handoff_requested?) || try(:v2_handoff_tool_completed?) || try(:v2_handoff_declared?)
   end
 
   def waiting_for_human?

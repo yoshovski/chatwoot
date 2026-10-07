@@ -1,4 +1,4 @@
-class Captain::Conversation::ContactCaptureService
+class Captain::Conversation::ContactCaptureService # rubocop:disable Metrics/ClassLength
   FORM_TEXT = 'Please share your contact details so our team can follow up if you leave the chat.'.freeze
   ACKNOWLEDGEMENT_TEXT = 'Thank you—your contact details have been saved. A team member will continue with you here.'.freeze
 
@@ -129,6 +129,12 @@ class Captain::Conversation::ContactCaptureService
     return false unless message.form? || message.content_type == 'form'
 
     message.content_attributes&.dig('type') == 'contact_capture' || message.content == FORM_TEXT
+  end
+
+  # The guard only stops one handoff from posting the form twice. Clearing it when
+  # the handoff ends lets the next handoff ask again if details are still missing.
+  def reset_form_guard!
+    [%w[name], %w[email], %w[name email]].each { |fields| Redis::Alfred.delete(guard_key(fields)) }
   end
 
   private

@@ -945,6 +945,20 @@ RSpec.describe Captain::Conversation::ResponseBuilderJob, type: :job do
         allow(account).to receive(:feature_enabled?).and_return(false)
         allow(account).to receive(:feature_enabled?).with('captain_integration_v2').and_return(true)
         allow(mock_agent_runner_service).to receive(:handoff_completed?).and_return(true)
+        conversation.contact.update!(name: 'Jane Doe')
+      end
+
+      it 'posts the delivered answer without the generic handoff line' do
+        handoff_answer = 'A colleague will confirm availability in this chat.'
+        allow(mock_agent_runner_service).to receive(:generate_response) do
+          conversation.update!(status: :open)
+          { 'response_parts' => [{ 'text' => handoff_answer, 'citation_indexes' => [] }], 'response' => handoff_answer,
+            'handoff_tool_called' => true }
+        end
+
+        described_class.perform_now(conversation, assistant)
+
+        expect(conversation.messages.outgoing.where(private: false).pluck(:content)).to eq([handoff_answer])
       end
 
       it 'creates a public handoff message after the generated response is discarded' do
@@ -1030,6 +1044,49 @@ RSpec.describe Captain::Conversation::ResponseBuilderJob, type: :job do
       end
     end
 
+    context 'when the captain_v2 answer declares a handoff without the handoff tool' do
+      let(:handoff_answer) { 'I could not verify a battery for that model. A colleague will continue here.' }
+
+      before do
+        allow(account).to receive(:feature_enabled?).and_return(false)
+        allow(account).to receive(:feature_enabled?).with('captain_integration_v2').and_return(true)
+        allow(mock_agent_runner_service).to receive(:generate_response).and_return({
+                                                                                     'response_parts' => [{ 'text' => handoff_answer,
+                                                                                                            'citation_indexes' => [] }],
+                                                                                     'response' => handoff_answer,
+                                                                                     'handoff_requested' => true,
+                                                                                     'handoff_tool_called' => false
+                                                                                   })
+        allow(Redis::Alfred).to receive(:set).and_return(true)
+        allow(Captain::Conversation::HandoffNoteService).to receive(:new)
+          .and_return(instance_double(Captain::Conversation::HandoffNoteService, post_note!: nil))
+      end
+
+      it 'delivers the answer, hands off and offers the contact form' do
+        expect(Captain::ConversationEvents).to receive(:handed_off)
+          .with(conversation: conversation, assistant: assistant, source: 'declared', reason_category: nil, at: kind_of(Time))
+
+        described_class.perform_now(conversation, assistant)
+
+        conversation.reload
+        expect(conversation.status).to eq('open')
+        expect(conversation.label_list).to include('needs-human')
+        expect(conversation.messages.outgoing.where(private: false).order(:id).pluck(:content))
+          .to eq([handoff_answer, Captain::Conversation::ContactCaptureService::FORM_TEXT])
+        expect(account.reload.usage_limits[:captain][:responses][:consumed]).to eq(0)
+      end
+
+      it 'only answers when a handoff is already waiting for a human' do
+        assistant.update!(config: assistant.config.merge('continue_while_waiting' => true))
+        conversation.update!(status: :open)
+
+        described_class.perform_now(conversation, assistant)
+
+        expect(conversation.messages.outgoing.where(private: false).pluck(:content)).to eq([handoff_answer])
+        expect(conversation.reload.label_list).not_to include('needs-human')
+      end
+    end
+
     context 'when capturing assistant sessions' do
       let(:run_context) do
         {
@@ -1056,6 +1113,7 @@ RSpec.describe Captain::Conversation::ResponseBuilderJob, type: :job do
         allow(account).to receive(:feature_enabled?).and_return(false)
         allow(account).to receive(:feature_enabled?).with('captain_integration_v2').and_return(true)
         allow(mock_agent_runner_service).to receive(:last_run_result).and_return(run_result)
+        conversation.contact.update!(name: 'Jane Doe')
       end
 
       it 'creates a session for a delivered response' do
