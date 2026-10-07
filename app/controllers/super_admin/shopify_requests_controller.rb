@@ -97,7 +97,7 @@ class SuperAdmin::ShopifyRequestsController < SuperAdmin::ApplicationController 
   def rotate_tool_key
     if @hook.shopify_sat_tenant_id.present?
       result = sat_client.rotate_tool_key(@hook.shopify_sat_tenant_id)
-      @hook.shopify_tool_key = result['tool_key']
+      @hook.shopify_tool_key = tool_api_key_from(result)
       @hook.save!
     end
 
@@ -140,8 +140,12 @@ class SuperAdmin::ShopifyRequestsController < SuperAdmin::ApplicationController 
       slug: "chatwoot-acc-#{@hook.account_id}-#{@hook.id}",
       shop_domain: @hook.reference_id
     )
-    @hook.shopify_tool_key = tenant['tool_key']
+    @hook.shopify_tool_key = tool_api_key_from(tenant)
     tenant['id']
+  end
+
+  def tool_api_key_from(response)
+    response['tool_api_key'].presence || raise(ShopifyAgentTools::AdminClient::Error, 'response is missing tool_api_key')
   end
 
   def update_hook_on_approval(tenant_id, install_url)
