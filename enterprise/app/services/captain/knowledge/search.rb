@@ -98,7 +98,9 @@ class Captain::Knowledge::Search
 
   def build_passage(passage, kind, document_id, record)
     title, content = canonical_text(record, passage)
-    handle = passage['handle'] || passage.dig('metadata', 'handle') || passage.dig('metadata', 'product_handle')
+    handle = passage['handle'].presence || passage.dig('metadata', 'handle') || passage.dig('metadata', 'product_handle')
+    # Catalog documents are titled by their Shopify handle, so product search and knowledge hits name the same source.
+    handle ||= passage.fetch('title') if %w[catalog product].include?(kind)
     result = Passage.new(kind: kind, title: title.truncate(90), content: content.truncate(PASSAGE_CHARS),
                          score: passage.fetch('score'), record: record, document_id: document_id, dataset_id: passage.fetch('dataset_id'),
                          handle: handle)

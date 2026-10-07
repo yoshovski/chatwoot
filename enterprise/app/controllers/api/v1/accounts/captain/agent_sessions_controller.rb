@@ -13,9 +13,26 @@ class Api::V1::Accounts::Captain::AgentSessionsController < Api::V1::Accounts::B
     )
     @scenario_titles = Captain::Scenario.where(account_id: Current.account.id, id: @agent_session.scenario_ids)
                                         .pluck(:id, :title).to_h
+    @sources = sources_with_document_links
   end
 
   private
+
+  # Uploaded PDFs have no public page, so agents open the file itself from their source card.
+  def sources_with_document_links
+    files = document_file_links
+    @agent_session.sources.map do |source|
+      next source unless source['kind'] == 'document' && source['url'].blank? && files[source['document_id']]
+
+      source.merge('url' => files[source['document_id']])
+    end
+  end
+
+  def document_file_links
+    Current.account.captain_documents.where(id: @agent_session.sources.pluck('document_id').compact)
+           .to_h { |document| [document.id, document.display_url] }
+           .select { |_id, link| link.to_s.match?(%r{\Ahttps?://}) }
+  end
 
   def message_sessions
     Current.account.captain_agent_sessions.where(result_type: 'Message')

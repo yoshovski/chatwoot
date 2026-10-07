@@ -15,7 +15,7 @@ json.used_faqs @used_faqs do |faq|
   json.id faq.id
   json.title faq.question
 end
-json.sources @agent_session.sources
+json.sources @sources
 json.scenarios @scenario_titles do |id, title|
   json.id id
   json.title title

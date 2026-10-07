@@ -42,8 +42,19 @@ class Captain::Tools::FaqLookupTool < Captain::Tools::BasePublicTool
 
     record_knowledge_sources(tool_context, passages)
     log_tool_usage('found_results', { query: query, count: passages.size })
+    record_source_details(tool_context, passages, query)
+    passages.map { |passage| format_passage(tool_context, passage) }.join
+  end
+
+  # A document can return several chunks; its best chunk decides the excerpt and relevance.
+  def record_source_details(tool_context, passages, query)
     best_score = passages.map { |passage| passage.score.to_f }.max
-    passages.map { |passage| format_passage(tool_context, passage, best_score) }.join
+    passages.group_by(&:source_reference).each_value do |chunks|
+      passage = chunks.max_by { |chunk| chunk.score.to_f }
+      low_relevance = passage.score.to_f < best_score - LOW_RELEVANCE_MARGIN
+      detail = passage.citation_detail.merge(passage_source_detail(passage, query), low_relevance: low_relevance)
+      source_index_for(tool_context, passage.source_reference, detail)
+    end
   end
 
   def record_knowledge_sources(tool_context, passages)
@@ -68,13 +79,12 @@ class Captain::Tools::FaqLookupTool < Captain::Tools::BasePublicTool
     )
   end
 
-  def format_passage(tool_context, passage, best_score)
-    detail = passage.citation_detail.merge(passage_source_detail(passage), low_relevance: passage.score.to_f < best_score - LOW_RELEVANCE_MARGIN)
-    index = source_index_for(tool_context, passage.source_reference, detail)
+  def format_passage(tool_context, passage)
+    index = source_index_for(tool_context, passage.source_reference, {})
     "\nKnowledge result:\nSource index: #{index}\nTitle: #{passage.title}\n#{passage.content}\n"
   end
 
-  def passage_source_detail(passage)
+  def passage_source_detail(passage, query)
     record = passage.record
     return faq_source_detail(record) if record.is_a?(Captain::AssistantResponse)
 
@@ -82,13 +92,22 @@ class Captain::Tools::FaqLookupTool < Captain::Tools::BasePublicTool
     {
       kind: product ? 'product' : passage.kind,
       title: (passage.content[/^#\s+(.+)$/, 1] if product) || passage.title,
-      excerpt: source_excerpt(passage.content[/^##\s*Product description\s*$(.+?)(?:^##\s|\z)/m, 1] || passage.content.sub(/^#\s+.+$/, '')),
+      excerpt: product ? product_excerpt(passage.content) : matched_excerpt(passage.content, query),
       document_id: record.is_a?(Captain::Document) ? record.id : nil
     }
   end
 
+  def product_excerpt(content)
+    source_excerpt(content[/^##\s*Product description\s*$(.+?)(?:^##\s|\z)/m, 1] || content.sub(/^#\s+.+$/, ''))
+  end
+
+  # FAQs generated from a document name it, so agents see them under that document instead of as separate sources.
   def faq_source_detail(response)
-    { kind: 'faq', title: response.question, excerpt: source_excerpt(response.answer), faq_id: response.id }
+    detail = { kind: 'faq', title: response.question, excerpt: source_excerpt(response.answer), faq_id: response.id }
+    document = response.documentable
+    return detail unless document.is_a?(Captain::Document)
+
+    detail.merge(document_id: document.id, document_title: document.name.presence || document.external_link)
   end
 
   def safe_to_run_after_new_customer_message?
