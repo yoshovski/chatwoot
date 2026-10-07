@@ -38,7 +38,7 @@ class Captain::ResponseSchema < RubyLLM::Schema
   def self.build_schema(suggested_replies:, limit:, product_cards:)
     RubyLLM::Schema.create do
       name 'CaptainResponse'
-          array :response_parts,
+      array :response_parts,
             description: 'Ordered parts of the message to send to the user. Keep all customer-visible text within each part text field.',
             min_items: 1 do
         object do
