@@ -181,7 +181,7 @@ RSpec.describe Captain::Tools::HandoffTool, type: :model do
 
           created_message = Message.last
           expect(created_message).to have_attributes(
-            content: "🔔 **Needs your reply**\nSummary unavailable, read the thread above.",
+            content: "🔔 **Needs your reply**\n#{reason}",
             message_type: 'outgoing',
             private: true,
             sender: assistant,
@@ -192,12 +192,14 @@ RSpec.describe Captain::Tools::HandoffTool, type: :model do
           expect(conversation.reload.label_list).to include('needs-human')
         end
 
-        it 'generates LLM summary note when transcript messages exist' do
-          create(:message, conversation: conversation, account: account, inbox: inbox, message_type: :incoming, content: 'Do you carry drones?')
-          tool.perform(tool_context, reason: 'Customer needs specialized support')
+        it 'preserves the current handoff reason instead of summarizing an earlier topic' do
+          create(:message, conversation: conversation, account: account, inbox: inbox, message_type: :incoming, content: 'Do you carry snowboards?')
+          reason = 'Battery compatibility for the X200 could not be verified.'
+          tool.perform(tool_context, reason: reason)
 
           created_message = Message.last
-          expect(created_message.content).to eq("🔔 **Needs your reply**\nWants: help\nDetails: drone\nNext: reply")
+          expect(created_message.content).to eq("🔔 **Needs your reply**\n#{reason}")
+          expect(WebMock).not_to have_requested(:post, %r{/chat/completions})
         end
 
         it 'triggers bot handoff on conversation' do

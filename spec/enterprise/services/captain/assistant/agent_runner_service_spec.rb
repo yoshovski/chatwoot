@@ -103,10 +103,12 @@ RSpec.describe Captain::Assistant::AgentRunnerService do
         run_options: run_options(runtime_configuration: runtime_configuration)
       )
 
-      expect(assistant).to receive(:agent).with(runtime_configuration: runtime_configuration).and_return(mock_agent)
+      expect(assistant).to receive(:agent)
+        .with(runtime_configuration: runtime_configuration, response_schema: Captain::ResponseSchema).and_return(mock_agent)
       expect(scenario).to receive(:agent).with(
         runtime_configuration: runtime_configuration,
-        runtime_agent_name: 'scenario_runtime_agent'
+        runtime_agent_name: 'scenario_runtime_agent',
+        response_schema: Captain::ResponseSchema
       ).and_return(mock_scenario_agent)
 
       expect(service.send(:build_and_wire_agents)).to eq([mock_agent, mock_scenario_agent])
@@ -364,16 +366,20 @@ RSpec.describe Captain::Assistant::AgentRunnerService do
     end
 
     context 'when agent result is a string' do
-      let(:mock_result) { instance_double(Agents::RunResult, output: 'Simple string response', context: nil, error: nil) }
+      let(:mock_result) do
+        output = { reasoning: 'Internal analysis', response_parts: [{ text: 'Which model?', citation_indexes: [] }] }.to_json
+        instance_double(Agents::RunResult, output: "#{output}\n#{output}", context: nil, error: nil)
+      end
 
-      it 'formats string response correctly' do
+      it 'rejects malformed structured output without exposing it as customer text' do
         result = service.generate_response(message_history: message_history)
 
         expect(result).to eq({
-                               'response' => 'Simple string response',
-                               'response_parts' => [{ 'text' => 'Simple string response', 'citation_indexes' => [] }],
-                               'reasoning' => 'Processed by agent',
-                               'agent_name' => nil,
+                               'response' => 'conversation_handoff',
+                               'response_parts' => [{ 'text' => 'conversation_handoff', 'citation_indexes' => [] }],
+                               'reasoning' => 'Error occurred: Captain agent returned invalid structured output',
+                               'error' => true,
+                               'error_reason' => 'type_error',
                                'handoff_tool_called' => false
                              })
       end

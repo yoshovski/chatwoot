@@ -29,7 +29,7 @@ class Captain::Tools::HandoffTool < Captain::Tools::BasePublicTool
                    })
 
     # Use existing handoff mechanism from ResponseBuilderJob
-    handoff_result = trigger_handoff(tool_context, conversation, reason_category)
+    handoff_result = trigger_handoff(tool_context, conversation, reason_category, reason)
     failure_message = handoff_failure_message(handoff_result)
     return failure_result(failure_message, tool_context.state) if failure_message
 
@@ -50,10 +50,10 @@ class Captain::Tools::HandoffTool < Captain::Tools::BasePublicTool
     end
   end
 
-  def trigger_handoff(tool_context, conversation, reason_category)
-    return trigger_legacy_handoff(tool_context, conversation, reason_category) unless captain_v2_enabled?
+  def trigger_handoff(tool_context, conversation, reason_category, reason)
+    return trigger_legacy_handoff(tool_context, conversation, reason_category, reason) unless captain_v2_enabled?
 
-    handoff_service = Captain::Conversation::HandoffService.new(conversation: conversation, assistant: @assistant)
+    handoff_service = Captain::Conversation::HandoffService.new(conversation: conversation, assistant: @assistant, reason: reason)
     return handle_already_active_handoff(handoff_service, tool_context) if handoff_service.handoff_active?
 
     note = nil
@@ -77,8 +77,8 @@ class Captain::Tools::HandoffTool < Captain::Tools::BasePublicTool
     :already_active
   end
 
-  def trigger_legacy_handoff(tool_context, conversation, reason_category)
-    handoff_service = Captain::Conversation::HandoffService.new(conversation: conversation, assistant: @assistant)
+  def trigger_legacy_handoff(tool_context, conversation, reason_category, reason)
+    handoff_service = Captain::Conversation::HandoffService.new(conversation: conversation, assistant: @assistant, reason: reason)
     return handle_already_active_handoff(handoff_service, tool_context) if handoff_service.handoff_active?
 
     note = handoff_service.apply_extras!(lock: false)
