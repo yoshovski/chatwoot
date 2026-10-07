@@ -73,8 +73,9 @@ class Captain::Conversation::ResponseBuilderJob < ApplicationJob # rubocop:disab
     @run_result = runner_service.last_run_result
 
     @v2_handoff_tool_completed = runner_service.handoff_completed?
+    @v2_response_discarded = runner_service.response_discarded?
     return process_response if v2_handoff_tool_completed?
-    return if runner_service.response_discarded? || newer_customer_message_arrived?
+    return if @v2_response_discarded || newer_customer_message_arrived?
 
     process_response
   end
@@ -189,9 +190,18 @@ class Captain::Conversation::ResponseBuilderJob < ApplicationJob # rubocop:disab
     # HandoffTool already ran bot_handoff! + OOO inside the agent loop. Preserve
     # waiting_since so this message doesn't clear the timestamp it left in place.
     I18n.with_locale(@assistant.account.locale) do
+      create_messages(preserve_waiting_since: true) if deliverable_v2_handoff_answer?
       create_handoff_message(preserve_waiting_since: true)
       trigger_handoff_contact_form
     end
+  end
+
+  def deliverable_v2_handoff_answer?
+    return false if @v2_response_discarded || @response['error'] || legacy_v1_handoff_token? || newer_customer_message_arrived?
+
+    @conversation.reload
+    @conversation.open? && !delegate_ownership_service.human_taken_over? &&
+      Captain::Assistant::ResponseParts.from_response(@response).plain_text.present?
   end
 
   def send_out_of_office_message_if_applicable
