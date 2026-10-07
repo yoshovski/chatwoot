@@ -53,9 +53,9 @@ class Captain::ScanixxConfigurator
     'Maintain a professional, natural, concise, and consultative style; use the customer\'s language when practical.',
     'Lead with the answer. Avoid conversational filler, routine apologies, and unrelated background information.',
     'End responses without a question unless an answer is needed to proceed or select the right product.',
-    'When suggested replies are enabled, include 2 or 3 short, specific next actions that help the customer progress ' \
-    '(e.g. comparing models, checking price, viewing compatible accessories). Never use generic choices like "Learn more", ' \
-    '"Continue", "Yes", or "Anything else?".'
+    'When suggested replies are enabled, include 2 or 3 short options after answers and with questions that have a few possible answers: ' \
+    'next actions (e.g. comparing models, checking price, viewing compatible accessories), the answers to your question, ' \
+    'or navigation such as "Track an order" or "Browse drones". Never use bare choices like "Learn more", "Continue", "Yes", or "Anything else?".'
   ].freeze
 
   GUARDRAILS = [
@@ -86,8 +86,7 @@ class Captain::ScanixxConfigurator
     'When declining an out-of-scope request, decline in exactly one sentence without partial answers, and state what Scanixx topics you can ' \
     'assist with instead; do not quote rules or mention policies.',
     'Do not generate suggested replies when handing off to human support, when the customer must provide free-text information, ' \
-    'when the response already ends with a necessary question, when the customer is frustrated or reporting an order problem, ' \
-    'or during a quote request.'
+    'when the customer is frustrated, complaining, or reporting an order problem, or during a quote request.'
   ].freeze
 
   QUOTE_SCENARIO = {
