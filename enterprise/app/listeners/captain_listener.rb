@@ -32,6 +32,9 @@ class CaptainListener < BaseListener
     conversation = extract_conversation_and_account(event)[0]
     return if conversation.blank?
     return unless conversation.assignee_id.blank? && (conversation.ai_assignee.present? || conversation.inbox.captain_active?)
+    # Captain's own handoff clears the AI assignee. Only removing the human
+    # assignee, or assigning the AI, hands the conversation back to Captain.
+    return unless event.data[:changed_attributes].to_h.key?('assignee_id') || conversation.ai_assignee.present?
 
     ownership_service(conversation).handle_returned_to_ai!
   end

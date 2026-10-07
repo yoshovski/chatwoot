@@ -6,6 +6,7 @@ class Captain::Assistant::ResponseRewriter
 
   AGENT_NAME = 'captain_response_rewriter'.freeze
   INSTRUCTIONS = 'Shorten customer support responses without changing their meaning or adding information.'.freeze
+  AGENT_DECISION_KEYS = %w[suggested_replies product_handles handoff_requested].freeze
 
   def initialize(assistant:, attribute_provider:)
     @assistant = assistant
@@ -23,7 +24,7 @@ class Captain::Assistant::ResponseRewriter
     raise rewrite_run_result.error || 'Captain response rewrite failed' if rewrite_run_result.failed?
 
     rewritten_model_output = rewritten_response_with_original_citations(rewrite_run_result.output, response_parts)
-    preserve_suggested_replies(rewritten_model_output, run_result)
+    preserve_agent_decisions(rewritten_model_output, run_result)
     replace_final_assistant_output(run_result.context[:conversation_history], rewritten_model_output)
     replace_final_assistant_output(run_result.messages, rewritten_model_output)
     run_result.output = rewritten_model_output
@@ -32,10 +33,13 @@ class Captain::Assistant::ResponseRewriter
 
   private
 
-  def preserve_suggested_replies(rewritten_model_output, run_result)
-    return unless run_result.output.is_a?(Hash) && run_result.output['suggested_replies'].present?
+  # The rewrite only shortens text. Buttons, cards and the handoff decision stay the agent's.
+  def preserve_agent_decisions(rewritten_model_output, run_result)
+    return unless run_result.output.is_a?(Hash)
 
-    rewritten_model_output['suggested_replies'] = run_result.output['suggested_replies']
+    AGENT_DECISION_KEYS.each do |key|
+      rewritten_model_output[key] = run_result.output[key] if run_result.output.key?(key)
+    end
   end
 
   def build_rewrite_prompt(response_parts, response_text_limit)

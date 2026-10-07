@@ -232,18 +232,30 @@ describe CaptainListener do
 
   describe '#assignee_changed' do
     let(:conversation) { create(:conversation, account: account, inbox: inbox, assignee_id: nil) }
-    let(:event) { Events::Base.new(:assignee_changed, Time.current, conversation: conversation) }
+    let(:event) do
+      Events::Base.new(:assignee_changed, Time.current, conversation: conversation, changed_attributes: { 'assignee_id' => [1, nil] })
+    end
 
     before do
       create(:captain_inbox, captain_assistant: assistant, inbox: inbox)
     end
 
-    it 'calls OwnershipService#handle_returned_to_ai! when assignee is blank and captain is active' do
+    it 'calls OwnershipService#handle_returned_to_ai! when the human assignee is removed and captain is active' do
       ownership_service = instance_double(Captain::Conversation::OwnershipService)
       expect(Captain::Conversation::OwnershipService).to receive(:new).with(conversation: conversation).and_return(ownership_service)
       expect(ownership_service).to receive(:handle_returned_to_ai!)
 
       listener.assignee_changed(event)
+    end
+
+    it 'does not treat a Captain handoff clearing the AI assignee as a return to the AI' do
+      conversation.update!(ai_assignee: nil)
+      handoff_event = Events::Base.new(:assignee_changed, Time.current, conversation: conversation,
+                                                                        changed_attributes: { 'assignee_agent_bot_id' => [assistant.id, nil],
+                                                                                              'ai_assignee_type' => ['Captain::Assistant', nil] })
+      expect(Captain::Conversation::OwnershipService).not_to receive(:new)
+
+      listener.assignee_changed(handoff_event)
     end
   end
 end

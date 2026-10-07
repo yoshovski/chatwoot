@@ -18,6 +18,16 @@ module Captain::Conversation::V2LifecycleEvents
     Captain::ConversationEvents.response_failed(conversation: @conversation, assistant: @assistant, reason: reason, at: Time.current)
   end
 
+  def record_v2_declared_handoff
+    Captain::ConversationEvents.handed_off(
+      conversation: @conversation,
+      assistant: @assistant,
+      source: Captain::ConversationEvents::Sources::DECLARED,
+      reason_category: nil,
+      at: Time.current
+    )
+  end
+
   def record_v2_failure_handoff(source:)
     Captain::ConversationEvents.handed_off(
       conversation: @conversation,

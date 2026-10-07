@@ -1,6 +1,7 @@
 class Captain::ConversationEvents
   module Sources
     TOOL = 'tool'.freeze
+    DECLARED = 'declared'.freeze
     GENERATION_FAILURE = 'generation_failure'.freeze
     TIME_BASED = 'time_based'.freeze
     INFERENCE = 'inference'.freeze
