@@ -60,6 +60,15 @@ RSpec.describe Llm::Models do
 
       expect(missing_providers).to be_empty
     end
+
+    it 'registers every selectable model in the RubyLLM model registry' do
+      registry_ids = JSON.parse(Rails.root.join('config/llm_models.json').read).pluck('id')
+      unregistered_models = described_class.models.filter_map do |model_name, config|
+        model_name unless config['coming_soon'] || registry_ids.include?(model_name)
+      end
+
+      expect(unregistered_models).to be_empty, "add to config/llm_models.json: #{unregistered_models.join(', ')}"
+    end
   end
 
   describe '.feature_config' do
