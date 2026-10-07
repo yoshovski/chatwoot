@@ -69,12 +69,22 @@ class Captain::Assistant::AgentRunnerService
         agent_name: msg[:agent_name]
       }
     end
+    reset_resolved_scenario_attribution!(conversation_history)
 
     {
       session_id: "#{@assistant.account_id}_#{@conversation&.display_id}",
       conversation_history: conversation_history,
       state: build_state
     }
+  end
+
+  def reset_resolved_scenario_attribution!(history)
+    boundary_index = history.rindex do |message|
+      message[:role] == :assistant && message[:content] == Captain::Conversation::MessageHistoryBuilderService::RESOLUTION_MARKER
+    end
+    return unless boundary_index
+
+    history.take(boundary_index + 1).each { |message| message[:agent_name] = nil }
   end
 
   def extract_last_user_message(message_history)
