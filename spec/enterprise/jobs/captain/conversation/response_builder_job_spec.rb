@@ -913,6 +913,20 @@ RSpec.describe Captain::Conversation::ResponseBuilderJob, type: :job do
         described_class.perform_now(conversation, assistant)
       end
 
+      it 'does not post the handoff token or count usage when the runner errors while waiting for a human' do
+        assistant.update!(config: { 'continue_while_waiting' => true })
+        conversation.open!
+        allow(mock_agent_runner_service).to receive(:generate_response).and_return(
+          { 'response' => 'conversation_handoff', 'reasoning' => 'Error occurred: llm down', 'error' => true,
+            'error_reason' => 'standard_error', 'handoff_tool_called' => false }
+        )
+
+        described_class.perform_now(conversation, assistant)
+
+        expect(conversation.messages.outgoing.where(content: 'conversation_handoff')).to be_empty
+        expect(account.reload.usage_limits[:captain][:responses][:consumed]).to eq(0)
+      end
+
       it 'emits response failed and generation failure handoff events when generation raises' do
         allow(mock_agent_runner_service).to receive(:generate_response).and_raise(StandardError, 'llm down')
 

@@ -95,15 +95,19 @@ class Captain::Conversation::ResponseBuilderJob < ApplicationJob # rubocop:disab
     if v2_handoff_tool_fired?
       process_v2_handoff_response
     elsif v1_handoff_requested?
-      if delegate_ownership_service.waiting?
-        trigger_handoff_contact_form
-        process_standard_response
-      else
-        process_v1_handoff_request
-      end
+      delegate_ownership_service.waiting? ? process_v1_handoff_while_waiting : process_v1_handoff_request
     elsif may_reply?
       process_standard_response
     end
+  end
+
+  def process_v1_handoff_while_waiting
+    trigger_handoff_contact_form
+    # The handoff token (also what a failed V2 run returns) is internal. The
+    # conversation is already waiting for a human, so post nothing for it.
+    return if legacy_v1_handoff_token?
+
+    process_standard_response
   end
 
   def process_v1_handoff_request
