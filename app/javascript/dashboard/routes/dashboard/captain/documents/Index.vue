@@ -319,6 +319,24 @@ const shopifyCatalogStatusLabel = computed(() => {
   }
 });
 
+// Hosts of the connected Shopify store, without "www.", for the add-document form's defaults.
+const shopifyStoreHosts = computed(() => {
+  const hook = shopifyHook.value;
+  if (hook?.state !== 'connected') return [];
+  return [
+    hook.shop_domain && `https://${hook.shop_domain}`,
+    hook.storefront_url,
+  ]
+    .filter(Boolean)
+    .flatMap(url => {
+      try {
+        return [new URL(url).hostname.toLowerCase().replace(/^www\./, '')];
+      } catch {
+        return [];
+      }
+    });
+});
+
 const fetchShopifyStatus = async () => {
   try {
     const { data } = await shopifyAPI.getStatus();
@@ -518,6 +536,7 @@ onUnmounted(() => {
       v-if="showCreateDialog"
       ref="createDocumentDialog"
       :assistant-id="selectedAssistantId"
+      :store-hosts="shopifyStoreHosts"
       @create-success="onCreateSuccess"
       @close="handleCreateDialogClose"
     />

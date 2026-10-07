@@ -2,12 +2,15 @@ class Captain::Documents::CrawlJob < ApplicationJob
   queue_as :low
 
   def perform(document)
-    if document.pdf_document?
-      perform_pdf_processing(document)
+    return perform_pdf_processing(document) if document.pdf_document?
+
+    scope = Captain::Documents::CrawlScope.new(document)
+    if !scope.follow_links?
+      crawl_page(document, document.external_link)
     elsif InstallationConfig.find_by(name: 'CAPTAIN_FIRECRAWL_API_KEY')&.value.present?
-      perform_firecrawl_crawl(document)
+      perform_firecrawl_crawl(document, scope)
     else
-      perform_simple_crawl(document)
+      perform_simple_crawl(document, scope)
     end
   rescue StandardError
     # Without this the document stays "in progress" forever and offers no retry.
@@ -31,24 +34,17 @@ class Captain::Documents::CrawlJob < ApplicationJob
     raise # Re-raise to let job framework handle retry logic
   end
 
-  def perform_simple_crawl(document)
-    scope = Captain::Documents::CrawlScope.new(document)
+  def perform_simple_crawl(document, scope)
     page_links = Captain::Tools::SimplePageCrawlService.new(document.external_link).page_links.select { |link| scope.follow?(link) }
-
-    page_links.each do |page_link|
-      Captain::Tools::SimplePageCrawlParserJob.perform_later(
-        assistant_id: document.assistant_id,
-        page_link: page_link
-      )
-    end
-
-    Captain::Tools::SimplePageCrawlParserJob.perform_later(
-      assistant_id: document.assistant_id,
-      page_link: document.external_link
-    )
+    page_links.each { |page_link| crawl_page(document, page_link) }
+    crawl_page(document, document.external_link)
   end
 
-  def perform_firecrawl_crawl(document)
+  def crawl_page(document, page_link)
+    Captain::Tools::SimplePageCrawlParserJob.perform_later(assistant_id: document.assistant_id, page_link: page_link)
+  end
+
+  def perform_firecrawl_crawl(document, scope)
     captain_usage_limits = document.account.usage_limits[:captain] || {}
     document_limit = captain_usage_limits[:documents] || {}
     crawl_limit = [document_limit[:current_available] || 10, 500].min
@@ -59,7 +55,7 @@ class Captain::Documents::CrawlJob < ApplicationJob
         document.external_link,
         firecrawl_webhook_url(document),
         crawl_limit,
-        include_paths: Captain::Documents::CrawlScope.new(document).firecrawl_include_paths
+        include_paths: scope.firecrawl_include_paths
       )
   end
 

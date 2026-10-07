@@ -28,6 +28,12 @@ RSpec.describe Captain::Documents::CrawlScope do
                              ])
     end
 
+    it 'adds a store page alone unless linked pages were asked for' do
+      expect(scope.follow_links?).to be(false)
+      document.include_linked_pages = 'true'
+      expect(described_class.new(document).follow_links?).to be(true)
+    end
+
     it 'limits a Firecrawl crawl to the same content pages' do
       expect(scope.firecrawl_include_paths).to eq([described_class::STORE_CONTENT_PATH])
     end
@@ -36,6 +42,12 @@ RSpec.describe Captain::Documents::CrawlScope do
   context 'when the crawl starts on any other site' do
     let(:document) { create(:captain_document, account: account, assistant: assistant, external_link: 'https://help.example.com/start') }
     let(:scope) { described_class.new(document) }
+
+    it 'follows linked pages unless the document was added alone' do
+      expect(scope.follow_links?).to be(true)
+      document.include_linked_pages = 'false'
+      expect(described_class.new(document).follow_links?).to be(false)
+    end
 
     it 'follows every page on the same site and nothing else' do
       expect(scope.follow?('https://help.example.com/products/pricing')).to be(true)

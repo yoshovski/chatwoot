@@ -1296,6 +1296,11 @@
           "PLACEHOLDER": "Enter the URL of the document",
           "ERROR": "Please provide a valid URL for the document"
         },
+        "LINKED_PAGES": {
+          "LABEL": "Also add pages linked from this page",
+          "HELP": "Adds the other pages on the same site that this page links to.",
+          "STORE_HELP": "Off by default for your Shopify store: products already come from the catalog sync. When on, only content pages (pages, policies, blogs) are added."
+        },
         "PDF_FILE": {
           "LABEL": "PDF File",
           "CHOOSE_FILE": "Choose PDF file",

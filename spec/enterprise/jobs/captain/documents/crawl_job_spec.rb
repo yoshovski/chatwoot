@@ -119,6 +119,17 @@ RSpec.describe Captain::Documents::CrawlJob, type: :job do
         expect(Captain::Tools::SimplePageCrawlParserJob).to have_received(:perform_later).twice
       end
 
+      it 'adds only the page itself when linked pages are off' do
+        document.update!(include_linked_pages: 'false')
+        allow(Captain::Tools::SimplePageCrawlParserJob).to receive(:perform_later)
+
+        described_class.perform_now(document)
+
+        expect(Captain::Tools::SimplePageCrawlService).not_to have_received(:new)
+        expect(Captain::Tools::SimplePageCrawlParserJob).to have_received(:perform_later)
+          .once.with(assistant_id: assistant_id, page_link: document.external_link)
+      end
+
       it 'marks the document as failed when the crawl crashes' do
         allow(simple_crawler).to receive(:page_links).and_raise(URI::InvalidURIError, 'bad URI')
 
