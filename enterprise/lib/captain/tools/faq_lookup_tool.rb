@@ -1,4 +1,6 @@
 class Captain::Tools::FaqLookupTool < Captain::Tools::BasePublicTool
+  include Captain::Tools::SourceIndexing
+
   description 'Search FAQs, documents and connected product knowledge to find relevant answers'
   param :query, type: 'string', desc: 'The question or topic to search for in the knowledge base'
 
@@ -53,13 +55,24 @@ class Captain::Tools::FaqLookupTool < Captain::Tools::BasePublicTool
   end
 
   def format_passage(tool_context, passage)
-    result = "\nKnowledge result:\nTitle: #{passage.title}\n#{passage.content}\n"
-    if @assistant.citations_enabled? && passage.customer_visible_source_url.present?
-      details = tool_context.state[Captain::Assistant::CITATION_DETAILS_STATE_KEY] ||= {}
-      details[passage.source_reference] = passage.citation_detail
-      result += "Citation index: #{citation_index_for_source(tool_context, passage.source_reference)}\n"
-    end
-    result
+    index = source_index_for(tool_context, passage.source_reference, passage.citation_detail.merge(passage_source_detail(passage)))
+    "\nKnowledge result:\nSource index: #{index}\nTitle: #{passage.title}\n#{passage.content}\n"
+  end
+
+  def passage_source_detail(passage)
+    record = passage.record
+    return faq_source_detail(record) if record.is_a?(Captain::AssistantResponse)
+
+    {
+      kind: %w[catalog product].include?(passage.kind) ? 'product' : passage.kind,
+      title: passage.content[/^#\s+(.+)$/, 1] || passage.title,
+      excerpt: source_excerpt(passage.content[/^##\s*Product description\s*$(.+?)(?:^##\s|\z)/m, 1] || passage.content.sub(/^#\s+.+$/, '')),
+      document_id: record.is_a?(Captain::Document) ? record.id : nil
+    }
+  end
+
+  def faq_source_detail(response)
+    { kind: 'faq', title: response.question, excerpt: source_excerpt(response.answer), faq_id: response.id }
   end
 
   def safe_to_run_after_new_customer_message?
@@ -85,33 +98,14 @@ class Captain::Tools::FaqLookupTool < Captain::Tools::BasePublicTool
   end
 
   def format_response(tool_context, response)
-    formatted_response = "
+    detail = faq_source_detail(response).merge(url: response.customer_visible_source_url)
+    index = source_index_for(tool_context, "faq:#{response.id}", detail)
+
+    "
         Knowledge result:
-        "
-    if @assistant.citations_enabled? && response.customer_visible_source_url.present?
-      formatted_response += "
-          Citation index: #{citation_index(tool_context, response)}
-          "
-    end
-    formatted_response += "
+        Source index: #{index}
         Question: #{response.question}
         Answer: #{response.answer}
         "
-
-    formatted_response
-  end
-
-  def citation_index(tool_context, response)
-    citation_index_for_source(tool_context, "faq:#{response.id}")
-  end
-
-  def citation_index_for_source(tool_context, reference)
-    citation_document_ids = tool_context.state[Captain::Assistant::CITATION_SOURCES_STATE_KEY] ||= {}
-    existing_index = citation_document_ids.find { |_index, source| source == reference }&.first
-    return existing_index if existing_index.present?
-
-    next_citation_index = citation_document_ids.size + 1
-    citation_document_ids[next_citation_index] = reference
-    next_citation_index
   end
 end

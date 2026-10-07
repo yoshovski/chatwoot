@@ -35,6 +35,7 @@ class Captain::Assistant::SessionCaptureService
       cited_document_ids: cited_document_ids,
       document_ids: metadata[:document_ids] || [],
       scenario_ids: scenario_ids,
+      sources: sources,
       run_context: current_turn_history
     )
   end
@@ -65,6 +66,36 @@ class Captain::Assistant::SessionCaptureService
     selected_citation_indexes = response_parts.to_a.flat_map { |part| part['citation_indexes'] }.uniq
 
     (selected_citation_indexes & visible_citation_indexes).filter_map { |index| citation_document_ids[index] }
+  end
+
+  # Every knowledge and product result of this turn, in source index order. A source is
+  # used when a reply part cites its index or the reply shows it as a product card.
+  def sources
+    references = (context.dig(:state, Captain::Assistant::CITATION_SOURCES_STATE_KEY) || {}).transform_keys(&:to_i)
+    details = context.dig(:state, Captain::Assistant::CITATION_DETAILS_STATE_KEY) || {}
+    used_references = cited_references(references) | card_references(references.values)
+
+    references.sort.map do |index, reference|
+      detail = (details[reference] || {}).to_h.symbolize_keys
+      {
+        index: index, reference: reference, used: used_references.include?(reference),
+        **detail.slice(:kind, :title, :excerpt, :url, :faq_id, :document_id)
+      }
+    end
+  end
+
+  def cited_references(references)
+    Captain::Assistant::ResponseParts.from_response(@run_result.output).to_a
+                                     .flat_map { |part| part['citation_indexes'] }
+                                     .filter_map { |index| references[index] }
+  end
+
+  def card_references(references)
+    output = @run_result.output
+    handles = output.is_a?(Hash) ? Array(output.with_indifferent_access[:product_handles]) : []
+    references.select do |reference|
+      reference.to_s.start_with?('product:') && handles.any? { |handle| handle.to_s.casecmp?(reference.delete_prefix('product:')) }
+    end
   end
 
   # On handoff, HandoffTool records the private reason note it created; the session

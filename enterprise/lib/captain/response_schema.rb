@@ -9,14 +9,13 @@ class Captain::ResponseSchema < RubyLLM::Schema
                                   'continue in this chat. False when no handoff is needed, or when you only ask whether the customer ' \
                                   'wants a human.'.freeze
 
-  string :reasoning, description: "Agent's thought process"
   array :response_parts,
         description: 'Ordered parts of the message to send to the user. Keep all customer-visible text within each part text field.',
         min_items: 1 do
     object do
       string :text, description: 'Customer-visible response text without citation markers or source URLs.', min_length: 1
       array :citation_indexes,
-            description: 'Numeric citation indexes from FAQ results that support this text. Use an empty array when none apply.' do
+            description: 'Source indexes of the tool results this text relies on. Use an empty array when none apply.' do
         integer minimum: 1
       end
     end
@@ -39,14 +38,13 @@ class Captain::ResponseSchema < RubyLLM::Schema
   def self.build_schema(suggested_replies:, limit:, product_cards:)
     RubyLLM::Schema.create do
       name 'CaptainResponse'
-      string :reasoning, description: "Agent's thought process"
-      array :response_parts,
+          array :response_parts,
             description: 'Ordered parts of the message to send to the user. Keep all customer-visible text within each part text field.',
             min_items: 1 do
         object do
           string :text, description: 'Customer-visible response text without citation markers or source URLs.', min_length: 1
           array :citation_indexes,
-                description: 'Numeric citation indexes from FAQ results that support this text. Use an empty array when none apply.' do
+                description: 'Source indexes of the tool results this text relies on. Use an empty array when none apply.' do
             integer minimum: 1
           end
         end

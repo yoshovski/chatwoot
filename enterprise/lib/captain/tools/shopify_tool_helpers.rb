@@ -57,23 +57,4 @@ module Captain::Tools::ShopifyToolHelpers
   def sanitize_handles(handles)
     Array(handles).compact.map(&:to_s).map(&:strip).reject(&:blank?)
   end
-
-  def citation_index_for_product(tool_context, handle, url)
-    return nil unless @assistant.citations_enabled? && handle.present?
-
-    reference = "product:#{handle}"
-    details = tool_context.state[Captain::Assistant::CITATION_DETAILS_STATE_KEY] ||= {}
-    details[reference] = { url: url }
-    find_or_create_citation_index(tool_context, reference)
-  end
-
-  def find_or_create_citation_index(tool_context, reference)
-    citation_document_ids = tool_context.state[Captain::Assistant::CITATION_SOURCES_STATE_KEY] ||= {}
-    existing_index = citation_document_ids.find { |_index, source| source == reference }&.first
-    return existing_index if existing_index.present?
-
-    next_index = citation_document_ids.size + 1
-    citation_document_ids[next_index] = reference
-    next_index
-  end
 end
