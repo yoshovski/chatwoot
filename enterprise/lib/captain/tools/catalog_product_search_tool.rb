@@ -30,8 +30,11 @@ class Captain::Tools::CatalogProductSearchTool < Captain::Tools::BasePublicTool
     true
   end
 
+  # The Shopify search runs in the background while the knowledge search uses this thread's database connection.
   def resolve_search_handles(client, query, limit)
-    all_handles = (fetch_exact_matches(client, query) + fetch_semantic_matches(query))
+    exact_matches = in_background { fetch_exact_matches(client, query) }
+    semantic_matches = fetch_semantic_matches(query)
+    all_handles = (await([exact_matches]).first + semantic_matches)
                   .map(&:to_s).map(&:strip).reject(&:blank?).uniq(&:downcase)
     all_handles.take(normalize_limit(limit))
   end
@@ -93,12 +96,18 @@ class Captain::Tools::CatalogProductSearchTool < Captain::Tools::BasePublicTool
     cleaned.downcase if cleaned.present? && cleaned.exclude?(' ')
   end
 
+  # Live lookups are independent HTTP calls, so they run in parallel (at most 10, the search limit).
   def fetch_live_products(client, handles)
-    handles.each_slice(3).flat_map do |slice|
-      slice.map do |handle|
-        fetch_single_product(client, handle)
-      end
-    end
+    await(handles.map { |handle| in_background { fetch_single_product(client, handle) } })
+  end
+
+  # For HTTP-only work. Waiting permits concurrent loads so a background thread can autoload code without deadlocking.
+  def in_background(&)
+    Thread.new { Rails.application.executor.wrap(&) }
+  end
+
+  def await(threads)
+    ActiveSupport::Dependencies.interlock.permit_concurrent_loads { threads.map(&:value) }
   end
 
   def fetch_single_product(client, handle)

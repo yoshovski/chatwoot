@@ -103,6 +103,7 @@ Rails.application.routes.draw do
             resources :assistants do
               member do
                 post :playground
+                get 'playground_runs/:run_id', action: :playground_run, as: :playground_run
                 get :metrics
                 get :faq_stats
                 get :summary

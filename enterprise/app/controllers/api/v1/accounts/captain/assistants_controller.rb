@@ -1,7 +1,7 @@
-class Api::V1::Accounts::Captain::AssistantsController < Api::V1::Accounts::BaseController # rubocop:disable Metrics/ClassLength
+class Api::V1::Accounts::Captain::AssistantsController < Api::V1::Accounts::BaseController
   before_action -> { check_authorization(Captain::Assistant) }
 
-  before_action :set_assistant, only: [:show, :update, :destroy, :playground, :metrics, :faq_stats, :summary, :drilldown, :avatar]
+  before_action :set_assistant, only: [:show, :update, :destroy, :playground, :playground_run, :metrics, :faq_stats, :summary, :drilldown, :avatar]
 
   def index
     @assistants = account_assistants.ordered
@@ -34,19 +34,19 @@ class Api::V1::Accounts::Captain::AssistantsController < Api::V1::Accounts::Base
   end
 
   def playground
-    response = if captain_v2_enabled?
-                 generate_v2_playground_response
-               else
-                 Captain::Playground::Configuration.reject_v1! if playground_configuration_supplied?
-                 Captain::Llm::AssistantChatService.new(assistant: @assistant, source: 'playground').generate_response(
-                   additional_message: playground_params[:message_content],
-                   message_history: message_history
-                 )
-               end
+    return enqueue_v2_playground_run if captain_v2_enabled?
 
-    render json: response
+    Captain::Playground::Configuration.reject_v1! if playground_configuration_supplied?
+    render json: Captain::Llm::AssistantChatService.new(assistant: @assistant, source: 'playground').generate_response(
+      additional_message: playground_params[:message_content],
+      message_history: message_history
+    )
   rescue Captain::Playground::Configuration::Invalid => e
     render json: { error: e.message, errors: e.errors }, status: :unprocessable_entity
+  end
+
+  def playground_run
+    render json: Captain::PlaygroundRunJob.result(@assistant, params.require(:run_id)) || { status: 'pending' }
   end
 
   def tools
@@ -178,21 +178,16 @@ class Api::V1::Accounts::Captain::AssistantsController < Api::V1::Accounts::Base
     )
   end
 
-  def generate_v2_playground_response
-    return default_v2_playground_response unless playground_configuration_params
-
-    Captain::Playground::Runner.new(
-      assistant: @assistant,
-      configuration_params: playground_configuration_params,
-      message_history: playground_message_history
-    ).generate_response
-  end
-
-  def default_v2_playground_response
-    run_options = Captain::Assistant::AgentRunnerService::RunOptions.new(source: 'playground')
-    Captain::Assistant::AgentRunnerService.new(assistant: @assistant, run_options: run_options).generate_response(
-      message_history: playground_message_history
-    )
+  # Validates the configuration now so mistakes still return 422, then runs the message in the background.
+  def enqueue_v2_playground_run
+    configuration_params = playground_configuration_params
+    if configuration_params
+      Captain::Playground::Configuration.new(assistant: @assistant, params: configuration_params)
+      configuration_params = configuration_params.to_unsafe_h
+    end
+    run_id = SecureRandom.uuid
+    Captain::PlaygroundRunJob.perform_later(@assistant, run_id, configuration_params, playground_message_history)
+    render json: { run_id: run_id }, status: :accepted
   end
 
   def playground_configuration_params
