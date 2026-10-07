@@ -2,8 +2,8 @@ class Captain::Tools::FaqLookupTool < Captain::Tools::BasePublicTool
   include Captain::Tools::SourceIndexing
 
   description 'Search FAQs, documents and connected product knowledge to find relevant answers'
-  param :query, type: 'string', desc: 'A short search of a few key words, such as "opening hours" or "Agras T100 battery". ' \
-                                      'Leave out the store name and filler words.'
+  param :query, type: 'string', desc: 'A few key words from the latest customer question, such as "opening hours" or "Agras T100 battery". ' \
+                                      'For a new topic, leave out earlier products and requests. Leave out the store name and filler words.'
 
   def perform(tool_context, query:)
     query = without_business_name(query)

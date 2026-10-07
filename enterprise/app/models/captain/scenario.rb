@@ -99,8 +99,10 @@ class Captain::Scenario < ApplicationRecord
     MAX_AGENT_NAME_LENGTH - handoff_id_key.length - HANDOFF_KEY_SUFFIX.length - 2
   end
 
+  # The assistant's tools plus the ones the instruction names, such as add_private_note.
   def agent_tools
-    resolved_tools.map { |tool| resolve_tool_instance(tool) }
+    named_tools = resolved_tools.filter_map { |tool| resolve_tool_instance(tool) }
+    (assistant.agent_tools + named_tools).uniq(&:name)
   end
 
   def resolved_instructions
