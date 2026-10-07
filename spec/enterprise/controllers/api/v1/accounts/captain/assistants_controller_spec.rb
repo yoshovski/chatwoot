@@ -627,12 +627,15 @@ RSpec.describe 'Api::V1::Accounts::Captain::Assistants', type: :request do
 
     context 'when captain v2 is enabled' do
       let(:run_options) { Captain::Assistant::AgentRunnerService::RunOptions.new(source: 'playground') }
+      let(:redis_store) { {} }
 
       before do
         account.enable_features('captain_integration_v2')
+        allow(Redis::Alfred).to receive(:setex) { |key, value, _ttl| redis_store[key] = value }
+        allow(Redis::Alfred).to receive(:get) { |key| redis_store[key] }
       end
 
-      it 'generates a response with the agent runner service' do
+      it 'runs the message in the background and returns the reply when polled' do
         allow(Captain::Assistant::AgentRunnerService).to receive(:new).with(
           assistant: assistant,
           run_options: run_options
@@ -650,12 +653,20 @@ RSpec.describe 'Api::V1::Accounts::Captain::Assistants', type: :request do
              headers: agent.create_new_auth_token,
              as: :json
 
-        expect(response).to have_http_status(:success)
+        expect(response).to have_http_status(:accepted)
+        run_url = "/api/v1/accounts/#{account.id}/captain/assistants/#{assistant.id}/playground_runs/#{json_response[:run_id]}"
+        get run_url, headers: agent.create_new_auth_token, as: :json
+        expect(json_response).to eq(status: 'pending')
+
+        perform_enqueued_jobs
+        get run_url, headers: agent.create_new_auth_token, as: :json
+
         expect(agent_runner_service).to have_received(:generate_response).with(
           message_history: valid_params[:message_history] + [{ role: 'user', content: valid_params[:message_content] }]
         )
-        expect(json_response[:response]).to eq('Assistant response')
-        expect(json_response[:response_parts]).to eq([{ text: 'Assistant response', citation_indexes: [] }])
+        expect(json_response[:status]).to eq('done')
+        expect(json_response[:response][:response]).to eq('Assistant response')
+        expect(json_response[:response][:response_parts]).to eq([{ text: 'Assistant response', citation_indexes: [] }])
       end
 
       it 'does not duplicate the latest user message if it is already in history' do
@@ -663,20 +674,14 @@ RSpec.describe 'Api::V1::Accounts::Captain::Assistants', type: :request do
           message_content: 'Hello assistant',
           message_history: [{ role: 'user', content: 'Hello assistant' }]
         }
-        allow(Captain::Assistant::AgentRunnerService).to receive(:new).with(
-          assistant: assistant,
-          run_options: run_options
-        ).and_return(agent_runner_service)
-        allow(agent_runner_service).to receive(:generate_response).and_return({ response: 'Assistant response' })
 
         post "/api/v1/accounts/#{account.id}/captain/assistants/#{assistant.id}/playground",
              params: params_with_latest_message,
              headers: agent.create_new_auth_token,
              as: :json
 
-        expect(response).to have_http_status(:success)
-        expect(agent_runner_service).to have_received(:generate_response).with(
-          message_history: params_with_latest_message[:message_history]
+        expect(Captain::PlaygroundRunJob).to have_been_enqueued.with(
+          assistant, json_response[:run_id], nil, params_with_latest_message[:message_history]
         )
       end
 
@@ -693,7 +698,7 @@ RSpec.describe 'Api::V1::Accounts::Captain::Assistants', type: :request do
         )
         allow(Captain::Playground::Runner).to receive(:new).with(
           assistant: assistant,
-          configuration_params: kind_of(ActionController::Parameters),
+          configuration_params: hash_including('response_guidelines' => ['Be concise'], 'knowledge_text' => 'Refunds take five days.'),
           message_history: valid_params[:message_history] + [{ role: 'user', content: valid_params[:message_content] }]
         ).and_return(playground_runner)
         allow(playground_runner).to receive(:generate_response).and_return(
@@ -701,13 +706,30 @@ RSpec.describe 'Api::V1::Accounts::Captain::Assistants', type: :request do
           run_details: { duration_ms: 12, events: [] }
         )
 
-        post "/api/v1/accounts/#{account.id}/captain/assistants/#{assistant.id}/playground",
-             params: enhanced_params,
-             headers: agent.create_new_auth_token,
-             as: :json
+        headers = agent.create_new_auth_token
+        perform_enqueued_jobs do
+          post "/api/v1/accounts/#{account.id}/captain/assistants/#{assistant.id}/playground",
+               params: enhanced_params, headers: headers, as: :json
+        end
+        get "/api/v1/accounts/#{account.id}/captain/assistants/#{assistant.id}/playground_runs/#{json_response[:run_id]}",
+            headers: headers, as: :json
 
-        expect(response).to have_http_status(:success)
-        expect(json_response[:run_details]).to eq(duration_ms: 12, events: [])
+        expect(json_response[:response][:run_details]).to eq(duration_ms: 12, events: [])
+      end
+
+      it 'reports a failed run instead of leaving the playground waiting' do
+        allow(Captain::Assistant::AgentRunnerService).to receive(:new).and_return(agent_runner_service)
+        allow(agent_runner_service).to receive(:generate_response).and_raise(StandardError, 'model unavailable')
+
+        headers = agent.create_new_auth_token
+        perform_enqueued_jobs do
+          post "/api/v1/accounts/#{account.id}/captain/assistants/#{assistant.id}/playground",
+               params: valid_params, headers: headers, as: :json
+        end
+        get "/api/v1/accounts/#{account.id}/captain/assistants/#{assistant.id}/playground_runs/#{json_response[:run_id]}",
+            headers: headers, as: :json
+
+        expect(json_response).to eq(status: 'failed', error: 'model unavailable')
       end
 
       it 'returns structured validation errors without modifying Captain configuration' do

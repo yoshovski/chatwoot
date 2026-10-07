@@ -5,6 +5,10 @@ import ApiClient from '../ApiClient';
 // backend can anchor calendar ranges to the viewer's day.
 const getTimezoneOffset = () => -new Date().getTimezoneOffset() / 60;
 
+// Captain V2 playground runs happen in a background job; poll until the reply is stored.
+const PLAYGROUND_POLL_INTERVAL_MS = 1000;
+const PLAYGROUND_MAX_WAIT_MS = 3 * 60 * 1000;
+
 class CaptainAssistant extends ApiClient {
   constructor() {
     super('captain/assistants', { accountScoped: true });
@@ -54,7 +58,7 @@ class CaptainAssistant extends ApiClient {
     return axios.delete(`${this.url}/${assistantId}/avatar`);
   }
 
-  playground({
+  async playground({
     assistantId,
     messageContent,
     messageHistory,
@@ -66,7 +70,32 @@ class CaptainAssistant extends ApiClient {
     };
     if (playgroundConfig) payload.playground_config = playgroundConfig;
 
-    return axios.post(`${this.url}/${assistantId}/playground`, payload);
+    const response = await axios.post(
+      `${this.url}/${assistantId}/playground`,
+      payload
+    );
+    if (response.status !== 202) return response;
+
+    return this.waitForPlaygroundRun(assistantId, response.data.run_id);
+  }
+
+  async waitForPlaygroundRun(assistantId, runId, startedAt = Date.now()) {
+    await new Promise(resolve => {
+      setTimeout(resolve, PLAYGROUND_POLL_INTERVAL_MS);
+    });
+    const { data } = await axios.get(
+      `${this.url}/${assistantId}/playground_runs/${runId}`
+    );
+    if (data.status === 'done') return { data: data.response };
+    if (
+      data.status === 'failed' ||
+      Date.now() - startedAt > PLAYGROUND_MAX_WAIT_MS
+    ) {
+      const error = new Error(data.error || 'Playground run timed out');
+      error.response = { data: { error: data.error } };
+      throw error;
+    }
+    return this.waitForPlaygroundRun(assistantId, runId, startedAt);
   }
 
   getMetrics({ assistantId, range, signal }) {

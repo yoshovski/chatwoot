@@ -54,4 +54,8 @@ class Captain::AssistantPolicy < ApplicationPolicy
   def playground?
     true
   end
+
+  def playground_run?
+    playground?
+  end
 end
