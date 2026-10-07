@@ -87,8 +87,13 @@ class Captain::Tools::FaqLookupTool < Captain::Tools::BasePublicTool
     }
   end
 
+  # FAQs generated from a document name it, so agents see them under that document instead of as separate sources.
   def faq_source_detail(response)
-    { kind: 'faq', title: response.question, excerpt: source_excerpt(response.answer), faq_id: response.id }
+    detail = { kind: 'faq', title: response.question, excerpt: source_excerpt(response.answer), faq_id: response.id }
+    document = response.documentable
+    return detail unless document.is_a?(Captain::Document)
+
+    detail.merge(document_id: document.id, document_title: document.name.presence || document.external_link)
   end
 
   def safe_to_run_after_new_customer_message?

@@ -90,7 +90,7 @@ class Captain::Assistant::SessionCaptureService
       used = used_references.include?(reference)
       next if !used && detail[:low_relevance]
 
-      { index: index, reference: reference, used: used, **detail.slice(:kind, :title, :excerpt, :url, :faq_id, :document_id) }
+      { index: index, reference: reference, used: used, **detail.slice(:kind, :title, :excerpt, :url, :faq_id, :document_id, :document_title) }
     end
   end
 

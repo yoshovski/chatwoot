@@ -87,6 +87,11 @@ const sources = computed(() => {
 const usedSources = computed(() => sources.value.filter(s => s.used));
 const otherSources = computed(() => sources.value.filter(s => !s.used));
 
+const expanded = ref({});
+const toggleExpanded = key => {
+  expanded.value = { ...expanded.value, [key]: !expanded.value[key] };
+};
+
 const faqsUrl = computed(() => {
   if (!session.value?.assistantId) return null;
   return router.resolve({
@@ -116,6 +121,47 @@ const sourceLink = source => {
   }
   return null;
 };
+
+// One card per document: FAQs generated from a document are listed under it,
+// so a fact found in a page and in its FAQs isn't shown as separate sources.
+const sourceGroups = computed(() => {
+  const groups = [];
+  const documentGroups = {};
+
+  usedSources.value.forEach(source => {
+    const key = `${source.kind}-${source.reference || source.id}`;
+    if (!source.documentId) {
+      groups.push({ key, main: source, faqs: [] });
+      return;
+    }
+
+    let group = documentGroups[source.documentId];
+    if (!group) {
+      group = { key: `document-${source.documentId}`, main: null, faqs: [] };
+      documentGroups[source.documentId] = group;
+      groups.push(group);
+    }
+    if (source.kind === 'faq') {
+      group.title ||= source.documentTitle;
+      group.faqs.push({ ...source, key });
+    } else {
+      group.main = source;
+    }
+  });
+
+  return groups.map(({ key, main, faqs, title }) => {
+    const kind = main || sourceKinds.value.document;
+    return {
+      key,
+      faqs,
+      icon: kind.icon,
+      kindLabel: kind.kindLabel,
+      title: main?.title || title,
+      excerpt: main?.excerpt,
+      link: main ? sourceLink(main) : null,
+    };
+  });
+});
 
 const scenarioTitles = computed(() =>
   (session.value?.scenarios || []).reduce((map, scenario) => {
@@ -366,10 +412,10 @@ const onPopoverHide = () => {
             <div class="flex flex-col gap-2">
               <span class="text-sm font-medium text-n-slate-12">
                 {{
-                  usedSources.length
+                  sourceGroups.length
                     ? t(
                         'CONVERSATION.CAPTAIN_GENERATION.USED_SOURCES',
-                        usedSources.length
+                        sourceGroups.length
                       )
                     : t('CONVERSATION.CAPTAIN_GENERATION.NO_SOURCES')
                 }}
@@ -381,35 +427,67 @@ const onPopoverHide = () => {
                 {{ t('CONVERSATION.CAPTAIN_GENERATION.NO_SOURCES_HINT') }}
               </span>
               <div
-                v-for="source in usedSources"
-                :key="`${source.kind}-${source.reference || source.id}`"
-                class="flex flex-col gap-1 p-3 rounded-lg bg-n-alpha-1"
+                v-for="group in sourceGroups"
+                :key="group.key"
+                class="flex flex-col gap-1.5 px-3 py-2.5 rounded-lg bg-n-alpha-1"
               >
-                <span
-                  class="inline-flex items-center gap-1 text-xs text-n-slate-11"
+                <div class="flex items-start gap-1.5">
+                  <Icon
+                    v-tooltip="group.kindLabel"
+                    :icon="group.icon"
+                    class="flex-shrink-0 mt-0.5 size-3.5 text-n-slate-11"
+                  />
+                  <span
+                    class="flex-1 min-w-0 text-sm font-medium break-words text-n-slate-12"
+                  >
+                    {{ group.title }}
+                  </span>
+                  <a
+                    v-if="group.link"
+                    v-tooltip="group.link.label"
+                    :href="group.link.href"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="flex-shrink-0 mt-0.5 text-n-slate-11 hover:text-n-slate-12"
+                  >
+                    <Icon icon="i-ph-arrow-square-out" class="size-3.5" />
+                  </a>
+                </div>
+                <button
+                  v-if="group.excerpt"
+                  type="button"
+                  class="p-0 text-xs leading-normal break-words bg-transparent border-0 cursor-pointer text-start text-n-slate-11"
+                  :class="{ 'line-clamp-1': !expanded[group.key] }"
+                  @click="toggleExpanded(group.key)"
                 >
-                  <Icon :icon="source.icon" class="size-3.5" />
-                  {{ source.kindLabel }}
-                </span>
-                <span class="text-sm font-medium break-words text-n-slate-12">
-                  {{ source.title }}
-                </span>
-                <p
-                  v-if="source.excerpt"
-                  class="m-0 text-xs leading-normal break-words line-clamp-3 text-n-slate-11"
+                  {{ group.excerpt }}
+                </button>
+                <div
+                  v-for="faq in group.faqs"
+                  :key="faq.key"
+                  class="flex flex-col gap-0.5"
                 >
-                  {{ source.excerpt }}
-                </p>
-                <a
-                  v-if="sourceLink(source)"
-                  :href="sourceLink(source).href"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  class="inline-flex items-center gap-1 text-xs text-n-blue-11 hover:underline"
-                >
-                  {{ sourceLink(source).label }}
-                  <Icon icon="i-ph-arrow-square-out" class="size-3" />
-                </a>
+                  <button
+                    type="button"
+                    class="inline-flex items-start gap-1 p-0 text-xs bg-transparent border-0 cursor-pointer text-start text-n-slate-12"
+                    @click="toggleExpanded(faq.key)"
+                  >
+                    <Icon
+                      v-tooltip="faq.kindLabel"
+                      :icon="faq.icon"
+                      class="flex-shrink-0 mt-0.5 size-3 text-n-slate-11"
+                    />
+                    <span :class="{ 'line-clamp-1': !expanded[faq.key] }">
+                      {{ faq.title }}
+                    </span>
+                  </button>
+                  <p
+                    v-if="expanded[faq.key] && faq.excerpt"
+                    class="m-0 text-xs leading-normal break-words ps-4 text-n-slate-11"
+                  >
+                    {{ faq.excerpt }}
+                  </p>
+                </div>
               </div>
             </div>
             <div v-if="otherSources.length" class="flex flex-col gap-2">

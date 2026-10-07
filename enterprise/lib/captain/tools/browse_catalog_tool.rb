@@ -13,7 +13,7 @@ class Captain::Tools::BrowseCatalogTool < Captain::Tools::BasePublicTool
 
     log_tool_usage('browsing_catalog', { query: query })
     collections = fetch_collections(client, query, limit)
-    return 'No collections found in catalog.' if collections.empty?
+    return no_matching_collection(tool_context, client, query, limit) if collections.empty?
 
     process_collections(tool_context, query, collections)
   rescue ShopifyAgentTools::Client::Error => e
@@ -29,6 +29,14 @@ class Captain::Tools::BrowseCatalogTool < Captain::Tools::BasePublicTool
 
   def safe_to_run_after_new_customer_message?
     true
+  end
+
+  # A category without its own collection is not a dead end: list the collections the store has instead.
+  def no_matching_collection(tool_context, client, query, limit)
+    collections = query.present? ? fetch_collections(client, nil, limit) : []
+    return 'No collections found in catalog.' if collections.empty?
+
+    "No collection matches \"#{query}\". The store's collections are:\n#{process_collections(tool_context, nil, collections)}"
   end
 
   def fetch_collections(client, query, limit)
