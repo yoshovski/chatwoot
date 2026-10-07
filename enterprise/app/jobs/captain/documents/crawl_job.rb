@@ -32,7 +32,8 @@ class Captain::Documents::CrawlJob < ApplicationJob
   end
 
   def perform_simple_crawl(document)
-    page_links = Captain::Tools::SimplePageCrawlService.new(document.external_link).page_links
+    scope = Captain::Documents::CrawlScope.new(document)
+    page_links = Captain::Tools::SimplePageCrawlService.new(document.external_link).page_links.select { |link| scope.follow?(link) }
 
     page_links.each do |page_link|
       Captain::Tools::SimplePageCrawlParserJob.perform_later(
@@ -57,7 +58,8 @@ class Captain::Documents::CrawlJob < ApplicationJob
       .perform(
         document.external_link,
         firecrawl_webhook_url(document),
-        crawl_limit
+        crawl_limit,
+        include_paths: Captain::Documents::CrawlScope.new(document).firecrawl_include_paths
       )
   end
 
