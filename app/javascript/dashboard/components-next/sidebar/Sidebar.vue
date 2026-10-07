@@ -528,7 +528,10 @@ const menuItems = computed(() => {
         {
           name: 'Documents',
           label: t('SIDEBAR.CAPTAIN_DOCUMENTS'),
-          activeOn: ['captain_assistants_documents_index'],
+          activeOn: [
+            'captain_assistants_documents_index',
+            'captain_assistants_products_index',
+          ],
           to: accountScopedRoute('captain_assistants_index', {
             navigationPath: 'captain_assistants_documents_index',
           }),

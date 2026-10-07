@@ -4,7 +4,7 @@ import { useI18n } from 'vue-i18n';
 import { useRoute, useRouter } from 'vue-router';
 import Icon from 'dashboard/components-next/icon/Icon.vue';
 import Popover from 'dashboard/components-next/popover/Popover.vue';
-import { useStore, useMapGetter } from 'dashboard/composables/store';
+import { useStore } from 'dashboard/composables/store';
 import { useAccount } from 'dashboard/composables/useAccount';
 import { FEATURE_FLAGS } from 'dashboard/featureFlags';
 import { useMessageContext } from './provider.js';
@@ -290,22 +290,6 @@ const steps = computed(() => {
   return result;
 });
 
-const currentUser = useMapGetter('getCurrentUser');
-const isSuperAdmin = computed(() => currentUser.value.type === 'SuperAdmin');
-
-// Model and credits are only surfaced to super admins and in development.
-const devDetails = computed(() => {
-  if (!session.value) return null;
-  if (!import.meta.env.DEV && !isSuperAdmin.value) return null;
-  const model = t('CONVERSATION.CAPTAIN_GENERATION.MODEL', {
-    model: session.value.llmModel,
-  });
-  const credits = t('CONVERSATION.CAPTAIN_GENERATION.CREDITS', {
-    credits: session.value.creditsConsumed,
-  });
-  return `${model} · ${credits}`;
-});
-
 // With the sparkle at the row start, the meta gets pushed to the opposite end;
 // without it, fall back to the message orientation.
 const rowLayoutClass = computed(() => {
@@ -507,9 +491,6 @@ const onPopoverHide = () => {
                 </div>
               </div>
             </div>
-            <span v-if="devDetails" class="text-xs text-n-slate-11">
-              {{ devDetails }}
-            </span>
           </template>
         </div>
       </template>

@@ -158,6 +158,35 @@ RSpec.describe 'Shopify Integration API', type: :request do
     end
   end
 
+  describe 'GET /api/v1/accounts/:account_id/integrations/shopify/catalog_products' do
+    let(:sat_client) { instance_double(ShopifyAgentTools::AdminClient) }
+    let(:page) { { 'items' => [{ 'handle' => 'agras-t100-battery', 'status' => 'synced' }], 'counts' => { 'synced' => 1 }, 'total' => 1 } }
+
+    before do
+      allow(ShopifyAgentTools::AdminClient).to receive(:new).and_return(sat_client)
+    end
+
+    it 'returns the synced products page for a connected store' do
+      create(:integrations_hook, :shopify, account: account, settings: { 'state' => 'connected', 'sat_tenant_id' => 'tenant-1' })
+      allow(sat_client).to receive(:catalog_documents).with('tenant-1', status: 'synced', query: 'agras', page: 2).and_return(page)
+
+      get "/api/v1/accounts/#{account.id}/integrations/shopify/catalog_products",
+          params: { status: 'synced', q: 'agras', page: 2 }, headers: agent.create_new_auth_token
+
+      expect(response).to have_http_status(:ok)
+      expect(response.parsed_body).to eq(page)
+    end
+
+    it 'refuses when catalog sync is off' do
+      create(:integrations_hook, :shopify, account: account,
+                                           settings: { 'state' => 'connected', 'sat_tenant_id' => 'tenant-1', 'catalog_sync_enabled' => false })
+
+      get "/api/v1/accounts/#{account.id}/integrations/shopify/catalog_products", headers: agent.create_new_auth_token
+
+      expect(response).to have_http_status(:unprocessable_entity)
+    end
+  end
+
   describe 'DELETE /api/v1/accounts/:account_id/integrations/shopify' do
     let(:admin) { create(:user, account: account, role: :administrator) }
 

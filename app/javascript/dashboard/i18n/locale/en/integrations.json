@@ -1163,6 +1163,21 @@
         }
       }
     },
+    "PRODUCTS": {
+      "HEADER": "Products",
+      "DESCRIPTION": "Shopify products in your assistant's knowledge. Prices, stock and links are always fetched live from Shopify.",
+      "SEARCH_PLACEHOLDER": "Search products",
+      "EMPTY": "No products found.",
+      "LOAD_ERROR": "Could not load the products. Try again in a moment.",
+      "FILTERS": {
+        "ALL": "All"
+      },
+      "STATUS": {
+        "SYNCED": "Synced",
+        "PENDING": "Pending",
+        "FAILED": "Failed"
+      }
+    },
     "DOCUMENTS": {
       "HEADER": "Documents",
       "ADD_NEW": "Create a new document",
@@ -1170,6 +1185,7 @@
         "LABEL": "Shopify catalog",
         "DESCRIPTION": "searched together with your documents and FAQs",
         "LINK": "Integrations",
+        "VIEW_PRODUCTS": "View products",
         "STATUS": {
           "ON": "On",
           "IMPORTING": "Importing",

@@ -130,9 +130,7 @@
         "ADD_LABEL": "Added a label",
         "UPDATE_PRIORITY": "Changed the priority",
         "RESOLVE": "Resolved the conversation"
-      },
-      "MODEL": "Generated with {model}",
-      "CREDITS": "Credits: {credits}"
+      }
     },
     "CARD": {
       "SHOW_LABELS": "Show labels",

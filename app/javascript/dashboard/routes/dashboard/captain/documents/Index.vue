@@ -440,11 +440,24 @@ onUnmounted(() => {
           {{ $t('CAPTAIN.DOCUMENTS.SHOPIFY_CATALOG.DESCRIPTION') }}
         </span>
         <router-link
+          v-if="['on', 'importing'].includes(shopifyCatalogStatus)"
+          :to="{
+            name: 'captain_assistants_products_index',
+            params: route.params,
+          }"
+          class="font-medium text-brand-600 hover:text-brand-700 ms-auto hover:underline"
+        >
+          {{ $t('CAPTAIN.DOCUMENTS.SHOPIFY_CATALOG.VIEW_PRODUCTS') }}
+        </router-link>
+        <router-link
           :to="{
             name: 'settings_integrations_shopify',
             params: { accountId: route.params.accountId },
           }"
-          class="font-medium text-brand-600 hover:text-brand-700 ms-auto hover:underline"
+          class="font-medium text-brand-600 hover:text-brand-700 hover:underline"
+          :class="{
+            'ms-auto': !['on', 'importing'].includes(shopifyCatalogStatus),
+          }"
         >
           {{ $t('CAPTAIN.DOCUMENTS.SHOPIFY_CATALOG.LINK') }}
         </router-link>

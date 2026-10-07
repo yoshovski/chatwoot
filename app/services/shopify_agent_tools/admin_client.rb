@@ -1,6 +1,8 @@
 module ShopifyAgentTools; end unless defined?(ShopifyAgentTools)
 
 class ShopifyAgentTools::AdminClient
+  CATALOG_PAGE_SIZE = 50
+
   class Error < StandardError
     attr_reader :status
 
@@ -71,6 +73,11 @@ class ShopifyAgentTools::AdminClient
 
   def catalog_status(tenant_id)
     request(:get, "v1/admin/tenants/#{tenant_id}/catalog/status")
+  end
+
+  def catalog_documents(tenant_id, status: nil, query: nil, page: 1)
+    params = { status: status, q: query, page: page, page_size: CATALOG_PAGE_SIZE }.compact_blank
+    request(:get, "v1/admin/tenants/#{tenant_id}/catalog/documents", params: params)
   end
 
   def pause_catalog_sync(tenant_id)

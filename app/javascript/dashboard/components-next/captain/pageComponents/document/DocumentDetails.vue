@@ -82,12 +82,16 @@ const usedInConversationsCount = computed(
 const tabs = computed(() => {
   const documentTabs = [
     { key: TAB_KEYS.CONTENT, label: contentTabLabel.value },
-    {
+  ];
+
+  // PDFs are searched as chunks and never turned into FAQs.
+  if (!isPdf.value) {
+    documentTabs.push({
       key: TAB_KEYS.FAQS,
       label: t('CAPTAIN.DOCUMENTS.RELATED_RESPONSES.TITLE'),
       count: totalCount.value,
-    },
-  ];
+    });
+  }
 
   if (canManage.value) {
     documentTabs.push({
@@ -205,7 +209,7 @@ const handlePageChange = page => {
 
 onMounted(() => {
   panelRef.value.open();
-  fetchResponses();
+  if (!isPdf.value) fetchResponses();
 });
 
 onUnmounted(closeUsage);
@@ -247,7 +251,7 @@ onUnmounted(closeUsage);
               {{ displayLink }}
             </span>
           </div>
-          <div class="flex flex-col gap-1">
+          <div v-if="!isPdf" class="flex flex-col gap-1">
             <span class="text-xs font-medium uppercase text-n-slate-10">
               {{ t('CAPTAIN.DOCUMENTS.DETAILS.GENERATED_FAQS') }}
             </span>

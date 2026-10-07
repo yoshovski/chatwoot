@@ -9,9 +9,17 @@ class Captain::Documents::CrawlJob < ApplicationJob
     else
       perform_simple_crawl(document)
     end
+  rescue StandardError
+    # Without this the document stays "in progress" forever and offers no retry.
+    mark_crawl_failed(document) unless document.pdf_document?
+    raise
   end
 
   private
+
+  def mark_crawl_failed(document)
+    document.update!(status: :available, sync_status: :failed, last_sync_error_code: 'fetch_failed', last_sync_attempted_at: Time.current)
+  end
 
   include Captain::FirecrawlHelper
 

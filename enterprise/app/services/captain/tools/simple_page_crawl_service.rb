@@ -62,10 +62,13 @@ class Captain::Tools::SimplePageCrawlService
     @doc.xpath('//loc').to_set(&:text)
   end
 
+  # Pages link to tel:, mailto: and javascript: targets, sometimes malformed; only http(s) pages are crawlable.
   def extract_links_from_html
-    @doc.xpath('//a/@href').to_set do |link|
-      absolute_url = URI.join(@external_link, link.value).to_s
-      absolute_url
+    @doc.xpath('//a/@href').each_with_object(Set.new) do |link, links|
+      absolute_url = URI.join(@external_link, link.value.strip)
+      links << absolute_url.to_s if absolute_url.is_a?(URI::HTTP)
+    rescue URI::Error
+      next
     end
   end
 

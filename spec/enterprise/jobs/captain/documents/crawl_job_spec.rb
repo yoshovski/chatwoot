@@ -104,6 +104,13 @@ RSpec.describe Captain::Documents::CrawlJob, type: :job do
         expect(simple_crawler).to receive(:page_links)
         described_class.perform_now(document)
       end
+
+      it 'marks the document as failed when the crawl crashes' do
+        allow(simple_crawler).to receive(:page_links).and_raise(URI::InvalidURIError, 'bad URI')
+
+        expect { described_class.perform_now(document) }.to raise_error(URI::InvalidURIError)
+        expect(document.reload).to have_attributes(status: 'available', sync_status: 'failed', last_sync_error_code: 'fetch_failed')
+      end
     end
 
     context 'when document is a PDF' do

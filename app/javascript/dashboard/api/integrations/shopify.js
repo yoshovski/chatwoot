@@ -25,6 +25,12 @@ class ShopifyAPI extends ApiClient {
     return axios.delete(this.url);
   }
 
+  getCatalogProducts({ status, q, page }) {
+    return axios.get(`${this.url}/catalog_products`, {
+      params: { status: status || undefined, q: q || undefined, page },
+    });
+  }
+
   pauseCatalog() {
     return axios.post(`${this.url}/pause_catalog`);
   }
