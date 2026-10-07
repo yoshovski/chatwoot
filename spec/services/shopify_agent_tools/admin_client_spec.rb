@@ -30,13 +30,13 @@ RSpec.describe ShopifyAgentTools::AdminClient do
         )
         .to_return(
           status: 201,
-          body: { id: 'sat-123', tool_key: 'sat_tool_key_abc', slug: 'acme-store' }.to_json,
+          body: { id: 'sat-123', tool_api_key: 'sat_tool_key_abc', slug: 'acme-store' }.to_json,
           headers: { 'Content-Type' => 'application/json' }
         )
 
       result = client.create_tenant(name: 'Acme', slug: 'acme-store', shop_domain: 'acme.myshopify.com')
       expect(result['id']).to eq('sat-123')
-      expect(result['tool_key']).to eq('sat_tool_key_abc')
+      expect(result['tool_api_key']).to eq('sat_tool_key_abc')
     end
   end
 
@@ -90,12 +90,12 @@ RSpec.describe ShopifyAgentTools::AdminClient do
         .with(headers: { 'Authorization' => "Bearer #{admin_key}" })
         .to_return(
           status: 200,
-          body: { tool_key: 'sat_new_tool_key' }.to_json,
+          body: { tenant_id: 'sat-123', tool_api_key: 'sat_new_tool_key' }.to_json,
           headers: { 'Content-Type' => 'application/json' }
         )
 
       result = client.rotate_tool_key('sat-123')
-      expect(result['tool_key']).to eq('sat_new_tool_key')
+      expect(result['tool_api_key']).to eq('sat_new_tool_key')
     end
   end
 
