@@ -10,4 +10,13 @@ module Enterprise::Conversations::EventDataPresenter
       sla_policy_id: sla_applicable ? sla_policy_id : nil
     )
   end
+
+  private
+
+  def push_meta
+    assistant = captain_waiting_assistant
+    return super if assistant.blank?
+
+    super.merge(captain_waiting: { id: assistant.id, name: assistant.name, thumbnail: assistant.push_event_data[:avatar_url] })
+  end
 end

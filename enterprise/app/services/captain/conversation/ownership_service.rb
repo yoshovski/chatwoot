@@ -76,6 +76,15 @@ class Captain::Conversation::OwnershipService
                 .exists?(['messages.created_at >= ?', since_time])
   end
 
+  # An agent takes the conversation from Captain: it is opened and assigned to them,
+  # and marked human-active so Captain stops answering while it waits.
+  def take_over!(user)
+    conversation.with_lock do
+      conversation.update!(status: :open, assignee: user, ai_assignee: nil)
+      record_human_takeover!
+    end
+  end
+
   def record_human_takeover!
     return if conversation.blank? || assistant.blank?
     return unless captain_configured_for_inbox?

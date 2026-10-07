@@ -122,6 +122,7 @@ Rails.application.routes.draw do
               resources :scenarios
             end
             resources :agent_sessions, only: [:show]
+            post 'conversations/:conversation_id/takeover', to: 'conversation_takeovers#create'
             resources :assistant_responses do
               get :drilldown, on: :member
             end

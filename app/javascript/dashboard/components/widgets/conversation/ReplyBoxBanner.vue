@@ -5,6 +5,7 @@ import { useMapGetter } from 'dashboard/composables/store';
 import { useAlert } from 'dashboard/composables';
 import { useI18n } from 'vue-i18n';
 import wootConstants from 'dashboard/constants/globals';
+import CaptainConversationsAPI from 'dashboard/api/captain/conversations';
 
 import Banner from 'dashboard/components/ui/Banner.vue';
 
@@ -64,12 +65,32 @@ const isAgentBotOwned = computed(
   () => currentChat.value?.meta?.assignee_type === 'AgentBot'
 );
 
+const isCaptainOwned = computed(
+  () => currentChat.value?.meta?.assignee_type === 'Captain::Assistant'
+);
+
 const showBotHandoffBanner = computed(() => {
-  return isPendingConversation.value && isAgentBotOwned.value;
+  return (
+    isPendingConversation.value &&
+    (isAgentBotOwned.value || isCaptainOwned.value)
+  );
 });
 
+// After a handoff, Captain can keep answering an open conversation (even one
+// assigned to an agent) until someone takes over.
+const captainWaitingAssistant = computed(
+  () => currentChat.value?.meta?.captain_waiting
+);
+
+const showCaptainWaitingBanner = computed(
+  () => !showBotHandoffBanner.value && Boolean(captainWaitingAssistant.value)
+);
+
 const botAssigneeName = computed(() => {
-  if (isAgentBotOwned.value && assignedAgent.value?.name) {
+  if (
+    (isAgentBotOwned.value || isCaptainOwned.value) &&
+    assignedAgent.value?.name
+  ) {
     return assignedAgent.value.name;
   }
 
@@ -101,7 +122,24 @@ const reopenConversation = async () => {
   });
 };
 
+// Taking over from Captain opens the conversation, assigns it to the agent and
+// stops Captain from answering, in one request.
+const takeOverFromCaptain = async () => {
+  try {
+    await CaptainConversationsAPI.takeOver(currentChat.value?.id);
+    await store.dispatch('getConversation', currentChat.value?.id);
+    useAlert(t('CONVERSATION.BOT_HANDOFF_SUCCESS'));
+  } catch (error) {
+    useAlert(t('CONVERSATION.BOT_HANDOFF_ERROR'));
+  }
+};
+
 const onClickBotHandoff = async () => {
+  if (isCaptainOwned.value) {
+    await takeOverFromCaptain();
+    return;
+  }
+
   try {
     const shouldAssignToCurrentUser =
       isAgentBotOwned.value || needsAssignmentToCurrentUser.value;
@@ -121,7 +159,9 @@ const onClickBotHandoff = async () => {
 
 <template>
   <Banner
-    v-if="showSelfAssignBanner && !showBotHandoffBanner"
+    v-if="
+      showSelfAssignBanner && !showBotHandoffBanner && !showCaptainWaitingBanner
+    "
     action-button-variant="ghost"
     color-scheme="secondary"
     class="mx-2 mb-2 rounded-lg !py-2"
@@ -143,5 +183,19 @@ const onClickBotHandoff = async () => {
     has-action-button
     :action-button-label="$t('CONVERSATION.BOT_HANDOFF_ACTION')"
     @primary-action="onClickBotHandoff"
+  />
+  <Banner
+    v-if="showCaptainWaitingBanner"
+    action-button-variant="ghost"
+    color-scheme="secondary"
+    class="mx-2 mb-2 rounded-lg !py-2"
+    :banner-message="
+      $t('CONVERSATION.CAPTAIN_WAITING_MESSAGE', {
+        assistantName: captainWaitingAssistant.name,
+      })
+    "
+    has-action-button
+    :action-button-label="$t('CONVERSATION.BOT_HANDOFF_ACTION')"
+    @primary-action="takeOverFromCaptain"
   />
 </template>
