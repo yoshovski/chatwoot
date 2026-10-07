@@ -1,4 +1,5 @@
 class Captain::Assistant::SessionCaptureService
+  SOURCES_USED_ATTRIBUTE = 'captain_sources_used'.freeze
   SCENARIO_AGENT_REGEX = /\A#{Captain::Scenario::HANDOFF_KEY_PREFIX}_(\d+)_/
 
   def initialize(assistant:, conversation:, run_result:, result_message:, credits_consumed:)
@@ -22,8 +23,9 @@ class Captain::Assistant::SessionCaptureService
 
   def capture!
     model = @assistant.agent_model
+    captured_sources = sources
 
-    Captain::AgentSession.create!(
+    session = Captain::AgentSession.create!(
       assistant: @assistant,
       session_type: :assistant,
       subject: @conversation,
@@ -35,12 +37,19 @@ class Captain::Assistant::SessionCaptureService
       cited_document_ids: cited_document_ids,
       document_ids: metadata[:document_ids] || [],
       scenario_ids: scenario_ids,
-      sources: sources,
+      sources: captured_sources,
       run_context: current_turn_history
     )
+    record_sources_used(captured_sources.count { |source| source[:used] })
+    session
   end
 
   private
+
+  # The dashboard shows the Sources button only on the reply that used sources, without loading every session.
+  def record_sources_used(count)
+    result_message.update!(additional_attributes: result_message.additional_attributes.to_h.merge(SOURCES_USED_ATTRIBUTE => count))
+  end
 
   def context
     @run_result.context || {}
@@ -68,19 +77,20 @@ class Captain::Assistant::SessionCaptureService
     (selected_citation_indexes & visible_citation_indexes).filter_map { |index| citation_document_ids[index] }
   end
 
-  # Every knowledge and product result of this turn, in source index order. A source is
-  # used when a reply part cites its index or the reply shows it as a product card.
+  # Every knowledge and product result of this turn, in source index order, except unused
+  # low-relevance hits. A source is used when a reply part cites its index or the reply
+  # shows it as a product card.
   def sources
-    references = (context.dig(:state, Captain::Assistant::CITATION_SOURCES_STATE_KEY) || {}).transform_keys(&:to_i)
-    details = context.dig(:state, Captain::Assistant::CITATION_DETAILS_STATE_KEY) || {}
+    references = context.dig(:state, Captain::Assistant::CITATION_SOURCES_STATE_KEY).to_h.transform_keys(&:to_i)
+    details = context.dig(:state, Captain::Assistant::CITATION_DETAILS_STATE_KEY).to_h
     used_references = cited_references(references) | card_references(references.values)
 
-    references.sort.map do |index, reference|
-      detail = (details[reference] || {}).to_h.symbolize_keys
-      {
-        index: index, reference: reference, used: used_references.include?(reference),
-        **detail.slice(:kind, :title, :excerpt, :url, :faq_id, :document_id)
-      }
+    references.sort.filter_map do |index, reference|
+      detail = details[reference].to_h.symbolize_keys
+      used = used_references.include?(reference)
+      next if !used && detail[:low_relevance]
+
+      { index: index, reference: reference, used: used, **detail.slice(:kind, :title, :excerpt, :url, :faq_id, :document_id) }
     end
   end
 

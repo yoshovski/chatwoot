@@ -193,7 +193,9 @@ class Captain::Playground::Configuration
   end
 
   def scenario_prompt_context
-    scenarios.map { |scenario| { title: scenario.title, key: agent_name_for(scenario), description: scenario.description } }
+    scenarios.map do |scenario|
+      { title: scenario.title, key: Agents::Helpers::NameNormalizer.to_tool_name(agent_name_for(scenario)), description: scenario.description }
+    end
   end
 
   def assistant_handler

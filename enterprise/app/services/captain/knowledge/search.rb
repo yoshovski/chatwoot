@@ -110,6 +110,8 @@ class Captain::Knowledge::Search
 
   def canonical_text(record, passage)
     return [record.question, "Question: #{record.question}\nAnswer: #{record.answer}"] if record.is_a?(Captain::AssistantResponse)
+    # Dify only knows documents by their sync key ("Captain Document 65."), so name them as Chatwoot does.
+    return [record.name.presence || record.external_link, passage.fetch('content')] if record.is_a?(Captain::Document)
 
     [passage.fetch('title'), passage.fetch('content')]
   end

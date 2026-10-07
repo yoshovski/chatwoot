@@ -10,7 +10,12 @@ import { useI18n } from 'vue-i18n';
 
 import MessageFormatter from 'shared/helpers/MessageFormatter.js';
 import { BUS_EVENTS } from 'shared/constants/busEvents';
-import { MESSAGE_VARIANTS, ORIENTATION, SENDER_TYPES } from '../constants';
+import {
+  CONTENT_TYPES,
+  MESSAGE_VARIANTS,
+  ORIENTATION,
+  SENDER_TYPES,
+} from '../constants';
 
 const props = defineProps({
   hideMeta: { type: Boolean, default: false },
@@ -24,6 +29,8 @@ const {
   id,
   sender,
   senderType,
+  contentType,
+  additionalAttributes,
 } = useMessageContext();
 const { t } = useI18n();
 
@@ -99,6 +106,21 @@ const shouldShowMeta = computed(
     variant.value !== MESSAGE_VARIANTS.ACTIVITY
 );
 
+// Captain replies record how many sources they used, so the Sources button sits on that
+// reply even when product cards or a form follow it. Older replies don't have the count
+// and keep the button with the footer, except on cards and forms.
+const showCaptainSources = computed(() => {
+  if (!isCaptainMessage.value) return false;
+
+  const sourcesUsed = additionalAttributes.value?.captainSourcesUsed;
+  if (sourcesUsed !== undefined) return sourcesUsed > 0;
+
+  return (
+    shouldShowMeta.value &&
+    ![CONTENT_TYPES.CARDS, CONTENT_TYPES.FORM].includes(contentType.value)
+  );
+});
+
 const replyToPreview = computed(() => {
   if (!inReplyTo) return '';
 
@@ -137,14 +159,17 @@ const replyToPreview = computed(() => {
       />
     </div>
     <slot />
-    <template v-if="shouldShowMeta">
+    <template v-if="shouldShowMeta || showCaptainSources">
       <CaptainGenerationDetails
-        v-if="isCaptainMessage"
+        v-if="showCaptainSources"
         :message-id="id"
         class="mt-2"
       >
         <template #meta>
-          <MessageMeta :class="[emailMetaClass, metaColorClass]" />
+          <MessageMeta
+            v-if="shouldShowMeta"
+            :class="[emailMetaClass, metaColorClass]"
+          />
         </template>
       </CaptainGenerationDetails>
       <MessageMeta
