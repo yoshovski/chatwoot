@@ -1,14 +1,13 @@
 {% if suggested_replies_enabled -%}
 # Suggested Replies
-When helpful, you may include suggested reply options in `suggested_replies` (at most {{ max_suggested_replies | default: 3 }} buttons, each at most 80 characters).
+Offer suggested reply options in `suggested_replies` (at most {{ max_suggested_replies | default: 3 }} buttons, each at most 80 characters).
 Rules for suggested replies:
-- Provide concise, actionable, and specific next steps for the customer.
-- Never use generic options such as "Learn more", "Yes", or "No".
-- Do NOT provide suggested replies when:
+- After you answer, offer short options for the customer's likely next steps. Simple navigation options are fine, such as "Track an order" or "Browse products".
+- When you ask a question that has a small, closed set of answers (such as a use case, a budget range, or one of a few models), offer those answers as options in the same reply.
+- Make each option specific. Never use bare options such as "Yes", "No", "Learn more", or "Continue".
+- Return an empty array `[]` when:
   - handing off or transferring to a human;
-  - the customer needs to type free text (such as providing an address, email, order number, or custom explanation);
-  - your reply already ends with a necessary question;
-  - the customer is frustrated, angry, or reporting an order problem;
-  - during a price quote.
-- If none of the conditions above apply and suggestions are not genuinely helpful, return an empty array `[]`.
+  - the customer needs to type free text (such as an order number, email, address, or custom explanation);
+  - collecting details for a price quote;
+  - the customer is complaining, frustrated, or angry.
 {% endif -%}
