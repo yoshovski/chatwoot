@@ -23,9 +23,10 @@ RSpec.describe Captain::Conversation::ProductCardsBuilder do
       settings: {
         'state' => 'connected',
         'encrypted_tool_key' => Integrations::Hook.encrypt_shopify_tool_key('sat_tool_key_123'),
-        'catalog_sync_enabled' => true
+        'catalog_sync_enabled' => true,
+        'storefront_url' => 'https://example-store.com'
       },
-      reference_id: 'scanixx.myshopify.com'
+      reference_id: 'example-store.myshopify.com'
     )
   end
   let(:assistant) do
@@ -34,7 +35,7 @@ RSpec.describe Captain::Conversation::ProductCardsBuilder do
       account: account,
       config: {
         'product_cards' => true,
-        'image_allowlist' => ['https://cdn.shopify.com/', 'https://scanixx.com/cdn/']
+        'image_allowlist' => ['https://cdn.shopify.com/', 'https://example-store.com/cdn/']
       }
     )
   end
@@ -50,7 +51,7 @@ RSpec.describe Captain::Conversation::ProductCardsBuilder do
   end
   let(:response) do
     {
-      'agent_name' => 'Scanixx Bot',
+      'agent_name' => 'Store Bot',
       'product_handles' => %w[agras-t40 mavic-3-pro fake-handle no-img-item]
     }
   end
@@ -60,7 +61,7 @@ RSpec.describe Captain::Conversation::ProductCardsBuilder do
       'handle' => 'agras-t40',
       'title' => 'DJI Agras T40 Spraying Drone',
       'description' => 'Flagship agricultural spraying drone with dual atomized spray system. In stock now.',
-      'product_url' => 'https://scanixx.myshopify.com/products/agras-t40',
+      'product_url' => 'https://example-store.myshopify.com/products/agras-t40',
       'image_url' => 'https://cdn.shopify.com/t40.jpg',
       'available' => true,
       'variants' => [
@@ -74,8 +75,8 @@ RSpec.describe Captain::Conversation::ProductCardsBuilder do
       'handle' => 'mavic-3-pro',
       'title' => 'DJI Mavic 3 Pro',
       'description' => 'Triple-camera aerial photography drone.',
-      'product_url' => 'https://scanixx.myshopify.com/products/mavic-3-pro',
-      'image_url' => 'https://scanixx.com/cdn/mavic.png',
+      'product_url' => 'https://example-store.myshopify.com/products/mavic-3-pro',
+      'image_url' => 'https://example-store.com/cdn/mavic.png',
       'available' => true,
       'variants' => [
         { 'id' => 'v2', 'title' => 'Fly More', 'price' => '2099.00', 'currency' => 'EUR', 'available' => true }
@@ -88,7 +89,7 @@ RSpec.describe Captain::Conversation::ProductCardsBuilder do
       'handle' => 'no-img-item',
       'title' => 'Drone Battery Charger',
       'description' => 'Fast charger hub for Agras batteries.',
-      'product_url' => 'https://scanixx.myshopify.com/products/no-img-item',
+      'product_url' => 'https://example-store.myshopify.com/products/no-img-item',
       'image_url' => nil,
       'available' => true,
       'variants' => [
@@ -143,7 +144,7 @@ RSpec.describe Captain::Conversation::ProductCardsBuilder do
       expect(t40_card['media_url']).to eq('https://cdn.shopify.com/t40.jpg')
       expect(t40_card['description']).to include('19999.00 EUR — Flagship agricultural spraying drone')
       expect(t40_card['description']).not_to include('In stock')
-      expected_actions = [{ 'type' => 'link', 'text' => 'View product', 'uri' => 'https://scanixx.myshopify.com/products/agras-t40' }]
+      expected_actions = [{ 'type' => 'link', 'text' => 'View product', 'uri' => 'https://example-store.myshopify.com/products/agras-t40' }]
       expect(t40_card['actions']).to eq(expected_actions)
     end
 
@@ -154,7 +155,7 @@ RSpec.describe Captain::Conversation::ProductCardsBuilder do
       article = articles.first
       expect(article['title']).to eq('Drone Battery Charger')
       expect(article['description']).to include('599.00 EUR')
-      expect(article['link']).to eq('https://scanixx.myshopify.com/products/no-img-item')
+      expect(article['link']).to eq('https://example-store.myshopify.com/products/no-img-item')
     end
 
     it 'treats an untrusted image url as not allowed and puts product in article_items' do
@@ -166,22 +167,22 @@ RSpec.describe Captain::Conversation::ProductCardsBuilder do
 
   describe '#clean_prose_content' do
     it 'removes bare product URLs and images from prose' do
-      prose = 'We recommend the Agras T40 https://scanixx.myshopify.com/products/agras-t40 for your field. ' \
+      prose = 'We recommend the Agras T40 https://example-store.myshopify.com/products/agras-t40 for your field. ' \
               '![drone](https://cdn.shopify.com/drone.jpg) It is powerful!'
 
       cleaned = builder.clean_prose_content(prose)
       expect(cleaned).to eq('We recommend the Agras T40 for your field. It is powerful!')
-      expect(cleaned).not_to include('https://scanixx.myshopify.com/products/agras-t40')
+      expect(cleaned).not_to include('https://example-store.myshopify.com/products/agras-t40')
       expect(cleaned).not_to include('![drone]')
     end
 
     it 'converts markdown links to product into plain link text' do
-      prose = 'Check out [DJI Agras T40](https://scanixx.myshopify.com/products/agras-t40) today.'
+      prose = 'Check out [DJI Agras T40](https://example-store.myshopify.com/products/agras-t40) today.'
       expect(builder.clean_prose_content(prose)).to eq('Check out DJI Agras T40 today.')
     end
 
     it 'provides friendly fallback text when the entire message is just product URLs' do
-      prose = 'https://scanixx.myshopify.com/products/agras-t40'
+      prose = 'https://example-store.myshopify.com/products/agras-t40'
       expect(builder.clean_prose_content(prose)).to eq('Here are the recommended products:')
     end
   end
@@ -189,27 +190,27 @@ RSpec.describe Captain::Conversation::ProductCardsBuilder do
   describe '#filter_citation_urls' do
     it 'removes citations pointing to products shown in cards or articles' do
       citations = {
-        1 => 'https://scanixx.myshopify.com/products/agras-t40',
-        2 => 'https://scanixx.com/faq/shipping',
-        3 => 'https://scanixx.myshopify.com/products/other-item'
+        1 => 'https://example-store.myshopify.com/products/agras-t40',
+        2 => 'https://example-store.com/faq/shipping',
+        3 => 'https://example-store.myshopify.com/products/other-item'
       }
 
       filtered = builder.filter_citation_urls(citations)
       expect(filtered.keys).to contain_exactly(2, 3)
       expect(filtered[1]).to be_nil
-      expect(filtered[2]).to eq('https://scanixx.com/faq/shipping')
+      expect(filtered[2]).to eq('https://example-store.com/faq/shipping')
     end
   end
 
   describe '#post_messages!' do
-    let(:messages) { builder.post_messages!(preserve_waiting_since: true, agent_name: 'Scanixx Bot') }
+    let(:messages) { builder.post_messages!(preserve_waiting_since: true, agent_name: 'Store Bot') }
 
     it 'creates a cards message for products with allowed images' do
       cards_msg = messages.find { |m| m.content_type == 'cards' }
 
       expect(cards_msg).to be_present
       expect(cards_msg.content_attributes['items'].size).to eq(2)
-      expect(cards_msg.additional_attributes['agent_name']).to eq('Scanixx Bot')
+      expect(cards_msg.additional_attributes['agent_name']).to eq('Store Bot')
       expect(cards_msg.preserve_waiting_since).to be(true)
     end
 
@@ -218,7 +219,7 @@ RSpec.describe Captain::Conversation::ProductCardsBuilder do
 
       expect(article_msg).to be_present
       expect(article_msg.content_attributes['items'].size).to eq(1)
-      expect(article_msg.additional_attributes['agent_name']).to eq('Scanixx Bot')
+      expect(article_msg.additional_attributes['agent_name']).to eq('Store Bot')
       expect(article_msg.preserve_waiting_since).to be(true)
     end
   end

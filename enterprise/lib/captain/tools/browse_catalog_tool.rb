@@ -4,7 +4,7 @@ class Captain::Tools::BrowseCatalogTool < Captain::Tools::BasePublicTool
   include Captain::Tools::ShopifyToolHelpers
 
   description 'Browse Shopify product collections and categories in the store catalog'
-  param :query, type: 'string', desc: 'Optional collection or category name to search for (e.g. drones)', required: false
+  param :query, type: 'string', desc: 'Optional collection or category name to search for (e.g. accessories)', required: false
   param :limit, type: 'integer', desc: 'Maximum number of collections to return (default: 10, max: 20)', required: false
 
   def perform(tool_context, query: nil, limit: 10)

@@ -281,38 +281,30 @@ class Captain::Assistant < ApplicationRecord
   end
 
   def default_link_allowlist
-    list = []
-    hook = account.hooks.find_by(app_id: 'shopify')
-    if hook&.shopify_connected? && hook.reference_id.present?
-      domain = hook.reference_id.downcase.strip
-      list << "https://#{domain}/"
-      list << "https://www.#{domain}/" unless domain.start_with?('www.')
-      if hook.shopify_storefront_url.present?
-        sf_url = hook.shopify_storefront_url.strip
-        sf_url = "https://#{sf_url}" unless sf_url.start_with?('http://', 'https://')
-        list << "#{sf_url.chomp('/')}/"
-      end
-    end
-    list << 'https://scanixx.com/'
-    list << 'https://www.scanixx.com/'
-    list << 'https://api.whatsapp.com/send/'
-    list.uniq
+    shopify_store_base_urls
   end
 
   def default_image_allowlist
-    list = ['https://cdn.shopify.com/']
-    hook = account.hooks.find_by(app_id: 'shopify')
-    if hook&.shopify_connected? && hook.reference_id.present?
-      domain = hook.reference_id.downcase.strip
-      list << "https://#{domain}/cdn/"
-      list << "https://www.#{domain}/cdn/" unless domain.start_with?('www.')
-    end
-    list << 'https://scanixx.com/cdn/'
-    list << 'https://www.scanixx.com/cdn/'
-    list.uniq
+    ['https://cdn.shopify.com/', *shopify_store_base_urls.map { |base_url| "#{base_url}cdn/" }]
   end
 
   private
+
+  # The connected store's myshopify domain (with and without www) and its public storefront.
+  def shopify_store_base_urls
+    hook = account.hooks.find_by(app_id: 'shopify')
+    return [] unless hook&.shopify_connected? && hook.reference_id.present?
+
+    domain = hook.reference_id.downcase.strip
+    base_urls = ["https://#{domain}/"]
+    base_urls << "https://www.#{domain}/" unless domain.start_with?('www.')
+    if hook.shopify_storefront_url.present?
+      storefront_url = hook.shopify_storefront_url.strip
+      storefront_url = "https://#{storefront_url}" unless storefront_url.start_with?('http://', 'https://')
+      base_urls << "#{storefront_url.chomp('/')}/"
+    end
+    base_urls.uniq
+  end
 
   def assistant_event_data
     {

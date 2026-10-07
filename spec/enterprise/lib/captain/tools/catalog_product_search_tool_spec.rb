@@ -177,22 +177,6 @@ RSpec.describe Captain::Tools::CatalogProductSearchTool do
       end
     end
 
-    context 'when account name contains scanixx' do
-      let(:account_name) { 'Scanixx Store' }
-
-      before do
-        allow(sat_client).to receive(:search_products).and_return(
-          { 'products' => [{ 'handle' => 'agras-t40' }] }
-        )
-        allow(knowledge_search).to receive(:search).and_return([])
-      end
-
-      it 'automatically enforces hide stock for Scanixx' do
-        result = tool.perform(tool_context, query: 'agras-t40')
-        expect(result).not_to include('Available:')
-      end
-    end
-
     context 'when product is not found or fails to fetch' do
       it 'keeps product marked unavailable on error' do
         allow(sat_client).to receive(:search_products).and_return(

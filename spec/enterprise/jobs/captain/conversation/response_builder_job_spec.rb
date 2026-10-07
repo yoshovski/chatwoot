@@ -817,7 +817,7 @@ RSpec.describe Captain::Conversation::ResponseBuilderJob, type: :job do
             'handle' => 'agras-t40',
             'title' => 'DJI Agras T40',
             'price' => '19999.00',
-            'product_url' => 'https://scanixx.myshopify.com/products/agras-t40',
+            'product_url' => 'https://example-store.myshopify.com/products/agras-t40',
             'image_url' => 'https://cdn.shopify.com/t40.jpg',
             'description' => 'Flagship agricultural spraying drone.'
           }
@@ -827,7 +827,7 @@ RSpec.describe Captain::Conversation::ResponseBuilderJob, type: :job do
             'handle' => 'no-img-item',
             'title' => 'Drone Battery Charger',
             'price' => '599.00',
-            'product_url' => 'https://scanixx.myshopify.com/products/no-img-item',
+            'product_url' => 'https://example-store.myshopify.com/products/no-img-item',
             'image_url' => nil,
             'description' => 'Fast charger.'
           }
@@ -835,8 +835,9 @@ RSpec.describe Captain::Conversation::ResponseBuilderJob, type: :job do
         let(:product_cards_run_result) do
           Agents::RunResult.new(
             output: {
-              'response_parts' => [{ 'text' => 'Check out https://scanixx.myshopify.com/products/agras-t40 for details.', 'citation_indexes' => [] }],
-              'response' => 'Check out https://scanixx.myshopify.com/products/agras-t40 for details.',
+              'response_parts' => [{ 'text' => 'Check out https://example-store.myshopify.com/products/agras-t40 for details.',
+                                     'citation_indexes' => [] }],
+              'response' => 'Check out https://example-store.myshopify.com/products/agras-t40 for details.',
               'product_handles' => %w[agras-t40 no-img-item unrelated-handle],
               'suggested_replies' => ['Track order']
             },
@@ -865,7 +866,7 @@ RSpec.describe Captain::Conversation::ResponseBuilderJob, type: :job do
           cards_msg = conversation.messages.find_by(content_type: 'cards')
 
           expect(primary_msg.content_type).to eq('text')
-          expect(primary_msg.content).not_to include('https://scanixx.myshopify.com/products/agras-t40')
+          expect(primary_msg.content).not_to include('https://example-store.myshopify.com/products/agras-t40')
           expect(cards_msg).to be_present
           expect(cards_msg.content_attributes['items'].size).to eq(1)
           expect(cards_msg.content_attributes['items'].first['media_url']).to eq('https://cdn.shopify.com/t40.jpg')
@@ -878,7 +879,7 @@ RSpec.describe Captain::Conversation::ResponseBuilderJob, type: :job do
 
           expect(article_msg).to be_present
           expect(article_msg.content_attributes['items'].size).to eq(1)
-          expect(article_msg.content_attributes['items'].first['link']).to eq('https://scanixx.myshopify.com/products/no-img-item')
+          expect(article_msg.content_attributes['items'].first['link']).to eq('https://example-store.myshopify.com/products/no-img-item')
         end
 
         it 'does not post cards or articles when product_cards is disabled' do
