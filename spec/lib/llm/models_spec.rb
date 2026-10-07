@@ -62,7 +62,7 @@ RSpec.describe Llm::Models do
     end
 
     it 'registers every selectable model in the RubyLLM model registry' do
-      registry_ids = JSON.parse(Rails.root.join('config/llm_models.json').read).pluck('id')
+      registry_ids = RubyLLM.models.all.map(&:id)
       unregistered_models = described_class.models.filter_map do |model_name, config|
         model_name unless config['coming_soon'] || registry_ids.include?(model_name)
       end
