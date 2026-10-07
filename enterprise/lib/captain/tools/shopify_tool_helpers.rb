@@ -13,18 +13,9 @@ module Captain::Tools::ShopifyToolHelpers
   end
 
   def hide_stock?
-    configured_hide_stock? || scanixx_store?
-  end
-
-  def configured_hide_stock?
     shopify_hook&.settings&.dig('hide_stock') == true ||
       @assistant.config&.dig('hide_stock') == true ||
       @assistant.account.custom_attributes&.dig('hide_stock') == true
-  end
-
-  def scanixx_store?
-    @assistant.account.name.to_s.downcase.include?('scanixx') ||
-      shopify_hook&.reference_id.to_s.downcase.include?('scanixx')
   end
 
   def sanitize_product_stock!(product)

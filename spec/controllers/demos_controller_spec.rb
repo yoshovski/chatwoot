@@ -12,9 +12,9 @@ describe '/demo', type: :request do
     end
 
     it 'renders the demo page for the demo slug' do
-      web_widget.update!(demo_slug: 'scanixx-website')
+      web_widget.update!(demo_slug: 'acme-website')
 
-      get '/demo/scanixx-website'
+      get '/demo/acme-website'
 
       expect(response).to be_successful
       expect(response.body).to include(web_widget.website_token)
@@ -35,12 +35,12 @@ describe '/demo', type: :request do
     end
 
     it 'shows the account name and takes the backdrop that contrasts with the widget colour' do
-      web_widget.account.update!(name: 'Scanixx')
+      web_widget.account.update!(name: 'Acme')
       web_widget.update!(widget_color: '#ffffff')
 
       get "/demo/#{web_widget.website_token}"
 
-      expect(response.body).to include('Scanixx')
+      expect(response.body).to include('Acme')
       expect(response.body).to include('backdrop-dark')
     end
 
