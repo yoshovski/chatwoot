@@ -6,6 +6,7 @@ class Captain::Tools::FaqLookupTool < Captain::Tools::BasePublicTool
                                       'Leave out the store name and filler words.'
 
   def perform(tool_context, query:)
+    query = without_business_name(query)
     log_tool_usage('searching', { query: query })
     return search_knowledge(tool_context, query) if @assistant.account.dify_knowledge_enabled?
 
@@ -23,6 +24,14 @@ class Captain::Tools::FaqLookupTool < Captain::Tools::BasePublicTool
   end
 
   private
+
+  # Models tend to prefix searches with the business name, which only adds noise to retrieval.
+  def without_business_name(query)
+    name = @assistant.config['product_name'].to_s.strip
+    return query if name.blank?
+
+    query.gsub(/\b#{Regexp.escape(name)}\b('s)?/i, ' ').squish.presence || query
+  end
 
   def search_knowledge(tool_context, query)
     passages = Captain::Knowledge::Search.new(@assistant).search(query)

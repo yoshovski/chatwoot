@@ -7,7 +7,7 @@ class Captain::Dify::DatasetProvisioningService
   end
 
   def perform
-    DATASETS.each do |kind, label|
+    created = DATASETS.filter_map do |kind, label|
       @assistant.with_lock do
         key = "dify_#{kind}_dataset_id"
         next if @assistant.config[key].present?
@@ -20,5 +20,13 @@ class Captain::Dify::DatasetProvisioningService
         @assistant.update!(config: @assistant.config.merge(key => dataset.fetch('id')))
       end
     end
+    # Records synced into a replaced dataset would otherwise stay unsearchable.
+    Captain::Dify::ReconcileJob.perform_later(@assistant.id) if created.any? && existing_records?
+  end
+
+  private
+
+  def existing_records?
+    @assistant.documents.exists?("metadata->>'dify_document_id' IS NOT NULL") || @assistant.responses.where.not(dify_document_id: nil).exists?
   end
 end

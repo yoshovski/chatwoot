@@ -13,6 +13,10 @@ defineProps({
     type: Number,
     required: true,
   },
+  storeHosts: {
+    type: Array,
+    default: () => [],
+  },
 });
 
 const emit = defineEmits(['close', 'createSuccess']);
@@ -58,6 +62,7 @@ defineExpose({ dialogRef });
   >
     <DocumentForm
       :assistant-id="assistantId"
+      :store-hosts="storeHosts"
       @submit="handleSubmit"
       @cancel="handleCancel"
     />

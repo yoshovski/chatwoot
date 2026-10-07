@@ -455,6 +455,7 @@ Rails.application.routes.draw do
                 get :orders
                 post :request_connection
                 post :sync_status
+                get :catalog_products
                 post :pause_catalog
                 post :resume_catalog
               end

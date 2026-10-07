@@ -1,7 +1,7 @@
 class Api::V1::Accounts::Integrations::ShopifyController < Api::V1::Accounts::Integrations::BaseController # rubocop:disable Metrics/ClassLength
   include Shopify::IntegrationHelper
   before_action :setup_shopify_context, only: [:orders]
-  before_action :fetch_hook, only: [:orders, :destroy, :sync_status, :pause_catalog, :resume_catalog]
+  before_action :fetch_hook, only: [:orders, :destroy, :sync_status, :pause_catalog, :resume_catalog, :catalog_products]
   before_action :check_authorization, only: [:destroy]
   before_action :validate_contact, only: [:orders]
 
@@ -33,6 +33,18 @@ class Api::V1::Accounts::Integrations::ShopifyController < Api::V1::Accounts::In
   def sync_status
     catalog_status = refresh_sat_state_and_catalog if @hook.shopify_sat_tenant_id.present?
     render json: hook_payload(@hook, catalog_status_data: catalog_status)
+  rescue ShopifyAgentTools::AdminClient::Error => e
+    render json: { error: e.message }, status: :unprocessable_entity
+  end
+
+  def catalog_products
+    unless @hook.shopify_connected? && @hook.shopify_catalog_sync_enabled? && @hook.shopify_sat_tenant_id.present?
+      return render json: { error: 'Shopify catalog sync is off' }, status: :unprocessable_entity
+    end
+
+    render json: ShopifyAgentTools::AdminClient.new.catalog_documents(
+      @hook.shopify_sat_tenant_id, status: params[:status], query: params[:q], page: params.fetch(:page, 1).to_i.clamp(1, 10_000)
+    )
   rescue ShopifyAgentTools::AdminClient::Error => e
     render json: { error: e.message }, status: :unprocessable_entity
   end

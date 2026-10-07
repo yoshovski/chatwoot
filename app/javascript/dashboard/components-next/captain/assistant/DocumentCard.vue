@@ -249,7 +249,7 @@ const handleRetry = () => {
         <Icon :icon="linkIcon" class="shrink-0" />
         <span class="truncate">{{ displayLink }}</span>
       </span>
-      <span class="text-sm shrink-0 text-n-slate-11">
+      <span v-if="!isPdf" class="text-sm shrink-0 text-n-slate-11">
         {{ responsesCountLabel }}
       </span>
       <DocumentSyncStatus

@@ -70,6 +70,9 @@ RSpec.describe Captain::Tools::SimplePageCrawlService do
               <a href="/relative">Relative Link</a>
               <a href="https://external.com">External Link</a>
               <a href="#anchor">Anchor Link</a>
+              <a href="tel:+1 (307) 414-8223 (WhatsApp only)">Call us</a>
+              <a href="mailto:hello@example.com">Email us</a>
+              <a href="javascript:openChat();">Chat</a>
             </body>
           </html>
         HTML
@@ -79,9 +82,8 @@ RSpec.describe Captain::Tools::SimplePageCrawlService do
         stub_request(:get, base_url).to_return(body: html_content)
       end
 
-      it 'extracts and absolutizes all links' do
-        links = service.page_links
-        expect(links).to include(
+      it 'extracts and absolutizes all web links and skips the rest' do
+        expect(service.page_links).to contain_exactly(
           'https://example.com/relative',
           'https://external.com',
           'https://example.com#anchor'

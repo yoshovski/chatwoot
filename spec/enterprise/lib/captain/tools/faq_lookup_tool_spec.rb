@@ -169,6 +169,13 @@ RSpec.describe Captain::Tools::FaqLookupTool, type: :model do
 
         expect(tool_context.state).to eq({})
       end
+
+      it 'drops the business name from the search' do
+        assistant.update!(config: assistant.config.merge('product_name' => 'Scanixx'))
+
+        expect(tool.perform(tool_context, query: "Scanixx's Spanish NIE")).to eq('No relevant FAQs found for: Spanish NIE')
+        expect(tool.perform(tool_context, query: 'Scanixx')).to eq('No relevant FAQs found for: Scanixx')
+      end
     end
 
     context 'with blank query' do

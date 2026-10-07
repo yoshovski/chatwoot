@@ -9,11 +9,16 @@ import { useAlert } from 'dashboard/composables';
 import Input from 'dashboard/components-next/input/Input.vue';
 import Button from 'dashboard/components-next/button/Button.vue';
 import ComboBox from 'dashboard/components-next/combobox/ComboBox.vue';
+import Checkbox from 'dashboard/components-next/checkbox/Checkbox.vue';
 
 const props = defineProps({
   assistantId: {
     type: Number,
     required: true,
+  },
+  storeHosts: {
+    type: Array,
+    default: () => [],
   },
 });
 
@@ -32,6 +37,8 @@ const initialState = {
   url: '',
   documentType: 'url',
   pdfFile: null,
+  // null follows the default for the URL until the user picks a value.
+  includeLinkedPages: null,
 };
 
 const state = reactive({ ...initialState });
@@ -54,6 +61,23 @@ const documentTypeOptions = [
 ];
 
 const v$ = useVuelidate(validationRules, state);
+
+const isStoreUrl = computed(() => {
+  try {
+    const host = new URL(state.url).hostname.toLowerCase();
+    return props.storeHosts.includes(host.replace(/^www\./, ''));
+  } catch {
+    return false;
+  }
+});
+
+// Store pages are added alone by default: products come from the catalog sync.
+const includeLinkedPages = computed({
+  get: () => state.includeLinkedPages ?? !isStoreUrl.value,
+  set: value => {
+    state.includeLinkedPages = value;
+  },
+});
 
 const isLoading = computed(() => formState.uiFlags.value.creatingItem);
 
@@ -107,6 +131,7 @@ const prepareDocumentDetails = () => {
   if (state.documentType === 'url') {
     formData.append('document[external_link]', state.url);
     formData.append('document[name]', state.name || state.url);
+    formData.append('document[include_linked_pages]', includeLinkedPages.value);
   } else {
     formData.append('document[pdf_file]', state.pdfFile);
     formData.append(
@@ -154,6 +179,25 @@ const handleSubmit = async () => {
       :message="formErrors.url"
       :message-type="formErrors.url ? 'error' : 'info'"
     />
+
+    <label
+      v-if="state.documentType === 'url'"
+      class="flex gap-2 items-start cursor-pointer"
+    >
+      <Checkbox v-model="includeLinkedPages" class="mt-0.5 shrink-0" />
+      <span class="flex flex-col gap-0.5">
+        <span class="text-sm text-n-slate-12">
+          {{ t('CAPTAIN.DOCUMENTS.FORM.LINKED_PAGES.LABEL') }}
+        </span>
+        <span class="text-xs text-n-slate-11">
+          {{
+            isStoreUrl
+              ? t('CAPTAIN.DOCUMENTS.FORM.LINKED_PAGES.STORE_HELP')
+              : t('CAPTAIN.DOCUMENTS.FORM.LINKED_PAGES.HELP')
+          }}
+        </span>
+      </span>
+    </label>
 
     <div v-if="state.documentType === 'pdf'" class="flex flex-col gap-2">
       <label class="text-sm font-medium text-n-slate-12">

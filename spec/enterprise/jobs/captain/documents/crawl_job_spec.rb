@@ -26,7 +26,8 @@ RSpec.describe Captain::Documents::CrawlJob, type: :job do
           expect(firecrawl_service).to receive(:perform).with(
             document.external_link,
             "#{webhook_url}?assistant_id=#{assistant_id}&token=#{token}",
-            20
+            20,
+            include_paths: []
           )
 
           described_class.perform_now(document)
@@ -42,7 +43,8 @@ RSpec.describe Captain::Documents::CrawlJob, type: :job do
           expect(firecrawl_service).to receive(:perform).with(
             document.external_link,
             "#{webhook_url}?assistant_id=#{assistant_id}&token=#{token}",
-            500
+            500,
+            include_paths: []
           )
 
           described_class.perform_now(document)
@@ -58,7 +60,8 @@ RSpec.describe Captain::Documents::CrawlJob, type: :job do
           expect(firecrawl_service).to receive(:perform).with(
             document.external_link,
             "#{webhook_url}?assistant_id=#{assistant_id}&token=#{token}",
-            10
+            10,
+            include_paths: []
           )
 
           described_class.perform_now(document)
@@ -103,6 +106,35 @@ RSpec.describe Captain::Documents::CrawlJob, type: :job do
       it 'uses SimplePageCrawlService to discover page links' do
         expect(simple_crawler).to receive(:page_links)
         described_class.perform_now(document)
+      end
+
+      it 'skips links to other sites' do
+        allow(simple_crawler).to receive(:page_links).and_return(['https://example.com/page1', 'https://facebook.com/example'])
+        allow(Captain::Tools::SimplePageCrawlParserJob).to receive(:perform_later)
+
+        described_class.perform_now(document)
+
+        expect(Captain::Tools::SimplePageCrawlParserJob).not_to have_received(:perform_later)
+          .with(assistant_id: assistant_id, page_link: 'https://facebook.com/example')
+        expect(Captain::Tools::SimplePageCrawlParserJob).to have_received(:perform_later).twice
+      end
+
+      it 'adds only the page itself when linked pages are off' do
+        document.update!(include_linked_pages: 'false')
+        allow(Captain::Tools::SimplePageCrawlParserJob).to receive(:perform_later)
+
+        described_class.perform_now(document)
+
+        expect(Captain::Tools::SimplePageCrawlService).not_to have_received(:new)
+        expect(Captain::Tools::SimplePageCrawlParserJob).to have_received(:perform_later)
+          .once.with(assistant_id: assistant_id, page_link: document.external_link)
+      end
+
+      it 'marks the document as failed when the crawl crashes' do
+        allow(simple_crawler).to receive(:page_links).and_raise(URI::InvalidURIError, 'bad URI')
+
+        expect { described_class.perform_now(document) }.to raise_error(URI::InvalidURIError)
+        expect(document.reload).to have_attributes(status: 'available', sync_status: 'failed', last_sync_error_code: 'fetch_failed')
       end
     end
 

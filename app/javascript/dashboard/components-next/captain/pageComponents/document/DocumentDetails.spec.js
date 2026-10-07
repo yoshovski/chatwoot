@@ -206,4 +206,33 @@ describe('DocumentDetails', () => {
 
     expect(wrapper.find('[data-test="usage-tab"]').exists()).toBe(false);
   });
+
+  it('shows no FAQ tab or FAQ count for PDFs, which are never turned into FAQs', () => {
+    const wrapper = shallowMount(DocumentDetails, {
+      props: { captainDocument: { ...captainDocument, pdf_document: true } },
+      global: {
+        directives: { dompurifyHtml: {} },
+        stubs: {
+          SidePanel: SidePanelStub,
+          TabBar: TabBarStub,
+          PaginationFooter: PaginationFooterStub,
+          Button: ButtonStub,
+          ReportDrilldownCard: true,
+        },
+      },
+    });
+
+    const tabKeys = wrapper
+      .findComponent(TabBarStub)
+      .props('tabs')
+      .map(tab => tab.key);
+    expect(tabKeys).not.toContain('faqs');
+    expect(wrapper.text()).not.toContain(
+      'CAPTAIN.DOCUMENTS.DETAILS.GENERATED_FAQS'
+    );
+    expect(dispatch).not.toHaveBeenCalledWith(
+      'captainResponses/get',
+      expect.anything()
+    );
+  });
 });

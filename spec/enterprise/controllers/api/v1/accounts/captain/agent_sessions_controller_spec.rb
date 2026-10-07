@@ -65,8 +65,7 @@ RSpec.describe 'Api::V1::Accounts::Captain::AgentSessions', type: :request do
         aggregate_failures do
           expect(json_response[:id]).to eq(agent_session.id)
           expect(json_response[:message_id]).to eq(message.id)
-          expect(json_response[:llm_model]).to eq('openai-gpt-5.2')
-          expect(json_response[:credits_consumed]).to eq(1.0)
+          expect(json_response).not_to include(:llm_model, :credits_consumed)
           expect(json_response[:run_context].length).to eq(4)
           expect(json_response[:run_context].second[:tool_calls].first[:arguments][:query]).to eq('refund')
 

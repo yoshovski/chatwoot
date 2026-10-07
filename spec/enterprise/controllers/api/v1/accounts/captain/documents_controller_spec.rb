@@ -453,6 +453,14 @@ RSpec.describe 'Api::V1::Accounts::Captain::Documents', type: :request do
           expect(json_response[:name]).to eq('Test Document')
           expect(json_response[:external_link]).to eq('https://example.com/doc')
         end
+
+        it 'stores whether linked pages should be added too' do
+          post "/api/v1/accounts/#{account.id}/captain/documents",
+               params: { document: valid_attributes[:document].merge(include_linked_pages: 'false') },
+               headers: admin.create_new_auth_token
+
+          expect(Captain::Document.order(:id).last.include_linked_pages).to eq('false')
+        end
       end
 
       context 'with invalid parameters' do

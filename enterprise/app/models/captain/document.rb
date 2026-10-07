@@ -36,7 +36,7 @@ class Captain::Document < ApplicationRecord
   has_many :responses, class_name: 'Captain::AssistantResponse', dependent: :destroy, as: :documentable
   belongs_to :account
   has_one_attached :pdf_file
-  store_accessor :metadata, :content_fingerprint, :last_sync_error_code, :sync_step, :openai_file_id
+  store_accessor :metadata, :content_fingerprint, :last_sync_error_code, :sync_step, :openai_file_id, :include_linked_pages
   include Concerns::CaptainMarkdownDocumentable
 
   validates :external_link, presence: true, unless: :file_attached?
