@@ -185,6 +185,27 @@ class Captain::Assistant < ApplicationRecord
     self.class.built_in_tool_ids + account.captain_custom_tools.pluck(:slug)
   end
 
+  def agent_name
+    name.parameterize(separator: '_')
+  end
+
+  # Scenarios start from these tools too, so they can search knowledge and products mid-flow.
+  def agent_tools
+    tools = [
+      self.class.resolve_tool_class('faq_lookup').new(self),
+      self.class.resolve_tool_class('handoff').new(self)
+    ]
+
+    if shopify_tools_available?
+      tools << self.class.resolve_tool_class('catalog_product_search').new(self)
+      tools << self.class.resolve_tool_class('browse_catalog').new(self)
+      tools << self.class.resolve_tool_class('track_order').new(self)
+    end
+
+    tools.concat(account.captain_custom_tools.enabled.map { |custom_tool| custom_tool.tool(self) })
+    tools
+  end
+
   def push_event_data
     assistant_event_data
   end
@@ -227,7 +248,7 @@ class Captain::Assistant < ApplicationRecord
       scenarios: scenarios.enabled.map do |scenario|
         {
           title: scenario.title,
-          key: scenario.handoff_key,
+          key: Agents::Helpers::NameNormalizer.to_tool_name(scenario.handoff_key),
           description: scenario.description
         }
       end,
@@ -366,26 +387,6 @@ class Captain::Assistant < ApplicationRecord
     return if config.key?('auto_resolve_mode')
 
     self.auto_resolve_mode = account&.captain_auto_resolve_mode || 'evaluated'
-  end
-
-  def agent_name
-    name.parameterize(separator: '_')
-  end
-
-  def agent_tools
-    tools = [
-      self.class.resolve_tool_class('faq_lookup').new(self),
-      self.class.resolve_tool_class('handoff').new(self)
-    ]
-
-    if shopify_tools_available?
-      tools << self.class.resolve_tool_class('catalog_product_search').new(self)
-      tools << self.class.resolve_tool_class('browse_catalog').new(self)
-      tools << self.class.resolve_tool_class('track_order').new(self)
-    end
-
-    tools.concat(account.captain_custom_tools.enabled.map { |custom_tool| custom_tool.tool(self) })
-    tools
   end
 end
 # rubocop:enable Metrics/ClassLength

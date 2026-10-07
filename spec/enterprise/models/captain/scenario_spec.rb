@@ -316,16 +316,24 @@ RSpec.describe Captain::Scenario, type: :model do
     end
 
     describe '#agent_tools' do
-      it 'returns array of tool instances including custom tools' do
+      it 'inherits the assistant tools without naming them' do
+        scenario = create(:captain_scenario, assistant: assistant, account: account, instruction: 'Answer warranty questions')
+
+        tool_names = scenario.send(:agent_tools).map(&:name)
+        expect(tool_names).to contain_exactly('captain--tools--faq_lookup', 'captain--tools--handoff')
+      end
+
+      it 'adds the tools the instruction names once' do
         create(:captain_custom_tool, account: account, slug: 'custom_fetch-order')
         scenario = create(:captain_scenario,
                           assistant: assistant,
                           account: account,
-                          instruction: 'Use [@Fetch Order](tool://custom_fetch-order)')
+                          instruction: 'Use [@Add Note](tool://add_contact_note) and [@Fetch Order](tool://custom_fetch-order)')
 
-        tools = scenario.send(:agent_tools)
-        expect(tools.length).to eq(1)
-        expect(tools.first).to be_a(Captain::Tools::HttpTool)
+        tool_names = scenario.send(:agent_tools).map(&:name)
+        expect(tool_names).to contain_exactly(
+          'captain--tools--faq_lookup', 'captain--tools--handoff', 'custom_fetch-order', 'captain--tools--add_contact_note'
+        )
       end
 
       it 'excludes disabled custom tools from execution' do
@@ -337,26 +345,7 @@ RSpec.describe Captain::Scenario, type: :model do
 
         custom_tool.update!(enabled: false)
 
-        tools = scenario.send(:agent_tools)
-        expect(tools).to be_empty
-      end
-
-      it 'returns mixed static and custom tool instances' do
-        create(:captain_custom_tool, account: account, slug: 'custom_fetch-order')
-        scenario = create(:captain_scenario,
-                          assistant: assistant,
-                          account: account,
-                          instruction: 'Use [@Add Note](tool://add_contact_note) and [@Fetch Order](tool://custom_fetch-order)')
-
-        allow(described_class).to receive(:resolve_tool_class).with('add_contact_note').and_return(
-          Class.new do
-            def initialize(_assistant); end
-          end
-        )
-
-        tools = scenario.send(:agent_tools)
-        expect(tools.length).to eq(2)
-        expect(tools.last).to be_a(Captain::Tools::HttpTool)
+        expect(scenario.send(:agent_tools).map(&:name)).not_to include('custom_fetch-order')
       end
     end
   end

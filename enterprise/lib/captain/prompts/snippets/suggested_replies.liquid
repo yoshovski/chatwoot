@@ -2,7 +2,7 @@
 # Suggested Replies
 Offer suggested reply options in `suggested_replies` (at most {{ max_suggested_replies | default: 3 }} buttons, each at most 80 characters).
 Rules for suggested replies:
-- After you answer, offer short options for the customer's likely next steps. Simple navigation options are fine, such as "Track an order" or "Browse products".
+- After you answer or greet, offer 2 or 3 short options for the customer's likely next steps. Simple navigation options are fine, such as "Track an order" or "Browse products". Base product and category options on what your tools or the conversation confirmed; never invent categories.
 - When you ask a question that has a small, closed set of answers (such as a use case, a budget range, or one of a few models), offer those answers as options in the same reply.
 - Make each option specific. Never use bare options such as "Yes", "No", "Learn more", or "Continue".
 - Return an empty array `[]` when:

@@ -5,6 +5,7 @@ import { useToggle, useElementSize } from '@vueuse/core';
 import { useVuelidate } from '@vuelidate/core';
 import { required, minLength } from '@vuelidate/validators';
 import { useMessageFormatter } from 'shared/composables/useMessageFormatter';
+import { useMapGetter } from 'dashboard/composables/store';
 import Input from 'dashboard/components-next/input/Input.vue';
 import Button from 'dashboard/components-next/button/Button.vue';
 import TextArea from 'dashboard/components-next/textarea/TextArea.vue';
@@ -89,6 +90,15 @@ const [isInstructionExpanded, toggleInstructionExpanded] = useToggle();
 
 const { height: contentHeight } = useElementSize(instructionContentRef);
 const needsOverlay = computed(() => contentHeight.value > 160);
+
+const captainTools = useMapGetter('captainTools/getRecords');
+// Scenarios use the assistant's tools; the instruction can name more, shown by their titles.
+const namedToolTitles = computed(() =>
+  props.tools.map(
+    toolId =>
+      captainTools.value.find(tool => tool.id === toolId)?.title || toolId
+  )
+);
 
 const startEdit = () => {
   Object.assign(state, {
@@ -227,12 +237,14 @@ const LINK_INSTRUCTION_CLASS =
           />
         </div>
       </div>
-      <span
-        v-if="tools?.length"
-        class="text-sm text-n-slate-11 font-medium mb-1"
-      >
-        {{ t('CAPTAIN.ASSISTANTS.SCENARIOS.ADD.SUGGESTED.TOOLS_USED') }}
-        {{ tools?.map(tool => `@${tool}`).join(', ') }}
+      <span class="text-sm text-n-slate-11 font-medium mb-1">
+        {{
+          namedToolTitles.length
+            ? t('CAPTAIN.ASSISTANTS.SCENARIOS.TOOLS.NAMED', {
+                tools: namedToolTitles.join(', '),
+              })
+            : t('CAPTAIN.ASSISTANTS.SCENARIOS.TOOLS.INHERITED')
+        }}
       </span>
     </div>
     <div v-else class="overflow-hidden flex flex-col gap-4 w-full">
