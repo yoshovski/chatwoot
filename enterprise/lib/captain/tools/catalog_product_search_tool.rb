@@ -2,9 +2,10 @@
 
 class Captain::Tools::CatalogProductSearchTool < Captain::Tools::BasePublicTool
   include Captain::Tools::ShopifyToolHelpers
+  include Captain::Tools::SourceIndexing
 
   description 'Search active products in the Shopify catalog with live prices, variants and links'
-  param :query, type: 'string', desc: 'The product title, SKU, keywords or description to search for'
+  param :query, type: 'string', desc: 'The product name, SKU or a few key words, such as "DB2160" or "Agras T100 battery"'
   param :limit, type: 'integer', desc: 'Maximum number of products to return (default: 3, at most 10)', required: false
 
   def perform(tool_context, query:, limit: 3)
@@ -125,7 +126,7 @@ class Captain::Tools::CatalogProductSearchTool < Captain::Tools::BasePublicTool
   def format_single_product(tool_context, product)
     lines = build_product_lines(product)
     append_availability_and_variants!(lines, product)
-    append_citation_index!(tool_context, lines, product)
+    append_source_index!(tool_context, lines, product)
     lines.join("\n")
   end
 
@@ -138,11 +139,11 @@ class Captain::Tools::CatalogProductSearchTool < Captain::Tools::BasePublicTool
     lines
   end
 
-  def append_citation_index!(tool_context, lines, product)
-    return unless @assistant.citations_enabled? && product['product_url'].present? && product['handle'].present?
+  def append_source_index!(tool_context, lines, product)
+    return if product['handle'].blank?
 
-    idx = citation_index_for_product(tool_context, product['handle'], product['product_url'])
-    lines << "Citation index: #{idx}" if idx
+    detail = { kind: 'product', title: product['title'], excerpt: source_excerpt(product['description']), url: product['product_url'] }
+    lines << "Source index: #{source_index_for(tool_context, "product:#{product['handle']}", detail)}"
   end
 
   def append_availability_and_variants!(lines, product)

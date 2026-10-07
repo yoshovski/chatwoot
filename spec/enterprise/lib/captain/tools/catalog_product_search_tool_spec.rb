@@ -134,7 +134,7 @@ RSpec.describe Captain::Tools::CatalogProductSearchTool do
       expect(result).to include('DJI Agras T40 Spraying Drone')
       expect(result).to include('19999.00 EUR')
       expect(result).to include('https://test-store.myshopify.com/products/agras-t40')
-      expect(result).to include('Citation index: 1')
+      expect(result).to include('Source index: 1')
 
       # Handles recorded in state
       expect(tool_context.state[:product_handles]).to include('agras-t40')

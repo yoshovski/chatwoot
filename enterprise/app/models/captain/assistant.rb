@@ -224,7 +224,6 @@ class Captain::Assistant < ApplicationRecord
       name: name,
       description: description,
       product_name: config['product_name'] || 'this product',
-      citation_enabled: citations_enabled?,
       scenarios: scenarios.enabled.map do |scenario|
         {
           title: scenario.title,

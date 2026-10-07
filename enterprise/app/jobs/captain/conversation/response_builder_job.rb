@@ -19,7 +19,7 @@ class Captain::Conversation::ResponseBuilderJob < ApplicationJob # rubocop:disab
     @conversation.reload
     return log_non_pending unless may_reply?
 
-    Current.executed_by = @assistant
+    start_reply
 
     return generate_and_process_response unless captain_v2_enabled?
 
@@ -32,10 +32,23 @@ class Captain::Conversation::ResponseBuilderJob < ApplicationJob # rubocop:disab
   rescue StandardError => e
     handle_error(e)
   ensure
+    toggle_typing(Events::Types::CONVERSATION_TYPING_OFF) if @typing
     Current.executed_by = nil
   end
 
   private
+
+  def start_reply
+    Current.executed_by = @assistant
+    toggle_typing(Events::Types::CONVERSATION_TYPING_ON)
+  end
+
+  # Shows "typing" in the widget and the dashboard while Captain works, also when it
+  # keeps answering after a handoff.
+  def toggle_typing(event)
+    @typing = event == Events::Types::CONVERSATION_TYPING_ON
+    Conversations::TypingStatusManager.new(@conversation, @assistant, {}).trigger_typing_event(event, false)
+  end
 
   def delegate_ownership_service
     Captain::Conversation::OwnershipService.new(

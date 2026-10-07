@@ -12,6 +12,7 @@
 #  run_context        :jsonb
 #  scenario_ids       :jsonb
 #  session_type       :integer          not null
+#  sources            :jsonb            not null
 #  subject_type       :string           not null
 #  used_faq_ids       :jsonb            not null
 #  created_at         :datetime         not null

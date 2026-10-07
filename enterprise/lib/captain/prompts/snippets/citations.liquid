@@ -1,4 +1,2 @@
-{% if citation_enabled -%}
-# Citations
-Each eligible knowledge result can include a numeric citation index. Put the supporting result's index in the `citation_indexes` array for each response part that uses it. Use only indexes shown in knowledge results. Reuse the same index for repeated references. Leave the array empty when the response part has no eligible source. Never include a source URL in response text or a citation field.
-{% endif -%}
+# Sources
+Knowledge and product results include a numeric source index. Put the indexes of the results each response part relies on in that part's `citation_indexes` array. Use only indexes shown in tool results. Reuse the same index for repeated references. Leave the array empty when the part relies on no result, such as a greeting or a question. Never include a source URL in response text or a citation field.

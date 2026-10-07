@@ -133,6 +133,23 @@ RSpec.describe Captain::Conversation::ProductCardsBuilder do
       expect(builder.shown_handles).to contain_exactly('agras-t40', 'mavic-3-pro', 'no-img-item')
       expect(builder.shown_handles).not_to include('fake-handle')
     end
+
+    it 'does not show a product again that a recent card message already showed' do
+      create(:message, conversation: conversation, account: account, inbox: inbox, message_type: :outgoing, sender: assistant,
+                       content_type: :article, content_attributes: { items: [{ 'title' => 'DJI Agras T40' }] },
+                       additional_attributes: { 'product_handles' => ['Agras-T40'] })
+
+      expect(builder.shown_handles).to contain_exactly('mavic-3-pro', 'no-img-item')
+    end
+
+    it 'shows a product again once its card is older than the recent messages' do
+      create(:message, conversation: conversation, account: account, inbox: inbox, message_type: :outgoing, sender: assistant,
+                       content_type: :article, content_attributes: { items: [{ 'title' => 'DJI Agras T40' }] },
+                       additional_attributes: { 'product_handles' => ['agras-t40'] })
+      create_list(:message, described_class::RECENT_MESSAGES, conversation: conversation, account: account, inbox: inbox)
+
+      expect(builder.shown_handles).to include('agras-t40')
+    end
   end
 
   describe 'card formatting and image allowlist' do
@@ -211,6 +228,7 @@ RSpec.describe Captain::Conversation::ProductCardsBuilder do
       expect(cards_msg).to be_present
       expect(cards_msg.content_attributes['items'].size).to eq(2)
       expect(cards_msg.additional_attributes['agent_name']).to eq('Store Bot')
+      expect(cards_msg.additional_attributes['product_handles']).to contain_exactly('agras-t40', 'mavic-3-pro', 'no-img-item')
       expect(cards_msg.preserve_waiting_since).to be(true)
     end
 

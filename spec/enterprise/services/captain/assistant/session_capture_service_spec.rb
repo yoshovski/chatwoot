@@ -175,8 +175,7 @@ RSpec.describe Captain::Assistant::SessionCaptureService do
         Captain::Assistant::CITATION_SOURCES_STATE_KEY => { 1 => "faq:#{cited_faq.id}", 2 => "doc:#{retrieved_document.id}" }
       }
       run_result.output = {
-        'response_parts' => [{ 'text' => 'Reset your password from settings.', 'citation_indexes' => [1] }],
-        'reasoning' => 'Used the password FAQ'
+        'response_parts' => [{ 'text' => 'Reset your password from settings.', 'citation_indexes' => [1] }]
       }
       result_message.update!(
         additional_attributes: {
@@ -195,11 +194,35 @@ RSpec.describe Captain::Assistant::SessionCaptureService do
       document = create(:captain_document, assistant: assistant, external_link: 'https://help.example.com/reset-password')
       run_context[:state][Captain::Assistant::CITATION_SOURCES_STATE_KEY] = { 1 => document.id }
       run_result.output = {
-        'response_parts' => [{ 'text' => 'Reset your password from settings.', 'citation_indexes' => [1] }],
-        'reasoning' => 'Used the password FAQ'
+        'response_parts' => [{ 'text' => 'Reset your password from settings.', 'citation_indexes' => [1] }]
       }
 
       expect(service.capture!.cited_document_ids).to eq([])
+    end
+
+    it 'stores every source of the turn and marks the cited ones and shown product cards as used' do
+      run_context[:state].merge!(
+        Captain::Assistant::CITATION_SOURCES_STATE_KEY => { 1 => 'faq:11', 2 => 'faq:12', 3 => 'product:agras-t40' },
+        Captain::Assistant::CITATION_DETAILS_STATE_KEY => {
+          'faq:11' => { kind: 'faq', title: 'How do I reset my modem?', excerpt: 'Hold reset for 10 seconds.', faq_id: 11 },
+          'faq:12' => { kind: 'faq', title: 'Opening hours', faq_id: 12 },
+          'product:agras-t40' => { kind: 'product', title: 'DJI Agras T40', url: 'https://shop.example.com/products/agras-t40' }
+        }
+      )
+      run_result.output = {
+        'response_parts' => [{ 'text' => 'Hold reset for 10 seconds.', 'citation_indexes' => [1] }],
+        'product_handles' => ['AGRAS-T40']
+      }
+
+      expect(service.capture!.sources).to eq(
+        [
+          { 'index' => 1, 'reference' => 'faq:11', 'used' => true, 'kind' => 'faq', 'title' => 'How do I reset my modem?',
+            'excerpt' => 'Hold reset for 10 seconds.', 'faq_id' => 11 },
+          { 'index' => 2, 'reference' => 'faq:12', 'used' => false, 'kind' => 'faq', 'title' => 'Opening hours', 'faq_id' => 12 },
+          { 'index' => 3, 'reference' => 'product:agras-t40', 'used' => true, 'kind' => 'product', 'title' => 'DJI Agras T40',
+            'url' => 'https://shop.example.com/products/agras-t40' }
+        ]
+      )
     end
 
     it 'extracts every scenario that authored a message in the current turn' do

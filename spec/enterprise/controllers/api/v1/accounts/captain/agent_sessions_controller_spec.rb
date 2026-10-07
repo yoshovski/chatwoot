@@ -78,7 +78,30 @@ RSpec.describe 'Api::V1::Accounts::Captain::AgentSessions', type: :request do
           expect(json_response[:used_faqs]).to eq([{ id: used_faq.id, title: 'How long do refunds take?' }])
 
           expect(json_response[:scenarios]).to eq([{ id: scenario.id, title: 'Refund flow' }])
+          expect(json_response[:assistant_id]).to eq(assistant.id)
+          expect(json_response[:sources]).to eq([])
         end
+      end
+
+      it 'returns the reply session for a later Captain message of the same reply' do
+        contact_form = create(:message, account: account, conversation: conversation, message_type: :outgoing,
+                                        sender: assistant, content: 'Please share your contact details.')
+
+        get "/api/v1/accounts/#{account.id}/captain/agent_sessions/#{contact_form.id}",
+            headers: agent.create_new_auth_token, as: :json
+
+        expect(response).to have_http_status(:success)
+        expect(json_response[:id]).to eq(agent_session.id)
+      end
+
+      it 'does not reuse the session after a newer customer message' do
+        create(:message, account: account, conversation: conversation, message_type: :incoming)
+        next_reply = create(:message, account: account, conversation: conversation, message_type: :outgoing, sender: assistant)
+
+        get "/api/v1/accounts/#{account.id}/captain/agent_sessions/#{next_reply.id}",
+            headers: agent.create_new_auth_token, as: :json
+
+        expect(response).to have_http_status(:not_found)
       end
 
       it 'does not allow an agent without access to the conversation' do

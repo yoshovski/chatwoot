@@ -1,5 +1,6 @@
 json.id @agent_session.id
 json.message_id @agent_session.result_id
+json.assistant_id @agent_session.assistant_id
 json.llm_model @agent_session.llm_model
 json.credits_consumed @agent_session.credits_consumed
 json.run_context @agent_session.run_context.is_a?(Array) ? @agent_session.run_context : []
@@ -16,6 +17,7 @@ json.used_faqs @used_faqs do |faq|
   json.id faq.id
   json.title faq.question
 end
+json.sources @agent_session.sources
 json.scenarios @scenario_titles do |id, title|
   json.id id
   json.title title

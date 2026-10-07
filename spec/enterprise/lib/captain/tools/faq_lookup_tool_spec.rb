@@ -27,7 +27,7 @@ RSpec.describe Captain::Tools::FaqLookupTool, type: :model do
       expect(tool.parameters).to have_key(:query)
       expect(tool.parameters[:query].name).to eq(:query)
       expect(tool.parameters[:query].type).to eq('string')
-      expect(tool.parameters[:query].description).to eq('The question or topic to search for in the knowledge base')
+      expect(tool.parameters[:query].description).to start_with('A short search of a few key words')
     end
   end
 
@@ -67,61 +67,52 @@ RSpec.describe Captain::Tools::FaqLookupTool, type: :model do
         expect(result).to include('Answer: Click on forgot password link')
         expect(result).to include('Question: How to change email?')
         expect(result).to include('Answer: Go to settings and update email')
-        expect(result).not_to include('Citation index:')
+        expect(result).to include('Source index: 1', 'Source index: 2')
       end
 
-      it 'does not assign indexes to attachments or storage links' do
+      it 'records each result as a source with its question and answer' do
+        tool.perform(tool_context, query: 'password reset')
+
+        expect(tool_context.state[Captain::Assistant::CITATION_SOURCES_STATE_KEY]).to eq(1 => "faq:#{response1.id}", 2 => "faq:#{response2.id}")
+        expect(tool_context.state[Captain::Assistant::CITATION_DETAILS_STATE_KEY]["faq:#{response1.id}"]).to include(
+          kind: 'faq', title: 'How to reset password?', excerpt: 'Click on forgot password link', faq_id: response1.id
+        )
+      end
+
+      it 'never records attachments, storage links or credentials as source links' do
         assistant.update!(config: assistant.config.merge('feature_citation' => true))
+        reference = "faq:#{response1.id}"
         document.pdf_file.attach(
           io: StringIO.new('PDF content'),
           filename: 'private-file.pdf',
           content_type: 'application/pdf'
         )
 
-        pdf_result = tool.perform(tool_context, query: 'private document')
+        ['s3://private-bucket/password', 'https://storage.example.com/private-file.pdf?token=secret',
+         'https://user:pass@help.example.com/password'].each do |link|
+          document.pdf_file.detach if link.start_with?('s3:')
+          document.update!(external_link: link)
+          tool_context.state.clear
 
-        expect(pdf_result).not_to include('Citation index:')
-        expect(tool_context.state[Captain::Assistant::CITATION_SOURCES_STATE_KEY]).to be_nil
+          result = tool.perform(tool_context, query: 'private document')
 
-        document.pdf_file.detach
-        document.update!(external_link: 's3://private-bucket/password')
-
-        storage_result = tool.perform(tool_context, query: 'private storage document')
-
-        expect(storage_result).not_to include('Citation index:')
-        expect(tool_context.state[Captain::Assistant::CITATION_SOURCES_STATE_KEY]).to be_nil
-
-        document.update!(external_link: 'https://storage.example.com/private-file.pdf?token=secret')
-
-        pdf_url_result = tool.perform(tool_context, query: 'private PDF URL')
-
-        expect(pdf_url_result).not_to include('Citation index:')
-        expect(tool_context.state[Captain::Assistant::CITATION_SOURCES_STATE_KEY]).to be_nil
+          expect(result).not_to include(link)
+          expect(tool_context.state[Captain::Assistant::CITATION_DETAILS_STATE_KEY][reference]).not_to have_key(:url)
+          expect(assistant.customer_visible_citation_urls(tool_context.state[Captain::Assistant::CITATION_SOURCES_STATE_KEY])).to be_empty
+        end
       end
 
-      it 'assigns stable numeric indexes to customer-visible document links' do
-        assistant.update!(config: assistant.config.merge('feature_citation' => true))
+      it 'keeps stable source indexes across lookups and records customer-visible links' do
         document.update!(external_link: 'https://help.example.com/password')
 
         result = tool.perform(tool_context, query: 'password')
         repeated_result = tool.perform(tool_context, query: 'password again')
 
-        expect(result).to include('Citation index: 1')
-        expect(repeated_result).to include('Citation index: 1')
+        expect(result).to include('Source index: 1', 'Source index: 2')
+        expect(repeated_result).to include('Source index: 1')
         expect(result).not_to include('https://help.example.com/password')
-        expect(result.scan('Citation index: 1').size).to eq(1)
-        expect(result).to include('Citation index: 2')
         expect(tool_context.state[Captain::Assistant::CITATION_SOURCES_STATE_KEY]).to eq(1 => "faq:#{response1.id}", 2 => "faq:#{response2.id}")
-      end
-
-      it 'does not cite document URLs containing credentials' do
-        assistant.update!(config: assistant.config.merge('feature_citation' => true))
-        document.update!(external_link: 'https://user:pass@help.example.com/password')
-
-        result = tool.perform(tool_context, query: 'password')
-
-        expect(result).not_to include('Citation index:')
-        expect(tool_context.state[Captain::Assistant::CITATION_SOURCES_STATE_KEY]).to be_nil
+        expect(tool_context.state[Captain::Assistant::CITATION_DETAILS_STATE_KEY]["faq:#{response1.id}"][:url]).to eq('https://help.example.com/password')
       end
 
       it 'logs tool usage for search' do
