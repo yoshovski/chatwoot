@@ -23,6 +23,15 @@ module Enterprise::Conversation
     self.captain_activity_reason_type = previous_reason_type
   end
 
+  # The Captain assistant that keeps answering this open conversation until a human
+  # takes over (assistant setting "keep answering while waiting").
+  def captain_waiting_assistant
+    return unless open?
+
+    ownership = Captain::Conversation::OwnershipService.new(conversation: self)
+    ownership.assistant if ownership.waiting?
+  end
+
   private
 
   def determine_conversation_status

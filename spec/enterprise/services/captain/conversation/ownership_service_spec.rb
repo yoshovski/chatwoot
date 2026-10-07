@@ -100,6 +100,29 @@ RSpec.describe Captain::Conversation::OwnershipService do
     end
   end
 
+  describe '#take_over!' do
+    it 'opens the conversation, assigns it to the agent and stops Captain from answering' do
+      conversation.update!(ai_assignee: assistant)
+
+      service.take_over!(user)
+
+      expect(conversation.reload).to have_attributes(status: 'open', assignee: user, ai_assignee: nil)
+      expect(conversation.label_list).to include('human-active')
+      expect(service.may_reply?).to be false
+    end
+
+    it 'takes over an open conversation that Captain keeps answering while assigned to another agent' do
+      other_agent = create(:user, account: account)
+      conversation.update!(status: :open, assignee: other_agent)
+      expect(conversation.captain_waiting_assistant).to eq(assistant)
+
+      service.take_over!(user)
+
+      expect(conversation.reload.assignee).to eq(user)
+      expect(conversation.captain_waiting_assistant).to be_nil
+    end
+  end
+
   describe '#handle_returned_to_ai!' do
     before do
       conversation.update_labels(['human-active'])

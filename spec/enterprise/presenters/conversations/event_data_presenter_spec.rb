@@ -39,4 +39,25 @@ RSpec.describe Conversations::EventDataPresenter do
       expect(presenter.push_data).not_to include(:applied_sla, :sla_events)
     end
   end
+
+  describe 'Captain waiting state' do
+    let(:assistant) { create(:captain_assistant, account: conversation.account, config: { 'continue_while_waiting' => true }) }
+
+    before { create(:captain_inbox, captain_assistant: assistant, inbox: conversation.inbox) }
+
+    it 'names the assistant that keeps answering until someone takes over' do
+      conversation.update!(status: :open)
+
+      push_data = described_class.new(Conversation.find(conversation.id)).push_data
+      expect(push_data[:meta][:captain_waiting]).to include(id: assistant.id, name: assistant.name)
+    end
+
+    it 'leaves it out once a human has taken over' do
+      conversation.update!(status: :open)
+      conversation.add_labels(['human-active'])
+
+      push_data = described_class.new(Conversation.find(conversation.id)).push_data
+      expect(push_data[:meta]).not_to have_key(:captain_waiting)
+    end
+  end
 end
