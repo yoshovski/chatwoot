@@ -457,7 +457,7 @@ const onPopoverHide = () => {
                   v-if="group.excerpt"
                   type="button"
                   class="p-0 text-xs leading-normal break-words bg-transparent border-0 cursor-pointer text-start text-n-slate-11"
-                  :class="{ 'line-clamp-1': !expanded[group.key] }"
+                  :class="{ 'line-clamp-2': !expanded[group.key] }"
                   @click="toggleExpanded(group.key)"
                 >
                   {{ group.excerpt }}
