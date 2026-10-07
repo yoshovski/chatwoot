@@ -18,6 +18,7 @@ class Captain::Conversation::HandoffNoteService
     Next: <the single next action for the team>
 
     Rules:
+    - Focus on the latest unresolved customer request. Do not revive earlier questions that were already answered or declined.
     - Maximum 12 words per line. Fragments, not sentences.
     - Omit the Details line entirely if they gave no specifics. Never write "none" or "not specified".
     - Only facts stated in the transcript. Never infer, never pad.
@@ -25,11 +26,12 @@ class Captain::Conversation::HandoffNoteService
     - No greeting, no preamble, no sign-off, no bullet characters.
   PROMPT
 
-  attr_reader :conversation, :assistant
+  attr_reader :conversation, :assistant, :reason
 
-  def initialize(conversation:, assistant: nil)
+  def initialize(conversation:, assistant: nil, reason: nil)
     @conversation = conversation
     @assistant = assistant || conversation&.inbox&.captain_assistant
+    @reason = reason
   end
 
   def post_note!
@@ -53,6 +55,8 @@ class Captain::Conversation::HandoffNoteService
   end
 
   def generate_note_content
+    return "#{NOTE_HEADER}\n#{reason}" if reason.present?
+
     summary = generate_summary
     "#{NOTE_HEADER}\n#{summary}"
   end

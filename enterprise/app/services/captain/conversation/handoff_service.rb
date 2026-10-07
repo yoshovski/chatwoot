@@ -1,9 +1,10 @@
 class Captain::Conversation::HandoffService
-  attr_reader :conversation, :assistant
+  attr_reader :conversation, :assistant, :reason
 
-  def initialize(conversation:, assistant: nil)
+  def initialize(conversation:, assistant: nil, reason: nil)
     @conversation = conversation
     @assistant = assistant || conversation&.inbox&.captain_assistant
+    @reason = reason
   end
 
   def ownership_service
@@ -58,7 +59,8 @@ class Captain::Conversation::HandoffService
   def note_service
     @note_service ||= Captain::Conversation::HandoffNoteService.new(
       conversation: conversation,
-      assistant: assistant
+      assistant: assistant,
+      reason: reason
     )
   end
 end

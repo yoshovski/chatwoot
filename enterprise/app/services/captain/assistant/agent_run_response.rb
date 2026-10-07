@@ -1,14 +1,15 @@
 module Captain::Assistant::AgentRunResponse
   private
 
+  def validate_agent_result!(run_result)
+    raise run_result.error if run_result.error
+    raise TypeError, 'Captain agent returned invalid structured output' unless run_result.output.is_a?(Hash)
+  end
+
   def process_agent_result(run_result)
     Rails.logger.info "[Captain V2] Agent result: #{run_result.inspect}"
     model_output = run_result.output
-    structured_response = if model_output.is_a?(Hash)
-                            model_output.with_indifferent_access
-                          else
-                            { 'response' => model_output.to_s, 'reasoning' => 'Processed by agent' }
-                          end
+    structured_response = model_output.with_indifferent_access
     response_parts = Captain::Assistant::ResponseParts.from_response(structured_response)
     response_parts = response_parts.without_citations unless @assistant.citations_enabled?
     structured_response['response_parts'] = response_parts.to_a
