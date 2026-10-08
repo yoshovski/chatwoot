@@ -171,10 +171,10 @@ RSpec.describe Captain::Tools::FaqLookupTool, type: :model do
       end
 
       it 'drops the business name from the search' do
-        assistant.update!(config: assistant.config.merge('product_name' => 'Scanixx'))
+        assistant.update!(config: assistant.config.merge('product_name' => 'Acme'))
 
-        expect(tool.perform(tool_context, query: "Scanixx's Spanish NIE")).to eq('No relevant FAQs found for: Spanish NIE')
-        expect(tool.perform(tool_context, query: 'Scanixx')).to eq('No relevant FAQs found for: Scanixx')
+        expect(tool.perform(tool_context, query: "Acme's return policy")).to eq('No relevant FAQs found for: return policy')
+        expect(tool.perform(tool_context, query: 'Acme')).to eq('No relevant FAQs found for: Acme')
       end
     end
 
