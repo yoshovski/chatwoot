@@ -141,6 +141,7 @@ Rails.application.routes.draw do
             end
             resources :documents, only: [:index, :show, :create, :update, :destroy] do
               post :sync, on: :member
+              post :generate_faqs, on: :member
               get :drilldown, on: :member
             end
             resource :tasks, only: [], controller: 'tasks' do

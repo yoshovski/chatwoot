@@ -656,4 +656,55 @@ RSpec.describe 'Api::V1::Accounts::Captain::Documents', type: :request do
       end
     end
   end
+
+  describe 'POST /api/v1/accounts/:account_id/captain/documents/:id/generate_faqs' do
+    let(:doc) { create(:captain_document, assistant: assistant, account: account, status: :available) }
+
+    context 'when it is an un-authenticated user' do
+      it 'returns unauthorized status' do
+        post "/api/v1/accounts/#{account.id}/captain/documents/#{doc.id}/generate_faqs"
+
+        expect(response).to have_http_status(:unauthorized)
+      end
+    end
+
+    context 'when it is an agent' do
+      it 'returns unauthorized status' do
+        post "/api/v1/accounts/#{account.id}/captain/documents/#{doc.id}/generate_faqs",
+             headers: agent.create_new_auth_token
+
+        expect(response).to have_http_status(:unauthorized)
+      end
+    end
+
+    context 'when it is an admin' do
+      it 'enqueues ResponseBuilderJob with force_ai: true and returns accepted status' do
+        expect(Captain::Documents::ResponseBuilderJob).to receive(:perform_later).with(doc, force_ai: true)
+
+        post "/api/v1/accounts/#{account.id}/captain/documents/#{doc.id}/generate_faqs",
+             headers: admin.create_new_auth_token
+
+        expect(response).to have_http_status(:accepted)
+      end
+
+      it 'returns 422 when document is a PDF and account has Dify knowledge enabled' do
+        auth_headers = admin.create_new_auth_token
+        pdf_doc = build(:captain_document, assistant: assistant, account: account)
+        pdf_doc.pdf_file.attach(
+          io: StringIO.new('PDF content'),
+          filename: 'test.pdf',
+          content_type: 'application/pdf'
+        )
+        pdf_doc.save!
+        allow_any_instance_of(Account).to receive(:dify_knowledge_enabled?).and_return(true)
+
+        expect(Captain::Documents::ResponseBuilderJob).not_to receive(:perform_later)
+
+        post "/api/v1/accounts/#{account.id}/captain/documents/#{pdf_doc.id}/generate_faqs",
+             headers: auth_headers
+
+        expect(response).to have_http_status(:unprocessable_entity)
+      end
+    end
+  end
 end

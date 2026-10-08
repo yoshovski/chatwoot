@@ -56,6 +56,10 @@ class Captain::AssistantPolicy < ApplicationPolicy
     @account_user.administrator?
   end
 
+  def generate_faqs?
+    @account_user.administrator?
+  end
+
   def playground?
     true
   end

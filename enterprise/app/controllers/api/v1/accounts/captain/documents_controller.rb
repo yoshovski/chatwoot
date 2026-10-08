@@ -3,7 +3,7 @@ class Api::V1::Accounts::Captain::DocumentsController < Api::V1::Accounts::BaseC
 
   before_action :set_current_page, only: [:index]
   before_action :set_documents, except: [:create]
-  before_action :set_document, only: [:show, :update, :destroy, :sync, :drilldown]
+  before_action :set_document, only: [:show, :update, :destroy, :sync, :drilldown, :generate_faqs]
   before_action :set_assistant, only: [:create]
   RESULTS_PER_PAGE = 25
 
@@ -48,6 +48,15 @@ class Api::V1::Accounts::Captain::DocumentsController < Api::V1::Accounts::BaseC
       last_sync_attempted_at: Time.current
     )
     Captain::Documents::PerformSyncJob.perform_later(@document)
+    head :accepted
+  end
+
+  def generate_faqs
+    if @document.pdf_document? && Current.account.dify_knowledge_enabled?
+      return render json: { error: 'PDF FAQ generation is not supported in Dify mode' }, status: :unprocessable_entity
+    end
+
+    Captain::Documents::ResponseBuilderJob.perform_later(@document, force_ai: true)
     head :accepted
   end
 

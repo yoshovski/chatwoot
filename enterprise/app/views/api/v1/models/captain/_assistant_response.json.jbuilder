@@ -31,3 +31,4 @@ json.question resource.question
 json.updated_at resource.updated_at.to_i
 json.status resource.status
 json.edited resource.edited
+json.origin resource.origin
