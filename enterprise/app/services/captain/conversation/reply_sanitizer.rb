@@ -111,9 +111,14 @@ class Captain::Conversation::ReplySanitizer
     # Remove heading markers (# through ######) at the beginning of lines
     text = text.gsub(/^(\s*)\#{1,6}[ \t]+/, '\1')
 
+    # Replace em dash and en dash punctuation with comma
+    text = text.gsub(/[ \t]*[—–][ \t]*/, ', ')
+
     # Clean up punctuation spacing if tags were stripped
     text = text.gsub(/:\s*([.!?,])/, '\1')
                .gsub(/[ \t]+([.!?,])/, '\1')
+               .gsub(/,\s*,+/, ',')
+               .gsub(/^,\s*/, '')
                .gsub(/[ \t]{2,}/, ' ')
 
     # Limit consecutive blank lines to at most two newlines

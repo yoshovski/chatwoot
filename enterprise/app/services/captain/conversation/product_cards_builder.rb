@@ -2,11 +2,15 @@
 
 # rubocop:disable Metrics/ClassLength
 class Captain::Conversation::ProductCardsBuilder
+  include Captain::Tools::ShopifyToolHelpers
+
   MAX_CARDS = 10
   MAX_TITLE_LENGTH = 80
   MAX_DESCRIPTION_LENGTH = 200
   # Products shown as cards within this many recent messages are not shown again.
   RECENT_MESSAGES = 10
+  STOCK_PHRASE_REGEX =
+    /\b(?:in\s+stock(?:\s+now)?|out\s+of\s+stock|sold\s+out|available\s+now|ready\s+to\s+ship|only\s+\d+\s+left|\d+\s+in\s+stock)\b/i
 
   attr_reader :assistant, :conversation, :response, :run_result
 
@@ -254,6 +258,7 @@ class Captain::Conversation::ProductCardsBuilder
   def build_card_title(product)
     title = product['title'].presence || product['handle'].to_s.tr('-_', ' ').titleize
     title = ActionController::Base.helpers.strip_tags(title.to_s) if defined?(ActionController::Base)
+    title = strip_stock_phrases(title) if hide_stock?
     title.to_s.strip.truncate(MAX_TITLE_LENGTH, omission: '...')
   end
 
@@ -269,6 +274,7 @@ class Captain::Conversation::ProductCardsBuilder
                  differentiator.presence || ''
                end
 
+    combined = strip_stock_phrases(combined) if hide_stock?
     combined.strip.truncate(MAX_DESCRIPTION_LENGTH, omission: '...')
   end
 
@@ -291,10 +297,24 @@ class Captain::Conversation::ProductCardsBuilder
     desc = product['description'].to_s
     desc = ActionController::Base.helpers.strip_tags(desc) if defined?(ActionController::Base)
     desc = desc.gsub(/[*_`#]/, '')
+    desc = strip_stock_phrases(desc) if hide_stock?
     desc = desc.gsub(/\b(in\s+stock|out\s+of\s+stock|available|inventory)\b[^\n.]*[\n.]?/i, '')
     desc = desc.gsub(%r{https?://\S+}, '')
     first_sentence = desc.split(/[.\n]/).map(&:strip).reject(&:blank?).first
     first_sentence.presence || desc.strip
+  end
+
+  def strip_stock_phrases(text)
+    return text if text.blank?
+
+    cleaned = text.to_s.gsub(STOCK_PHRASE_REGEX, '')
+    cleaned = cleaned.gsub(/\(\s*\)/, '').gsub(/\[\s*\]/, '')
+    cleaned = cleaned.gsub(/\s*[-—–,:]\s*([.!?,])/, '\1')
+                     .gsub(/\.\s*\./, '.')
+                     .gsub(/^[ \t]*[-—–,:.]+[ \t]*/, '')
+                     .gsub(/[ \t]*[-—–,:.]+[ \t]*$/, '')
+                     .gsub(/[ \t]{2,}/, ' ')
+    cleaned.strip
   end
 
   def extract_image_url(product)

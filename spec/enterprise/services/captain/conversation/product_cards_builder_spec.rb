@@ -180,6 +180,34 @@ RSpec.describe Captain::Conversation::ProductCardsBuilder do
       expect(builder.cards_items.size).to eq(1)
       expect(builder.article_items.size).to eq(2)
     end
+
+    context 'when hide_stock is enabled' do
+      before do
+        assistant.config['hide_stock'] = true
+        t40_product['description'] = 'Flagship agricultural spraying drone. In stock now.'
+        t40_product['title'] = 'DJI Agras T40 (In Stock)'
+        no_img_product['description'] = 'Fast charger hub for Agras batteries. In stock.'
+        no_img_product['title'] = 'Drone Battery Charger - Ready to ship'
+      end
+
+      it 'strips stock phrases from card titles and descriptions' do
+        cards = builder.cards_items
+        t40_card = cards.find { |c| c['title'].include?('Agras T40') }
+
+        expect(t40_card['title']).to eq('DJI Agras T40')
+        expect(t40_card['description']).to include('19999.00 EUR — Flagship agricultural spraying drone')
+        expect(t40_card['description']).not_to include('In stock')
+      end
+
+      it 'strips stock phrases from article titles and descriptions' do
+        articles = builder.article_items
+        article = articles.first
+
+        expect(article['title']).to eq('Drone Battery Charger')
+        expect(article['description']).to include('599.00 EUR — Fast charger hub for Agras batteries')
+        expect(article['description']).not_to include('In stock')
+      end
+    end
   end
 
   describe '#clean_prose_content' do
