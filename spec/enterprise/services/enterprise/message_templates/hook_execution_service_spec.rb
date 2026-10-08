@@ -8,6 +8,8 @@ RSpec.describe MessageTemplates::HookExecutionService do
   let(:assistant) { create(:captain_assistant, account: account) }
 
   before do
+    # Examples are Captain V1 unless they enable V2; new accounts get V2 on this fork's self-hosted enterprise plan.
+    account.disable_features!('captain_integration_v2')
     create(:captain_inbox, captain_assistant: assistant, inbox: inbox)
   end
 
@@ -251,6 +253,8 @@ RSpec.describe MessageTemplates::HookExecutionService do
     context 'when continue_while_waiting is enabled' do
       before do
         assistant.update!(config: { 'continue_while_waiting' => true })
+        # The inbox caches the assistant it loaded before the config change.
+        inbox.reload
       end
 
       it 'schedules captain response job when open and not taken over' do
