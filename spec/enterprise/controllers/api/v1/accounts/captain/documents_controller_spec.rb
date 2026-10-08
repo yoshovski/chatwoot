@@ -584,6 +584,25 @@ RSpec.describe 'Api::V1::Accounts::Captain::Documents', type: :request do
     end
   end
 
+  describe 'PATCH /api/v1/accounts/:account_id/captain/documents/:id' do
+    it 'lets an admin make a document agents only, and nothing else' do
+      patch "/api/v1/accounts/#{account.id}/captain/documents/#{document.id}",
+            params: { document: { agents_only: true, name: 'Renamed' } }, headers: admin.create_new_auth_token, as: :json
+
+      expect(response).to have_http_status(:success)
+      expect(json_response[:agents_only]).to be(true)
+      expect(document.reload).to have_attributes(agents_only: true, name: document.name)
+    end
+
+    it 'returns unauthorized for agents' do
+      patch "/api/v1/accounts/#{account.id}/captain/documents/#{document.id}",
+            params: { document: { agents_only: true } }, headers: agent.create_new_auth_token, as: :json
+
+      expect(response).to have_http_status(:unauthorized)
+      expect(document.reload.agents_only).to be(false)
+    end
+  end
+
   describe 'DELETE /api/v1/accounts/:account_id/captain/documents/:id' do
     context 'when it is an un-authenticated user' do
       before do

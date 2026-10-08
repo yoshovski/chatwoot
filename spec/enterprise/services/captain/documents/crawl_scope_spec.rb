@@ -5,26 +5,26 @@ RSpec.describe Captain::Documents::CrawlScope do
   let(:assistant) { create(:captain_assistant, account: account) }
 
   context 'when the crawl starts on the connected Shopify store' do
-    let(:document) { create(:captain_document, account: account, assistant: assistant, external_link: 'https://scanixx.com/policies/shipping-policy') }
+    let(:document) { create(:captain_document, account: account, assistant: assistant, external_link: 'https://acme-store.com/policies/shipping-policy') }
     let(:scope) { described_class.new(document) }
 
     before do
-      create(:integrations_hook, :shopify, account: account, reference_id: 'scanixx-dev.myshopify.com',
-                                           settings: { 'state' => 'connected', 'storefront_url' => 'https://scanixx.com' })
+      create(:integrations_hook, :shopify, account: account, reference_id: 'acme-dev.myshopify.com',
+                                           settings: { 'state' => 'connected', 'storefront_url' => 'https://acme-store.com' })
     end
 
     it 'follows only content pages on the store' do
       followed = %w[
-        https://scanixx.com/pages/contact https://www.scanixx.com/policies/refund-policy
-        https://scanixx.com/blogs/news https://scanixx.com/en/pages/warranty
-        https://scanixx.com/products/db2160 https://scanixx.com/collections/agras
-        https://scanixx.com https://scanixx.com/cart https://scanixx.com/search
-        https://facebook.com/scanixx https://other.example.com/pages/contact
+        https://acme-store.com/pages/contact https://www.acme-store.com/policies/refund-policy
+        https://acme-store.com/blogs/news https://acme-store.com/en/pages/warranty
+        https://acme-store.com/products/x200-battery https://acme-store.com/collections/batteries
+        https://acme-store.com https://acme-store.com/cart https://acme-store.com/search
+        https://facebook.com/acme https://other.example.com/pages/contact
       ].select { |link| scope.follow?(link) }
 
       expect(followed).to eq(%w[
-                               https://scanixx.com/pages/contact https://www.scanixx.com/policies/refund-policy
-                               https://scanixx.com/blogs/news https://scanixx.com/en/pages/warranty
+                               https://acme-store.com/pages/contact https://www.acme-store.com/policies/refund-policy
+                               https://acme-store.com/blogs/news https://acme-store.com/en/pages/warranty
                              ])
     end
 

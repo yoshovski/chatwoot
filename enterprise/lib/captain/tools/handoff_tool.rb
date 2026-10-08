@@ -56,6 +56,7 @@ class Captain::Tools::HandoffTool < Captain::Tools::BasePublicTool
     handoff_service = Captain::Conversation::HandoffService.new(conversation: conversation, assistant: @assistant, reason: reason)
     return handle_already_active_handoff(handoff_service, tool_context) if handoff_service.handoff_active?
 
+    handoff_service.note_content
     note = nil
     handoff_result = conversation.with_lock do
       next :changed unless conversation.pending?

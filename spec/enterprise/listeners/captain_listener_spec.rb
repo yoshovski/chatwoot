@@ -153,6 +153,16 @@ describe CaptainListener do
         expect(message.reload.content_attributes['captain_suggestion_handled']).to be(true)
       end
 
+      it 'does not schedule a response for choices sent by an agent' do
+        message.update!(sender: user)
+
+        expect(Captain::Conversation::ResponseSchedulerService).not_to receive(:new)
+
+        listener.message_updated(event)
+
+        expect(message.reload.content_attributes['captain_suggestion_handled']).to be_nil
+      end
+
       it 'does not schedule response if already handled' do
         message.content_attributes['captain_suggestion_handled'] = true
         message.save!
@@ -190,10 +200,11 @@ describe CaptainListener do
   describe '#message_created' do
     let(:conversation) { create(:conversation, account: account, inbox: inbox) }
 
-    it 'captures typed email for incoming messages' do
+    it 'captures typed email for incoming messages in a Captain inbox' do
+      create(:captain_inbox, captain_assistant: assistant, inbox: inbox)
       contact = create(:contact, account: account, email: nil)
       conversation.update!(contact: contact)
-      message = create(:message, account: account, inbox: inbox, conversation: conversation,
+      message = create(:message, account: account, inbox: inbox.reload, conversation: conversation,
                                  message_type: :incoming, content: 'my email is user@example.com')
       event = Events::Base.new(:message_created, Time.current, message: message)
 
@@ -202,6 +213,17 @@ describe CaptainListener do
       expect(contact_capture_service).to receive(:capture_typed_email!).with(message)
 
       listener.message_created(event)
+    end
+
+    it 'leaves the contact email alone in an inbox without Captain' do
+      contact = create(:contact, account: account, email: 'customer@example.com')
+      conversation.update!(contact: contact)
+      message = create(:message, account: account, inbox: inbox, conversation: conversation,
+                                 message_type: :incoming, content: 'Forwarding this from colleague@example.com')
+
+      listener.message_created(Events::Base.new(:message_created, Time.current, message: message))
+
+      expect(contact.reload.email).to eq('customer@example.com')
     end
 
     it 'calls OwnershipService#record_human_takeover! for outgoing public human messages' do

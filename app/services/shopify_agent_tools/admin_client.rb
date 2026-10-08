@@ -12,9 +12,20 @@ class ShopifyAgentTools::AdminClient
     end
   end
 
+  DEFAULT_API_URL = 'https://shopify-tools.chatoctave.com'.freeze
+
+  # SAT_API_URL from the environment or the installation config, for both the admin and the tool client.
+  def self.api_url
+    ENV.fetch('SAT_API_URL', nil).presence || global_config('SAT_API_URL').presence || DEFAULT_API_URL
+  end
+
+  def self.global_config(key)
+    GlobalConfigService.load(key, nil) if defined?(GlobalConfigService)
+  end
+
   def initialize(api_url: nil, admin_key: nil)
-    @api_url = (api_url.presence || ENV.fetch('SAT_API_URL', nil).presence || global_config('SAT_API_URL').presence || 'https://shopify-tools.chatoctave.com').chomp('/')
-    @admin_key = admin_key.presence || ENV.fetch('SAT_ADMIN_KEY', nil).presence || global_config('SAT_ADMIN_KEY')
+    @api_url = (api_url.presence || self.class.api_url).chomp('/')
+    @admin_key = admin_key.presence || ENV.fetch('SAT_ADMIN_KEY', nil).presence || self.class.global_config('SAT_ADMIN_KEY')
 
     raise Error, 'Shopify Agent Tools admin key is missing' if @admin_key.blank?
 
@@ -117,11 +128,5 @@ class ShopifyAgentTools::AdminClient
     parsed['detail'] if parsed.is_a?(Hash)
   rescue JSON::ParserError
     nil
-  end
-
-  def global_config(key)
-    return unless defined?(GlobalConfigService)
-
-    GlobalConfigService.load(key, nil)
   end
 end

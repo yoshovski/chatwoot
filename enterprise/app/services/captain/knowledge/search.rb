@@ -33,10 +33,12 @@ class Captain::Knowledge::Search
     end
   end
 
-  def initialize(assistant, actor: nil)
+  # Searches answer customers unless for_agents: agents-only documents and FAQs are left out of customer results.
+  def initialize(assistant, actor: nil, for_agents: false)
     @assistant = assistant
     @account = assistant.account
     @actor = actor || assistant
+    @for_agents = for_agents
   end
 
   def search(query, kinds: nil)
@@ -85,6 +87,7 @@ class Captain::Knowledge::Search
     document_id = passage.fetch('document_id')
     record = canonical_record(kind, document_id)
     return if %w[faq document].include?(kind) && record.nil?
+    return if record && !@for_agents && !record.visible_to_customers?
 
     build_passage(passage, kind, document_id, record)
   end

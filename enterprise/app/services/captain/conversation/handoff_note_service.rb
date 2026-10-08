@@ -1,4 +1,6 @@
 class Captain::Conversation::HandoffNoteService
+  include Integrations::LlmInstrumentation
+
   NOTE_HEADER = '🔔 **Needs your reply**'.freeze
   FALLBACK_NOTE = 'Summary unavailable, read the thread above.'.freeze
   DEFAULT_MODEL = 'llm-fast'.freeze
@@ -34,10 +36,9 @@ class Captain::Conversation::HandoffNoteService
     @reason = reason
   end
 
-  def post_note!
+  def post_note!(content = generate_note_content)
     return nil if conversation.blank?
 
-    content = generate_note_content
     sender = assistant || conversation.inbox&.captain_assistant
 
     conversation.messages.create!(
@@ -62,6 +63,8 @@ class Captain::Conversation::HandoffNoteService
   end
 
   def generate_summary
+    return FALLBACK_NOTE unless captain_responses_left?
+
     transcript = build_transcript
     return FALLBACK_NOTE if transcript.blank?
 
@@ -95,6 +98,11 @@ class Captain::Conversation::HandoffNoteService
   end
 
   private
+
+  # A handoff because the account ran out of Captain responses gets no LLM summary either.
+  def captain_responses_left?
+    conversation.account.usage_limits[:captain][:responses][:current_available].positive?
+  end
 
   def request_summary(transcript)
     summary = call_llm(model: configured_model, prompt: system_prompt, input: transcript)
@@ -164,48 +172,39 @@ class Captain::Conversation::HandoffNoteService
     summary.to_s.sub(/\A🔔\s*\*\*Needs your reply\*\*\s*\n?/i, '').strip
   end
 
-  def chat_completions_url
-    endpoint = InstallationConfig.find_by(name: 'CAPTAIN_OPEN_AI_ENDPOINT')&.value.presence || 'https://api.openai.com/'
-    base = endpoint.chomp('/')
-    base = "#{base}/v1" unless base.end_with?('/v1')
-    "#{base}/chat/completions"
+  def call_llm(model:, prompt:, input:)
+    response = instrument_llm_call(instrumentation_params(model, prompt, input)) do
+      llm_context.chat(model: model, provider: :openai, assume_model_exists: true)
+                 .with_temperature(TEMPERATURE)
+                 .with_params(max_tokens: MAX_TOKENS)
+                 .with_instructions(prompt)
+                 .ask(input)
+    end
+    response.content.to_s.strip.presence
+  rescue RubyLLM::Error, Faraday::Error => e
+    Rails.logger.warn("[Captain][HandoffNoteService] LLM call error (#{model}): #{e.class}: #{e.message}")
+    nil
   end
 
-  def llm_connection
-    Faraday.new do |f|
-      f.options.timeout = TIMEOUT_SECONDS
-      f.options.open_timeout = TIMEOUT_SECONDS
+  # Captain's LLM endpoint and key, with a short timeout and no retries: the fallback model is the retry.
+  def llm_context
+    Llm::Config.initialize!
+    RubyLLM.context do |config|
+      config.request_timeout = TIMEOUT_SECONDS
+      config.max_retries = 0
     end
   end
 
-  def llm_headers
-    api_key = InstallationConfig.find_by(name: 'CAPTAIN_OPEN_AI_API_KEY')&.value.presence
-    headers = { 'Content-Type' => 'application/json' }
-    headers['Authorization'] = "Bearer #{api_key}" if api_key.present?
-    headers
-  end
-
-  def call_llm(model:, prompt:, input:)
-    payload = {
+  def instrumentation_params(model, prompt, input)
+    {
+      span_name: 'llm.captain.handoff_summary',
       model: model,
-      messages: [{ role: 'system', content: prompt }, { role: 'user', content: input }],
       temperature: TEMPERATURE,
-      max_tokens: MAX_TOKENS
+      account_id: conversation.account_id,
+      conversation_id: conversation.display_id,
+      feature_name: 'handoff_summary',
+      messages: [{ role: 'system', content: prompt }, { role: 'user', content: input }],
+      metadata: { assistant_id: assistant&.id }
     }
-
-    response = llm_connection.post(chat_completions_url, payload.to_json, llm_headers)
-    return nil unless response.status.between?(200, 299)
-
-    JSON.parse(response.body).dig('choices', 0, 'message', 'content')&.strip
-  rescue StandardError => e
-    Rails.logger.warn("[Captain][HandoffNoteService] LLM call error (#{model}): #{e.class}: #{e.message}")
-    nil
-  # rubocop:disable Lint/RescueException
-  rescue Exception => e
-    raise e unless defined?(WebMock::NetConnectNotAllowedError) && e.is_a?(WebMock::NetConnectNotAllowedError)
-
-    Rails.logger.warn("[Captain][HandoffNoteService] LLM call WebMock error (#{model}): #{e.class}: #{e.message}")
-    nil
-    # rubocop:enable Lint/RescueException
   end
 end

@@ -44,7 +44,7 @@ RSpec.describe Captain::Tools::CatalogProductSearchTool do
       account_id: 1,
       config: assistant_config,
       citations_enabled?: true,
-      shopify_tools_available?: true
+      shopify_catalog_tools_available?: true
     )
   end
   let(:tool) { described_class.new(assistant) }
@@ -90,7 +90,7 @@ RSpec.describe Captain::Tools::CatalogProductSearchTool do
     end
 
     it 'returns false when assistant reports tools not available' do
-      allow(assistant).to receive(:shopify_tools_available?).and_return(false)
+      allow(assistant).to receive(:shopify_catalog_tools_available?).and_return(false)
       expect(tool.active?).to be false
     end
   end
@@ -193,7 +193,7 @@ RSpec.describe Captain::Tools::CatalogProductSearchTool do
 
     context 'when connection is disconnected' do
       before do
-        allow(assistant).to receive(:shopify_tools_available?).and_return(false)
+        allow(assistant).to receive(:shopify_catalog_tools_available?).and_return(false)
       end
 
       it 'returns error message' do

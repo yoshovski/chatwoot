@@ -39,6 +39,8 @@ RSpec.describe Captain::Conversation::ResponseBuilderJob, type: :job do
       before do
         allow(account).to receive(:feature_enabled?).and_return(false)
         allow(account).to receive(:feature_enabled?).with('captain_integration_v2').and_return(false)
+        # A known contact: handoffs to a contact without name or email also post the contact form (#59).
+        conversation.contact.update!(name: 'Jane Doe', email: 'jane@example.com')
       end
 
       it 'uses Captain::Llm::AssistantChatService' do
@@ -596,6 +598,7 @@ RSpec.describe Captain::Conversation::ResponseBuilderJob, type: :job do
         end
 
         it 'falls back to text message when response contains markdown links' do
+          assistant.update!(config: assistant.config.merge('link_allowlist' => ['https://example.com']))
           link_parts = [{ 'text' => 'Check our [guide](https://example.com)', 'citation_indexes' => [] }]
           allow(mock_agent_runner_service).to receive(:generate_response).and_return({
                                                                                        'response_parts' => link_parts,
@@ -669,7 +672,8 @@ RSpec.describe Captain::Conversation::ResponseBuilderJob, type: :job do
             }
           )
           allow(mock_agent_runner_service).to receive(:last_run_result).and_return(run_result)
-          assistant.update!(config: assistant.config.merge('feature_citation' => true))
+          # Citation links go through the link allowlist like any other link in a reply.
+          assistant.update!(config: assistant.config.merge('feature_citation' => true, 'link_allowlist' => ['https://help.example.com']))
         end
 
         it 'does not render links when citations are disabled' do
@@ -865,7 +869,9 @@ RSpec.describe Captain::Conversation::ResponseBuilderJob, type: :job do
         end
 
         before do
-          assistant.update!(config: assistant.config.merge('product_cards' => true, 'suggested_replies' => true, 'max_suggested_replies' => 3))
+          assistant.update!(config: assistant.config.merge('product_cards' => true, 'suggested_replies' => true, 'max_suggested_replies' => 3,
+                                                           'link_allowlist' => ['https://example-store.myshopify.com'],
+                                                           'image_allowlist' => ['https://cdn.shopify.com']))
           allow(mock_agent_runner_service).to receive(:last_run_result).and_return(product_cards_run_result)
           allow(mock_agent_runner_service).to receive(:generate_response).and_return(product_cards_run_result.output)
         end
@@ -1070,7 +1076,7 @@ RSpec.describe Captain::Conversation::ResponseBuilderJob, type: :job do
                                                                                    })
         allow(Redis::Alfred).to receive(:set).and_return(true)
         allow(Captain::Conversation::HandoffNoteService).to receive(:new)
-          .and_return(instance_double(Captain::Conversation::HandoffNoteService, post_note!: nil))
+          .and_return(instance_double(Captain::Conversation::HandoffNoteService, generate_note_content: 'Note', post_note!: nil))
       end
 
       it 'delivers the answer, hands off and offers the contact form' do
@@ -1287,6 +1293,8 @@ RSpec.describe Captain::Conversation::ResponseBuilderJob, type: :job do
       allow(account).to receive(:feature_enabled?).and_return(false)
       allow(account).to receive(:feature_enabled?).with('captain_integration_v2').and_return(false)
       create(:message, conversation: conversation, content: 'Hello with image', message_type: :incoming)
+      allow(Captain::Conversation::HandoffNoteService).to receive(:new)
+        .and_return(instance_double(Captain::Conversation::HandoffNoteService, generate_note_content: 'Note', post_note!: nil))
       allow(Captain::Llm::AssistantChatService).to receive(:new).and_return(mock_llm_chat_service)
       allow(Captain::OpenAiMessageBuilderService).to receive(:new).with(message: anything).and_return(mock_message_builder)
       allow(mock_message_builder).to receive(:generate_content).and_return('Hello with image')

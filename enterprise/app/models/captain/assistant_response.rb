@@ -44,6 +44,13 @@ class Captain::AssistantResponse < ApplicationRecord
   scope :by_account, ->(account_id) { where(account_id: account_id) }
   scope :by_assistant, ->(assistant_id) { where(assistant_id: assistant_id) }
   scope :with_document, ->(document_id) { where(document_id: document_id) }
+  # Leaves out agents-only FAQs and FAQs generated from an agents-only document.
+  scope :visible_to_customers, lambda {
+    agents_only_documents = Captain::Document.where(agents_only: true).select(:id)
+    where(agents_only: false)
+      .where("captain_assistant_responses.documentable_type IS DISTINCT FROM 'Captain::Document' " \
+             "OR captain_assistant_responses.documentable_id NOT IN (#{agents_only_documents.to_sql})")
+  }
 
   enum status: { approved: 1 }
 
@@ -54,6 +61,10 @@ class Captain::AssistantResponse < ApplicationRecord
 
   def customer_visible_source_url
     documentable.customer_visible_source_url if documentable.is_a?(Captain::Document)
+  end
+
+  def visible_to_customers?
+    !agents_only? && !(documentable.is_a?(Captain::Document) && documentable.agents_only?)
   end
 
   private

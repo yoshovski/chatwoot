@@ -14,7 +14,9 @@ class Captain::Tools::SearchDocumentationService < Captain::Tools::BaseTool
                        .new(account: assistant.account)
                        .translate(query, target_language: assistant.account.locale_english_name)
 
-    responses = assistant.responses.approved.search(translated_query)
+    responses = assistant.responses.approved
+    responses = responses.visible_to_customers if @user.blank?
+    responses = responses.search(translated_query)
 
     return 'No FAQs found for the given query' if responses.empty?
 
@@ -24,7 +26,8 @@ class Captain::Tools::SearchDocumentationService < Captain::Tools::BaseTool
   private
 
   def search_knowledge(query)
-    passages = Captain::Knowledge::Search.new(assistant, actor: @user).search(query)
+    # Copilot passes the agent; the V1 customer assistant passes no user.
+    passages = Captain::Knowledge::Search.new(assistant, actor: @user, for_agents: @user.present?).search(query)
     return 'No knowledge found for the given query' if passages.empty?
 
     passages.map(&:to_tool_result).join

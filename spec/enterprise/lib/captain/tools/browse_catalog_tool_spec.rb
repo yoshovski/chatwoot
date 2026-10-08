@@ -36,7 +36,7 @@ RSpec.describe Captain::Tools::BrowseCatalogTool do
       account_id: 1,
       config: {},
       citations_enabled?: false,
-      shopify_tools_available?: true
+      shopify_catalog_tools_available?: true
     )
   end
   let(:tool) { described_class.new(assistant) }
@@ -74,7 +74,7 @@ RSpec.describe Captain::Tools::BrowseCatalogTool do
     end
 
     it 'returns false when shopify tools are not available' do
-      allow(assistant).to receive(:shopify_tools_available?).and_return(false)
+      allow(assistant).to receive(:shopify_catalog_tools_available?).and_return(false)
       expect(tool.active?).to be false
     end
   end
@@ -114,7 +114,7 @@ RSpec.describe Captain::Tools::BrowseCatalogTool do
     end
 
     it 'returns failure result when connection is not available' do
-      allow(assistant).to receive(:shopify_tools_available?).and_return(false)
+      allow(assistant).to receive(:shopify_catalog_tools_available?).and_return(false)
 
       result = tool.perform(tool_context)
       expect(result).to include('Shopify is not connected for this account')

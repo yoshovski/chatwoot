@@ -187,6 +187,33 @@ RSpec.describe 'Shopify Integration API', type: :request do
     end
   end
 
+  describe 'admin-only Shopify actions' do
+    let(:admin) { create(:user, account: account, role: :administrator) }
+    let!(:hook) { create(:integrations_hook, :shopify, account: account) }
+
+    it 'returns unauthorized for agents and leaves the hook unchanged' do
+      [
+        [:post, 'request_connection', { shop_domain: 'other-store.myshopify.com' }],
+        [:post, 'sync_status', {}],
+        [:post, 'pause_catalog', {}],
+        [:post, 'resume_catalog', {}]
+      ].each do |verb, action, params|
+        send(verb, "/api/v1/accounts/#{account.id}/integrations/shopify/#{action}", params: params, headers: agent.create_new_auth_token, as: :json)
+
+        expect(response).to have_http_status(:unauthorized), "expected #{action} to be admin-only"
+      end
+      expect(hook.reload.attributes.slice('reference_id', 'status', 'settings')).to eq(hook.attributes.slice('reference_id', 'status', 'settings'))
+    end
+
+    it 'lets administrators request a connection' do
+      post "/api/v1/accounts/#{account.id}/integrations/shopify/request_connection",
+           params: { shop_domain: 'other-store.myshopify.com' }, headers: admin.create_new_auth_token, as: :json
+
+      expect(response).to have_http_status(:ok)
+      expect(hook.reload.reference_id).to eq('other-store.myshopify.com')
+    end
+  end
+
   describe 'DELETE /api/v1/accounts/:account_id/integrations/shopify' do
     let(:admin) { create(:user, account: account, role: :administrator) }
 

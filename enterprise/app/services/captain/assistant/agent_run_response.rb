@@ -7,7 +7,7 @@ module Captain::Assistant::AgentRunResponse
   end
 
   def process_agent_result(run_result)
-    Rails.logger.info "[Captain V2] Agent result: #{run_result.inspect}"
+    log_agent_result(run_result)
     model_output = run_result.output
     structured_response = model_output.with_indifferent_access
     response_parts = Captain::Assistant::ResponseParts.from_response(structured_response)
@@ -17,6 +17,12 @@ module Captain::Assistant::AgentRunResponse
     structured_response['agent_name'] = run_result.context&.dig(:current_agent)
     structured_response['handoff_tool_called'] = run_result.context&.dig(:captain_v2_handoff_tool_called) || false
     structured_response
+  end
+
+  # The reply text and tool results are customer data: keep them out of production (info) logs.
+  def log_agent_result(run_result)
+    Rails.logger.info "[Captain V2] Agent result: agent=#{run_result.context&.dig(:current_agent)} keys=#{run_result.output.keys.join(',')}"
+    Rails.logger.debug { "[Captain V2] Agent result: #{run_result.inspect}" }
   end
 
   def rewrite_oversized_response(run_result)

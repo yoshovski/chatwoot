@@ -22,7 +22,7 @@ class Captain::Assistant < ApplicationRecord
   CITATION_SOURCES_STATE_KEY = :captain_v2_citation_sources
   CITATION_DETAILS_STATE_KEY = :captain_v2_citation_details
   PRODUCT_HANDLES_STATE_KEY = :captain_v2_product_handles
-  SHOPIFY_TOOL_IDS = %w[catalog_product_search browse_catalog track_order].freeze
+  SHOPIFY_CATALOG_TOOL_IDS = %w[catalog_product_search browse_catalog].freeze
   AUTO_RESOLVE_MODES = %w[disabled legacy evaluated].freeze
   DEFAULT_INACTIVITY_THRESHOLD_MINUTES = 60
   MINIMUM_INACTIVITY_THRESHOLD_MINUTES = 5
@@ -162,16 +162,17 @@ class Captain::Assistant < ApplicationRecord
     send_inactivity_resolution_message
   end
 
-  def shopify_tools_available?
-    hook = account.hooks.find_by(app_id: 'shopify')
-    return false unless hook&.shopify_connected? && hook.shopify_tool_key.present?
+  # Order tracking only needs a connected store and its tool key. The catalog tools also need the catalog sync on.
+  def shopify_order_tracking_available? = shopify_tools_hook.present?
 
-    hook.shopify_catalog_client_status == 'on'
+  def shopify_catalog_tools_available?
+    shopify_tools_hook&.shopify_catalog_client_status == 'on'
   end
 
   def available_agent_tools
     tools = self.class.built_in_agent_tools.dup
-    tools.reject! { |tool| SHOPIFY_TOOL_IDS.include?(tool[:id]) } unless shopify_tools_available?
+    tools.reject! { |tool| SHOPIFY_CATALOG_TOOL_IDS.include?(tool[:id]) } unless shopify_catalog_tools_available?
+    tools.reject! { |tool| tool[:id] == 'track_order' } unless shopify_order_tracking_available?
 
     custom_tools = account.captain_custom_tools.enabled.map(&:to_tool_metadata)
     tools.concat(custom_tools)
@@ -191,19 +192,12 @@ class Captain::Assistant < ApplicationRecord
 
   # Scenarios start from these tools too, so they can search knowledge and products mid-flow.
   def agent_tools
-    tools = [
-      self.class.resolve_tool_class('faq_lookup').new(self),
-      self.class.resolve_tool_class('handoff').new(self)
-    ]
+    tool_ids = %w[faq_lookup handoff]
+    tool_ids += SHOPIFY_CATALOG_TOOL_IDS if shopify_catalog_tools_available?
+    tool_ids << 'track_order' if shopify_order_tracking_available?
 
-    if shopify_tools_available?
-      tools << self.class.resolve_tool_class('catalog_product_search').new(self)
-      tools << self.class.resolve_tool_class('browse_catalog').new(self)
-      tools << self.class.resolve_tool_class('track_order').new(self)
-    end
-
+    tools = tool_ids.map { |tool_id| self.class.resolve_tool_class(tool_id).new(self) }
     tools.concat(account.captain_custom_tools.enabled.map { |custom_tool| custom_tool.tool(self) })
-    tools
   end
 
   def push_event_data
@@ -309,6 +303,11 @@ class Captain::Assistant < ApplicationRecord
   end
 
   private
+
+  def shopify_tools_hook
+    hook = account.hooks.find_by(app_id: 'shopify')
+    hook if hook&.shopify_connected? && hook.shopify_tool_key.present?
+  end
 
   # The connected store's myshopify domain (with and without www) and its public storefront.
   def shopify_store_base_urls

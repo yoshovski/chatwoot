@@ -5,6 +5,18 @@ RSpec.describe Conversation, type: :model do
     it { is_expected.to belong_to(:sla_policy).optional }
   end
 
+  describe 'deletion' do
+    it 'deletes its Captain agent sessions, which hold the conversation history' do
+      conversation = create(:conversation)
+      assistant = create(:captain_assistant, account: conversation.account)
+      create(:captain_agent_session, account: conversation.account, assistant: assistant, subject: conversation)
+
+      perform_enqueued_jobs { conversation.destroy! }
+
+      expect(Captain::AgentSession.where(subject: conversation)).to be_empty
+    end
+  end
+
   describe 'SLA policy updates' do
     let(:conversation) { create(:conversation) }
     let!(:sla_policy) { create(:sla_policy, account: conversation.account) }

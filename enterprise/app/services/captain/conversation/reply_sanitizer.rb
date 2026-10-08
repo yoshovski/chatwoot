@@ -3,6 +3,8 @@
 class Captain::Conversation::ReplySanitizer
   MARKDOWN_LINK_REGEX = /\[([^\]]+)\]\(([^\)\s]+)(?:\s+["'][^"']*["'])?\)/
   AUTOLINK_REGEX = %r{<(https?://[^>]+)>}i
+  # A URL written out in the text, not the target of a markdown link or an autolink.
+  BARE_URL_REGEX = %r{(?<!\]\()(?<!<)https?://[^\s<>()\[\]"']+}i
 
   attr_reader :assistant
 
@@ -15,7 +17,7 @@ class Captain::Conversation::ReplySanitizer
 
     text = content.dup
     text = strip_images(text)
-    text = filter_markdown_links(text)
+    text = filter_bare_urls(filter_autolinks(filter_markdown_links(text)))
     text = cleanup_prose_formatting(text)
     text.strip
   end
@@ -83,27 +85,22 @@ class Captain::Conversation::ReplySanitizer
   end
 
   def filter_markdown_links(text)
-    filtered = text.gsub(MARKDOWN_LINK_REGEX) do
-      full_match = Regexp.last_match(0)
-      link_text = Regexp.last_match(1)
-      url = Regexp.last_match(2)
-
-      if allowed_link_url?(url)
-        full_match
-      else
-        link_text
-      end
+    text.gsub(MARKDOWN_LINK_REGEX) do
+      full_match, link_text, url = Regexp.last_match.values_at(0, 1, 2)
+      allowed_link_url?(url) ? full_match : link_text
     end
+  end
 
-    filtered.gsub(AUTOLINK_REGEX) do
-      full_match = Regexp.last_match(0)
-      url = Regexp.last_match(1)
+  def filter_autolinks(text)
+    text.gsub(AUTOLINK_REGEX) do
+      allowed_link_url?(Regexp.last_match(1)) ? Regexp.last_match(0) : ''
+    end
+  end
 
-      if allowed_link_url?(url)
-        full_match
-      else
-        ''
-      end
+  # The widget turns written-out URLs into links too. Keep the sentence's punctuation when one is dropped.
+  def filter_bare_urls(text)
+    text.gsub(BARE_URL_REGEX) do |url|
+      allowed_link_url?(url) ? url : url[/[.,;:!?]+\z/].to_s
     end
   end
 

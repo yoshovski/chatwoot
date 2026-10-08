@@ -11,16 +11,13 @@ RSpec.describe Internal::CheckNewVersionsJob do
     allow(Rails.env).to receive(:production?).and_return(true)
   end
 
-  it 'updates the plan info' do
-    data = { 'version' => '1.2.3', 'plan' => 'enterprise', 'plan_quantity' => 1, 'chatwoot_support_website_token' => '123',
+  # This fork keeps its own plan: the hub's plan and support settings are not written (see 3c02831aba).
+  it 'does not store the plan info from the hub' do
+    data = { 'version' => '1.2.3', 'plan' => 'community', 'plan_quantity' => 1, 'chatwoot_support_website_token' => '123',
              'chatwoot_support_identifier_hash' => '123', 'chatwoot_support_script_url' => '123' }
     allow(ChatwootHub).to receive(:sync_with_hub).and_return(data)
     job
-    expect(InstallationConfig.find_by(name: 'INSTALLATION_PRICING_PLAN').value).to eq 'enterprise'
-    expect(InstallationConfig.find_by(name: 'INSTALLATION_PRICING_PLAN_QUANTITY').value).to eq 1
-    expect(InstallationConfig.find_by(name: 'CHATWOOT_SUPPORT_WEBSITE_TOKEN').value).to eq '123'
-    expect(InstallationConfig.find_by(name: 'CHATWOOT_SUPPORT_IDENTIFIER_HASH').value).to eq '123'
-    expect(InstallationConfig.find_by(name: 'CHATWOOT_SUPPORT_SCRIPT_URL').value).to eq '123'
+    expect(InstallationConfig.where(name: %w[INSTALLATION_PRICING_PLAN CHATWOOT_SUPPORT_WEBSITE_TOKEN])).to be_empty
   end
 
   it 'calls Internal::ReconcilePlanConfigService' do

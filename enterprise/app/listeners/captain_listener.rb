@@ -72,6 +72,8 @@ class CaptainListener < BaseListener
   end
 
   def suggestion_click_processable?(message)
+    # Choices sent by agents or automations are not Captain's suggestion buttons.
+    return false unless message.sender_type == 'Captain::Assistant'
     return false if message.content_attributes&.dig('captain_suggestion_handled')
     return false if message.selected_option_text.blank?
 
@@ -119,7 +121,7 @@ class CaptainListener < BaseListener
   end
 
   def handle_incoming_message(message)
-    return if message.conversation.blank?
+    return unless captain_active_for_conversation?(message.conversation)
 
     contact_capture_service(message.conversation).capture_typed_email!(message)
   end
