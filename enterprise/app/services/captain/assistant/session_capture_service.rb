@@ -1,5 +1,5 @@
 class Captain::Assistant::SessionCaptureService
-  SOURCES_USED_ATTRIBUTE = 'captain_sources_used'.freeze
+  SOURCES_FOUND_ATTRIBUTE = 'captain_sources_found'.freeze
   SCENARIO_AGENT_REGEX = /\A#{Captain::Scenario::HANDOFF_KEY_PREFIX}_(\d+)_/
 
   def initialize(assistant:, conversation:, run_result:, result_message:, credits_consumed:)
@@ -40,22 +40,23 @@ class Captain::Assistant::SessionCaptureService
       sources: captured_sources,
       run_context: current_turn_history
     )
-    record_sources_used(captured_sources.count { |source| source[:used] })
+    record_sources_found(captured_sources.size)
     session
   end
 
   private
 
-  # The dashboard shows the Sources button only on the answer that used sources, without loading every session.
+  # The dashboard shows the Sources button only on an answer whose searches found something, without loading
+  # every session. Found, not cited: the model can rely on a result and still leave citation_indexes empty.
   # On a handoff the session sits on the private note; the answer finds it there, so the note gets no button.
-  def record_sources_used(count)
+  def record_sources_found(count)
     answer = @result_message || result_message
-    mark_sources_used(answer, count)
-    mark_sources_used(result_message, 0) unless result_message == answer
+    mark_sources_found(answer, count)
+    mark_sources_found(result_message, 0) unless result_message == answer
   end
 
-  def mark_sources_used(message, count)
-    message.update!(additional_attributes: message.additional_attributes.to_h.merge(SOURCES_USED_ATTRIBUTE => count))
+  def mark_sources_found(message, count)
+    message.update!(additional_attributes: message.additional_attributes.to_h.merge(SOURCES_FOUND_ATTRIBUTE => count))
   end
 
   def context

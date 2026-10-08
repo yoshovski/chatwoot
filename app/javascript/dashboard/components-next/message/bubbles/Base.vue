@@ -106,14 +106,17 @@ const shouldShowMeta = computed(
     variant.value !== MESSAGE_VARIANTS.ACTIVITY
 );
 
-// Captain replies record how many sources they used, so the Sources button sits on that
-// reply even when product cards or a form follow it. Older replies don't have the count
-// and keep the button with the footer, except on cards and forms.
+// Captain replies record how many sources their searches found, so the Sources button sits
+// on that reply even when product cards or a form follow it. Earlier replies recorded only
+// the sources they cited; the oldest have no count and keep the button with the footer,
+// except on cards and forms.
 const showCaptainSources = computed(() => {
   if (!isCaptainMessage.value) return false;
 
-  const sourcesUsed = additionalAttributes.value?.captainSourcesUsed;
-  if (sourcesUsed !== undefined) return sourcesUsed > 0;
+  const { captainSourcesFound, captainSourcesUsed } =
+    additionalAttributes.value || {};
+  const sourcesCount = captainSourcesFound ?? captainSourcesUsed;
+  if (sourcesCount !== undefined) return sourcesCount > 0;
 
   return (
     shouldShowMeta.value &&
