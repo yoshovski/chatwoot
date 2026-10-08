@@ -167,3 +167,81 @@ jobs:
         with:
           name: rails-log-folder-${{ matrix.ci_node_index }}
           path: log
+
+  # The CE job above strips enterprise/, so Captain, SLA and billing code would
+  # otherwise never be tested. This fork ships the Enterprise image.
+  enterprise-tests:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        ci_node_total: [6]
+        ci_node_index: [0, 1, 2, 3, 4, 5]
+
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: ''
+          POSTGRES_DB: postgres
+          POSTGRES_HOST_AUTH_METHOD: trust
+        ports:
+          - 5432:5432
+        options: >-
+          --mount type=tmpfs,destination=/var/lib/postgresql/data
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      redis:
+        image: redis:alpine
+        ports:
+          - 6379:6379
+        options: --entrypoint redis-server
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+
+      - uses: ruby/setup-ruby@v1
+        with:
+          bundler-cache: true
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: 'pnpm'
+
+      - name: Install pnpm dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Create database
+        run: bundle exec rake db:create
+
+      - name: Seed database
+        run: bundle exec rake db:schema:load
+
+      - name: Run enterprise tests (parallelized)
+        run: |
+          SPEC_FILES=($(find spec/enterprise -name '*_spec.rb' | sort))
+          TESTS=""
+
+          for i in "${!SPEC_FILES[@]}"; do
+            if [ $(( i % ${{ matrix.ci_node_total }} )) -eq ${{ matrix.ci_node_index }} ]; then
+              TESTS="$TESTS ${SPEC_FILES[$i]}"
+            fi
+          done
+
+          if [ -n "$TESTS" ]; then
+            bundle exec rspec --profile=10 --format progress --format json --out tmp/rspec_results.json $TESTS
+          fi
+        env:
+          NODE_OPTIONS: --openssl-legacy-provider
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: rspec-enterprise-results-${{ matrix.ci_node_index }}
+          path: tmp/rspec_results.json
