@@ -178,6 +178,8 @@ class Captain::Assistant < ApplicationRecord
     shopify_tools_hook&.shopify_catalog_client_status == 'on'
   end
 
+  def commerce_enabled? = shopify_catalog_tools_available? || shopify_order_tracking_available?
+
   def available_agent_tools
     tools = self.class.built_in_agent_tools.dup
     tools.reject! { |tool| SHOPIFY_CATALOG_TOOL_IDS.include?(tool[:id]) } unless shopify_catalog_tools_available?
@@ -283,6 +285,7 @@ class Captain::Assistant < ApplicationRecord
       name: name,
       description: description,
       product_name: config['product_name'] || 'this product',
+      commerce_enabled: commerce_enabled?,
       scenarios: scenarios.enabled.map do |scenario|
         {
           title: scenario.title,

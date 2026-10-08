@@ -13,7 +13,11 @@ Before every reply, check whether the user's latest message belongs to this scen
 
 {% render 'current_time', current_time: current_time %}
 
-{% render 'core_rules' %}
+{% render 'core_rules', commerce_enabled: commerce_enabled %}
+
+{% if commerce_enabled -%}
+{% render 'commerce_rules' %}
+{% endif -%}
 
 {% render 'suggested_replies', suggested_replies_enabled: suggested_replies_enabled, max_suggested_replies: max_suggested_replies %}
 

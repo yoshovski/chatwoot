@@ -17,5 +17,21 @@ RSpec.describe Captain::Conversation::ReplySanitizer do
     it 'keeps the text of a disallowed markdown link' do
       expect(sanitizer.sanitize_prose('Read [the guide](https://evil.example.net/guide).')).to eq('Read the guide.')
     end
+
+    it 'replaces em dash and en dash with comma while keeping hyphens in words and number ranges' do
+      content = 'We have 10-20 sizes for this T-shirt — check it out – they are great.'
+
+      expect(sanitizer.sanitize_prose(content)).to eq(
+        'We have 10-20 sizes for this T-shirt, check it out, they are great.'
+      )
+    end
+
+    it 'replaces em and en dashes without spaces between words' do
+      content = 'Great choice—we recommend this–check it out.'
+
+      expect(sanitizer.sanitize_prose(content)).to eq(
+        'Great choice, we recommend this, check it out.'
+      )
+    end
   end
 end

@@ -3,9 +3,9 @@ class Captain::Tools::HandoffTool < Captain::Tools::BasePublicTool
   # paths emit the remaining categories, such as usage limits and pending clarification.
   REASON_CATEGORIES = %w[customer_request missing_knowledge unsupported_request policy_restriction tool_failure].freeze
 
-  description 'Hand off the conversation to a human agent when unable to assist further'
+  description 'Hand off the conversation when a human colleague is needed. Always give a reason that helps the colleague.'
   params do
-    string :reason, description: 'The reason why handoff is needed (optional)', required: false
+    string :reason, description: 'The reason why handoff is needed to help the colleague (optional)', required: false
     string :reason_category, enum: REASON_CATEGORIES, description: 'Reporting category for why the handoff is needed'
   end
 

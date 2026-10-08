@@ -18,7 +18,7 @@ RSpec.describe Captain::Tools::FaqLookupTool, type: :model do
 
   describe '#description' do
     it 'returns the correct description' do
-      expect(tool.description).to eq('Search FAQs, documents and connected product knowledge to find relevant answers')
+      expect(tool.description).to include('specifications, box contents, compatibility, model differences')
     end
   end
 
