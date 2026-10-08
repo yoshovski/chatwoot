@@ -84,7 +84,6 @@
     },
     "SUCCESS_DELETE_MESSAGE": "Message deleted successfully",
     "FAIL_DELETE_MESSSAGE": "Couldn't delete message! Try again",
-    "NO_RESPONSE": "No response",
     "REQUEST_CONTACT_INFO": {
       "ACTION": "Ask the customer to share their WhatsApp phone number",
       "PENDING_ACTION": "Contact information request pending",

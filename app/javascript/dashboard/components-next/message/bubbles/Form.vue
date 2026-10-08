@@ -6,11 +6,9 @@ import Icon from 'dashboard/components-next/icon/Icon.vue';
 import { useI18n } from 'vue-i18n';
 import { CONTENT_TYPES } from '../constants.js';
 import { useMessageContext } from '../provider.js';
-import { useInbox } from 'dashboard/composables/useInbox';
 
 const { content, contentAttributes, contentType } = useMessageContext();
 const { t } = useI18n();
-const { isAWebWidgetInbox } = useInbox();
 
 const formValues = computed(() => {
   if (contentType.value === CONTENT_TYPES.FORM) {
@@ -74,8 +72,5 @@ const offeredOptions = computed(() => {
         <dd>{{ item.title }}</dd>
       </template>
     </dl>
-    <div v-else-if="isAWebWidgetInbox" class="my-2 font-medium">
-      {{ t('CONVERSATION.NO_RESPONSE') }}
-    </div>
   </BaseBubble>
 </template>
