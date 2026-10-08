@@ -3,6 +3,9 @@ class Api::V1::Accounts::Integrations::ShopifyController < Api::V1::Accounts::In
   before_action :setup_shopify_context, only: [:orders]
   before_action :fetch_hook, only: [:orders, :destroy, :sync_status, :pause_catalog, :resume_catalog, :catalog_products]
   before_action :check_authorization, only: [:destroy]
+  # Connecting the store and controlling the catalog sync change the hook: admins only.
+  # show and catalog_products stay readable for agents, who use the Captain documents and products pages.
+  before_action -> { authorize(:hook, :update?) }, only: [:request_connection, :sync_status, :pause_catalog, :resume_catalog]
   before_action :validate_contact, only: [:orders]
 
   def show
