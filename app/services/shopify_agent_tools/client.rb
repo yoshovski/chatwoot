@@ -17,8 +17,8 @@ class ShopifyAgentTools::Client
     end
   end
 
-  def initialize(tool_key:, api_url: ENV.fetch('SAT_API_URL', nil))
-    @api_url = (api_url.presence || 'https://shopify-tools.chatoctave.com').chomp('/')
+  def initialize(tool_key:, api_url: nil)
+    @api_url = (api_url.presence || ShopifyAgentTools::AdminClient.api_url).chomp('/')
     @tool_key = tool_key.to_s.strip
 
     raise Error, 'Shopify Agent Tools tool key is missing' if @tool_key.blank?
