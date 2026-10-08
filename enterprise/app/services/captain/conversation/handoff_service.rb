@@ -21,10 +21,17 @@ class Captain::Conversation::HandoffService
     false
   end
 
+  # The summary may take an LLM call. Build it before taking the conversation lock, so the customer's
+  # next message doesn't wait on it; callers holding their own lock call this before locking.
+  def note_content
+    @note_content ||= note_service.generate_note_content
+  end
+
   def apply_extras!(lock: true)
     return nil if conversation.blank?
     return nil if handoff_active?
 
+    note_content
     if lock
       conversation.with_lock do
         return nil if handoff_active?
@@ -53,7 +60,7 @@ class Captain::Conversation::HandoffService
 
   def persist_extras!
     ownership_service.add_needs_human_label!
-    note_service.post_note!
+    note_service.post_note!(note_content)
   end
 
   def note_service

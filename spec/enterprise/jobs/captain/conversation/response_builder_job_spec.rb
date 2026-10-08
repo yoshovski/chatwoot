@@ -1070,7 +1070,7 @@ RSpec.describe Captain::Conversation::ResponseBuilderJob, type: :job do
                                                                                    })
         allow(Redis::Alfred).to receive(:set).and_return(true)
         allow(Captain::Conversation::HandoffNoteService).to receive(:new)
-          .and_return(instance_double(Captain::Conversation::HandoffNoteService, post_note!: nil))
+          .and_return(instance_double(Captain::Conversation::HandoffNoteService, generate_note_content: 'Note', post_note!: nil))
       end
 
       it 'delivers the answer, hands off and offers the contact form' do
