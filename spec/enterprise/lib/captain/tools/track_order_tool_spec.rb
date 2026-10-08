@@ -29,7 +29,7 @@ RSpec.describe Captain::Tools::TrackOrderTool do
       account: account,
       account_id: 1,
       config: {},
-      shopify_tools_available?: true
+      shopify_order_tracking_available?: true
     )
   end
   let(:tool) { described_class.new(assistant) }
@@ -67,7 +67,7 @@ RSpec.describe Captain::Tools::TrackOrderTool do
     end
 
     it 'returns false when shopify tools are not available' do
-      allow(assistant).to receive(:shopify_tools_available?).and_return(false)
+      allow(assistant).to receive(:shopify_order_tracking_available?).and_return(false)
       expect(tool.active?).to be false
     end
   end
@@ -145,7 +145,7 @@ RSpec.describe Captain::Tools::TrackOrderTool do
     end
 
     it 'returns failure result when Shopify is disconnected' do
-      allow(assistant).to receive(:shopify_tools_available?).and_return(false)
+      allow(assistant).to receive(:shopify_order_tracking_available?).and_return(false)
 
       result = tool.perform(tool_context, order_number: '#1001', customer_email: 'customer@example.com')
       expect(result).to include('Shopify is not connected for this account')

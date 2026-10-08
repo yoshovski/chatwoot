@@ -9,7 +9,9 @@ class Captain::Tools::TrackOrderTool < Captain::Tools::BasePublicTool
 
   def perform(tool_context, order_number:, customer_email:)
     client = shopify_sat_client
-    return failure_result('Shopify is not connected for this account', tool_context.state) unless client && @assistant.shopify_tools_available?
+    unless client && @assistant.shopify_order_tracking_available?
+      return failure_result('Shopify is not connected for this account', tool_context.state)
+    end
 
     validation_error = validate_input(order_number, customer_email)
     return validation_error if validation_error
@@ -21,7 +23,7 @@ class Captain::Tools::TrackOrderTool < Captain::Tools::BasePublicTool
   end
 
   def active?
-    @assistant.shopify_tools_available?
+    @assistant.shopify_order_tracking_available?
   end
 
   private
