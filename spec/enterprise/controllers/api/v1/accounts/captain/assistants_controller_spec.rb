@@ -268,6 +268,27 @@ RSpec.describe 'Api::V1::Accounts::Captain::Assistants', type: :request do
         expect(assistant.reload.config).to include('product_name' => 'Chatwoot', 'auto_resolve_mode' => 'disabled')
       end
 
+      it 'updates handoff_fallback_agent_id and handoff_fallback_team_id when captain_integration_v2 is enabled' do
+        account.enable_features!('captain_integration_v2')
+        team = create(:team, account: account)
+
+        patch "/api/v1/accounts/#{account.id}/captain/assistants/#{assistant.id}",
+              params: {
+                assistant: {
+                  config: {
+                    handoff_fallback_agent_id: agent.id,
+                    handoff_fallback_team_id: team.id
+                  }
+                }
+              },
+              headers: admin.create_new_auth_token,
+              as: :json
+
+        expect(response).to have_http_status(:success)
+        expect(assistant.reload.config['handoff_fallback_agent_id']).to eq(agent.id)
+        expect(assistant.config['handoff_fallback_team_id']).to eq(team.id)
+      end
+
       it 'keeps inactivity timer settings behind Captain V2' do
         account.disable_features!('captain_integration_v2')
         assistant.update!(

@@ -143,7 +143,8 @@ class Api::V1::Accounts::Captain::AssistantsController < Api::V1::Accounts::Base
       attributes += [
         :auto_resolve_after, :send_inactivity_resolution_message,
         :handoff_safety_net, { handoff_safety_net_keywords: [] },
-        :reply_labels, :outcome_labels
+        :reply_labels, :outcome_labels,
+        :handoff_fallback_agent_id, :handoff_fallback_team_id
       ]
     end
     attributes

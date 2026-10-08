@@ -410,4 +410,63 @@ RSpec.describe Captain::Assistant, type: :model do
       expect(assistant.image_allowlist).to eq(['https://cdn.shopify.com/'])
     end
   end
+
+  describe 'handoff fallback assignments' do
+    let(:inbox) { create(:inbox, account: account) }
+    let(:user) { create(:user, account: account) }
+    let(:team) { create(:team, account: account) }
+
+    before do
+      create(:captain_inbox, captain_assistant: assistant, inbox: inbox)
+    end
+
+    it 'is valid when handoff_fallback_agent belongs to account and inbox' do
+      inbox.inbox_members.create!(user: user)
+      assistant.handoff_fallback_agent_id = user.id
+
+      expect(assistant).to be_valid
+      expect(assistant.handoff_fallback_agent).to eq(user)
+    end
+
+    it 'is invalid when handoff_fallback_agent does not belong to account' do
+      other_account = create(:account)
+      other_user = create(:user, account: other_account)
+      assistant.handoff_fallback_agent_id = other_user.id
+
+      expect(assistant).not_to be_valid
+      expect(assistant.errors[:handoff_fallback_agent_id]).to include('must belong to the account')
+    end
+
+    it 'is invalid when handoff_fallback_agent is not a member of assistant inbox' do
+      assistant.handoff_fallback_agent_id = user.id
+
+      expect(assistant).not_to be_valid
+      expect(assistant.errors[:handoff_fallback_agent_id]).to include('must be a member of the inbox')
+    end
+
+    it 'is valid when handoff_fallback_team belongs to account' do
+      assistant.handoff_fallback_team_id = team.id
+
+      expect(assistant).to be_valid
+      expect(assistant.handoff_fallback_team).to eq(team)
+    end
+
+    it 'is invalid when handoff_fallback_team does not belong to account' do
+      other_account = create(:account)
+      other_team = create(:team, account: other_account)
+      assistant.handoff_fallback_team_id = other_team.id
+
+      expect(assistant).not_to be_valid
+      expect(assistant.errors[:handoff_fallback_team_id]).to include('must belong to the account')
+    end
+
+    it 'normalizes fallback ids to integers or nil' do
+      assistant.config['handoff_fallback_agent_id'] = '123'
+      assistant.config['handoff_fallback_team_id'] = ''
+      assistant.send(:normalize_fallback_assignments)
+
+      expect(assistant.config['handoff_fallback_agent_id']).to eq(123)
+      expect(assistant.config['handoff_fallback_team_id']).to be_nil
+    end
+  end
 end

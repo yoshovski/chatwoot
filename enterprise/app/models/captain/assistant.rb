@@ -64,7 +64,8 @@ class Captain::Assistant < ApplicationRecord
                  :auto_resolve_mode, :auto_resolve_after, :send_inactivity_resolution_message, :response_window,
                  :continue_while_waiting, :suggested_replies, :max_suggested_replies, :product_cards,
                  :link_allowlist, :image_allowlist, :handoff_safety_net, :handoff_safety_net_keywords,
-                 :reply_labels, :reply_label_keywords, :outcome_labels
+                 :reply_labels, :reply_label_keywords, :outcome_labels,
+                 :handoff_fallback_agent_id, :handoff_fallback_team_id
 
   BOOLEAN_CONFIG_KEYS = %w[
     feature_faq
@@ -86,12 +87,14 @@ class Captain::Assistant < ApplicationRecord
   before_validation :normalize_max_suggested_replies
   before_validation :normalize_allowlists
   before_validation :normalize_keywords
+  before_validation :normalize_fallback_assignments
 
   validates :name, presence: true
   validates :description, presence: true, length: { maximum: DESCRIPTION_LENGTH_LIMIT }
   validates :account_id, presence: true
   validates_with Captain::AudienceValidator
   validate :validate_response_window
+  validate :validate_handoff_fallback_assignments
   validates :auto_resolve_mode, inclusion: { in: AUTO_RESOLVE_MODES }
   validates :send_inactivity_resolution_message, inclusion: { in: [true, false] }
   validates :auto_resolve_after,
@@ -194,6 +197,18 @@ class Captain::Assistant < ApplicationRecord
 
   def agent_name
     name.parameterize(separator: '_')
+  end
+
+  def handoff_fallback_agent
+    return if handoff_fallback_agent_id.blank?
+
+    account&.users&.find_by(id: handoff_fallback_agent_id)
+  end
+
+  def handoff_fallback_team
+    return if handoff_fallback_team_id.blank?
+
+    account&.teams&.find_by(id: handoff_fallback_team_id)
   end
 
   # Scenarios start from these tools too, so they can search knowledge and products mid-flow.
@@ -439,6 +454,50 @@ class Captain::Assistant < ApplicationRecord
     return if config.key?('auto_resolve_mode')
 
     self.auto_resolve_mode = account&.captain_auto_resolve_mode || 'evaluated'
+  end
+
+  def normalize_fallback_assignments
+    return unless config.is_a?(Hash)
+
+    %w[handoff_fallback_agent_id handoff_fallback_team_id].each do |key|
+      if config.key?(key)
+        val = config[key]
+        config[key] = val.present? ? Integer(val.to_s, exception: false) : nil
+      elsif config.key?(key.to_sym)
+        val = config.delete(key.to_sym)
+        config[key] = val.present? ? Integer(val.to_s, exception: false) : nil
+      end
+    end
+  end
+
+  def validate_handoff_fallback_assignments
+    validate_handoff_fallback_agent
+    validate_handoff_fallback_team
+  end
+
+  def validate_handoff_fallback_agent
+    return if handoff_fallback_agent_id.blank?
+    return unless account
+
+    agent = account.users.find_by(id: handoff_fallback_agent_id)
+    unless agent
+      errors.add(:handoff_fallback_agent_id, 'must belong to the account')
+      return
+    end
+
+    return if inboxes.empty?
+    return if inboxes.all? { |inbox| inbox.inbox_members.exists?(user_id: agent.id) }
+
+    errors.add(:handoff_fallback_agent_id, 'must be a member of the inbox')
+  end
+
+  def validate_handoff_fallback_team
+    return if handoff_fallback_team_id.blank?
+    return unless account
+
+    return if account.teams.exists?(id: handoff_fallback_team_id)
+
+    errors.add(:handoff_fallback_team_id, 'must belong to the account')
   end
 end
 # rubocop:enable Metrics/ClassLength

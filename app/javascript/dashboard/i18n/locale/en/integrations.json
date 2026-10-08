@@ -896,6 +896,14 @@
           "MAX_BUTTONS_PLACEHOLDER": "Enter maximum buttons (1-5)",
           "PRODUCT_CARDS": "Show product cards in replies"
         },
+        "FALLBACK_ASSIGNMENTS": {
+          "TITLE": "If no one is online after a handoff, assign to…",
+          "AGENT_LABEL": "Agent",
+          "AGENT_PLACEHOLDER": "Select an agent",
+          "TEAM_LABEL": "Team",
+          "TEAM_PLACEHOLDER": "Select a team",
+          "NONE": "None"
+        },
         "AUDIENCE": {
           "EVERYONE": {
             "LABEL": "Everyone",

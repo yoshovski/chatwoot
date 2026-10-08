@@ -280,4 +280,56 @@ describe CaptainListener do
       listener.assignee_changed(handoff_event)
     end
   end
+
+  describe '#conversation_bot_handoff' do
+    let(:conversation) { create(:conversation, account: account, inbox: inbox) }
+    let(:event) { Events::Base.new(:conversation_bot_handoff, Time.current, conversation: conversation) }
+
+    before do
+      create(:captain_inbox, captain_assistant: assistant, inbox: inbox)
+    end
+
+    it 'does not enqueue HandoffFallbackAssignmentJob when captain_integration_v2 is disabled' do
+      account.disable_features('captain_integration_v2')
+      inbox.inbox_members.create!(user: user)
+      assistant.update!(config: assistant.config.merge('handoff_fallback_agent_id' => user.id))
+
+      expect(Captain::Conversation::HandoffFallbackAssignmentJob).not_to receive(:set)
+
+      listener.conversation_bot_handoff(event)
+    end
+
+    it 'does not enqueue HandoffFallbackAssignmentJob when assistant has neither fallback agent nor team' do
+      account.enable_features('captain_integration_v2')
+      assistant.update!(config: assistant.config.merge('handoff_fallback_agent_id' => nil, 'handoff_fallback_team_id' => nil))
+
+      expect(Captain::Conversation::HandoffFallbackAssignmentJob).not_to receive(:set)
+
+      listener.conversation_bot_handoff(event)
+    end
+
+    it 'enqueues HandoffFallbackAssignmentJob with 10 seconds delay when fallback agent is set' do
+      account.enable_features('captain_integration_v2')
+      inbox.inbox_members.create!(user: user)
+      assistant.update!(config: assistant.config.merge('handoff_fallback_agent_id' => user.id))
+
+      job_double = double
+      expect(Captain::Conversation::HandoffFallbackAssignmentJob).to receive(:set).with(wait: 10.seconds).and_return(job_double)
+      expect(job_double).to receive(:perform_later).with(conversation, assistant)
+
+      listener.conversation_bot_handoff(event)
+    end
+
+    it 'enqueues HandoffFallbackAssignmentJob with 10 seconds delay when fallback team is set' do
+      team = create(:team, account: account)
+      account.enable_features('captain_integration_v2')
+      assistant.update!(config: assistant.config.merge('handoff_fallback_team_id' => team.id))
+
+      job_double = double
+      expect(Captain::Conversation::HandoffFallbackAssignmentJob).to receive(:set).with(wait: 10.seconds).and_return(job_double)
+      expect(job_double).to receive(:perform_later).with(conversation, assistant)
+
+      listener.conversation_bot_handoff(event)
+    end
+  end
 end
