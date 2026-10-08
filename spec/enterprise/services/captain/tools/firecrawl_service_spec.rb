@@ -59,7 +59,7 @@ RSpec.describe Captain::Tools::FirecrawlService do
         webhook: { url: webhook_url },
         scrapeOptions: {
           onlyMainContent: true,
-          formats: ['markdown'],
+          formats: %w[markdown html],
           excludeTags: Captain::Tools::FirecrawlService::FIRECRAWL_EXCLUDE_TAGS,
           maxAge: 0
         }

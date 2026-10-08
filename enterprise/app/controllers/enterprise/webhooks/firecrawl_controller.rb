@@ -41,7 +41,7 @@ class Enterprise::Webhooks::FirecrawlController < ActionController::API
       :metadata,
       :format,
       :firecrawl,
-      data: [:markdown, { metadata: {} }]
+      data: [:markdown, :html, { metadata: {} }]
     )
   end
 end

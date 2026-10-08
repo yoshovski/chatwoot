@@ -1,5 +1,5 @@
 class Captain::Documents::SinglePageFetcher
-  Result = Struct.new(:success, :title, :content, :error_code, keyword_init: true)
+  Result = Struct.new(:success, :title, :content, :faqs, :error_code, keyword_init: true)
 
   CONTENT_MAX_LENGTH = 200_000
   TITLE_MAX_LENGTH = 255 # captain_documents.name is a varchar(255)
@@ -35,11 +35,31 @@ class Captain::Documents::SinglePageFetcher
     target_error = firecrawl_target_error_code(data)
     return Result.new(success: false, error_code: target_error) if target_error
 
+    extract_firecrawl_result(data)
+  end
+
+  def extract_firecrawl_result(data)
+    title = data&.dig('metadata', 'title')
+    content, faqs, title = parse_firecrawl_html(data&.dig('html'), data&.dig('markdown'), title)
+
+    content = content.presence || title.presence || ''
     Result.new(
       success: true,
-      title: data&.dig('metadata', 'title')&.truncate(TITLE_MAX_LENGTH, omission: ''),
-      content: data&.dig('markdown')&.truncate(CONTENT_MAX_LENGTH, omission: '')
+      title: title&.truncate(TITLE_MAX_LENGTH, omission: ''),
+      content: content.truncate(CONTENT_MAX_LENGTH, omission: ''),
+      faqs: faqs
     )
+  end
+
+  def parse_firecrawl_html(html, markdown, default_title)
+    return [markdown, [], default_title] if html.blank?
+
+    parser = Captain::Tools::HtmlPageParser.new(html)
+    [
+      parser.body_markdown_without_faqs.presence || markdown,
+      parser.faqs,
+      parser.title.presence || default_title
+    ]
   end
 
   # Firecrawl returns API 200 even when the scraped page itself failed —
@@ -55,10 +75,13 @@ class Captain::Documents::SinglePageFetcher
     crawler = Captain::Tools::SimplePageCrawlService.new(@url)
     return Result.new(success: false, error_code: http_error_code(crawler.status_code)) unless crawler.success?
 
+    content = crawler.body_markdown_without_faqs.presence || crawler.page_title.presence || ''
+
     Result.new(
       success: true,
       title: crawler.page_title&.truncate(TITLE_MAX_LENGTH, omission: ''),
-      content: crawler.body_markdown&.truncate(CONTENT_MAX_LENGTH, omission: '')
+      content: content.truncate(CONTENT_MAX_LENGTH, omission: ''),
+      faqs: crawler.faqs
     )
   end
 

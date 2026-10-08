@@ -23,6 +23,14 @@ class Captain::Tools::SimplePageCrawlService
     @parser.body_markdown
   end
 
+  def body_markdown_without_faqs
+    @parser.body_markdown_without_faqs
+  end
+
+  def faqs
+    @parser.faqs
+  end
+
   def meta_description
     meta_desc = @doc.at_css('meta[name="description"]')
     return nil unless meta_desc && meta_desc['content']
