@@ -4,8 +4,9 @@ class Captain::Tools::FaqLookupTool < Captain::Tools::BasePublicTool
   # Results scoring this far below the search's best hit are noise; agents don't see them unless the reply used them.
   LOW_RELEVANCE_MARGIN = 0.2
 
-  description 'Search FAQs, documents and connected product knowledge to find relevant answers'
-  param :query, type: 'string', desc: 'A few key words from the latest customer question, such as "opening hours" or "Agras T100 battery". ' \
+  description 'Search FAQs, documents and connected knowledge for specifications, box contents, compatibility, model differences, setup, ' \
+              'warranty, shipping rules, payments and store policies. Search the customer\'s latest question in a few key words.'
+  param :query, type: 'string', desc: 'A few key words from the latest customer question, such as "opening hours" or "model X200 battery". ' \
                                       'For a new topic, leave out earlier products and requests. Leave out the store name and filler words.'
 
   def perform(tool_context, query:)

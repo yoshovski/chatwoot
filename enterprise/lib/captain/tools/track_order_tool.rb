@@ -3,7 +3,8 @@
 class Captain::Tools::TrackOrderTool < Captain::Tools::BasePublicTool
   include Captain::Tools::ShopifyToolHelpers
 
-  description 'Track a customer order using the customer-visible order number and matching customer email'
+  description 'Track a customer order only when both the order number and the checkout email are known. ' \
+              'Ask once for whatever is missing; then call it immediately.'
   param :order_number, type: 'string', desc: 'Customer-visible Shopify order number (e.g. #1001 or 1001)', required: true
   param :customer_email, type: 'string', desc: 'Customer email address used to verify ownership of the order', required: true
 

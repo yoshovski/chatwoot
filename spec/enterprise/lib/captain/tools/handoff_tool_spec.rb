@@ -12,7 +12,7 @@ RSpec.describe Captain::Tools::HandoffTool, type: :model do
 
   describe '#description' do
     it 'returns the correct description' do
-      expect(tool.description).to eq('Hand off the conversation to a human agent when unable to assist further')
+      expect(tool.description).to eq('Hand off the conversation when a human colleague is needed. Always give a reason that helps the colleague.')
     end
   end
 
