@@ -22,6 +22,7 @@ class Captain::Assistant < ApplicationRecord
   CITATION_SOURCES_STATE_KEY = :captain_v2_citation_sources
   CITATION_DETAILS_STATE_KEY = :captain_v2_citation_details
   PRODUCT_HANDLES_STATE_KEY = :captain_v2_product_handles
+  PRODUCT_SEARCH_STATS_STATE_KEY = :captain_v2_product_search_stats
   SHOPIFY_CATALOG_TOOL_IDS = %w[catalog_product_search browse_catalog].freeze
   AUTO_RESOLVE_MODES = %w[disabled legacy evaluated].freeze
   DEFAULT_INACTIVITY_THRESHOLD_MINUTES = 60
@@ -238,6 +239,17 @@ class Captain::Assistant < ApplicationRecord
   def run_result_product_handles(run_result)
     state = run_result&.context&.dig(:state)
     state&.dig(PRODUCT_HANDLES_STATE_KEY) || state&.dig(:product_handles)
+  end
+
+  def run_result_product_search_stats(run_result)
+    state = run_result&.context&.dig(:state)
+    return unless state
+
+    raw_stats = state[PRODUCT_SEARCH_STATS_STATE_KEY] || state[:product_search_stats] || state['product_search_stats']
+    return if raw_stats.blank?
+
+    stats = raw_stats.with_indifferent_access
+    { searches: stats[:searches].to_i, results: stats[:results].to_i }
   end
 
   def prompt_context

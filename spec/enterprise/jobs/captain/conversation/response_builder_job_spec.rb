@@ -1143,6 +1143,88 @@ RSpec.describe Captain::Conversation::ResponseBuilderJob, type: :job do
       end
     end
 
+    context 'when captain_v2 formatted reply is blank' do
+      before do
+        allow(account).to receive(:feature_enabled?).and_return(false)
+        allow(account).to receive(:feature_enabled?).with('captain_integration_v2').and_return(true)
+        allow(mock_agent_runner_service).to receive(:handoff_completed?).and_return(false)
+        allow(mock_agent_runner_service).to receive(:response_discarded?).and_return(false)
+        conversation.contact.update!(name: 'Jane Doe', email: 'jane@example.com')
+      end
+
+      it 'replies with catalog empty fallback when every product search returned nothing' do
+        run_context = {
+          state: {
+            Captain::Assistant::PRODUCT_SEARCH_STATS_STATE_KEY => { searches: 1, results: 0 }
+          }
+        }
+        run_result = Agents::RunResult.new(output: {}, usage: nil, context: run_context)
+        allow(mock_agent_runner_service).to receive(:last_run_result).and_return(run_result)
+        allow(mock_agent_runner_service).to receive(:generate_response).and_return(
+          {
+            'response' => '',
+            'response_parts' => []
+          }
+        )
+
+        described_class.perform_now(conversation, assistant, responding_to_message.id)
+
+        expect(conversation.messages.outgoing.where(private: false).last.content)
+          .to eq(I18n.t('conversations.captain.empty_response_catalog_empty'))
+        expect(conversation.reload.status).to eq('pending')
+      end
+
+      it 'replies asking for explanation when customer message has attachments' do
+        responding_to_message.attachments.create!(account: account, file_type: :image, external_url: 'https://example.com/item.jpg')
+        allow(mock_agent_runner_service).to receive(:generate_response).and_return(
+          {
+            'response' => '',
+            'response_parts' => []
+          }
+        )
+
+        described_class.perform_now(conversation, assistant, responding_to_message.id)
+
+        expect(conversation.messages.outgoing.where(private: false).last.content)
+          .to eq(I18n.t('conversations.captain.empty_response_attachments'))
+        expect(conversation.reload.status).to eq('pending')
+      end
+
+      it 'replies with rephrase prompt when model returned an answer but nothing usable is left' do
+        allow(mock_agent_runner_service).to receive(:generate_response).and_return(
+          {
+            'response' => '![image](https://example.com/item.png)',
+            'response_parts' => [{ 'text' => '![image](https://example.com/item.png)', 'citation_indexes' => [] }]
+          }
+        )
+
+        described_class.perform_now(conversation, assistant, responding_to_message.id)
+
+        expect(conversation.messages.outgoing.where(private: false).last.content)
+          .to eq(I18n.t('conversations.captain.empty_response_unusable'))
+        expect(conversation.reload.status).to eq('pending')
+      end
+
+      it 'hands off when the model returned nothing at all' do
+        allow(mock_agent_runner_service).to receive(:generate_response).and_return(
+          {
+            'response' => '',
+            'response_parts' => []
+          }
+        )
+        allow(Redis::Alfred).to receive(:set).and_return(true)
+        allow(Captain::Conversation::HandoffNoteService).to receive(:new)
+          .and_return(instance_double(Captain::Conversation::HandoffNoteService, generate_note_content: 'Note', post_note!: nil))
+
+        described_class.perform_now(conversation, assistant, responding_to_message.id)
+
+        expect(conversation.reload.status).to eq('open')
+        expect(conversation.label_list).to include('needs-human')
+        expect(conversation.messages.outgoing.where(private: false).last.content)
+          .to eq(I18n.t('conversations.captain.empty_response_handoff'))
+      end
+    end
+
     context 'when capturing assistant sessions' do
       let(:run_context) do
         {

@@ -114,6 +114,8 @@ class Captain::Conversation::ResponseBuilderJob < ApplicationJob # rubocop:disab
       process_v2_declared_handoff
     elsif v2_handoff_safety_net_triggered?
       process_v2_declared_handoff(source: Captain::ConversationEvents::Sources::SAFETY_NET)
+    elsif v2_empty_response_handoff?
+      process_v2_empty_response_handoff
     elsif may_reply?
       process_standard_response
     end
@@ -219,7 +221,7 @@ class Captain::Conversation::ResponseBuilderJob < ApplicationJob # rubocop:disab
   # so the customer was promised a colleague nobody was told about. Deliver the
   # answer, then run the handoff the tool would have run. While a handoff is
   # already waiting for a human, the answer is all that is needed.
-  def process_v2_declared_handoff(source: Captain::ConversationEvents::Sources::DECLARED)
+  def process_v2_declared_handoff(source: Captain::ConversationEvents::Sources::DECLARED, custom_message: nil)
     return process_standard_response unless conversation_pending?
 
     I18n.with_locale(@assistant.account.locale) do
@@ -227,7 +229,11 @@ class Captain::Conversation::ResponseBuilderJob < ApplicationJob # rubocop:disab
         "[CAPTAIN][ResponseBuilderJob] Handoff #{source} without the handoff tool for account=#{account.id} " \
         "conversation=#{@conversation.display_id}"
       )
-      @handoff_message = create_messages
+      @handoff_message = if custom_message.present?
+                           create_outgoing_message(custom_message, agent_name: @response&.dig('agent_name'))
+                         else
+                           create_messages
+                         end
       apply_handoff_extras
       @conversation.bot_handoff!
       record_v2_declared_handoff(source: source)
@@ -236,6 +242,21 @@ class Captain::Conversation::ResponseBuilderJob < ApplicationJob # rubocop:disab
     end
 
     capture_assistant_session(result_message: @handoff_message, credits_consumed: 0.0)
+  end
+
+  def v2_empty_response_handoff?
+    return false unless captain_v2_enabled?
+    return false unless conversation_pending?
+    return false unless v2_formatted_prose_blank?
+
+    !v2_catalog_searches_empty? && !v2_customer_message_has_attachments? && !v2_model_returned_answer?
+  end
+
+  def process_v2_empty_response_handoff
+    handoff_text = I18n.with_locale(@assistant.account.locale) do
+      I18n.t('conversations.captain.empty_response_handoff')
+    end
+    process_v2_declared_handoff(custom_message: handoff_text)
   end
 
   def v2_handoff_safety_net_triggered?
