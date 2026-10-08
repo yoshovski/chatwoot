@@ -64,7 +64,7 @@ RSpec.describe Captain::Tools::SimplePageCrawlParserJob, type: :job do
 
       context 'when title or content exceed maximum length' do
         let(:long_title) { 'x' * 300 }
-        let(:long_content) { 'x' * 20_000 }
+        let(:long_content) { 'x' * (Captain::Documents::SinglePageFetcher::CONTENT_MAX_LENGTH + 10_000) }
 
         before do
           allow(crawler).to receive(:page_title).and_return(long_title)
@@ -76,7 +76,7 @@ RSpec.describe Captain::Tools::SimplePageCrawlParserJob, type: :job do
 
           document = assistant.documents.last
           expect(document.name.length).to eq(255)
-          expect(document.content.length).to eq(15_000)
+          expect(document.content.length).to eq(Captain::Documents::SinglePageFetcher::CONTENT_MAX_LENGTH)
         end
       end
     end

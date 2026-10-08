@@ -91,6 +91,34 @@ RSpec.describe Captain::Tools::SimplePageCrawlService do
       end
     end
 
+    context 'when links exist only in navigation or header' do
+      let(:html_content) do
+        <<~HTML
+          <html>
+            <body>
+              <header>
+                <nav>
+                  <a href="/menu-item">Menu Item</a>
+                </nav>
+              </header>
+              <main>
+                <p>Main content without links</p>
+              </main>
+            </body>
+          </html>
+        HTML
+      end
+
+      before do
+        stub_request(:get, base_url).to_return(body: html_content)
+      end
+
+      it 'still returns links that are only in the menu even after body_markdown is generated' do
+        service.body_markdown
+        expect(service.page_links).to contain_exactly('https://example.com/menu-item')
+      end
+    end
+
     context 'with sitemap XML' do
       let(:sitemap_url) { 'https://example.com/sitemap.xml' }
       let(:sitemap_service) { described_class.new(sitemap_url) }

@@ -43,7 +43,7 @@ class Captain::Tools::SimplePageCrawlParserJob < ApplicationJob
     document.update!(
       external_link: normalized_link,
       name: (crawler.page_title || '')[0..254],
-      content: (crawler.body_markdown || '')[0..14_999],
+      content: (crawler.body_markdown || '')[0...Captain::Documents::SinglePageFetcher::CONTENT_MAX_LENGTH],
       status: :available,
       **synced_attributes
     )
