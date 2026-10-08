@@ -1287,6 +1287,8 @@ RSpec.describe Captain::Conversation::ResponseBuilderJob, type: :job do
       allow(account).to receive(:feature_enabled?).and_return(false)
       allow(account).to receive(:feature_enabled?).with('captain_integration_v2').and_return(false)
       create(:message, conversation: conversation, content: 'Hello with image', message_type: :incoming)
+      allow(Captain::Conversation::HandoffNoteService).to receive(:new)
+        .and_return(instance_double(Captain::Conversation::HandoffNoteService, generate_note_content: 'Note', post_note!: nil))
       allow(Captain::Llm::AssistantChatService).to receive(:new).and_return(mock_llm_chat_service)
       allow(Captain::OpenAiMessageBuilderService).to receive(:new).with(message: anything).and_return(mock_message_builder)
       allow(mock_message_builder).to receive(:generate_content).and_return('Hello with image')
