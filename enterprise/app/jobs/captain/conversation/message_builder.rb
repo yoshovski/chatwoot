@@ -43,6 +43,10 @@ module Captain::Conversation::MessageBuilder
     response_parts = Captain::Assistant::ResponseParts.from_response(@response)
     citation_urls = cards_builder.filter_citation_urls(@assistant.trusted_citation_urls(@run_result))
     message_content = cards_builder.clean_prose_content(response_parts.customer_message_content(citation_urls: citation_urls))
+    if message_content.blank?
+      message_content = v2_empty_reply_fallback_text
+      response_parts = Captain::Assistant::ResponseParts.new([{ 'text' => message_content, 'citation_indexes' => [] }])
+    end
     validate_message_content!(message_content)
 
     suggestions = extract_suggested_replies
@@ -128,6 +132,55 @@ module Captain::Conversation::MessageBuilder
     return true if cards_builder&.has_products?
 
     @response.is_a?(Hash) && (@response['cards'].present? || @response['content_type'] == 'cards')
+  end
+
+  def v2_empty_reply_fallback_text
+    I18n.with_locale(@assistant.account.locale) do
+      if v2_catalog_searches_empty?
+        I18n.t('conversations.captain.empty_response_catalog_empty')
+      elsif v2_customer_message_has_attachments?
+        I18n.t('conversations.captain.empty_response_attachments')
+      elsif v2_model_returned_answer?
+        I18n.t('conversations.captain.empty_response_unusable')
+      else
+        I18n.t('conversations.captain.empty_response_handoff')
+      end
+    end
+  end
+
+  def v2_catalog_searches_empty?
+    stats = @assistant.run_result_product_search_stats(@run_result)
+    return false if stats.blank?
+
+    stats[:searches].positive? && stats[:results].zero?
+  end
+
+  def v2_customer_message_has_attachments?
+    responding_to_customer_message&.attachments&.any? || false
+  end
+
+  def v2_model_returned_answer?
+    raw_response = @response.is_a?(Hash) ? (@response['response'] || @response[:response]) : @response.to_s
+    response_parts_text = Captain::Assistant::ResponseParts.from_response(@response).plain_text
+    raw_response.to_s.strip.present? || response_parts_text.strip.present?
+  end
+
+  def v2_formatted_prose_blank?
+    v2_formatted_prose.blank?
+  end
+
+  def v2_formatted_prose
+    return @v2_formatted_prose if defined?(@v2_formatted_prose)
+
+    cards_builder = Captain::Conversation::ProductCardsBuilder.new(
+      assistant: @assistant,
+      conversation: @conversation,
+      response: @response,
+      run_result: @run_result
+    )
+    response_parts = Captain::Assistant::ResponseParts.from_response(@response)
+    citation_urls = cards_builder.filter_citation_urls(@assistant.trusted_citation_urls(@run_result))
+    @v2_formatted_prose = cards_builder.clean_prose_content(response_parts.customer_message_content(citation_urls: citation_urls))
   end
 end
 # rubocop:enable Metrics/ModuleLength

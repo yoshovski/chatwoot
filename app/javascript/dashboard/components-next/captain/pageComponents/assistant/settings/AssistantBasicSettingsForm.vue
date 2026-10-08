@@ -1,5 +1,5 @@
 <script setup>
-import { reactive, computed, watch } from 'vue';
+import { reactive, computed, watch, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useVuelidate } from '@vuelidate/core';
 import { required, minLength } from '@vuelidate/validators';
@@ -8,6 +8,9 @@ import Input from 'dashboard/components-next/input/Input.vue';
 import Button from 'dashboard/components-next/button/Button.vue';
 import Editor from 'dashboard/components-next/Editor/Editor.vue';
 import Avatar from 'dashboard/components-next/avatar/Avatar.vue';
+import Select from 'dashboard/components-next/select/Select.vue';
+import { useAdmin } from 'dashboard/composables/useAdmin';
+import { useStore, useMapGetter } from 'dashboard/composables/store';
 
 const props = defineProps({
   assistant: {
@@ -19,6 +22,17 @@ const props = defineProps({
 const emit = defineEmits(['submit', 'deleteAvatar']);
 
 const { t } = useI18n();
+const { isAdmin } = useAdmin();
+const store = useStore();
+const agentsList = useMapGetter('agents/getAgents');
+const teamsList = useMapGetter('teams/getTeams');
+
+onMounted(() => {
+  if (isAdmin.value) {
+    store.dispatch('agents/get');
+    store.dispatch('teams/get');
+  }
+});
 
 const initialState = {
   name: '',
@@ -26,12 +40,17 @@ const initialState = {
   productName: '',
   avatar: null,
   avatarUrl: '',
+  handoffFallbackAgentId: '',
+  handoffFallbackTeamId: '',
   features: {
     conversationFaqs: false,
     memories: false,
     citations: false,
     contactAttributes: false,
     continueWhileWaiting: false,
+    handoffSafetyNet: false,
+    replyLabels: false,
+    outcomeLabels: false,
   },
   replyStyle: {
     suggestedReplies: false,
@@ -67,12 +86,17 @@ const updateStateFromAssistant = assistant => {
   state.avatarUrl = assistant.avatar_url || '';
   state.avatar = null;
   state.productName = config.product_name;
+  state.handoffFallbackAgentId = config.handoff_fallback_agent_id ?? '';
+  state.handoffFallbackTeamId = config.handoff_fallback_team_id ?? '';
   state.features = {
     conversationFaqs: config.feature_faq || false,
     memories: config.feature_memory || false,
     citations: config.feature_citation || false,
     contactAttributes: config.feature_contact_attributes || false,
     continueWhileWaiting: config.continue_while_waiting || false,
+    handoffSafetyNet: config.handoff_safety_net || false,
+    replyLabels: config.reply_labels || false,
+    outcomeLabels: config.outcome_labels || false,
   };
   state.replyStyle = {
     suggestedReplies: config.suggested_replies || false,
@@ -80,6 +104,38 @@ const updateStateFromAssistant = assistant => {
     productCards: config.product_cards || false,
   };
 };
+
+const agentOptions = computed(() => {
+  const options = [
+    {
+      value: '',
+      label: t('CAPTAIN.ASSISTANTS.FORM.FALLBACK_ASSIGNMENTS.NONE'),
+    },
+  ];
+  (agentsList.value || []).forEach(agent => {
+    options.push({
+      value: agent.id,
+      label: agent.name || agent.available_name || agent.email,
+    });
+  });
+  return options;
+});
+
+const teamOptions = computed(() => {
+  const options = [
+    {
+      value: '',
+      label: t('CAPTAIN.ASSISTANTS.FORM.FALLBACK_ASSIGNMENTS.NONE'),
+    },
+  ];
+  (teamsList.value || []).forEach(team => {
+    options.push({
+      value: team.id,
+      label: team.name,
+    });
+  });
+  return options;
+});
 
 const handleImageUpload = ({ file, url }) => {
   state.avatar = file;
@@ -111,6 +167,9 @@ const handleBasicInfoUpdate = async () => {
       feature_citation: state.features.citations,
       feature_contact_attributes: state.features.contactAttributes,
       continue_while_waiting: state.features.continueWhileWaiting,
+      handoff_safety_net: state.features.handoffSafetyNet,
+      reply_labels: state.features.replyLabels,
+      outcome_labels: state.features.outcomeLabels,
       suggested_replies: Boolean(state.replyStyle.suggestedReplies),
       max_suggested_replies: Math.min(
         5,
@@ -119,6 +178,15 @@ const handleBasicInfoUpdate = async () => {
       product_cards: Boolean(state.replyStyle.productCards),
     },
   };
+
+  if (isAdmin.value) {
+    payload.config.handoff_fallback_agent_id = state.handoffFallbackAgentId
+      ? Number(state.handoffFallbackAgentId)
+      : null;
+    payload.config.handoff_fallback_team_id = state.handoffFallbackTeamId
+      ? Number(state.handoffFallbackTeamId)
+      : null;
+  }
 
   if (state.avatar) {
     payload.avatar = state.avatar;
@@ -207,6 +275,18 @@ watch(
           />
           {{ t('CAPTAIN.ASSISTANTS.FORM.FEATURES.CONTINUE_WHILE_WAITING') }}
         </label>
+        <label v-if="isAdmin" class="flex items-center gap-2">
+          <input v-model="state.features.handoffSafetyNet" type="checkbox" />
+          {{ t('CAPTAIN.ASSISTANTS.FORM.FEATURES.HANDOFF_SAFETY_NET') }}
+        </label>
+        <label v-if="isAdmin" class="flex items-center gap-2">
+          <input v-model="state.features.replyLabels" type="checkbox" />
+          {{ t('CAPTAIN.ASSISTANTS.FORM.FEATURES.REPLY_LABELS') }}
+        </label>
+        <label v-if="isAdmin" class="flex items-center gap-2">
+          <input v-model="state.features.outcomeLabels" type="checkbox" />
+          {{ t('CAPTAIN.ASSISTANTS.FORM.FEATURES.OUTCOME_LABELS') }}
+        </label>
       </div>
     </div>
 
@@ -235,6 +315,42 @@ watch(
           <input v-model="state.replyStyle.productCards" type="checkbox" />
           {{ t('CAPTAIN.ASSISTANTS.FORM.REPLY_STYLE.PRODUCT_CARDS') }}
         </label>
+      </div>
+    </div>
+
+    <div v-if="isAdmin" class="flex flex-col gap-3">
+      <label class="text-sm font-medium text-n-slate-12">
+        {{ t('CAPTAIN.ASSISTANTS.FORM.FALLBACK_ASSIGNMENTS.TITLE') }}
+      </label>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="flex flex-col gap-1.5">
+          <label class="text-xs font-medium text-n-slate-11">
+            {{ t('CAPTAIN.ASSISTANTS.FORM.FALLBACK_ASSIGNMENTS.AGENT_LABEL') }}
+          </label>
+          <Select
+            v-model="state.handoffFallbackAgentId"
+            :options="agentOptions"
+            :placeholder="
+              t(
+                'CAPTAIN.ASSISTANTS.FORM.FALLBACK_ASSIGNMENTS.AGENT_PLACEHOLDER'
+              )
+            "
+            class="[&>select]:w-full min-w-48"
+          />
+        </div>
+        <div class="flex flex-col gap-1.5">
+          <label class="text-xs font-medium text-n-slate-11">
+            {{ t('CAPTAIN.ASSISTANTS.FORM.FALLBACK_ASSIGNMENTS.TEAM_LABEL') }}
+          </label>
+          <Select
+            v-model="state.handoffFallbackTeamId"
+            :options="teamOptions"
+            :placeholder="
+              t('CAPTAIN.ASSISTANTS.FORM.FALLBACK_ASSIGNMENTS.TEAM_PLACEHOLDER')
+            "
+            class="[&>select]:w-full min-w-48"
+          />
+        </div>
       </div>
     </div>
 

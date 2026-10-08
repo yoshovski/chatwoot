@@ -315,6 +315,10 @@ en:
   conversations:
     captain:
       handoff: 'Transferring to another agent for further assistance.'
+      empty_response_catalog_empty: "I couldn't find a matching product in our current catalog."
+      empty_response_attachments: 'Please send a short message explaining what to check.'
+      empty_response_unusable: 'Sorry, I did not catch that. Could you rephrase?'
+      empty_response_handoff: "I couldn't complete that request. A colleague will continue with you in this chat."
     messages:
       instagram_story_content: '%{story_sender} mentioned you in the story: '
       instagram_deleted_story_content: This story is no longer available.

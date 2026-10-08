@@ -51,6 +51,19 @@ class CaptainListener < BaseListener
 
     Captain::Llm::ContactNotesService.new(assistant, conversation).generate_and_update_notes if assistant.config['feature_memory'].present?
     Captain::Llm::ConversationFaqJob.perform_later(conversation, assistant) if assistant.config['feature_faq'].present?
+    Captain::Conversation::OutcomeLabelJob.perform_later(conversation, assistant) if outcome_label_eligible?(conversation, assistant)
+  end
+
+  def conversation_bot_handoff(event)
+    conversation = extract_conversation_and_account(event)[0]
+    return if conversation.blank? || conversation.inbox.blank?
+    return unless conversation.account.feature_enabled?('captain_integration_v2')
+
+    assistant = conversation.inbox.captain_assistant
+    return if assistant.blank?
+    return if assistant.handoff_fallback_agent_id.blank? && assistant.handoff_fallback_team_id.blank?
+
+    Captain::Conversation::HandoffFallbackAssignmentJob.set(wait: 10.seconds).perform_later(conversation, assistant)
   end
 
   private
@@ -130,5 +143,12 @@ class CaptainListener < BaseListener
     return if message.conversation.blank?
 
     contact_capture_service(message.conversation).handle_form_submission!(message)
+  end
+
+  def outcome_label_eligible?(conversation, assistant)
+    return false if assistant.blank? || conversation&.account.blank?
+    return false unless conversation.account.feature_enabled?('captain_integration_v2')
+
+    assistant.outcome_labels?
   end
 end

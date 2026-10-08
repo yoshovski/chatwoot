@@ -1,4 +1,4 @@
-class Api::V1::Accounts::Captain::AssistantsController < Api::V1::Accounts::BaseController
+class Api::V1::Accounts::Captain::AssistantsController < Api::V1::Accounts::BaseController # rubocop:disable Metrics/ClassLength
   before_action -> { check_authorization(Captain::Assistant) }
 
   before_action :set_assistant, only: [:show, :update, :destroy, :playground, :playground_run, :metrics, :faq_stats, :summary, :drilldown, :avatar]
@@ -139,7 +139,14 @@ class Api::V1::Accounts::Captain::AssistantsController < Api::V1::Accounts::Base
       :max_suggested_replies, :product_cards,
       { link_allowlist: [], image_allowlist: [] }
     ]
-    attributes += [:auto_resolve_after, :send_inactivity_resolution_message] if Current.account.feature_enabled?('captain_integration_v2')
+    if Current.account.feature_enabled?('captain_integration_v2')
+      attributes += [
+        :auto_resolve_after, :send_inactivity_resolution_message,
+        :handoff_safety_net, { handoff_safety_net_keywords: [] },
+        :reply_labels, :outcome_labels,
+        :handoff_fallback_agent_id, :handoff_fallback_team_id
+      ]
+    end
     attributes
   end
 
@@ -152,6 +159,7 @@ class Api::V1::Accounts::Captain::AssistantsController < Api::V1::Accounts::Base
     permitted[:guardrails] = params[:assistant][:guardrails] if params[:assistant].key?(:guardrails)
 
     permit_audience_config(permitted)
+    permit_reply_label_keywords(permitted)
 
     permitted
   end
@@ -164,6 +172,14 @@ class Api::V1::Accounts::Captain::AssistantsController < Api::V1::Accounts::Base
 
     audience = config[:audience]
     permitted[:config][:audience] = audience.respond_to?(:permit!) ? audience.permit!.to_h : audience
+  end
+
+  def permit_reply_label_keywords(permitted)
+    config = params[:assistant][:config]
+    return unless config.try(:key?, :reply_label_keywords)
+
+    keywords = config[:reply_label_keywords]
+    permitted[:config][:reply_label_keywords] = keywords.respond_to?(:permit!) ? keywords.permit!.to_h : keywords
   end
 
   def playground_params

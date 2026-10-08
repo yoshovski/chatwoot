@@ -22,6 +22,7 @@ class Captain::Assistant < ApplicationRecord
   CITATION_SOURCES_STATE_KEY = :captain_v2_citation_sources
   CITATION_DETAILS_STATE_KEY = :captain_v2_citation_details
   PRODUCT_HANDLES_STATE_KEY = :captain_v2_product_handles
+  PRODUCT_SEARCH_STATS_STATE_KEY = :captain_v2_product_search_stats
   SHOPIFY_CATALOG_TOOL_IDS = %w[catalog_product_search browse_catalog].freeze
   AUTO_RESOLVE_MODES = %w[disabled legacy evaluated].freeze
   DEFAULT_INACTIVITY_THRESHOLD_MINUTES = 60
@@ -62,7 +63,9 @@ class Captain::Assistant < ApplicationRecord
   store_accessor :config, :temperature, :feature_faq, :feature_memory, :feature_contact_attributes, :product_name,
                  :auto_resolve_mode, :auto_resolve_after, :send_inactivity_resolution_message, :response_window,
                  :continue_while_waiting, :suggested_replies, :max_suggested_replies, :product_cards,
-                 :link_allowlist, :image_allowlist
+                 :link_allowlist, :image_allowlist, :handoff_safety_net, :handoff_safety_net_keywords,
+                 :reply_labels, :reply_label_keywords, :outcome_labels,
+                 :handoff_fallback_agent_id, :handoff_fallback_team_id
 
   BOOLEAN_CONFIG_KEYS = %w[
     feature_faq
@@ -73,6 +76,9 @@ class Captain::Assistant < ApplicationRecord
     send_inactivity_resolution_message
     suggested_replies
     product_cards
+    handoff_safety_net
+    reply_labels
+    outcome_labels
   ].freeze
 
   before_validation :set_default_auto_resolve_mode, on: :create
@@ -80,12 +86,15 @@ class Captain::Assistant < ApplicationRecord
   before_validation :normalize_boolean_config_attributes
   before_validation :normalize_max_suggested_replies
   before_validation :normalize_allowlists
+  before_validation :normalize_keywords
+  before_validation :normalize_fallback_assignments
 
   validates :name, presence: true
   validates :description, presence: true, length: { maximum: DESCRIPTION_LENGTH_LIMIT }
   validates :account_id, presence: true
   validates_with Captain::AudienceValidator
   validate :validate_response_window
+  validate :validate_handoff_fallback_assignments
   validates :auto_resolve_mode, inclusion: { in: AUTO_RESOLVE_MODES }
   validates :send_inactivity_resolution_message, inclusion: { in: [true, false] }
   validates :auto_resolve_after,
@@ -190,6 +199,18 @@ class Captain::Assistant < ApplicationRecord
     name.parameterize(separator: '_')
   end
 
+  def handoff_fallback_agent
+    return if handoff_fallback_agent_id.blank?
+
+    account&.users&.find_by(id: handoff_fallback_agent_id)
+  end
+
+  def handoff_fallback_team
+    return if handoff_fallback_team_id.blank?
+
+    account&.teams&.find_by(id: handoff_fallback_team_id)
+  end
+
   # Scenarios start from these tools too, so they can search knowledge and products mid-flow.
   def agent_tools
     tool_ids = %w[faq_lookup handoff]
@@ -220,6 +241,18 @@ class Captain::Assistant < ApplicationRecord
     config['feature_citation']
   end
 
+  def handoff_safety_net?
+    ActiveModel::Type::Boolean.new.cast(config['handoff_safety_net']) == true
+  end
+
+  def reply_labels?
+    ActiveModel::Type::Boolean.new.cast(config['reply_labels']) == true
+  end
+
+  def outcome_labels?
+    ActiveModel::Type::Boolean.new.cast(config['outcome_labels']) == true
+  end
+
   def trusted_citation_urls(run_result)
     return {} unless citations_enabled?
 
@@ -232,6 +265,17 @@ class Captain::Assistant < ApplicationRecord
   def run_result_product_handles(run_result)
     state = run_result&.context&.dig(:state)
     state&.dig(PRODUCT_HANDLES_STATE_KEY) || state&.dig(:product_handles)
+  end
+
+  def run_result_product_search_stats(run_result)
+    state = run_result&.context&.dig(:state)
+    return unless state
+
+    raw_stats = state[PRODUCT_SEARCH_STATS_STATE_KEY] || state[:product_search_stats] || state['product_search_stats']
+    return if raw_stats.blank?
+
+    stats = raw_stats.with_indifferent_access
+    { searches: stats[:searches].to_i, results: stats[:results].to_i }
   end
 
   def prompt_context
@@ -375,6 +419,30 @@ class Captain::Assistant < ApplicationRecord
     config[key] = Array(config[key]).map(&:to_s).map(&:strip).reject(&:blank?).uniq
   end
 
+  def normalize_keywords
+    return unless config.is_a?(Hash)
+
+    normalize_safety_net_keywords
+    normalize_reply_label_keywords
+  end
+
+  def normalize_safety_net_keywords
+    return unless config.key?('handoff_safety_net_keywords')
+
+    config['handoff_safety_net_keywords'] = Array(config['handoff_safety_net_keywords']).map(&:to_s).map(&:strip).reject(&:blank?)
+  end
+
+  def normalize_reply_label_keywords
+    return unless config.key?('reply_label_keywords')
+
+    raw = config['reply_label_keywords']
+    config['reply_label_keywords'] = if raw.is_a?(Hash)
+                                       raw.transform_values { |v| Array(v).map(&:to_s).map(&:strip).reject(&:blank?) }
+                                     else
+                                       {}
+                                     end
+  end
+
   def validate_response_window
     response_window = config['response_window']
     return if response_window.blank?
@@ -386,6 +454,50 @@ class Captain::Assistant < ApplicationRecord
     return if config.key?('auto_resolve_mode')
 
     self.auto_resolve_mode = account&.captain_auto_resolve_mode || 'evaluated'
+  end
+
+  def normalize_fallback_assignments
+    return unless config.is_a?(Hash)
+
+    %w[handoff_fallback_agent_id handoff_fallback_team_id].each do |key|
+      if config.key?(key)
+        val = config[key]
+        config[key] = val.present? ? Integer(val.to_s, exception: false) : nil
+      elsif config.key?(key.to_sym)
+        val = config.delete(key.to_sym)
+        config[key] = val.present? ? Integer(val.to_s, exception: false) : nil
+      end
+    end
+  end
+
+  def validate_handoff_fallback_assignments
+    validate_handoff_fallback_agent
+    validate_handoff_fallback_team
+  end
+
+  def validate_handoff_fallback_agent
+    return if handoff_fallback_agent_id.blank?
+    return unless account
+
+    agent = account.users.find_by(id: handoff_fallback_agent_id)
+    unless agent
+      errors.add(:handoff_fallback_agent_id, 'must belong to the account')
+      return
+    end
+
+    return if inboxes.empty?
+    return if inboxes.all? { |inbox| inbox.inbox_members.exists?(user_id: agent.id) }
+
+    errors.add(:handoff_fallback_agent_id, 'must be a member of the inbox')
+  end
+
+  def validate_handoff_fallback_team
+    return if handoff_fallback_team_id.blank?
+    return unless account
+
+    return if account.teams.exists?(id: handoff_fallback_team_id)
+
+    errors.add(:handoff_fallback_team_id, 'must belong to the account')
   end
 end
 # rubocop:enable Metrics/ClassLength

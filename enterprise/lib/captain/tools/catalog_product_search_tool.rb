@@ -16,9 +16,13 @@ class Captain::Tools::CatalogProductSearchTool < Captain::Tools::BasePublicTool
 
     log_tool_usage('searching_products', { query: query })
     selected_handles = resolve_search_handles(client, query, limit)
-    return "No products found matching: #{query}" if selected_handles.empty?
+    if selected_handles.empty?
+      record_product_search_stats(tool_context, 0)
+      return "No products found matching: #{query}"
+    end
 
     products = fetch_live_products(client, selected_handles)
+    record_product_search_stats(tool_context, products.count { |p| p['handle'].present? && p['available'] != false })
     process_found_products(tool_context, query, products)
   end
 
@@ -48,6 +52,15 @@ class Captain::Tools::CatalogProductSearchTool < Captain::Tools::BasePublicTool
     cache_products(tool_context, products)
     log_tool_usage('found_products', { query: query, count: products.size, handles: returned_handles })
     format_products(tool_context, products)
+  end
+
+  def record_product_search_stats(tool_context, count)
+    return if tool_context&.state.nil?
+
+    stats = tool_context.state[Captain::Assistant::PRODUCT_SEARCH_STATS_STATE_KEY] ||= { searches: 0, results: 0 }
+    stats[:searches] += 1
+    stats[:results] += count
+    tool_context.state[Captain::Assistant::PRODUCT_SEARCH_STATS_STATE_KEY] = stats
   end
 
   def normalize_limit(limit)
