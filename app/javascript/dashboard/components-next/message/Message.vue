@@ -140,6 +140,8 @@ const props = defineProps({
   senderId: { type: Number, default: null },
   senderType: { type: String, default: null },
   sourceId: { type: String, default: '' }, // eslint-disable-line vue/no-unused-properties
+  // Shown for context only (e.g. the reply button a customer picked): no message actions.
+  readOnly: { type: Boolean, default: false },
 });
 
 const emit = defineEmits(['retry']);
@@ -372,7 +374,7 @@ const componentToRender = computed(() => {
 });
 
 const shouldShowContextMenu = computed(() => {
-  return !props.contentAttributes?.isUnsupported;
+  return !props.readOnly && !props.contentAttributes?.isUnsupported;
 });
 
 const isBubble = computed(() => {
@@ -452,6 +454,8 @@ const shouldRenderMessage = computed(() => {
 });
 
 function openContextMenu(e) {
+  if (props.readOnly) return;
+
   const shouldSkipContextMenu =
     e.target?.classList.contains('skip-context-menu') ||
     ['a', 'img'].includes(e.target?.tagName.toLowerCase());

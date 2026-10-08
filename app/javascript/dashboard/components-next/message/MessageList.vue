@@ -1,7 +1,7 @@
 <script setup>
 import { computed, reactive } from 'vue';
 import Message from './Message.vue';
-import { MESSAGE_TYPES } from './constants.js';
+import { CONTENT_TYPES, MESSAGE_STATUS, MESSAGE_TYPES } from './constants.js';
 import { useCamelCase } from 'dashboard/composables/useTransformKeys';
 import { useMapGetter } from 'dashboard/composables/store.js';
 import MessageApi from 'dashboard/api/inbox/message.js';
@@ -52,6 +52,36 @@ const allMessages = computed(() => {
 });
 
 const currentChat = useMapGetter('getSelectedChat');
+
+// Reply buttons are for the customer. As in the widget, the option they picked shows as
+// their own message right after the bot reply. It is read-only and gets a negative id, so
+// it never acts on or collides with a stored message.
+const displayMessages = computed(() => {
+  const contact = useCamelCase(currentChat.value?.meta?.sender ?? {});
+  return allMessages.value.flatMap(message => {
+    const [option] =
+      message.contentType === CONTENT_TYPES.INPUT_SELECT
+        ? (message.contentAttributes?.submittedValues ?? [])
+        : [];
+    if (!option) return [message];
+
+    return [
+      message,
+      {
+        id: -message.id,
+        readOnly: true,
+        content: option.title || option.value,
+        messageType: MESSAGE_TYPES.INCOMING,
+        contentType: CONTENT_TYPES.TEXT,
+        status: MESSAGE_STATUS.SENT,
+        conversationId: message.conversationId,
+        inboxId: message.inboxId,
+        createdAt: message.createdAt,
+        sender: contact,
+      },
+    ];
+  });
+});
 
 // Cache for fetched reply messages to avoid duplicate API calls
 const fetchedReplyMessages = reactive(new Map());
@@ -168,7 +198,7 @@ const getInReplyToMessage = parentMessage => {
 <template>
   <ul class="px-4 bg-n-surface-1">
     <slot name="beforeAll" />
-    <template v-for="(message, index) in allMessages" :key="message.id">
+    <template v-for="(message, index) in displayMessages" :key="message.id">
       <slot
         v-if="firstUnreadId && message.id === firstUnreadId"
         name="unreadBadge"
@@ -177,7 +207,7 @@ const getInReplyToMessage = parentMessage => {
         v-bind="message"
         :is-email-inbox="isAnEmailChannel"
         :in-reply-to="getInReplyToMessage(message)"
-        :group-with-next="shouldGroupWithNext(index, allMessages)"
+        :group-with-next="shouldGroupWithNext(index, displayMessages)"
         :inbox-supports-reply-to="inboxSupportsReplyTo"
         :current-user-id="currentUserId"
         data-clarity-mask="True"

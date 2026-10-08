@@ -46,9 +46,16 @@ class Captain::Assistant::SessionCaptureService
 
   private
 
-  # The dashboard shows the Sources button only on the reply that used sources, without loading every session.
+  # The dashboard shows the Sources button only on the answer that used sources, without loading every session.
+  # On a handoff the session sits on the private note; the answer finds it there, so the note gets no button.
   def record_sources_used(count)
-    result_message.update!(additional_attributes: result_message.additional_attributes.to_h.merge(SOURCES_USED_ATTRIBUTE => count))
+    answer = @result_message || result_message
+    mark_sources_used(answer, count)
+    mark_sources_used(result_message, 0) unless result_message == answer
+  end
+
+  def mark_sources_used(message, count)
+    message.update!(additional_attributes: message.additional_attributes.to_h.merge(SOURCES_USED_ATTRIBUTE => count))
   end
 
   def context
