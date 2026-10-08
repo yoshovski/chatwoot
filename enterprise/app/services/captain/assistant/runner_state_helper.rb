@@ -23,7 +23,8 @@ module Captain::Assistant::RunnerStateHelper
       timezone: @conversation&.inbox&.timezone.presence || 'UTC',
       suggested_replies_enabled: suggested_replies_enabled?,
       max_suggested_replies: @assistant.max_suggested_replies,
-      product_cards_enabled: product_cards_enabled?
+      product_cards_enabled: product_cards_enabled?,
+      commerce_enabled: commerce_enabled?
     }
     state[:source] = @source if @source.present?
     state[:responding_to_message_id] = @responding_to_message_id if @responding_to_message_id.present?
@@ -53,5 +54,9 @@ module Captain::Assistant::RunnerStateHelper
 
   def slice_attrs(record, keys)
     record.attributes.symbolize_keys.slice(*keys)
+  end
+
+  def commerce_enabled?
+    @assistant.commerce_enabled?
   end
 end

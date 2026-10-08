@@ -16,22 +16,7 @@ module Concerns::Agentable
 
   def agent_instructions(context = nil, prompt_template: template_name, runtime_configuration: nil)
     enhanced_context = runtime_prompt_context(prompt_context, runtime_configuration)
-
-    if context
-      state = context.context[:state] || {}
-      config = state[:assistant_config] || {}
-      enhanced_context = enhanced_context.merge(
-        current_time: format_current_time(state[:timezone]),
-        conversation: state[:conversation] || {},
-        contact: config['feature_contact_attributes'].present? ? state[:contact] : nil,
-        campaign: state[:campaign] || {},
-        message_length_limit: state[:message_length_limit],
-        ownership_instruction: state[:ownership_instruction],
-        suggested_replies_enabled: state[:suggested_replies_enabled],
-        max_suggested_replies: state[:max_suggested_replies],
-        product_cards_enabled: state[:product_cards_enabled]
-      )
-    end
+    enhanced_context = enhanced_context.merge(context_state_context(context)) if context
 
     Captain::PromptRenderer.render(prompt_template, enhanced_context.with_indifferent_access)
   end
@@ -49,6 +34,24 @@ module Concerns::Agentable
     return context unless runtime_configuration
 
     runtime_configuration.prompt_context_for(self, context)
+  end
+
+  def context_state_context(context)
+    state = context.context[:state] || {}
+    config = state[:assistant_config] || {}
+    attrs = {
+      current_time: format_current_time(state[:timezone]),
+      conversation: state[:conversation] || {},
+      contact: config['feature_contact_attributes'].present? ? state[:contact] : nil,
+      campaign: state[:campaign] || {},
+      message_length_limit: state[:message_length_limit],
+      ownership_instruction: state[:ownership_instruction],
+      suggested_replies_enabled: state[:suggested_replies_enabled],
+      max_suggested_replies: state[:max_suggested_replies],
+      product_cards_enabled: state[:product_cards_enabled]
+    }
+    attrs[:commerce_enabled] = state[:commerce_enabled] if state.key?(:commerce_enabled)
+    attrs
   end
 
   def agent_name

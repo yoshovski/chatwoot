@@ -368,4 +368,28 @@ RSpec.describe Captain::Scenario, type: :model do
       expect(scenario.account).to be_present
     end
   end
+
+  describe '#agent_instructions' do
+    let(:account) { create(:account) }
+    let(:assistant) { create(:captain_assistant, account: account) }
+    let(:scenario) { create(:captain_scenario, assistant: assistant, account: account) }
+
+    it 'renders commerce rules when shopify tools are available' do
+      allow(assistant).to receive(:shopify_catalog_tools_available?).and_return(true)
+
+      instructions = scenario.agent_instructions
+
+      expect(instructions).to include('# Commerce Rules')
+      expect(instructions).to include('Use product search for discovery')
+    end
+
+    it 'omits commerce rules when shopify tools are not available' do
+      allow(assistant).to receive(:shopify_catalog_tools_available?).and_return(false)
+      allow(assistant).to receive(:shopify_order_tracking_available?).and_return(false)
+
+      instructions = scenario.agent_instructions
+
+      expect(instructions).not_to include('# Commerce Rules')
+    end
+  end
 end

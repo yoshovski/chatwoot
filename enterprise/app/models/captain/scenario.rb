@@ -66,6 +66,7 @@ class Captain::Scenario < ApplicationRecord
       title: title,
       instructions: resolved_instructions,
       tools: resolved_tools,
+      commerce_enabled: assistant.commerce_enabled?,
       # Same normalization the agents gem uses for handoff tool names, so the prompt names a tool that exists.
       assistant_name: Agents::Helpers::NameNormalizer.to_tool_name(assistant.agent_name),
       response_guidelines: response_guidelines || [],
