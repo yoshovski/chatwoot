@@ -158,6 +158,7 @@ class Captain::Conversation::ResponseBuilderJob < ApplicationJob # rubocop:disab
     delegate_ownership_service.clear_returned_to_ai_flag!
     capture_assistant_session(result_message: message, credits_consumed: 1.0)
     record_v2_response_completed(message) if captain_v2_enabled?
+    apply_v2_reply_labels(handed_off: false, answer: message.content)
   end
 
   def process_v2_handoff_response
@@ -203,6 +204,7 @@ class Captain::Conversation::ResponseBuilderJob < ApplicationJob # rubocop:disab
       report_v1_handoff_not_executed if conversation_pending?
       send_out_of_office_message_if_applicable
       trigger_handoff_contact_form
+      apply_v2_reply_labels(handed_off: true, answer: @handoff_message&.content) if captain_v2_enabled?
     end
   end
 
@@ -214,6 +216,7 @@ class Captain::Conversation::ResponseBuilderJob < ApplicationJob # rubocop:disab
       # A delivered answer already tells the customer a colleague will continue.
       @handoff_message = answer || create_handoff_message(preserve_waiting_since: true)
       trigger_handoff_contact_form
+      apply_v2_reply_labels(handed_off: true, answer: @handoff_message&.content)
     end
   end
 
@@ -239,6 +242,7 @@ class Captain::Conversation::ResponseBuilderJob < ApplicationJob # rubocop:disab
       record_v2_declared_handoff(source: source)
       send_out_of_office_message_if_applicable
       trigger_handoff_contact_form
+      apply_v2_reply_labels(handed_off: true, answer: @handoff_message&.content)
     end
 
     capture_assistant_session(result_message: @handoff_message, credits_consumed: 0.0)
@@ -257,6 +261,37 @@ class Captain::Conversation::ResponseBuilderJob < ApplicationJob # rubocop:disab
       I18n.t('conversations.captain.empty_response_handoff')
     end
     process_v2_declared_handoff(custom_message: handoff_text)
+  end
+
+  def apply_v2_reply_labels(handed_off: false, answer: nil)
+    return unless captain_v2_enabled? && @assistant.reply_labels?
+
+    labels = Captain::Conversation::ReplyLabels.new(
+      assistant: @assistant,
+      customer_message: responding_to_customer_message,
+      answer: v2_reply_answer_text(answer),
+      products_shown: v2_products_shown?,
+      handed_off: handed_off
+    ).labels
+
+    return if labels.empty?
+
+    labels.each { |title| account.labels.find_or_create_by!(title: title) }
+    @conversation.add_labels(labels)
+  end
+
+  def v2_reply_answer_text(answer)
+    answer.presence || @handoff_message&.content.presence || Captain::Assistant::ResponseParts.from_response(@response).plain_text
+  end
+
+  def v2_products_shown?
+    @assistant.shopify_catalog_tools_available? &&
+      Captain::Conversation::ProductCardsBuilder.new(
+        assistant: @assistant,
+        conversation: @conversation,
+        response: @response,
+        run_result: @run_result
+      ).products?
   end
 
   def v2_handoff_safety_net_triggered?

@@ -51,6 +51,7 @@ class CaptainListener < BaseListener
 
     Captain::Llm::ContactNotesService.new(assistant, conversation).generate_and_update_notes if assistant.config['feature_memory'].present?
     Captain::Llm::ConversationFaqJob.perform_later(conversation, assistant) if assistant.config['feature_faq'].present?
+    Captain::Conversation::OutcomeLabelJob.perform_later(conversation, assistant) if outcome_label_eligible?(conversation, assistant)
   end
 
   private
@@ -130,5 +131,12 @@ class CaptainListener < BaseListener
     return if message.conversation.blank?
 
     contact_capture_service(message.conversation).handle_form_submission!(message)
+  end
+
+  def outcome_label_eligible?(conversation, assistant)
+    return false if assistant.blank? || conversation&.account.blank?
+    return false unless conversation.account.feature_enabled?('captain_integration_v2')
+
+    assistant.outcome_labels?
   end
 end

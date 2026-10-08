@@ -35,6 +35,8 @@ const initialState = {
     contactAttributes: false,
     continueWhileWaiting: false,
     handoffSafetyNet: false,
+    replyLabels: false,
+    outcomeLabels: false,
   },
   replyStyle: {
     suggestedReplies: false,
@@ -77,6 +79,8 @@ const updateStateFromAssistant = assistant => {
     contactAttributes: config.feature_contact_attributes || false,
     continueWhileWaiting: config.continue_while_waiting || false,
     handoffSafetyNet: config.handoff_safety_net || false,
+    replyLabels: config.reply_labels || false,
+    outcomeLabels: config.outcome_labels || false,
   };
   state.replyStyle = {
     suggestedReplies: config.suggested_replies || false,
@@ -116,6 +120,8 @@ const handleBasicInfoUpdate = async () => {
       feature_contact_attributes: state.features.contactAttributes,
       continue_while_waiting: state.features.continueWhileWaiting,
       handoff_safety_net: state.features.handoffSafetyNet,
+      reply_labels: state.features.replyLabels,
+      outcome_labels: state.features.outcomeLabels,
       suggested_replies: Boolean(state.replyStyle.suggestedReplies),
       max_suggested_replies: Math.min(
         5,
@@ -215,6 +221,14 @@ watch(
         <label v-if="isAdmin" class="flex items-center gap-2">
           <input v-model="state.features.handoffSafetyNet" type="checkbox" />
           {{ t('CAPTAIN.ASSISTANTS.FORM.FEATURES.HANDOFF_SAFETY_NET') }}
+        </label>
+        <label v-if="isAdmin" class="flex items-center gap-2">
+          <input v-model="state.features.replyLabels" type="checkbox" />
+          {{ t('CAPTAIN.ASSISTANTS.FORM.FEATURES.REPLY_LABELS') }}
+        </label>
+        <label v-if="isAdmin" class="flex items-center gap-2">
+          <input v-model="state.features.outcomeLabels" type="checkbox" />
+          {{ t('CAPTAIN.ASSISTANTS.FORM.FEATURES.OUTCOME_LABELS') }}
         </label>
       </div>
     </div>

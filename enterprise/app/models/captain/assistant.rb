@@ -63,7 +63,8 @@ class Captain::Assistant < ApplicationRecord
   store_accessor :config, :temperature, :feature_faq, :feature_memory, :feature_contact_attributes, :product_name,
                  :auto_resolve_mode, :auto_resolve_after, :send_inactivity_resolution_message, :response_window,
                  :continue_while_waiting, :suggested_replies, :max_suggested_replies, :product_cards,
-                 :link_allowlist, :image_allowlist, :handoff_safety_net, :handoff_safety_net_keywords
+                 :link_allowlist, :image_allowlist, :handoff_safety_net, :handoff_safety_net_keywords,
+                 :reply_labels, :reply_label_keywords, :outcome_labels
 
   BOOLEAN_CONFIG_KEYS = %w[
     feature_faq
@@ -75,6 +76,8 @@ class Captain::Assistant < ApplicationRecord
     suggested_replies
     product_cards
     handoff_safety_net
+    reply_labels
+    outcome_labels
   ].freeze
 
   before_validation :set_default_auto_resolve_mode, on: :create
@@ -225,6 +228,14 @@ class Captain::Assistant < ApplicationRecord
 
   def handoff_safety_net?
     ActiveModel::Type::Boolean.new.cast(config['handoff_safety_net']) == true
+  end
+
+  def reply_labels?
+    ActiveModel::Type::Boolean.new.cast(config['reply_labels']) == true
+  end
+
+  def outcome_labels?
+    ActiveModel::Type::Boolean.new.cast(config['outcome_labels']) == true
   end
 
   def trusted_citation_urls(run_result)
@@ -395,9 +406,26 @@ class Captain::Assistant < ApplicationRecord
 
   def normalize_keywords
     return unless config.is_a?(Hash)
+
+    normalize_safety_net_keywords
+    normalize_reply_label_keywords
+  end
+
+  def normalize_safety_net_keywords
     return unless config.key?('handoff_safety_net_keywords')
 
     config['handoff_safety_net_keywords'] = Array(config['handoff_safety_net_keywords']).map(&:to_s).map(&:strip).reject(&:blank?)
+  end
+
+  def normalize_reply_label_keywords
+    return unless config.key?('reply_label_keywords')
+
+    raw = config['reply_label_keywords']
+    config['reply_label_keywords'] = if raw.is_a?(Hash)
+                                       raw.transform_values { |v| Array(v).map(&:to_s).map(&:strip).reject(&:blank?) }
+                                     else
+                                       {}
+                                     end
   end
 
   def validate_response_window
