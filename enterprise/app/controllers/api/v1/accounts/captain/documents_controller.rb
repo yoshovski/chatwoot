@@ -3,7 +3,7 @@ class Api::V1::Accounts::Captain::DocumentsController < Api::V1::Accounts::BaseC
 
   before_action :set_current_page, only: [:index]
   before_action :set_documents, except: [:create]
-  before_action :set_document, only: [:show, :destroy, :sync, :drilldown]
+  before_action :set_document, only: [:show, :update, :destroy, :sync, :drilldown]
   before_action :set_assistant, only: [:create]
   RESULTS_PER_PAGE = 25
 
@@ -29,6 +29,12 @@ class Api::V1::Accounts::Captain::DocumentsController < Api::V1::Accounts::BaseC
     render_could_not_create_error(e.message)
   rescue ActiveRecord::RecordInvalid => e
     render_could_not_create_error(e.record.errors.full_messages.join(', '))
+  end
+
+  # Only who may see the document can change; its source and content come from the sync.
+  def update
+    @document.update!(params.require(:document).permit(:agents_only))
+    render :show
   end
 
   def sync
@@ -157,6 +163,6 @@ class Api::V1::Accounts::Captain::DocumentsController < Api::V1::Accounts::BaseC
   end
 
   def document_params
-    params.require(:document).permit(:name, :external_link, :assistant_id, :pdf_file, :markdown_content, :include_linked_pages)
+    params.require(:document).permit(:name, :external_link, :assistant_id, :pdf_file, :markdown_content, :include_linked_pages, :agents_only)
   end
 end

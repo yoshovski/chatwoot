@@ -16,6 +16,7 @@ import Spinner from 'dashboard/components-next/spinner/Spinner.vue';
 import SidePanel from 'dashboard/components-next/side-panel/SidePanel.vue';
 import Icon from 'dashboard/components-next/icon/Icon.vue';
 import Button from 'dashboard/components-next/button/Button.vue';
+import Checkbox from 'dashboard/components-next/checkbox/Checkbox.vue';
 import TabBar from 'dashboard/components-next/tabbar/TabBar.vue';
 import PaginationFooter from 'dashboard/components-next/pagination/PaginationFooter.vue';
 import CaptainDocumentAPI from 'dashboard/api/captain/document';
@@ -160,6 +161,29 @@ const documentTitle = computed(
   () => documentDetails.value.name || documentDetails.value.external_link
 );
 
+// The store replaces the record on update, so the panel keeps its own copy of the setting.
+const agentsOnlyValue = ref(!!props.captainDocument.agents_only);
+const isSavingVisibility = ref(false);
+const agentsOnly = computed({
+  get: () => agentsOnlyValue.value,
+  set: async value => {
+    agentsOnlyValue.value = value;
+    isSavingVisibility.value = true;
+    try {
+      await store.dispatch('captainDocuments/update', {
+        id: documentDetails.value.id,
+        document: { agents_only: value },
+      });
+      useAlert(t('CAPTAIN.DOCUMENTS.DETAILS.VISIBILITY_SAVED'));
+    } catch {
+      agentsOnlyValue.value = !value;
+      useAlert(t('CAPTAIN.DOCUMENTS.DETAILS.VISIBILITY_ERROR'));
+    } finally {
+      isSavingVisibility.value = false;
+    }
+  },
+});
+
 const fetchDocumentUsage = ({ resourceId, ...params }) =>
   CaptainDocumentAPI.getDrilldown({ documentId: resourceId, ...params });
 
@@ -272,6 +296,28 @@ onUnmounted(closeUsage);
             </span>
           </div>
         </div>
+        <label
+          v-if="canManage"
+          class="flex gap-2 items-start"
+          :class="isSavingVisibility ? 'opacity-60' : 'cursor-pointer'"
+        >
+          <Checkbox
+            v-model="agentsOnly"
+            :disabled="isSavingVisibility"
+            class="mt-0.5 shrink-0"
+          />
+          <span class="flex flex-col gap-0.5">
+            <span class="text-sm text-n-slate-12">
+              {{ t('CAPTAIN.DOCUMENTS.FORM.AGENTS_ONLY.LABEL') }}
+            </span>
+            <span class="text-xs text-n-slate-11">
+              {{ t('CAPTAIN.DOCUMENTS.FORM.AGENTS_ONLY.HELP') }}
+            </span>
+          </span>
+        </label>
+        <span v-else-if="agentsOnly" class="text-sm text-n-slate-11">
+          {{ t('CAPTAIN.DOCUMENTS.FORM.AGENTS_ONLY.LABEL') }}
+        </span>
       </section>
 
       <TabBar

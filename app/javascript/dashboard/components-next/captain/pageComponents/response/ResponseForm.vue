@@ -8,6 +8,7 @@ import { useMapGetter } from 'dashboard/composables/store';
 import Input from 'dashboard/components-next/input/Input.vue';
 import Editor from 'dashboard/components-next/Editor/Editor.vue';
 import Button from 'dashboard/components-next/button/Button.vue';
+import Checkbox from 'dashboard/components-next/checkbox/Checkbox.vue';
 
 const props = defineProps({
   mode: {
@@ -31,6 +32,7 @@ const formState = {
 const initialState = {
   question: '',
   answer: '',
+  agentsOnly: false,
 };
 
 const state = reactive({ ...initialState });
@@ -60,6 +62,7 @@ const handleCancel = () => emit('cancel');
 const prepareDocumentDetails = () => ({
   question: state.question,
   answer: state.answer,
+  agents_only: state.agentsOnly,
 });
 
 const handleSubmit = async () => {
@@ -74,11 +77,12 @@ const handleSubmit = async () => {
 const updateStateFromResponse = response => {
   if (!response) return;
 
-  const { question, answer } = response;
+  const { question, answer, agents_only: agentsOnly } = response;
 
   Object.assign(state, {
     question,
     answer,
+    agentsOnly: !!agentsOnly,
   });
 };
 
@@ -110,6 +114,17 @@ watch(
       :max-length="10000"
       :message-type="formErrors.answer ? 'error' : 'info'"
     />
+    <label class="flex gap-2 items-start cursor-pointer">
+      <Checkbox v-model="state.agentsOnly" class="mt-0.5 shrink-0" />
+      <span class="flex flex-col gap-0.5">
+        <span class="text-sm text-n-slate-12">
+          {{ t('CAPTAIN.RESPONSES.FORM.AGENTS_ONLY.LABEL') }}
+        </span>
+        <span class="text-xs text-n-slate-11">
+          {{ t('CAPTAIN.RESPONSES.FORM.AGENTS_ONLY.HELP') }}
+        </span>
+      </span>
+    </label>
     <div class="flex items-center justify-between w-full gap-3">
       <Button
         type="button"

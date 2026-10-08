@@ -76,6 +76,9 @@ class Captain::Document < ApplicationRecord
     sync_synced.where(arel_table[:last_synced_at].gteq(time))
   }
 
+  # Agents-only documents (internal notes, personal data) are searched only for agents, never for customer replies.
+  def visible_to_customers? = !agents_only?
+
   def pdf_document?
     return true if pdf_file.attached? && pdf_file.blob.content_type == 'application/pdf'
     return true if external_link&.start_with?('PDF:')

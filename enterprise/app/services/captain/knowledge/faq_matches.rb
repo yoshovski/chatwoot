@@ -21,7 +21,7 @@ class Captain::Knowledge::FaqMatches
   private
 
   def published_matches(relation, query)
-    passages = Captain::Knowledge::Search.new(@assistant).search(query, kinds: ['faq'])
+    passages = Captain::Knowledge::Search.new(@assistant, for_agents: true).search(query, kinds: ['faq'])
     passages.select { |passage| passage.score >= MATCH_SCORE }.filter_map(&:record) & relation.to_a
   end
 end

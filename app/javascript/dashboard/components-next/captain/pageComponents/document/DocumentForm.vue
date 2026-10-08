@@ -39,6 +39,7 @@ const initialState = {
   pdfFile: null,
   // null follows the default for the URL until the user picks a value.
   includeLinkedPages: null,
+  agentsOnly: false,
 };
 
 const state = reactive({ ...initialState });
@@ -127,6 +128,7 @@ const openFileDialog = () => {
 const prepareDocumentDetails = () => {
   const formData = new FormData();
   formData.append('document[assistant_id]', props.assistantId);
+  formData.append('document[agents_only]', state.agentsOnly);
 
   if (state.documentType === 'url') {
     formData.append('document[external_link]', state.url);
@@ -257,6 +259,18 @@ const handleSubmit = async () => {
       :label="t('CAPTAIN.DOCUMENTS.FORM.NAME.LABEL')"
       :placeholder="t('CAPTAIN.DOCUMENTS.FORM.NAME.PLACEHOLDER')"
     />
+
+    <label class="flex gap-2 items-start cursor-pointer">
+      <Checkbox v-model="state.agentsOnly" class="mt-0.5 shrink-0" />
+      <span class="flex flex-col gap-0.5">
+        <span class="text-sm text-n-slate-12">
+          {{ t('CAPTAIN.DOCUMENTS.FORM.AGENTS_ONLY.LABEL') }}
+        </span>
+        <span class="text-xs text-n-slate-11">
+          {{ t('CAPTAIN.DOCUMENTS.FORM.AGENTS_ONLY.HELP') }}
+        </span>
+      </span>
+    </label>
 
     <div class="flex gap-3 justify-between items-center w-full">
       <Button

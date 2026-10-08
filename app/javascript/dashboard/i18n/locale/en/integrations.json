@@ -1281,7 +1281,9 @@
         "VIEW_RAW": "View raw",
         "VIEW_PREVIEW": "View preview",
         "UNREADABLE_CONTENT": "Readable content could not be extracted from this document. You can view the raw extracted content.",
-        "EMPTY_CONTENT": "No crawled content is available for this document yet."
+        "EMPTY_CONTENT": "No crawled content is available for this document yet.",
+        "VISIBILITY_SAVED": "Visibility updated",
+        "VISIBILITY_ERROR": "Could not update the visibility. Please try again."
       },
       "FORM_DESCRIPTION": "Enter the URL of the document to add it as a knowledge source and choose the assistant to associate it with.",
       "CREATE": {
@@ -1305,6 +1307,10 @@
           "HELP": "Adds the other pages on the same site that this page links to.",
           "STORE_HELP": "Off by default for your Shopify store: products already come from the catalog sync. When on, only content pages (pages, policies, blogs) are added."
         },
+        "AGENTS_ONLY": {
+          "LABEL": "Agents only",
+          "HELP": "Captain won't use this document, or the FAQs made from it, to answer customers. Copilot and reply suggestions still can. Use it for internal notes and personal data."
+        },
         "PDF_FILE": {
           "LABEL": "PDF File",
           "CHOOSE_FILE": "Choose PDF file",
@@ -1325,7 +1331,6 @@
         "SUCCESS_MESSAGE": "The document has been successfully deleted",
         "ERROR_MESSAGE": "There was an error deleting the document, please try again."
       },
-
       "OPTIONS": {
         "VIEW_DETAILS": "View details",
         "SYNC_NOW": "Refresh now",
@@ -1537,6 +1542,10 @@
           "LABEL": "Answer",
           "PLACEHOLDER": "Enter the answer here",
           "ERROR": "Please provide a valid answer."
+        },
+        "AGENTS_ONLY": {
+          "LABEL": "Agents only",
+          "HELP": "Captain won't use this FAQ to answer customers. Copilot and reply suggestions still can."
         }
       },
       "EDIT": {

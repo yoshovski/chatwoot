@@ -139,7 +139,7 @@ Rails.application.routes.draw do
             resources :custom_tools do
               post :test, on: :collection
             end
-            resources :documents, only: [:index, :show, :create, :destroy] do
+            resources :documents, only: [:index, :show, :create, :update, :destroy] do
               post :sync, on: :member
               get :drilldown, on: :member
             end

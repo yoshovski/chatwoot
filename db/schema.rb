@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_10_07_150000) do
+ActiveRecord::Schema[7.1].define(version: 2026_10_08_120000) do
   # These extensions should be enabled to support this database
   enable_extension "pg_stat_statements"
   enable_extension "pg_trgm"
@@ -426,6 +426,7 @@ ActiveRecord::Schema[7.1].define(version: 2026_10_07_150000) do
     t.string "documentable_type"
     t.boolean "edited", default: false, null: false
     t.string "dify_document_id"
+    t.boolean "agents_only", default: false, null: false
     t.index ["account_id"], name: "index_captain_assistant_responses_on_account_id"
     t.index ["assistant_id"], name: "index_captain_assistant_responses_on_assistant_id"
     t.index ["dify_document_id"], name: "index_captain_assistant_responses_on_dify_document_id"
@@ -478,6 +479,7 @@ ActiveRecord::Schema[7.1].define(version: 2026_10_07_150000) do
     t.integer "sync_status"
     t.datetime "last_synced_at"
     t.datetime "last_sync_attempted_at"
+    t.boolean "agents_only", default: false, null: false
     t.index "assistant_id, md5(external_link)", name: "idx_captain_documents_on_assistant_id_and_external_link_md5", unique: true
     t.index ["account_id", "assistant_id", "sync_status", "last_synced_at"], name: "idx_captain_documents_on_account_assistant_sync_stats"
     t.index ["account_id", "sync_status"], name: "index_captain_documents_on_account_id_and_sync_status"

@@ -1,4 +1,5 @@
 json.account_id resource.account_id
+json.agents_only resource.agents_only
 json.assistant do
   json.partial! 'api/v1/models/captain/assistant', formats: [:json], resource: resource.assistant
 end

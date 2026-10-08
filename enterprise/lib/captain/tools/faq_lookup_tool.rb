@@ -14,7 +14,7 @@ class Captain::Tools::FaqLookupTool < Captain::Tools::BasePublicTool
     return search_knowledge(tool_context, query) if @assistant.account.dify_knowledge_enabled?
 
     # Use existing vector search on approved responses
-    responses = @assistant.responses.approved.search(query).includes(:documentable).to_a
+    responses = @assistant.responses.approved.visible_to_customers.search(query).includes(:documentable).to_a
     record_retrieved_sources(tool_context, responses)
 
     if responses.empty?
