@@ -39,6 +39,11 @@ class Captain::AssistantPolicy < ApplicationPolicy
     update?
   end
 
+  # Removing the assistant's photo.
+  def avatar?
+    update?
+  end
+
   def dismiss?
     update?
   end
