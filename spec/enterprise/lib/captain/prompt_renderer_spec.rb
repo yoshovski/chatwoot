@@ -104,6 +104,33 @@ RSpec.describe Captain::PromptRenderer do
       expect(result).to include('citation_indexes', 'numeric source index')
       expect(result).not_to include('[[faq:')
     end
+
+    it 'renders the commerce rules snippet' do
+      allow(File).to receive(:read).with(template_path).and_return("{% render 'commerce_rules' %}")
+
+      result = described_class.render(template_name, {})
+
+      expect(result).to include('# Commerce Rules')
+      expect(result).to include('Use product search for discovery')
+    end
+
+    it 'renders commerce handoff rule in core_rules when commerce_enabled' do
+      allow(File).to receive(:read).with(template_path).and_return("{% render 'core_rules', commerce_enabled: commerce_enabled %}")
+
+      result = described_class.render(template_name, { commerce_enabled: true })
+
+      expect(result).to include('Hand off directly without asking for consent')
+      expect(result).not_to include('ask whether the user wants to talk to another support agent')
+    end
+
+    it 'renders consent-first handoff rule in core_rules when not commerce_enabled' do
+      allow(File).to receive(:read).with(template_path).and_return("{% render 'core_rules', commerce_enabled: commerce_enabled %}")
+
+      result = described_class.render(template_name, { commerce_enabled: false })
+
+      expect(result).to include('ask whether the user wants to talk to another support agent')
+      expect(result).not_to include('Hand off directly without asking for consent')
+    end
   end
 
   describe '.load_template' do
