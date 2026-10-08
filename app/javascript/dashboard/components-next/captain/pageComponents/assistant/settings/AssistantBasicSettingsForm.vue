@@ -8,6 +8,7 @@ import Input from 'dashboard/components-next/input/Input.vue';
 import Button from 'dashboard/components-next/button/Button.vue';
 import Editor from 'dashboard/components-next/Editor/Editor.vue';
 import Avatar from 'dashboard/components-next/avatar/Avatar.vue';
+import { useAdmin } from 'dashboard/composables/useAdmin';
 
 const props = defineProps({
   assistant: {
@@ -19,6 +20,7 @@ const props = defineProps({
 const emit = defineEmits(['submit', 'deleteAvatar']);
 
 const { t } = useI18n();
+const { isAdmin } = useAdmin();
 
 const initialState = {
   name: '',
@@ -32,6 +34,7 @@ const initialState = {
     citations: false,
     contactAttributes: false,
     continueWhileWaiting: false,
+    handoffSafetyNet: false,
   },
   replyStyle: {
     suggestedReplies: false,
@@ -73,6 +76,7 @@ const updateStateFromAssistant = assistant => {
     citations: config.feature_citation || false,
     contactAttributes: config.feature_contact_attributes || false,
     continueWhileWaiting: config.continue_while_waiting || false,
+    handoffSafetyNet: config.handoff_safety_net || false,
   };
   state.replyStyle = {
     suggestedReplies: config.suggested_replies || false,
@@ -111,6 +115,7 @@ const handleBasicInfoUpdate = async () => {
       feature_citation: state.features.citations,
       feature_contact_attributes: state.features.contactAttributes,
       continue_while_waiting: state.features.continueWhileWaiting,
+      handoff_safety_net: state.features.handoffSafetyNet,
       suggested_replies: Boolean(state.replyStyle.suggestedReplies),
       max_suggested_replies: Math.min(
         5,
@@ -206,6 +211,10 @@ watch(
             type="checkbox"
           />
           {{ t('CAPTAIN.ASSISTANTS.FORM.FEATURES.CONTINUE_WHILE_WAITING') }}
+        </label>
+        <label v-if="isAdmin" class="flex items-center gap-2">
+          <input v-model="state.features.handoffSafetyNet" type="checkbox" />
+          {{ t('CAPTAIN.ASSISTANTS.FORM.FEATURES.HANDOFF_SAFETY_NET') }}
         </label>
       </div>
     </div>

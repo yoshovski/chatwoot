@@ -884,7 +884,8 @@
           "ALLOW_MEMORIES": "Capture key details as memories from customer interactions.",
           "ALLOW_CITATIONS": "Include source citations in responses",
           "ALLOW_CONTACT_ATTRIBUTES": "Allow access to contact information",
-          "CONTINUE_WHILE_WAITING": "Keep answering while waiting for a human until takeover"
+          "CONTINUE_WHILE_WAITING": "Keep answering while waiting for a human until takeover",
+          "HANDOFF_SAFETY_NET": "Hand off when the reply can't help"
         },
         "REPLY_STYLE": {
           "TITLE": "Reply style",

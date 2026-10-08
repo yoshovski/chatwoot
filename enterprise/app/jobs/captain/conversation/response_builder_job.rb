@@ -100,7 +100,7 @@ class Captain::Conversation::ResponseBuilderJob < ApplicationJob # rubocop:disab
     Captain::Assistant::AgentRunnerService.new(assistant: @assistant, conversation: @conversation, run_options: run_options)
   end
 
-  def process_response
+  def process_response # rubocop:disable Metrics/CyclomaticComplexity, Metrics/PerceivedComplexity
     # The V2 runner rescues its own generation errors and signals them via an error
     # response instead of raising, so the failure event must be emitted here — the
     # top-level handle_error path only sees exceptions raised outside the runner.
@@ -112,6 +112,8 @@ class Captain::Conversation::ResponseBuilderJob < ApplicationJob # rubocop:disab
       delegate_ownership_service.waiting? ? process_v1_handoff_while_waiting : process_v1_handoff_request
     elsif v2_handoff_declared?
       process_v2_declared_handoff
+    elsif v2_handoff_safety_net_triggered?
+      process_v2_declared_handoff(source: Captain::ConversationEvents::Sources::SAFETY_NET)
     elsif may_reply?
       process_standard_response
     end
@@ -217,23 +219,37 @@ class Captain::Conversation::ResponseBuilderJob < ApplicationJob # rubocop:disab
   # so the customer was promised a colleague nobody was told about. Deliver the
   # answer, then run the handoff the tool would have run. While a handoff is
   # already waiting for a human, the answer is all that is needed.
-  def process_v2_declared_handoff
+  def process_v2_declared_handoff(source: Captain::ConversationEvents::Sources::DECLARED)
     return process_standard_response unless conversation_pending?
 
     I18n.with_locale(@assistant.account.locale) do
       Rails.logger.info(
-        "[CAPTAIN][ResponseBuilderJob] Handoff declared without the handoff tool for account=#{account.id} " \
+        "[CAPTAIN][ResponseBuilderJob] Handoff #{source} without the handoff tool for account=#{account.id} " \
         "conversation=#{@conversation.display_id}"
       )
       @handoff_message = create_messages
       apply_handoff_extras
       @conversation.bot_handoff!
-      record_v2_declared_handoff
+      record_v2_declared_handoff(source: source)
       send_out_of_office_message_if_applicable
       trigger_handoff_contact_form
     end
 
     capture_assistant_session(result_message: @handoff_message, credits_consumed: 0.0)
+  end
+
+  def v2_handoff_safety_net_triggered?
+    return false unless captain_v2_enabled?
+    return false unless @assistant.handoff_safety_net?
+    return false unless conversation_pending?
+
+    customer_msg = responding_to_customer_message
+    answer_text = Captain::Assistant::ResponseParts.from_response(@response).plain_text
+    Captain::Conversation::HandoffSafetyNet.new(
+      assistant: @assistant,
+      customer_message: customer_msg,
+      answer: answer_text
+    ).triggered?
   end
 
   def deliverable_v2_handoff_answer?
@@ -324,11 +340,15 @@ class Captain::Conversation::ResponseBuilderJob < ApplicationJob # rubocop:disab
   end
 
   def trigger_handoff_contact_form
-    triggering_message = @conversation.messages.where(id: @responding_to_message_id).first ||
-                         @conversation.messages.incoming.last
     Captain::Conversation::HandoffService.new(
       conversation: @conversation,
       assistant: @assistant
-    ).trigger_contact_capture_form!(triggering_message: triggering_message)
+    ).trigger_contact_capture_form!(triggering_message: responding_to_customer_message)
+  end
+
+  def responding_to_customer_message
+    return @conversation.messages.where(id: @responding_to_message_id).first if @responding_to_message_id.present?
+
+    @conversation.messages.incoming.last
   end
 end

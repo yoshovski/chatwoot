@@ -62,7 +62,7 @@ class Captain::Assistant < ApplicationRecord
   store_accessor :config, :temperature, :feature_faq, :feature_memory, :feature_contact_attributes, :product_name,
                  :auto_resolve_mode, :auto_resolve_after, :send_inactivity_resolution_message, :response_window,
                  :continue_while_waiting, :suggested_replies, :max_suggested_replies, :product_cards,
-                 :link_allowlist, :image_allowlist
+                 :link_allowlist, :image_allowlist, :handoff_safety_net, :handoff_safety_net_keywords
 
   BOOLEAN_CONFIG_KEYS = %w[
     feature_faq
@@ -73,6 +73,7 @@ class Captain::Assistant < ApplicationRecord
     send_inactivity_resolution_message
     suggested_replies
     product_cards
+    handoff_safety_net
   ].freeze
 
   before_validation :set_default_auto_resolve_mode, on: :create
@@ -80,6 +81,7 @@ class Captain::Assistant < ApplicationRecord
   before_validation :normalize_boolean_config_attributes
   before_validation :normalize_max_suggested_replies
   before_validation :normalize_allowlists
+  before_validation :normalize_keywords
 
   validates :name, presence: true
   validates :description, presence: true, length: { maximum: DESCRIPTION_LENGTH_LIMIT }
@@ -218,6 +220,10 @@ class Captain::Assistant < ApplicationRecord
 
   def citations_enabled?
     config['feature_citation']
+  end
+
+  def handoff_safety_net?
+    ActiveModel::Type::Boolean.new.cast(config['handoff_safety_net']) == true
   end
 
   def trusted_citation_urls(run_result)
@@ -373,6 +379,13 @@ class Captain::Assistant < ApplicationRecord
     return unless config.key?(key)
 
     config[key] = Array(config[key]).map(&:to_s).map(&:strip).reject(&:blank?).uniq
+  end
+
+  def normalize_keywords
+    return unless config.is_a?(Hash)
+    return unless config.key?('handoff_safety_net_keywords')
+
+    config['handoff_safety_net_keywords'] = Array(config['handoff_safety_net_keywords']).map(&:to_s).map(&:strip).reject(&:blank?)
   end
 
   def validate_response_window

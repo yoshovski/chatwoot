@@ -1,4 +1,4 @@
-class Api::V1::Accounts::Captain::AssistantsController < Api::V1::Accounts::BaseController
+class Api::V1::Accounts::Captain::AssistantsController < Api::V1::Accounts::BaseController # rubocop:disable Metrics/ClassLength
   before_action -> { check_authorization(Captain::Assistant) }
 
   before_action :set_assistant, only: [:show, :update, :destroy, :playground, :playground_run, :metrics, :faq_stats, :summary, :drilldown, :avatar]
@@ -139,7 +139,12 @@ class Api::V1::Accounts::Captain::AssistantsController < Api::V1::Accounts::Base
       :max_suggested_replies, :product_cards,
       { link_allowlist: [], image_allowlist: [] }
     ]
-    attributes += [:auto_resolve_after, :send_inactivity_resolution_message] if Current.account.feature_enabled?('captain_integration_v2')
+    if Current.account.feature_enabled?('captain_integration_v2')
+      attributes += [
+        :auto_resolve_after, :send_inactivity_resolution_message,
+        :handoff_safety_net, { handoff_safety_net_keywords: [] }
+      ]
+    end
     attributes
   end
 
