@@ -120,7 +120,9 @@ Rails.application.routes.draw do
                 get :tools
               end
               resources :inboxes, only: [:index, :create, :destroy], param: :inbox_id
-              resources :scenarios
+              resources :scenarios do
+                post :draft, on: :collection
+              end
             end
             resources :agent_sessions, only: [:show]
             post 'conversations/:conversation_id/takeover', to: 'conversation_takeovers#create'

@@ -11,6 +11,10 @@ class Captain::ScenarioPolicy < ApplicationPolicy
     @account_user.administrator?
   end
 
+  def draft?
+    @account_user.administrator?
+  end
+
   def update?
     @account_user.administrator?
   end

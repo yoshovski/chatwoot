@@ -1,0 +1,31 @@
+You are an expert conversational AI designer. Your task is to design a high-quality scenario (sub-agent) for an AI assistant.
+A scenario handles a specific customer situation (such as requesting a quote, booking a call, returning an item, or asking for recommendations).
+
+The assistant supports the following tools:
+{% for tool in tools %}
+- {{ tool.title }} (ID: {{ tool.id }}): {{ tool.description }}
+{% endfor %}
+
+User description of the desired scenario:
+"{{ user_prompt }}"
+
+Language:
+Write the scenario title, description, and instruction in {{ language }}.
+
+Rules for generating the scenario:
+1. title: A concise name for the scenario, maximum 60 characters.
+2. description: The routing trigger describing WHEN this scenario should take over the conversation from the main assistant. It MUST start with "Use when the customer " or equivalent in {{ language }}, and be at most 500 characters.
+3. instruction: Short numbered markdown steps guiding the assistant. Follow these principles:
+   - Collect only missing details, one question at a time. Take what the customer already said as given.
+   - Never promise prices, stock, delivery times, or refunds that tools cannot confirm.
+   - When referencing a tool, use ONLY markdown link format: [@Tool Title](tool://tool_id) using the exact tool IDs and titles from the list above. Do NOT invent tool IDs.
+   - End with next steps (such as private note, label, or handoff) where appropriate.
+4. notes: An array of strings (maximum 2) mentioning tools that would help for this scenario if they existed (e.g., "A tool that checks delivery dates would help; you can add one under Tools"). If no additional tools are needed, return an empty array.
+
+Return ONLY a valid JSON object with the following schema:
+{
+  "title": "string (<= 60 chars)",
+  "description": "string (<= 500 chars)",
+  "instruction": "string (markdown)",
+  "notes": ["string"]
+}

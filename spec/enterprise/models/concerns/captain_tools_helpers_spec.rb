@@ -64,6 +64,18 @@ RSpec.describe Concerns::CaptainToolsHelpers, type: :concern do
     end
   end
 
+  describe '.built_in_agent_tools' do
+    it 'returns tools with emoji and metadata' do
+      tools = test_class.built_in_agent_tools
+      expect(tools).not_to be_empty
+      tools.each do |tool|
+        expect(tool[:emoji]).to be_present
+        expect(tool[:title]).to be_present
+        expect(tool[:description]).to be_present
+      end
+    end
+  end
+
   describe '#extract_tool_ids_from_text' do
     it 'extracts tool IDs from text' do
       text = 'First [@Add Contact Note](tool://add_contact_note) then [@Update Priority](tool://update_priority)'

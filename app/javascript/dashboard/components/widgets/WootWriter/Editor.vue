@@ -229,6 +229,35 @@ const caretPosition = computed(() => {
   return { top: top - editorTop, height: bottom - top };
 });
 
+const toolsMenuPosition = computed(() => {
+  if (!editorView || !range.value || !editorRoot.value) return null;
+  const from = Math.min(range.value.from, editorView.state.doc.content.size);
+  const coords = editorView.coordsAtPos(from);
+  const editorRect = editorRoot.value.getBoundingClientRect();
+  const windowHeight = window.innerHeight;
+
+  const MENU_HEIGHT = 280;
+  const GAP = 8;
+
+  const roomBelow = windowHeight - coords.bottom;
+  const flipAbove = roomBelow < MENU_HEIGHT && coords.top > MENU_HEIGHT;
+
+  const top = flipAbove
+    ? coords.top - editorRect.top - MENU_HEIGHT - GAP
+    : coords.bottom - editorRect.top + GAP;
+
+  const left = Math.max(
+    0,
+    Math.min(coords.left - editorRect.left, editorRect.width - 360)
+  );
+
+  return {
+    top: `${top}px`,
+    left: `${left}px`,
+    flipAbove,
+  };
+});
+
 const isEditorMenuPopover = computed(
   () =>
     editorRoot.value?.classList.contains('popover-prosemirror-menu') ?? false
@@ -320,17 +349,20 @@ function createSuggestionPlugin({
       return false;
     },
     onChange: args => {
+      if (!isAllowed()) return false;
       editorView = args.view;
       range.value = args.range;
       if (searchTerm) searchTerm.value = args.text;
       return false;
     },
     onExit: () => {
+      if (!isAllowed()) return false;
       if (searchTerm) searchTerm.value = '';
       showMenu.value = false;
       return false;
     },
     onKeyDown: ({ event }) => {
+      if (!isAllowed()) return false;
       return event.keyCode === 13 && showMenu.value && interceptEnter;
     },
   });
@@ -341,20 +373,27 @@ const plugins = computed(() => {
     return [];
   }
 
+  const atPlugins = props.enableCaptainTools
+    ? [
+        createSuggestionPlugin({
+          trigger: '@',
+          showMenu: showToolsMenu,
+          searchTerm: toolSearchKey,
+          isAllowed: () => props.enableCaptainTools,
+          interceptEnter: true,
+        }),
+      ]
+    : [
+        createSuggestionPlugin({
+          trigger: '@',
+          showMenu: showUserMentions,
+          searchTerm: mentionSearchKey,
+          isAllowed: () => props.isPrivate || !props.enableCaptainTools,
+        }),
+      ];
+
   return [
-    createSuggestionPlugin({
-      trigger: '@',
-      showMenu: showToolsMenu,
-      searchTerm: toolSearchKey,
-      isAllowed: () => props.enableCaptainTools,
-      interceptEnter: true,
-    }),
-    createSuggestionPlugin({
-      trigger: '@',
-      showMenu: showUserMentions,
-      searchTerm: mentionSearchKey,
-      isAllowed: () => props.isPrivate || !props.enableCaptainTools,
-    }),
+    ...atPlugins,
     createSuggestionPlugin({
       trigger: '/',
       showMenu: showCannedMenu,
@@ -788,6 +827,49 @@ function insertSpecialContent(type, content) {
   useTrack(event_map[type]);
 }
 
+function insertTool(tool) {
+  if (!editorView || !tool) {
+    return;
+  }
+
+  const editorState = editorView.state;
+  const { schema } = editorState;
+  if (!schema.nodes.tools) return;
+
+  const toolNode = schema.nodes.tools.create({
+    id: tool.id,
+    name: tool.title,
+  });
+
+  const hasFocus = editorView.hasFocus();
+  let insertPos;
+  let tr = editorState.tr;
+
+  if (range.value) {
+    const { from, to } = range.value;
+    tr = tr.replaceWith(from, to, toolNode);
+    insertPos = from + toolNode.nodeSize;
+    range.value = null;
+    showToolsMenu.value = false;
+  } else if (hasFocus) {
+    const { from, to } = editorState.selection;
+    tr = tr.replaceWith(from, to, toolNode);
+    insertPos = from + toolNode.nodeSize;
+  } else {
+    const endPos = Selection.atEnd(editorState.doc).from;
+    tr = tr.insert(endPos, toolNode);
+    insertPos = endPos + toolNode.nodeSize;
+  }
+
+  tr = tr.insertText(' ', insertPos);
+  const nextPos = Math.min(insertPos + 1, tr.doc.content.size);
+  tr = tr.setSelection(Selection.near(tr.doc.resolve(nextPos)));
+
+  editorView.dispatch(tr);
+  editorView.focus();
+  useTrack(CONVERSATION_EVENTS.INSERTED_A_TOOL);
+}
+
 function handleLineBreakWhenCmdAndEnterToSendEnabled(event) {
   if (
     hasPressedCommandAndEnter(event) &&
@@ -934,7 +1016,7 @@ onMounted(() => {
   }
 });
 
-defineExpose({ focusEditorInputField });
+defineExpose({ focusEditorInputField, insertTool });
 
 // BUS Event to insert text or markdown into the editor at the
 // current cursor position.
@@ -1000,6 +1082,7 @@ useEmitter(BUS_EVENTS.INSERT_INTO_RICH_EDITOR, content => {
     <TagTools
       v-if="showToolsMenu"
       :search-key="toolSearchKey"
+      :menu-position="toolsMenuPosition"
       @select-tool="content => insertSpecialContent('tool', content)"
     />
     <CopilotMenuBar
@@ -1140,7 +1223,7 @@ useEmitter(BUS_EVENTS.INSERT_INTO_RICH_EDITOR, content => {
 }
 
 .prosemirror-tools-node {
-  @apply font-medium text-n-slate-12 py-0;
+  @apply inline-flex items-center gap-1 px-2 py-0.5 mx-0.5 rounded-full text-xs font-medium align-middle bg-n-iris-3 text-n-iris-11 border border-n-iris-4 select-none cursor-default;
 }
 
 .editor-wrap {

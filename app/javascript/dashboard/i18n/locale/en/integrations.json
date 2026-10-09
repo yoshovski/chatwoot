@@ -1104,7 +1104,42 @@
         "DESCRIPTION": "Give your assistant some context—like “what to do when a user is stuck,” or “how to act during a refund request.”",
         "TOOLS": {
           "INHERITED": "Uses the assistant's tools",
+          "INHERITED_ALL": "Uses all of the assistant's tools",
+          "USES": "Uses:",
+          "UNAVAILABLE": "This tool isn't available for this assistant",
           "NAMED": "Uses the assistant's tools. Named in the instruction: {tools}"
+        },
+        "PALETTE": {
+          "TITLE": "Add a tool:",
+          "MORE": "More tools",
+          "SEARCH": "Search tools...",
+          "NO_RESULTS": "No tools found",
+          "TIP": "Tip: type @ to add a tool anywhere in the text."
+        },
+        "TEMPLATES": {
+          "GALLERY_TITLE": "Scenario templates",
+          "GALLERY_DESCRIPTION": "Start with ready-made workflows for quotes, calls, returns, product discovery, and B2B.",
+          "USE_TEMPLATE": "Use template",
+          "NEEDS_SHOPIFY": "Needs Shopify",
+          "NEEDS_SHOPIFY_TOOLTIP": "This template requires the Find products tool, which is available when Shopify is connected.",
+          "COLLAPSE": "Hide templates",
+          "EXPAND": "Show templates",
+          "STEPPER": {
+            "STEP_OF": "Step {current} of {total}",
+            "NEXT": "Next",
+            "BACK": "Back",
+            "SKIP": "Skip",
+            "PREVIEW": "Preview",
+            "PREVIEW_TITLE": "Review scenario",
+            "PREVIEW_DESCRIPTION": "Review the generated title, routing trigger, and instructions. You can customize them before saving.",
+            "ADD_SCENARIO": "Add scenario",
+            "ALLOWLIST_CONFIRM": {
+              "TITLE": "Allow links in replies?",
+              "MESSAGE": "To share {host} with customers, add it to your assistant's allowed link domains. Otherwise, links to {host} will be stripped from messages.",
+              "CONFIRM": "Allow and save",
+              "CANCEL": "Save without allowing"
+            }
+          }
         },
         "BULK_ACTION": {
           "SELECTED": "{count} item selected | {count} items selected",
@@ -1122,6 +1157,27 @@
           "NEW": {
             "CREATE": "Add a scenario",
             "TITLE": "Create a scenario",
+            "BUILDER": {
+              "CHOICES": {
+                "DESCRIBE": "Describe it",
+                "TEMPLATE": "Start from a template",
+                "MANUAL": "Write it myself"
+              },
+              "DESCRIBE": {
+                "PROMPT_LABEL": "What should your assistant do?",
+                "PROMPT_PLACEHOLDER": "Describe the scenario (e.g. guide customers through product returns and log warranty claims)...",
+                "EXAMPLES_LABEL": "Try an example prompt:",
+                "EXAMPLE_1": "Guide customers looking to return a product and log a claim",
+                "EXAMPLE_2": "Collect custom quote requirements and pass to sales",
+                "EXAMPLE_3": "Answer sizing questions and recommend best-fit products",
+                "BUILD_BUTTON": "Build scenario",
+                "BUILDING": "Designing scenario with AI...",
+                "REGENERATE": "Regenerate",
+                "ADD_SCENARIO": "Add scenario",
+                "EDIT_PROMPT": "Edit prompt",
+                "ERROR": "Could not generate scenario. Please try a different description."
+              }
+            },
             "FORM": {
               "TITLE": {
                 "LABEL": "Title",
