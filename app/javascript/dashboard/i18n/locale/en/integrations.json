@@ -1516,6 +1516,7 @@
       "SHOPIFY_CARD": {
         "TITLE": "Live product catalog",
         "SYNCED_COUNT": "{count} product synced | {count} products synced",
+        "SYNCED_LABEL": "product synced | products synced",
         "ON_DESCRIPTION": "Your assistant answers with live prices, product links and images",
         "FAILED_ATTENTION": "{count} needs attention | {count} need attention",
         "VIEW_PRODUCTS": "View products",

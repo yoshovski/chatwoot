@@ -33,6 +33,9 @@ const translate = (key, options = {}) => {
   if (key === 'CAPTAIN.KNOWLEDGE.SHOPIFY_CARD.SYNCED_COUNT') {
     return `${options.count} products synced`;
   }
+  if (key === 'CAPTAIN.KNOWLEDGE.SHOPIFY_CARD.SYNCED_LABEL') {
+    return 'products synced';
+  }
   if (key === 'CAPTAIN.KNOWLEDGE.SHOPIFY_CARD.FAILED_ATTENTION') {
     return `${options.count} need attention`;
   }
@@ -101,7 +104,9 @@ describe('ShopifyCatalogCard', () => {
       const wrapper = mountCard();
       await flushPromises();
 
-      expect(wrapper.text()).toContain('279 products synced');
+      expect(wrapper.text()).toContain('279');
+      expect(wrapper.text().match(/279/g)).toHaveLength(1);
+      expect(wrapper.text()).toContain('products synced');
       expect(wrapper.text()).toContain('3 need attention');
       expect(wrapper.text()).toContain(
         'CAPTAIN.KNOWLEDGE.SHOPIFY_CARD.ON_DESCRIPTION'
