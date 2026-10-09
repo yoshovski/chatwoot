@@ -72,6 +72,12 @@ Always respect these boundaries:
 {% endfor %}
 {% endif -%}
 
+{% if off_limits_message -%}
+# Declining
+When you decline a question because of a guardrail or because it is outside what you can help with, say this, in the customer's language:
+"{{ off_limits_message }}"
+{% endif -%}
+
 {% if message_length_limit -%}
 # Channel Requirements
 Keep your response at or under {{ message_length_limit }} characters so it can be delivered through this channel.

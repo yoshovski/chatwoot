@@ -11,6 +11,7 @@ import Button from 'dashboard/components-next/button/Button.vue';
 
 import SettingsPageLayout from 'dashboard/components-next/captain/pageComponents/assistant/settings/SettingsPageLayout.vue';
 import SettingsCard from 'dashboard/components-next/captain/pageComponents/assistant/settings/SettingsCard.vue';
+import AssistantOffLimitsMessage from 'dashboard/components-next/captain/pageComponents/assistant/settings/AssistantOffLimitsMessage.vue';
 import SettingsSwitchRow from 'dashboard/components-next/captain/pageComponents/assistant/settings/SettingsSwitchRow.vue';
 import SettingsHeader from 'dashboard/components-next/captain/pageComponents/settings/SettingsHeader.vue';
 import SuggestedRules from 'dashboard/components-next/captain/assistant/SuggestedRules.vue';
@@ -305,5 +306,10 @@ const addAllExample = () => {
         @add="addGuardrail"
       />
     </div>
+    <AssistantOffLimitsMessage
+      :assistant="assistant"
+      class="mt-2"
+      @submit="updateAssistant"
+    />
   </SettingsPageLayout>
 </template>

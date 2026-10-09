@@ -362,6 +362,20 @@ RSpec.describe Captain::Assistant, type: :model do
       expect(assistant.agent_instructions).to include("# Tone\nKeep replies short and direct. Skip pleasantries.")
     end
 
+    it 'tells the AI agent how to decline only when an off-limits message is set' do
+      expect(assistant.agent_instructions).not_to include('# Declining')
+
+      assistant.update!(config: assistant.config.merge('off_limits_message' => 'I can only help with Acme orders.'))
+
+      expect(assistant.agent_instructions).to include('# Declining', '"I can only help with Acme orders."')
+    end
+
+    it 'limits the off-limits message length' do
+      assistant.config['off_limits_message'] = 'a' * (described_class::OFF_LIMITS_MESSAGE_LENGTH_LIMIT + 1)
+
+      expect(assistant).not_to be_valid
+    end
+
     it 'never names the product in the orchestrator prompt' do
       create(:captain_scenario, assistant: assistant, account: account)
 

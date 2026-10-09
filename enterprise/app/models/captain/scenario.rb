@@ -70,7 +70,8 @@ class Captain::Scenario < ApplicationRecord
       # Same normalization the agents gem uses for handoff tool names, so the prompt names a tool that exists.
       assistant_name: Agents::Helpers::NameNormalizer.to_tool_name(assistant.agent_name),
       response_guidelines: response_guidelines || [],
-      guardrails: guardrails || []
+      guardrails: guardrails || [],
+      off_limits_message: assistant.off_limits_message.presence
     }
   end
 

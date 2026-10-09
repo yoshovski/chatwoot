@@ -19,6 +19,7 @@
 # rubocop:disable Metrics/ClassLength
 class Captain::Assistant < ApplicationRecord
   DESCRIPTION_LENGTH_LIMIT = 500
+  OFF_LIMITS_MESSAGE_LENGTH_LIMIT = 500
   CITATION_SOURCES_STATE_KEY = :captain_v2_citation_sources
   CITATION_DETAILS_STATE_KEY = :captain_v2_citation_details
   PRODUCT_HANDLES_STATE_KEY = :captain_v2_product_handles
@@ -70,7 +71,7 @@ class Captain::Assistant < ApplicationRecord
                  :continue_while_waiting, :suggested_replies, :max_suggested_replies, :product_cards,
                  :link_allowlist, :image_allowlist, :handoff_safety_net, :handoff_safety_net_keywords,
                  :reply_labels, :reply_label_keywords, :outcome_labels,
-                 :handoff_fallback_agent_id, :handoff_fallback_team_id, :tone
+                 :handoff_fallback_agent_id, :handoff_fallback_team_id, :tone, :off_limits_message
 
   BOOLEAN_CONFIG_KEYS = %w[
     feature_faq
@@ -110,6 +111,7 @@ class Captain::Assistant < ApplicationRecord
             },
             allow_nil: true
   validates :tone, inclusion: { in: TONE_INSTRUCTIONS.keys }, allow_blank: true
+  validates :off_limits_message, length: { maximum: OFF_LIMITS_MESSAGE_LENGTH_LIMIT }
   validates :max_suggested_replies,
             numericality: {
               only_integer: true,
@@ -300,6 +302,7 @@ class Captain::Assistant < ApplicationRecord
         }
       end,
       tone_instruction: TONE_INSTRUCTIONS[tone],
+      off_limits_message: off_limits_message.presence,
       response_guidelines: response_guidelines || [],
       guardrails: guardrails || []
     }
