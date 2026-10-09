@@ -11,6 +11,7 @@ import { debounce } from '@chatwoot/utils';
 
 import DeleteDialog from 'dashboard/components-next/captain/pageComponents/DeleteDialog.vue';
 import KnowledgeHeader from 'dashboard/components-next/captain/knowledge/KnowledgeHeader.vue';
+import ShopifyCatalogCard from 'dashboard/components-next/captain/knowledge/ShopifyCatalogCard.vue';
 import DocumentCard from 'dashboard/components-next/captain/assistant/DocumentCard.vue';
 import DocumentFilter from 'dashboard/components-next/captain/assistant/DocumentFilter.vue';
 import DocumentBulkActions from 'dashboard/components-next/captain/assistant/DocumentBulkActions.vue';
@@ -323,25 +324,6 @@ const hasActiveDocumentFilters = computed(
 
 const shopifyHook = ref(null);
 
-const shopifyCatalogStatus = computed(() => {
-  return shopifyHook.value?.catalog_status || null;
-});
-
-const shopifyCatalogStatusLabel = computed(() => {
-  switch (shopifyCatalogStatus.value) {
-    case 'on':
-      return t('CAPTAIN.DOCUMENTS.SHOPIFY_CATALOG.STATUS.ON');
-    case 'importing':
-      return t('CAPTAIN.DOCUMENTS.SHOPIFY_CATALOG.STATUS.IMPORTING');
-    case 'needs_reconnect':
-      return t('CAPTAIN.DOCUMENTS.SHOPIFY_CATALOG.STATUS.NEEDS_RECONNECT');
-    case 'off':
-      return t('CAPTAIN.DOCUMENTS.SHOPIFY_CATALOG.STATUS.OFF');
-    default:
-      return shopifyCatalogStatus.value || '';
-  }
-});
-
 // Hosts of the connected Shopify store, without "www.", for the add-document form's defaults.
 const shopifyStoreHosts = computed(() => {
   const hook = shopifyHook.value;
@@ -461,49 +443,7 @@ onUnmounted(() => {
 
     <template #controls>
       <KnowledgeHeader />
-      <div
-        v-if="shopifyCatalogStatus"
-        class="flex items-center gap-2 px-4 py-2.5 text-xs rounded-lg border border-n-weak bg-n-alpha-2 text-n-slate-11 mb-4"
-      >
-        <span
-          class="w-2 h-2 rounded-full flex-shrink-0"
-          :class="{
-            'bg-emerald-500': shopifyCatalogStatus === 'on',
-            'bg-amber-500 animate-pulse': shopifyCatalogStatus === 'importing',
-            'bg-ruby-500': shopifyCatalogStatus === 'needs_reconnect',
-            'bg-n-slate-7': shopifyCatalogStatus === 'off',
-          }"
-        />
-        <span class="text-n-slate-12">
-          <strong class="font-medium">
-            {{ $t('CAPTAIN.DOCUMENTS.SHOPIFY_CATALOG.LABEL') }}:
-          </strong>
-          {{ shopifyCatalogStatusLabel }} —
-          {{ $t('CAPTAIN.DOCUMENTS.SHOPIFY_CATALOG.DESCRIPTION') }}
-        </span>
-        <router-link
-          v-if="['on', 'importing'].includes(shopifyCatalogStatus)"
-          :to="{
-            name: 'captain_assistants_products_index',
-            params: route.params,
-          }"
-          class="font-medium text-brand-600 hover:text-brand-700 ms-auto hover:underline"
-        >
-          {{ $t('CAPTAIN.DOCUMENTS.SHOPIFY_CATALOG.VIEW_PRODUCTS') }}
-        </router-link>
-        <router-link
-          :to="{
-            name: 'settings_integrations_shopify',
-            params: { accountId: route.params.accountId },
-          }"
-          class="font-medium text-brand-600 hover:text-brand-700 hover:underline"
-          :class="{
-            'ms-auto': !['on', 'importing'].includes(shopifyCatalogStatus),
-          }"
-        >
-          {{ $t('CAPTAIN.DOCUMENTS.SHOPIFY_CATALOG.LINK') }}
-        </router-link>
-      </div>
+      <ShopifyCatalogCard :initial-hook="shopifyHook" />
     </template>
 
     <template #body>

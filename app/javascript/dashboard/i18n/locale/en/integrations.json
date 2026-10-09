@@ -1205,6 +1205,37 @@
         "SOURCES": "Sources",
         "FAQS": "FAQs",
         "PRODUCTS": "Products"
+      },
+      "SHOPIFY_CARD": {
+        "TITLE": "Live product catalog",
+        "SYNCED_COUNT": "{count} product synced | {count} products synced",
+        "ON_DESCRIPTION": "Your assistant answers with live prices, product links and images",
+        "FAILED_ATTENTION": "{count} needs attention | {count} need attention",
+        "VIEW_PRODUCTS": "View products",
+        "SETTINGS": "Shopify settings",
+        "RECONNECT": "Reconnect Shopify",
+        "IMPORTING_TITLE": "Importing your catalog…",
+        "IMPORTING_PROGRESS": "{synced} of {total} products ({percent}%)",
+        "NEEDS_RECONNECT_DESCRIPTION": "Reconnect Shopify to keep answers up to date",
+        "PAUSED_DESCRIPTION": "Catalog sync is paused",
+        "RESUME": "Resume sync",
+        "RESUME_SUCCESS": "Catalog sync resumed",
+        "RESUME_ERROR": "Could not resume catalog sync. Please try again.",
+        "STATUS": {
+          "LIVE": "Live",
+          "IMPORTING": "Syncing",
+          "NEEDS_RECONNECT": "Needs reconnect",
+          "PAUSED": "Paused"
+        },
+        "UPSELL": {
+          "TITLE": "Connect your Shopify store",
+          "BENEFITS": {
+            "PRICES_STOCK": "Live prices and stock",
+            "PRODUCT_CARDS": "Product cards in chat",
+            "ORDER_TRACKING": "Order tracking"
+          },
+          "BUTTON": "Connect Shopify"
+        }
       }
     },
     "DOCUMENTS": {

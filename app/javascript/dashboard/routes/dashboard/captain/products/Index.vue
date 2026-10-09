@@ -8,6 +8,7 @@ import shopifyAPI from 'dashboard/api/integrations/shopify';
 import PageLayout from 'dashboard/components-next/captain/PageLayout.vue';
 import CaptainPaywall from 'dashboard/components-next/captain/pageComponents/Paywall.vue';
 import KnowledgeHeader from 'dashboard/components-next/captain/knowledge/KnowledgeHeader.vue';
+import ShopifyCatalogCard from 'dashboard/components-next/captain/knowledge/ShopifyCatalogCard.vue';
 import Input from 'dashboard/components-next/input/Input.vue';
 import TabBar from 'dashboard/components-next/tabbar/TabBar.vue';
 import Icon from 'dashboard/components-next/icon/Icon.vue';
@@ -132,6 +133,7 @@ onMounted(() => fetchProducts(1));
 
     <template #controls>
       <KnowledgeHeader />
+      <ShopifyCatalogCard compact />
       <p class="mb-3 text-sm text-n-slate-11">
         {{ $t('CAPTAIN.PRODUCTS.DESCRIPTION') }}
       </p>
