@@ -30,7 +30,15 @@ class Captain::PlaygroundRunJob < ApplicationJob
     end
 
     run_options = Captain::Assistant::AgentRunnerService::RunOptions.new(source: 'playground')
-    Captain::Assistant::AgentRunnerService.new(assistant: assistant, run_options: run_options).generate_response(message_history: message_history)
+    runner = Captain::Assistant::AgentRunnerService.new(assistant: assistant, run_options: run_options)
+    response = runner.generate_response(message_history: message_history)
+    return response if response['error']
+
+    response.merge(
+      Captain::Playground::CustomerView.new(
+        assistant: assistant, response: response, run_result: runner.last_run_result, message_history: message_history
+      ).to_h
+    )
   end
 
   def store(assistant, run_id, result)

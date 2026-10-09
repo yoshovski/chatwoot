@@ -580,7 +580,7 @@ RSpec.describe 'Api::V1::Accounts::Captain::Assistants', type: :request do
       }
     end
     let(:chat_service) { instance_double(Captain::Llm::AssistantChatService) }
-    let(:agent_runner_service) { instance_double(Captain::Assistant::AgentRunnerService) }
+    let(:agent_runner_service) { instance_double(Captain::Assistant::AgentRunnerService, last_run_result: nil) }
 
     context 'when it is an un-authenticated user' do
       it 'returns unauthorized' do
