@@ -28,6 +28,7 @@ GREETING = re.compile(
 # A one-line heading carries no content but matches queries well; it must not take a slot.
 HEADING_ONLY_KINDS = {"document", "extra"}
 MAX_HEADING_ONLY_CHARS = 80
+BREADCRUMB_SEPARATOR = " > "
 SENTENCE_PUNCTUATION = re.compile(r"[.:?!]")
 EXT = re.compile(r"\.(md|txt|json|html?|pdf|docx?|csv)$", re.I)
 P_HANDLE = re.compile(r"^\s*Product handle:\s*([a-z0-9][a-z0-9_-]*)\s*$", re.I | re.M)
@@ -56,10 +57,14 @@ def clipped(text, limit):
 
 
 def heading_only(content):
-    if "\n" in content:
+    lines = content.split("\n")
+    if len(lines) == 2 and BREADCRUMB_SEPARATOR in lines[0]:
+        lines = lines[1:]
+    if len(lines) > 1:
         return False
-    return content.startswith("#") or (
-        len(content) <= MAX_HEADING_ONLY_CHARS and not SENTENCE_PUNCTUATION.search(content)
+    line = lines[0].strip()
+    return line.startswith("#") or (
+        len(line) <= MAX_HEADING_ONLY_CHARS and not SENTENCE_PUNCTUATION.search(line)
     )
 
 

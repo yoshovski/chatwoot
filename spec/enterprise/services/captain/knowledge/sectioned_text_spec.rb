@@ -69,4 +69,42 @@ RSpec.describe Captain::Knowledge::SectionedText do
   it 'returns an empty string for empty content' do
     expect(sectioned(nil)).to eq('')
   end
+
+  describe 'plain-line section titles' do
+    it 'turns a short standalone line into a section for the paragraphs below it' do
+      markdown = "# Refund policy\n\nGeneral Return Policy\n\nReturns need approval.\n\nRestocking Fee\n\nAn 18% fee applies."
+
+      expect(sectioned(markdown, title: 'Refund policy')).to eq(
+        "Refund policy > General Return Policy\nReturns need approval.\n\nRefund policy > Restocking Fee\nAn 18% fee applies."
+      )
+    end
+
+    it 'keeps a title as text when no body follows it' do
+      expect(sectioned("Intro text.\n\nThank you for shopping with us")).to eq(
+        "Help center\nIntro text.\n\nHelp center\nThank you for shopping with us"
+      )
+    end
+
+    it 'keeps a title as text when a heading follows it' do
+      expect(sectioned("Some note\n\n## Returns\n\nBody text.")).to eq("Help center\nSome note\n\nHelp center > Returns\nBody text.")
+    end
+
+    it 'keeps the first of two consecutive titles as text' do
+      expect(sectioned("First line\n\nSecond line\n\nBody text.")).to eq("Help center\nFirst line\n\nHelp center > Second line\nBody text.")
+    end
+
+    it 'nests below the last # heading and is replaced by the next title' do
+      markdown = "## Returns\n\nWindow\n\nThirty days.\n\nExceptions\n\nSale items."
+
+      expect(sectioned(markdown).split("\n\n").map { |block| block.lines.first.chomp }).to eq(
+        ['Help center > Returns > Window', 'Help center > Returns > Exceptions']
+      )
+    end
+
+    it 'does not treat sentences, labels, list items or long lines as titles' do
+      ['Items must be unused.', 'Effective Date: 12-29-2025', '* one item', '* * *', 'x' * 81].each do |line|
+        expect(sectioned("#{line}\n\nBody text.", title: nil)).to eq("#{line}\n\nBody text.")
+      end
+    end
+  end
 end

@@ -102,6 +102,7 @@ class KnowledgeSearchTest(unittest.TestCase):
             document.dataset_id: [
                 segment("## RMA requirements"),
                 segment("RMA requirements"),
+                segment("Help center > Returns\nRMA requirements"),
                 segment("Help center > Returns\nItems must be unused."),
                 segment("Items must be unused and in the original box."),
             ],
