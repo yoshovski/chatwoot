@@ -25,6 +25,10 @@ GREETING = re.compile(
     r"i look forward|looking forward)\b",
     re.I,
 )
+# A one-line heading carries no content but matches queries well; it must not take a slot.
+HEADING_ONLY_KINDS = {"document", "extra"}
+MAX_HEADING_ONLY_CHARS = 80
+SENTENCE_PUNCTUATION = re.compile(r"[.:?!]")
 EXT = re.compile(r"\.(md|txt|json|html?|pdf|docx?|csv)$", re.I)
 P_HANDLE = re.compile(r"^\s*Product handle:\s*([a-z0-9][a-z0-9_-]*)\s*$", re.I | re.M)
 P_NAME = re.compile(r"^\s*Product:\s*(.+)$", re.M)
@@ -51,6 +55,14 @@ def clipped(text, limit):
     return text[: limit - 4].rsplit(" ", 1)[0] + " ..."
 
 
+def heading_only(content):
+    if "\n" in content:
+        return False
+    return content.startswith("#") or (
+        len(content) <= MAX_HEADING_ONLY_CHARS and not SENTENCE_PUNCTUATION.search(content)
+    )
+
+
 def passage(dataset, record):
     segment = record["segment"]
     score = record["score"]
@@ -62,7 +74,7 @@ def passage(dataset, record):
     ):
         return None
     content = segment["content"].strip()
-    if not content:
+    if not content or (dataset.kind in HEADING_ONLY_KINDS and heading_only(content)):
         return None
     answer = segment.get("answer")
     document = segment["document"]
