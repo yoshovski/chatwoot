@@ -1193,9 +1193,64 @@
         "FAILED": "Failed"
       }
     },
+    "KNOWLEDGE": {
+      "TITLE": "Knowledge",
+      "SUBTITLE": "Everything your assistant can use to answer. Add sources; FAQs are made from them.",
+      "STATS": {
+        "SOURCES": "{count} source | {count} sources",
+        "FAQS": "{count} FAQ | {count} FAQs",
+        "PRODUCTS": "{count} product | {count} products"
+      },
+      "TABS": {
+        "SOURCES": "Sources",
+        "FAQS": "FAQs",
+        "PRODUCTS": "Products"
+      },
+      "SHOPIFY_CARD": {
+        "TITLE": "Live product catalog",
+        "SYNCED_COUNT": "{count} product synced | {count} products synced",
+        "ON_DESCRIPTION": "Your assistant answers with live prices, product links and images",
+        "FAILED_ATTENTION": "{count} needs attention | {count} need attention",
+        "VIEW_PRODUCTS": "View products",
+        "SETTINGS": "Shopify settings",
+        "RECONNECT": "Reconnect Shopify",
+        "IMPORTING_TITLE": "Importing your catalog…",
+        "IMPORTING_PROGRESS": "{synced} of {total} products ({percent}%)",
+        "NEEDS_RECONNECT_DESCRIPTION": "Reconnect Shopify to keep answers up to date",
+        "PAUSED_DESCRIPTION": "Catalog sync is paused",
+        "RESUME": "Resume sync",
+        "RESUME_SUCCESS": "Catalog sync resumed",
+        "RESUME_ERROR": "Could not resume catalog sync. Please try again.",
+        "STATUS": {
+          "LIVE": "Live",
+          "IMPORTING": "Syncing",
+          "NEEDS_RECONNECT": "Needs reconnect",
+          "PAUSED": "Paused"
+        },
+        "UPSELL": {
+          "TITLE": "Connect your Shopify store",
+          "BENEFITS": {
+            "PRICES_STOCK": "Live prices and stock",
+            "PRODUCT_CARDS": "Product cards in chat",
+            "ORDER_TRACKING": "Order tracking"
+          },
+          "BUTTON": "Connect Shopify"
+        }
+      }
+    },
     "DOCUMENTS": {
-      "HEADER": "Documents",
-      "ADD_NEW": "Create a new document",
+      "HEADER": "Sources",
+      "ADD_NEW": "Add source",
+      "STATUS": {
+        "PAUSED": "Paused"
+      },
+      "PAUSE": "Pause source",
+      "RESUME": "Resume source",
+      "TOGGLE_ERROR": "Could not update source status. Please try again.",
+      "GENERATE_FAQS": {
+        "SUCCESS_MESSAGE": "FAQs are being generated",
+        "ERROR_MESSAGE": "Could not generate FAQs. Please try again."
+      },
       "SHOPIFY_CATALOG": {
         "LABEL": "Shopify catalog",
         "DESCRIPTION": "searched together with your documents and FAQs",
@@ -1346,6 +1401,7 @@
         "VIEW_DETAILS": "View details",
         "SYNC_NOW": "Refresh now",
         "RETRY_SYNC": "Retry refresh",
+        "GENERATE_FAQS": "Generate FAQs",
         "DELETE_DOCUMENT": "Delete Document"
       },
       "EMPTY_STATE": {
@@ -1507,6 +1563,26 @@
     "RESPONSES": {
       "HEADER": "FAQs",
       "ADD_NEW": "Create new FAQ",
+      "STATUS": {
+        "PAUSED": "Paused"
+      },
+      "PAUSE": "Pause FAQ",
+      "RESUME": "Resume FAQ",
+      "TOGGLE_ERROR": "Could not update FAQ status. Please try again.",
+      "FILTERS": {
+        "SOURCE": {
+          "ALL": "All sources",
+          "HAND_TYPED": "Typed by hand",
+          "CONVERSATION": "From conversations"
+        },
+        "FROM_SOURCE": "From: {name}"
+      },
+      "ORIGIN": {
+        "PAGE_IMPORT": "Imported from page",
+        "AI_GENERATED": "AI generated",
+        "CONVERSATION": "From a conversation",
+        "HAND_TYPED": "Typed by hand"
+      },
       "NO_USED_CONVERSATIONS": "No conversations found for this FAQ.",
       "DOCUMENTABLE": {
         "CONVERSATION": "Conversation #{id}"

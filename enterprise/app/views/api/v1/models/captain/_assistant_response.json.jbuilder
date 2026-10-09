@@ -1,5 +1,6 @@
 json.account_id resource.account_id
 json.agents_only resource.agents_only
+json.enabled resource.enabled
 json.answer resource.answer
 json.assistant do
   json.partial! 'api/v1/models/captain/assistant', formats: [:json], resource: resource.assistant
@@ -31,3 +32,4 @@ json.question resource.question
 json.updated_at resource.updated_at.to_i
 json.status resource.status
 json.edited resource.edited
+json.origin resource.origin

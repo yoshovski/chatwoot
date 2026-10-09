@@ -63,6 +63,7 @@ class Captain::Document < ApplicationRecord
   after_destroy :update_document_usage
   after_commit :enqueue_response_builder_job
   scope :ordered, -> { order(created_at: :desc) }
+  scope :enabled, -> { where(enabled: true) }
 
   scope :for_account, ->(account_id) { where(account_id: account_id) }
   scope :for_assistant, ->(assistant_id) { where(assistant_id: assistant_id) }

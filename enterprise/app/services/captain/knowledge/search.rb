@@ -123,9 +123,9 @@ class Captain::Knowledge::Search
 
   def canonical_record(kind, document_id)
     case kind
-    when 'faq' then @assistant.responses.approved.by_account(@account.id).find_by(dify_document_id: document_id)
+    when 'faq' then @assistant.responses.approved.enabled_for_search.by_account(@account.id).find_by(dify_document_id: document_id)
     when 'document'
-      @assistant.documents.for_account(@account.id).available.find_by("metadata->>'dify_document_id' = ?", document_id)
+      @assistant.documents.for_account(@account.id).enabled.available.find_by("metadata->>'dify_document_id' = ?", document_id)
     end
   end
 end

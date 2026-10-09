@@ -242,5 +242,110 @@ RSpec.describe Captain::Tools::HtmlPageParser do
       expect(markdown).not_to match(/(?:\n[ \t]*){3,}\n/)
       expect(markdown).to include("First paragraph\n\n\nSecond paragraph")
     end
+
+    it 'preserves hidden elements referenced by aria-controls or inside details' do
+      html = <<~HTML
+        <html>
+          <body>
+            <main>
+              <button aria-controls="faq-panel-1">What is the policy?</button>
+              <div id="faq-panel-1" hidden>
+                <p>Accordion answer is preserved.</p>
+              </div>
+              <details>
+                <summary>Details question</summary>
+                <div aria-hidden="true"><p>Details hidden answer preserved.</p></div>
+              </details>
+              <div hidden><p>Unreferenced hidden element should be removed.</p></div>
+            </main>
+          </body>
+        </html>
+      HTML
+
+      parser = described_class.new(html)
+      markdown = parser.body_markdown
+
+      expect(markdown).to include('Accordion answer is preserved.')
+      expect(markdown).to include('Details hidden answer preserved.')
+      expect(markdown).not_to include('Unreferenced hidden element')
+    end
+  end
+
+  describe '#faqs' do
+    it 'extracts FAQ pairs from the uncleaned main content' do
+      html = <<~HTML
+        <html>
+          <body>
+            <main>
+              <h1>Help Center</h1>
+              <details>
+                <summary>How can I return an item?</summary>
+                <p>Items can be returned within 30 days.</p>
+              </details>
+            </main>
+          </body>
+        </html>
+      HTML
+
+      parser = described_class.new(html)
+      expect(parser.faqs).to eq([
+                                  {
+                                    'question' => 'How can I return an item?',
+                                    'answer' => 'Items can be returned within 30 days.'
+                                  }
+                                ])
+    end
+  end
+
+  describe '#body_markdown_without_faqs' do
+    it 'returns markdown with matched FAQ elements removed' do
+      html = <<~HTML
+        <html>
+          <body>
+            <main>
+              <h1>Company Information</h1>
+              <p>We provide enterprise services.</p>
+              <details>
+                <summary>How can I return an item?</summary>
+                <p>Items can be returned within 30 days.</p>
+              </details>
+            </main>
+          </body>
+        </html>
+      HTML
+
+      parser = described_class.new(html)
+      markdown = parser.body_markdown_without_faqs
+
+      expect(markdown).to include('# Company Information')
+      expect(markdown).to include('We provide enterprise services.')
+      expect(markdown).not_to include('How can I return an item?')
+      expect(markdown).not_to include('Items can be returned within 30 days.')
+    end
+
+    it 'preserves blog listings with question headings below the 3 heading threshold' do
+      html = <<~HTML
+        <html>
+          <body>
+            <main>
+              <h1>Blog</h1>
+              <h2>Why choose our platform?</h2>
+              <p>Because it is reliable.</p>
+              <h2>What makes us different?</h2>
+              <p>Our fast response times.</p>
+            </main>
+          </body>
+        </html>
+      HTML
+
+      parser = described_class.new(html)
+      expect(parser.faqs).to be_empty
+      markdown = parser.body_markdown_without_faqs
+
+      expect(markdown).to include('## Why choose our platform?')
+      expect(markdown).to include('Because it is reliable.')
+      expect(markdown).to include('## What makes us different?')
+      expect(markdown).to include('Our fast response times.')
+    end
   end
 end

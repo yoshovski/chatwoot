@@ -9,6 +9,12 @@ vi.mock('dashboard/composables/usePolicy', () => ({
   usePolicy: () => ({ checkPermissions }),
 }));
 
+vi.mock('vue-router', () => ({
+  useRoute: () => ({
+    params: { accountId: '1', assistantId: '2' },
+  }),
+}));
+
 vi.mock('vue-i18n', () => ({
   useI18n: () => ({
     t: (key, { n } = {}) => {
@@ -30,6 +36,14 @@ const ButtonStub = {
     '<button v-bind="$attrs" :disabled="disabled" @click="$emit(\'click\', $event)">{{ label }}</button>',
 };
 
+const SwitchStub = {
+  name: 'Switch',
+  props: ['modelValue'],
+  emits: ['update:modelValue', 'change'],
+  template:
+    '<button type="button" @click="$emit(\'update:modelValue\', !modelValue)">switch</button>',
+};
+
 const mountCard = (props = {}) =>
   shallowMount(DocumentCard, {
     props: {
@@ -41,17 +55,21 @@ const mountCard = (props = {}) =>
       createdAt: 1_700_000_000,
       status: 'available',
       responsesCount: 12,
+      enabled: true,
       ...props,
     },
     global: {
       directives: { onClickaway: {} },
       stubs: {
         Button: ButtonStub,
+        Switch: SwitchStub,
+        Policy: { template: '<div><slot /></div>' },
         CardLayout: { template: '<div><slot /></div>' },
         DocumentSyncStatus: true,
         DropdownMenu: true,
         Checkbox: true,
         Icon: true,
+        'router-link': true,
       },
     },
   });
@@ -103,5 +121,21 @@ describe('DocumentCard', () => {
     expect(wrapper.text()).toContain('playground-knowledge.md');
     expect(wrapper.find('a').exists()).toBe(false);
     expect(wrapper.find('document-sync-status-stub').exists()).toBe(false);
+  });
+
+  it('shows the paused state when enabled is false', () => {
+    const wrapper = mountCard({ enabled: false });
+
+    expect(wrapper.text()).toContain('CAPTAIN.DOCUMENTS.STATUS.PAUSED');
+  });
+
+  it('emits toggle event when switch is toggled', async () => {
+    const wrapper = mountCard({ enabled: true });
+    const switchComp = wrapper.findComponent({ name: 'Switch' });
+
+    expect(switchComp.exists()).toBe(true);
+    await switchComp.vm.$emit('update:modelValue', false);
+
+    expect(wrapper.emitted('toggle')).toEqual([[{ id: 42, enabled: false }]]);
   });
 });

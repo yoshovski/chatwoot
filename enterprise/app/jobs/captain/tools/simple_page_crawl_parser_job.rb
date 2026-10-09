@@ -40,10 +40,15 @@ class Captain::Tools::SimplePageCrawlParserJob < ApplicationJob
   end
 
   def persist_document!(document, normalized_link, crawler)
+    content = crawler.body_markdown_without_faqs.presence || crawler.page_title.presence || ''
+    content = content[0...Captain::Documents::SinglePageFetcher::CONTENT_MAX_LENGTH]
+    metadata = (document.metadata || {}).merge('page_faqs' => crawler.faqs)
+
     document.update!(
       external_link: normalized_link,
       name: (crawler.page_title || '')[0..254],
-      content: (crawler.body_markdown || '')[0...Captain::Documents::SinglePageFetcher::CONTENT_MAX_LENGTH],
+      content: content,
+      metadata: metadata,
       status: :available,
       **synced_attributes
     )

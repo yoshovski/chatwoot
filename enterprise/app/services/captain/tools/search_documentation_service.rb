@@ -10,20 +10,23 @@ class Captain::Tools::SearchDocumentationService < Captain::Tools::BaseTool
     Rails.logger.info { "#{self.class.name}: #{query}" }
     return search_knowledge(query) if assistant.account.dify_knowledge_enabled?
 
-    translated_query = Captain::Llm::TranslateQueryService
-                       .new(account: assistant.account)
-                       .translate(query, target_language: assistant.account.locale_english_name)
-
-    responses = assistant.responses.approved
-    responses = responses.visible_to_customers if @user.blank?
-    responses = responses.search(translated_query)
-
+    responses = search_responses(query)
     return 'No FAQs found for the given query' if responses.empty?
 
     responses.map { |response| format_response(response) }.join
   end
 
   private
+
+  def search_responses(query)
+    translated_query = Captain::Llm::TranslateQueryService
+                       .new(account: assistant.account)
+                       .translate(query, target_language: assistant.account.locale_english_name)
+
+    responses = assistant.responses.approved.enabled_for_search
+    responses = responses.visible_to_customers if @user.blank?
+    responses.search(translated_query)
+  end
 
   def search_knowledge(query)
     # Copilot passes the agent; the V1 customer assistant passes no user.

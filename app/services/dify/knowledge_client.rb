@@ -47,6 +47,10 @@ class Dify::KnowledgeClient
     request(:delete, "datasets/#{dataset_id}/documents/#{document_id}")
   end
 
+  def update_documents_status(dataset_id:, action:, document_ids:)
+    request(:patch, "datasets/#{dataset_id}/documents/status/#{action}", { document_ids: Array.wrap(document_ids) })
+  end
+
   def documents(dataset_id:, keyword:, page: nil, limit: 2)
     request(:get, "datasets/#{dataset_id}/documents", params: { keyword: keyword, limit: limit, page: page }.compact)
   end

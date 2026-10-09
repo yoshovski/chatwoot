@@ -1,13 +1,14 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { useRoute } from 'vue-router';
 import { debounce } from '@chatwoot/utils';
 import { FEATURE_FLAGS } from 'dashboard/featureFlags';
 import { dynamicTime } from 'shared/helpers/timeHelper';
 import shopifyAPI from 'dashboard/api/integrations/shopify';
 import PageLayout from 'dashboard/components-next/captain/PageLayout.vue';
 import CaptainPaywall from 'dashboard/components-next/captain/pageComponents/Paywall.vue';
+import KnowledgeHeader from 'dashboard/components-next/captain/knowledge/KnowledgeHeader.vue';
+import ShopifyCatalogCard from 'dashboard/components-next/captain/knowledge/ShopifyCatalogCard.vue';
 import Input from 'dashboard/components-next/input/Input.vue';
 import TabBar from 'dashboard/components-next/tabbar/TabBar.vue';
 import Icon from 'dashboard/components-next/icon/Icon.vue';
@@ -22,7 +23,6 @@ const STATUS_CLASSES = {
 };
 
 const { t } = useI18n();
-const route = useRoute();
 
 const products = ref([]);
 const counts = ref({});
@@ -56,10 +56,6 @@ const tabs = computed(() => {
 const activeTabIndex = computed(() =>
   tabs.value.findIndex(tab => tab.key === statusFilter.value)
 );
-const documentsRoute = computed(() => ({
-  name: 'captain_assistants_documents_index',
-  params: route.params,
-}));
 
 // Shopify's CDN resizes on the fly, so the list never downloads full-size images.
 const thumbnailUrl = url => {
@@ -111,7 +107,6 @@ onMounted(() => fetchProducts(1));
 <template>
   <PageLayout
     :header-title="$t('CAPTAIN.PRODUCTS.HEADER')"
-    :back-url="documentsRoute"
     :feature-flag="FEATURE_FLAGS.CAPTAIN"
     :total-count="total"
     :items-per-page="PAGE_SIZE"
@@ -137,6 +132,8 @@ onMounted(() => fetchProducts(1));
     </template>
 
     <template #controls>
+      <KnowledgeHeader />
+      <ShopifyCatalogCard compact />
       <p class="mb-3 text-sm text-n-slate-11">
         {{ $t('CAPTAIN.PRODUCTS.DESCRIPTION') }}
       </p>

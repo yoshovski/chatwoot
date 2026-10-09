@@ -55,9 +55,9 @@ RSpec.describe Captain::Tools::FaqLookupTool, type: :model do
         allow(Resolv).to receive(:getaddresses).and_return(['93.184.216.34'])
 
         # Mock nearest_neighbors to return our test responses
-        allow(Captain::AssistantResponse).to receive(:nearest_neighbors).and_return(
-          Captain::AssistantResponse.where(id: [response1.id, response2.id])
-        )
+        allow(Captain::AssistantResponse).to receive(:nearest_neighbors) do
+          (Captain::AssistantResponse.current_scope || Captain::AssistantResponse.all).where(id: [response1.id, response2.id])
+        end
       end
 
       it 'searches FAQs and returns formatted responses' do
@@ -68,6 +68,27 @@ RSpec.describe Captain::Tools::FaqLookupTool, type: :model do
         expect(result).to include('Question: How to change email?')
         expect(result).to include('Answer: Go to settings and update email')
         expect(result).to include('Source index: 1', 'Source index: 2')
+      end
+
+      it 'excludes FAQs when their parent document is paused, and brings them back when resumed' do
+        document.update!(enabled: false)
+        result = tool.perform(tool_context, query: 'password reset')
+        expect(result).to eq('No relevant FAQs found for: password reset')
+
+        document.update!(enabled: true)
+        resumed_result = tool.perform(tool_context, query: 'password reset')
+        expect(resumed_result).to include('Question: How to reset password?')
+      end
+
+      it 'excludes an FAQ when the FAQ itself is paused, and brings it back when resumed' do
+        response1.update!(enabled: false)
+        result = tool.perform(tool_context, query: 'password reset')
+        expect(result).not_to include('Question: How to reset password?')
+        expect(result).to include('Question: How to change email?')
+
+        response1.update!(enabled: true)
+        resumed_result = tool.perform(tool_context, query: 'password reset')
+        expect(resumed_result).to include('Question: How to reset password?')
       end
 
       it 'records each result as a source with its question and answer' do

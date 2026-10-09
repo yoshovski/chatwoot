@@ -63,4 +63,17 @@ RSpec.describe Captain::Dify::AssistantResponse, type: :model do
 
     expect(Captain::Llm::UpdateEmbeddingJob).not_to have_been_enqueued
   end
+
+  it 'enqueues Dify status update with disable when paused, and enable when resumed' do
+    response.update!(dify_document_id: 'faq-doc-id')
+    clear_enqueued_jobs
+
+    expect { response.update!(enabled: false) }.to have_enqueued_job(Captain::Dify::UpdateDocumentStatusJob)
+      .with(account.id, 'faq-id', 'disable', ['faq-doc-id'])
+
+    clear_enqueued_jobs
+
+    expect { response.update!(enabled: true) }.to have_enqueued_job(Captain::Dify::UpdateDocumentStatusJob)
+      .with(account.id, 'faq-id', 'enable', ['faq-doc-id'])
+  end
 end

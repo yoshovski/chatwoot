@@ -39,6 +39,16 @@ RSpec.describe Dify::KnowledgeClient do
     expect(client.delete_document(dataset_id: 'dataset-one', document_id: 'doc-one')).to be_nil
   end
 
+  it 'updates document status with PATCH request' do
+    patch_req = stub_request(:patch, "#{root}/dataset-one/documents/status/disable")
+                .with(body: { document_ids: %w[doc-one doc-two] })
+                .to_return(body: '{"result":"success"}')
+
+    expect(client.update_documents_status(dataset_id: 'dataset-one', action: 'disable', document_ids: %w[doc-one doc-two]))
+      .to eq('result' => 'success')
+    expect(patch_req).to have_been_requested.once
+  end
+
   it 'passes hybrid search, reranking and metadata conditions to retrieval' do
     model = { search_method: 'hybrid_search', reranking_enable: true, metadata_filtering_conditions: { conditions: [] } }
     retrieval = stub_request(:post, "#{root}/dataset-one/retrieve").with(body: { query: 'Example', retrieval_model: model })

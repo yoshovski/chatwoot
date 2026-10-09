@@ -51,6 +51,13 @@ class Captain::AssistantResponse < ApplicationRecord
       .where("captain_assistant_responses.documentable_type IS DISTINCT FROM 'Captain::Document' " \
              "OR captain_assistant_responses.documentable_id NOT IN (#{agents_only_documents.to_sql})")
   }
+  # Leaves out paused FAQs and FAQs generated from a paused document.
+  scope :enabled_for_search, lambda {
+    disabled_documents = Captain::Document.where(enabled: false).select(:id)
+    where(captain_assistant_responses: { enabled: true })
+      .where("captain_assistant_responses.documentable_type IS DISTINCT FROM 'Captain::Document' " \
+             "OR captain_assistant_responses.documentable_id NOT IN (#{disabled_documents.to_sql})")
+  }
 
   enum status: { approved: 1 }
 
@@ -65,6 +72,13 @@ class Captain::AssistantResponse < ApplicationRecord
 
   def visible_to_customers?
     !agents_only? && !(documentable.is_a?(Captain::Document) && documentable.agents_only?)
+  end
+
+  def enabled_for_search?
+    return false unless enabled?
+    return true unless documentable.is_a?(Captain::Document)
+
+    documentable.enabled?
   end
 
   private

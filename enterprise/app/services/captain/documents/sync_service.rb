@@ -60,9 +60,11 @@ class Captain::Documents::SyncService
   end
 
   def update_content(result, fingerprint)
+    metadata = (@document.metadata || {}).merge('page_faqs' => (result.faqs || []))
     @document.update!(
       content: result.content,
       name: result.title.presence || @document.name,
+      metadata: metadata,
       content_fingerprint: fingerprint,
       sync_status: :synced,
       sync_step: nil,

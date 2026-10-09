@@ -29,6 +29,14 @@ const ButtonStub = {
     '<button v-bind="$attrs" :disabled="disabled" @click="$emit(\'click\', $event)">{{ label }}</button>',
 };
 
+const SwitchStub = {
+  name: 'Switch',
+  props: ['modelValue'],
+  emits: ['update:modelValue', 'change'],
+  template:
+    '<button type="button" @click="$emit(\'update:modelValue\', !modelValue)">switch</button>',
+};
+
 const mountCard = (props = {}) =>
   shallowMount(ResponseCard, {
     props: {
@@ -44,12 +52,14 @@ const mountCard = (props = {}) =>
       createdAt: 1_700_000_000,
       updatedAt: 1_700_000_000,
       usedInConversationsCount: 4,
+      enabled: true,
       ...props,
     },
     global: {
       directives: { onClickaway: {} },
       stubs: {
         Button: ButtonStub,
+        Switch: SwitchStub,
         CardLayout: { template: '<div><slot /></div>' },
         Policy: { template: '<div><slot /></div>' },
         DropdownMenu: true,
@@ -95,5 +105,22 @@ describe('ResponseCard', () => {
     const wrapper = mountCard();
 
     expect(wrapper.find('[aria-label^="Used in"]').exists()).toBe(false);
+  });
+
+  it('renders the origin chip for page_import', () => {
+    const wrapper = mountCard({ origin: 'page_import' });
+
+    expect(wrapper.text()).toContain('CAPTAIN.RESPONSES.ORIGIN.PAGE_IMPORT');
+  });
+
+  it('renders paused badge when enabled is false and emits toggle', async () => {
+    const wrapper = mountCard({ enabled: false });
+
+    expect(wrapper.text()).toContain('CAPTAIN.RESPONSES.STATUS.PAUSED');
+
+    const switchComp = wrapper.findComponent({ name: 'Switch' });
+    expect(switchComp.exists()).toBe(true);
+    await switchComp.vm.$emit('update:modelValue', true);
+    expect(wrapper.emitted('toggle')).toEqual([[{ id: 42, enabled: true }]]);
   });
 });
