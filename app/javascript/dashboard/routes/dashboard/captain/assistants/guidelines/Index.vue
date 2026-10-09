@@ -183,10 +183,7 @@ const addAllExample = async () => {
       })
     "
   >
-    <AssistantBehaviorSettings
-      :assistant="assistant"
-      @update="saveBehavior"
-    />
+    <AssistantBehaviorSettings :assistant="assistant" @update="saveBehavior" />
     <SettingsHeader
       class="pt-2"
       :heading="t('CAPTAIN.ASSISTANTS.SETTINGS.BEHAVIOR.RULES.TITLE')"

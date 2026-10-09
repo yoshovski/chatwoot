@@ -36,7 +36,9 @@ const quickReplyButtons = computed(() =>
 const toneOptions = computed(() =>
   TONES.map(tone => ({
     id: tone,
-    label: t(`CAPTAIN.ASSISTANTS.SETTINGS.BEHAVIOR.TONE.${tone.toUpperCase()}.LABEL`),
+    label: t(
+      `CAPTAIN.ASSISTANTS.SETTINGS.BEHAVIOR.TONE.${tone.toUpperCase()}.LABEL`
+    ),
     description: t(
       `CAPTAIN.ASSISTANTS.SETTINGS.BEHAVIOR.TONE.${tone.toUpperCase()}.DESC`
     ),
@@ -116,7 +118,9 @@ const changeMaxButtons = delta => {
           <div class="flex items-center justify-between gap-2">
             <span class="text-xs text-n-slate-11">
               {{
-                t('CAPTAIN.ASSISTANTS.SETTINGS.BEHAVIOR.CARDS.QUICK_REPLIES.MAX')
+                t(
+                  'CAPTAIN.ASSISTANTS.SETTINGS.BEHAVIOR.CARDS.QUICK_REPLIES.MAX'
+                )
               }}
             </span>
             <div class="flex items-center gap-1">
@@ -133,9 +137,7 @@ const changeMaxButtons = delta => {
                 :disabled="!suggestedReplies || maxButtons <= MIN_BUTTONS"
                 @click="changeMaxButtons(-1)"
               />
-              <span
-                class="w-5 text-sm font-medium text-center text-n-slate-12"
-              >
+              <span class="w-5 text-sm font-medium text-center text-n-slate-12">
                 {{ maxButtons }}
               </span>
               <Button

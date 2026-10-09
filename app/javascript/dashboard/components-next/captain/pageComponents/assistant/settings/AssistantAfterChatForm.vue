@@ -246,9 +246,12 @@ watch(
           <div class="flex items-start gap-2">
             <span class="i-lucide-triangle-alert mt-0.5 size-4 shrink-0" />
             {{
-              t('CAPTAIN.ASSISTANTS.FORM.INACTIVITY_RESOLUTION.ALWAYS_WARNING', {
-                name,
-              })
+              t(
+                'CAPTAIN.ASSISTANTS.FORM.INACTIVITY_RESOLUTION.ALWAYS_WARNING',
+                {
+                  name,
+                }
+              )
             }}
           </div>
         </Banner>
@@ -330,7 +333,9 @@ watch(
       />
       <SettingsSwitchRow
         v-model="state.outcomeLabels"
-        :title="t('CAPTAIN.ASSISTANTS.SETTINGS.AFTER_CHAT.OUTCOME_LABELS.TITLE')"
+        :title="
+          t('CAPTAIN.ASSISTANTS.SETTINGS.AFTER_CHAT.OUTCOME_LABELS.TITLE')
+        "
         :description="
           t('CAPTAIN.ASSISTANTS.SETTINGS.AFTER_CHAT.OUTCOME_LABELS.DESC')
         "

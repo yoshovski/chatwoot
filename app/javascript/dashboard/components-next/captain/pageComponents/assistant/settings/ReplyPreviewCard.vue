@@ -19,9 +19,7 @@ const modelValue = defineModel({ type: Boolean, default: false });
   <div
     class="flex flex-col gap-3 p-4 rounded-xl outline bg-n-solid-1 transition-[outline-color]"
     :class="
-      modelValue
-        ? 'outline-2 outline-n-brand'
-        : 'outline-1 outline-n-weak'
+      modelValue ? 'outline-2 outline-n-brand' : 'outline-1 outline-n-weak'
     "
   >
     <div class="flex items-center justify-between gap-2">

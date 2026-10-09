@@ -46,7 +46,9 @@ const { t } = useI18n();
         <p
           class="self-start max-w-[85%] mb-0 px-3 py-2 text-sm rounded-xl ltr:rounded-bl-sm rtl:rounded-br-sm bg-n-solid-1 text-n-slate-12 outline outline-1 outline-n-weak"
         >
-          {{ t('CAPTAIN.ASSISTANTS.SETTINGS.IDENTITY.PREVIEW_GREETING', { name }) }}
+          {{
+            t('CAPTAIN.ASSISTANTS.SETTINGS.IDENTITY.PREVIEW_GREETING', { name })
+          }}
         </p>
         <p
           class="self-end max-w-[85%] mb-0 px-3 py-2 text-sm text-white rounded-xl ltr:rounded-br-sm rtl:rounded-bl-sm bg-n-brand"

@@ -24,10 +24,6 @@ const modelValue = defineModel({ type: Boolean, default: false });
       </span>
       <slot />
     </div>
-    <Switch
-      v-model="modelValue"
-      :aria-label="title"
-      class="mt-0.5"
-    />
+    <Switch v-model="modelValue" :aria-label="title" class="mt-0.5" />
   </div>
 </template>

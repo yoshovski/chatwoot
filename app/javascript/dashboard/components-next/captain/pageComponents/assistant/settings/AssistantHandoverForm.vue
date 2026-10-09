@@ -165,11 +165,15 @@ watch(
       v-if="isAdmin"
       class="flex flex-wrap items-center gap-2 px-5 py-4 text-sm rounded-xl outline outline-1 outline-n-weak bg-n-solid-1 text-n-slate-12"
     >
-      <span>{{ t('CAPTAIN.ASSISTANTS.SETTINGS.HANDOVER.FALLBACK_PREFIX') }}</span>
+      <span>{{
+        t('CAPTAIN.ASSISTANTS.SETTINGS.HANDOVER.FALLBACK_PREFIX')
+      }}</span>
       <Select
         v-model="state.handoffFallbackTeamId"
         :options="teamOptions"
-        :aria-label="t('CAPTAIN.ASSISTANTS.FORM.FALLBACK_ASSIGNMENTS.TEAM_LABEL')"
+        :aria-label="
+          t('CAPTAIN.ASSISTANTS.FORM.FALLBACK_ASSIGNMENTS.TEAM_LABEL')
+        "
         class="[&>select]:w-full min-w-40"
       />
       <span>{{ t('CAPTAIN.ASSISTANTS.SETTINGS.HANDOVER.FALLBACK_OR') }}</span>

@@ -174,7 +174,9 @@ const addAllExample = () => {
 <template>
   <SettingsPageLayout
     :heading="
-      t('CAPTAIN.ASSISTANTS.SETTINGS.BOUNDARIES.TITLE', { name: assistant.name })
+      t('CAPTAIN.ASSISTANTS.SETTINGS.BOUNDARIES.TITLE', {
+        name: assistant.name,
+      })
     "
     :description="
       t('CAPTAIN.ASSISTANTS.SETTINGS.BOUNDARIES.DESCRIPTION', {
@@ -186,7 +188,9 @@ const addAllExample = () => {
       <SettingsSwitchRow
         v-model="contactAccess"
         class="!py-0"
-        :title="t('CAPTAIN.ASSISTANTS.SETTINGS.BOUNDARIES.CONTACT_ACCESS.TITLE')"
+        :title="
+          t('CAPTAIN.ASSISTANTS.SETTINGS.BOUNDARIES.CONTACT_ACCESS.TITLE')
+        "
         :description="
           t('CAPTAIN.ASSISTANTS.SETTINGS.BOUNDARIES.CONTACT_ACCESS.DESC', {
             name: assistant.name,
