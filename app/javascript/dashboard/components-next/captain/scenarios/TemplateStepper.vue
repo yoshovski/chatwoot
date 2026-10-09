@@ -550,7 +550,9 @@ defineExpose({
         />
         <template v-else>
           <Button
-            v-if="!currentQuestion.required && currentQuestion.type !== 'select'"
+            v-if="
+              !currentQuestion.required && currentQuestion.type !== 'select'
+            "
             type="button"
             ghost
             slate

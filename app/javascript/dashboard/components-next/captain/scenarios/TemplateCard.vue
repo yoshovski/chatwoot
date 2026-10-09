@@ -34,7 +34,8 @@ const ICON_COLORS = {
 };
 
 const i18nKey = computed(
-  () => `CAPTAIN.ASSISTANTS.SCENARIOS.TEMPLATES.${props.template.id.toUpperCase()}`
+  () =>
+    `CAPTAIN.ASSISTANTS.SCENARIOS.TEMPLATES.${props.template.id.toUpperCase()}`
 );
 
 const isAvailable = computed(() =>
@@ -71,7 +72,9 @@ const onClick = () => {
 <template>
   <button
     v-tooltip.top="
-      isAvailable ? null : t('CAPTAIN.ASSISTANTS.SCENARIOS.TEMPLATES.NEEDS_SHOPIFY_TOOLTIP')
+      isAvailable
+        ? null
+        : t('CAPTAIN.ASSISTANTS.SCENARIOS.TEMPLATES.NEEDS_SHOPIFY_TOOLTIP')
     "
     type="button"
     class="group relative flex flex-col gap-3 h-full w-full p-4 text-start rounded-xl border border-n-strong bg-n-solid-2 transition-colors motion-reduce:transition-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-n-brand"

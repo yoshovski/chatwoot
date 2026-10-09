@@ -105,9 +105,7 @@ const onSearchDropdown = q => {
         v-if="showMoreDropdown"
         :items="filteredDropdownTools"
         show-search
-        :search-placeholder="
-          t('CAPTAIN.ASSISTANTS.SCENARIOS.PALETTE.SEARCH')
-        "
+        :search-placeholder="t('CAPTAIN.ASSISTANTS.SCENARIOS.PALETTE.SEARCH')"
         class="top-8 ltr:left-0 rtl:right-0 shadow-lg"
         @select="onSelectDropdownItem"
         @search="onSearchDropdown"

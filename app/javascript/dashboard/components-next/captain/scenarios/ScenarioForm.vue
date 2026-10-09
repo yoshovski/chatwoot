@@ -30,15 +30,13 @@ const v$ = useVuelidate(
 );
 
 const errorFor = (field, key) =>
-  v$.value[field].$error ? t(`CAPTAIN.ASSISTANTS.SCENARIOS.FORM.${key}.ERROR`) : '';
+  v$.value[field].$error
+    ? t(`CAPTAIN.ASSISTANTS.SCENARIOS.FORM.${key}.ERROR`)
+    : '';
 
 const titleError = computed(() => errorFor('title', 'TITLE'));
-const descriptionError = computed(() =>
-  errorFor('description', 'DESCRIPTION')
-);
-const instructionError = computed(() =>
-  errorFor('instruction', 'INSTRUCTION')
-);
+const descriptionError = computed(() => errorFor('description', 'DESCRIPTION'));
+const instructionError = computed(() => errorFor('instruction', 'INSTRUCTION'));
 
 const linkedToolIds = computed(() =>
   getToolIdsFromInstruction(instruction.value)
@@ -76,7 +74,8 @@ defineExpose({ validate, reset });
         t('CAPTAIN.ASSISTANTS.SCENARIOS.FORM.DESCRIPTION.PLACEHOLDER')
       "
       :message="
-        descriptionError || t('CAPTAIN.ASSISTANTS.SCENARIOS.FORM.DESCRIPTION.HELP')
+        descriptionError ||
+        t('CAPTAIN.ASSISTANTS.SCENARIOS.FORM.DESCRIPTION.HELP')
       "
       :message-type="descriptionError ? 'error' : 'info'"
       show-character-count

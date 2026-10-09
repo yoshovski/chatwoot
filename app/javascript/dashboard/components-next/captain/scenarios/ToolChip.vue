@@ -81,7 +81,9 @@ const handleClick = () => {
       v-if="removable"
       type="button"
       class="-me-1 inline-flex items-center justify-center rounded-full p-0.5 hover:bg-n-alpha-2"
-      :aria-label="t('CAPTAIN.ASSISTANTS.SCENARIOS.FORM.TOOLS.REMOVE', { tool: title })"
+      :aria-label="
+        t('CAPTAIN.ASSISTANTS.SCENARIOS.FORM.TOOLS.REMOVE', { tool: title })
+      "
       @click.stop="emit('remove')"
     >
       <span class="i-lucide-x size-3" />
