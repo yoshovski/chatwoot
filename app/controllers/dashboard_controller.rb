@@ -11,6 +11,7 @@ class DashboardController < ActionController::Base
     TERMS_URL
     BRAND_URL
     BRAND_NAME
+    CAPTAIN_BRAND_NAME
     PRIVACY_URL
     DISPLAY_MANIFEST
     CREATE_NEW_ACCOUNT_FROM_DASHBOARD
