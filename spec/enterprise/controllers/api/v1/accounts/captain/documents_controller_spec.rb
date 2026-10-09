@@ -594,6 +594,22 @@ RSpec.describe 'Api::V1::Accounts::Captain::Documents', type: :request do
       expect(document.reload).to have_attributes(agents_only: true, name: document.name)
     end
 
+    it 'lets an admin pause and resume a document' do
+      patch "/api/v1/accounts/#{account.id}/captain/documents/#{document.id}",
+            params: { document: { enabled: false } }, headers: admin.create_new_auth_token, as: :json
+
+      expect(response).to have_http_status(:success)
+      expect(json_response[:enabled]).to be(false)
+      expect(document.reload.enabled).to be(false)
+
+      patch "/api/v1/accounts/#{account.id}/captain/documents/#{document.id}",
+            params: { document: { enabled: true } }, headers: admin.create_new_auth_token, as: :json
+
+      expect(response).to have_http_status(:success)
+      expect(json_response[:enabled]).to be(true)
+      expect(document.reload.enabled).to be(true)
+    end
+
     it 'returns unauthorized for agents' do
       patch "/api/v1/accounts/#{account.id}/captain/documents/#{document.id}",
             params: { document: { agents_only: true } }, headers: agent.create_new_auth_token, as: :json
@@ -696,7 +712,9 @@ RSpec.describe 'Api::V1::Accounts::Captain::Documents', type: :request do
           content_type: 'application/pdf'
         )
         pdf_doc.save!
-        allow_any_instance_of(Account).to receive(:dify_knowledge_enabled?).and_return(true)
+        allow(Account).to receive(:find).and_call_original
+        allow(Account).to receive(:find).with(account.id.to_s).and_return(account)
+        allow(account).to receive(:dify_knowledge_enabled?).and_return(true)
 
         expect(Captain::Documents::ResponseBuilderJob).not_to receive(:perform_later)
 

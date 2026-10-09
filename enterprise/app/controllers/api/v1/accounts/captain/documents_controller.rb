@@ -33,7 +33,7 @@ class Api::V1::Accounts::Captain::DocumentsController < Api::V1::Accounts::BaseC
 
   # Only who may see the document can change; its source and content come from the sync.
   def update
-    @document.update!(params.require(:document).permit(:agents_only))
+    @document.update!(params.require(:document).permit(:agents_only, :enabled))
     render :show
   end
 

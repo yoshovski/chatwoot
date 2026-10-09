@@ -4,6 +4,7 @@ module Captain::Dify::Document
   prepended do
     store_accessor :metadata, :dify_document_id, :dify_indexing_status, :dify_content_fingerprint
     before_save :mark_dify_indexing_pending
+    after_update_commit :sync_dify_document_status
     after_destroy_commit :delete_dify_document
   end
 
@@ -50,5 +51,37 @@ module Captain::Dify::Document
     return if dify_document_id.blank? || assistant.nil?
 
     Captain::Dify::DeleteDocumentJob.perform_later(id, account_id, assistant.config.fetch('dify_docs_dataset_id'), dify_document_id)
+  end
+
+  def sync_dify_document_status
+    return unless saved_change_to_enabled?
+    return unless account.dify_knowledge_enabled?
+    return if dify_document_id.blank? || assistant.nil?
+
+    action = enabled? ? 'enable' : 'disable'
+    Captain::Dify::UpdateDocumentStatusJob.perform_later(
+      account_id,
+      assistant.config.fetch('dify_docs_dataset_id'),
+      action,
+      [dify_document_id]
+    )
+    sync_dify_child_faq_status(action)
+  end
+
+  def sync_dify_child_faq_status(action)
+    faq_dataset_id = assistant.config['dify_faq_dataset_id']
+    return if faq_dataset_id.blank?
+
+    scope = responses.where.not(dify_document_id: nil)
+    scope = scope.where(enabled: true) if enabled?
+    faq_ids = scope.pluck(:dify_document_id)
+    return if faq_ids.blank?
+
+    Captain::Dify::UpdateDocumentStatusJob.perform_later(
+      account_id,
+      faq_dataset_id,
+      action,
+      faq_ids
+    )
   end
 end

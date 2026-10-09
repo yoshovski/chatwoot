@@ -104,7 +104,8 @@ class Api::V1::Accounts::Captain::AssistantResponsesController < Api::V1::Accoun
       :question,
       :answer,
       :assistant_id,
-      :agents_only
+      :agents_only,
+      :enabled
     )
   end
 end

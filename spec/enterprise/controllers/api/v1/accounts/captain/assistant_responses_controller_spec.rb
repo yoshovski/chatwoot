@@ -395,6 +395,26 @@ RSpec.describe 'Api::V1::Accounts::Captain::AssistantResponses', type: :request 
       expect(json_response[:answer]).to eq('Updated answer')
     end
 
+    it 'lets an admin pause and resume an assistant response' do
+      patch "/api/v1/accounts/#{account.id}/captain/assistant_responses/#{response_record.id}",
+            params: { assistant_response: { enabled: false } },
+            headers: admin.create_new_auth_token,
+            as: :json
+
+      expect(response).to have_http_status(:ok)
+      expect(json_response[:enabled]).to be(false)
+      expect(response_record.reload.enabled).to be(false)
+
+      patch "/api/v1/accounts/#{account.id}/captain/assistant_responses/#{response_record.id}",
+            params: { assistant_response: { enabled: true } },
+            headers: admin.create_new_auth_token,
+            as: :json
+
+      expect(response).to have_http_status(:ok)
+      expect(json_response[:enabled]).to be(true)
+      expect(response_record.reload.enabled).to be(true)
+    end
+
     it 'does not move a response to an assistant in another account' do
       other_assistant = create(:captain_assistant)
       params = update_params.deep_merge(assistant_response: { assistant_id: other_assistant.id })

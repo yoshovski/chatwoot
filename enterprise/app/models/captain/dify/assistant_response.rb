@@ -3,6 +3,7 @@ module Captain::Dify::AssistantResponse
 
   prepended do
     before_update :detach_dify_document_on_move
+    after_update_commit :sync_dify_faq_status
   end
 
   private
@@ -32,5 +33,19 @@ module Captain::Dify::AssistantResponse
     return if document_id.blank? || source.nil?
 
     Captain::Dify::DeleteFaqJob.perform_later(id, account_id, source.config.fetch('dify_faq_dataset_id'), document_id)
+  end
+
+  def sync_dify_faq_status
+    return unless saved_change_to_enabled?
+    return unless account.dify_knowledge_enabled?
+    return if dify_document_id.blank? || assistant.nil?
+
+    action = enabled? ? 'enable' : 'disable'
+    Captain::Dify::UpdateDocumentStatusJob.perform_later(
+      account_id,
+      assistant.config.fetch('dify_faq_dataset_id'),
+      action,
+      [dify_document_id]
+    )
   end
 end

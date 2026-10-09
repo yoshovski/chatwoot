@@ -1,11 +1,6 @@
 # frozen_string_literal: true
 
-require 'spec_helper'
-require 'active_support/all'
-
-module Captain; end
-Captain.const_set(:AssistantResponse, Class.new) unless defined?(Captain::AssistantResponse)
-module Captain::Knowledge; end
+require 'rails_helper'
 
 require_relative '../../../../../enterprise/app/services/captain/knowledge/search'
 
@@ -257,6 +252,149 @@ RSpec.describe Captain::Knowledge::Search do
         ).and_return(knowledge_response)
 
         search_service.search('linen shirt')
+      end
+    end
+
+    context 'when searching document passages' do
+      let(:documents_scope) { double('DocumentsScope') }
+      let(:account_documents_scope) { double('AccountDocumentsScope') }
+      let(:enabled_documents_scope) { double('EnabledDocumentsScope') }
+      let(:available_documents_scope) { double('AvailableDocumentsScope') }
+      let(:doc_record) do
+        double(
+          'Captain::Document',
+          id: 5,
+          name: 'Guide',
+          external_link: 'https://example.com/guide',
+          visible_to_customers?: true
+        )
+      end
+      let(:docs_response) do
+        double(
+          'Response',
+          code: 200,
+          parsed_response: {
+            'passages' => [
+              {
+                'kind' => 'document',
+                'title' => 'Guide',
+                'content' => 'Guide content here.',
+                'score' => 0.88,
+                'document_id' => 'dify-doc-99',
+                'dataset_id' => 'docs-ds',
+                'url' => 'https://example.com/guide'
+              }
+            ]
+          }
+        )
+      end
+
+      before do
+        allow(hooks_relation).to receive(:find_by).with(app_id: 'shopify').and_return(nil)
+        allow(assistant).to receive(:documents).and_return(documents_scope)
+        allow(documents_scope).to receive(:for_account).with(1).and_return(account_documents_scope)
+        allow(account_documents_scope).to receive(:enabled).and_return(enabled_documents_scope)
+        allow(enabled_documents_scope).to receive(:available).and_return(available_documents_scope)
+
+        citation_sources = double('Captain::Knowledge::CitationSources')
+        stub_const('Captain::Knowledge::CitationSources', Class.new do
+          def initialize(assistant); end
+        end)
+        allow(Captain::Knowledge::CitationSources).to receive(:new).with(assistant).and_return(citation_sources)
+        allow(citation_sources).to receive(:url).and_return('https://example.com/guide')
+      end
+
+      it 'returns the document when enabled, and excludes it when paused for both customers and agents' do
+        allow(knowledge_client).to receive(:request).and_return(docs_response)
+
+        # Enabled: document is found
+        allow(available_documents_scope).to receive(:find_by).with("metadata->>'dify_document_id' = ?", 'dify-doc-99').and_return(doc_record)
+        results = search_service.search('guide')
+        expect(results.size).to eq(1)
+        expect(results.first.record).to eq(doc_record)
+
+        # Paused: enabled scope filters it out, returning nil
+        allow(available_documents_scope).to receive(:find_by).with("metadata->>'dify_document_id' = ?", 'dify-doc-99').and_return(nil)
+        expect(search_service.search('guide')).to be_empty
+
+        # Paused: even for agents (for_agents: true), paused document is excluded
+        search_service_for_agents = described_class.new(assistant, for_agents: true)
+        expect(search_service_for_agents.search('guide')).to be_empty
+
+        # Resumed: found again
+        allow(available_documents_scope).to receive(:find_by).with("metadata->>'dify_document_id' = ?", 'dify-doc-99').and_return(doc_record)
+        expect(search_service.search('guide').size).to eq(1)
+      end
+    end
+
+    context 'when searching FAQ passages' do
+      let(:responses_scope) { double('ResponsesScope') }
+      let(:approved_responses_scope) { double('ApprovedResponsesScope') }
+      let(:enabled_responses_scope) { double('EnabledResponsesScope') }
+      let(:account_responses_scope) { double('AccountResponsesScope') }
+      let(:faq_record) do
+        double(
+          'Captain::AssistantResponse',
+          id: 42,
+          question: 'How to return?',
+          answer: 'Return within 30 days',
+          visible_to_customers?: true
+        )
+      end
+      let(:faq_response) do
+        double(
+          'Response',
+          code: 200,
+          parsed_response: {
+            'passages' => [
+              {
+                'kind' => 'faq',
+                'title' => 'How to return?',
+                'content' => "Question: How to return?\nAnswer: Return within 30 days",
+                'score' => 0.95,
+                'document_id' => 'dify-faq-42',
+                'dataset_id' => 'faq-ds'
+              }
+            ]
+          }
+        )
+      end
+
+      before do
+        allow(hooks_relation).to receive(:find_by).with(app_id: 'shopify').and_return(nil)
+        allow(assistant).to receive(:responses).and_return(responses_scope)
+        allow(responses_scope).to receive(:approved).and_return(approved_responses_scope)
+        allow(approved_responses_scope).to receive(:enabled_for_search).and_return(enabled_responses_scope)
+        allow(enabled_responses_scope).to receive(:by_account).with(1).and_return(account_responses_scope)
+
+        citation_sources = double('Captain::Knowledge::CitationSources')
+        stub_const('Captain::Knowledge::CitationSources', Class.new do
+          def initialize(assistant); end
+        end)
+        allow(Captain::Knowledge::CitationSources).to receive(:new).with(assistant).and_return(citation_sources)
+        allow(citation_sources).to receive(:url).and_return('https://example.com/guide')
+      end
+
+      it 'returns the FAQ when enabled, and excludes it when paused for both customers and agents' do
+        allow(knowledge_client).to receive(:request).and_return(faq_response)
+
+        # Enabled
+        allow(account_responses_scope).to receive(:find_by).with(dify_document_id: 'dify-faq-42').and_return(faq_record)
+        results = search_service.search('return')
+        expect(results.size).to eq(1)
+        expect(results.first.record).to eq(faq_record)
+
+        # Paused: enabled_for_search filters it out, returning nil
+        allow(account_responses_scope).to receive(:find_by).with(dify_document_id: 'dify-faq-42').and_return(nil)
+        expect(search_service.search('return')).to be_empty
+
+        # Paused: even for agents
+        search_service_for_agents = described_class.new(assistant, for_agents: true)
+        expect(search_service_for_agents.search('return')).to be_empty
+
+        # Resumed
+        allow(account_responses_scope).to receive(:find_by).with(dify_document_id: 'dify-faq-42').and_return(faq_record)
+        expect(search_service.search('return').size).to eq(1)
       end
     end
   end

@@ -55,4 +55,17 @@ RSpec.describe Captain::Dify::Document do
     expect { assistant.destroy! }.to have_enqueued_job(Captain::Dify::DeleteDocumentJob).with(document.id, account.id, 'docs-id', 'doc-id')
     expect { document.reload.destroy! }.not_to raise_error
   end
+
+  it 'enqueues Dify status update with disable when paused, and enable when resumed' do
+    document = create(:captain_document, assistant: assistant, content: 'Synthetic', metadata: { dify_document_id: 'doc-id' })
+    clear_enqueued_jobs
+
+    expect { document.update!(enabled: false) }.to have_enqueued_job(Captain::Dify::UpdateDocumentStatusJob)
+      .with(account.id, 'docs-id', 'disable', ['doc-id'])
+
+    clear_enqueued_jobs
+
+    expect { document.update!(enabled: true) }.to have_enqueued_job(Captain::Dify::UpdateDocumentStatusJob)
+      .with(account.id, 'docs-id', 'enable', ['doc-id'])
+  end
 end
