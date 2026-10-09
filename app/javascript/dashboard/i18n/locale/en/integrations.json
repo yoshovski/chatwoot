@@ -1116,6 +1116,31 @@
           "NO_RESULTS": "No tools found",
           "TIP": "Tip: type @ to add a tool anywhere in the text."
         },
+        "TEMPLATES": {
+          "GALLERY_TITLE": "Scenario templates",
+          "GALLERY_DESCRIPTION": "Start with ready-made workflows for quotes, calls, returns, product discovery, and B2B.",
+          "USE_TEMPLATE": "Use template",
+          "NEEDS_SHOPIFY": "Needs Shopify",
+          "NEEDS_SHOPIFY_TOOLTIP": "This template requires the Find products tool, which is available when Shopify is connected.",
+          "COLLAPSE": "Hide templates",
+          "EXPAND": "Show templates",
+          "STEPPER": {
+            "STEP_OF": "Step {current} of {total}",
+            "NEXT": "Next",
+            "BACK": "Back",
+            "SKIP": "Skip",
+            "PREVIEW": "Preview",
+            "PREVIEW_TITLE": "Review scenario",
+            "PREVIEW_DESCRIPTION": "Review the generated title, routing trigger, and instructions. You can customize them before saving.",
+            "ADD_SCENARIO": "Add scenario",
+            "ALLOWLIST_CONFIRM": {
+              "TITLE": "Allow links in replies?",
+              "MESSAGE": "To share {host} with customers, add it to your assistant's allowed link domains. Otherwise, links to {host} will be stripped from messages.",
+              "CONFIRM": "Allow and save",
+              "CANCEL": "Save without allowing"
+            }
+          }
+        },
         "BULK_ACTION": {
           "SELECTED": "{count} item selected | {count} items selected",
           "SELECT_ALL": "Select all ({count})",

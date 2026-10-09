@@ -5,63 +5,52 @@ import { useRoute } from 'vue-router';
 import { picoSearch } from '@chatwoot/pico-search';
 import { useStore, useMapGetter } from 'dashboard/composables/store';
 import { useAlert } from 'dashboard/composables';
-import { useUISettings } from 'dashboard/composables/useUISettings';
-import { useMessageFormatter } from 'shared/composables/useMessageFormatter';
-import Button from 'dashboard/components-next/button/Button.vue';
 import Input from 'dashboard/components-next/input/Input.vue';
 
 import PageLayout from 'dashboard/components-next/captain/PageLayout.vue';
 import SettingsHeader from 'dashboard/components-next/captain/pageComponents/settings/SettingsHeader.vue';
-import SuggestedScenarios from 'dashboard/components-next/captain/assistant/SuggestedRules.vue';
+import TemplateGallery from 'dashboard/components-next/captain/scenarios/TemplateGallery.vue';
+import TemplateStepperDialog from 'dashboard/components-next/captain/scenarios/TemplateStepperDialog.vue';
 import ScenariosCard from 'dashboard/components-next/captain/assistant/ScenariosCard.vue';
 import BulkSelectBar from 'dashboard/components-next/captain/assistant/BulkSelectBar.vue';
 import AddNewScenariosDialog from 'dashboard/components-next/captain/assistant/AddNewScenariosDialog.vue';
-import ToolChip from 'dashboard/components-next/captain/scenarios/ToolChip.vue';
-import { formatInstructionWithToolChips } from 'dashboard/components-next/captain/scenarios/instructionFormatter';
 
 const { t } = useI18n();
 const route = useRoute();
 const store = useStore();
-const { uiSettings, updateUISettings } = useUISettings();
-const { formatMessage } = useMessageFormatter();
 const assistantId = computed(() => Number(route.params.assistantId));
 
 const uiFlags = useMapGetter('captainScenarios/getUIFlags');
 const isFetching = computed(() => uiFlags.value.fetchingList);
 const scenarios = useMapGetter('captainScenarios/getRecords');
 const captainTools = useMapGetter('captainTools/getRecords');
+const assistant = computed(() =>
+  store.getters['captainAssistants/getRecord'](assistantId.value)
+);
 
 const searchQuery = ref('');
+const selectedTemplate = ref(null);
+const stepperDialog = ref(null);
 
-const LINK_INSTRUCTION_CLASS =
-  '[&_a[href^="tool://"]]:text-n-iris-11 [&_a:not([href^="tool://"])]:text-n-slate-12 [&_a]:pointer-events-none [&_a]:cursor-default';
+const onUseTemplate = template => {
+  selectedTemplate.value = template;
+  stepperDialog.value?.open();
+};
 
-// Suggested example scenarios for quick add
-const scenariosExample = [
-  {
-    id: 1,
-    title: 'Prospective Buyer',
-    description:
-      'Handle customers who are showing interest in purchasing a license',
-    instruction:
-      'If someone is interested in purchasing a license, ask them for following:\n\n1. How many licenses are they willing to purchase?\n2. Are they migrating from another platform?\n. Once these details are collected, do the following steps\n1. add a private note to with the information you collected using [Add Private Note](tool://add_private_note)\n2. Add label "sales" to the contact using [Add Label to Conversation](tool://add_label_to_conversation)\n3. Reply saying "one of us will reach out soon" and provide an estimated timeline for the response and [Handoff to Human](tool://handoff)',
-    tools: ['add_private_note', 'add_label_to_conversation', 'handoff'],
-  },
-];
-
-const filteredScenarios = computed(() => {
-  const query = searchQuery.value.trim();
-  const source = scenarios.value;
-  if (!query) return source;
-  return picoSearch(source, query, ['title', 'description', 'instruction']);
-});
-
-const shouldShowSuggestedRules = computed(() => {
-  return uiSettings.value?.show_scenarios_suggestions !== false;
-});
-
-const closeSuggestedRules = () => {
-  updateUISettings({ show_scenarios_suggestions: false });
+const updateAssistantAllowlist = async host => {
+  try {
+    const currentList = assistant.value?.link_allowlist || [];
+    if (!currentList.includes(host)) {
+      await store.dispatch('captainAssistants/update', {
+        id: assistantId.value,
+        config: {
+          link_allowlist: [...currentList, host],
+        },
+      });
+    }
+  } catch {
+    // Ignore error
+  }
 };
 
 // Bulk selection & hover state
@@ -193,28 +182,19 @@ const addScenario = async scenario => {
   }
 };
 
-const addAllExampleScenarios = async () => {
-  try {
-    scenariosExample.forEach(async scenario => {
-      await store.dispatch('captainScenarios/create', {
-        assistantId: assistantId.value,
-        ...scenario,
-      });
-    });
-    useAlert(t('CAPTAIN.ASSISTANTS.SCENARIOS.API.ADD.SUCCESS'));
-  } catch (error) {
-    const errorMessage =
-      error?.response?.message ||
-      t('CAPTAIN.ASSISTANTS.SCENARIOS.API.ADD.ERROR');
-    useAlert(errorMessage);
-  }
-};
+const filteredScenarios = computed(() => {
+  const query = searchQuery.value.trim();
+  const source = scenarios.value;
+  if (!query) return source;
+  return picoSearch(source, query, ['title', 'description', 'instruction']);
+});
 
 onMounted(() => {
   store.dispatch('captainScenarios/get', {
     assistantId: assistantId.value,
   });
   store.dispatch('captainTools/getTools');
+  store.dispatch('captainAssistants/show', { id: assistantId.value });
 });
 </script>
 
@@ -230,60 +210,8 @@ onMounted(() => {
         :heading="$t('CAPTAIN.ASSISTANTS.SCENARIOS.TITLE')"
         :description="$t('CAPTAIN.ASSISTANTS.SCENARIOS.DESCRIPTION')"
       />
-      <div v-if="shouldShowSuggestedRules" class="flex mt-7 flex-col gap-4">
-        <SuggestedScenarios
-          :title="$t('CAPTAIN.ASSISTANTS.SCENARIOS.ADD.SUGGESTED.TITLE')"
-          :items="scenariosExample"
-          @close="closeSuggestedRules"
-          @add="addAllExampleScenarios"
-        >
-          <template #default="{ item }">
-            <div class="flex items-center gap-3 justify-between">
-              <span class="text-sm text-n-slate-12">
-                {{ item.title }}
-              </span>
-              <Button
-                :label="
-                  $t('CAPTAIN.ASSISTANTS.SCENARIOS.ADD.SUGGESTED.ADD_SINGLE')
-                "
-                ghost
-                xs
-                slate
-                class="!text-sm !text-n-slate-11 flex-shrink-0"
-                @click="addScenario(item)"
-              />
-            </div>
-            <div class="flex flex-col">
-              <span class="text-sm text-n-slate-11 mt-2">
-                {{ item.description }}
-              </span>
-              <span
-                v-dompurify-html:toolLinks="
-                  formatInstructionWithToolChips(
-                    item.instruction,
-                    captainTools,
-                    { formatMessage }
-                  )
-                "
-                class="text-sm text-n-slate-12 py-4 prose prose-sm min-w-0 break-words"
-                :class="LINK_INSTRUCTION_CLASS"
-              />
-              <div
-                v-if="item.tools?.length"
-                class="flex items-center gap-1.5 flex-wrap mb-1 mt-2"
-              >
-                <span class="text-xs text-n-slate-11 font-medium">
-                  {{ t('CAPTAIN.ASSISTANTS.SCENARIOS.TOOLS.USES') }}
-                </span>
-                <ToolChip
-                  v-for="toolId in item.tools"
-                  :key="toolId"
-                  :tool-id="toolId"
-                />
-              </div>
-            </div>
-          </template>
-        </SuggestedScenarios>
+      <div class="mt-7">
+        <TemplateGallery :tools="captainTools" @use-template="onUseTemplate" />
       </div>
       <div class="flex mt-7 flex-col gap-4">
         <div class="flex justify-between items-center">
@@ -348,4 +276,12 @@ onMounted(() => {
       </div>
     </template>
   </PageLayout>
+  <TemplateStepperDialog
+    ref="stepperDialog"
+    :template="selectedTemplate"
+    :tools="captainTools"
+    :assistant="assistant"
+    @add="addScenario"
+    @update-allowlist="updateAssistantAllowlist"
+  />
 </template>
