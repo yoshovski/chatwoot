@@ -205,6 +205,17 @@ RSpec.describe 'Inboxes API', type: :request do
         expect(JSON.parse(response.body, symbolize_names: true)[:id]).to eq(inbox.id)
       end
 
+      it 'returns the demo page settings of a web widget inbox' do
+        widget_inbox = create(:inbox, account: account, channel: create(:channel_widget, account: account, demo_mode_enabled: true,
+                                                                                         demo_slug: 'ask-acme'))
+
+        get "/api/v1/accounts/#{account.id}/inboxes/#{widget_inbox.id}",
+            headers: admin.create_new_auth_token,
+            as: :json
+
+        expect(response.parsed_body).to include('demo_mode_enabled' => true, 'demo_slug' => 'ask-acme')
+      end
+
       it 'returns reauthorization_required for embedded signup whatsapp channel when reauth required' do
         whatsapp_channel = create(:channel_whatsapp, account: account, provider: 'whatsapp_cloud', sync_templates: false,
                                                      validate_provider_config: false)

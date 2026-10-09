@@ -22,6 +22,19 @@ class Captain::Conversation::ContactCaptureService # rubocop:disable Metrics/Cla
     @assistant = assistant || conversation&.inbox&.captain_assistant
   end
 
+  # The form a customer sees when a handoff needs their details; the playground shows it without a conversation.
+  def self.form_payload(missing_fields)
+    items = []
+    items << NAME_FORM_ITEM if missing_fields.include?('name')
+    items << EMAIL_FORM_ITEM if missing_fields.include?('email')
+
+    {
+      content: FORM_TEXT,
+      content_type: 'form',
+      content_attributes: { 'type' => 'contact_capture', 'items' => items, 'button_label' => 'Submit' }
+    }
+  end
+
   def self.extract_email(text)
     return nil if text.blank?
 
@@ -159,27 +172,15 @@ class Captain::Conversation::ContactCaptureService # rubocop:disable Metrics/Cla
     additional_attrs = sender&.name.present? ? { 'agent_name' => sender.name } : {}
 
     conversation.messages.create!(
-      message_type: :outgoing,
-      content_type: :form,
-      account_id: conversation.account_id,
-      inbox_id: conversation.inbox_id,
-      sender: sender,
-      content: FORM_TEXT,
-      content_attributes: {
-        'type' => 'contact_capture',
-        'items' => build_form_items(missing_fields),
-        'button_label' => 'Submit'
-      },
-      additional_attributes: additional_attrs,
-      preserve_waiting_since: true
+      self.class.form_payload(missing_fields).merge(
+        message_type: :outgoing,
+        account_id: conversation.account_id,
+        inbox_id: conversation.inbox_id,
+        sender: sender,
+        additional_attributes: additional_attrs,
+        preserve_waiting_since: true
+      )
     )
-  end
-
-  def build_form_items(missing_fields)
-    items = []
-    items << NAME_FORM_ITEM if missing_fields.include?('name')
-    items << EMAIL_FORM_ITEM if missing_fields.include?('email')
-    items
   end
 
   def claim_submission_processing(message)

@@ -3,7 +3,9 @@ import { useI18n } from 'vue-i18n';
 import { ref, watch, nextTick } from 'vue';
 import Avatar from 'dashboard/components-next/avatar/Avatar.vue';
 import { useMessageFormatter } from 'shared/composables/useMessageFormatter';
-import PlaygroundRunDetails from './PlaygroundRunDetails.vue';
+import PlaygroundHandoffNotice from './PlaygroundHandoffNotice.vue';
+import PlaygroundReply from './PlaygroundReply.vue';
+import { accentAttrs } from './playgroundAccent';
 
 const props = defineProps({
   messages: {
@@ -14,7 +16,17 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  widgetColor: {
+    type: String,
+    default: '',
+  },
+  widgetTextColor: {
+    type: String,
+    default: '',
+  },
 });
+
+const emit = defineEmits(['selectOption']);
 
 const messageContainer = ref(null);
 
@@ -34,14 +46,15 @@ const getAvatarName = sender =>
     ? t('CAPTAIN.PLAYGROUND.USER')
     : t('CAPTAIN.PLAYGROUND.ASSISTANT');
 
+const isCustomerView = message =>
+  !isUserMessage(message.sender) && !message.isError;
+
 const messageStyle = message => {
   if (message.isError) {
     return 'bg-n-ruby-3 text-n-ruby-11 rounded-es-sm rounded-ee-xl rounded-t-xl';
   }
 
-  return isUserMessage(message.sender)
-    ? 'bg-n-solid-blue text-n-slate-12 rounded-ee-sm rounded-es-xl rounded-t-xl'
-    : 'bg-n-solid-iris text-n-slate-12 rounded-es-sm rounded-ee-xl rounded-t-xl';
+  return 'rounded-ee-sm rounded-es-xl rounded-t-xl';
 };
 
 const scrollToBottom = async () => {
@@ -59,48 +72,56 @@ watch(() => props.messages.length, scrollToBottom);
     ref="messageContainer"
     class="flex-1 overflow-y-auto mb-4 px-6 space-y-6"
   >
-    <div
-      v-for="(message, index) in messages"
-      :key="index"
-      class="flex"
-      :class="getMessageAlignment(message.sender)"
-    >
-      <div
-        class="flex max-w-[90%] items-end gap-1.5 md:max-w-[75%]"
-        :class="getMessageDirection(message.sender)"
-      >
-        <Avatar
-          :name="getAvatarName(message.sender)"
-          rounded-full
-          :size="24"
-          class="shrink-0"
-        />
+    <template v-for="(message, index) in messages" :key="index">
+      <div class="flex" :class="getMessageAlignment(message.sender)">
         <div
-          class="px-4 py-3 text-sm [overflow-wrap:break-word]"
-          :class="messageStyle(message)"
+          class="flex max-w-[90%] items-end gap-1.5 md:max-w-[75%]"
+          :class="getMessageDirection(message.sender)"
         >
-          <div v-dompurify-html="formatMessage(message.content)" />
-          <PlaygroundRunDetails
-            v-if="message.runDetails && message.setupSummary"
-            :run-details="message.runDetails"
-            :setup-summary="message.setupSummary"
+          <Avatar
+            :name="getAvatarName(message.sender)"
+            rounded-full
+            :size="24"
+            class="shrink-0"
           />
+          <PlaygroundReply
+            v-if="isCustomerView(message)"
+            :message="message"
+            :widget-color="widgetColor"
+            :widget-text-color="widgetTextColor"
+            :is-latest="index === messages.length - 1"
+            @select-option="emit('selectOption', { index, title: $event })"
+          />
+          <div
+            v-else
+            class="px-4 py-3 text-sm [overflow-wrap:break-word]"
+            :class="messageStyle(message)"
+            v-bind="
+              message.isError ? {} : accentAttrs(widgetColor, widgetTextColor)
+            "
+          >
+            <div v-dompurify-html="formatMessage(message.content)" />
+          </div>
         </div>
       </div>
-    </div>
+      <PlaygroundHandoffNotice
+        v-if="message.handoff"
+        :handoff="message.handoff"
+      />
+    </template>
     <div v-if="isLoading" class="flex justify-start">
       <div class="flex items-start gap-1.5">
         <Avatar :name="getAvatarName('assistant')" rounded-full :size="24" />
         <div
-          class="max-w-sm rounded-lg p-3 text-sm bg-n-solid-iris text-n-slate-12"
+          class="max-w-sm rounded-lg p-3 text-sm bg-n-slate-3 text-n-slate-12"
         >
           <div class="flex gap-1">
-            <div class="w-2 h-2 rounded-full bg-n-iris-10 animate-bounce" />
+            <div class="w-2 h-2 rounded-full bg-n-slate-10 animate-bounce" />
             <div
-              class="w-2 h-2 rounded-full bg-n-iris-10 animate-bounce [animation-delay:0.2s]"
+              class="w-2 h-2 rounded-full bg-n-slate-10 animate-bounce [animation-delay:0.2s]"
             />
             <div
-              class="w-2 h-2 rounded-full bg-n-iris-10 animate-bounce [animation-delay:0.4s]"
+              class="w-2 h-2 rounded-full bg-n-slate-10 animate-bounce [animation-delay:0.4s]"
             />
           </div>
         </div>

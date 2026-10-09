@@ -14,7 +14,7 @@ class Captain::Conversation::ProductCardsBuilder
 
   attr_reader :assistant, :conversation, :response, :run_result
 
-  def initialize(assistant:, conversation:, response:, run_result:)
+  def initialize(assistant:, response:, run_result:, conversation: nil)
     @assistant = assistant
     @conversation = conversation
     @response = response
@@ -75,14 +75,28 @@ class Captain::Conversation::ProductCardsBuilder
     end
   end
 
-  def post_messages!(preserve_waiting_since: false, agent_name: nil)
+  def build_messages(agent_name: nil)
     return [] unless products?
 
     additional_attrs = agent_name.present? ? { agent_name: agent_name } : {}
     messages = []
-    messages << post_cards_message!(preserve_waiting_since, additional_attrs) if cards_items.any?
-    messages << post_article_message!(preserve_waiting_since, additional_attrs) if article_items.any?
+    messages << build_message('cards', cards_items, additional_attrs) if cards_items.any?
+    messages << build_message('article', article_items, additional_attrs) if article_items.any?
     messages
+  end
+
+  def post_messages!(preserve_waiting_since: false, agent_name: nil)
+    build_messages(agent_name: agent_name).map do |payload|
+      @conversation.messages.create!(
+        payload.merge(
+          message_type: :outgoing,
+          account_id: @assistant.account_id,
+          inbox_id: @conversation.inbox_id,
+          sender: @assistant,
+          preserve_waiting_since: preserve_waiting_since
+        )
+      )
+    end
   end
 
   private
@@ -110,24 +124,13 @@ class Captain::Conversation::ProductCardsBuilder
     shown_handles.size > 1 ? 'Here are the recommended products:' : 'Here is the product:'
   end
 
-  def post_cards_message!(preserve_waiting_since, additional_attrs)
-    create_message(
-      content: cards_items.first['title'],
-      content_type: 'cards',
-      items: cards_items.take(MAX_CARDS),
-      preserve_waiting_since: preserve_waiting_since,
-      additional_attrs: additional_attrs
-    )
-  end
-
-  def post_article_message!(preserve_waiting_since, additional_attrs)
-    create_message(
-      content: article_items.first['title'],
-      content_type: 'article',
-      items: article_items.take(MAX_CARDS),
-      preserve_waiting_since: preserve_waiting_since,
-      additional_attrs: additional_attrs
-    )
+  def build_message(content_type, items, additional_attrs)
+    {
+      content: items.first['title'],
+      content_type: content_type,
+      content_attributes: { items: items.take(MAX_CARDS) },
+      additional_attributes: additional_attrs.merge(product_handles: shown_handles)
+    }
   end
 
   def resolve_products!
@@ -159,6 +162,8 @@ class Captain::Conversation::ProductCardsBuilder
   end
 
   def recently_shown_handles
+    return [] unless @conversation
+
     recent_ids = @conversation.messages.reorder(id: :desc).limit(RECENT_MESSAGES).select(:id)
     @conversation.messages.where(id: recent_ids, content_type: %w[cards article])
                  .pluck(:additional_attributes)
@@ -376,20 +381,6 @@ class Captain::Conversation::ProductCardsBuilder
     return nil unless hook&.shopify_connected? && hook.shopify_tool_key.present?
 
     hook.shopify_sat_client
-  end
-
-  def create_message(content:, content_type:, items:, preserve_waiting_since:, additional_attrs:)
-    @conversation.messages.create!(
-      message_type: :outgoing,
-      account_id: @assistant.account_id,
-      inbox_id: @conversation.inbox_id,
-      sender: @assistant,
-      content: content,
-      content_type: content_type,
-      content_attributes: { items: items },
-      preserve_waiting_since: preserve_waiting_since,
-      additional_attributes: additional_attrs.merge(product_handles: shown_handles)
-    )
   end
 end
 # rubocop:enable Metrics/ClassLength

@@ -1,4 +1,3 @@
-# rubocop:disable Metrics/ModuleLength
 module Captain::Conversation::MessageBuilder
   private
 
@@ -27,36 +26,20 @@ module Captain::Conversation::MessageBuilder
   def create_messages(preserve_waiting_since: false)
     return create_v1_message(preserve_waiting_since: preserve_waiting_since) unless captain_v2_enabled?
 
-    cards_builder = Captain::Conversation::ProductCardsBuilder.new(
-      assistant: @assistant,
-      conversation: @conversation,
-      response: @response,
-      run_result: @run_result
-    )
-
-    primary_message = create_v2_primary_message(cards_builder, preserve_waiting_since: preserve_waiting_since)
-    cards_builder.post_messages!(preserve_waiting_since: preserve_waiting_since, agent_name: @response['agent_name'])
+    answer, *cards = reply_composer.messages(suppress_suggestions: waiting_for_human? || handoff_active_or_requested?)
+    validate_message_content!(answer[:content])
+    primary_message = create_composed_message(answer, preserve_waiting_since: preserve_waiting_since)
+    cards.each { |payload| create_composed_message(payload, preserve_waiting_since: preserve_waiting_since) }
     primary_message
   end
 
-  def create_v2_primary_message(cards_builder, preserve_waiting_since: false)
-    response_parts = Captain::Assistant::ResponseParts.from_response(@response)
-    citation_urls = cards_builder.filter_citation_urls(@assistant.trusted_citation_urls(@run_result))
-    message_content = cards_builder.clean_prose_content(response_parts.customer_message_content(citation_urls: citation_urls))
-    if message_content.blank?
-      message_content = v2_empty_reply_fallback_text
-      response_parts = Captain::Assistant::ResponseParts.new([{ 'text' => message_content, 'citation_indexes' => [] }])
-    end
-    validate_message_content!(message_content)
-
-    suggestions = extract_suggested_replies
-    extra_attrs = suggestion_button_attributes(message_content, suggestions, cards_builder: cards_builder)
-    create_outgoing_message(
-      message_content,
-      agent_name: @response['agent_name'],
-      response_parts: response_parts.to_a,
-      preserve_waiting_since: preserve_waiting_since,
-      extra_attrs: extra_attrs
+  def reply_composer
+    Captain::Conversation::ReplyComposer.new(
+      assistant: @assistant,
+      conversation: @conversation,
+      response: @response,
+      run_result: @run_result,
+      customer_message: responding_to_customer_message
     )
   end
 
@@ -71,116 +54,28 @@ module Captain::Conversation::MessageBuilder
     raise ArgumentError, 'Message content cannot be blank' if content.blank?
   end
 
-  def create_outgoing_message(message_content, agent_name: nil, response_parts: nil, preserve_waiting_since: false, extra_attrs: {})
-    additional_attrs = {}
-    additional_attrs[:agent_name] = agent_name if agent_name.present?
-    additional_attrs[Captain::Assistant::ResponseParts::MESSAGE_ATTRIBUTE_KEY] = response_parts unless response_parts.nil?
+  def create_outgoing_message(message_content, agent_name: nil, preserve_waiting_since: false)
+    additional_attrs = agent_name.present? ? { agent_name: agent_name } : {}
+    create_composed_message({ content: message_content, additional_attributes: additional_attrs }, preserve_waiting_since: preserve_waiting_since)
+  end
 
+  def create_composed_message(payload, preserve_waiting_since: false)
     @conversation.messages.create!(
-      {
+      payload.merge(
         message_type: :outgoing,
         account_id: account.id,
         inbox_id: inbox.id,
         sender: @assistant,
-        content: message_content,
-        additional_attributes: additional_attrs,
         preserve_waiting_since: preserve_waiting_since
-      }.merge(extra_attrs)
+      )
     )
-  end
-
-  def suggestion_button_attributes(message_content, suggestions, cards_builder: nil)
-    return {} unless eligible_for_suggestion_buttons?(message_content, suggestions, cards_builder: cards_builder)
-
-    {
-      content_type: 'input_select',
-      content_attributes: { items: suggestions.map { |text| { 'title' => text, 'value' => text } } }
-    }
-  end
-
-  def extract_suggested_replies
-    raw = @response.is_a?(Hash) ? @response['suggested_replies'] : nil
-    Array(raw).filter_map { |item| clean_suggestion_item(item) }.take(@assistant.max_suggested_replies)
-  end
-
-  def clean_suggestion_item(item)
-    text = item.is_a?(Hash) ? (item['title'] || item['value']) : item.to_s
-    clean = text.to_s.strip
-    clean.presence && clean.length <= 80 ? clean : nil
-  end
-
-  def eligible_for_suggestion_buttons?(message_content, suggestions, cards_builder: nil)
-    return false if suggestions.blank? || waiting_for_human? || handoff_active_or_requested?
-    return false if contains_links?(message_content) || contains_cards?(cards_builder)
-
-    true
   end
 
   def handoff_active_or_requested?
-    try(:v2_handoff_tool_fired?) || try(:v1_handoff_requested?) || try(:v2_handoff_tool_completed?) || try(:v2_handoff_declared?)
+    v2_handoff_tool_fired? || v1_handoff_requested? || v2_handoff_tool_completed? || v2_handoff_declared?
   end
 
   def waiting_for_human?
-    try(:delegate_ownership_service)&.waiting?
-  end
-
-  def contains_links?(content)
-    content.to_s.match?(%r{https?://|\[.*?\]\(.*?\)}i)
-  end
-
-  def contains_cards?(cards_builder = nil)
-    return true if cards_builder&.has_products?
-
-    @response.is_a?(Hash) && (@response['cards'].present? || @response['content_type'] == 'cards')
-  end
-
-  def v2_empty_reply_fallback_text
-    I18n.with_locale(@assistant.account.locale) do
-      if v2_catalog_searches_empty?
-        I18n.t('conversations.captain.empty_response_catalog_empty')
-      elsif v2_customer_message_has_attachments?
-        I18n.t('conversations.captain.empty_response_attachments')
-      elsif v2_model_returned_answer?
-        I18n.t('conversations.captain.empty_response_unusable')
-      else
-        I18n.t('conversations.captain.empty_response_handoff')
-      end
-    end
-  end
-
-  def v2_catalog_searches_empty?
-    stats = @assistant.run_result_product_search_stats(@run_result)
-    return false if stats.blank?
-
-    stats[:searches].positive? && stats[:results].zero?
-  end
-
-  def v2_customer_message_has_attachments?
-    responding_to_customer_message&.attachments&.any? || false
-  end
-
-  def v2_model_returned_answer?
-    raw_response = @response.is_a?(Hash) ? (@response['response'] || @response[:response]) : @response.to_s
-    response_parts_text = Captain::Assistant::ResponseParts.from_response(@response).plain_text
-    raw_response.to_s.strip.present? || response_parts_text.strip.present?
-  end
-
-  def v2_formatted_prose_blank?
-    v2_formatted_prose.blank?
-  end
-
-  def v2_formatted_prose
-    return @v2_formatted_prose if defined?(@v2_formatted_prose)
-
-    cards_builder = Captain::Conversation::ProductCardsBuilder.new(
-      assistant: @assistant,
-      conversation: @conversation,
-      response: @response,
-      run_result: @run_result
-    )
-    response_parts = Captain::Assistant::ResponseParts.from_response(@response)
-    citation_urls = cards_builder.filter_citation_urls(@assistant.trusted_citation_urls(@run_result))
-    @v2_formatted_prose = cards_builder.clean_prose_content(response_parts.customer_message_content(citation_urls: citation_urls))
+    delegate_ownership_service.waiting?
   end
 end
-# rubocop:enable Metrics/ModuleLength
