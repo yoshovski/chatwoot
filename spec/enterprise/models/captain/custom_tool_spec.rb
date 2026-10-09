@@ -462,6 +462,7 @@ RSpec.describe Captain::CustomTool, type: :model do
                                  id: 'custom_test-tool',
                                  title: 'Test Tool',
                                  description: 'A test tool',
+                                 emoji: '🔌',
                                  custom: true
                                })
       end
