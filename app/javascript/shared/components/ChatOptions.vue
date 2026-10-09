@@ -1,11 +1,9 @@
 <script>
 import ChatOption from 'shared/components/ChatOption.vue';
-import AiBadge from 'shared/components/AiBadge.vue';
 import { useMessageFormatter } from 'shared/composables/useMessageFormatter';
 
 export default {
   components: {
-    AiBadge,
     ChatOption,
   },
   props: {
@@ -30,10 +28,6 @@ export default {
       default: '',
     },
     showAgentName: {
-      type: Boolean,
-      default: false,
-    },
-    showAiBadge: {
       type: Boolean,
       default: false,
     },
@@ -66,12 +60,8 @@ export default {
         class="message-content text-n-slate-12"
       />
     </h4>
-    <div
-      v-if="showAgentName"
-      class="flex items-center gap-1 agent-name !my-0 px-0.5 text-n-slate-11"
-    >
+    <div v-if="showAgentName" class="agent-name !my-0 px-0.5 text-n-slate-11">
       {{ agentName }}
-      <AiBadge v-if="showAiBadge" />
     </div>
     <ul
       v-if="!hideFields"

@@ -13,7 +13,6 @@ import configMixin from '../mixins/configMixin';
 import messageMixin from '../mixins/messageMixin';
 import { isASubmittedFormMessage } from 'shared/helpers/MessageTypeHelper';
 import ReplyToChip from 'widget/components/ReplyToChip.vue';
-import AiBadge from 'shared/components/AiBadge.vue';
 import { BUS_EVENTS } from 'shared/constants/busEvents';
 import { emitter } from 'shared/helpers/mitt';
 
@@ -21,7 +20,6 @@ export default {
   name: 'AgentMessage',
   components: {
     AgentMessageBubble,
-    AiBadge,
     ImageBubble,
     VideoBubble,
     Avatar,
@@ -245,7 +243,6 @@ export default {
               :message-type="messageType"
               :message="message.content"
               :agent-name="agentName"
-              :show-ai-badge="isAiAssistant"
               :hide-options="hideOptions"
               :show-agent-name="
                 isOptions &&
@@ -302,10 +299,9 @@ export default {
             !isCampaignMessage &&
             (message.showAvatar || hasRecordedResponse)
           "
-          class="flex items-center gap-1 agent-name text-n-slate-11"
+          class="agent-name text-n-slate-11"
         >
           {{ agentName }}
-          <AiBadge v-if="isAiAssistant" />
         </p>
       </div>
     </div>
