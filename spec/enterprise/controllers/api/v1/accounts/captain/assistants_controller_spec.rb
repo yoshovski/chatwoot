@@ -792,4 +792,72 @@ RSpec.describe 'Api::V1::Accounts::Captain::Assistants', type: :request do
       end
     end
   end
+
+  describe 'GET /api/v1/accounts/{account.id}/captain/assistants/tools' do
+    context 'when it is an un-authenticated user' do
+      it 'returns unauthorized' do
+        get "/api/v1/accounts/#{account.id}/captain/assistants/tools", as: :json
+        expect(response).to have_http_status(:unauthorized)
+      end
+    end
+
+    context 'when it is an admin' do
+      it 'returns tools with emoji and friendly titles' do
+        get "/api/v1/accounts/#{account.id}/captain/assistants/tools",
+            headers: admin.create_new_auth_token,
+            as: :json
+
+        expect(response).to have_http_status(:success)
+        expect(json_response).to be_an(Array)
+
+        faq_tool = json_response.find { |t| t[:id] == 'faq_lookup' }
+        expect(faq_tool).to be_present
+        expect(faq_tool[:emoji]).to eq('📚')
+        expect(faq_tool[:title]).to eq('Search knowledge')
+        expect(faq_tool[:description]).to eq('Finds answers in your sources and FAQs')
+      end
+
+      it 'includes custom tools with plug emoji' do
+        create(:captain_custom_tool, account: account, title: 'My Custom Tool', slug: 'custom_my-tool',
+                                     description: 'A custom tool for testing')
+
+        get "/api/v1/accounts/#{account.id}/captain/assistants/tools",
+            headers: admin.create_new_auth_token,
+            as: :json
+
+        expect(response).to have_http_status(:success)
+        custom_tool = json_response.find { |t| t[:id] == 'custom_my-tool' }
+        expect(custom_tool).to be_present
+        expect(custom_tool[:emoji]).to eq('🔌')
+        expect(custom_tool[:title]).to eq('My Custom Tool')
+      end
+
+      it 'filters Shopify tools by availability' do
+        get "/api/v1/accounts/#{account.id}/captain/assistants/tools",
+            headers: admin.create_new_auth_token,
+            as: :json
+
+        tool_ids = json_response.map { |t| t[:id] }
+        expect(tool_ids).not_to include('catalog_product_search', 'browse_catalog', 'track_order')
+
+        hook = build(:integrations_hook, :shopify, account: account, settings: {
+                       'state' => 'connected',
+                       'catalog_dataset_id' => 'dataset-1'
+                     })
+        hook.shopify_tool_key = 'sat_key_123'
+        hook.save!
+
+        get "/api/v1/accounts/#{account.id}/captain/assistants/tools",
+            headers: admin.create_new_auth_token,
+            as: :json
+
+        updated_tool_ids = json_response.map { |t| t[:id] }
+        expect(updated_tool_ids).to include('catalog_product_search', 'browse_catalog', 'track_order')
+
+        product_search_tool = json_response.find { |t| t[:id] == 'catalog_product_search' }
+        expect(product_search_tool[:emoji]).to eq('🛍️')
+        expect(product_search_tool[:title]).to eq('Find products')
+      end
+    end
+  end
 end

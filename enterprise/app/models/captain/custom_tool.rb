@@ -76,6 +76,7 @@ class Captain::CustomTool < ApplicationRecord
       id: slug,
       title: title,
       description: description,
+      emoji: '🔌',
       custom: true
     }
   end

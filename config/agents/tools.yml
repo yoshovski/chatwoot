@@ -3,54 +3,65 @@
 # title: Human-readable tool name for frontend display
 # description: Brief description of what the tool does
 # icon: Icon name for frontend display (frontend icon system)
+# emoji: Emoji icon for tool chip and palette display
 #######################################################
 
 - id: add_contact_note
-  title: 'Add Contact Note'
-  description: 'Add a note to a contact profile'
+  title: 'Note on the contact'
+  description: "Saves a note on the customer's profile"
   icon: 'note-add'
+  emoji: '👤'
 
 - id: add_private_note
-  title: 'Add Private Note'
-  description: 'Add a private note to a conversation (internal only)'
+  title: 'Add a private note'
+  description: 'Leaves a note only your team can see'
   icon: 'eye-off'
+  emoji: '📝'
 
 - id: update_priority
-  title: 'Update Priority'
-  description: 'Update conversation priority level'
+  title: 'Set priority'
+  description: "Changes the conversation's priority"
   icon: 'exclamation-triangle'
+  emoji: '⚡'
 
 - id: add_label_to_conversation
-  title: 'Add Label to Conversation'
-  description: 'Add a label to a conversation'
+  title: 'Add a label'
+  description: 'Tags the conversation'
   icon: 'tag'
+  emoji: '🏷️'
 
 - id: faq_lookup
-  title: 'FAQ Lookup'
-  description: 'Search FAQ responses using semantic similarity'
+  title: 'Search knowledge'
+  description: 'Finds answers in your sources and FAQs'
   icon: 'search'
+  emoji: '📚'
 
 - id: resolve_conversation
-  title: 'Resolve Conversation'
-  description: 'Resolve a conversation when the issue has been addressed'
+  title: 'Resolve the chat'
+  description: 'Marks the conversation as resolved'
   icon: 'checkmark'
+  emoji: '✅'
 
 - id: handoff
-  title: 'Handoff to Human'
-  description: 'Hand off the conversation to a human agent'
+  title: 'Hand off to a person'
+  description: 'Passes the chat to your team'
   icon: 'user-switch'
+  emoji: '🙋'
 
 - id: catalog_product_search
-  title: 'Search Products'
-  description: 'Search active products in the Shopify catalog with live prices, variants and links'
+  title: 'Find products'
+  description: 'Searches your catalog with live prices and links'
   icon: 'search'
+  emoji: '🛍️'
 
 - id: browse_catalog
-  title: 'Browse Catalog'
-  description: 'Browse Shopify product collections and categories in the store catalog'
+  title: 'Browse categories'
+  description: "Shows your store's collections"
   icon: 'tag'
+  emoji: '🗂️'
 
 - id: track_order
-  title: 'Track Order'
-  description: 'Track a customer order using order number and matching email'
+  title: 'Track an order'
+  description: 'Checks order status with the order number and email'
   icon: 'checkmark'
+  emoji: '📦'
