@@ -159,6 +159,20 @@ RSpec.describe Captain::Assistant, type: :model do
     end
   end
 
+  describe 'tone validation' do
+    it 'accepts a blank tone and the known tones' do
+      [nil, *described_class::TONE_INSTRUCTIONS.keys].each do |tone|
+        assistant.config['tone'] = tone
+        expect(assistant).to be_valid
+      end
+    end
+
+    it 'rejects an unknown tone' do
+      assistant.config['tone'] = 'pirate'
+      expect(assistant).not_to be_valid
+    end
+  end
+
   describe 'audience validation' do
     let(:leaf) { { 'attribute_key' => 'country_code', 'filter_operator' => 'equal_to', 'values' => ['US'] } }
 
@@ -338,6 +352,14 @@ RSpec.describe Captain::Assistant, type: :model do
 
       expect(instructions).to include('# Human Handoff Protocol', 'captain--tools--handoff')
       expect(instructions).not_to include('You are drafting a reply for a support agent to review.')
+    end
+
+    it 'adds the tone line only when a tone is chosen' do
+      expect(assistant.agent_instructions).not_to include('# Tone')
+
+      assistant.update!(config: assistant.config.merge('tone' => 'short'))
+
+      expect(assistant.agent_instructions).to include("# Tone\nKeep replies short and direct. Skip pleasantries.")
     end
 
     it 'never names the product in the orchestrator prompt' do

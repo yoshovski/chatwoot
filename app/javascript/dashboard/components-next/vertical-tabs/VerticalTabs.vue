@@ -22,24 +22,35 @@ const activeTab = defineModel({ type: String, required: true });
     <nav
       class="flex flex-row w-full gap-1 pb-2 overflow-x-auto no-scrollbar border-b shrink-0 border-n-weak md:sticky md:top-0 md:flex-col md:w-48 md:gap-0.5 md:border-b-0 md:overflow-visible"
     >
-      <button
-        v-for="tab in tabs"
-        :key="tab.id"
-        type="button"
-        class="flex items-center gap-2 px-2.5 py-2 text-sm text-start transition-colors rounded-lg shrink-0 min-h-9 md:w-full"
-        :class="
-          activeTab === tab.id
-            ? 'bg-n-alpha-2 text-n-slate-12 font-medium'
-            : 'text-n-slate-11 hover:bg-n-alpha-1 hover:text-n-slate-12'
-        "
-        :aria-current="activeTab === tab.id ? 'page' : undefined"
-        @click="activeTab = tab.id"
-      >
-        <Icon v-if="tab.icon" :icon="tab.icon" class="shrink-0 size-4" />
-        <span class="min-w-0 whitespace-nowrap md:whitespace-normal">
-          {{ tab.label }}
+      <template v-for="(tab, index) in tabs" :key="tab.id">
+        <span
+          v-if="tab.group && tab.group !== tabs[index - 1]?.group"
+          class="hidden px-2.5 pt-4 pb-1 text-xs text-n-slate-10 md:block first:pt-0"
+        >
+          {{ tab.group }}
         </span>
-      </button>
+        <button
+          type="button"
+          class="flex items-center gap-2 px-2.5 py-2 text-sm text-start transition-colors rounded-lg shrink-0 min-h-9 md:w-full"
+          :class="
+            activeTab === tab.id
+              ? 'bg-n-alpha-2 text-n-slate-12 font-medium'
+              : 'text-n-slate-11 hover:bg-n-alpha-1 hover:text-n-slate-12'
+          "
+          :aria-current="activeTab === tab.id ? 'page' : undefined"
+          @click="activeTab = tab.id"
+        >
+          <Icon v-if="tab.icon" :icon="tab.icon" class="shrink-0 size-4" />
+          <span class="min-w-0 whitespace-nowrap md:whitespace-normal">
+            {{ tab.label }}
+          </span>
+          <Icon
+            v-if="tab.trailingIcon"
+            :icon="tab.trailingIcon"
+            class="shrink-0 size-3.5 ms-auto text-n-slate-10"
+          />
+        </button>
+      </template>
     </nav>
 
     <div class="flex flex-col flex-1 w-full min-w-0" :class="contentClass">

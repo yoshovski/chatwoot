@@ -4,8 +4,9 @@ import { describe, expect, it, vi } from 'vitest';
 import Button from 'dashboard/components-next/button/Button.vue';
 import RadioCard from 'dashboard/components-next/radioCard/RadioCard.vue';
 import Switch from 'dashboard/components-next/switch/Switch.vue';
-import AssistantSystemSettingsForm from './AssistantSystemSettingsForm.vue';
+import AssistantAfterChatForm from './AssistantAfterChatForm.vue';
 import DurationSelect from './DurationSelect.vue';
+import SettingsSwitchRow from './SettingsSwitchRow.vue';
 
 vi.mock('vue-i18n', () => ({
   useI18n: () => ({ t: key => key }),
@@ -13,6 +14,10 @@ vi.mock('vue-i18n', () => ({
 
 vi.mock('dashboard/composables/useAccount', () => ({
   useAccount: () => ({ isCloudFeatureEnabled: () => true }),
+}));
+
+vi.mock('dashboard/composables/useAdmin', () => ({
+  useAdmin: () => ({ isAdmin: { value: true } }),
 }));
 
 const assistant = {
@@ -23,21 +28,31 @@ const assistant = {
     auto_resolve_mode: 'evaluated',
     auto_resolve_after: 75,
     send_inactivity_resolution_message: true,
+    reply_labels: true,
+    outcome_labels: false,
+    feature_faq: true,
+    feature_memory: false,
   },
 };
 
 const mountComponent = () =>
-  shallowMount(AssistantSystemSettingsForm, {
+  shallowMount(AssistantAfterChatForm, {
     props: { assistant },
-    global: { stubs: { Banner: false, SettingsToggleSection: false } },
+    global: {
+      stubs: {
+        Banner: false,
+        SettingsToggleSection: false,
+        SettingsCard: false,
+      },
+    },
   });
 
 const submitForm = async wrapper => {
-  wrapper.findComponent(Button).vm.$emit('click');
+  wrapper.findAllComponents(Button).at(-1).vm.$emit('click');
   await flushPromises();
 };
 
-describe('AssistantSystemSettingsForm', () => {
+describe('AssistantAfterChatForm', () => {
   it('shows the evaluated policy controls from the saved config', () => {
     const wrapper = mountComponent();
     const modeCards = wrapper.findAllComponents(RadioCard);
@@ -90,6 +105,25 @@ describe('AssistantSystemSettingsForm', () => {
       config: {
         ...assistant.config,
         auto_resolve_after: 130,
+      },
+    });
+  });
+
+  it('saves the label and learning switches with the other settings', async () => {
+    const wrapper = mountComponent();
+    const rows = wrapper.findAllComponents(SettingsSwitchRow);
+
+    expect(rows).toHaveLength(4);
+    rows[1].vm.$emit('update:modelValue', true);
+    rows[3].vm.$emit('update:modelValue', true);
+    await nextTick();
+    await submitForm(wrapper);
+
+    expect(wrapper.emitted('submit')[0][0]).toEqual({
+      config: {
+        ...assistant.config,
+        outcome_labels: true,
+        feature_memory: true,
       },
     });
   });

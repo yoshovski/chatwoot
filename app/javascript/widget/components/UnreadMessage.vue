@@ -62,7 +62,7 @@ export default {
           return avatarUrl;
         }
         if (type === 'captain_assistant') {
-          return '/assets/images/dashboard/captain/tony-avatar.svg';
+          return '/assets/images/dashboard/captain/ai-agent-avatar.svg';
         }
         return displayImage;
       }

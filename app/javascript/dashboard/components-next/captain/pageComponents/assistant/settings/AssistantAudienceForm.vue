@@ -161,14 +161,22 @@ watch(
       <RadioCard
         :id="MODE.EVERYONE"
         :label="t('CAPTAIN.ASSISTANTS.FORM.AUDIENCE.EVERYONE.LABEL')"
-        :description="t('CAPTAIN.ASSISTANTS.FORM.AUDIENCE.EVERYONE.DESC')"
+        :description="
+          t('CAPTAIN.ASSISTANTS.FORM.AUDIENCE.EVERYONE.DESC', {
+            name: assistant.name,
+          })
+        "
         :is-active="mode === MODE.EVERYONE"
         @select="mode = MODE.EVERYONE"
       />
       <RadioCard
         :id="MODE.SPECIFIC"
         :label="t('CAPTAIN.ASSISTANTS.FORM.AUDIENCE.SPECIFIC.LABEL')"
-        :description="t('CAPTAIN.ASSISTANTS.FORM.AUDIENCE.SPECIFIC.DESC')"
+        :description="
+          t('CAPTAIN.ASSISTANTS.FORM.AUDIENCE.SPECIFIC.DESC', {
+            name: assistant.name,
+          })
+        "
         :is-active="mode === MODE.SPECIFIC"
         @select="mode = MODE.SPECIFIC"
       >
@@ -187,7 +195,7 @@ watch(
     </div>
     <div>
       <Button
-        :label="t('CAPTAIN.ASSISTANTS.FORM.UPDATE')"
+        :label="t('CAPTAIN.ASSISTANTS.SETTINGS.SAVE')"
         @click="handleSubmit"
       />
     </div>

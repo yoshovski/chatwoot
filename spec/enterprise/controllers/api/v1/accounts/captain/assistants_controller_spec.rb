@@ -386,6 +386,24 @@ RSpec.describe 'Api::V1::Accounts::Captain::Assistants', type: :request do
           expect(response).to have_http_status(:unprocessable_content)
         end
       end
+
+      it 'saves a known tone and rejects an unknown one' do
+        patch "/api/v1/accounts/#{account.id}/captain/assistants/#{assistant.id}",
+              params: { assistant: { config: { tone: 'professional' } } },
+              headers: admin.create_new_auth_token,
+              as: :json
+
+        expect(response).to have_http_status(:success)
+        expect(assistant.reload.config['tone']).to eq('professional')
+
+        patch "/api/v1/accounts/#{account.id}/captain/assistants/#{assistant.id}",
+              params: { assistant: { config: { tone: 'pirate' } } },
+              headers: admin.create_new_auth_token,
+              as: :json
+
+        expect(response).to have_http_status(:unprocessable_content)
+        expect(assistant.reload.config['tone']).to eq('professional')
+      end
     end
   end
 

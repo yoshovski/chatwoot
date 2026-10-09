@@ -10,8 +10,12 @@ const { assistant, updateAssistant } = useAssistantSettings();
 
 <template>
   <SettingsPageLayout
-    :heading="t('CAPTAIN.ASSISTANTS.SETTINGS.SCHEDULE.TITLE')"
-    :description="t('CAPTAIN.ASSISTANTS.SETTINGS.SCHEDULE.DESCRIPTION')"
+    :heading="
+      t('CAPTAIN.ASSISTANTS.SETTINGS.WORKING_HOURS.TITLE', {
+        name: assistant.name,
+      })
+    "
+    :description="t('CAPTAIN.ASSISTANTS.SETTINGS.WORKING_HOURS.DESCRIPTION')"
   >
     <AssistantScheduleForm :assistant="assistant" @submit="updateAssistant" />
   </SettingsPageLayout>

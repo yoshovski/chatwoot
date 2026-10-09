@@ -57,6 +57,11 @@ Here's the metadata we have about the current conversation and the contact assoc
 
 {% endif -%}
 
+{% if tone_instruction -%}
+# Tone
+{{ tone_instruction }}
+
+{% endif -%}
 {% if response_guidelines.size > 0 -%}
 # Response Guidelines
 Your responses should follow these guidelines:

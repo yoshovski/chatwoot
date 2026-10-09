@@ -141,7 +141,7 @@ describe('agent identity rendering', () => {
 
     expect(wrapper.vm.agentName).toBe('Default Assistant');
     expect(wrapper.vm.avatarUrl).toBe(
-      '/assets/images/dashboard/captain/tony-avatar.svg'
+      '/assets/images/dashboard/captain/ai-agent-avatar.svg'
     );
   });
 
@@ -201,12 +201,12 @@ describe('agent identity rendering', () => {
 
     expect(wrapper.vm.agentName).toBe('Default Assistant');
     expect(wrapper.vm.avatarUrl).toBe(
-      '/assets/images/dashboard/captain/tony-avatar.svg'
+      '/assets/images/dashboard/captain/ai-agent-avatar.svg'
     );
   });
 });
 
-describe('AI badge', () => {
+describe('AI agent messages', () => {
   const mountWithSender = sender =>
     mount(AgentMessage, {
       props: {
@@ -235,21 +235,12 @@ describe('AI badge', () => {
     delete window.chatwootWebChannel;
   });
 
-  it('shows next to the name of an AI assistant', () => {
-    const wrapper = mountWithSender({
-      type: 'captain_assistant',
-      name: 'Luna',
-      avatar_url: '',
-    });
+  it.each(['captain_assistant', 'user', 'agent_bot'])(
+    'shows only the sender name for %s senders',
+    type => {
+      const wrapper = mountWithSender({ type, name: 'Sam', avatar_url: '' });
 
-    expect(wrapper.find('.agent-name').text()).toContain('Luna');
-    expect(wrapper.find('.agent-name [role="img"]').exists()).toBe(true);
-  });
-
-  it.each(['user', 'agent_bot'])('is not shown for %s senders', type => {
-    const wrapper = mountWithSender({ type, name: 'Sam', avatar_url: '' });
-
-    expect(wrapper.find('.agent-name').text()).toBe('Sam');
-    expect(wrapper.find('[role="img"]').exists()).toBe(false);
-  });
+      expect(wrapper.find('.agent-name').text()).toBe('Sam');
+    }
+  );
 });
