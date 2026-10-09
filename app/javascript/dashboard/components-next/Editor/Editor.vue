@@ -1,6 +1,5 @@
 <script setup>
 import { computed, ref, watch, useSlots } from 'vue';
-import { useI18n } from 'vue-i18n';
 
 import WootEditor from 'dashboard/components/widgets/WootWriter/Editor.vue';
 import ToolPalette from 'dashboard/components-next/captain/scenarios/ToolPalette.vue';
@@ -23,6 +22,7 @@ const props = defineProps({
   enableVariables: { type: Boolean, default: false },
   enableCannedResponses: { type: Boolean, default: true },
   enableCaptainTools: { type: Boolean, default: false },
+  showToolPalette: { type: Boolean, default: false },
   signature: { type: String, default: '' },
   allowSignature: { type: Boolean, default: false },
   sendWithSignature: { type: Boolean, default: false },
@@ -32,7 +32,6 @@ const props = defineProps({
 
 const emit = defineEmits(['update:modelValue', 'executeCopilotAction']);
 
-const { t } = useI18n();
 const slots = useSlots();
 
 const isFocused = ref(false);
@@ -95,7 +94,7 @@ watch(
       {{ label }}
     </label>
     <ToolPalette
-      v-if="enableCaptainTools"
+      v-if="enableCaptainTools && showToolPalette"
       class="mb-1"
       @insert-tool="insertTool"
     />
@@ -148,14 +147,6 @@ watch(
         <slot v-else name="actions" />
       </div>
     </div>
-    <p v-if="enableCaptainTools" class="mt-1 mb-0 text-xs text-n-slate-11">
-      {{
-        t(
-          'CAPTAIN.ASSISTANTS.SCENARIOS.PALETTE.TIP',
-          'Tip: type @ to add a tool anywhere in the text.'
-        )
-      }}
-    </p>
     <p
       v-if="message"
       class="min-w-0 mt-1 mb-0 text-xs truncate transition-all duration-500 ease-in-out"

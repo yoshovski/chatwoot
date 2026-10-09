@@ -1,7 +1,22 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { mount } from '@vue/test-utils';
 import AddNewScenariosDialog from './AddNewScenariosDialog.vue';
+import { createStore } from 'vuex';
 import CaptainScenarios from 'dashboard/api/captain/scenarios';
+
+vi.mock('dashboard/components/widgets/WootWriter/Editor.vue', () => ({
+  default: {
+    props: ['modelValue'],
+    emits: ['input'],
+    template: '<textarea class="woot-editor" :value="modelValue" />',
+  },
+}));
+
+const store = createStore({
+  modules: {
+    captainTools: { namespaced: true, getters: { getRecords: () => [] } },
+  },
+});
 
 vi.mock('dashboard/api/captain/scenarios', () => ({
   default: {
@@ -35,6 +50,7 @@ describe('AddNewScenariosDialog', () => {
         ...props,
       },
       global: {
+        plugins: [store],
         stubs: {
           Dialog: {
             template:
@@ -51,9 +67,9 @@ describe('AddNewScenariosDialog', () => {
               },
             },
           },
-          Editor: {
-            props: ['modelValue'],
-            template: '<div class="editor-stub">{{ modelValue }}</div>',
+          TemplateStepper: {
+            template:
+              '<div class="stepper-stub"><button class="stepper-back" @click="$emit(\'back\')" /></div>',
           },
           TemplateCard: {
             props: ['template'],
@@ -129,6 +145,7 @@ describe('AddNewScenariosDialog', () => {
     wrapper.vm.previewState.title = 'AI Draft Title';
     wrapper.vm.previewState.description = 'AI Draft Description';
     wrapper.vm.previewState.instruction = 'AI Draft Instruction';
+    await wrapper.vm.$nextTick();
 
     wrapper.vm.saveDraftScenario();
 
@@ -143,7 +160,7 @@ describe('AddNewScenariosDialog', () => {
     ]);
   });
 
-  it('switches to template tab and emits useTemplate when a template card is clicked', async () => {
+  it('shows the questionnaire in the same dialog and goes back to the list', async () => {
     const wrapper = createWrapper();
     await wrapper.find('button').trigger('click');
 
@@ -151,10 +168,22 @@ describe('AddNewScenariosDialog', () => {
     await wrapper.vm.$nextTick();
 
     const templateCards = wrapper.findAll('.template-card-stub');
-    expect(templateCards.length).toBeGreaterThan(0);
+    expect(templateCards).toHaveLength(5);
 
     await templateCards[0].trigger('click');
-    expect(wrapper.emitted('useTemplate')).toBeTruthy();
+    expect(wrapper.find('.stepper-stub').exists()).toBe(true);
+    expect(wrapper.find('.template-card-stub').exists()).toBe(false);
+
+    await wrapper.find('.stepper-back').trigger('click');
+    expect(wrapper.findAll('.template-card-stub')).toHaveLength(5);
+  });
+
+  it('opens straight into a template picked on the page', async () => {
+    const wrapper = createWrapper();
+    wrapper.vm.open({ tab: 'template', template: { id: 'book_a_call' } });
+    await wrapper.vm.$nextTick();
+
+    expect(wrapper.find('.stepper-stub').exists()).toBe(true);
   });
 
   it('switches to manual tab and validates required fields before adding', async () => {
@@ -163,6 +192,7 @@ describe('AddNewScenariosDialog', () => {
 
     wrapper.vm.setChoice('manual');
     await wrapper.vm.$nextTick();
+    expect(wrapper.find('.woot-editor').exists()).toBe(true);
 
     // Try submit empty
     await wrapper.vm.onClickAddManual();
@@ -172,6 +202,7 @@ describe('AddNewScenariosDialog', () => {
     wrapper.vm.manualState.title = 'Manual Scenario';
     wrapper.vm.manualState.description = 'Manual Description';
     wrapper.vm.manualState.instruction = 'Manual Instruction';
+    await wrapper.vm.$nextTick();
 
     await wrapper.vm.onClickAddManual();
     expect(wrapper.emitted('add')).toEqual([

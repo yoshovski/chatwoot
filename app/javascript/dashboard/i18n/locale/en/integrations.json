@@ -1128,15 +1128,13 @@
           "TITLE": "Add a tool:",
           "MORE": "More tools",
           "SEARCH": "Search tools...",
-          "NO_RESULTS": "No tools found",
-          "TIP": "Tip: type @ to add a tool anywhere in the text."
+          "NO_RESULTS": "No tools found"
         },
         "TEMPLATES": {
-          "GALLERY_TITLE": "Scenario templates",
-          "GALLERY_DESCRIPTION": "Start with ready-made workflows for quotes, calls, returns, product discovery, and B2B.",
-          "USE_TEMPLATE": "Use template",
+          "GALLERY_TITLE": "Start from a template",
+          "GALLERY_DESCRIPTION": "Answer a few questions and get a ready scenario you can still edit.",
           "NEEDS_SHOPIFY": "Needs Shopify",
-          "NEEDS_SHOPIFY_TOOLTIP": "This template requires the Find products tool, which is available when Shopify is connected.",
+          "NEEDS_SHOPIFY_TOOLTIP": "Connect Shopify to use this template. It needs the Find products tool.",
           "COLLAPSE": "Hide templates",
           "EXPAND": "Show templates",
           "STEPPER": {
@@ -1144,16 +1142,228 @@
             "NEXT": "Next",
             "BACK": "Back",
             "SKIP": "Skip",
-            "PREVIEW": "Preview",
-            "PREVIEW_TITLE": "Review scenario",
-            "PREVIEW_DESCRIPTION": "Review the generated title, routing trigger, and instructions. You can customize them before saving.",
             "ADD_SCENARIO": "Add scenario",
             "ALLOWLIST_CONFIRM": {
-              "TITLE": "Allow links in replies?",
-              "MESSAGE": "To share {host} with customers, add it to your assistant's allowed link domains. Otherwise, links to {host} will be stripped from messages.",
-              "CONFIRM": "Allow and save",
-              "CANCEL": "Save without allowing"
+              "TITLE": "Allow links to {host} in replies?",
+              "MESSAGE": "Your assistant only sends links to allowed sites. Without this, the booking link is removed from its replies.",
+              "CONFIRM": "Allow and add scenario",
+              "CANCEL": "Add without allowing"
+            },
+            "URL_ERROR": "Enter a link that starts with https://",
+            "LABEL_PLACEHOLDER": "quote",
+            "LABEL_ERROR": "Use letters, numbers, - or _ only",
+            "LABEL_EXISTS": "Existing label",
+            "LABEL_NEW": "New label. It's created when you add the scenario.",
+            "SAVE_ERROR": "Couldn't save the scenario. Try again.",
+            "CUSTOM": {
+              "PLACEHOLDER": "Add your own field",
+              "ADD": "Add",
+              "REMOVE": "Remove {field}",
+              "DUPLICATE": "That field is already in the list",
+              "LENGTH": "Use 2 to {max} characters"
             }
+          },
+          "STEPS": "{count} step | {count} steps",
+          "DESCRIBE": {
+            "TITLE": "Describe your own",
+            "TAGLINE": "Say what should happen and AI drafts the steps."
+          },
+          "REQUEST_A_QUOTE": {
+            "TITLE": "Request a quote",
+            "TAGLINE": "Collect what sales needs, then pass the quote to your team.",
+            "QUESTIONS": {
+              "QUOTES_FOR": {
+                "LABEL": "What do customers ask quotes for?",
+                "HELP": "Optional. Helps the assistant recognise a quote request.",
+                "PLACEHOLDER": "Bulk orders, custom sizes, installation"
+              },
+              "DETAILS": {
+                "LABEL": "What should the assistant collect?",
+                "HELP": "It asks one at a time and skips anything the customer already said.",
+                "CUSTOM_PLACEHOLDER": "Add your own, like site access hours"
+              },
+              "MIN_QUANTITY": {
+                "LABEL": "Minimum order for a quote",
+                "HELP": "Optional. Below this, the assistant points to the normal product page.",
+                "PLACEHOLDER": "10"
+              },
+              "REPLY_TIME": {
+                "LABEL": "When does your team reply?",
+                "HELP": "The assistant tells the customer when to expect the quote.",
+                "OTHER_PLACEHOLDER": "within 3 hours on weekdays"
+              },
+              "AFTER_SUMMARY": {
+                "LABEL": "What happens after the summary?",
+                "HELP": "Pick note only if your team sends quotes by email and the chat can stay with the assistant."
+              },
+              "LABEL": {
+                "LABEL": "Which label marks these chats?",
+                "HELP": "Pick one of your labels or type a new one."
+              }
+            }
+          },
+          "BOOK_A_CALL": {
+            "TITLE": "Book a call",
+            "TAGLINE": "Share your booking link when a customer wants to talk.",
+            "QUESTIONS": {
+              "BOOKING_URL": {
+                "LABEL": "What's your booking link?",
+                "HELP": "Cal.com, Calendly or any booking page. It must start with https://.",
+                "PLACEHOLDER": "https://cal.com/your-team/intro"
+              },
+              "CALL_PURPOSES": {
+                "LABEL": "What are calls for?",
+                "HELP": "The assistant uses this to describe the call."
+              },
+              "OFFER_WHEN": {
+                "LABEL": "When should the assistant offer a call?",
+                "CUSTOM_PLACEHOLDER": "Add your own, like a complaint about a delivery"
+              },
+              "ASK_FIRST": {
+                "LABEL": "What should it ask before sharing the link?",
+                "HELP": "Optional. Keep it short; the booking page asks for the rest."
+              },
+              "LABEL": {
+                "LABEL": "Which label marks these chats?",
+                "HELP": "Pick one of your labels or type a new one."
+              }
+            }
+          },
+          "RETURNS_AND_WARRANTY": {
+            "TITLE": "Returns and warranty",
+            "TAGLINE": "Tell returns from defects and collect proof for your team.",
+            "QUESTIONS": {
+              "RETURN_WINDOW": {
+                "LABEL": "How many days do customers have to return an item?",
+                "PLACEHOLDER": "30"
+              },
+              "WARRANTY_PERIOD": {
+                "LABEL": "How long is the warranty?",
+                "PLACEHOLDER": "2 years"
+              },
+              "DETAILS": {
+                "LABEL": "What should the assistant collect?",
+                "HELP": "It asks one at a time and skips anything the customer already said.",
+                "CUSTOM_PLACEHOLDER": "Add your own, like the original packaging"
+              },
+              "LABEL": {
+                "LABEL": "Which label marks these chats?",
+                "HELP": "Pick one of your labels or type a new one."
+              }
+            }
+          },
+          "PRODUCT_FINDER": {
+            "TITLE": "Product finder",
+            "TAGLINE": "Ask two or three questions and recommend the best fit.",
+            "QUESTIONS": {
+              "CATEGORY": {
+                "LABEL": "What does it help customers choose?",
+                "HELP": "Optional. Leave empty to cover your whole catalog.",
+                "PLACEHOLDER": "Running shoes"
+              },
+              "QUESTIONS_TO_ASK": {
+                "LABEL": "What should the assistant ask?",
+                "HELP": "Two or three questions work best.",
+                "CUSTOM_PLACEHOLDER": "Add your own, like room size"
+              },
+              "RECOMMENDATION_COUNT": {
+                "LABEL": "How many products should it recommend?"
+              }
+            }
+          },
+          "B2B_INQUIRY": {
+            "TITLE": "B2B and wholesale",
+            "TAGLINE": "Qualify business buyers and collect volume and tax details.",
+            "QUESTIONS": {
+              "QUALIFICATION": {
+                "LABEL": "Who counts as a business customer?",
+                "PLACEHOLDER": "Companies, resellers or orders above 20 units"
+              },
+              "DETAILS": {
+                "LABEL": "What should the assistant collect?",
+                "HELP": "It asks one at a time and skips anything the customer already said.",
+                "CUSTOM_PLACEHOLDER": "Add your own, like the industry"
+              },
+              "REPLY_TIME": {
+                "LABEL": "When does your team reply?",
+                "OTHER_PLACEHOLDER": "within 3 hours on weekdays"
+              },
+              "LABEL": {
+                "LABEL": "Which label marks these chats?",
+                "HELP": "Pick one of your labels or type a new one."
+              }
+            }
+          },
+          "GROUPS": {
+            "ORDER": "Order",
+            "DELIVERY": "Delivery",
+            "CONTACT_AND_COMPANY": "Contact and company",
+            "EXTRA": "Extra",
+            "PROBLEM": "Problem",
+            "OUTCOME": "Outcome",
+            "COMPANY": "Company",
+            "CONTACT": "Contact",
+            "TOPICS": "Topics",
+            "SITUATIONS": "Situations",
+            "NEEDS": "Needs",
+            "CUSTOM": "Your own fields"
+          },
+          "FIELDS": {
+            "PRODUCTS_AND_QUANTITIES": "Products and quantities",
+            "VARIANT_OR_SPECS": "Variant, size or specs",
+            "CUSTOMISATION": "Customisation or branding",
+            "RECURRING": "One-off or recurring",
+            "DELIVERY_COUNTRY_POSTCODE": "Delivery country and postcode",
+            "NEEDED_BY": "Needed-by date",
+            "DELIVERY_ADDRESS": "Full delivery or installation address",
+            "SHIPPING_PREFERENCE": "Shipping preference",
+            "NAME_AND_EMAIL": "Name and email",
+            "PHONE": "Phone number",
+            "COMPANY_NAME": "Company name",
+            "VAT_ID": "VAT or tax ID",
+            "COUNTRY": "Country",
+            "WEBSITE": "Website",
+            "CONTACT_PERSON": "Contact person",
+            "RESALE_OR_OWN_USE": "Resale or own use",
+            "PRODUCTS_AND_VOLUME": "Products and expected volume",
+            "BUDGET": "Budget or target price",
+            "INTENDED_USE": "Intended use",
+            "FILES": "Files, drawings or photos",
+            "EXISTING_CUSTOMER": "Existing customer or order number",
+            "PAYMENT_TERMS": "Payment terms",
+            "ORDER_NUMBER": "Order number",
+            "CHECKOUT_EMAIL": "Checkout email",
+            "PRODUCT": "Product",
+            "REASON": "Reason or defect",
+            "PHOTOS": "Photos or video",
+            "SERIAL_NUMBER": "Serial number",
+            "DATE_RECEIVED": "Date received",
+            "CONDITION": "Unused or used",
+            "PREFERRED_OUTCOME": "Refund, replacement or repair",
+            "TOPIC": "Topic",
+            "PREFERRED_TIME": "Preferred day and time zone",
+            "MAIN_USE": "Main use",
+            "EXPERIENCE_LEVEL": "Experience level",
+            "COMPATIBILITY": "Compatibility with what they own",
+            "MUST_HAVE_FEATURES": "Must-have features",
+            "PRODUCT_DEMO": "Product demo",
+            "ADVICE_BEFORE_BUYING": "Advice before buying",
+            "TECHNICAL_HELP": "Technical help",
+            "PARTNERSHIPS": "Partnerships",
+            "CUSTOMER_ASKS": "Customer asks for a call",
+            "UNANSWERED_TECHNICAL": "A technical question the knowledge can't answer",
+            "LARGE_ORDER": "A large or custom order"
+          },
+          "OPTIONS": {
+            "WITHIN_1_BUSINESS_DAY": "Within 1 business day",
+            "WITHIN_24_HOURS": "Within 24 hours",
+            "WITHIN_2_3_BUSINESS_DAYS": "Within 2–3 business days",
+            "OTHER": "Other",
+            "HANDOFF": "Hand off to the team",
+            "NOTE_ONLY": "Leave a note, keep the chat with the assistant",
+            "1": "1",
+            "2": "2",
+            "3": "3"
           }
         },
         "BULK_ACTION": {
@@ -1216,7 +1426,7 @@
         },
         "UPDATE": {
           "CANCEL": "Cancel",
-          "UPDATE": "Update changes"
+          "UPDATE": "Save changes"
         },
         "STATUS": {
           "ENABLED": "Enabled",
@@ -1245,6 +1455,30 @@
           "DELETE": {
             "SUCCESS": "Scenarios deleted successfully",
             "ERROR": "There was an error deleting scenarios, please try again."
+          }
+        },
+        "FORM": {
+          "TITLE": {
+            "LABEL": "Name",
+            "PLACEHOLDER": "Request a quote",
+            "ERROR": "Give the scenario a name"
+          },
+          "DESCRIPTION": {
+            "LABEL": "When to use it",
+            "PLACEHOLDER": "Use when the customer asks for a quote or bulk pricing.",
+            "HELP": "Your assistant reads this to decide when to start the scenario.",
+            "ERROR": "Say when your assistant should use this scenario"
+          },
+          "INSTRUCTION": {
+            "LABEL": "Steps and rules",
+            "PLACEHOLDER": "1. Ask for the order number. 2. Check the order. 3. Hand off if it's late.",
+            "HELP": "Write the steps in order. Add tools with the buttons above or type {'@'}.",
+            "ERROR": "Add at least one step"
+          },
+          "TOOLS": {
+            "LABEL": "Tools in this scenario:",
+            "NONE": "None linked. Your assistant can still use all of its tools.",
+            "REMOVE": "Remove {tool} from the steps"
           }
         }
       }

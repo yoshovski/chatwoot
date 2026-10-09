@@ -16,9 +16,13 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  removable: {
+    type: Boolean,
+    default: false,
+  },
 });
 
-const emit = defineEmits(['click']);
+const emit = defineEmits(['click', 'remove']);
 
 const { t } = useI18n();
 const captainTools = useMapGetter('captainTools/getRecords');
@@ -44,10 +48,7 @@ const tooltip = computed(() => {
   if (isAvailable.value) {
     return matchedTool.value?.description || '';
   }
-  return t(
-    'CAPTAIN.ASSISTANTS.SCENARIOS.TOOLS.UNAVAILABLE',
-    "This tool isn't available for this assistant"
-  );
+  return t('CAPTAIN.ASSISTANTS.SCENARIOS.TOOLS.UNAVAILABLE');
 });
 
 const handleClick = () => {
@@ -76,5 +77,16 @@ const handleClick = () => {
   >
     <span v-if="emoji" class="text-xs leading-none">{{ emoji }}</span>
     <span class="truncate">{{ title }}</span>
+    <button
+      v-if="removable"
+      type="button"
+      class="-me-1 inline-flex items-center justify-center rounded-full p-0.5 hover:bg-n-alpha-2"
+      :aria-label="
+        t('CAPTAIN.ASSISTANTS.SCENARIOS.FORM.TOOLS.REMOVE', { tool: title })
+      "
+      @click.stop="emit('remove')"
+    >
+      <span class="i-lucide-x size-3" />
+    </button>
   </span>
 </template>

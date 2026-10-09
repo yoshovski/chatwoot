@@ -269,6 +269,7 @@ const selectTab = tab => {
                 "
                 :show-character-count="false"
                 enable-captain-tools
+                show-tool-palette
               />
               <div
                 class="flex flex-wrap items-center justify-between gap-3 border-t border-n-weak pt-3"

@@ -1,9 +1,12 @@
 <script setup>
-import { ref, computed } from 'vue';
+import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
-import Button from 'dashboard/components-next/button/Button.vue';
-import ToolChip from './ToolChip.vue';
-import TemplatePreviewChat from './TemplatePreviewChat.vue';
+import { getToolIdsFromInstruction } from './scenarioTools';
+import {
+  buildFromTemplate,
+  countSteps,
+  isTemplateAvailable,
+} from './scenarioTemplates';
 
 const props = defineProps({
   template: {
@@ -19,135 +22,123 @@ const props = defineProps({
 const emit = defineEmits(['use']);
 
 const { t } = useI18n();
-const isHovered = ref(false);
 
-const COLOR_GRADIENTS = {
-  amber:
-    'bg-gradient-to-br from-n-amber-3/80 to-n-amber-4/30 dark:from-n-amber-3/20 dark:to-n-amber-4/10',
-  iris: 'bg-gradient-to-br from-n-iris-3/80 to-n-iris-4/30 dark:from-n-iris-3/20 dark:to-n-iris-4/10',
-  teal: 'bg-gradient-to-br from-n-teal-3/80 to-n-teal-4/30 dark:from-n-teal-3/20 dark:to-n-teal-4/10',
-  violet:
-    'bg-gradient-to-br from-n-violet-3/80 to-n-violet-4/30 dark:from-n-violet-3/20 dark:to-n-violet-4/10',
-  slate:
-    'bg-gradient-to-br from-n-slate-3/80 to-n-slate-4/30 dark:from-n-slate-3/20 dark:to-n-slate-4/10',
+const MAX_VISIBLE_TOOLS = 3;
+
+const ICON_COLORS = {
+  amber: 'bg-n-amber-3 text-n-amber-11',
+  iris: 'bg-n-iris-3 text-n-iris-11',
+  teal: 'bg-n-teal-3 text-n-teal-11',
+  ruby: 'bg-n-ruby-3 text-n-ruby-11',
+  slate: 'bg-n-slate-3 text-n-slate-11',
 };
 
-const headerGradient = computed(() => {
-  return COLOR_GRADIENTS[props.template.color] || COLOR_GRADIENTS.slate;
-});
+const i18nKey = computed(
+  () =>
+    `CAPTAIN.ASSISTANTS.SCENARIOS.TEMPLATES.${props.template.id.toUpperCase()}`
+);
 
-const isMissingRequiredTools = computed(() => {
-  if (!props.template.requiredTools?.length) return false;
-  const availableToolIds = new Set(
-    (props.tools || []).map(tool => (typeof tool === 'string' ? tool : tool.id))
-  );
-  return props.template.requiredTools.some(
-    toolId => !availableToolIds.has(toolId)
-  );
-});
+const isAvailable = computed(() =>
+  isTemplateAvailable(props.template, props.tools)
+);
 
-const usedToolIds = computed(() => {
-  const result = props.template.build({}, props.tools || []);
-  const matches = result.instruction?.matchAll(/\(tool:\/\/([^)]+)\)/g) || [];
-  return [...new Set([...matches].map(m => m[1]))];
-});
+const defaultInstruction = computed(
+  () => buildFromTemplate(props.template, {}, props.tools).instruction
+);
 
-const buttonTooltip = computed(() => {
-  if (isMissingRequiredTools.value) {
-    return t(
-      'CAPTAIN.ASSISTANTS.SCENARIOS.TEMPLATES.NEEDS_SHOPIFY_TOOLTIP',
-      'This template requires the Find products tool, which is available when Shopify is connected.'
-    );
-  }
-  return '';
-});
+const stepCount = computed(() => countSteps(defaultInstruction.value));
 
-const onUseTemplate = () => {
-  if (isMissingRequiredTools.value) return;
-  emit('use', props.template);
+const usedTools = computed(() =>
+  getToolIdsFromInstruction(defaultInstruction.value)
+    .map(id => props.tools.find(tool => tool.id === id))
+    .filter(Boolean)
+);
+
+const visibleTools = computed(() =>
+  usedTools.value.slice(0, MAX_VISIBLE_TOOLS)
+);
+const hiddenToolCount = computed(
+  () => usedTools.value.length - visibleTools.value.length
+);
+const toolsTooltip = computed(() =>
+  usedTools.value.map(tool => tool.title).join(', ')
+);
+
+const onClick = () => {
+  if (isAvailable.value) emit('use', props.template);
 };
 </script>
 
 <template>
-  <div
-    class="flex flex-col rounded-2xl border border-n-weak bg-n-alpha-3 overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-200"
-    @mouseenter="isHovered = true"
-    @mouseleave="isHovered = false"
+  <button
+    v-tooltip.top="
+      isAvailable
+        ? null
+        : t('CAPTAIN.ASSISTANTS.SCENARIOS.TEMPLATES.NEEDS_SHOPIFY_TOOLTIP')
+    "
+    type="button"
+    class="group relative flex flex-col gap-3 h-full w-full p-4 text-start rounded-xl border border-n-strong bg-n-solid-2 transition-colors motion-reduce:transition-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-n-brand"
+    :class="
+      isAvailable
+        ? 'hover:border-n-slate-7 hover:bg-n-solid-3'
+        : 'cursor-not-allowed'
+    "
+    :aria-disabled="!isAvailable"
+    :data-test="`template-${template.id}`"
+    @click="onClick"
   >
-    <!-- Card Header -->
-    <div
-      class="p-5 flex flex-col gap-3 border-b border-n-weak"
-      :class="headerGradient"
-    >
-      <div class="flex items-start justify-between gap-3">
-        <span class="text-3xl leading-none select-none">
-          {{ template.emoji }}
-        </span>
-        <span
-          v-if="isMissingRequiredTools"
-          v-tooltip.top="{
-            content: buttonTooltip,
-            delay: { show: 200, hide: 0 },
-          }"
-          class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-n-amber-3 text-n-amber-11 border border-n-amber-4 select-none cursor-default"
-        >
-          {{
-            t(
-              'CAPTAIN.ASSISTANTS.SCENARIOS.TEMPLATES.NEEDS_SHOPIFY',
-              'Needs Shopify'
-            )
-          }}
-        </span>
-      </div>
-
-      <div class="flex flex-col gap-1">
-        <h3 class="text-base font-semibold text-n-slate-12 tracking-tight m-0">
-          {{ template.title }}
-        </h3>
-        <p class="text-xs text-n-slate-11 line-clamp-2 leading-relaxed m-0">
-          {{ template.tagline }}
-        </p>
-      </div>
-
-      <!-- Tools Used Row -->
-      <div
-        v-if="usedToolIds.length"
-        class="flex items-center gap-1 flex-wrap pt-1"
+    <div class="flex items-start justify-between w-full">
+      <span
+        class="flex items-center justify-center size-9 rounded-lg"
+        :class="ICON_COLORS[template.color]"
       >
-        <ToolChip
-          v-for="toolId in usedToolIds"
-          :key="toolId"
-          :tool-id="toolId"
-        />
-      </div>
+        <span class="size-5" :class="template.icon" />
+      </span>
+      <span
+        v-if="isAvailable"
+        class="i-lucide-arrow-up-right size-4 text-n-slate-10 opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100 transition-opacity motion-reduce:transition-none"
+      />
     </div>
 
-    <!-- Live Mini-Chat Preview -->
-    <div class="p-4 flex flex-col gap-3 flex-1 justify-between">
-      <TemplatePreviewChat :demo="template.demo" :is-playing="isHovered" />
+    <div class="flex flex-col gap-1">
+      <span class="text-sm font-medium text-n-slate-12">
+        {{ t(`${i18nKey}.TITLE`) }}
+      </span>
+      <span class="text-sm text-n-slate-11 line-clamp-2">
+        {{ t(`${i18nKey}.TAGLINE`) }}
+      </span>
+    </div>
 
-      <div class="pt-2">
+    <div
+      class="mt-auto flex items-center justify-between w-full text-xs text-n-slate-10"
+    >
+      <span v-if="isAvailable">
+        {{ t('CAPTAIN.ASSISTANTS.SCENARIOS.TEMPLATES.STEPS', stepCount) }}
+      </span>
+      <span v-else class="inline-flex items-center gap-1 text-n-amber-11">
+        <span class="i-lucide-plug size-3.5" />
+        {{ t('CAPTAIN.ASSISTANTS.SCENARIOS.TEMPLATES.NEEDS_SHOPIFY') }}
+      </span>
+
+      <span
+        v-if="usedTools.length"
+        v-tooltip.top="toolsTooltip"
+        class="flex items-center"
+      >
         <span
-          v-tooltip.top="{
-            content: buttonTooltip,
-            delay: { show: 200, hide: 0 },
-          }"
-          class="block w-full"
+          v-for="tool in visibleTools"
+          :key="tool.id"
+          class="flex items-center justify-center size-6 -ms-1.5 first:ms-0 rounded-full bg-n-alpha-2 ring-2 ring-n-solid-2 text-xs"
         >
-          <Button
-            sm
-            :disabled="isMissingRequiredTools"
-            :label="
-              t(
-                'CAPTAIN.ASSISTANTS.SCENARIOS.TEMPLATES.USE_TEMPLATE',
-                'Use template'
-              )
-            "
-            class="w-full justify-center"
-            @click="onUseTemplate"
-          />
+          {{ tool.emoji }}
         </span>
-      </div>
+        <span
+          v-if="hiddenToolCount"
+          class="flex items-center justify-center size-6 -ms-1.5 rounded-full bg-n-alpha-2 ring-2 ring-n-solid-2 text-xs text-n-slate-11"
+        >
+          {{ `+${hiddenToolCount}` }}
+        </span>
+      </span>
     </div>
-  </div>
+  </button>
 </template>
