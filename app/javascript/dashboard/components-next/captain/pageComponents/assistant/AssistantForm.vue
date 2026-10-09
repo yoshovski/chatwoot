@@ -27,6 +27,7 @@ const { t } = useI18n();
 
 const formState = {
   uiFlags: useMapGetter('captainAssistants/getUIFlags'),
+  globalConfig: useMapGetter('globalConfig/get'),
 };
 
 const initialState = {
@@ -38,7 +39,13 @@ const initialState = {
   featureCitation: false,
 };
 
-const state = reactive({ ...initialState });
+const state = reactive({
+  ...initialState,
+  name:
+    props.mode === 'create'
+      ? formState.globalConfig.value?.captainBrandName || ''
+      : '',
+});
 
 const validationRules = {
   name: { required, minLength: minLength(1) },
@@ -116,7 +123,7 @@ watch(
       v-model="state.name"
       :label="t('CAPTAIN.ASSISTANTS.FORM.NAME.LABEL')"
       :placeholder="t('CAPTAIN.ASSISTANTS.FORM.NAME.PLACEHOLDER')"
-      :message="formErrors.name"
+      :message="formErrors.name || t('CAPTAIN.ASSISTANTS.FORM.NAME.HELP_TEXT')"
       :message-type="formErrors.name ? 'error' : 'info'"
     />
 

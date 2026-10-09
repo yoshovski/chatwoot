@@ -11,6 +11,7 @@ import PaginationFooter from 'dashboard/components-next/pagination/PaginationFoo
 import Spinner from 'dashboard/components-next/spinner/Spinner.vue';
 import Policy from 'dashboard/components/policy.vue';
 import AssistantSwitcher from 'dashboard/components-next/captain/pageComponents/switcher/AssistantSwitcher.vue';
+import AssistantBrandChip from 'dashboard/components-next/captain/assistant/AssistantBrandChip.vue';
 import CreateAssistantDialog from 'dashboard/components-next/captain/pageComponents/assistant/CreateAssistantDialog.vue';
 
 const props = defineProps({
@@ -138,6 +139,10 @@ const handleCreateAssistant = () => {
                 >
                   {{ activeAssistantName }}
                 </span>
+                <AssistantBrandChip
+                  v-if="!isFetchingAssistants"
+                  :name="activeAssistantName"
+                />
                 <div class="relative group">
                   <OnClickOutside
                     @trigger="showAssistantSwitcherDropdown = false"

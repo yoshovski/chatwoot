@@ -118,7 +118,7 @@ export default {
       }
 
       if (this.message.sender?.type === 'captain_assistant') {
-        return '/assets/images/dashboard/captain/logo.svg';
+        return '/assets/images/dashboard/captain/tony-avatar.svg';
       }
 
       if (this.message.sender) {
