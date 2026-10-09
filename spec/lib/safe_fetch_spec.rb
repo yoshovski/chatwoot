@@ -564,5 +564,44 @@ RSpec.describe SafeFetch do
       end
     end
   end
+
+  describe '.probe' do
+    it 'returns the status and lowercase headers of a 200 without a content-type allowlist' do
+      stub_request(:get, 'http://example.com/page')
+        .to_return(status: 200, body: '<html></html>', headers: { 'ETag' => '"abc"', 'Content-Type' => 'text/html' })
+
+      probe = described_class.probe('http://example.com/page')
+
+      expect(probe.status).to eq(200)
+      expect(probe.headers).to include('etag' => '"abc"', 'content-type' => 'text/html')
+    end
+
+    it 'sends the given request headers and reports a 304 instead of raising' do
+      stub_request(:get, 'http://example.com/page').with(headers: { 'If-None-Match' => '"abc"' }).to_return(status: 304)
+
+      expect(described_class.probe('http://example.com/page', headers: { 'If-None-Match' => '"abc"' }).status).to eq(304)
+    end
+
+    it 'reports the status of the final URL after a redirect' do
+      stub_request(:get, 'http://example.com/old').to_return(status: 301, headers: { 'Location' => 'http://example.com/new' })
+      stub_request(:get, 'http://example.com/new').to_return(status: 404)
+
+      expect(described_class.probe('http://example.com/old').status).to eq(404)
+    end
+
+    it 'keeps the SSRF protection' do
+      expect { described_class.probe('http://127.0.0.1/secret') }.to raise_error do |error|
+        expect(error.class.name).to eq('SafeFetch::UnsafeUrlError')
+      end
+    end
+
+    it 'maps network failures to FetchError' do
+      stub_request(:get, 'http://example.com/page').to_timeout
+
+      expect { described_class.probe('http://example.com/page') }.to raise_error do |error|
+        expect(error.class.name).to eq('SafeFetch::FetchError')
+      end
+    end
+  end
 end
 # rubocop:enable Style/RedundantFetchBlock

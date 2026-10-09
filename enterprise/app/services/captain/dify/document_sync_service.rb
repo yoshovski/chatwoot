@@ -62,9 +62,9 @@ class Captain::Dify::DocumentSyncService
                                content_type: 'application/pdf', **attributes)
       end
     elsif document_id
-      @client.update_by_text(dataset_id: @dataset_id, document_id: document_id, text: @document.content, **attributes)
+      @client.update_by_text(dataset_id: @dataset_id, document_id: document_id, text: @document.dify_sectioned_content, **attributes)
     else
-      @client.create_by_text(dataset_id: @dataset_id, text: @document.content, **attributes)
+      @client.create_by_text(dataset_id: @dataset_id, text: @document.dify_sectioned_content, **attributes)
     end
   end
 

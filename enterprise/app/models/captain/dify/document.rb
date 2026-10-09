@@ -11,7 +11,20 @@ module Captain::Dify::Document
   def dify_source_fingerprint
     return "pdf:#{pdf_file.blob.checksum}" if pdf_document?
 
-    Digest::SHA256.hexdigest(content)
+    "sectioned-v1:#{Digest::SHA256.hexdigest(dify_sectioned_content)}"
+  end
+
+  def dify_sectioned_content
+    Captain::Knowledge::SectionedText.new(content, title: name).to_s
+  end
+
+  def knowledge_state
+    return unless account.dify_knowledge_enabled?
+    return 'paused' unless enabled?
+    return 'searchable' if available? && dify_indexing_status == 'completed'
+    return 'not_searchable' if dify_indexing_status == 'error' || sync_failed?
+
+    'indexing'
   end
 
   def mark_dify_sync_failed!(error_code)

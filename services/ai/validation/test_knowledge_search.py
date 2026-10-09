@@ -80,6 +80,47 @@ class KnowledgeSearchTest(unittest.TestCase):
         self.assertEqual(result.passages[2].url, "https://example.test/delivery")
         self.assertEqual([p.id for p in result.passages], [1, 2, 3])
 
+    def test_heading_only_document_passages_are_dropped_but_faq_and_paragraphs_are_kept(self):
+        def segment(content, answer=None):
+            return {
+                "score": 0.9,
+                "segment": {
+                    "document_id": str(uuid4()),
+                    "enabled": True,
+                    "status": "completed",
+                    "content": content,
+                    "answer": answer,
+                    "document": {"name": "source.pdf", "doc_metadata": {}},
+                },
+            }
+
+        document, extra, faq = [
+            SearchDataset(dataset_id=str(uuid4()), kind=kind)
+            for kind in ("document", "extra", "faq")
+        ]
+        records = {
+            document.dataset_id: [
+                segment("## RMA requirements"),
+                segment("RMA requirements"),
+                segment("Help center > Returns\nItems must be unused."),
+                segment("Items must be unused and in the original box."),
+            ],
+            extra.dataset_id: [segment("# Warranty"), segment("Two years.")],
+            faq.dataset_id: [segment("Returns", "Within 30 days.")],
+        }
+        payload = self.payload.model_copy(update={"datasets": [document, extra, faq]})
+        with patch.object(Dify, "search", side_effect=lambda dataset, *_: records[dataset]):
+            result = search(self.config, payload, 0.3)
+        self.assertCountEqual(
+            [p.content for p in result.passages],
+            [
+                "Help center > Returns\nItems must be unused.",
+                "Items must be unused and in the original box.",
+                "Two years.",
+                "Question: Returns\nAnswer: Within 30 days.",
+            ],
+        )
+
     def test_below_threshold_and_disabled_results_are_no_match(self):
         for records in self.records.values():
             records[0]["score"] = 0.299

@@ -1516,6 +1516,7 @@
       "SHOPIFY_CARD": {
         "TITLE": "Live product catalog",
         "SYNCED_COUNT": "{count} product synced | {count} products synced",
+        "SYNCED_LABEL": "product synced | products synced",
         "ON_DESCRIPTION": "Your assistant answers with live prices, product links and images",
         "FAILED_ATTENTION": "{count} needs attention | {count} need attention",
         "VIEW_PRODUCTS": "View products",
@@ -1571,6 +1572,13 @@
         }
       },
       "FAQ_COUNT": "{n} FAQ | {n} FAQs",
+      "KNOWLEDGE_STATE": {
+        "SEARCHABLE": "Searchable",
+        "INDEXING": "Indexing…",
+        "NOT_SEARCHABLE": "Not searchable",
+        "PAUSED": "Paused",
+        "TOOLTIP": "Your assistant searches this page's text directly. FAQ sections found on the page are imported as separate FAQs."
+      },
       "USED_IN_CONVERSATIONS": "Used in {n} conversation | Used in {n} conversations",
       "NO_USED_CONVERSATIONS": "No conversations found for this document.",
       "SELECTED": "{count} selected",

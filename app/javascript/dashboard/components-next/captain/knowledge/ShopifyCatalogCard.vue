@@ -478,7 +478,7 @@ onMounted(() => {
                 </span>
                 <span class="text-sm font-medium text-n-slate-11">
                   {{
-                    $t('CAPTAIN.KNOWLEDGE.SHOPIFY_CARD.SYNCED_COUNT', {
+                    $t('CAPTAIN.KNOWLEDGE.SHOPIFY_CARD.SYNCED_LABEL', {
                       count: syncedCount,
                     })
                   }}

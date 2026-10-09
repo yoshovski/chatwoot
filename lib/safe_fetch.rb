@@ -14,6 +14,8 @@ module SafeFetch
     end
   end
 
+  Probe = Data.define(:status, :headers)
+
   class Error < StandardError; end
   class InvalidUrlError < Error; end
   class UnsafeUrlError < Error; end
@@ -26,12 +28,23 @@ module SafeFetch
   def self.fetch(url, **, &)
     raise ArgumentError, 'block required' unless block_given?
 
-    SafeFetch::Fetcher.new(SafeFetch::RequestOptions.new(url: url, **)).fetch(&)
+    translate_errors { SafeFetch::Fetcher.new(SafeFetch::RequestOptions.new(url: url, **)).fetch(&) }
+  end
+
+  # Requests the final URL (following redirects) and returns its status and lowercase response headers
+  # without reading the body, so a 304 is an answer rather than an error.
+  def self.probe(url, **)
+    translate_errors { SafeFetch::Fetcher.new(SafeFetch::RequestOptions.new(url: url, **)).probe }
+  end
+
+  def self.translate_errors
+    yield
   rescue SsrfFilter::InvalidUriScheme, URI::InvalidURIError => e
     raise InvalidUrlError, e.message
   rescue SsrfFilter::Error, Resolv::ResolvError => e
     raise UnsafeUrlError, e.message
   end
+  private_class_method :translate_errors
 
   def self.allow_private_network?
     ActiveModel::Type::Boolean.new.cast(ENV.fetch('SAFE_FETCH_ALLOW_PRIVATE_NETWORK', false))
