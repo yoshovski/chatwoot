@@ -33,6 +33,11 @@ class Captain::Assistant < ApplicationRecord
   DEFAULT_MAX_SUGGESTED_REPLIES = 3
   MINIMUM_MAX_SUGGESTED_REPLIES = 1
   MAXIMUM_MAX_SUGGESTED_REPLIES = 5
+  TONE_INSTRUCTIONS = {
+    'friendly' => 'Write in a warm, friendly tone.',
+    'professional' => 'Write in a polite, professional tone.',
+    'short' => 'Keep replies short and direct. Skip pleasantries.'
+  }.freeze
 
   include Avatarable
   include Concerns::CaptainToolsHelpers
@@ -65,7 +70,7 @@ class Captain::Assistant < ApplicationRecord
                  :continue_while_waiting, :suggested_replies, :max_suggested_replies, :product_cards,
                  :link_allowlist, :image_allowlist, :handoff_safety_net, :handoff_safety_net_keywords,
                  :reply_labels, :reply_label_keywords, :outcome_labels,
-                 :handoff_fallback_agent_id, :handoff_fallback_team_id
+                 :handoff_fallback_agent_id, :handoff_fallback_team_id, :tone
 
   BOOLEAN_CONFIG_KEYS = %w[
     feature_faq
@@ -104,6 +109,7 @@ class Captain::Assistant < ApplicationRecord
               less_than_or_equal_to: MAXIMUM_INACTIVITY_THRESHOLD_MINUTES
             },
             allow_nil: true
+  validates :tone, inclusion: { in: TONE_INSTRUCTIONS.keys }, allow_blank: true
   validates :max_suggested_replies,
             numericality: {
               only_integer: true,
@@ -293,6 +299,7 @@ class Captain::Assistant < ApplicationRecord
           description: scenario.description
         }
       end,
+      tone_instruction: TONE_INSTRUCTIONS[tone],
       response_guidelines: response_guidelines || [],
       guardrails: guardrails || []
     }
