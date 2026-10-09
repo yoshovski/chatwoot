@@ -256,7 +256,7 @@ const LINK_INSTRUCTION_CLASS =
         </span>
       </div>
     </div>
-    <div v-else class="overflow-hidden flex flex-col gap-4 w-full">
+    <div v-else class="relative flex flex-col gap-4 w-full">
       <Input
         v-model="state.title"
         :label="t('CAPTAIN.ASSISTANTS.SCENARIOS.ADD.NEW.FORM.TITLE.LABEL')"

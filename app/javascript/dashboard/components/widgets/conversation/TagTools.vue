@@ -9,6 +9,10 @@ const props = defineProps({
     type: String,
     default: '',
   },
+  menuPosition: {
+    type: Object,
+    default: null,
+  },
 });
 
 const emit = defineEmits(['selectTool']);
@@ -25,9 +29,12 @@ const filteredTools = computed(() => {
 
 const adjustScroll = () => {};
 
-const onSelect = idx => {
-  if (idx) selectedIndex.value = idx;
-  emit('selectTool', filteredTools.value[selectedIndex.value]);
+const onSelect = (idx, tool) => {
+  if (typeof idx === 'number') selectedIndex.value = idx;
+  const selected = tool || filteredTools.value[selectedIndex.value];
+  if (selected) {
+    emit('selectTool', selected);
+  }
 };
 
 useKeyboardNavigableList({
@@ -49,7 +56,10 @@ watch(filteredTools, newListOfTools => {
     v-if="filteredTools.length"
     :items="filteredTools"
     :selected-index="selectedIndex"
-    class="bottom-20"
+    :style="
+      menuPosition ? { top: menuPosition.top, left: menuPosition.left } : null
+    "
+    :class="menuPosition ? '' : 'bottom-20'"
     @select="onSelect"
   />
   <template v-else />

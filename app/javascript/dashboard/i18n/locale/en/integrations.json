@@ -1109,6 +1109,13 @@
           "UNAVAILABLE": "This tool isn't available for this assistant",
           "NAMED": "Uses the assistant's tools. Named in the instruction: {tools}"
         },
+        "PALETTE": {
+          "TITLE": "Add a tool:",
+          "MORE": "More tools",
+          "SEARCH": "Search tools...",
+          "NO_RESULTS": "No tools found",
+          "TIP": "Tip: type @ to add a tool anywhere in the text."
+        },
         "BULK_ACTION": {
           "SELECTED": "{count} item selected | {count} items selected",
           "SELECT_ALL": "Select all ({count})",

@@ -1,7 +1,9 @@
 <script setup>
 import { computed, ref, watch, useSlots } from 'vue';
+import { useI18n } from 'vue-i18n';
 
 import WootEditor from 'dashboard/components/widgets/WootWriter/Editor.vue';
+import ToolPalette from 'dashboard/components-next/captain/scenarios/ToolPalette.vue';
 
 const props = defineProps({
   modelValue: { type: String, default: '' },
@@ -30,9 +32,11 @@ const props = defineProps({
 
 const emit = defineEmits(['update:modelValue', 'executeCopilotAction']);
 
+const { t } = useI18n();
 const slots = useSlots();
 
 const isFocused = ref(false);
+const wootEditor = ref(null);
 
 const characterCount = computed(() => props.modelValue.length);
 
@@ -65,6 +69,14 @@ const handleBlur = () => {
   }
 };
 
+const insertTool = tool => {
+  wootEditor.value?.insertTool(tool);
+};
+
+defineExpose({
+  insertTool,
+});
+
 watch(
   () => props.modelValue,
   newValue => {
@@ -82,6 +94,11 @@ watch(
     <label v-if="label" class="mb-0.5 text-sm font-medium text-n-slate-12">
       {{ label }}
     </label>
+    <ToolPalette
+      v-if="enableCaptainTools"
+      class="mb-1"
+      @insert-tool="insertTool"
+    />
     <div
       class="flex flex-col w-full gap-2 px-3 py-3 transition-all duration-500 ease-in-out border rounded-lg editor-wrapper bg-n-alpha-black2"
       :class="[
@@ -97,6 +114,7 @@ watch(
       ]"
     >
       <WootEditor
+        ref="wootEditor"
         :editor-id="editorKey"
         :model-value="modelValue"
         :placeholder="placeholder"
@@ -130,6 +148,14 @@ watch(
         <slot v-else name="actions" />
       </div>
     </div>
+    <p v-if="enableCaptainTools" class="mt-1 mb-0 text-xs text-n-slate-11">
+      {{
+        t(
+          'CAPTAIN.ASSISTANTS.SCENARIOS.PALETTE.TIP',
+          'Tip: type @ to add a tool anywhere in the text.'
+        )
+      }}
+    </p>
     <p
       v-if="message"
       class="min-w-0 mt-1 mb-0 text-xs truncate transition-all duration-500 ease-in-out"
