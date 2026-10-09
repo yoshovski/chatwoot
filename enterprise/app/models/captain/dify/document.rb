@@ -18,6 +18,15 @@ module Captain::Dify::Document
     Captain::Knowledge::SectionedText.new(content, title: name).to_s
   end
 
+  def knowledge_state
+    return unless account.dify_knowledge_enabled?
+    return 'paused' unless enabled?
+    return 'searchable' if available? && dify_indexing_status == 'completed'
+    return 'not_searchable' if dify_indexing_status == 'error' || sync_failed?
+
+    'indexing'
+  end
+
   def mark_dify_sync_failed!(error_code)
     update!(status: :in_progress, sync_status: :failed, dify_indexing_status: 'error', sync_step: nil,
             last_sync_error_code: error_code, last_sync_attempted_at: Time.current)

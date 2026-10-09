@@ -85,4 +85,48 @@ RSpec.describe Captain::Dify::Document do
       expect(document.dify_source_fingerprint).not_to eq(before)
     end
   end
+
+  describe '#knowledge_state' do
+    let(:document) { create(:captain_document, assistant: assistant, content: 'Body') }
+
+    it 'is nil when the account does not use Dify' do
+      plain = create(:captain_document, content: 'Body')
+
+      expect(plain.knowledge_state).to be_nil
+    end
+
+    it 'is paused when the document is disabled, even if it is indexed' do
+      document.update!(status: :available, dify_indexing_status: 'completed', enabled: false)
+
+      expect(document.knowledge_state).to eq('paused')
+    end
+
+    it 'is searchable once the page is available and Dify finished indexing it' do
+      document.update!(status: :available, dify_indexing_status: 'completed')
+
+      expect(document.knowledge_state).to eq('searchable')
+    end
+
+    it 'is indexing while Dify is still working on it' do
+      expect(document.knowledge_state).to eq('indexing')
+    end
+
+    it 'is not searchable when Dify reported an indexing error' do
+      document.update!(dify_indexing_status: 'error')
+
+      expect(document.knowledge_state).to eq('not_searchable')
+    end
+
+    it 'is not searchable when the sync failed and there is no completed index' do
+      document.update!(sync_status: :failed, dify_indexing_status: 'waiting')
+
+      expect(document.knowledge_state).to eq('not_searchable')
+    end
+
+    it 'stays searchable when only a later re-fetch failed and the earlier index is complete' do
+      document.update!(status: :available, dify_indexing_status: 'completed', sync_status: :failed)
+
+      expect(document.knowledge_state).to eq('searchable')
+    end
+  end
 end

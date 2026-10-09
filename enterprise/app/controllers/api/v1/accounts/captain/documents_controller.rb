@@ -72,7 +72,7 @@ class Api::V1::Accounts::Captain::DocumentsController < Api::V1::Accounts::BaseC
   private
 
   def set_documents
-    @documents = Current.account.captain_documents.with_attached_pdf_file.with_attached_markdown_file.includes(:assistant)
+    @documents = Current.account.captain_documents.with_attached_pdf_file.with_attached_markdown_file.includes(:assistant, :account)
   end
 
   def filtered_documents

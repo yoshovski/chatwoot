@@ -1572,6 +1572,13 @@
         }
       },
       "FAQ_COUNT": "{n} FAQ | {n} FAQs",
+      "KNOWLEDGE_STATE": {
+        "SEARCHABLE": "Searchable",
+        "INDEXING": "Indexing…",
+        "NOT_SEARCHABLE": "Not searchable",
+        "PAUSED": "Paused",
+        "TOOLTIP": "Your assistant searches this page's text directly. FAQ sections found on the page are imported as separate FAQs."
+      },
       "USED_IN_CONVERSATIONS": "Used in {n} conversation | Used in {n} conversations",
       "NO_USED_CONVERSATIONS": "No conversations found for this document.",
       "SELECTED": "{count} selected",

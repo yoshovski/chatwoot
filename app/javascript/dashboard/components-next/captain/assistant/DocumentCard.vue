@@ -86,6 +86,10 @@ const props = defineProps({
     type: Number,
     default: 0,
   },
+  knowledgeState: {
+    type: String,
+    default: null,
+  },
   isSelected: {
     type: Boolean,
     default: false,
@@ -105,6 +109,29 @@ const props = defineProps({
 });
 
 const emit = defineEmits(['action', 'select', 'hover', 'toggle']);
+
+const KNOWLEDGE_STATE_CHIPS = {
+  searchable: {
+    label: 'CAPTAIN.DOCUMENTS.KNOWLEDGE_STATE.SEARCHABLE',
+    chip: 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400',
+    dot: 'bg-emerald-500',
+  },
+  indexing: {
+    label: 'CAPTAIN.DOCUMENTS.KNOWLEDGE_STATE.INDEXING',
+    chip: 'bg-amber-500/10 text-amber-700 dark:text-amber-400',
+    dot: 'bg-amber-500 animate-pulse',
+  },
+  not_searchable: {
+    label: 'CAPTAIN.DOCUMENTS.KNOWLEDGE_STATE.NOT_SEARCHABLE',
+    chip: 'bg-ruby-500/10 text-ruby-700 dark:text-ruby-400',
+    dot: 'bg-ruby-500',
+  },
+  paused: {
+    label: 'CAPTAIN.DOCUMENTS.KNOWLEDGE_STATE.PAUSED',
+    chip: 'bg-n-slate-3 text-n-slate-11',
+    dot: 'bg-n-slate-7',
+  },
+};
 
 const exactTimestamp = useExactTimestamp();
 const route = useRoute();
@@ -138,6 +165,13 @@ const isRetryableSync = computed(
   () => isFailed.value || (isSyncing.value && !props.syncInProgress)
 );
 const showSyncStatus = computed(() => props.syncable);
+const knowledgeChip = computed(
+  () => KNOWLEDGE_STATE_CHIPS[props.knowledgeState]
+);
+// With Dify the page text is searched directly, so a page without FAQs is normal.
+const showFaqPill = computed(
+  () => !isPdf.value && (!props.knowledgeState || props.responsesCount > 0)
+);
 
 const typeIcon = computed(() => {
   if (isPdf.value) return 'i-lucide-file-text';
@@ -329,8 +363,24 @@ const handleRetry = () => {
         <Icon :icon="linkIcon" class="shrink-0" />
         <span class="truncate">{{ displayLink }}</span>
       </span>
+      <span
+        v-if="knowledgeChip"
+        v-tooltip.top="{
+          content: t('CAPTAIN.DOCUMENTS.KNOWLEDGE_STATE.TOOLTIP'),
+          delay: { show: 500, hide: 0 },
+        }"
+        class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium shrink-0"
+        :class="knowledgeChip.chip"
+      >
+        <span
+          data-test="chip-dot"
+          class="size-1.5 rounded-full"
+          :class="knowledgeChip.dot"
+        />
+        {{ t(knowledgeChip.label) }}
+      </span>
       <router-link
-        v-if="!isPdf"
+        v-if="showFaqPill"
         :to="faqsFilteredRoute"
         class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-n-alpha-2 hover:bg-n-alpha-3 text-n-slate-11 hover:text-n-slate-12 transition-colors shrink-0"
         @click.stop

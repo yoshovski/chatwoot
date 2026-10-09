@@ -481,6 +481,7 @@ onUnmounted(() => {
           :sync-in-progress="doc.sync_in_progress"
           :sync-stale-after-hours="syncIntervalHours"
           :responses-count="doc.responses_count"
+          :knowledge-state="doc.knowledge_state"
           :is-selected="canManageDocuments && bulkSelectedIds.has(doc.id)"
           :selectable="canManageDocuments"
           :show-selection-control="shouldShowSelectionControl(doc.id)"

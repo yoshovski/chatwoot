@@ -69,7 +69,9 @@ const mountCard = (props = {}) =>
         DropdownMenu: true,
         Checkbox: true,
         Icon: true,
-        'router-link': true,
+        'router-link': {
+          template: '<span data-test="faq-pill"><slot /></span>',
+        },
       },
     },
   });
@@ -137,5 +139,55 @@ describe('DocumentCard', () => {
     await switchComp.vm.$emit('update:modelValue', false);
 
     expect(wrapper.emitted('toggle')).toEqual([[{ id: 42, enabled: false }]]);
+  });
+
+  describe('with a Dify knowledge index', () => {
+    it.each([
+      ['searchable', 'CAPTAIN.DOCUMENTS.KNOWLEDGE_STATE.SEARCHABLE'],
+      ['indexing', 'CAPTAIN.DOCUMENTS.KNOWLEDGE_STATE.INDEXING'],
+      ['not_searchable', 'CAPTAIN.DOCUMENTS.KNOWLEDGE_STATE.NOT_SEARCHABLE'],
+      ['paused', 'CAPTAIN.DOCUMENTS.KNOWLEDGE_STATE.PAUSED'],
+    ])('shows the %s chip', (knowledgeState, label) => {
+      const wrapper = mountCard({ knowledgeState });
+
+      expect(wrapper.text()).toContain(label);
+    });
+
+    it('pulses the dot only while indexing', () => {
+      const dotOf = knowledgeState =>
+        mountCard({ knowledgeState }).get(
+          'span.rounded-full > span.size-1\\.5'
+        );
+
+      expect(dotOf('indexing').classes()).toContain('animate-pulse');
+      expect(dotOf('searchable').classes()).not.toContain('animate-pulse');
+    });
+
+    it('hides the FAQ pill when the page has no FAQs', () => {
+      const wrapper = mountCard({
+        knowledgeState: 'searchable',
+        responsesCount: 0,
+      });
+
+      expect(wrapper.find('[data-test="faq-pill"]').exists()).toBe(false);
+    });
+
+    it('shows the FAQ pill when the page has FAQs', () => {
+      const wrapper = mountCard({
+        knowledgeState: 'searchable',
+        responsesCount: 3,
+      });
+
+      expect(wrapper.find('[data-test="faq-pill"]').text()).toBe('3 FAQs');
+    });
+  });
+
+  describe('without a Dify knowledge index', () => {
+    it('keeps the FAQ pill, including 0 FAQs, and shows no chip', () => {
+      const wrapper = mountCard({ responsesCount: 0 });
+
+      expect(wrapper.find('[data-test="faq-pill"]').text()).toBe('0 FAQs');
+      expect(wrapper.text()).not.toContain('CAPTAIN.DOCUMENTS.KNOWLEDGE_STATE');
+    });
   });
 });

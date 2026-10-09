@@ -19,6 +19,7 @@ json.markdown_document resource.markdown_document?
 json.status resource.status
 json.syncable resource.syncable?
 json.sync_status resource.sync_status
+json.knowledge_state resource.knowledge_state
 json.sync_in_progress resource.sync_in_progress?
 json.last_synced_at resource.last_synced_at&.to_i
 json.last_sync_attempted_at resource.last_sync_attempted_at&.to_i
