@@ -28,13 +28,17 @@ describe('TemplateGallery', () => {
     const wrapper = mountGallery();
 
     expect(wrapper.findAll('[data-test^="template-"]')).toHaveLength(6);
-    expect(wrapper.text()).not.toContain('CAPTAIN.ASSISTANTS.SCENARIOS.TEMPLATES.NEEDS_SHOPIFY_TOOLTIP');
+    expect(wrapper.text()).not.toContain(
+      'CAPTAIN.ASSISTANTS.SCENARIOS.TEMPLATES.NEEDS_SHOPIFY_TOOLTIP'
+    );
   });
 
   it('emits the chosen template', async () => {
     const wrapper = mountGallery();
 
-    await wrapper.find('[data-test="template-request_a_quote"]').trigger('click');
+    await wrapper
+      .find('[data-test="template-request_a_quote"]')
+      .trigger('click');
 
     expect(wrapper.emitted('useTemplate')[0][0].id).toBe('request_a_quote');
   });

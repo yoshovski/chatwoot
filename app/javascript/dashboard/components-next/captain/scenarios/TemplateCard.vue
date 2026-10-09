@@ -2,7 +2,11 @@
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { getToolIdsFromInstruction } from './scenarioTools';
-import { countSteps, isTemplateAvailable } from './scenarioTemplates';
+import {
+  buildFromTemplate,
+  countSteps,
+  isTemplateAvailable,
+} from './scenarioTemplates';
 
 const props = defineProps({
   template: {
@@ -38,7 +42,7 @@ const isAvailable = computed(() =>
 );
 
 const defaultInstruction = computed(
-  () => props.template.build({}, props.tools).instruction
+  () => buildFromTemplate(props.template, {}, props.tools).instruction
 );
 
 const stepCount = computed(() => countSteps(defaultInstruction.value));

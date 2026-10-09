@@ -1,175 +1,158 @@
-import { describe, it, expect, vi } from 'vitest';
-import { mount } from '@vue/test-utils';
-import { nextTick } from 'vue';
 import {
   SCENARIO_TEMPLATES,
+  allowlistEntryFor,
+  buildFromTemplate,
   getTemplateById,
+  isLinkAllowed,
   resolveToolLink,
 } from './scenarioTemplates';
-import TemplateStepper from './TemplateStepper.vue';
 
 const sampleTools = [
-  { id: 'faq_lookup', emoji: '📚', title: 'Search knowledge' },
-  { id: 'catalog_product_search', emoji: '🛍️', title: 'Find products' },
-  { id: 'track_order', emoji: '📦', title: 'Track an order' },
-  { id: 'handoff', emoji: '🙋', title: 'Hand off to a person' },
-  { id: 'add_private_note', emoji: '📝', title: 'Add a private note' },
-  { id: 'add_label_to_conversation', emoji: '🏷️', title: 'Add a label' },
+  { id: 'faq_lookup', title: 'Search knowledge' },
+  { id: 'catalog_product_search', title: 'Find products' },
+  { id: 'track_order', title: 'Track an order' },
+  { id: 'handoff', title: 'Hand off to a person' },
+  { id: 'add_private_note', title: 'Add a private note' },
+  { id: 'add_label_to_conversation', title: 'Add a label' },
 ];
+
+const BOOKING_URL = 'https://cal.com/acme/intro';
+
+const answersWithEverything = template =>
+  Object.fromEntries(
+    template.questions.map(question => {
+      if (question.type === 'chips') {
+        return [
+          question.key,
+          [
+            ...question.groups.flatMap(group => group.options),
+            { custom: true, label: 'Site access hours' },
+          ],
+        ];
+      }
+      if (question.type === 'url') return [question.key, BOOKING_URL];
+      if (question.type === 'number') return [question.key, 12];
+      if (question.type === 'label') return [question.key, 'custom-label'];
+      if (question.type === 'select') return [question.key, question.default];
+      return [question.key, 'bulk orders'];
+    })
+  );
+
+const stepNumbers = instruction =>
+  [...instruction.matchAll(/^(\d+)\.\s/gm)].map(match => Number(match[1]));
 
 describe('scenarioTemplates', () => {
   describe('resolveToolLink', () => {
-    it('formats markdown link when tool is available', () => {
-      const link = resolveToolLink(
-        'faq_lookup',
-        'Search knowledge',
+    it('links an available tool and falls back to plain text', () => {
+      expect(
+        resolveToolLink('faq_lookup', 'Search knowledge', sampleTools)
+      ).toBe('[@Search knowledge](tool://faq_lookup)');
+      expect(resolveToolLink('faq_lookup', 'Search knowledge', [])).toBe(
+        'Search knowledge'
+      );
+    });
+  });
+
+  describe.each(SCENARIO_TEMPLATES.map(template => [template.id, template]))(
+    '%s',
+    (_id, template) => {
+      const builds = [
+        ['defaults', {}],
+        ['every option', answersWithEverything(template)],
+      ];
+
+      it.each(builds)('numbers steps without gaps (%s)', (_name, answers) => {
+        const { instruction } = buildFromTemplate(
+          template,
+          { booking_url: BOOKING_URL, ...answers },
+          sampleTools
+        );
+        const numbers = stepNumbers(instruction);
+
+        expect(numbers.length).toBeGreaterThan(2);
+        expect(numbers).toEqual(numbers.map((_n, index) => index + 1));
+      });
+
+      it('writes a routing description under 500 characters', () => {
+        const { description } = buildFromTemplate(template, {}, sampleTools);
+
+        expect(description).toMatch(/^Use when/);
+        expect(description.length).toBeLessThanOrEqual(500);
+      });
+
+      it('links only available tools', () => {
+        const withTools = buildFromTemplate(template, {}, sampleTools);
+        const linkedIds = [
+          ...withTools.instruction.matchAll(/tool:\/\/([^)]+)/g),
+        ].map(match => match[1]);
+
+        expect(linkedIds.length).toBeGreaterThan(0);
+        linkedIds.forEach(id =>
+          expect(sampleTools.map(tool => tool.id)).toContain(id)
+        );
+        expect(buildFromTemplate(template, {}, []).instruction).not.toContain(
+          'tool://'
+        );
+      });
+
+      it('writes custom fields and the label verbatim', () => {
+        const answers = answersWithEverything(template);
+        const { instruction } = buildFromTemplate(
+          template,
+          answers,
+          sampleTools
+        );
+        const hasChips = template.questions.some(q => q.type === 'chips');
+        const hasLabel = template.questions.some(q => q.type === 'label');
+
+        if (hasChips) expect(instruction).toContain('Site access hours');
+        if (hasLabel) expect(instruction).toContain('"custom-label"');
+      });
+    }
+  );
+
+  describe('Request a quote', () => {
+    const template = getTemplateById('request_a_quote');
+
+    it('collects contact details by default so the team can send the quote', () => {
+      const { instruction } = buildFromTemplate(template, {}, sampleTools);
+
+      expect(instruction).toContain('Name and email address');
+      expect(instruction).toContain('Hand the chat to the team');
+      expect(instruction).toContain('within 1 business day');
+    });
+
+    it('keeps the chat with the assistant for the note-only option', () => {
+      const { instruction } = buildFromTemplate(
+        template,
+        {
+          after_summary: 'note_only',
+          reply_time: 'other',
+          reply_time_other: 'within 3 hours',
+        },
         sampleTools
       );
-      expect(link).toBe('[@Search knowledge](tool://faq_lookup)');
-    });
 
-    it('returns plain default title when tool is not available', () => {
-      const link = resolveToolLink('faq_lookup', 'Search knowledge', []);
-      expect(link).toBe('Search knowledge');
+      expect(instruction).toContain('send the quote by email within 3 hours');
+      expect(instruction).not.toContain('tool://handoff');
     });
   });
 
-  describe('template build deterministic generation', () => {
-    SCENARIO_TEMPLATES.forEach(template => {
-      describe(template.id, () => {
-        it('builds description <= 500 chars with defaults', () => {
-          const result = template.build({}, sampleTools);
-          expect(result.description.length).toBeLessThanOrEqual(500);
-          expect(result.description).toMatch(/^Use when/);
-        });
-
-        it('includes only available tool links', () => {
-          const resultWithTools = template.build({}, sampleTools);
-          const toolMatches = [
-            ...(resultWithTools.instruction.matchAll(/tool:\/\/([^)]+)/g) ||
-              []),
-          ].map(m => m[1]);
-
-          const sampleIds = sampleTools.map(t => t.id);
-          toolMatches.forEach(id => {
-            expect(sampleIds).toContain(id);
-          });
-
-          // With empty tools list, no tool:// links should be present
-          const resultNoTools = template.build({}, []);
-          expect(resultNoTools.instruction).not.toContain('tool://');
-        });
-
-        it('includes custom or default label when template uses label', () => {
-          const labelQuestion = template.questions.find(q => q.key === 'label');
-          if (labelQuestion) {
-            const customLabel = 'custom_tag_123';
-            const result = template.build({ label: customLabel }, sampleTools);
-            expect(result.instruction).toContain(customLabel);
-          }
-        });
-      });
-    });
-  });
-
-  describe('TemplateStepper', () => {
-    const mountStepper = (props = {}) => {
-      return mount(TemplateStepper, {
-        props: {
-          tools: sampleTools,
-          assistant: { link_allowlist: ['cal.com'] },
-          ...props,
-        },
-        global: {
-          mocks: {
-            $t: (msg, vars) =>
-              typeof vars === 'object' ? JSON.stringify(vars) : msg,
-          },
-          stubs: {
-            ScenarioForm: {
-              props: ['instruction'],
-              template: '<div class="stub-editor">{{ instruction }}</div>',
-              methods: { validate: () => true },
-            },
-            Input: {
-              props: ['modelValue'],
-              template: '<input :value="modelValue" />',
-            },
-            TextArea: {
-              props: ['modelValue'],
-              template: '<textarea :value="modelValue" />',
-            },
-          },
-        },
-      });
-    };
-
-    it('shows preview with built instruction at the final step', async () => {
-      const template = getTemplateById('request_a_quote');
-      const wrapper = mountStepper({ template });
-
-      // Step through all questions to reach Preview
-      for (let i = 0; i < template.questions.length; i += 1) {
-        wrapper.vm.goToNext();
-      }
-      await nextTick();
-
-      expect(wrapper.vm.isPreviewStep).toBe(true);
-      expect(wrapper.vm.previewData.title).toBe('Request a quote');
-      expect(wrapper.vm.previewData.description).toContain('Use when');
-      expect(wrapper.vm.previewData.instruction).toContain(
-        'guide them through the quote request'
+  describe('link allowlist', () => {
+    it('matches booking links the way reply links are filtered', () => {
+      expect(isLinkAllowed(BOOKING_URL, ['https://store.example/'])).toBe(
+        false
       );
-      expect(wrapper.find('.stub-editor').text()).toContain(
-        'guide them through the quote request'
+      expect(isLinkAllowed(BOOKING_URL, ['https://cal.com/'])).toBe(true);
+      expect(isLinkAllowed(BOOKING_URL, ['https://cal.com'])).toBe(true);
+      expect(isLinkAllowed(BOOKING_URL, ['https://cal.com.evil.test/'])).toBe(
+        false
       );
+      expect(isLinkAllowed(BOOKING_URL, ['cal.com'])).toBe(false);
     });
 
-    it('asks to allowlist an unknown host on save for Book a call template', async () => {
-      const template = getTemplateById('book_a_call');
-      const wrapper = mountStepper({
-        template,
-        assistant: { link_allowlist: ['cal.com'] },
-      });
-
-      // Set booking URL with unknown host
-      wrapper.vm.answers.booking_url = 'https://unknown-scheduler.org/book';
-
-      // Step through to Preview
-      for (let i = 0; i < template.questions.length; i += 1) {
-        wrapper.vm.goToNext();
-      }
-      await nextTick();
-
-      // Trigger save
-      await wrapper.vm.saveScenario();
-      await nextTick();
-
-      expect(wrapper.vm.showAllowlistConfirm).toBe(true);
-      expect(wrapper.vm.pendingHost).toBe('unknown-scheduler.org');
-      expect(wrapper.emitted('add')).toBeFalsy();
-    });
-
-    it('does not ask to allowlist when host is already in allowlist', async () => {
-      const template = getTemplateById('book_a_call');
-      const wrapper = mountStepper({
-        template,
-        assistant: { link_allowlist: ['cal.com'] },
-      });
-
-      wrapper.vm.answers.booking_url = 'https://cal.com/team/demo';
-
-      for (let i = 0; i < template.questions.length; i += 1) {
-        wrapper.vm.goToNext();
-      }
-      await nextTick();
-
-      await wrapper.vm.saveScenario();
-      await nextTick();
-
-      expect(wrapper.vm.showAllowlistConfirm).toBe(false);
-      expect(wrapper.emitted('add')).toBeTruthy();
-      expect(wrapper.emitted('add')[0][0].title).toBe('Book a call');
+    it('allows the whole booking site, not the bare host', () => {
+      expect(allowlistEntryFor(BOOKING_URL)).toBe('https://cal.com/');
     });
   });
 });

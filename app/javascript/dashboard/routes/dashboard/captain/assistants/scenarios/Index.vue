@@ -39,22 +39,6 @@ const onDescribe = () => {
   addScenarioDialog.value.open({ tab: 'describe' });
 };
 
-const updateAssistantAllowlist = async host => {
-  try {
-    const currentList = assistant.value?.link_allowlist || [];
-    if (!currentList.includes(host)) {
-      await store.dispatch('captainAssistants/update', {
-        id: assistantId.value,
-        config: {
-          link_allowlist: [...currentList, host],
-        },
-      });
-    }
-  } catch {
-    // Ignore error
-  }
-};
-
 // Bulk selection & hover state
 const bulkSelectedIds = ref(new Set());
 const hoveredCard = ref(null);
@@ -233,7 +217,6 @@ onMounted(() => {
                 :assistant="assistant"
                 :tools="captainTools"
                 @add="addScenario"
-                @update-allowlist="updateAssistantAllowlist"
               />
             </template>
           </BulkSelectBar>

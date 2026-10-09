@@ -28,7 +28,7 @@ const props = defineProps({
   },
 });
 
-const emit = defineEmits(['add', 'updateAllowlist']);
+const emit = defineEmits(['add']);
 
 const { t } = useI18n();
 const route = useRoute();
@@ -220,7 +220,6 @@ defineExpose({
         :assistant="assistant"
         @back="selectedTemplate = null"
         @add="onAddFromTemplate"
-        @update-allowlist="emit('updateAllowlist', $event)"
       />
 
       <!-- Top Choices Segmented Navigation -->
