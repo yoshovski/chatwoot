@@ -22,6 +22,24 @@ class Api::V1::Accounts::Captain::ScenariosController < Api::V1::Accounts::BaseC
     head :no_content
   end
 
+  def draft
+    prompt = (params[:description] || params.dig(:scenario, :description)).to_s.strip
+    if prompt.length < 10 || prompt.length > 2000
+      return render json: { error: 'Description must be between 10 and 2,000 characters' }, status: :unprocessable_entity
+    end
+
+    result = Captain::Llm::ScenarioDraftService.new(
+      assistant: @assistant,
+      user_prompt: prompt
+    ).perform
+
+    if result
+      render json: result
+    else
+      render json: { error: 'Unable to generate scenario draft. Please try again with more details.' }, status: :unprocessable_entity
+    end
+  end
+
   private
 
   def set_assistant

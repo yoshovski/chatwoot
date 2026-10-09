@@ -258,4 +258,62 @@ RSpec.describe 'Api::V1::Accounts::Captain::Scenarios', type: :request do
       end
     end
   end
+
+  describe 'POST /api/v1/accounts/{account.id}/captain/assistants/{assistant.id}/scenarios/draft' do
+    let(:draft_prompt) { 'Collect quote requests from customers and hand off to our team' }
+    let(:draft_result) do
+      {
+        title: 'Request a quote',
+        description: 'Use when the customer asks for a quote or bulk pricing.',
+        instruction: "1. Collect details\n2. [@Find products](tool://catalog_product_search)",
+        tools: ['catalog_product_search'],
+        notes: []
+      }
+    end
+
+    context 'when it is an un-authenticated user' do
+      it 'returns unauthorized status' do
+        post "/api/v1/accounts/#{account.id}/captain/assistants/#{assistant.id}/scenarios/draft",
+             params: { description: draft_prompt }
+        expect(response).to have_http_status(:unauthorized)
+      end
+    end
+
+    context 'when it is an agent' do
+      it 'returns unauthorized status' do
+        post "/api/v1/accounts/#{account.id}/captain/assistants/#{assistant.id}/scenarios/draft",
+             headers: agent.create_new_auth_token,
+             params: { description: draft_prompt }
+        expect(response).to have_http_status(:unauthorized)
+      end
+    end
+
+    context 'when it is an admin' do
+      it 'returns 200 with generated scenario draft' do
+        service = instance_double(Captain::Llm::ScenarioDraftService, perform: draft_result)
+        expect(Captain::Llm::ScenarioDraftService).to receive(:new).with(
+          assistant: assistant,
+          user_prompt: draft_prompt
+        ).and_return(service)
+
+        post "/api/v1/accounts/#{account.id}/captain/assistants/#{assistant.id}/scenarios/draft",
+             headers: admin.create_new_auth_token,
+             params: { description: draft_prompt },
+             as: :json
+
+        expect(response).to have_http_status(:success)
+        expect(json_response[:title]).to eq('Request a quote')
+        expect(json_response[:tools]).to eq(['catalog_product_search'])
+      end
+
+      it 'returns 422 if description is too short' do
+        post "/api/v1/accounts/#{account.id}/captain/assistants/#{assistant.id}/scenarios/draft",
+             headers: admin.create_new_auth_token,
+             params: { description: 'short' },
+             as: :json
+
+        expect(response).to have_http_status(:unprocessable_entity)
+      end
+    end
+  end
 end

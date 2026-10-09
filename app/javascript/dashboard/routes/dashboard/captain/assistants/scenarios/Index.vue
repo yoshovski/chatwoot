@@ -226,7 +226,12 @@ onMounted(() => {
             @bulk-delete="bulkDeleteScenarios"
           >
             <template #default-actions>
-              <AddNewScenariosDialog @add="addScenario" />
+              <AddNewScenariosDialog
+                :assistant-id="assistantId"
+                :tools="captainTools"
+                @add="addScenario"
+                @use-template="onUseTemplate"
+              />
             </template>
           </BulkSelectBar>
           <div

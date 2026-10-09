@@ -691,6 +691,7 @@ en:
         copilot: 'Copilot'
         label_suggestion: 'Label suggestion'
         document_faq_generation: 'Document FAQ generation'
+        scenario_builder: 'Scenario builder'
         conversation_faq_generation: 'Conversation FAQ generation'
         conversation_faq_matching: 'Conversation FAQ matching'
         help_center_article_generation: 'Help center article generation'

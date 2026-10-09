@@ -34,5 +34,17 @@ export default createStore({
         return throwErrorMessage(error);
       }
     },
+
+    draft: async (_store, { assistantId, description }) => {
+      try {
+        const response = await CaptainScenarios.draft({
+          assistantId,
+          description,
+        });
+        return response.data;
+      } catch (error) {
+        return throwErrorMessage(error);
+      }
+    },
   }),
 });
