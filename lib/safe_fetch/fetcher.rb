@@ -1,4 +1,10 @@
 class SafeFetch::Fetcher
+  NETWORK_ERRORS = [
+    Net::OpenTimeout, Net::ReadTimeout, SocketError, OpenSSL::SSL::SSLError,
+    IOError, Errno::ECONNABORTED, Errno::ECONNREFUSED, Errno::ECONNRESET,
+    Errno::EHOSTUNREACH, Errno::ENETUNREACH, Errno::EPIPE, Errno::ETIMEDOUT
+  ].freeze
+
   def initialize(options)
     @options = options
   end
@@ -15,6 +21,19 @@ class SafeFetch::Fetcher
         content_type: normalized_content_type(response['content-type'])
       )
     end
+  end
+
+  def probe
+    probed = nil
+    catch(:probed) do
+      perform_request do |res|
+        probed = SafeFetch::Probe.new(status: res.code.to_i, headers: res.each_header.to_h)
+        throw :probed if res.is_a?(Net::HTTPSuccess)
+      end
+    end
+    probed
+  rescue *NETWORK_ERRORS => e
+    raise SafeFetch::FetchError, e.message
   end
 
   private
@@ -37,9 +56,7 @@ class SafeFetch::Fetcher
       validate_content_type!(res['content-type'])
       bytes_written = write_response_body(res, tempfile, bytes_written)
     end
-  rescue Net::OpenTimeout, Net::ReadTimeout, SocketError, OpenSSL::SSL::SSLError,
-         IOError, Errno::ECONNABORTED, Errno::ECONNREFUSED, Errno::ECONNRESET,
-         Errno::EHOSTUNREACH, Errno::ENETUNREACH, Errno::EPIPE, Errno::ETIMEDOUT => e
+  rescue *NETWORK_ERRORS => e
     raise SafeFetch::FetchError, e.message
   end
 
