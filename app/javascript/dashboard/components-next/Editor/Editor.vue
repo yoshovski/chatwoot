@@ -149,12 +149,7 @@ watch(
       </div>
     </div>
     <p v-if="enableCaptainTools" class="mt-1 mb-0 text-xs text-n-slate-11">
-      {{
-        t(
-          'CAPTAIN.ASSISTANTS.SCENARIOS.PALETTE.TIP',
-          'Tip: type @ to add a tool anywhere in the text.'
-        )
-      }}
+      {{ t('CAPTAIN.ASSISTANTS.SCENARIOS.PALETTE.TIP') }}
     </p>
     <p
       v-if="message"

@@ -1114,7 +1114,7 @@
           "MORE": "More tools",
           "SEARCH": "Search tools...",
           "NO_RESULTS": "No tools found",
-          "TIP": "Tip: type @ to add a tool anywhere in the text."
+          "TIP": "Tip: type {'@'} to add a tool anywhere in the text."
         },
         "TEMPLATES": {
           "GALLERY_TITLE": "Scenario templates",
