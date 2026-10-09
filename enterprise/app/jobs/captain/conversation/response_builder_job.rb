@@ -188,9 +188,9 @@ class Captain::Conversation::ResponseBuilderJob < ApplicationJob # rubocop:disab
     @response['response'] == 'conversation_handoff'
   end
 
-  def v2_handoff_tool_fired? = @response['handoff_tool_called']
+  def v2_handoff_tool_fired? = Captain::Conversation::HandoffDetector.tool_fired?(@response)
   def v2_handoff_tool_completed? = @v2_handoff_tool_completed == true
-  def v2_handoff_declared? = @response['handoff_requested'] == true
+  def v2_handoff_declared? = Captain::Conversation::HandoffDetector.declared?(@response)
 
   def process_v1_handoff
     I18n.with_locale(@assistant.account.locale) do
@@ -251,9 +251,14 @@ class Captain::Conversation::ResponseBuilderJob < ApplicationJob # rubocop:disab
   def v2_empty_response_handoff?
     return false unless captain_v2_enabled?
     return false unless conversation_pending?
-    return false unless v2_formatted_prose_blank?
 
-    !v2_catalog_searches_empty? && !v2_customer_message_has_attachments? && !v2_model_returned_answer?
+    handoff_detector.empty_response?
+  end
+
+  def handoff_detector
+    Captain::Conversation::HandoffDetector.new(
+      assistant: @assistant, response: @response, customer_message: responding_to_customer_message, composer: reply_composer
+    )
   end
 
   def process_v2_empty_response_handoff
@@ -299,13 +304,7 @@ class Captain::Conversation::ResponseBuilderJob < ApplicationJob # rubocop:disab
     return false unless @assistant.handoff_safety_net?
     return false unless conversation_pending?
 
-    customer_msg = responding_to_customer_message
-    answer_text = Captain::Assistant::ResponseParts.from_response(@response).plain_text
-    Captain::Conversation::HandoffSafetyNet.new(
-      assistant: @assistant,
-      customer_message: customer_msg,
-      answer: answer_text
-    ).triggered?
+    handoff_detector.safety_net_triggered?
   end
 
   def deliverable_v2_handoff_answer?
