@@ -3,6 +3,7 @@ import { ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import Button from 'dashboard/components-next/button/Button.vue';
 import RadioCard from 'dashboard/components-next/radioCard/RadioCard.vue';
+import WorkingHoursChart from './WorkingHoursChart.vue';
 
 const props = defineProps({
   assistant: {
@@ -45,7 +46,7 @@ watch(
 
 <template>
   <div class="flex flex-col gap-4">
-    <div class="flex flex-col gap-3">
+    <div class="grid gap-3 lg:grid-cols-3">
       <RadioCard
         v-for="option in OPTIONS"
         :id="option"
@@ -54,18 +55,18 @@ watch(
           t(`CAPTAIN.ASSISTANTS.FORM.SCHEDULE.${option.toUpperCase()}.LABEL`)
         "
         :description="
-          t(`CAPTAIN.ASSISTANTS.FORM.SCHEDULE.${option.toUpperCase()}.DESC`)
+          t(`CAPTAIN.ASSISTANTS.FORM.SCHEDULE.${option.toUpperCase()}.DESC`, {
+            name: assistant.name,
+          })
         "
         :is-active="selected === option"
         @select="selected = $event"
       />
     </div>
-    <p class="text-sm text-n-slate-11">
-      {{ t('CAPTAIN.ASSISTANTS.FORM.SCHEDULE.HINT') }}
-    </p>
+    <WorkingHoursChart :response-window="selected" :name="assistant.name" />
     <div>
       <Button
-        :label="t('CAPTAIN.ASSISTANTS.FORM.UPDATE')"
+        :label="t('CAPTAIN.ASSISTANTS.SETTINGS.SAVE')"
         @click="handleSubmit"
       />
     </div>

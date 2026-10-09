@@ -10,6 +10,9 @@ import Input from 'dashboard/components-next/input/Input.vue';
 import Button from 'dashboard/components-next/button/Button.vue';
 
 import SettingsPageLayout from 'dashboard/components-next/captain/pageComponents/assistant/settings/SettingsPageLayout.vue';
+import SettingsCard from 'dashboard/components-next/captain/pageComponents/assistant/settings/SettingsCard.vue';
+import SettingsSwitchRow from 'dashboard/components-next/captain/pageComponents/assistant/settings/SettingsSwitchRow.vue';
+import SettingsHeader from 'dashboard/components-next/captain/pageComponents/settings/SettingsHeader.vue';
 import SuggestedRules from 'dashboard/components-next/captain/assistant/SuggestedRules.vue';
 import AddNewRulesInput from 'dashboard/components-next/captain/assistant/AddNewRulesInput.vue';
 import AddNewRulesDialog from 'dashboard/components-next/captain/assistant/AddNewRulesDialog.vue';
@@ -19,7 +22,15 @@ import BulkSelectBar from 'dashboard/components-next/captain/assistant/BulkSelec
 const { t } = useI18n();
 const store = useStore();
 const { uiSettings, updateUISettings } = useUISettings();
-const { assistantId, assistant } = useAssistantSettings();
+const { assistantId, assistant, updateAssistant } = useAssistantSettings();
+
+const contactAccess = computed({
+  get: () => Boolean(assistant.value?.config?.feature_contact_attributes),
+  set: value =>
+    updateAssistant({
+      config: { ...assistant.value.config, feature_contact_attributes: value },
+    }),
+});
 
 const searchQuery = ref('');
 const newInlineRule = ref('');
@@ -162,9 +173,32 @@ const addAllExample = () => {
 
 <template>
   <SettingsPageLayout
-    :heading="t('CAPTAIN.ASSISTANTS.GUARDRAILS.TITLE')"
-    :description="t('CAPTAIN.ASSISTANTS.GUARDRAILS.DESCRIPTION')"
+    :heading="
+      t('CAPTAIN.ASSISTANTS.SETTINGS.BOUNDARIES.TITLE', { name: assistant.name })
+    "
+    :description="
+      t('CAPTAIN.ASSISTANTS.SETTINGS.BOUNDARIES.DESCRIPTION', {
+        name: assistant.name,
+      })
+    "
   >
+    <SettingsCard>
+      <SettingsSwitchRow
+        v-model="contactAccess"
+        class="!py-0"
+        :title="t('CAPTAIN.ASSISTANTS.SETTINGS.BOUNDARIES.CONTACT_ACCESS.TITLE')"
+        :description="
+          t('CAPTAIN.ASSISTANTS.SETTINGS.BOUNDARIES.CONTACT_ACCESS.DESC', {
+            name: assistant.name,
+          })
+        "
+      />
+    </SettingsCard>
+    <SettingsHeader
+      class="pt-2"
+      :heading="t('CAPTAIN.ASSISTANTS.SETTINGS.BOUNDARIES.LIST_TITLE')"
+      :description="t('CAPTAIN.ASSISTANTS.GUARDRAILS.DESCRIPTION')"
+    />
     <SuggestedRules
       v-if="shouldShowSuggestedRules"
       :title="t('CAPTAIN.ASSISTANTS.GUARDRAILS.ADD.SUGGESTED.TITLE')"

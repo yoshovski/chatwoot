@@ -2,7 +2,7 @@
 import { useI18n } from 'vue-i18n';
 import { useAssistantSettings } from './useAssistantSettings';
 import SettingsPageLayout from 'dashboard/components-next/captain/pageComponents/assistant/settings/SettingsPageLayout.vue';
-import AssistantHandoverForm from 'dashboard/components-next/captain/pageComponents/assistant/settings/AssistantHandoverForm.vue';
+import AssistantAfterChatForm from 'dashboard/components-next/captain/pageComponents/assistant/settings/AssistantAfterChatForm.vue';
 
 const { t } = useI18n();
 const { assistant, updateAssistant } = useAssistantSettings();
@@ -10,13 +10,9 @@ const { assistant, updateAssistant } = useAssistantSettings();
 
 <template>
   <SettingsPageLayout
-    :heading="t('CAPTAIN.ASSISTANTS.SETTINGS.HANDOVER.TITLE')"
-    :description="
-      t('CAPTAIN.ASSISTANTS.SETTINGS.HANDOVER.DESCRIPTION', {
-        name: assistant.name,
-      })
-    "
+    :heading="t('CAPTAIN.ASSISTANTS.SETTINGS.AFTER_CHAT.TITLE')"
+    :description="t('CAPTAIN.ASSISTANTS.SETTINGS.AFTER_CHAT.DESCRIPTION')"
   >
-    <AssistantHandoverForm :assistant="assistant" @submit="updateAssistant" />
+    <AssistantAfterChatForm :assistant="assistant" @submit="updateAssistant" />
   </SettingsPageLayout>
 </template>

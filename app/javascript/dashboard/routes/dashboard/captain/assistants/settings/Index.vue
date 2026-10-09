@@ -7,6 +7,7 @@ import { useAssistantSettings } from './useAssistantSettings';
 import Button from 'dashboard/components-next/button/Button.vue';
 import SettingsPageLayout from 'dashboard/components-next/captain/pageComponents/assistant/settings/SettingsPageLayout.vue';
 import AssistantBasicSettingsForm from 'dashboard/components-next/captain/pageComponents/assistant/settings/AssistantBasicSettingsForm.vue';
+import AssistantChatPreview from 'dashboard/components-next/captain/pageComponents/assistant/settings/AssistantChatPreview.vue';
 import DeleteDialog from 'dashboard/components-next/captain/pageComponents/DeleteDialog.vue';
 
 const { t } = useI18n();
@@ -50,36 +51,58 @@ const handleDeleteSuccess = () => {
 
 <template>
   <SettingsPageLayout
-    :heading="t('CAPTAIN.ASSISTANTS.SETTINGS.BASIC_SETTINGS.TITLE')"
-    :description="t('CAPTAIN.ASSISTANTS.SETTINGS.BASIC_SETTINGS.DESCRIPTION')"
+    :heading="
+      t('CAPTAIN.ASSISTANTS.SETTINGS.IDENTITY.TITLE', { name: assistant.name })
+    "
+    :description="
+      t('CAPTAIN.ASSISTANTS.SETTINGS.IDENTITY.DESCRIPTION', {
+        name: assistant.name,
+      })
+    "
   >
-    <AssistantBasicSettingsForm
-      :assistant="assistant"
-      @submit="updateAssistant"
-      @delete-avatar="deleteAssistantAvatar"
-    />
-    <span class="w-full h-px mt-2 bg-n-weak" />
-    <div class="flex items-end justify-between w-full gap-4">
-      <div class="flex flex-col gap-2">
-        <h6 class="text-base font-medium text-n-slate-12">
-          {{ t('CAPTAIN.ASSISTANTS.SETTINGS.DELETE.TITLE') }}
-        </h6>
+    <div class="flex flex-col gap-6 lg:flex-row lg:items-start">
+      <AssistantBasicSettingsForm
+        :assistant="assistant"
+        class="flex-1 min-w-0"
+        @submit="updateAssistant"
+        @delete-avatar="deleteAssistantAvatar"
+      />
+      <AssistantChatPreview
+        :name="assistant.name"
+        :avatar-url="assistant.avatar_url"
+        class="lg:w-72 shrink-0"
+      />
+    </div>
+    <div
+      class="flex flex-wrap items-center justify-between w-full gap-4 px-5 py-4 rounded-xl outline outline-1 outline-n-ruby-5 bg-n-solid-1"
+    >
+      <div class="flex flex-col gap-0.5">
+        <span class="text-sm font-medium text-n-slate-12">
+          {{
+            t('CAPTAIN.ASSISTANTS.SETTINGS.IDENTITY.REMOVE_TITLE', {
+              name: assistant.name,
+            })
+          }}
+        </span>
         <span class="text-sm text-n-slate-11">
-          {{ t('CAPTAIN.ASSISTANTS.SETTINGS.DELETE.DESCRIPTION') }}
+          {{
+            t('CAPTAIN.ASSISTANTS.SETTINGS.IDENTITY.REMOVE_DESCRIPTION', {
+              name: assistant.name,
+            })
+          }}
         </span>
       </div>
-      <div class="flex-shrink-0">
-        <Button
-          :label="
-            t('CAPTAIN.ASSISTANTS.SETTINGS.DELETE.BUTTON_TEXT', {
-              assistantName: assistant.name,
-            })
-          "
-          color="ruby"
-          class="max-w-56 !w-fit"
-          @click="handleDelete"
-        />
-      </div>
+      <Button
+        :label="
+          t('CAPTAIN.ASSISTANTS.SETTINGS.IDENTITY.REMOVE_TITLE', {
+            name: assistant.name,
+          })
+        "
+        color="ruby"
+        variant="faded"
+        size="sm"
+        @click="handleDelete"
+      />
     </div>
     <DeleteDialog
       v-if="assistant"

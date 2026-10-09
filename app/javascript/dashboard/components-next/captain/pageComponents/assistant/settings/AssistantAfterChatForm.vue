@@ -13,6 +13,9 @@ import RadioCard from 'dashboard/components-next/radioCard/RadioCard.vue';
 import SettingsToggleSection from 'dashboard/components-next/Settings/SettingsToggleSection.vue';
 import Switch from 'dashboard/components-next/switch/Switch.vue';
 import DurationSelect from './DurationSelect.vue';
+import SettingsCard from './SettingsCard.vue';
+import SettingsSwitchRow from './SettingsSwitchRow.vue';
+import { useAdmin } from 'dashboard/composables/useAdmin';
 
 const props = defineProps({
   assistant: {
@@ -25,6 +28,7 @@ const emit = defineEmits(['submit']);
 
 const { t } = useI18n();
 const { isCloudFeatureEnabled } = useAccount();
+const { isAdmin } = useAdmin();
 
 const isCaptainV2Enabled = computed(() =>
   isCloudFeatureEnabled(FEATURE_FLAGS.CAPTAIN_V2)
@@ -34,42 +38,52 @@ const MIN_INACTIVITY_MINUTES = 5;
 const MAX_INACTIVITY_MINUTES = 24 * 60;
 
 const initialState = {
-  handoffMessage: '',
   resolutionMessage: '',
-  instructions: '',
   autoResolveMode: 'evaluated',
   inactivityThresholdMinutes: 60,
   sendInactivityResolutionMessage: true,
+  replyLabels: false,
+  outcomeLabels: false,
+  conversationFaqs: false,
+  memories: false,
 };
 
 const state = reactive({ ...initialState });
+
+const name = computed(() => props.assistant.name);
 
 const autoResolveOptions = computed(() => [
   {
     value: 'evaluated',
     label: t(
-      'CAPTAIN.ASSISTANTS.FORM.INACTIVITY_RESOLUTION.MODES.EVALUATED.LABEL'
+      'CAPTAIN.ASSISTANTS.FORM.INACTIVITY_RESOLUTION.MODES.EVALUATED.LABEL',
+      { name: name.value }
     ),
     description: t(
-      'CAPTAIN.ASSISTANTS.FORM.INACTIVITY_RESOLUTION.MODES.EVALUATED.DESCRIPTION'
+      'CAPTAIN.ASSISTANTS.FORM.INACTIVITY_RESOLUTION.MODES.EVALUATED.DESCRIPTION',
+      { name: name.value }
     ),
   },
   {
     value: 'legacy',
     label: t(
-      'CAPTAIN.ASSISTANTS.FORM.INACTIVITY_RESOLUTION.MODES.LEGACY.LABEL'
+      'CAPTAIN.ASSISTANTS.FORM.INACTIVITY_RESOLUTION.MODES.LEGACY.LABEL',
+      { name: name.value }
     ),
     description: t(
-      'CAPTAIN.ASSISTANTS.FORM.INACTIVITY_RESOLUTION.MODES.LEGACY.DESCRIPTION'
+      'CAPTAIN.ASSISTANTS.FORM.INACTIVITY_RESOLUTION.MODES.LEGACY.DESCRIPTION',
+      { name: name.value }
     ),
   },
   {
     value: 'disabled',
     label: t(
-      'CAPTAIN.ASSISTANTS.FORM.INACTIVITY_RESOLUTION.MODES.DISABLED.LABEL'
+      'CAPTAIN.ASSISTANTS.FORM.INACTIVITY_RESOLUTION.MODES.DISABLED.LABEL',
+      { name: name.value }
     ),
     description: t(
-      'CAPTAIN.ASSISTANTS.FORM.INACTIVITY_RESOLUTION.MODES.DISABLED.DESCRIPTION'
+      'CAPTAIN.ASSISTANTS.FORM.INACTIVITY_RESOLUTION.MODES.DISABLED.DESCRIPTION',
+      { name: name.value }
     ),
   },
 ]);
@@ -84,9 +98,7 @@ const initialActionTimingLabel = computed(() =>
 );
 
 const validationRules = {
-  handoffMessage: { minLength: minLength(1) },
   resolutionMessage: { minLength: minLength(1) },
-  instructions: { minLength: minLength(1) },
   inactivityThresholdMinutes: {
     required,
     minValue: minValue(MIN_INACTIVITY_MINUTES),
@@ -101,29 +113,27 @@ const getErrorMessage = field => {
 };
 
 const formErrors = computed(() => ({
-  handoffMessage: getErrorMessage('handoffMessage'),
   resolutionMessage: getErrorMessage('resolutionMessage'),
-  instructions: getErrorMessage('instructions'),
   inactivityThresholdMinutes: getErrorMessage('inactivityThresholdMinutes'),
 }));
 
 const updateStateFromAssistant = assistant => {
   const { config = {} } = assistant;
-  state.handoffMessage = config.handoff_message;
   state.resolutionMessage = config.resolution_message;
-  state.instructions = config.instructions;
   state.autoResolveMode = config.auto_resolve_mode ?? 'evaluated';
   state.inactivityThresholdMinutes = config.auto_resolve_after ?? 60;
   state.sendInactivityResolutionMessage =
     config.send_inactivity_resolution_message ?? true;
+  state.replyLabels = config.reply_labels || false;
+  state.outcomeLabels = config.outcome_labels || false;
+  state.conversationFaqs = config.feature_faq || false;
+  state.memories = config.feature_memory || false;
 };
 
 const fieldsToValidate = () => {
-  if (!isCaptainV2Enabled.value) {
-    return ['handoffMessage', 'resolutionMessage', 'instructions'];
-  }
+  const fields = [];
+  if (!isCaptainV2Enabled.value) return fields;
 
-  const fields = ['handoffMessage'];
   if (shouldShowInactivityDuration.value) {
     fields.push('inactivityThresholdMinutes');
     if (state.sendInactivityResolutionMessage) fields.push('resolutionMessage');
@@ -131,7 +141,7 @@ const fieldsToValidate = () => {
   return fields;
 };
 
-const handleSystemMessagesUpdate = async () => {
+const handleSubmit = async () => {
   const isValid = await Promise.all(
     fieldsToValidate().map(field => v$.value[field].$validate())
   ).then(results => results.every(Boolean));
@@ -140,7 +150,10 @@ const handleSystemMessagesUpdate = async () => {
   const payload = {
     config: {
       ...props.assistant.config,
-      handoff_message: state.handoffMessage,
+      reply_labels: state.replyLabels,
+      outcome_labels: state.outcomeLabels,
+      feature_faq: state.conversationFaqs,
+      feature_memory: state.memories,
     },
   };
 
@@ -151,9 +164,6 @@ const handleSystemMessagesUpdate = async () => {
       send_inactivity_resolution_message: state.sendInactivityResolutionMessage,
       resolution_message: state.resolutionMessage,
     });
-  } else {
-    payload.config.resolution_message = state.resolutionMessage;
-    payload.config.instructions = state.instructions;
   }
 
   emit('submit', payload);
@@ -173,10 +183,7 @@ watch(
     <SettingsToggleSection
       v-if="isCaptainV2Enabled"
       hide-toggle
-      :header="t('CAPTAIN.ASSISTANTS.FORM.INACTIVITY_RESOLUTION.TITLE')"
-      :description="
-        t('CAPTAIN.ASSISTANTS.FORM.INACTIVITY_RESOLUTION.DESCRIPTION')
-      "
+      :header="t('CAPTAIN.ASSISTANTS.SETTINGS.AFTER_CHAT.QUIET_TITLE')"
     >
       <div class="flex w-full flex-col gap-4 pt-3">
         <div
@@ -239,7 +246,9 @@ watch(
           <div class="flex items-start gap-2">
             <span class="i-lucide-triangle-alert mt-0.5 size-4 shrink-0" />
             {{
-              t('CAPTAIN.ASSISTANTS.FORM.INACTIVITY_RESOLUTION.ALWAYS_WARNING')
+              t('CAPTAIN.ASSISTANTS.FORM.INACTIVITY_RESOLUTION.ALWAYS_WARNING', {
+                name,
+              })
             }}
           </div>
         </Banner>
@@ -308,48 +317,45 @@ watch(
       </template>
     </SettingsToggleSection>
 
-    <SettingsToggleSection
-      hide-toggle
-      :header="t('CAPTAIN.ASSISTANTS.FORM.HANDOFF_MESSAGE.LABEL')"
+    <SettingsCard
+      v-if="isAdmin"
+      :title="t('CAPTAIN.ASSISTANTS.SETTINGS.AFTER_CHAT.ORGANIZE')"
     >
-      <template #editor>
-        <Editor
-          v-model="state.handoffMessage"
-          :placeholder="
-            t('CAPTAIN.ASSISTANTS.FORM.HANDOFF_MESSAGE.PLACEHOLDER')
-          "
-          :message="formErrors.handoffMessage"
-          :message-type="formErrors.handoffMessage ? 'error' : 'info'"
-          class="z-0 [&_.editor-wrapper]:!min-h-32 [&_.editor-wrapper]:!border-0 [&_.editor-wrapper]:!bg-transparent [&_.editor-wrapper]:!p-0"
-        />
-      </template>
-    </SettingsToggleSection>
+      <SettingsSwitchRow
+        v-model="state.replyLabels"
+        :title="t('CAPTAIN.ASSISTANTS.SETTINGS.AFTER_CHAT.TOPIC_LABELS.TITLE')"
+        :description="
+          t('CAPTAIN.ASSISTANTS.SETTINGS.AFTER_CHAT.TOPIC_LABELS.DESC')
+        "
+      />
+      <SettingsSwitchRow
+        v-model="state.outcomeLabels"
+        :title="t('CAPTAIN.ASSISTANTS.SETTINGS.AFTER_CHAT.OUTCOME_LABELS.TITLE')"
+        :description="
+          t('CAPTAIN.ASSISTANTS.SETTINGS.AFTER_CHAT.OUTCOME_LABELS.DESC')
+        "
+      />
+    </SettingsCard>
 
-    <Editor
-      v-if="!isCaptainV2Enabled"
-      v-model="state.resolutionMessage"
-      :label="t('CAPTAIN.ASSISTANTS.FORM.RESOLUTION_MESSAGE.LABEL')"
-      :placeholder="t('CAPTAIN.ASSISTANTS.FORM.RESOLUTION_MESSAGE.PLACEHOLDER')"
-      :message="formErrors.resolutionMessage"
-      :message-type="formErrors.resolutionMessage ? 'error' : 'info'"
-      class="z-0"
-    />
-
-    <Editor
-      v-if="!isCaptainV2Enabled"
-      v-model="state.instructions"
-      :label="t('CAPTAIN.ASSISTANTS.FORM.INSTRUCTIONS.LABEL')"
-      :placeholder="t('CAPTAIN.ASSISTANTS.FORM.INSTRUCTIONS.PLACEHOLDER')"
-      :message="formErrors.instructions"
-      :max-length="20000"
-      :message-type="formErrors.instructions ? 'error' : 'info'"
-      class="z-0"
-    />
+    <SettingsCard :title="t('CAPTAIN.ASSISTANTS.SETTINGS.AFTER_CHAT.LEARN')">
+      <SettingsSwitchRow
+        v-model="state.conversationFaqs"
+        :title="t('CAPTAIN.ASSISTANTS.SETTINGS.AFTER_CHAT.FAQS.TITLE')"
+        :description="t('CAPTAIN.ASSISTANTS.SETTINGS.AFTER_CHAT.FAQS.DESC')"
+      />
+      <SettingsSwitchRow
+        v-model="state.memories"
+        :title="t('CAPTAIN.ASSISTANTS.SETTINGS.AFTER_CHAT.MEMORIES.TITLE')"
+        :description="
+          t('CAPTAIN.ASSISTANTS.SETTINGS.AFTER_CHAT.MEMORIES.DESC', { name })
+        "
+      />
+    </SettingsCard>
 
     <div>
       <Button
-        :label="t('CAPTAIN.ASSISTANTS.FORM.UPDATE')"
-        @click="handleSystemMessagesUpdate"
+        :label="t('CAPTAIN.ASSISTANTS.SETTINGS.SAVE')"
+        @click="handleSubmit"
       />
     </div>
   </div>
