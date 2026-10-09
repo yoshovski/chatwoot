@@ -225,7 +225,9 @@ watch(
       v-model="state.name"
       :label="t('CAPTAIN.ASSISTANTS.FORM.NAME.LABEL')"
       :placeholder="t('CAPTAIN.ASSISTANTS.FORM.NAME.PLACEHOLDER')"
-      :message="formErrors.name"
+      :message="
+        formErrors.name || t('CAPTAIN.ASSISTANTS.FORM.NAME.AI_BADGE_NOTE')
+      "
       :message-type="formErrors.name ? 'error' : 'info'"
     />
 

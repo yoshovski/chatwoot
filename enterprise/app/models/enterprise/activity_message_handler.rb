@@ -11,6 +11,18 @@ module Enterprise::ActivityMessageHandler
 
   private
 
+  def activity_message_owner(user_name)
+    captain_assistant_name(user_name) || super
+  end
+
+  def priority_change_activity(user_name)
+    super(captain_assistant_name(user_name) || user_name)
+  end
+
+  def captain_assistant_name(user_name)
+    Current.executed_by.name if user_name.blank? && Current.executed_by.instance_of?(Captain::Assistant)
+  end
+
   def captain_status_reason
     captain_activity_reason.presence
   end

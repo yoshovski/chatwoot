@@ -6,6 +6,7 @@ import { useMapGetter, useStore } from 'dashboard/composables/store.js';
 
 import Button from 'dashboard/components-next/button/Button.vue';
 import Avatar from 'dashboard/components-next/avatar/Avatar.vue';
+import AssistantBrandChip from 'dashboard/components-next/captain/assistant/AssistantBrandChip.vue';
 
 const emit = defineEmits(['close', 'createAssistant']);
 
@@ -123,8 +124,10 @@ const openCreateAssistantDialog = () => {
         <span class="text-sm font-medium truncate text-n-slate-12">
           {{ assistant.name || '' }}
         </span>
+        <AssistantBrandChip :name="assistant.name || ''" />
         <Avatar
           v-if="assistant"
+          :src="assistant.avatar_url"
           :name="assistant.name"
           :size="20"
           icon-name="i-lucide-bot"

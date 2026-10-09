@@ -30,6 +30,7 @@ export default {
     },
     agentName: { type: String, default: '' },
     showAgentName: { type: Boolean, default: false },
+    showAiBadge: { type: Boolean, default: false },
     hideOptions: { type: Boolean, default: false },
   },
   setup() {
@@ -123,6 +124,7 @@ export default {
         :hide-fields="hideOptions"
         :agent-name="agentName"
         :show-agent-name="showAgentName"
+        :show-ai-badge="showAiBadge"
         @option-select="onOptionSelect"
       />
     </div>

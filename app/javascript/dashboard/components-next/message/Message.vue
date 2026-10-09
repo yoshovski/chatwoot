@@ -533,7 +533,11 @@ const avatarTooltip = computed(() => {
     return replaceInstallationName(t('CONVERSATION.NATIVE_APP_ADVISORY'));
   }
   if (avatarInfo.value.name === '') return '';
-  return `${t('CONVERSATION.SENT_BY')} ${avatarInfo.value.name}`;
+  const aiBadge =
+    props.sender?.type === SENDER_TYPES.CAPTAIN_ASSISTANT
+      ? ` (${t('CONVERSATION.AI_BADGE')})`
+      : '';
+  return `${t('CONVERSATION.SENT_BY')} ${avatarInfo.value.name}${aiBadge}`;
 });
 
 const setupHighlightTimer = () => {

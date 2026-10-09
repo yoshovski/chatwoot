@@ -1,0 +1,10 @@
+<svg width="96" height="96" viewBox="0 0 96 96" fill="none" xmlns="http://www.w3.org/2000/svg">
+<defs>
+<linearGradient id="tony-bg" x1="0" y1="0" x2="96" y2="96" gradientUnits="userSpaceOnUse">
+<stop stop-color="#6E56CF"/>
+<stop offset="1" stop-color="#2F6FEB"/>
+</linearGradient>
+</defs>
+<rect width="96" height="96" rx="24" fill="url(#tony-bg)"/>
+<path d="M26 28H70V38H54V70H42V38H26V28Z" fill="#FFFFFF"/>
+</svg>

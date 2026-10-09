@@ -42,6 +42,10 @@
   value: 'Chatwoot'
   display_title: 'Brand Name'
   description: 'The name that would be used in emails and the widget'
+- name: CAPTAIN_BRAND_NAME
+  value: 'Tony'
+  display_title: 'AI agent product name'
+  description: 'The name of the AI agent product shown in the dashboard and used by the copilot'
 - name: TERMS_URL
   value: 'https://www.chatwoot.com/terms-of-service'
   display_title: 'Terms URL'

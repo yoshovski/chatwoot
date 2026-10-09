@@ -42,6 +42,9 @@ class Captain::Conversation::OutcomeLabelJob < ApplicationJob
     updated_labels = (current_labels - labels_to_remove) + [chosen_outcome]
 
     @account.labels.find_or_create_by!(title: chosen_outcome)
+    Current.executed_by = @assistant
     @conversation.update_labels(updated_labels)
+  ensure
+    Current.executed_by = nil
   end
 end

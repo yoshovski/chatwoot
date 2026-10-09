@@ -340,6 +340,12 @@ RSpec.describe Captain::Assistant, type: :model do
       expect(instructions).not_to include('You are drafting a reply for a support agent to review.')
     end
 
+    it 'never names the product in the orchestrator prompt' do
+      create(:captain_scenario, assistant: assistant, account: account)
+
+      expect(assistant.agent_instructions).not_to include('Captain')
+    end
+
     it 'renders the separate Copilot reply suggestion prompt when requested' do
       assistant.update!(
         response_guidelines: ['Include the raw guide URL https://yc.ms/eglb1H.'],

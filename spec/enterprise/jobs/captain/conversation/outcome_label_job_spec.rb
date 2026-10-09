@@ -26,6 +26,15 @@ RSpec.describe Captain::Conversation::OutcomeLabelJob, type: :job do
       expect(conversation.reload.label_list).to include('bot-resolved')
     end
 
+    it 'writes the label activity under the assistant name' do
+      allow(classifier).to receive(:classify).and_return('bot-resolved')
+
+      perform_enqueued_jobs { described_class.perform_now(conversation, assistant) }
+
+      expect(conversation.messages.activity.last.content).to eq("#{assistant.name} added bot-resolved")
+      expect(Current.executed_by).to be_nil
+    end
+
     it 'replaces a stale outcome label and preserves unrelated labels' do
       conversation.update_labels(%w[vip purchase-intent])
       allow(classifier).to receive(:classify).and_return('bot-resolved')

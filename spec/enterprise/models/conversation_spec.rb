@@ -17,6 +17,42 @@ RSpec.describe Conversation, type: :model do
     end
   end
 
+  describe 'activity messages written by a Captain assistant' do
+    let(:conversation) { create(:conversation) }
+    let(:assistant) { create(:captain_assistant, account: conversation.account, name: 'Luna') }
+    let(:label) { create(:label, account: conversation.account) }
+
+    before { Current.user = nil }
+
+    after { Current.reset }
+
+    it 'names the assistant when it adds a label and keeps the name after a rename' do
+      Current.executed_by = assistant
+
+      perform_enqueued_jobs { conversation.update_labels([label.title]) }
+      assistant.update!(name: 'Mia')
+
+      activity = conversation.messages.activity.last
+      expect(activity.content).to eq("Luna added #{label.title}")
+    end
+
+    it 'names the assistant when it sets the priority' do
+      Current.executed_by = assistant
+
+      perform_enqueued_jobs { conversation.update!(priority: :high) }
+
+      expect(conversation.messages.activity.last.content).to eq('Luna set the priority to high')
+    end
+
+    it 'keeps saying Automation System for an automation rule' do
+      Current.executed_by = create(:automation_rule, account: conversation.account)
+
+      perform_enqueued_jobs { conversation.update_labels([label.title]) }
+
+      expect(conversation.messages.activity.last.content).to eq("Automation System added #{label.title}")
+    end
+  end
+
   describe 'SLA policy updates' do
     let(:conversation) { create(:conversation) }
     let!(:sla_policy) { create(:sla_policy, account: conversation.account) }

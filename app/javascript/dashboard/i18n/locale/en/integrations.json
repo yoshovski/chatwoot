@@ -834,6 +834,8 @@
         "NAME": {
           "LABEL": "Name",
           "PLACEHOLDER": "Enter assistant name",
+          "HELP_TEXT": "The name and photo customers see. You can change them anytime.",
+          "AI_BADGE_NOTE": "Customers see this name with an AI badge.",
           "ERROR": "The name is required"
         },
         "DESCRIPTION": {
