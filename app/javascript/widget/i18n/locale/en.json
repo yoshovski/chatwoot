@@ -59,6 +59,10 @@
     "COMPANY_FROM": "from",
     "BOT": "Bot"
   },
+  "AI_BADGE": {
+    "LABEL": "AI",
+    "TITLE": "Automated reply by an AI assistant"
+  },
   "BUBBLE": {
     "LABEL": "Chat with us"
   },
