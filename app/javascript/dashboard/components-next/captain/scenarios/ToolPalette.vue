@@ -73,7 +73,7 @@ const onSearchDropdown = q => {
 <template>
   <div class="flex items-center gap-1.5 flex-wrap text-xs text-n-slate-11 py-1">
     <span class="font-medium text-n-slate-11">
-      {{ t('CAPTAIN.ASSISTANTS.SCENARIOS.PALETTE.TITLE', 'Add a tool:') }}
+      {{ t('CAPTAIN.ASSISTANTS.SCENARIOS.PALETTE.TITLE') }}
     </span>
 
     <ToolChip
@@ -95,7 +95,7 @@ const onSearchDropdown = q => {
         slate
         icon="i-lucide-chevron-down"
         trailing-icon
-        :label="t('CAPTAIN.ASSISTANTS.SCENARIOS.PALETTE.MORE', 'More tools')"
+        :label="t('CAPTAIN.ASSISTANTS.SCENARIOS.PALETTE.MORE')"
         class="!text-xs !py-0.5 !px-2 rounded-full border border-n-weak hover:bg-n-alpha-2"
         @click="showMoreDropdown = !showMoreDropdown"
       />
@@ -105,7 +105,7 @@ const onSearchDropdown = q => {
         :items="filteredDropdownTools"
         show-search
         :search-placeholder="
-          t('CAPTAIN.ASSISTANTS.SCENARIOS.PALETTE.SEARCH', 'Search tools...')
+          t('CAPTAIN.ASSISTANTS.SCENARIOS.PALETTE.SEARCH')
         "
         class="top-8 ltr:left-0 rtl:right-0 shadow-lg"
         @select="onSelectDropdownItem"

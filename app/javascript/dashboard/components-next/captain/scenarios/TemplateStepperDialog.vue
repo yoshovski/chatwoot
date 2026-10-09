@@ -5,7 +5,7 @@ import Dialog from 'dashboard/components-next/dialog/Dialog.vue';
 import Button from 'dashboard/components-next/button/Button.vue';
 import Input from 'dashboard/components-next/input/Input.vue';
 import TextArea from 'dashboard/components-next/textarea/TextArea.vue';
-import Editor from 'dashboard/components-next/Editor/Editor.vue';
+import ScenarioForm from './ScenarioForm.vue';
 
 const props = defineProps({
   template: {
@@ -26,6 +26,7 @@ const emit = defineEmits(['add', 'updateAllowlist', 'close']);
 
 const { t } = useI18n();
 const dialogRef = ref(null);
+const previewFormRef = ref(null);
 
 const currentStep = ref(0);
 const answers = reactive({});
@@ -150,6 +151,7 @@ const close = () => {
 };
 
 const saveScenario = async () => {
+  if (!previewFormRef.value.validate()) return;
   // Check allowlist for booking url or links
   if (answers.booking_url) {
     const host = extractHost(answers.booking_url);
@@ -368,36 +370,11 @@ defineExpose({
 
     <!-- Preview View -->
     <div v-else-if="isPreviewStep" class="flex flex-col gap-4 py-2">
-      <Input
-        v-model="previewData.title"
-        :label="t('CAPTAIN.ASSISTANTS.SCENARIOS.ADD.NEW.FORM.TITLE.LABEL')"
-        :placeholder="
-          t('CAPTAIN.ASSISTANTS.SCENARIOS.ADD.NEW.FORM.TITLE.PLACEHOLDER')
-        "
-      />
-
-      <TextArea
-        v-model="previewData.description"
-        :max-length="500"
-        :label="
-          t('CAPTAIN.ASSISTANTS.SCENARIOS.ADD.NEW.FORM.DESCRIPTION.LABEL')
-        "
-        :placeholder="
-          t('CAPTAIN.ASSISTANTS.SCENARIOS.ADD.NEW.FORM.DESCRIPTION.PLACEHOLDER')
-        "
-        show-character-count
-      />
-
-      <Editor
-        v-model="previewData.instruction"
-        :label="
-          t('CAPTAIN.ASSISTANTS.SCENARIOS.ADD.NEW.FORM.INSTRUCTION.LABEL')
-        "
-        :placeholder="
-          t('CAPTAIN.ASSISTANTS.SCENARIOS.ADD.NEW.FORM.INSTRUCTION.PLACEHOLDER')
-        "
-        :show-character-count="false"
-        enable-captain-tools
+      <ScenarioForm
+        ref="previewFormRef"
+        v-model:title="previewData.title"
+        v-model:description="previewData.description"
+        v-model:instruction="previewData.instruction"
       />
     </div>
 

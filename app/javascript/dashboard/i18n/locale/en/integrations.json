@@ -1113,8 +1113,7 @@
           "TITLE": "Add a tool:",
           "MORE": "More tools",
           "SEARCH": "Search tools...",
-          "NO_RESULTS": "No tools found",
-          "TIP": "Tip: type {'@'} to add a tool anywhere in the text."
+          "NO_RESULTS": "No tools found"
         },
         "TEMPLATES": {
           "GALLERY_TITLE": "Scenario templates",
@@ -1201,7 +1200,7 @@
         },
         "UPDATE": {
           "CANCEL": "Cancel",
-          "UPDATE": "Update changes"
+          "UPDATE": "Save changes"
         },
         "STATUS": {
           "ENABLED": "Enabled",
@@ -1230,6 +1229,30 @@
           "DELETE": {
             "SUCCESS": "Scenarios deleted successfully",
             "ERROR": "There was an error deleting scenarios, please try again."
+          }
+        },
+        "FORM": {
+          "TITLE": {
+            "LABEL": "Name",
+            "PLACEHOLDER": "Request a quote",
+            "ERROR": "Give the scenario a name"
+          },
+          "DESCRIPTION": {
+            "LABEL": "When to use it",
+            "PLACEHOLDER": "Use when the customer asks for a quote or bulk pricing.",
+            "HELP": "Your assistant reads this to decide when to start the scenario.",
+            "ERROR": "Say when your assistant should use this scenario"
+          },
+          "INSTRUCTION": {
+            "LABEL": "Steps and rules",
+            "PLACEHOLDER": "1. Ask for the order number. 2. Check the order. 3. Hand off if it's late.",
+            "HELP": "Write the steps in order. Add tools with the buttons above or type {'@'}.",
+            "ERROR": "Add at least one step"
+          },
+          "TOOLS": {
+            "LABEL": "Tools in this scenario:",
+            "NONE": "None linked. Your assistant can still use all of its tools.",
+            "REMOVE": "Remove {tool} from the steps"
           }
         }
       }

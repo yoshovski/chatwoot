@@ -2,20 +2,16 @@
 import { computed, reactive, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useToggle, useElementSize } from '@vueuse/core';
-import { useVuelidate } from '@vuelidate/core';
-import { required, minLength } from '@vuelidate/validators';
 import { useMessageFormatter } from 'shared/composables/useMessageFormatter';
 import { useMapGetter } from 'dashboard/composables/store';
-import Input from 'dashboard/components-next/input/Input.vue';
 import Button from 'dashboard/components-next/button/Button.vue';
-import TextArea from 'dashboard/components-next/textarea/TextArea.vue';
-import Editor from 'dashboard/components-next/Editor/Editor.vue';
 import CardLayout from 'dashboard/components-next/CardLayout.vue';
 import Checkbox from 'dashboard/components-next/checkbox/Checkbox.vue';
 import Icon from 'dashboard/components-next/icon/Icon.vue';
 import Switch from 'dashboard/components-next/switch/Switch.vue';
 import Policy from 'dashboard/components/policy.vue';
 import ToolChip from 'dashboard/components-next/captain/scenarios/ToolChip.vue';
+import ScenarioForm from 'dashboard/components-next/captain/scenarios/ScenarioForm.vue';
 import { formatInstructionWithToolChips } from 'dashboard/components-next/captain/scenarios/instructionFormatter';
 
 const props = defineProps({
@@ -79,11 +75,12 @@ const statusLabel = computed(() =>
 );
 
 const state = reactive({
-  id: '',
   title: '',
   description: '',
   instruction: '',
 });
+
+const scenarioFormRef = ref(null);
 
 const instructionContentRef = ref();
 
@@ -97,56 +94,24 @@ const captainTools = useMapGetter('captainTools/getRecords');
 const formattedInstruction = computed(() =>
   formatInstructionWithToolChips(props.instruction, captainTools.value, {
     formatMessage,
-    unavailableText: t(
-      'CAPTAIN.ASSISTANTS.SCENARIOS.TOOLS.UNAVAILABLE',
-      "This tool isn't available for this assistant"
-    ),
+    unavailableText: t('CAPTAIN.ASSISTANTS.SCENARIOS.TOOLS.UNAVAILABLE'),
   })
 );
 
 const startEdit = () => {
   Object.assign(state, {
-    id: props.id,
     title: props.title,
     description: props.description,
     instruction: props.instruction,
-    tools: props.tools,
   });
   toggleEditing(true);
 };
 
-const rules = {
-  title: { required, minLength: minLength(1) },
-  description: { required },
-  instruction: { required },
-};
-
-const v$ = useVuelidate(rules, state);
-
-const titleError = computed(() =>
-  v$.value.title.$error
-    ? t('CAPTAIN.ASSISTANTS.SCENARIOS.ADD.NEW.FORM.TITLE.ERROR')
-    : ''
-);
-
-const descriptionError = computed(() =>
-  v$.value.description.$error
-    ? t('CAPTAIN.ASSISTANTS.SCENARIOS.ADD.NEW.FORM.DESCRIPTION.ERROR')
-    : ''
-);
-
 const onClickUpdate = () => {
-  v$.value.$touch();
-  if (v$.value.$invalid) return;
-  emit('update', { ...state });
+  if (!scenarioFormRef.value.validate()) return;
+  emit('update', { id: props.id, ...state });
   toggleEditing(false);
 };
-
-const instructionError = computed(() =>
-  v$.value.instruction.$error
-    ? t('CAPTAIN.ASSISTANTS.SCENARIOS.ADD.NEW.FORM.INSTRUCTION.ERROR')
-    : ''
-);
 
 const LINK_INSTRUCTION_CLASS =
   '[&_a[href^="tool://"]]:text-n-iris-11 [&_a:not([href^="tool://"])]:text-n-slate-12 [&_a]:pointer-events-none [&_a]:cursor-default';
@@ -257,41 +222,11 @@ const LINK_INSTRUCTION_CLASS =
       </div>
     </div>
     <div v-else class="relative flex flex-col gap-4 w-full">
-      <Input
-        v-model="state.title"
-        :label="t('CAPTAIN.ASSISTANTS.SCENARIOS.ADD.NEW.FORM.TITLE.LABEL')"
-        :placeholder="
-          t('CAPTAIN.ASSISTANTS.SCENARIOS.ADD.NEW.FORM.TITLE.PLACEHOLDER')
-        "
-        :message="titleError"
-        :message-type="titleError ? 'error' : 'info'"
-      />
-
-      <TextArea
-        v-model="state.description"
-        :max-length="500"
-        :label="
-          t('CAPTAIN.ASSISTANTS.SCENARIOS.ADD.NEW.FORM.DESCRIPTION.LABEL')
-        "
-        :placeholder="
-          t('CAPTAIN.ASSISTANTS.SCENARIOS.ADD.NEW.FORM.DESCRIPTION.PLACEHOLDER')
-        "
-        :message="descriptionError"
-        :message-type="descriptionError ? 'error' : 'info'"
-        show-character-count
-      />
-      <Editor
-        v-model="state.instruction"
-        :label="
-          t('CAPTAIN.ASSISTANTS.SCENARIOS.ADD.NEW.FORM.INSTRUCTION.LABEL')
-        "
-        :placeholder="
-          t('CAPTAIN.ASSISTANTS.SCENARIOS.ADD.NEW.FORM.INSTRUCTION.PLACEHOLDER')
-        "
-        :message="instructionError"
-        :message-type="instructionError ? 'error' : 'info'"
-        :show-character-count="false"
-        enable-captain-tools
+      <ScenarioForm
+        ref="scenarioFormRef"
+        v-model:title="state.title"
+        v-model:description="state.description"
+        v-model:instruction="state.instruction"
       />
       <div class="flex items-center gap-3">
         <Button

@@ -2,17 +2,14 @@
 import { computed, reactive, ref, nextTick } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRoute } from 'vue-router';
-import { useVuelidate } from '@vuelidate/core';
-import { required, minLength } from '@vuelidate/validators';
 import { useAlert } from 'dashboard/composables';
 
 import Dialog from 'dashboard/components-next/dialog/Dialog.vue';
-import Input from 'dashboard/components-next/input/Input.vue';
 import Button from 'dashboard/components-next/button/Button.vue';
 import TextArea from 'dashboard/components-next/textarea/TextArea.vue';
-import Editor from 'dashboard/components-next/Editor/Editor.vue';
 import CaptainScenarios from 'dashboard/api/captain/scenarios';
 import TemplateCard from '../scenarios/TemplateCard.vue';
+import ScenarioForm from '../scenarios/ScenarioForm.vue';
 import { SCENARIO_TEMPLATES } from '../scenarios/scenarioTemplates';
 
 const props = defineProps({
@@ -81,31 +78,8 @@ const manualState = reactive({
   instruction: '',
 });
 
-const manualRules = {
-  title: { required, minLength: minLength(1) },
-  description: { required },
-  instruction: { required },
-};
-
-const v$ = useVuelidate(manualRules, manualState);
-
-const manualTitleError = computed(() =>
-  v$.value.title.$error
-    ? t('CAPTAIN.ASSISTANTS.SCENARIOS.ADD.NEW.FORM.TITLE.ERROR')
-    : ''
-);
-
-const manualDescriptionError = computed(() =>
-  v$.value.description.$error
-    ? t('CAPTAIN.ASSISTANTS.SCENARIOS.ADD.NEW.FORM.DESCRIPTION.ERROR')
-    : ''
-);
-
-const manualInstructionError = computed(() =>
-  v$.value.instruction.$error
-    ? t('CAPTAIN.ASSISTANTS.SCENARIOS.ADD.NEW.FORM.INSTRUCTION.ERROR')
-    : ''
-);
+const previewFormRef = ref(null);
+const manualFormRef = ref(null);
 
 const open = () => {
   activeChoice.value = 'describe';
@@ -154,13 +128,7 @@ const editPrompt = () => {
 };
 
 const saveDraftScenario = () => {
-  if (
-    !previewState.title?.trim() ||
-    !previewState.description?.trim() ||
-    !previewState.instruction?.trim()
-  ) {
-    return;
-  }
+  if (!previewFormRef.value.validate()) return;
 
   emit('add', {
     title: previewState.title.trim(),
@@ -178,8 +146,7 @@ const onUseTemplate = template => {
 
 // Manual submit method
 const onClickAddManual = async () => {
-  v$.value.$touch();
-  if (v$.value.$invalid) return;
+  if (!manualFormRef.value.validate()) return;
 
   await emit('add', {
     title: manualState.title.trim(),
@@ -190,7 +157,7 @@ const onClickAddManual = async () => {
   manualState.title = '';
   manualState.description = '';
   manualState.instruction = '';
-  v$.value.$reset();
+  manualFormRef.value.reset();
   close();
 };
 
@@ -325,40 +292,11 @@ defineExpose({
             </div>
           </div>
 
-          <Input
-            v-model="previewState.title"
-            :label="t('CAPTAIN.ASSISTANTS.SCENARIOS.ADD.NEW.FORM.TITLE.LABEL')"
-            :placeholder="
-              t('CAPTAIN.ASSISTANTS.SCENARIOS.ADD.NEW.FORM.TITLE.PLACEHOLDER')
-            "
-          />
-
-          <TextArea
-            v-model="previewState.description"
-            :max-length="500"
-            :label="
-              t('CAPTAIN.ASSISTANTS.SCENARIOS.ADD.NEW.FORM.DESCRIPTION.LABEL')
-            "
-            :placeholder="
-              t(
-                'CAPTAIN.ASSISTANTS.SCENARIOS.ADD.NEW.FORM.DESCRIPTION.PLACEHOLDER'
-              )
-            "
-            show-character-count
-          />
-
-          <Editor
-            v-model="previewState.instruction"
-            :label="
-              t('CAPTAIN.ASSISTANTS.SCENARIOS.ADD.NEW.FORM.INSTRUCTION.LABEL')
-            "
-            :placeholder="
-              t(
-                'CAPTAIN.ASSISTANTS.SCENARIOS.ADD.NEW.FORM.INSTRUCTION.PLACEHOLDER'
-              )
-            "
-            :show-character-count="false"
-            enable-captain-tools
+          <ScenarioForm
+            ref="previewFormRef"
+            v-model:title="previewState.title"
+            v-model:description="previewState.description"
+            v-model:instruction="previewState.instruction"
           />
         </div>
       </div>
@@ -382,46 +320,11 @@ defineExpose({
         v-else-if="activeChoice === 'manual'"
         class="flex flex-col gap-4 py-1"
       >
-        <Input
-          v-model="manualState.title"
-          :label="t('CAPTAIN.ASSISTANTS.SCENARIOS.ADD.NEW.FORM.TITLE.LABEL')"
-          :placeholder="
-            t('CAPTAIN.ASSISTANTS.SCENARIOS.ADD.NEW.FORM.TITLE.PLACEHOLDER')
-          "
-          :message="manualTitleError"
-          :message-type="manualTitleError ? 'error' : 'info'"
-        />
-
-        <TextArea
-          v-model="manualState.description"
-          :max-length="500"
-          :label="
-            t('CAPTAIN.ASSISTANTS.SCENARIOS.ADD.NEW.FORM.DESCRIPTION.LABEL')
-          "
-          :placeholder="
-            t(
-              'CAPTAIN.ASSISTANTS.SCENARIOS.ADD.NEW.FORM.DESCRIPTION.PLACEHOLDER'
-            )
-          "
-          :message="manualDescriptionError"
-          :message-type="manualDescriptionError ? 'error' : 'info'"
-          show-character-count
-        />
-
-        <Editor
-          v-model="manualState.instruction"
-          :label="
-            t('CAPTAIN.ASSISTANTS.SCENARIOS.ADD.NEW.FORM.INSTRUCTION.LABEL')
-          "
-          :placeholder="
-            t(
-              'CAPTAIN.ASSISTANTS.SCENARIOS.ADD.NEW.FORM.INSTRUCTION.PLACEHOLDER'
-            )
-          "
-          :message="manualInstructionError"
-          :message-type="manualInstructionError ? 'error' : 'info'"
-          :show-character-count="false"
-          enable-captain-tools
+        <ScenarioForm
+          ref="manualFormRef"
+          v-model:title="manualState.title"
+          v-model:description="manualState.description"
+          v-model:instruction="manualState.instruction"
         />
       </div>
 

@@ -90,9 +90,10 @@ describe('scenarioTemplates', () => {
               template: '<div><slot /><slot name="footer" /></div>',
               methods: { open: vi.fn(), close: vi.fn() },
             },
-            Editor: {
-              props: ['modelValue'],
-              template: '<div class="stub-editor">{{ modelValue }}</div>',
+            ScenarioForm: {
+              props: ['instruction'],
+              template: '<div class="stub-editor">{{ instruction }}</div>',
+              methods: { validate: () => true },
             },
             Input: {
               props: ['modelValue'],

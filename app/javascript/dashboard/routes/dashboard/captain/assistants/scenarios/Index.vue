@@ -9,6 +9,7 @@ import Input from 'dashboard/components-next/input/Input.vue';
 
 import PageLayout from 'dashboard/components-next/captain/PageLayout.vue';
 import SettingsHeader from 'dashboard/components-next/captain/pageComponents/settings/SettingsHeader.vue';
+import { getToolIdsFromInstruction } from 'dashboard/components-next/captain/scenarios/scenarioTools';
 import TemplateGallery from 'dashboard/components-next/captain/scenarios/TemplateGallery.vue';
 import TemplateStepperDialog from 'dashboard/components-next/captain/scenarios/TemplateStepperDialog.vue';
 import ScenariosCard from 'dashboard/components-next/captain/assistant/ScenariosCard.vue';
@@ -92,19 +93,13 @@ const handleRuleHover = (isHovered, id) => {
   hoveredCard.value = isHovered ? id : null;
 };
 
-const getToolsFromInstruction = instruction => [
-  ...new Set(
-    [...(instruction?.matchAll(/\(tool:\/\/([^)]+)\)/g) ?? [])].map(m => m[1])
-  ),
-];
-
 const updateScenario = async scenario => {
   try {
     await store.dispatch('captainScenarios/update', {
       id: scenario.id,
       assistantId: assistantId.value,
       ...scenario,
-      tools: getToolsFromInstruction(scenario.instruction),
+      tools: getToolIdsFromInstruction(scenario.instruction),
     });
     useAlert(t('CAPTAIN.ASSISTANTS.SCENARIOS.API.UPDATE.SUCCESS'));
   } catch (error) {
@@ -171,7 +166,7 @@ const addScenario = async scenario => {
     await store.dispatch('captainScenarios/create', {
       assistantId: assistantId.value,
       ...scenario,
-      tools: getToolsFromInstruction(scenario.instruction),
+      tools: getToolIdsFromInstruction(scenario.instruction),
     });
     useAlert(t('CAPTAIN.ASSISTANTS.SCENARIOS.API.ADD.SUCCESS'));
   } catch (error) {

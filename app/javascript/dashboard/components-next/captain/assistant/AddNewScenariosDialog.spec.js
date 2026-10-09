@@ -1,7 +1,22 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { mount } from '@vue/test-utils';
 import AddNewScenariosDialog from './AddNewScenariosDialog.vue';
+import { createStore } from 'vuex';
 import CaptainScenarios from 'dashboard/api/captain/scenarios';
+
+vi.mock('dashboard/components/widgets/WootWriter/Editor.vue', () => ({
+  default: {
+    props: ['modelValue'],
+    emits: ['input'],
+    template: '<textarea class="woot-editor" :value="modelValue" />',
+  },
+}));
+
+const store = createStore({
+  modules: {
+    captainTools: { namespaced: true, getters: { getRecords: () => [] } },
+  },
+});
 
 vi.mock('dashboard/api/captain/scenarios', () => ({
   default: {
@@ -35,6 +50,7 @@ describe('AddNewScenariosDialog', () => {
         ...props,
       },
       global: {
+        plugins: [store],
         stubs: {
           Dialog: {
             template:
@@ -50,10 +66,6 @@ describe('AddNewScenariosDialog', () => {
                 this.isOpen = false;
               },
             },
-          },
-          Editor: {
-            props: ['modelValue'],
-            template: '<div class="editor-stub">{{ modelValue }}</div>',
           },
           TemplateCard: {
             props: ['template'],
@@ -129,6 +141,7 @@ describe('AddNewScenariosDialog', () => {
     wrapper.vm.previewState.title = 'AI Draft Title';
     wrapper.vm.previewState.description = 'AI Draft Description';
     wrapper.vm.previewState.instruction = 'AI Draft Instruction';
+    await wrapper.vm.$nextTick();
 
     wrapper.vm.saveDraftScenario();
 
@@ -163,6 +176,7 @@ describe('AddNewScenariosDialog', () => {
 
     wrapper.vm.setChoice('manual');
     await wrapper.vm.$nextTick();
+    expect(wrapper.find('.woot-editor').exists()).toBe(true);
 
     // Try submit empty
     await wrapper.vm.onClickAddManual();
@@ -172,6 +186,7 @@ describe('AddNewScenariosDialog', () => {
     wrapper.vm.manualState.title = 'Manual Scenario';
     wrapper.vm.manualState.description = 'Manual Description';
     wrapper.vm.manualState.instruction = 'Manual Instruction';
+    await wrapper.vm.$nextTick();
 
     await wrapper.vm.onClickAddManual();
     expect(wrapper.emitted('add')).toEqual([
