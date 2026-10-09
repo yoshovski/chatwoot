@@ -64,4 +64,17 @@ describe('PlaygroundInboxPicker', () => {
       wrapper.get('[data-test="playground-demo-link"]').attributes('href')
     ).toBe(`${window.location.origin}/demo/token123`);
   });
+
+  it('prefers the demo slug over the website token in the demo link', async () => {
+    mocks.inboxes = ref([widgetInbox({ demo_slug: 'ask-acme' })]);
+    const wrapper = mountPicker();
+    await flushPromises();
+    await wrapper.setProps({
+      modelValue: widgetInbox({ demo_slug: 'ask-acme' }),
+    });
+
+    expect(
+      wrapper.get('[data-test="playground-demo-link"]').attributes('href')
+    ).toBe(`${window.location.origin}/demo/ask-acme`);
+  });
 });

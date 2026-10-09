@@ -626,6 +626,33 @@ RSpec.describe Captain::Conversation::ResponseBuilderJob, type: :job do
           expect(last_message.content_type).to eq('text')
         end
 
+        it 'falls back to text message when the answer promises a handoff' do
+          allow(mock_agent_runner_service).to receive(:generate_response).and_return({
+                                                                                       'response_parts' => v2_response_parts,
+                                                                                       'response' => 'Hey, welcome to Captain V2',
+                                                                                       'handoff_requested' => true,
+                                                                                       'suggested_replies' => ['Track order']
+                                                                                     })
+
+          described_class.perform_now(conversation, assistant)
+
+          expect(conversation.messages.outgoing.find_by(content: 'Hey, welcome to Captain V2').content_type).to eq('text')
+        end
+
+        it 'falls back to text message while the conversation waits for a human' do
+          assistant.update!(config: assistant.config.merge('continue_while_waiting' => true))
+          conversation.open!
+          allow(mock_agent_runner_service).to receive(:generate_response).and_return({
+                                                                                       'response_parts' => v2_response_parts,
+                                                                                       'response' => 'Hey, welcome to Captain V2',
+                                                                                       'suggested_replies' => ['Track order']
+                                                                                     })
+
+          described_class.perform_now(conversation, assistant)
+
+          expect(conversation.messages.outgoing.last.content_type).to eq('text')
+        end
+
         it 'includes customer selection from input_select in previous message history' do
           create(
             :message,
