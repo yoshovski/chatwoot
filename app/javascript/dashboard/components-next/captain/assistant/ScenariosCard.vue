@@ -15,6 +15,8 @@ import Checkbox from 'dashboard/components-next/checkbox/Checkbox.vue';
 import Icon from 'dashboard/components-next/icon/Icon.vue';
 import Switch from 'dashboard/components-next/switch/Switch.vue';
 import Policy from 'dashboard/components/policy.vue';
+import ToolChip from 'dashboard/components-next/captain/scenarios/ToolChip.vue';
+import { formatInstructionWithToolChips } from 'dashboard/components-next/captain/scenarios/instructionFormatter';
 
 const props = defineProps({
   id: {
@@ -92,12 +94,14 @@ const { height: contentHeight } = useElementSize(instructionContentRef);
 const needsOverlay = computed(() => contentHeight.value > 160);
 
 const captainTools = useMapGetter('captainTools/getRecords');
-// Scenarios use the assistant's tools; the instruction can name more, shown by their titles.
-const namedToolTitles = computed(() =>
-  props.tools.map(
-    toolId =>
-      captainTools.value.find(tool => tool.id === toolId)?.title || toolId
-  )
+const formattedInstruction = computed(() =>
+  formatInstructionWithToolChips(props.instruction, captainTools.value, {
+    formatMessage,
+    unavailableText: t(
+      'CAPTAIN.ASSISTANTS.SCENARIOS.TOOLS.UNAVAILABLE',
+      "This tool isn't available for this assistant"
+    ),
+  })
 );
 
 const startEdit = () => {
@@ -218,7 +222,7 @@ const LINK_INSTRUCTION_CLASS =
       >
         <div ref="instructionContentRef">
           <p
-            v-dompurify-html:toolLinks="formatMessage(instruction, false)"
+            v-dompurify-html:toolLinks="formattedInstruction"
             class="text-sm text-n-slate-12 py-4 mb-0 prose prose-sm min-w-0 break-words max-w-none"
             :class="LINK_INSTRUCTION_CLASS"
           />
@@ -237,15 +241,20 @@ const LINK_INSTRUCTION_CLASS =
           />
         </div>
       </div>
-      <span class="text-sm text-n-slate-11 font-medium mb-1">
-        {{
-          namedToolTitles.length
-            ? t('CAPTAIN.ASSISTANTS.SCENARIOS.TOOLS.NAMED', {
-                tools: namedToolTitles.join(', '),
-              })
-            : t('CAPTAIN.ASSISTANTS.SCENARIOS.TOOLS.INHERITED')
-        }}
-      </span>
+      <div
+        v-if="tools && tools.length"
+        class="flex items-center gap-1.5 flex-wrap mt-2 mb-1"
+      >
+        <span class="text-xs text-n-slate-11 font-medium">
+          {{ t('CAPTAIN.ASSISTANTS.SCENARIOS.TOOLS.USES') }}
+        </span>
+        <ToolChip v-for="toolId in tools" :key="toolId" :tool-id="toolId" />
+      </div>
+      <div v-else class="flex items-center gap-1.5 mt-2 mb-1">
+        <span class="text-xs text-n-slate-11 font-medium">
+          {{ t('CAPTAIN.ASSISTANTS.SCENARIOS.TOOLS.INHERITED_ALL') }}
+        </span>
+      </div>
     </div>
     <div v-else class="overflow-hidden flex flex-col gap-4 w-full">
       <Input

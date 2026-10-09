@@ -1140,7 +1140,7 @@ useEmitter(BUS_EVENTS.INSERT_INTO_RICH_EDITOR, content => {
 }
 
 .prosemirror-tools-node {
-  @apply font-medium text-n-slate-12 py-0;
+  @apply inline-flex items-center gap-1 px-2 py-0.5 mx-0.5 rounded-full text-xs font-medium align-middle bg-n-iris-3 text-n-iris-11 border border-n-iris-4 select-none cursor-default;
 }
 
 .editor-wrap {

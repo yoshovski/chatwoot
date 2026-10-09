@@ -1104,6 +1104,9 @@
         "DESCRIPTION": "Give your assistant some context—like “what to do when a user is stuck,” or “how to act during a refund request.”",
         "TOOLS": {
           "INHERITED": "Uses the assistant's tools",
+          "INHERITED_ALL": "Uses all of the assistant's tools",
+          "USES": "Uses:",
+          "UNAVAILABLE": "This tool isn't available for this assistant",
           "NAMED": "Uses the assistant's tools. Named in the instruction: {tools}"
         },
         "BULK_ACTION": {

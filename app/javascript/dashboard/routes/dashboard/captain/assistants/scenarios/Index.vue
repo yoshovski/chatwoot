@@ -16,6 +16,8 @@ import SuggestedScenarios from 'dashboard/components-next/captain/assistant/Sugg
 import ScenariosCard from 'dashboard/components-next/captain/assistant/ScenariosCard.vue';
 import BulkSelectBar from 'dashboard/components-next/captain/assistant/BulkSelectBar.vue';
 import AddNewScenariosDialog from 'dashboard/components-next/captain/assistant/AddNewScenariosDialog.vue';
+import ToolChip from 'dashboard/components-next/captain/scenarios/ToolChip.vue';
+import { formatInstructionWithToolChips } from 'dashboard/components-next/captain/scenarios/instructionFormatter';
 
 const { t } = useI18n();
 const route = useRoute();
@@ -27,6 +29,7 @@ const assistantId = computed(() => Number(route.params.assistantId));
 const uiFlags = useMapGetter('captainScenarios/getUIFlags');
 const isFetching = computed(() => uiFlags.value.fetchingList);
 const scenarios = useMapGetter('captainScenarios/getRecords');
+const captainTools = useMapGetter('captainTools/getRecords');
 
 const searchQuery = ref('');
 
@@ -256,15 +259,28 @@ onMounted(() => {
               </span>
               <span
                 v-dompurify-html:toolLinks="
-                  formatMessage(item.instruction, false)
+                  formatInstructionWithToolChips(
+                    item.instruction,
+                    captainTools,
+                    { formatMessage }
+                  )
                 "
                 class="text-sm text-n-slate-12 py-4 prose prose-sm min-w-0 break-words"
                 :class="LINK_INSTRUCTION_CLASS"
               />
-              <span class="text-sm text-n-slate-11 font-medium mb-1">
-                {{ t('CAPTAIN.ASSISTANTS.SCENARIOS.ADD.SUGGESTED.TOOLS_USED') }}
-                {{ item.tools?.map(tool => `@${tool}`).join(', ') }}
-              </span>
+              <div
+                v-if="item.tools?.length"
+                class="flex items-center gap-1.5 flex-wrap mb-1 mt-2"
+              >
+                <span class="text-xs text-n-slate-11 font-medium">
+                  {{ t('CAPTAIN.ASSISTANTS.SCENARIOS.TOOLS.USES') }}
+                </span>
+                <ToolChip
+                  v-for="toolId in item.tools"
+                  :key="toolId"
+                  :tool-id="toolId"
+                />
+              </div>
             </div>
           </template>
         </SuggestedScenarios>
