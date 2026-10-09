@@ -68,4 +68,21 @@ RSpec.describe Captain::Dify::Document do
     expect { document.update!(enabled: true) }.to have_enqueued_job(Captain::Dify::UpdateDocumentStatusJob)
       .with(account.id, 'docs-id', 'enable', ['doc-id'])
   end
+
+  describe '#dify_source_fingerprint' do
+    it 'is versioned for text documents and follows the sectioned text' do
+      document = create(:captain_document, assistant: assistant, content: '## Returns\n\nBody')
+
+      expect(document.dify_source_fingerprint).to eq("sectioned-v1:#{Digest::SHA256.hexdigest(document.dify_sectioned_content)}")
+    end
+
+    it 'changes when the document title changes' do
+      document = create(:captain_document, assistant: assistant, content: 'Body', name: 'First title')
+      before = document.dify_source_fingerprint
+
+      document.name = 'Second title'
+
+      expect(document.dify_source_fingerprint).not_to eq(before)
+    end
+  end
 end

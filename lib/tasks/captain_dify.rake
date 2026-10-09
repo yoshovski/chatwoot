@@ -1,3 +1,4 @@
+# rubocop:disable Metrics/BlockLength
 namespace :captain do
   namespace :dify do
     desc 'Enqueue document sync to Dify for one assistant. Usage: rake captain:dify:backfill_documents ASSISTANT_ID=123'
@@ -31,5 +32,20 @@ namespace :captain do
       end
       puts "Enqueued #{count} FAQ sync jobs for assistant_id=#{assistant.id}"
     end
+
+    desc 'Re-sync text documents whose Dify index predates section-aware chunking. Optional: ACCOUNT_ID=123'
+    task resection_documents: :environment do
+      scope = Captain::Document.where("metadata->>'dify_document_id' IS NOT NULL")
+      scope = scope.where(account_id: ENV['ACCOUNT_ID']) if ENV['ACCOUNT_ID'].present?
+      count = 0
+      scope.find_each do |document|
+        next if document.pdf_document? || document.dify_content_fingerprint == document.dify_source_fingerprint
+
+        Captain::Dify::SyncDocumentJob.perform_later(document.id)
+        count += 1
+      end
+      puts "Enqueued #{count} document sync jobs"
+    end
   end
 end
+# rubocop:enable Metrics/BlockLength

@@ -27,8 +27,15 @@ RSpec.describe Captain::Dify::DocumentSyncService do
 
     expect(document.reload.dify_document_id).to eq('doc-id')
     expect(document).to be_in_progress
-    expect(client).to have_received(:create_by_text).with(hash_including(dataset_id: 'docs-id', text: document.content,
-                                                                         doc_form: 'hierarchical_model'))
+    expect(client).to have_received(:create_by_text).with(hash_including(dataset_id: 'docs-id', doc_form: 'hierarchical_model'))
+  end
+
+  it 'sends the section-aware text instead of the raw content' do
+    document.update!(content: "## Returns\n\nItems must be unused.")
+
+    described_class.new(document).perform
+
+    expect(client).to have_received(:create_by_text).with(hash_including(text: "#{document.name} > Returns\nItems must be unused."))
   end
 
   it 'updates a linked document in place when its content fingerprint changes' do
@@ -36,7 +43,7 @@ RSpec.describe Captain::Dify::DocumentSyncService do
 
     described_class.new(document).perform
 
-    expect(client).to have_received(:update_by_text).with(hash_including(document_id: 'doc-id', text: document.content))
+    expect(client).to have_received(:update_by_text).with(hash_including(document_id: 'doc-id', text: document.dify_sectioned_content))
     expect(client).not_to have_received(:create_by_text)
   end
 
