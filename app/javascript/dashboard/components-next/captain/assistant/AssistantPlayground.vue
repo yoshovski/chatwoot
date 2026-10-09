@@ -7,6 +7,8 @@ import SidePanel from 'dashboard/components-next/side-panel/SidePanel.vue';
 import { FEATURE_FLAGS } from 'dashboard/featureFlags';
 import { usePolicy } from 'dashboard/composables/usePolicy';
 import MessageList from './MessageList.vue';
+import PlaygroundInboxPicker from './PlaygroundInboxPicker.vue';
+import PlaygroundWidgetBar from './PlaygroundWidgetBar.vue';
 import PlaygroundTestSetup from './PlaygroundTestSetup.vue';
 import { usePlaygroundSession } from './usePlaygroundSession';
 import CaptainAssistant from 'dashboard/api/captain/assistant';
@@ -27,6 +29,7 @@ const messages = ref([]);
 const newMessage = ref('');
 const isLoading = ref(false);
 const isSetupOpen = ref(true);
+const selectedInbox = ref(null);
 const setupPanelRef = ref(null);
 const setupInstanceKey = ref(0);
 let conversationVersion = 0;
@@ -112,9 +115,9 @@ watch(
   { immediate: true }
 );
 
-const sendMessage = async () => {
+const sendMessage = async (text = newMessage.value) => {
   if (
-    !newMessage.value.trim() ||
+    !text.trim() ||
     isLoading.value ||
     (isV2.value && session.isInitializing)
   ) {
@@ -130,15 +133,15 @@ const sendMessage = async () => {
   }
 
   const userMessage = {
-    content: newMessage.value,
+    content: text,
     sender: 'user',
     timestamp: new Date().toISOString(),
   };
   messages.value.push(userMessage);
-  const currentMessage = newMessage.value;
+  const currentMessage = text;
   const requestVersion = conversationVersion;
   const setupSummary = isV2.value ? session.configurationSummary() : undefined;
-  newMessage.value = '';
+  if (text === newMessage.value) newMessage.value = '';
 
   try {
     isLoading.value = true;
@@ -157,6 +160,8 @@ const sendMessage = async () => {
       sender: 'assistant',
       agentName: data.agent_name,
       runDetails: data.run_details,
+      messages: data.messages,
+      handoff: data.handoff,
       setupSummary,
       isError: Boolean(data.error),
       timestamp: new Date().toISOString(),
@@ -172,6 +177,14 @@ const sendMessage = async () => {
   } finally {
     isLoading.value = false;
   }
+};
+
+// A suggestion button is sent as the customer's next message, like in the widget.
+const selectOption = ({ index, title }) => {
+  if (isLoading.value) return;
+
+  messages.value[index].selectedOption = title;
+  sendMessage(title);
 };
 
 const handleEnterKey = event => {
@@ -193,6 +206,11 @@ const handleEnterKey = event => {
             {{ t('CAPTAIN.PLAYGROUND.HEADER') }}
           </h3>
           <div class="flex items-center gap-1">
+            <PlaygroundInboxPicker
+              v-if="isV2"
+              v-model="selectedInbox"
+              :assistant-id="assistantId"
+            />
             <NextButton
               ghost
               sm
@@ -217,7 +235,21 @@ const handleEnterKey = event => {
         </p>
       </div>
 
-      <MessageList :messages="messages" :is-loading="isLoading" />
+      <PlaygroundWidgetBar
+        v-if="isV2"
+        :assistant-id="assistantId"
+        :widget-color="selectedInbox?.widget_color"
+        :widget-text-color="selectedInbox?.widget_text_color"
+        class="mx-6 mb-4"
+      />
+
+      <MessageList
+        :messages="messages"
+        :is-loading="isLoading"
+        :widget-color="selectedInbox?.widget_color"
+        :widget-text-color="selectedInbox?.widget_text_color"
+        @select-option="selectOption"
+      />
 
       <div
         class="mx-6 flex items-center rounded-xl bg-n-background p-3 outline outline-1 outline-n-weak"
@@ -234,7 +266,7 @@ const handleEnterKey = event => {
           :disabled="isSendDisabled"
           icon="i-lucide-send"
           :aria-label="t('CAPTAIN.PLAYGROUND.SEND_MESSAGE')"
-          @click="sendMessage"
+          @click="sendMessage()"
         />
       </div>
 

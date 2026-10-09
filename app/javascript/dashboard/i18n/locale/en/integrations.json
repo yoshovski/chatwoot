@@ -683,6 +683,21 @@
       "CREDIT_NOTE": "Messages sent here will count toward your Captain credits.",
       "CLEAR_CONVERSATION": "Clear conversation",
       "RESPONSE_ERROR": "Captain could not complete this test run. Review the setup and try again.",
+      "CUSTOMER_VIEW": {
+        "INBOX_LABEL": "Preview as inbox",
+        "DEFAULT_LOOK": "Default look",
+        "OPEN_DEMO": "Open live demo",
+        "FORM_THANKS": "Thanks, a colleague will continue here.",
+        "VIEW_PRODUCT": "View",
+        "HANDOFF": "Handed off to your team. In a live chat they'd be notified now.",
+        "HANDOFF_REASON": {
+          "TOOL": "The assistant handed off on its own.",
+          "TOOL_WITH_REASON": "The assistant handed off: {reason}",
+          "DECLARED": "The answer promised a colleague, so a handoff would have been started.",
+          "SAFETY_NET": "The handoff safety net matched this message or answer.",
+          "EMPTY_RESPONSE": "The assistant had nothing usable to say, so a handoff would have been started."
+        }
+      },
       "SETUP": {
         "TITLE": "Test setup",
         "DESCRIPTION": "Changes here apply only to this playground session unless you explicitly save an item.",

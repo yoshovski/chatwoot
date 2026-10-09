@@ -118,6 +118,47 @@ describe('AssistantPlayground', () => {
     });
   });
 
+  it('keeps the customer view of a reply and sends a clicked suggestion as the next message', async () => {
+    mocks.playground.mockResolvedValueOnce({
+      data: {
+        response: 'Hello from Captain',
+        messages: [
+          {
+            content: 'Hello from Captain',
+            content_type: 'input_select',
+            content_attributes: {
+              items: [{ title: 'Track order', value: 'Track order' }],
+            },
+          },
+        ],
+        handoff: null,
+      },
+    });
+    const wrapper = mountPlayground();
+    await wrapper.get('input').setValue('Hello');
+    await wrapper.get('input').trigger('keydown', { key: 'Enter' });
+    await flushPromises();
+    const list = wrapper.getComponent(MessageListStub);
+    expect(list.props('messages')[1].messages[0].content_type).toBe(
+      'input_select'
+    );
+
+    list.vm.$emit('selectOption', { index: 1, title: 'Track order' });
+    await flushPromises();
+
+    expect(list.props('messages')[1].selectedOption).toBe('Track order');
+    expect(mocks.playground).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        messageContent: 'Track order',
+        messageHistory: [
+          { role: 'user', content: 'Hello' },
+          { role: 'assistant', content: 'Hello from Captain' },
+          { role: 'user', content: 'Track order' },
+        ],
+      })
+    );
+  });
+
   it('shows request errors in the chat', async () => {
     mocks.playground.mockRejectedValue({
       response: { data: { error: 'Invalid playground configuration' } },
