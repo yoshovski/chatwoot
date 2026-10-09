@@ -139,10 +139,7 @@ const handleCreateAssistant = () => {
                 >
                   {{ activeAssistantName }}
                 </span>
-                <AssistantBrandChip
-                  v-if="!isFetchingAssistants"
-                  :name="activeAssistantName"
-                />
+                <AssistantBrandChip v-if="!isFetchingAssistants" />
                 <div class="relative group">
                   <OnClickOutside
                     @trigger="showAssistantSwitcherDropdown = false"

@@ -141,7 +141,7 @@ describe('agent identity rendering', () => {
 
     expect(wrapper.vm.agentName).toBe('Default Assistant');
     expect(wrapper.vm.avatarUrl).toBe(
-      '/assets/images/dashboard/captain/tony-avatar.svg'
+      '/assets/images/dashboard/captain/ai-agent-avatar.svg'
     );
   });
 
@@ -201,7 +201,7 @@ describe('agent identity rendering', () => {
 
     expect(wrapper.vm.agentName).toBe('Default Assistant');
     expect(wrapper.vm.avatarUrl).toBe(
-      '/assets/images/dashboard/captain/tony-avatar.svg'
+      '/assets/images/dashboard/captain/ai-agent-avatar.svg'
     );
   });
 });

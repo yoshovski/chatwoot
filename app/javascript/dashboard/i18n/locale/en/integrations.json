@@ -463,12 +463,12 @@
         "LOADING": "Generating summary…"
       },
       "INBOX_BANNER": {
-        "TEXT": "This assistant isn't connected to any inbox yet, so it won't respond to conversations.",
+        "TEXT": "This AI agent isn't connected to any inbox yet, so it won't respond to conversations.",
         "ACTION": "Connect inbox",
         "DISMISS": "Dismiss"
       },
       "COVERAGE_BANNER": {
-        "TEXT": "{count} FAQ suggestions are ready for review, keeping coverage at {coverage}%. Approve them so your assistant can resolve more on its own.",
+        "TEXT": "{count} FAQ suggestions are ready for review, keeping coverage at {coverage}%. Approve them so your AI agent can resolve more on its own.",
         "ACTION": "Review suggestions",
         "DISMISS": "Dismiss"
       },
@@ -529,7 +529,7 @@
         },
         "PLAYGROUND": {
           "TITLE": "Playground",
-          "DESCRIPTION": "Test this assistant's replies"
+          "DESCRIPTION": "Test this AI agent's replies"
         },
         "BILLING": {
           "TITLE": "Billing",
@@ -632,10 +632,10 @@
       }
     },
     "ASSISTANT_SWITCHER": {
-      "ASSISTANTS": "Assistants",
-      "SWITCH_ASSISTANT": "Switch between assistants",
-      "NEW_ASSISTANT": "Create Assistant",
-      "EMPTY_LIST": "No assistants found, please create one to get started"
+      "ASSISTANTS": "AI agents",
+      "SWITCH_ASSISTANT": "Switch between AI agents",
+      "NEW_ASSISTANT": "New AI agent",
+      "EMPTY_LIST": "No AI agents yet. Create one to get started."
     },
     "COPILOT": {
       "TITLE": "Copilot",
@@ -649,7 +649,7 @@
       "USE": "Use this",
       "RESET": "Reset",
       "SHOW_STEPS": "Show steps",
-      "SELECT_ASSISTANT": "Select Assistant",
+      "SELECT_ASSISTANT": "Select AI agent",
       "PROMPTS": {
         "SUMMARIZE": {
           "LABEL": "Summarize this conversation",
@@ -675,11 +675,11 @@
     },
     "PLAYGROUND": {
       "USER": "You",
-      "ASSISTANT": "Assistant",
+      "ASSISTANT": "AI agent",
       "MESSAGE_PLACEHOLDER": "Type your message...",
       "SEND_MESSAGE": "Send message",
       "HEADER": "Playground",
-      "DESCRIPTION": "Use this playground to send messages to your assistant and check if it responds accurately, quickly, and in the tone you expect.",
+      "DESCRIPTION": "Use this playground to send messages to your AI agent and check if it responds accurately, quickly, and in the tone you expect.",
       "CREDIT_NOTE": "Messages sent here will count toward your Captain credits.",
       "CLEAR_CONVERSATION": "Clear conversation",
       "RESPONSE_ERROR": "Captain could not complete this test run. Review the setup and try again.",
@@ -691,11 +691,11 @@
         "VIEW_PRODUCT": "View",
         "HANDOFF": "Handed off to your team. In a live chat they'd be notified now.",
         "HANDOFF_REASON": {
-          "TOOL": "The assistant handed off on its own.",
-          "TOOL_WITH_REASON": "The assistant handed off: {reason}",
+          "TOOL": "The AI agent handed off on its own.",
+          "TOOL_WITH_REASON": "The AI agent handed off: {reason}",
           "DECLARED": "The answer promised a colleague, so a handoff would have been started.",
           "SAFETY_NET": "The handoff safety net matched this message or answer.",
-          "EMPTY_RESPONSE": "The assistant had nothing usable to say, so a handoff would have been started."
+          "EMPTY_RESPONSE": "The AI agent had nothing usable to say, so a handoff would have been started."
         }
       },
       "SETUP": {
@@ -708,7 +708,7 @@
         "SESSION_ONLY": "Session only",
         "INCLUDE_IN_TEST": "Include in this test",
         "ADD_TO_TEST": "Add to test (↵)",
-        "LOAD_ERROR": "The saved assistant setup could not be loaded.",
+        "LOAD_ERROR": "The saved AI agent setup could not be loaded.",
         "INVALID_CONFIGURATION": "Complete or remove the included temporary scenarios before sending a message.",
         "SAVE_SCENARIO_SUCCESS": "The scenario was saved and remains included in this test.",
         "SAVE_SCENARIO_ERROR": "The scenario could not be saved.",
@@ -718,11 +718,11 @@
         "SCENARIOS": {
           "TAB_TITLE": "Scenarios",
           "CREATE_TITLE": "Add a temporary scenario",
-          "CREATE_HINT": "Try a new behavior without changing the assistant configuration.",
+          "CREATE_HINT": "Try a new behavior without changing the AI agent configuration.",
           "SAVED_SUMMARY": "Existing scenarios ({count})",
           "ADD_PERMANENTLY": "Add scenario permanently",
           "DISABLED": "Disabled",
-          "EMPTY": "This assistant has no saved scenarios.",
+          "EMPTY": "This AI agent has no saved scenarios.",
           "COMPOSER_PLACEHOLDER": "Type a temporary scenario title...",
           "COLLAPSE": "Collapse temporary scenario",
           "EXPAND": "Expand temporary scenario",
@@ -731,10 +731,10 @@
         "GUIDELINES": {
           "TAB_TITLE": "Guidelines",
           "CREATE_TITLE": "Add a temporary guideline",
-          "CREATE_HINT": "Test a response preference before adding it to the assistant.",
+          "CREATE_HINT": "Test a response preference before adding it to the AI agent.",
           "SAVED_SUMMARY": "Existing guidelines ({count})",
           "ADD_PERMANENTLY": "Add guideline permanently",
-          "EMPTY": "This assistant has no saved response guidelines.",
+          "EMPTY": "This AI agent has no saved response guidelines.",
           "COMPOSER_PLACEHOLDER": "Type a temporary guideline...",
           "PLACEHOLDER": "Add a response guideline",
           "REMOVE": "Remove temporary response guideline"
@@ -742,10 +742,10 @@
         "GUARDRAILS": {
           "TAB_TITLE": "Guardrails",
           "CREATE_TITLE": "Add a temporary guardrail",
-          "CREATE_HINT": "Test a safety boundary before adding it to the assistant.",
+          "CREATE_HINT": "Test a safety boundary before adding it to the AI agent.",
           "SAVED_SUMMARY": "Existing guardrails ({count})",
           "ADD_PERMANENTLY": "Add guardrail permanently",
-          "EMPTY": "This assistant has no saved guardrails.",
+          "EMPTY": "This AI agent has no saved guardrails.",
           "COMPOSER_PLACEHOLDER": "Type a temporary guardrail...",
           "PLACEHOLDER": "Add a guardrail",
           "REMOVE": "Remove temporary guardrail"
@@ -783,13 +783,13 @@
     "PAYWALL": {
       "TITLE": "Upgrade to use Captain AI",
       "AVAILABLE_ON": "Captain is not available on the free plan.",
-      "UPGRADE_PROMPT": "Upgrade your plan to get access to our assistants, copilot and more.",
+      "UPGRADE_PROMPT": "Upgrade your plan to get access to our AI agents, copilot and more.",
       "UPGRADE_NOW": "Upgrade now",
       "CANCEL_ANYTIME": "You can change or cancel your plan anytime"
     },
     "ENTERPRISE_PAYWALL": {
       "AVAILABLE_ON": "Captain AI is only available in the Enterprise plans.",
-      "UPGRADE_PROMPT": "Upgrade your plan to get access to our assistants, copilot and more.",
+      "UPGRADE_PROMPT": "Upgrade your plan to get access to our AI agents, copilot and more.",
       "ASK_ADMIN": "Please reach out to your administrator for the upgrade."
     },
     "BANNER": {
@@ -802,21 +802,21 @@
       "EDIT": "Update"
     },
     "ASSISTANTS": {
-      "HEADER": "Assistants",
-      "NO_ASSISTANTS_AVAILABLE": "There are no assistants available in your account.",
-      "ADD_NEW": "Create a new assistant",
+      "HEADER": "AI agents",
+      "NO_ASSISTANTS_AVAILABLE": "There are no AI agents available in your account.",
+      "ADD_NEW": "Create a new AI agent",
       "DELETE": {
-        "TITLE": "Are you sure to delete the assistant?",
-        "DESCRIPTION": "This action is permanent. Deleting this assistant will remove it from all connected inboxes and permanently erase all generated knowledge.",
+        "TITLE": "Delete this AI agent?",
+        "DESCRIPTION": "This action is permanent. Deleting this AI agent will remove it from all connected inboxes and permanently erase all generated knowledge.",
         "CONFIRM": "Yes, delete",
-        "SUCCESS_MESSAGE": "The assistant has been successfully deleted",
-        "ERROR_MESSAGE": "There was an error deleting the assistant, please try again."
+        "SUCCESS_MESSAGE": "AI agent deleted",
+        "ERROR_MESSAGE": "There was an error deleting the AI agent, please try again."
       },
-      "FORM_DESCRIPTION": "Fill out the details below to name your assistant, describe its purpose, and specify the product it will support.",
+      "FORM_DESCRIPTION": "Fill out the details below to name your AI agent, describe its purpose, and specify the product it will support.",
       "CREATE": {
-        "TITLE": "Create an assistant",
-        "SUCCESS_MESSAGE": "The assistant has been successfully created",
-        "ERROR_MESSAGE": "There was an error creating the assistant, please try again."
+        "TITLE": "Create an AI agent",
+        "SUCCESS_MESSAGE": "AI agent created",
+        "ERROR_MESSAGE": "There was an error creating the AI agent, please try again."
       },
       "FORM": {
         "UPDATE": "Update",
@@ -829,18 +829,19 @@
         },
         "AVATAR": {
           "LABEL": "Photo",
-          "HELP_TEXT": "Upload a photo for this assistant"
+          "HELP_TEXT": "Upload a photo for this AI agent"
         },
         "NAME": {
           "LABEL": "Name",
-          "PLACEHOLDER": "Enter assistant name",
+          "PLACEHOLDER": "Enter AI agent name",
           "HELP_TEXT": "The name and photo customers see. You can change them anytime.",
-          "AI_BADGE_NOTE": "Customers see this name with an AI badge.",
-          "ERROR": "The name is required"
+          "AI_BADGE_NOTE": "Customers see this name with \"AI agent\" in the chat header.",
+          "ERROR": "The name is required",
+          "DEFAULT": "{accountName} Assistant"
         },
         "DESCRIPTION": {
           "LABEL": "Description",
-          "PLACEHOLDER": "Enter assistant description",
+          "PLACEHOLDER": "Enter AI agent description",
           "ERROR": "The description is required"
         },
         "PRODUCT_NAME": {
@@ -893,7 +894,7 @@
         },
         "INSTRUCTIONS": {
           "LABEL": "Instructions",
-          "PLACEHOLDER": "Enter instructions for the assistant"
+          "PLACEHOLDER": "Enter instructions for the AI agent"
         },
         "FEATURES": {
           "TITLE": "Features",
@@ -965,29 +966,29 @@
         }
       },
       "EDIT": {
-        "TITLE": "Update the assistant",
-        "SUCCESS_MESSAGE": "The assistant has been successfully updated",
-        "ERROR_MESSAGE": "There was an error updating the assistant, please try again.",
-        "NOT_FOUND": "Could not find the assistant. Please try again."
+        "TITLE": "Update the AI agent",
+        "SUCCESS_MESSAGE": "Changes saved",
+        "ERROR_MESSAGE": "There was an error updating the AI agent, please try again.",
+        "NOT_FOUND": "Could not find the AI agent. Please try again."
       },
       "AVATAR": {
-        "SUCCESS_DELETE": "Assistant photo deleted successfully",
-        "ERROR_DELETE": "There was an error deleting the assistant photo, please try again."
+        "SUCCESS_DELETE": "AI agent photo deleted successfully",
+        "ERROR_DELETE": "There was an error deleting the AI agent photo, please try again."
       },
       "SETTINGS": {
         "HEADER": "Settings",
         "BASIC_SETTINGS": {
           "TITLE": "Basic settings",
-          "DESCRIPTION": "Customize what the assistant says when ending a conversation or transferring to a human."
+          "DESCRIPTION": "Customize what the AI agent says when ending a conversation or transferring to a human."
         },
         "SYSTEM_SETTINGS": {
           "TITLE": "System settings",
-          "DESCRIPTION": "Customize what the assistant says when ending a conversation or transferring to a human.",
+          "DESCRIPTION": "Customize what the AI agent says when ending a conversation or transferring to a human.",
           "DESCRIPTION_V2": "Manage what Captain does when customers stop replying and set the handoff message."
         },
         "AUDIENCE": {
           "TITLE": "Audience",
-          "DESCRIPTION": "Choose whether this assistant responds to everyone or only to a specific audience."
+          "DESCRIPTION": "Choose whether this AI agent responds to everyone or only to a specific audience."
         },
         "SCHEDULE": {
           "TITLE": "Schedule",
@@ -995,40 +996,40 @@
         },
         "CONTROL_ITEMS": {
           "TITLE": "The Fun Stuff",
-          "DESCRIPTION": "Add more control to the assistant. (a bit more visual like a story : Query guardrail → scenarios → output) Nudges user to actually utilise these.",
+          "DESCRIPTION": "Add more control to the AI agent. (a bit more visual like a story : Query guardrail → scenarios → output) Nudges user to actually utilise these.",
           "OPTIONS": {
             "GUARDRAILS": {
               "TITLE": "Guardrails",
-              "DESCRIPTION": "Keeps things on track—only the kinds of questions you want your assistant to answer, nothing off-limits or off-topic."
+              "DESCRIPTION": "Keeps things on track—only the kinds of questions you want your AI agent to answer, nothing off-limits or off-topic."
             },
             "RESPONSE_GUIDELINES": {
               "TITLE": "Response guidelines",
-              "DESCRIPTION": "The vibe and structure of your assistant’s replies—clear and friendly? Short and snappy? Detailed and formal?"
+              "DESCRIPTION": "The vibe and structure of your AI agent’s replies—clear and friendly? Short and snappy? Detailed and formal?"
             }
           }
         },
         "DELETE": {
-          "TITLE": "Delete Assistant",
-          "DESCRIPTION": "This action is permanent. Deleting this assistant will remove it from all connected inboxes and permanently erase all generated knowledge.",
+          "TITLE": "Delete AI agent",
+          "DESCRIPTION": "This action is permanent. Deleting this AI agent will remove it from all connected inboxes and permanently erase all generated knowledge.",
           "BUTTON_TEXT": "Delete {assistantName}"
         }
       },
       "OPTIONS": {
-        "EDIT_ASSISTANT": "Edit Assistant",
-        "DELETE_ASSISTANT": "Delete Assistant",
+        "EDIT_ASSISTANT": "Edit AI agent",
+        "DELETE_ASSISTANT": "Delete AI agent",
         "VIEW_CONNECTED_INBOXES": "View connected inboxes"
       },
       "EMPTY_STATE": {
-        "TITLE": "No assistants available",
-        "SUBTITLE": "Create an assistant to provide quick and accurate responses to your users. It can learn from your help articles and past conversations.",
+        "TITLE": "Create your first AI agent",
+        "SUBTITLE": "Create an AI agent to provide quick and accurate responses to your users. It can learn from your help articles and past conversations.",
         "FEATURE_SPOTLIGHT": {
-          "TITLE": "Captain Assistant",
-          "NOTE": "Captain Assistant engages directly with customers, learns from your help docs and past conversations, and delivers instant, accurate responses. It handles the initial queries, providing quick resolutions before  transferring to an agent when needed."
+          "TITLE": "Captain AI Agent",
+          "NOTE": "Captain AI Agent engages directly with customers, learns from your help docs and past conversations, and delivers instant, accurate responses. It handles the initial queries, providing quick resolutions before  transferring to an agent when needed."
         }
       },
       "GUARDRAILS": {
         "TITLE": "Guardrails",
-        "DESCRIPTION": "Keeps things on track—only the kinds of questions you want your assistant to answer, nothing off-limits or off-topic.",
+        "DESCRIPTION": "Keeps things on track—only the kinds of questions you want your AI agent to answer, nothing off-limits or off-topic.",
         "BULK_ACTION": {
           "SELECTED": "{count} item selected | {count} items selected",
           "SELECT_ALL": "Select all ({count})",
@@ -1073,7 +1074,7 @@
       },
       "RESPONSE_GUIDELINES": {
         "TITLE": "Response Guidelines",
-        "DESCRIPTION": "The vibe and structure of your assistant’s replies—clear and friendly? Short and snappy? Detailed and formal?",
+        "DESCRIPTION": "The vibe and structure of your AI agent’s replies—clear and friendly? Short and snappy? Detailed and formal?",
         "BULK_ACTION": {
           "SELECTED": "{count} item selected | {count} items selected",
           "SELECT_ALL": "Select all ({count})",
@@ -1118,13 +1119,13 @@
       },
       "SCENARIOS": {
         "TITLE": "Scenarios",
-        "DESCRIPTION": "Give your assistant some context—like “what to do when a user is stuck,” or “how to act during a refund request.”",
+        "DESCRIPTION": "Give your AI agent some context—like “what to do when a user is stuck,” or “how to act during a refund request.”",
         "TOOLS": {
-          "INHERITED": "Uses the assistant's tools",
-          "INHERITED_ALL": "Uses all of the assistant's tools",
+          "INHERITED": "Uses the AI agent's tools",
+          "INHERITED_ALL": "Uses all of the AI agent's tools",
           "USES": "Uses:",
-          "UNAVAILABLE": "This tool isn't available for this assistant",
-          "NAMED": "Uses the assistant's tools. Named in the instruction: {tools}"
+          "UNAVAILABLE": "This tool isn't available for this AI agent",
+          "NAMED": "Uses the AI agent's tools. Named in the instruction: {tools}"
         },
         "PALETTE": {
           "TITLE": "Add a tool:",
@@ -1147,7 +1148,7 @@
             "ADD_SCENARIO": "Add scenario",
             "ALLOWLIST_CONFIRM": {
               "TITLE": "Allow links to {host} in replies?",
-              "MESSAGE": "Your assistant only sends links to allowed sites. Without this, the booking link is removed from its replies.",
+              "MESSAGE": "Your AI agent only sends links to allowed sites. Without this, the booking link is removed from its replies.",
               "CONFIRM": "Allow and add scenario",
               "CANCEL": "Add without allowing"
             },
@@ -1176,27 +1177,27 @@
             "QUESTIONS": {
               "QUOTES_FOR": {
                 "LABEL": "What do customers ask quotes for?",
-                "HELP": "Optional. Helps the assistant recognise a quote request.",
+                "HELP": "Optional. Helps the AI agent recognise a quote request.",
                 "PLACEHOLDER": "Bulk orders, custom sizes, installation"
               },
               "DETAILS": {
-                "LABEL": "What should the assistant collect?",
+                "LABEL": "What should the AI agent collect?",
                 "HELP": "It asks one at a time and skips anything the customer already said.",
                 "CUSTOM_PLACEHOLDER": "Add your own, like site access hours"
               },
               "MIN_QUANTITY": {
                 "LABEL": "Minimum order for a quote",
-                "HELP": "Optional. Below this, the assistant points to the normal product page.",
+                "HELP": "Optional. Below this, the AI agent points to the normal product page.",
                 "PLACEHOLDER": "10"
               },
               "REPLY_TIME": {
                 "LABEL": "When does your team reply?",
-                "HELP": "The assistant tells the customer when to expect the quote.",
+                "HELP": "The AI agent tells the customer when to expect the quote.",
                 "OTHER_PLACEHOLDER": "within 3 hours on weekdays"
               },
               "AFTER_SUMMARY": {
                 "LABEL": "What happens after the summary?",
-                "HELP": "Pick note only if your team sends quotes by email and the chat can stay with the assistant."
+                "HELP": "Pick note only if your team sends quotes by email and the chat can stay with the AI agent."
               },
               "LABEL": {
                 "LABEL": "Which label marks these chats?",
@@ -1215,10 +1216,10 @@
               },
               "CALL_PURPOSES": {
                 "LABEL": "What are calls for?",
-                "HELP": "The assistant uses this to describe the call."
+                "HELP": "The AI agent uses this to describe the call."
               },
               "OFFER_WHEN": {
-                "LABEL": "When should the assistant offer a call?",
+                "LABEL": "When should the AI agent offer a call?",
                 "CUSTOM_PLACEHOLDER": "Add your own, like a complaint about a delivery"
               },
               "ASK_FIRST": {
@@ -1244,7 +1245,7 @@
                 "PLACEHOLDER": "2 years"
               },
               "DETAILS": {
-                "LABEL": "What should the assistant collect?",
+                "LABEL": "What should the AI agent collect?",
                 "HELP": "It asks one at a time and skips anything the customer already said.",
                 "CUSTOM_PLACEHOLDER": "Add your own, like the original packaging"
               },
@@ -1264,7 +1265,7 @@
                 "PLACEHOLDER": "Running shoes"
               },
               "QUESTIONS_TO_ASK": {
-                "LABEL": "What should the assistant ask?",
+                "LABEL": "What should the AI agent ask?",
                 "HELP": "Two or three questions work best.",
                 "CUSTOM_PLACEHOLDER": "Add your own, like room size"
               },
@@ -1282,7 +1283,7 @@
                 "PLACEHOLDER": "Companies, resellers or orders above 20 units"
               },
               "DETAILS": {
-                "LABEL": "What should the assistant collect?",
+                "LABEL": "What should the AI agent collect?",
                 "HELP": "It asks one at a time and skips anything the customer already said.",
                 "CUSTOM_PLACEHOLDER": "Add your own, like the industry"
               },
@@ -1362,7 +1363,7 @@
             "WITHIN_2_3_BUSINESS_DAYS": "Within 2–3 business days",
             "OTHER": "Other",
             "HANDOFF": "Hand off to the team",
-            "NOTE_ONLY": "Leave a note, keep the chat with the assistant",
+            "NOTE_ONLY": "Leave a note, keep the chat with the AI agent",
             "1": "1",
             "2": "2",
             "3": "3"
@@ -1391,7 +1392,7 @@
                 "MANUAL": "Write it myself"
               },
               "DESCRIBE": {
-                "PROMPT_LABEL": "What should your assistant do?",
+                "PROMPT_LABEL": "What should your AI agent do?",
                 "PROMPT_PLACEHOLDER": "Describe the scenario (e.g. guide customers through product returns and log warranty claims)...",
                 "EXAMPLES_LABEL": "Try an example prompt:",
                 "EXAMPLE_1": "Guide customers looking to return a product and log a claim",
@@ -1468,8 +1469,8 @@
           "DESCRIPTION": {
             "LABEL": "When to use it",
             "PLACEHOLDER": "Use when the customer asks for a quote or bulk pricing.",
-            "HELP": "Your assistant reads this to decide when to start the scenario.",
-            "ERROR": "Say when your assistant should use this scenario"
+            "HELP": "Your AI agent reads this to decide when to start the scenario.",
+            "ERROR": "Say when your AI agent should use this scenario"
           },
           "INSTRUCTION": {
             "LABEL": "Steps and rules",
@@ -1479,15 +1480,16 @@
           },
           "TOOLS": {
             "LABEL": "Tools in this scenario:",
-            "NONE": "None linked. Your assistant can still use all of its tools.",
+            "NONE": "None linked. Your AI agent can still use all of its tools.",
             "REMOVE": "Remove {tool} from the steps"
           }
         }
-      }
+      },
+      "AI_AGENT_CHIP": "AI agent"
     },
     "PRODUCTS": {
       "HEADER": "Products",
-      "DESCRIPTION": "Shopify products in your assistant's knowledge. Prices, stock and links are always fetched live from Shopify.",
+      "DESCRIPTION": "Shopify products in your AI agent's knowledge. Prices, stock and links are always fetched live from Shopify.",
       "SEARCH_PLACEHOLDER": "Search products",
       "EMPTY": "No products found.",
       "LOAD_ERROR": "Could not load the products. Try again in a moment.",
@@ -1502,7 +1504,7 @@
     },
     "KNOWLEDGE": {
       "TITLE": "Knowledge",
-      "SUBTITLE": "Everything your assistant can use to answer. Add sources; FAQs are made from them.",
+      "SUBTITLE": "Everything your AI agent can use to answer. Add sources; FAQs are made from them.",
       "STATS": {
         "SOURCES": "{count} source | {count} sources",
         "FAQS": "{count} FAQ | {count} FAQs",
@@ -1517,7 +1519,7 @@
         "TITLE": "Live product catalog",
         "SYNCED_COUNT": "{count} product synced | {count} products synced",
         "SYNCED_LABEL": "product synced | products synced",
-        "ON_DESCRIPTION": "Your assistant answers with live prices, product links and images",
+        "ON_DESCRIPTION": "Your AI agent answers with live prices, product links and images",
         "FAILED_ATTENTION": "{count} needs attention | {count} need attention",
         "VIEW_PRODUCTS": "View products",
         "SETTINGS": "Shopify settings",
@@ -1577,7 +1579,7 @@
         "INDEXING": "Indexing…",
         "NOT_SEARCHABLE": "Not searchable",
         "PAUSED": "Paused",
-        "TOOLTIP": "Your assistant searches this page's text directly. FAQ sections found on the page are imported as separate FAQs."
+        "TOOLTIP": "Your AI agent searches this page's text directly. FAQ sections found on the page are imported as separate FAQs."
       },
       "USED_IN_CONVERSATIONS": "Used in {n} conversation | Used in {n} conversations",
       "NO_USED_CONVERSATIONS": "No conversations found for this document.",
@@ -1666,7 +1668,7 @@
         "VISIBILITY_SAVED": "Visibility updated",
         "VISIBILITY_ERROR": "Could not update the visibility. Please try again."
       },
-      "FORM_DESCRIPTION": "Enter the URL of the document to add it as a knowledge source and choose the assistant to associate it with.",
+      "FORM_DESCRIPTION": "Enter the URL of the document to add it as a knowledge source and choose the AI agent to associate it with.",
       "CREATE": {
         "TITLE": "Add a document",
         "SUCCESS_MESSAGE": "The document has been successfully created",
@@ -1721,25 +1723,25 @@
       },
       "EMPTY_STATE": {
         "TITLE": "No documents available",
-        "SUBTITLE": "Documents are used by your assistant to generate FAQs. You can import documents to provide context for your assistant.",
+        "SUBTITLE": "Documents are used by your AI agent to generate FAQs. You can import documents to provide context for your AI agent.",
         "FILTERED_TITLE": "No matching documents",
         "FILTERED_SUBTITLE": "Try changing the source, status, or search term.",
         "FEATURE_SPOTLIGHT": {
           "TITLE": "Captain Document",
-          "NOTE": "A document in Captain serves as a knowledge resource for the assistant. By connecting your help center or guides, Captain can analyze the content and provide accurate responses for customer inquiries."
+          "NOTE": "A document in Captain serves as a knowledge resource for the AI agent. By connecting your help center or guides, Captain can analyze the content and provide accurate responses for customer inquiries."
         }
       }
     },
     "CUSTOM_TOOLS": {
       "HEADER": "Tools",
       "ADD_NEW": "Create a new tool",
-      "SOFT_LIMIT_WARNING": "Having more than 10 tools may reduce the assistant's reliability in selecting the right tool. Consider removing unused tools for better results.",
+      "SOFT_LIMIT_WARNING": "Having more than 10 tools may reduce the AI agent's reliability in selecting the right tool. Consider removing unused tools for better results.",
       "EMPTY_STATE": {
         "TITLE": "No custom tools available",
-        "SUBTITLE": "Create custom tools to connect your assistant with external APIs and services, enabling it to fetch data and perform actions on your behalf.",
+        "SUBTITLE": "Create custom tools to connect your AI agent with external APIs and services, enabling it to fetch data and perform actions on your behalf.",
         "FEATURE_SPOTLIGHT": {
           "TITLE": "Custom Tools",
-          "NOTE": "Custom tools allow your assistant to interact with external APIs and services. Create tools to fetch data, perform actions, or integrate with your existing systems to enhance your assistant's capabilities."
+          "NOTE": "Custom tools allow your AI agent to interact with external APIs and services. Create tools to fetch data, perform actions, or integrate with your existing systems to enhance your AI agent's capabilities."
         }
       },
       "FORM_DESCRIPTION": "Configure your custom tool to connect with external APIs",
@@ -1928,7 +1930,7 @@
         "TITLE": "Captain grouped recurring customer questions into FAQ suggestions.",
         "ACTION": "Review suggestions"
       },
-      "FORM_DESCRIPTION": "Add a question and its corresponding answer to the knowledge base and select the assistant it should be associated with.",
+      "FORM_DESCRIPTION": "Add a question and its corresponding answer to the knowledge base and select the AI agent it should be associated with.",
       "CREATE": {
         "TITLE": "Add an FAQ",
         "SUCCESS_MESSAGE": "The response has been added successfully.",
@@ -1963,7 +1965,7 @@
       },
       "EMPTY_STATE": {
         "TITLE": "No FAQs Found",
-        "SUBTITLE": "FAQs help your assistant provide quick and accurate answers to questions from your customers. They can be generated automatically from your content or can be added manually.",
+        "SUBTITLE": "FAQs help your AI agent provide quick and accurate answers to questions from your customers. They can be generated automatically from your content or can be added manually.",
         "CLEAR_SEARCH": "Clear active filters",
         "FEATURE_SPOTLIGHT": {
           "TITLE": "Captain FAQ",
@@ -2021,7 +2023,7 @@
         "SUCCESS_MESSAGE": "The inbox was successfully disconnected.",
         "ERROR_MESSAGE": "There was an error disconnecting the inbox, please try again."
       },
-      "FORM_DESCRIPTION": "Choose an inbox to connect with the assistant.",
+      "FORM_DESCRIPTION": "Choose an inbox to connect with the AI agent.",
       "CREATE": {
         "TITLE": "Connect an Inbox",
         "SUCCESS_MESSAGE": "The inbox was successfully connected.",
@@ -2030,13 +2032,13 @@
       "FORM": {
         "INBOX": {
           "LABEL": "Inbox",
-          "PLACEHOLDER": "Choose the inbox to deploy the assistant.",
+          "PLACEHOLDER": "Choose the inbox to deploy the AI agent.",
           "ERROR": "An inbox selection is required."
         }
       },
       "EMPTY_STATE": {
         "TITLE": "No Connected Inboxes",
-        "SUBTITLE": "Connecting an inbox allows the assistant to handle initial questions from your customers before transferring them to you."
+        "SUBTITLE": "Connecting an inbox allows the AI agent to handle initial questions from your customers before transferring them to you."
       }
     }
   }

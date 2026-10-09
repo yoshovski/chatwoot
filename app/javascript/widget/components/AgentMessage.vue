@@ -123,7 +123,7 @@ export default {
       }
 
       if (this.isAiAssistant) {
-        return '/assets/images/dashboard/captain/tony-avatar.svg';
+        return '/assets/images/dashboard/captain/ai-agent-avatar.svg';
       }
 
       if (this.message.sender) {

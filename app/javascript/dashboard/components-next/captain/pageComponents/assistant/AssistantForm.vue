@@ -27,7 +27,7 @@ const { t } = useI18n();
 
 const formState = {
   uiFlags: useMapGetter('captainAssistants/getUIFlags'),
-  globalConfig: useMapGetter('globalConfig/get'),
+  currentAccount: useMapGetter('getCurrentAccount'),
 };
 
 const initialState = {
@@ -42,8 +42,10 @@ const initialState = {
 const state = reactive({
   ...initialState,
   name:
-    props.mode === 'create'
-      ? formState.globalConfig.value?.captainBrandName || ''
+    props.mode === 'create' && formState.currentAccount.value?.name
+      ? t('CAPTAIN.ASSISTANTS.FORM.NAME.DEFAULT', {
+          accountName: formState.currentAccount.value.name,
+        })
       : '',
 });
 

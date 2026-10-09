@@ -4,11 +4,13 @@ import AssistantForm from './AssistantForm.vue';
 
 vi.mock('dashboard/composables/store', () => ({
   useMapGetter: getter =>
-    ref(getter === 'globalConfig/get' ? { captainBrandName: 'Tony' } : {}),
+    ref(getter === 'getCurrentAccount' ? { name: 'Acme' } : {}),
 }));
 
 vi.mock('vue-i18n', () => ({
-  useI18n: () => ({ t: key => key }),
+  useI18n: () => ({
+    t: (key, params) => (params ? `${key}:${params.accountName}` : key),
+  }),
 }));
 
 const mountForm = props =>
@@ -18,10 +20,12 @@ const mountForm = props =>
   });
 
 describe('AssistantForm', () => {
-  it('prefills the name with the brand name when creating', () => {
+  it('prefills the name from the account name when creating', () => {
     const wrapper = mountForm({ mode: 'create' });
 
-    expect(wrapper.find('input').element.value).toBe('Tony');
+    expect(wrapper.find('input').element.value).toBe(
+      'CAPTAIN.ASSISTANTS.FORM.NAME.DEFAULT:Acme'
+    );
     expect(wrapper.text()).toContain('CAPTAIN.ASSISTANTS.FORM.NAME.HELP_TEXT');
   });
 
