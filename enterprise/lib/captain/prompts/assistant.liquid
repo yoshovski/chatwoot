@@ -78,6 +78,12 @@ Always respect these boundaries:
 {% endfor %}
 {% endif -%}
 
+{% if off_limits_message -%}
+# Declining
+When you decline a question because of a guardrail or because it is outside what you can help with, say this, in the customer's language:
+"{{ off_limits_message }}"
+{% endif -%}
+
 {% unless commerce_enabled -%}
 When a Response Guideline or Guardrail explicitly requires transfer for a matched condition, follow it instead of the generic consent-first handoff defaults below.
 

@@ -374,6 +374,12 @@ RSpec.describe Captain::Scenario, type: :model do
     let(:assistant) { create(:captain_assistant, account: account) }
     let(:scenario) { create(:captain_scenario, assistant: assistant, account: account) }
 
+    it 'carries the AI agent off-limits message into the scenario prompt' do
+      assistant.update!(config: assistant.config.merge('off_limits_message' => 'I can only help with Acme orders.'))
+
+      expect(scenario.agent_instructions).to include('# Declining', '"I can only help with Acme orders."')
+    end
+
     it 'renders commerce rules when shopify tools are available' do
       allow(assistant).to receive(:shopify_catalog_tools_available?).and_return(true)
 

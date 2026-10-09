@@ -1067,6 +1067,11 @@
           "CONTACT_ACCESS": {
             "TITLE": "Can see customer details",
             "DESC": "Name, email and order history, so {name} can answer “Where is my order?”"
+          },
+          "OFF_LIMITS": {
+            "TITLE": "When a question is off-limits, {name} says",
+            "DESC": "Used whenever a guardrail or a question outside your business makes the AI agent decline. Translated to the customer's language.",
+            "PLACEHOLDER": "I can only help with questions about our products and orders. Is there something I can help you with there?"
           }
         },
         "HANDOVER": {
