@@ -851,14 +851,16 @@ function insertTool(tool) {
     insertPos = from + toolNode.nodeSize;
     range.value = null;
     showToolsMenu.value = false;
-  } else if (hasFocus) {
-    const { from, to } = editorState.selection;
-    tr = tr.replaceWith(from, to, toolNode);
-    insertPos = from + toolNode.nodeSize;
   } else {
-    const endPos = Selection.atEnd(editorState.doc).from;
-    tr = tr.insert(endPos, toolNode);
-    insertPos = endPos + toolNode.nodeSize;
+    const { from, to } = hasFocus
+      ? editorState.selection
+      : Selection.atEnd(editorState.doc);
+    // Keep the chip off the previous word, e.g. "person." + tool.
+    const charBefore = editorState.doc.textBetween(Math.max(from - 1, 0), from);
+    const gap = charBefore && !/\s/.test(charBefore) ? 1 : 0;
+    tr = tr.insertText(' '.repeat(gap), from, to);
+    tr = tr.insert(from + gap, toolNode);
+    insertPos = from + gap + toolNode.nodeSize;
   }
 
   tr = tr.insertText(' ', insertPos);
