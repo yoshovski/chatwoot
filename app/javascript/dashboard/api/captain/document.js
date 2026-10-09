@@ -23,6 +23,10 @@ class CaptainDocument extends ApiClient {
     return axios.post(`${this.url}/${id}/sync`);
   }
 
+  generateFaqs(id) {
+    return axios.post(`${this.url}/${id}/generate_faqs`);
+  }
+
   getDrilldown({ documentId, page, signal }) {
     const requestConfig = { params: { page } };
     if (signal) requestConfig.signal = signal;

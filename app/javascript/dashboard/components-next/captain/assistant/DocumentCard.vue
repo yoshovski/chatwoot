@@ -1,5 +1,6 @@
 <script setup>
 import { computed } from 'vue';
+import { useRoute } from 'vue-router';
 import { useToggle } from '@vueuse/core';
 import { useI18n } from 'vue-i18n';
 import { dynamicTime } from 'shared/helpers/timeHelper';
@@ -16,6 +17,8 @@ import CardLayout from 'dashboard/components-next/CardLayout.vue';
 import DropdownMenu from 'dashboard/components-next/dropdown-menu/DropdownMenu.vue';
 import Button from 'dashboard/components-next/button/Button.vue';
 import Checkbox from 'dashboard/components-next/checkbox/Checkbox.vue';
+import Switch from 'dashboard/components-next/switch/Switch.vue';
+import Policy from 'dashboard/components/policy.vue';
 import DocumentSyncStatus from 'dashboard/components-next/captain/assistant/DocumentSyncStatus.vue';
 
 const props = defineProps({
@@ -26,6 +29,10 @@ const props = defineProps({
   name: {
     type: String,
     default: '',
+  },
+  enabled: {
+    type: Boolean,
+    default: true,
   },
   assistant: {
     type: Object,
@@ -97,9 +104,10 @@ const props = defineProps({
   },
 });
 
-const emit = defineEmits(['action', 'select', 'hover']);
+const emit = defineEmits(['action', 'select', 'hover', 'toggle']);
 
 const exactTimestamp = useExactTimestamp();
+const route = useRoute();
 
 const { checkPermissions } = usePolicy();
 
@@ -109,6 +117,11 @@ const [showActionsDropdown, toggleDropdown] = useToggle();
 const modelValue = computed({
   get: () => props.isSelected,
   set: () => emit('select', props.id),
+});
+
+const enabledState = computed({
+  get: () => props.enabled,
+  set: enabled => emit('toggle', { id: props.id, enabled }),
 });
 
 const isPdf = computed(() => props.pdfDocument);
@@ -126,6 +139,33 @@ const isRetryableSync = computed(
 );
 const showSyncStatus = computed(() => props.syncable);
 
+const typeIcon = computed(() => {
+  if (isPdf.value) return 'i-lucide-file-text';
+  if (isMarkdown.value) return 'i-lucide-align-left';
+  return 'i-lucide-globe';
+});
+
+const typeIconClasses = computed(() => {
+  if (isPdf.value) {
+    return 'bg-n-ruby-3 text-n-ruby-11 dark:bg-n-ruby-3/20';
+  }
+  if (isMarkdown.value) {
+    return 'bg-n-teal-3 text-n-teal-11 dark:bg-n-teal-3/20';
+  }
+  return 'bg-n-blue-3 text-n-blue-11 dark:bg-n-blue-3/20';
+});
+
+const faqsFilteredRoute = computed(() => ({
+  name: 'captain_assistants_responses_index',
+  params: {
+    accountId: route?.params?.accountId,
+    assistantId: props.assistant?.id || route?.params?.assistantId,
+  },
+  query: {
+    document_id: props.id,
+  },
+}));
+
 const menuItems = computed(() => {
   const allOptions = [];
 
@@ -137,6 +177,15 @@ const menuItems = computed(() => {
       value: 'sync',
       action: 'sync',
       icon: 'i-lucide-refresh-cw',
+    });
+  }
+
+  if (canManage.value && !isPdf.value && !isMarkdown.value) {
+    allOptions.push({
+      label: t('CAPTAIN.DOCUMENTS.OPTIONS.GENERATE_FAQS'),
+      value: 'generateFaqs',
+      action: 'generateFaqs',
+      icon: 'i-lucide-sparkles',
     });
   }
 
@@ -185,6 +234,7 @@ const handleRetry = () => {
   <CardLayout
     :selectable="selectable"
     class="relative"
+    :class="{ 'opacity-60': !enabled }"
     @mouseenter="emit('hover', true)"
     @mouseleave="emit('hover', false)"
   >
@@ -194,32 +244,62 @@ const handleRetry = () => {
     >
       <Checkbox v-model="modelValue" />
     </div>
-    <div class="flex gap-1 justify-between w-full">
-      <button
-        type="button"
-        class="p-0 text-base text-left bg-transparent border-0 outline-transparent text-n-slate-12 line-clamp-1 underline-offset-2 hover:underline focus-visible:underline"
-        @click="handleViewDetails"
-      >
-        {{ name }}
-      </button>
-      <div
-        v-if="showMenu && menuItems.length"
-        v-on-clickaway="() => toggleDropdown(false)"
-        class="flex relative items-center group"
-      >
-        <Button
-          icon="i-lucide-ellipsis-vertical"
-          color="slate"
-          size="xs"
-          class="rounded-md group-hover:bg-n-alpha-2"
-          @click="toggleDropdown()"
-        />
-        <DropdownMenu
-          v-if="showActionsDropdown"
-          :menu-items="menuItems"
-          class="top-full mt-1 ltr:right-0 rtl:left-0 xl:ltr:right-0 xl:rtl:left-0"
-          @action="handleAction($event)"
-        />
+    <div class="flex gap-3 justify-between items-center w-full">
+      <div class="flex items-center gap-2.5 min-w-0 flex-1">
+        <div
+          class="flex items-center justify-center size-8 rounded-lg shrink-0"
+          :class="typeIconClasses"
+        >
+          <Icon :icon="typeIcon" class="size-4" />
+        </div>
+        <button
+          type="button"
+          class="p-0 text-base text-left bg-transparent border-0 outline-transparent text-n-slate-12 line-clamp-1 underline-offset-2 hover:underline focus-visible:underline"
+          @click="handleViewDetails"
+        >
+          {{ name }}
+        </button>
+        <span
+          v-if="!enabled"
+          class="inline-flex items-center px-1.5 py-0.5 text-xs font-medium rounded bg-n-slate-3 text-n-slate-11 shrink-0"
+        >
+          {{ $t('CAPTAIN.DOCUMENTS.STATUS.PAUSED') }}
+        </span>
+      </div>
+      <div class="flex items-center gap-2 shrink-0">
+        <Policy
+          v-if="canManage"
+          :permissions="['administrator']"
+          class="flex items-center"
+        >
+          <Switch
+            v-model="enabledState"
+            :aria-label="
+              enabled
+                ? t('CAPTAIN.DOCUMENTS.PAUSE')
+                : t('CAPTAIN.DOCUMENTS.RESUME')
+            "
+          />
+        </Policy>
+        <div
+          v-if="showMenu && menuItems.length"
+          v-on-clickaway="() => toggleDropdown(false)"
+          class="flex relative items-center group"
+        >
+          <Button
+            icon="i-lucide-ellipsis-vertical"
+            color="slate"
+            size="xs"
+            class="rounded-md group-hover:bg-n-alpha-2"
+            @click="toggleDropdown()"
+          />
+          <DropdownMenu
+            v-if="showActionsDropdown"
+            :menu-items="menuItems"
+            class="top-full mt-1 ltr:right-0 rtl:left-0 xl:ltr:right-0 xl:rtl:left-0"
+            @action="handleAction($event)"
+          />
+        </div>
       </div>
     </div>
     <div class="flex gap-4 justify-between items-center w-full">
@@ -249,9 +329,14 @@ const handleRetry = () => {
         <Icon :icon="linkIcon" class="shrink-0" />
         <span class="truncate">{{ displayLink }}</span>
       </span>
-      <span v-if="!isPdf" class="text-sm shrink-0 text-n-slate-11">
+      <router-link
+        v-if="!isPdf"
+        :to="faqsFilteredRoute"
+        class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-n-alpha-2 hover:bg-n-alpha-3 text-n-slate-11 hover:text-n-slate-12 transition-colors shrink-0"
+        @click.stop
+      >
         {{ responsesCountLabel }}
-      </span>
+      </router-link>
       <DocumentSyncStatus
         v-if="showSyncStatus"
         :status="syncStatus"

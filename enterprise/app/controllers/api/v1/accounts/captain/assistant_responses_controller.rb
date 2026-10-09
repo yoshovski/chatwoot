@@ -59,24 +59,22 @@ class Api::V1::Accounts::Captain::AssistantResponsesController < Api::V1::Accoun
   end
 
   def apply_filters(base_query)
-    base_query = base_query.where(assistant_id: permitted_params[:assistant_id]) if permitted_params[:assistant_id].present?
-
+    query = base_query
+    query = query.where(assistant_id: permitted_params[:assistant_id]) if permitted_params[:assistant_id].present?
     if permitted_params[:document_id].present?
-      base_query = base_query.where(
+      query = query.where(
         documentable_id: permitted_params[:document_id],
         documentable_type: 'Captain::Document'
       )
     end
-
+    query = query.where(documentable_type: permitted_params[:documentable_type]) if permitted_params[:documentable_type].present?
     if permitted_params[:search].present?
-      search_term = "%#{permitted_params[:search]}%"
-      base_query = base_query.where(
+      query = query.where(
         'question ILIKE :search OR answer ILIKE :search',
-        search: search_term
+        search: "%#{permitted_params[:search]}%"
       )
     end
-
-    base_query
+    query
   end
 
   def set_assistant
@@ -96,7 +94,7 @@ class Api::V1::Accounts::Captain::AssistantResponsesController < Api::V1::Accoun
   end
 
   def permitted_params
-    params.permit(:id, :assistant_id, :page, :document_id, :account_id, :search)
+    params.permit(:id, :assistant_id, :page, :document_id, :account_id, :search, :documentable_type)
   end
 
   def response_params

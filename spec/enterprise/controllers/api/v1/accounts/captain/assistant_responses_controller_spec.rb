@@ -178,6 +178,32 @@ RSpec.describe 'Api::V1::Accounts::Captain::AssistantResponses', type: :request 
       end
     end
 
+    context 'when filtering by documentable_type' do
+      let(:conversation) { create(:conversation, account: account) }
+
+      before do
+        create_list(:captain_assistant_response, 2,
+                    account: account,
+                    assistant: assistant,
+                    documentable: admin)
+        create_list(:captain_assistant_response, 3,
+                    account: account,
+                    assistant: assistant,
+                    documentable: conversation)
+      end
+
+      it 'returns only responses matching the documentable_type' do
+        get "/api/v1/accounts/#{account.id}/captain/assistant_responses",
+            params: { documentable_type: 'Conversation' },
+            headers: agent.create_new_auth_token,
+            as: :json
+
+        expect(response).to have_http_status(:ok)
+        expect(json_response[:payload].length).to eq(3)
+        expect(json_response[:payload].all? { |r| r[:documentable][:type] == 'Conversation' }).to be(true)
+      end
+    end
+
     context 'when searching' do
       before do
         create(:captain_assistant_response,

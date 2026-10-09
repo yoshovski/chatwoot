@@ -11,7 +11,11 @@ import { useAccount } from 'dashboard/composables/useAccount';
 import CaptainResponseAPI from 'dashboard/api/captain/response';
 
 import Banner from 'dashboard/components-next/banner/Banner.vue';
+import Button from 'dashboard/components-next/button/Button.vue';
+import DropdownMenu from 'dashboard/components-next/dropdown-menu/DropdownMenu.vue';
+import Icon from 'dashboard/components-next/icon/Icon.vue';
 import Input from 'dashboard/components-next/input/Input.vue';
+import KnowledgeHeader from 'dashboard/components-next/captain/knowledge/KnowledgeHeader.vue';
 import BulkSelectBar from 'dashboard/components-next/captain/assistant/BulkSelectBar.vue';
 import DeleteDialog from 'dashboard/components-next/captain/pageComponents/DeleteDialog.vue';
 import BulkDeleteDialog from 'dashboard/components-next/captain/pageComponents/BulkDeleteDialog.vue';
@@ -38,6 +42,12 @@ const usageResponse = ref(null);
 const showResponseUsage = ref(false);
 const deleteDialog = ref(null);
 const bulkDeleteDialog = ref(null);
+
+const documentIdFilter = ref(
+  route.query.document_id ? Number(route.query.document_id) : null
+);
+const sourceTypeFilter = ref(route.query.source_type || null);
+const openSourceMenu = ref(false);
 
 const dialogType = ref('');
 const searchQuery = ref('');
@@ -99,16 +109,70 @@ const handleResponseUsageClose = () => {
   showResponseUsage.value = false;
 };
 
+const sourceOptions = computed(() => [
+  {
+    label: t('CAPTAIN.RESPONSES.FILTERS.SOURCE.ALL'),
+    value: null,
+  },
+  {
+    label: t('CAPTAIN.RESPONSES.FILTERS.SOURCE.HAND_TYPED'),
+    value: 'User',
+  },
+  {
+    label: t('CAPTAIN.RESPONSES.FILTERS.SOURCE.CONVERSATION'),
+    value: 'Conversation',
+  },
+]);
+
+const currentSourceLabel = computed(() => {
+  const match = sourceOptions.value.find(
+    opt => opt.value === sourceTypeFilter.value
+  );
+  return match ? match.label : t('CAPTAIN.RESPONSES.FILTERS.SOURCE.ALL');
+});
+
+const activeDocumentName = computed(() => {
+  if (!documentIdFilter.value) return '';
+  const docResponse = responses.value.find(
+    r =>
+      r.documentable?.type === 'Captain::Document' &&
+      r.documentable?.id === documentIdFilter.value
+  );
+  if (docResponse?.documentable?.name) {
+    return docResponse.documentable.name;
+  }
+  const storeDoc = store.getters['captainDocuments/getRecord']?.(
+    documentIdFilter.value
+  );
+  if (storeDoc?.name) return storeDoc.name;
+
+  return `#${documentIdFilter.value}`;
+});
+
+const handleToggleResponse = async ({ id, enabled }) => {
+  try {
+    await store.dispatch('captainResponses/update', { id, enabled });
+  } catch {
+    useAlert(t('CAPTAIN.RESPONSES.TOGGLE_ERROR'));
+  }
+};
+
 const fetchResponseUsage = ({ resourceId, ...params }) =>
   CaptainResponseAPI.getDrilldown({ responseId: resourceId, ...params });
 
-const updateURLWithFilters = (page, search) => {
+const updateURLWithFilters = (page, search, docId, sourceType) => {
   const query = {
     page: page || 1,
   };
 
   if (search) {
     query.search = search;
+  }
+  if (docId) {
+    query.document_id = docId;
+  }
+  if (sourceType) {
+    query.source_type = sourceType;
   }
 
   router.replace({ query });
@@ -125,9 +189,20 @@ const fetchResponses = async (page = 1) => {
   if (searchQuery.value) {
     filterParams.search = searchQuery.value;
   }
+  if (documentIdFilter.value) {
+    filterParams.documentId = documentIdFilter.value;
+  }
+  if (sourceTypeFilter.value) {
+    filterParams.documentableType = sourceTypeFilter.value;
+  }
 
   // Update URL with current filters
-  updateURLWithFilters(page, searchQuery.value);
+  updateURLWithFilters(
+    page,
+    searchQuery.value,
+    documentIdFilter.value,
+    sourceTypeFilter.value
+  );
 
   store.dispatch('captainResponses/setFetchingList', true);
 
@@ -147,6 +222,18 @@ const fetchResponses = async (page = 1) => {
     useAlert(error?.message || t('CAPTAIN.RESPONSES.ERRORS.LOAD'));
     store.dispatch('captainResponses/setFetchingList', false);
   }
+};
+
+const handleSourceSelect = ({ value }) => {
+  openSourceMenu.value = false;
+  sourceTypeFilter.value = value;
+  documentIdFilter.value = null;
+  fetchResponses(1);
+};
+
+const clearDocumentFilter = () => {
+  documentIdFilter.value = null;
+  fetchResponses(1);
 };
 
 // Bulk action
@@ -229,9 +316,24 @@ const handleSearchInput = () => {
 
 const initializeFromURL = () => {
   searchQuery.value = route.query.search || '';
+  documentIdFilter.value = route.query.document_id
+    ? Number(route.query.document_id)
+    : null;
+  sourceTypeFilter.value = route.query.source_type || null;
   const pageFromURL = parseInt(route.query.page, 10) || 1;
   fetchResponses(pageFromURL);
 };
+
+watch(
+  () => route.query.document_id,
+  newDocId => {
+    const parsedId = newDocId ? Number(newDocId) : null;
+    if (parsedId !== documentIdFilter.value) {
+      documentIdFilter.value = parsedId;
+      fetchResponses(1);
+    }
+  }
+);
 
 const navigateToFaqSuggestions = () => {
   router.push({
@@ -311,19 +413,59 @@ onUnmounted(() => {
       </div>
     </template>
 
+    <template #controls>
+      <KnowledgeHeader />
+    </template>
+
     <template #subHeader>
       <BulkSelectBar
+        v-if="bulkSelectedIds.size > 0"
         v-model="bulkSelectedIds"
         :all-items="responses"
         :select-all-label="buildSelectedCountLabel"
         :selected-count-label="selectedCountLabel"
         :delete-label="$t('CAPTAIN.RESPONSES.BULK_DELETE_BUTTON')"
-        class="w-fit"
-        :class="{
-          'mb-2': bulkSelectedIds.size > 0,
-        }"
+        class="w-fit mb-2"
         @bulk-delete="bulkDeleteDialog.dialogRef.open()"
       />
+      <div v-else class="flex flex-wrap items-center gap-2 mb-3">
+        <div v-on-clickaway="() => (openSourceMenu = false)" class="relative">
+          <Button
+            :label="currentSourceLabel"
+            icon="i-lucide-chevron-down"
+            trailing-icon
+            size="xs"
+            variant="faded"
+            color="slate"
+            @click="openSourceMenu = !openSourceMenu"
+          />
+          <DropdownMenu
+            v-if="openSourceMenu"
+            :menu-items="sourceOptions"
+            class="top-full mt-1 ltr:left-0 rtl:right-0 z-20 min-w-40"
+            @action="handleSourceSelect"
+          />
+        </div>
+        <div
+          v-if="documentIdFilter"
+          class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-n-brand/10 text-n-brand dark:bg-n-brand/20"
+        >
+          <span>
+            {{
+              $t('CAPTAIN.RESPONSES.FILTERS.FROM_SOURCE', {
+                name: activeDocumentName,
+              })
+            }}
+          </span>
+          <button
+            type="button"
+            class="hover:opacity-75"
+            @click="clearDocumentFilter"
+          >
+            <Icon icon="i-lucide-x" class="size-3" />
+          </button>
+        </div>
+      </div>
     </template>
 
     <template #emptyState>
@@ -356,6 +498,8 @@ onUnmounted(() => {
           :assistant="response.assistant"
           :documentable="response.documentable"
           :status="response.status"
+          :origin="response.origin"
+          :enabled="response.enabled !== false"
           :created-at="response.created_at"
           :updated-at="response.updated_at"
           :used-in-conversations-count="response.used_in_conversations_count"
@@ -366,6 +510,7 @@ onUnmounted(() => {
           @action="handleAction"
           @navigate="handleNavigationAction"
           @select="handleCardSelect"
+          @toggle="handleToggleResponse"
           @hover="isHovered => handleCardHover(isHovered, response.id)"
           @view-conversations="handleShowResponseUsage"
         />

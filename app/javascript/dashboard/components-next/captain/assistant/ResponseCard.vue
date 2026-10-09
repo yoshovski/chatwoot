@@ -10,6 +10,7 @@ import CardLayout from 'dashboard/components-next/CardLayout.vue';
 import DropdownMenu from 'dashboard/components-next/dropdown-menu/DropdownMenu.vue';
 import Button from 'dashboard/components-next/button/Button.vue';
 import Checkbox from 'dashboard/components-next/checkbox/Checkbox.vue';
+import Switch from 'dashboard/components-next/switch/Switch.vue';
 import Policy from 'dashboard/components/policy.vue';
 import Icon from 'dashboard/components-next/icon/Icon.vue';
 
@@ -33,6 +34,14 @@ const props = defineProps({
   status: {
     type: String,
     default: 'approved',
+  },
+  origin: {
+    type: String,
+    default: null,
+  },
+  enabled: {
+    type: Boolean,
+    default: true,
   },
   documentable: {
     type: Object,
@@ -78,6 +87,7 @@ const emit = defineEmits([
   'select',
   'hover',
   'viewConversations',
+  'toggle',
 ]);
 
 const exactTimestamp = useExactTimestamp();
@@ -157,25 +167,94 @@ const handleViewConversations = () => {
 
   emit('viewConversations', props.id);
 };
+
+const enabledState = computed({
+  get: () => props.enabled,
+  set: enabled => emit('toggle', { id: props.id, enabled }),
+});
+
+const originInfo = computed(() => {
+  if (props.origin === 'page_import') {
+    return {
+      label: t('CAPTAIN.RESPONSES.ORIGIN.PAGE_IMPORT'),
+      icon: 'i-lucide-globe',
+      class: 'bg-n-blue-3 text-n-blue-11 dark:bg-n-blue-3/20',
+    };
+  }
+  if (props.origin === 'ai_generated') {
+    return {
+      label: t('CAPTAIN.RESPONSES.ORIGIN.AI_GENERATED'),
+      icon: 'i-lucide-sparkles',
+      class: 'bg-n-purple-3 text-n-purple-11 dark:bg-n-purple-3/20',
+    };
+  }
+  if (props.documentable?.type === 'Conversation') {
+    return {
+      label: t('CAPTAIN.RESPONSES.ORIGIN.CONVERSATION'),
+      icon: 'i-lucide-messages-square',
+      class: 'bg-n-amber-3 text-n-amber-11 dark:bg-n-amber-3/20',
+    };
+  }
+  if (props.documentable?.type === 'User') {
+    return {
+      label: t('CAPTAIN.RESPONSES.ORIGIN.HAND_TYPED'),
+      icon: 'i-lucide-pencil',
+      class: 'bg-n-teal-3 text-n-teal-11 dark:bg-n-teal-3/20',
+    };
+  }
+  if (props.documentable?.type === 'Captain::Document') {
+    return {
+      label: t('CAPTAIN.RESPONSES.ORIGIN.AI_GENERATED'),
+      icon: 'i-lucide-sparkles',
+      class: 'bg-n-purple-3 text-n-purple-11 dark:bg-n-purple-3/20',
+    };
+  }
+  return {
+    label: t('CAPTAIN.RESPONSES.ORIGIN.HAND_TYPED'),
+    icon: 'i-lucide-pencil',
+    class: 'bg-n-teal-3 text-n-teal-11 dark:bg-n-teal-3/20',
+  };
+});
 </script>
 
 <template>
   <CardLayout
     selectable
     class="relative"
-    :class="{ 'rounded-md': compact }"
+    :class="{ 'rounded-md': compact, 'opacity-60': !enabled }"
     @mouseenter="emit('hover', true)"
     @mouseleave="emit('hover', false)"
   >
     <div v-show="selectable" class="absolute top-7 ltr:left-3 rtl:right-3">
       <Checkbox v-model="modelValue" />
     </div>
-    <div class="flex relative justify-between w-full gap-1">
+    <div class="flex relative justify-between w-full gap-1 items-center">
       <span class="text-base text-n-slate-12 line-clamp-1">
         {{ question }}
       </span>
-      <div v-if="!compact && showMenu" class="flex items-center gap-2">
+      <div v-if="!compact" class="flex items-center gap-2">
+        <span
+          v-if="!enabled"
+          class="inline-flex items-center px-1.5 py-0.5 text-xs font-medium rounded bg-n-slate-3 text-n-slate-11 shrink-0"
+        >
+          {{ $t('CAPTAIN.RESPONSES.STATUS.PAUSED') }}
+        </span>
         <Policy
+          v-if="canManage"
+          :permissions="['administrator']"
+          class="flex items-center"
+        >
+          <Switch
+            v-model="enabledState"
+            :aria-label="
+              enabled
+                ? t('CAPTAIN.RESPONSES.PAUSE')
+                : t('CAPTAIN.RESPONSES.RESUME')
+            "
+          />
+        </Policy>
+        <Policy
+          v-if="showMenu"
           v-on-clickaway="() => toggleDropdown(false)"
           :permissions="['administrator']"
           class="relative flex items-center group"
@@ -247,7 +326,7 @@ const handleViewConversations = () => {
         class="flex items-center gap-3"
         :class="{ 'justify-between w-full': !showActions }"
       >
-        <div class="inline-flex items-center gap-3 min-w-0">
+        <div class="inline-flex items-center gap-2.5 min-w-0">
           <span
             v-if="status === 'approved'"
             class="text-sm shrink-0 truncate text-n-slate-11 inline-flex items-center gap-1"
@@ -255,25 +334,17 @@ const handleViewConversations = () => {
             <Icon icon="i-woot-captain" class="size-3.5" />
             {{ assistant?.name || '' }}
           </span>
+          <span
+            class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium shrink-0"
+            :class="originInfo.class"
+          >
+            <Icon :icon="originInfo.icon" class="size-3 shrink-0" />
+            <span>{{ originInfo.label }}</span>
+          </span>
           <div
             v-if="documentable"
-            class="text-sm text-n-slate-11 grid grid-cols-[auto_1fr] items-center gap-1 min-w-0"
+            class="text-sm text-n-slate-11 truncate min-w-0"
           >
-            <Icon
-              v-if="documentable.type === 'Captain::Document'"
-              icon="i-ph-files-light"
-              class="size-3.5"
-            />
-            <Icon
-              v-else-if="documentable.type === 'User'"
-              icon="i-ph-user-circle-plus"
-              class="size-3.5"
-            />
-            <Icon
-              v-else-if="documentable.type === 'Conversation'"
-              icon="i-ph-chat-circle-dots"
-              class="size-3.5"
-            />
             <span
               v-if="documentable.type === 'Captain::Document'"
               class="truncate"

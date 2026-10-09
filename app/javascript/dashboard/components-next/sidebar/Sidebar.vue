@@ -515,21 +515,12 @@ const menuItems = computed(() => {
           }),
         },
         {
-          name: 'FAQs',
-          label: t('SIDEBAR.CAPTAIN_RESPONSES'),
-          activeOn: [
-            'captain_assistants_responses_index',
-            'captain_assistants_faq_suggestions',
-          ],
-          to: accountScopedRoute('captain_assistants_index', {
-            navigationPath: 'captain_assistants_responses_index',
-          }),
-        },
-        {
-          name: 'Documents',
-          label: t('SIDEBAR.CAPTAIN_DOCUMENTS'),
+          name: 'Knowledge',
+          label: t('SIDEBAR.CAPTAIN_KNOWLEDGE'),
           activeOn: [
             'captain_assistants_documents_index',
+            'captain_assistants_responses_index',
+            'captain_assistants_faq_suggestions',
             'captain_assistants_products_index',
           ],
           to: accountScopedRoute('captain_assistants_index', {
