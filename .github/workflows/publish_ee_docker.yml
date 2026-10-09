@@ -79,6 +79,8 @@ jobs:
           platforms: ${{ matrix.platform }}
           push: ${{ github.event_name == 'push' || github.event_name == 'workflow_dispatch' }}
           outputs: type=image,name=${{ env.DOCKER_REPO }},push-by-digest=true,name-canonical=true,push=true
+          cache-from: type=registry,ref=${{ env.DOCKER_REPO }}:buildcache-ee-${{ env.PLATFORM_PAIR }}
+          cache-to: type=registry,ref=${{ env.DOCKER_REPO }}:buildcache-ee-${{ env.PLATFORM_PAIR }},mode=max,image-manifest=true
 
       - name: Export digest
         run: |
