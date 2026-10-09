@@ -9,6 +9,7 @@ import Button from 'dashboard/components-next/button/Button.vue';
 import TextArea from 'dashboard/components-next/textarea/TextArea.vue';
 import CaptainScenarios from 'dashboard/api/captain/scenarios';
 import TemplateCard from '../scenarios/TemplateCard.vue';
+import TemplateStepper from '../scenarios/TemplateStepper.vue';
 import ScenarioForm from '../scenarios/ScenarioForm.vue';
 import { SCENARIO_TEMPLATES } from '../scenarios/scenarioTemplates';
 
@@ -21,9 +22,13 @@ const props = defineProps({
     type: Array,
     default: () => [],
   },
+  assistant: {
+    type: Object,
+    default: () => ({}),
+  },
 });
 
-const emit = defineEmits(['add', 'useTemplate']);
+const emit = defineEmits(['add', 'updateAllowlist']);
 
 const { t } = useI18n();
 const route = useRoute();
@@ -37,6 +42,15 @@ const currentAssistantId = computed(
 
 // Tab choices: 'describe', 'template', 'manual'
 const activeChoice = ref('describe');
+const selectedTemplate = ref(null);
+
+const dialogTitle = computed(() =>
+  selectedTemplate.value
+    ? t(
+        `CAPTAIN.ASSISTANTS.SCENARIOS.TEMPLATES.${selectedTemplate.value.id.toUpperCase()}.TITLE`
+      )
+    : t('CAPTAIN.ASSISTANTS.SCENARIOS.ADD.NEW.TITLE')
+);
 
 const choices = computed(() => [
   {
@@ -81,16 +95,20 @@ const manualState = reactive({
 const previewFormRef = ref(null);
 const manualFormRef = ref(null);
 
-const open = () => {
-  activeChoice.value = 'describe';
+const open = ({ tab = 'describe', template = null } = {}) => {
+  activeChoice.value = tab;
+  selectedTemplate.value = template;
   draftResult.value = null;
   dialogRef.value?.open();
-  nextTick(() => {
-    promptInputRef.value?.$el?.focus?.();
-  });
+  if (tab === 'describe') {
+    nextTick(() => {
+      promptInputRef.value?.$el?.focus?.();
+    });
+  }
 };
 
 const close = () => {
+  selectedTemplate.value = null;
   dialogRef.value?.close();
 };
 
@@ -138,10 +156,13 @@ const saveDraftScenario = () => {
   close();
 };
 
-// Template selection method
 const onUseTemplate = template => {
+  selectedTemplate.value = template;
+};
+
+const onAddFromTemplate = scenario => {
+  emit('add', scenario);
   close();
-  emit('useTemplate', template);
 };
 
 // Manual submit method
@@ -166,6 +187,7 @@ defineExpose({
   close,
   generateDraft,
   activeChoice,
+  selectedTemplate,
   describePrompt,
   draftResult,
   previewState,
@@ -179,19 +201,31 @@ defineExpose({
       sm
       slate
       class="flex-shrink-0"
-      @click="open"
+      @click="open()"
     />
 
     <Dialog
       ref="dialogRef"
       width="2xl"
-      :title="t('CAPTAIN.ASSISTANTS.SCENARIOS.ADD.NEW.TITLE')"
+      :title="dialogTitle"
       :show-cancel-button="false"
       :show-confirm-button="false"
       overflow-y-auto
     >
+      <TemplateStepper
+        v-if="selectedTemplate"
+        :key="selectedTemplate.id"
+        :template="selectedTemplate"
+        :tools="tools"
+        :assistant="assistant"
+        @back="selectedTemplate = null"
+        @add="onAddFromTemplate"
+        @update-allowlist="emit('updateAllowlist', $event)"
+      />
+
       <!-- Top Choices Segmented Navigation -->
       <div
+        v-else
         class="flex items-center gap-1 p-1 bg-n-alpha-1 rounded-xl border border-n-weak w-fit -mt-2 mb-2"
       >
         <button
@@ -211,7 +245,10 @@ defineExpose({
       </div>
 
       <!-- 1. DESCRIBE IT TAB -->
-      <div v-if="activeChoice === 'describe'" class="flex flex-col gap-4 py-1">
+      <div
+        v-if="!selectedTemplate && activeChoice === 'describe'"
+        class="flex flex-col gap-4 py-1"
+      >
         <!-- Skeleton Loading State -->
         <div
           v-if="isGenerating"
@@ -303,8 +340,8 @@ defineExpose({
 
       <!-- 2. START FROM A TEMPLATE TAB -->
       <div
-        v-else-if="activeChoice === 'template'"
-        class="grid grid-cols-1 md:grid-cols-2 gap-4 py-2 max-h-[32rem] overflow-y-auto pr-1"
+        v-else-if="!selectedTemplate && activeChoice === 'template'"
+        class="grid grid-cols-1 sm:grid-cols-2 gap-3 py-1"
       >
         <TemplateCard
           v-for="template in SCENARIO_TEMPLATES"
@@ -317,7 +354,7 @@ defineExpose({
 
       <!-- 3. WRITE IT MYSELF TAB -->
       <div
-        v-else-if="activeChoice === 'manual'"
+        v-else-if="!selectedTemplate && activeChoice === 'manual'"
         class="flex flex-col gap-4 py-1"
       >
         <ScenarioForm
@@ -330,68 +367,12 @@ defineExpose({
 
       <!-- Footer Buttons -->
       <template #footer>
-        <!-- Footer for Describe It (Before generation) -->
-        <div
-          v-if="activeChoice === 'describe' && !draftResult"
-          class="flex items-center justify-end w-full gap-3 pt-4 border-t border-n-weak"
-        >
-          <Button
-            variant="faded"
-            color="slate"
-            :label="t('CAPTAIN.ASSISTANTS.SCENARIOS.ADD.NEW.FORM.CANCEL')"
-            type="button"
-            @click="close"
-          />
-          <Button
-            :disabled="
-              !describePrompt.trim() ||
-              describePrompt.trim().length < 10 ||
-              isGenerating
-            "
-            :is-loading="isGenerating"
-            :label="
-              t(
-                'CAPTAIN.ASSISTANTS.SCENARIOS.ADD.NEW.BUILDER.DESCRIBE.BUILD_BUTTON'
-              )
-            "
-            type="button"
-            @click="generateDraft"
-          />
-        </div>
-
-        <!-- Footer for Describe It (Preview mode) -->
-        <div
-          v-else-if="activeChoice === 'describe' && draftResult"
-          class="flex items-center justify-between w-full pt-4 border-t border-n-weak"
-        >
-          <div class="flex items-center gap-2">
-            <Button
-              variant="faded"
-              color="slate"
-              :label="
-                t(
-                  'CAPTAIN.ASSISTANTS.SCENARIOS.ADD.NEW.BUILDER.DESCRIBE.EDIT_PROMPT'
-                )
-              "
-              type="button"
-              @click="editPrompt"
-            />
-            <Button
-              variant="faded"
-              color="slate"
-              icon="i-lucide-refresh-cw"
-              :is-loading="isGenerating"
-              :label="
-                t(
-                  'CAPTAIN.ASSISTANTS.SCENARIOS.ADD.NEW.BUILDER.DESCRIBE.REGENERATE'
-                )
-              "
-              type="button"
-              @click="generateDraft"
-            />
-          </div>
-
-          <div class="flex items-center gap-2">
+        <template v-if="!selectedTemplate">
+          <!-- Footer for Describe It (Before generation) -->
+          <div
+            v-if="activeChoice === 'describe' && !draftResult"
+            class="flex items-center justify-end w-full gap-3 pt-4 border-t border-n-weak"
+          >
             <Button
               variant="faded"
               color="slate"
@@ -400,51 +381,109 @@ defineExpose({
               @click="close"
             />
             <Button
+              :disabled="
+                !describePrompt.trim() ||
+                describePrompt.trim().length < 10 ||
+                isGenerating
+              "
+              :is-loading="isGenerating"
               :label="
                 t(
-                  'CAPTAIN.ASSISTANTS.SCENARIOS.ADD.NEW.BUILDER.DESCRIBE.ADD_SCENARIO'
+                  'CAPTAIN.ASSISTANTS.SCENARIOS.ADD.NEW.BUILDER.DESCRIBE.BUILD_BUTTON'
                 )
               "
               type="button"
-              @click="saveDraftScenario"
+              @click="generateDraft"
             />
           </div>
-        </div>
 
-        <!-- Footer for Start From Template -->
-        <div
-          v-else-if="activeChoice === 'template'"
-          class="flex items-center justify-end w-full pt-4 border-t border-n-weak"
-        >
-          <Button
-            variant="faded"
-            color="slate"
-            :label="t('CAPTAIN.ASSISTANTS.SCENARIOS.ADD.NEW.FORM.CANCEL')"
-            type="button"
-            @click="close"
-          />
-        </div>
+          <!-- Footer for Describe It (Preview mode) -->
+          <div
+            v-else-if="activeChoice === 'describe' && draftResult"
+            class="flex items-center justify-between w-full pt-4 border-t border-n-weak"
+          >
+            <div class="flex items-center gap-2">
+              <Button
+                variant="faded"
+                color="slate"
+                :label="
+                  t(
+                    'CAPTAIN.ASSISTANTS.SCENARIOS.ADD.NEW.BUILDER.DESCRIBE.EDIT_PROMPT'
+                  )
+                "
+                type="button"
+                @click="editPrompt"
+              />
+              <Button
+                variant="faded"
+                color="slate"
+                icon="i-lucide-refresh-cw"
+                :is-loading="isGenerating"
+                :label="
+                  t(
+                    'CAPTAIN.ASSISTANTS.SCENARIOS.ADD.NEW.BUILDER.DESCRIBE.REGENERATE'
+                  )
+                "
+                type="button"
+                @click="generateDraft"
+              />
+            </div>
 
-        <!-- Footer for Write It Myself -->
-        <div
-          v-else-if="activeChoice === 'manual'"
-          class="flex items-center justify-between w-full gap-3 pt-4 border-t border-n-weak"
-        >
-          <Button
-            variant="faded"
-            color="slate"
-            :label="t('CAPTAIN.ASSISTANTS.SCENARIOS.ADD.NEW.FORM.CANCEL')"
-            class="w-full"
-            type="button"
-            @click="close"
-          />
-          <Button
-            :label="t('CAPTAIN.ASSISTANTS.SCENARIOS.ADD.NEW.FORM.CREATE')"
-            class="w-full"
-            type="button"
-            @click="onClickAddManual"
-          />
-        </div>
+            <div class="flex items-center gap-2">
+              <Button
+                variant="faded"
+                color="slate"
+                :label="t('CAPTAIN.ASSISTANTS.SCENARIOS.ADD.NEW.FORM.CANCEL')"
+                type="button"
+                @click="close"
+              />
+              <Button
+                :label="
+                  t(
+                    'CAPTAIN.ASSISTANTS.SCENARIOS.ADD.NEW.BUILDER.DESCRIBE.ADD_SCENARIO'
+                  )
+                "
+                type="button"
+                @click="saveDraftScenario"
+              />
+            </div>
+          </div>
+
+          <!-- Footer for Start From Template -->
+          <div
+            v-else-if="activeChoice === 'template'"
+            class="flex items-center justify-end w-full pt-4 border-t border-n-weak"
+          >
+            <Button
+              variant="faded"
+              color="slate"
+              :label="t('CAPTAIN.ASSISTANTS.SCENARIOS.ADD.NEW.FORM.CANCEL')"
+              type="button"
+              @click="close"
+            />
+          </div>
+
+          <!-- Footer for Write It Myself -->
+          <div
+            v-else-if="activeChoice === 'manual'"
+            class="flex items-center justify-between w-full gap-3 pt-4 border-t border-n-weak"
+          >
+            <Button
+              variant="faded"
+              color="slate"
+              :label="t('CAPTAIN.ASSISTANTS.SCENARIOS.ADD.NEW.FORM.CANCEL')"
+              class="w-full"
+              type="button"
+              @click="close"
+            />
+            <Button
+              :label="t('CAPTAIN.ASSISTANTS.SCENARIOS.ADD.NEW.FORM.CREATE')"
+              class="w-full"
+              type="button"
+              @click="onClickAddManual"
+            />
+          </div>
+        </template>
       </template>
     </Dialog>
   </div>

@@ -90,6 +90,7 @@ const onSearchDropdown = q => {
       class="relative inline-block"
     >
       <Button
+        type="button"
         xs
         ghost
         slate

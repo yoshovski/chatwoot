@@ -11,7 +11,6 @@ import PageLayout from 'dashboard/components-next/captain/PageLayout.vue';
 import SettingsHeader from 'dashboard/components-next/captain/pageComponents/settings/SettingsHeader.vue';
 import { getToolIdsFromInstruction } from 'dashboard/components-next/captain/scenarios/scenarioTools';
 import TemplateGallery from 'dashboard/components-next/captain/scenarios/TemplateGallery.vue';
-import TemplateStepperDialog from 'dashboard/components-next/captain/scenarios/TemplateStepperDialog.vue';
 import ScenariosCard from 'dashboard/components-next/captain/assistant/ScenariosCard.vue';
 import BulkSelectBar from 'dashboard/components-next/captain/assistant/BulkSelectBar.vue';
 import AddNewScenariosDialog from 'dashboard/components-next/captain/assistant/AddNewScenariosDialog.vue';
@@ -30,12 +29,14 @@ const assistant = computed(() =>
 );
 
 const searchQuery = ref('');
-const selectedTemplate = ref(null);
-const stepperDialog = ref(null);
+const addScenarioDialog = ref(null);
 
 const onUseTemplate = template => {
-  selectedTemplate.value = template;
-  stepperDialog.value?.open();
+  addScenarioDialog.value.open({ tab: 'template', template });
+};
+
+const onDescribe = () => {
+  addScenarioDialog.value.open({ tab: 'describe' });
 };
 
 const updateAssistantAllowlist = async host => {
@@ -206,7 +207,12 @@ onMounted(() => {
         :description="$t('CAPTAIN.ASSISTANTS.SCENARIOS.DESCRIPTION')"
       />
       <div class="mt-7">
-        <TemplateGallery :tools="captainTools" @use-template="onUseTemplate" />
+        <TemplateGallery
+          :tools="captainTools"
+          :has-scenarios="scenarios.length > 0"
+          @use-template="onUseTemplate"
+          @describe="onDescribe"
+        />
       </div>
       <div class="flex mt-7 flex-col gap-4">
         <div class="flex justify-between items-center">
@@ -222,10 +228,12 @@ onMounted(() => {
           >
             <template #default-actions>
               <AddNewScenariosDialog
+                ref="addScenarioDialog"
                 :assistant-id="assistantId"
+                :assistant="assistant"
                 :tools="captainTools"
                 @add="addScenario"
-                @use-template="onUseTemplate"
+                @update-allowlist="updateAssistantAllowlist"
               />
             </template>
           </BulkSelectBar>
@@ -276,12 +284,4 @@ onMounted(() => {
       </div>
     </template>
   </PageLayout>
-  <TemplateStepperDialog
-    ref="stepperDialog"
-    :template="selectedTemplate"
-    :tools="captainTools"
-    :assistant="assistant"
-    @add="addScenario"
-    @update-allowlist="updateAssistantAllowlist"
-  />
 </template>

@@ -6,7 +6,7 @@ import {
   getTemplateById,
   resolveToolLink,
 } from './scenarioTemplates';
-import TemplateStepperDialog from './TemplateStepperDialog.vue';
+import TemplateStepper from './TemplateStepper.vue';
 
 const sampleTools = [
   { id: 'faq_lookup', emoji: '📚', title: 'Search knowledge' },
@@ -36,7 +36,7 @@ describe('scenarioTemplates', () => {
 
   describe('template build deterministic generation', () => {
     SCENARIO_TEMPLATES.forEach(template => {
-      describe(template.title, () => {
+      describe(template.id, () => {
         it('builds description <= 500 chars with defaults', () => {
           const result = template.build({}, sampleTools);
           expect(result.description.length).toBeLessThanOrEqual(500);
@@ -72,9 +72,9 @@ describe('scenarioTemplates', () => {
     });
   });
 
-  describe('TemplateStepperDialog', () => {
+  describe('TemplateStepper', () => {
     const mountStepper = (props = {}) => {
-      return mount(TemplateStepperDialog, {
+      return mount(TemplateStepper, {
         props: {
           tools: sampleTools,
           assistant: { link_allowlist: ['cal.com'] },
@@ -86,10 +86,6 @@ describe('scenarioTemplates', () => {
               typeof vars === 'object' ? JSON.stringify(vars) : msg,
           },
           stubs: {
-            Dialog: {
-              template: '<div><slot /><slot name="footer" /></div>',
-              methods: { open: vi.fn(), close: vi.fn() },
-            },
             ScenarioForm: {
               props: ['instruction'],
               template: '<div class="stub-editor">{{ instruction }}</div>',

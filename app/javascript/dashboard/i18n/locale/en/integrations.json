@@ -1116,11 +1116,10 @@
           "NO_RESULTS": "No tools found"
         },
         "TEMPLATES": {
-          "GALLERY_TITLE": "Scenario templates",
-          "GALLERY_DESCRIPTION": "Start with ready-made workflows for quotes, calls, returns, product discovery, and B2B.",
-          "USE_TEMPLATE": "Use template",
+          "GALLERY_TITLE": "Start from a template",
+          "GALLERY_DESCRIPTION": "Answer a few questions and get a ready scenario you can still edit.",
           "NEEDS_SHOPIFY": "Needs Shopify",
-          "NEEDS_SHOPIFY_TOOLTIP": "This template requires the Find products tool, which is available when Shopify is connected.",
+          "NEEDS_SHOPIFY_TOOLTIP": "Connect Shopify to use this template. It needs the Find products tool.",
           "COLLAPSE": "Hide templates",
           "EXPAND": "Show templates",
           "STEPPER": {
@@ -1128,9 +1127,6 @@
             "NEXT": "Next",
             "BACK": "Back",
             "SKIP": "Skip",
-            "PREVIEW": "Preview",
-            "PREVIEW_TITLE": "Review scenario",
-            "PREVIEW_DESCRIPTION": "Review the generated title, routing trigger, and instructions. You can customize them before saving.",
             "ADD_SCENARIO": "Add scenario",
             "ALLOWLIST_CONFIRM": {
               "TITLE": "Allow links in replies?",
@@ -1138,6 +1134,31 @@
               "CONFIRM": "Allow and save",
               "CANCEL": "Save without allowing"
             }
+          },
+          "STEPS": "{count} step | {count} steps",
+          "DESCRIBE": {
+            "TITLE": "Describe your own",
+            "TAGLINE": "Say what should happen and AI drafts the steps."
+          },
+          "REQUEST_A_QUOTE": {
+            "TITLE": "Request a quote",
+            "TAGLINE": "Collect what sales needs, then pass the quote to your team."
+          },
+          "BOOK_A_CALL": {
+            "TITLE": "Book a call",
+            "TAGLINE": "Share your booking link when a customer wants to talk."
+          },
+          "RETURNS_AND_WARRANTY": {
+            "TITLE": "Returns and warranty",
+            "TAGLINE": "Tell returns from defects and collect proof for your team."
+          },
+          "PRODUCT_FINDER": {
+            "TITLE": "Product finder",
+            "TAGLINE": "Ask two or three questions and recommend the best fit."
+          },
+          "B2B_INQUIRY": {
+            "TITLE": "B2B and wholesale",
+            "TAGLINE": "Qualify business buyers and collect volume and tax details."
           }
         },
         "BULK_ACTION": {

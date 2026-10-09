@@ -14,41 +14,9 @@ export const resolveToolLink = (toolId, defaultTitle, availableTools = []) => {
 export const SCENARIO_TEMPLATES = [
   {
     id: 'request_a_quote',
-    emoji: '🧾',
+    icon: 'i-lucide-receipt-text',
     color: 'amber',
-    title: 'Request a quote',
-    tagline:
-      'Collect requirements and prepare custom quotes for your sales team',
     requiredTools: [],
-    demo: [
-      {
-        role: 'customer',
-        text: 'Hi! Can I get a quote for 25 units of Model X200?',
-      },
-      { role: 'typing' },
-      {
-        role: 'assistant',
-        text: 'I would be happy to help with a quote! What is your delivery country or postal code?',
-      },
-      { role: 'customer', text: 'Germany, postal code 10115.' },
-      { role: 'typing' },
-      {
-        role: 'assistant',
-        text: 'Thank you! Do you have a target delivery date or deadline for this order?',
-      },
-      { role: 'customer', text: 'End of next month.' },
-      { role: 'typing' },
-      {
-        role: 'assistant',
-        text: 'Summary: 25x Model X200 for delivery to Germany (10115) by end of next month. Does everything look correct?',
-        action: {
-          type: 'note',
-          text: 'Private note: 25x Model X200, Germany (10115)',
-        },
-        handoff:
-          'Passing to our sales team to prepare your official quote within 24 hours',
-      },
-    ],
     questions: [
       {
         key: 'quotes_for',
@@ -186,33 +154,9 @@ export const SCENARIO_TEMPLATES = [
   },
   {
     id: 'book_a_call',
-    emoji: '📅',
+    icon: 'i-lucide-calendar-clock',
     color: 'iris',
-    title: 'Book a call',
-    tagline:
-      'Let customers schedule a call or product demo through your booking link',
     requiredTools: [],
-    demo: [
-      {
-        role: 'customer',
-        text: 'Can someone on your team jump on a quick call with me?',
-      },
-      { role: 'typing' },
-      {
-        role: 'assistant',
-        text: 'We would love to speak with you! What topic would you like to cover during the call?',
-      },
-      {
-        role: 'customer',
-        text: 'A technical demo of your enterprise features.',
-      },
-      { role: 'typing' },
-      {
-        role: 'assistant',
-        text: 'You can pick a convenient slot directly on our calendar: [Schedule a demo](https://cal.com/demo).',
-        buttons: ['Schedule a demo (Cal.com)'],
-      },
-    ],
     questions: [
       {
         key: 'booking_url',
@@ -309,33 +253,9 @@ export const SCENARIO_TEMPLATES = [
   },
   {
     id: 'returns_and_warranty',
-    emoji: '↩️',
+    icon: 'i-lucide-undo-2',
     color: 'teal',
-    title: 'Returns & warranty claim',
-    tagline: 'Handle standard returns and warranty defect claims step by step',
     requiredTools: [],
-    demo: [
-      {
-        role: 'customer',
-        text: 'My Model X200 battery stopped charging after 3 weeks. Order #1001.',
-      },
-      { role: 'typing' },
-      {
-        role: 'assistant',
-        text: 'I am sorry to hear that. I checked order #1001 — it is within your 2-year warranty window. Could you share a quick photo showing the issue?',
-      },
-      { role: 'customer', text: 'Uploaded photo: charger_error.jpg' },
-      { role: 'typing' },
-      {
-        role: 'assistant',
-        text: 'Thank you for the photo! I have logged your warranty claim with our team.',
-        action: {
-          type: 'note',
-          text: 'Claim summary: Order #1001, defect verified with photo',
-        },
-        handoff: 'Passing to our warranty team for replacement authorization',
-      },
-    ],
     questions: [
       {
         key: 'return_window',
@@ -445,48 +365,9 @@ export const SCENARIO_TEMPLATES = [
   },
   {
     id: 'product_finder',
-    emoji: '🧭',
-    color: 'violet',
-    title: 'Product finder',
-    tagline:
-      'Guide shoppers to the right product with a few targeted questions',
+    icon: 'i-lucide-compass',
+    color: 'ruby',
     requiredTools: ['catalog_product_search'],
-    demo: [
-      {
-        role: 'customer',
-        text: 'I need a portable charger for backpacking under $80.',
-      },
-      { role: 'typing' },
-      {
-        role: 'assistant',
-        text: 'Here are two lightweight options that fit your backpacking budget:',
-      },
-      {
-        role: 'assistant',
-        productCard: {
-          title: 'CampPower Mini 10k',
-          price: '$49.00',
-          feature: 'Ultralight (180g), waterproof rating IP67',
-        },
-      },
-      {
-        role: 'assistant',
-        productCard: {
-          title: 'TrailCharge 20k Solar',
-          price: '$75.00',
-          feature: 'Dual USB-C, built-in emergency solar panel',
-        },
-      },
-      {
-        role: 'customer',
-        text: 'Does the CampPower Mini support USB-C PD fast charging?',
-      },
-      { role: 'typing' },
-      {
-        role: 'assistant',
-        text: 'Yes! It delivers 20W USB-C Power Delivery fast charging.',
-      },
-    ],
     questions: [
       {
         key: 'product_category',
@@ -563,37 +444,9 @@ export const SCENARIO_TEMPLATES = [
   },
   {
     id: 'b2b_inquiry',
-    emoji: '🏢',
+    icon: 'i-lucide-building-2',
     color: 'slate',
-    title: 'B2B / wholesale inquiry',
-    tagline: 'Qualify business inquiries and collect wholesale requirements',
     requiredTools: [],
-    demo: [
-      {
-        role: 'customer',
-        text: 'Hi, we are interested in ordering 60 units for Acme Ltd. Do you have wholesale pricing?',
-      },
-      { role: 'typing' },
-      {
-        role: 'assistant',
-        text: 'Hello! Yes, we offer volume pricing for business orders. Could you share your company name, VAT or tax ID, and delivery country?',
-      },
-      {
-        role: 'customer',
-        text: 'Acme Ltd, VAT ID GB987654321, United Kingdom.',
-      },
-      { role: 'typing' },
-      {
-        role: 'assistant',
-        text: 'Thank you! I have passed your inquiry to our corporate team with your details.',
-        action: {
-          type: 'note',
-          text: 'Wholesale request: Acme Ltd (GB987654321), 60 units',
-        },
-        handoff:
-          'Passing to our B2B team who will email you wholesale pricing within 1 business day',
-      },
-    ],
     questions: [
       {
         key: 'qualification_criteria',
@@ -697,3 +550,9 @@ export const SCENARIO_TEMPLATES = [
 
 export const getTemplateById = id =>
   SCENARIO_TEMPLATES.find(template => template.id === id);
+
+export const countSteps = instruction =>
+  (instruction.match(/^\d+\.\s/gm) || []).length;
+
+export const isTemplateAvailable = (template, tools = []) =>
+  template.requiredTools.every(toolId => tools.some(tool => tool.id === toolId));
