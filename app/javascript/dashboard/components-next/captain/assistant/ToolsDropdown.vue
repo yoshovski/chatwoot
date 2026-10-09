@@ -57,7 +57,7 @@ watch(
       <input
         :value="searchQuery"
         type="text"
-        :placeholder="searchPlaceholder || 'Search tools...'"
+        :placeholder="searchPlaceholder"
         class="w-full px-2.5 py-1.5 text-xs rounded-lg bg-n-alpha-black2 border border-n-weak text-n-slate-12 placeholder-n-slate-9 outline-none focus:border-n-brand"
         @input="handleSearch"
       />
