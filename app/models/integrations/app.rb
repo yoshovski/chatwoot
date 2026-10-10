@@ -129,9 +129,10 @@ class Integrations::App
 
   private
 
+  # The custom app connection needs neither the Shopify Partner app nor the App Store
+  # installation switch, so only the account's own feature flag decides.
   def shopify_enabled?(account)
-    Shopify::FeatureGate.enabled?(account: account) &&
-      GlobalConfigService.load('SHOPIFY_CLIENT_ID', nil).present?
+    account.feature_enabled?(Shopify::FeatureGate::ACCOUNT_FEATURE)
   end
 
   def notion_enabled?(account)
