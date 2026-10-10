@@ -33,14 +33,9 @@ const { t } = useI18n();
           icon-name="i-lucide-bot-message-square"
           rounded-full
         />
-        <div class="flex flex-col min-w-0">
-          <span class="text-sm font-semibold text-white truncate">
-            {{ name }}
-          </span>
-          <span class="text-xs text-white/80">
-            {{ t('CAPTAIN.ASSISTANTS.SETTINGS.IDENTITY.PREVIEW_SUBTITLE') }}
-          </span>
-        </div>
+        <span class="min-w-0 text-sm font-semibold text-white truncate">
+          {{ name }}
+        </span>
       </div>
       <div class="flex flex-col gap-2.5 p-4 bg-n-slate-2 min-h-36">
         <p
