@@ -51,6 +51,7 @@ jobs:
           context: .
           file: docker/Dockerfile
           platforms: ${{ matrix.platform }}
+          # Publish only the build cache; do not publish a runnable image.
           push: false
           load: false
           # Exercise the same shared dependency cache used by EE releases.
