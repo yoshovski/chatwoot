@@ -1,5 +1,4 @@
 <script setup>
-import AccountUsage from 'dashboard/routes/dashboard/settings/billing/AccountUsage.vue';
 import { h, ref, computed, onMounted, watch } from 'vue';
 import { provideSidebarContext, useSidebarResize } from './provider';
 import { useAccount } from 'dashboard/composables/useAccount';
@@ -965,7 +964,9 @@ const menuItems = computed(() => {
         },
         {
           name: 'Settings Billing',
-          label: t('SIDEBAR.BILLING'),
+          label: isOnChatwootCloud.value
+            ? t('SIDEBAR.BILLING')
+            : t('ACCOUNT_SUBSCRIPTION.TITLE'),
           icon: 'i-lucide-credit-card',
           to: accountScopedRoute('billing_settings_index'),
         },
@@ -1092,7 +1093,6 @@ const menuItems = computed(() => {
       <div
         class="pointer-events-none absolute inset-x-0 -top-[1.938rem] h-8 bg-gradient-to-t from-n-background to-transparent"
       />
-      <AccountUsage v-if="!isEffectivelyCollapsed" compact class="w-full" />
       <SidebarChangelogCard
         v-if="
           isOnChatwootCloud &&

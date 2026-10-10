@@ -1,7 +1,9 @@
 class AccountSubscription < ApplicationRecord
   SUPPORTED_CURRENCIES = %w[eur usd gbp brl].freeze
-  CONFIGURATION_FIELDS = %w[enabled monthly_limit billing_interval currency monthly_price_cents annual_price_cents annual_discount_percent
-                            setup_fee_cents custom_payment_cents custom_payment_description new_custom_payment trial_enabled trial_days
+  PRICE_FIELDS = %w[monthly_price annual_price setup_fee custom_payment].freeze
+  PRICE_FORMAT = /\A\d+(?:[.,]\d{1,2})?\z/
+  CONFIGURATION_FIELDS = %w[enabled monthly_limit billing_interval currency monthly_price annual_price annual_discount_percent
+                            setup_fee custom_payment custom_payment_description new_custom_payment trial_enabled trial_days
                             trial_ends_at period_started_at period_ends_at reset_usage].freeze
   belongs_to :account
   attr_accessor :reset_usage, :new_custom_payment
@@ -13,9 +15,29 @@ class AccountSubscription < ApplicationRecord
   validates :annual_discount_percent, numericality: { only_integer: true, in: 0..100 }
   validates :trial_days, numericality: { only_integer: true, in: 1..730 }
   validate :validate_period_dates
+  validate :validate_price_inputs
   before_validation :initialize_dates
   before_validation :initialize_trial
   before_validation :initialize_custom_payment
+
+  PRICE_FIELDS.each do |name|
+    define_method(name) do
+      return instance_variable_get("@#{name}") if instance_variable_defined?("@#{name}")
+
+      cents = public_send("#{name}_cents")
+      format('%<units>d.%<fraction>02d', units: cents / 100, fraction: cents % 100) unless cents.nil?
+    end
+
+    define_method("#{name}=") do |value|
+      amount = value.to_s.strip
+      instance_variable_set("@#{name}", amount)
+      if name == 'annual_price' && amount.blank?
+        self.annual_price_cents = nil
+      elsif PRICE_FORMAT.match?(amount)
+        public_send("#{name}_cents=", (BigDecimal(amount.tr(',', '.')) * 100).to_i)
+      end
+    end
+  end
 
   def quota_period(at: Time.current)
     anchor = quota_anchor || Time.current
@@ -78,6 +100,18 @@ class AccountSubscription < ApplicationRecord
   end
 
   private
+
+  def validate_price_inputs
+    PRICE_FIELDS.each do |name|
+      next unless instance_variable_defined?("@#{name}")
+
+      amount = public_send(name)
+      next if name == 'annual_price' && amount.blank?
+      next if PRICE_FORMAT.match?(amount)
+
+      errors.add(name, :invalid)
+    end
+  end
 
   def initialize_custom_payment
     return unless will_save_change_to_currency? || will_save_change_to_custom_payment_cents? || will_save_change_to_custom_payment_description? ||
