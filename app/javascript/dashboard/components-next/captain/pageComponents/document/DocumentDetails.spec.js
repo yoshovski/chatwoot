@@ -106,7 +106,13 @@ describe('DocumentDetails', () => {
 
   it('requests another FAQ page when the document has more than 25 FAQs', async () => {
     const wrapper = shallowMount(DocumentDetails, {
-      props: { captainDocument },
+      props: {
+        captainDocument: {
+          ...captainDocument,
+          knowledge_state: 'searchable',
+          responses_count: 26,
+        },
+      },
       global: {
         directives: { dompurifyHtml: {} },
         stubs: {

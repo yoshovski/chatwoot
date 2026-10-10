@@ -170,13 +170,13 @@ describe('DocumentCard', () => {
       expect(wrapper.find('[data-test="faq-pill"]').exists()).toBe(false);
     });
 
-    it('hides FAQ counts for chunked pages with legacy FAQs', () => {
+    it('shows FAQ counts for chunked pages with existing FAQs', () => {
       const wrapper = mountCard({
         knowledgeState: 'searchable',
         responsesCount: 3,
       });
 
-      expect(wrapper.find('[data-test="faq-pill"]').exists()).toBe(false);
+      expect(wrapper.find('[data-test="faq-pill"]').text()).toBe('3 FAQs');
     });
   });
 
