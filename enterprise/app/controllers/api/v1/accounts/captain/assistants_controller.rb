@@ -68,6 +68,8 @@ class Api::V1::Accounts::Captain::AssistantsController < Api::V1::Accounts::Base
   end
 
   def summary
+    return head :forbidden unless Current.account.feature_enabled?('captain_overview_summary')
+
     window = Captain::AssistantStatsWindow.new(params[:range], params[:timezone_offset])
     result = cached_or_generated_summary(window, summary_stats)
 

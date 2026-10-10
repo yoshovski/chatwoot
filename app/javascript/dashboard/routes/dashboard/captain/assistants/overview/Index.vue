@@ -2,6 +2,7 @@
 import { computed, onUnmounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRoute } from 'vue-router';
+import { useAccount } from 'dashboard/composables/useAccount';
 import { FEATURE_FLAGS } from 'dashboard/featureFlags';
 import { usePolicy } from 'dashboard/composables/usePolicy';
 import CaptainAssistant from 'dashboard/api/captain/assistant';
@@ -20,6 +21,10 @@ import QuickLinks from 'dashboard/components-next/captain/pageComponents/overvie
 import InboxBanner from 'dashboard/components-next/captain/pageComponents/overview/InboxBanner.vue';
 import CoverageBanner from 'dashboard/components-next/captain/pageComponents/overview/CoverageBanner.vue';
 
+const { isCloudFeatureEnabled } = useAccount();
+const summaryEnabled = computed(() =>
+  isCloudFeatureEnabled(FEATURE_FLAGS.CAPTAIN_OVERVIEW_SUMMARY)
+);
 const { t } = useI18n();
 const route = useRoute();
 const isOverviewV2Enabled =
@@ -227,7 +232,11 @@ const closeDrilldown = () => {
 
         <CoverageBanner :knowledge="faqStats ?? undefined" />
 
-        <WelcomeCard :range="selectedRange" :stats="summaryStats" />
+        <WelcomeCard
+          v-if="summaryEnabled"
+          :range="selectedRange"
+          :stats="summaryStats"
+        />
 
         <div
           class="grid grid-cols-1 gap-px overflow-hidden border rounded-xl sm:grid-cols-2 lg:grid-cols-3 bg-n-weak border-n-weak"

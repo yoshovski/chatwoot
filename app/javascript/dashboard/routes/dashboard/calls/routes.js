@@ -1,3 +1,4 @@
+import { FEATURE_FLAGS } from 'dashboard/featureFlags';
 import { INSTALLATION_TYPES } from 'dashboard/constants/installationTypes';
 import {
   CONVERSATION_PERMISSIONS,
@@ -12,6 +13,7 @@ export const routes = [
     name: 'calls_dashboard_index',
     component: CallsIndex,
     meta: {
+      featureFlag: FEATURE_FLAGS.CALLS,
       permissions: [...ROLES, ...CONVERSATION_PERMISSIONS],
       installationTypes: [
         INSTALLATION_TYPES.CLOUD,

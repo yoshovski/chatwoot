@@ -1,0 +1,24 @@
+<div class="field-unit__label"><%= f.label field.attribute %></div>
+<div class="field-unit__field">
+  <p class="mb-3 text-sm"><%= t('super_admin.account_subscription.helper') %></p>
+  <% AccountSubscription::CONFIGURATION_FIELDS.each do |name| %>
+    <%= label_tag "account_subscription_#{name}", t("super_admin.account_subscription.#{name}") %>
+    <% value = name == 'reset_usage' ? false : field.data.public_send(name) %>
+    <% if %w[enabled trial_enabled reset_usage new_custom_payment].include?(name) %>
+      <%= hidden_field_tag "account[subscription_settings][#{name}]", '0' %>
+      <%= check_box_tag "account[subscription_settings][#{name}]", '1', value, id: "account_subscription_#{name}" %>
+    <% elsif %w[billing_interval currency custom_payment_description].include?(name) %>
+      <% if name == 'billing_interval' %>
+        <%= select_tag "account[subscription_settings][#{name}]", options_for_select([['Monthly', 'month'], ['Yearly', 'year']], value) %>
+      <% elsif name == 'currency' %>
+        <%= select_tag "account[subscription_settings][#{name}]", options_for_select(AccountSubscription::SUPPORTED_CURRENCIES.map { |code| [code.upcase, code] }, value) %>
+      <% else %>
+        <%= text_field_tag "account[subscription_settings][#{name}]", value,  class: 'mb-3 block w-full' %>
+      <% end %>
+    <% elsif name.end_with?('_at') %>
+      <%= datetime_local_field_tag "account[subscription_settings][#{name}]", value&.utc&.strftime('%Y-%m-%dT%H:%M'), class: 'mb-3 block w-full' %>
+    <% else %>
+      <%= number_field_tag "account[subscription_settings][#{name}]", value, min: 0, step: 1, class: 'mb-3 block w-full' %>
+    <% end %>
+  <% end %>
+</div>

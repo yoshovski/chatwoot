@@ -13,6 +13,7 @@ vi.mock('dashboard/composables/useAccount', () => ({
   useAccount: () => ({
     currentAccount,
     isCloudFeatureEnabled,
+    isOnChatwootCloud: true,
   }),
 }));
 

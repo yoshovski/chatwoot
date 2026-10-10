@@ -4,12 +4,14 @@ import { useAccount } from 'dashboard/composables/useAccount';
 import { FEATURE_FLAGS } from 'dashboard/featureFlags';
 import { useBranding } from 'shared/composables/useBranding';
 
+import AccountUsage from './AccountUsage.vue';
 import ShopifyBilling from './ShopifyBilling.vue';
 import StripeBilling from './Index.vue';
 import BaseSettingsHeader from '../components/BaseSettingsHeader.vue';
 import SettingsLayout from '../SettingsLayout.vue';
 
-const { currentAccount, isCloudFeatureEnabled } = useAccount();
+const { currentAccount, isCloudFeatureEnabled, isOnChatwootCloud } =
+  useAccount();
 const { replaceInstallationName } = useBranding();
 
 const isAccountLoaded = computed(() => Boolean(currentAccount.value?.id));
@@ -42,5 +44,8 @@ const isShopifyEnabled = computed(
       />
     </template>
   </SettingsLayout>
-  <StripeBilling v-else />
+  <template v-else>
+    <AccountUsage />
+    <StripeBilling v-if="isOnChatwootCloud" />
+  </template>
 </template>

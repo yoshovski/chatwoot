@@ -56,6 +56,14 @@ Rails.application.routes.draw do
           namespace :actions do
             resource :contact_merge, only: [:create]
           end
+          resource :account_subscription, only: [:show] do
+            post :checkout
+            post :portal
+            post :payment
+          end
+          resources :data_exports, only: [:index, :create, :show] do
+            get :download, on: :member
+          end
           resource :bulk_actions, only: [:create]
           resource :onboarding, only: [:update] do
             get :help_center_generation
@@ -784,6 +792,8 @@ Rails.application.routes.draw do
       resources :accounts, only: [:index, :new, :create, :show, :edit, :update, :destroy] do
         post :seed, on: :member
         post :reset_cache, on: :member
+        post :apply_subscription_pricing, on: :member
+        post :extend_subscription_period, on: :member
       end
       resources :users, only: [:index, :new, :create, :show, :edit, :update, :destroy] do
         delete :avatar, on: :member, action: :destroy_avatar

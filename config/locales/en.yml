@@ -73,7 +73,13 @@ en:
     sessions:
       cannot_revoke_current: You cannot revoke the current session.
 
+  account_subscription:
+    setup_fee: 'Customization and setup'
   errors:
+    account_subscription:
+      trial_exhausted: 'Trial AI replies are paused because the trial expired or its conversation quota was exhausted.'
+      unavailable: 'Account payment is not available.'
+      payment_failed: 'Unable to process payment. Please try again.'
     ai_knowledge:
       invalid_bot_id: Agent bot ID must be a positive integer
       invalid_identifier: Invalid knowledge identifier
@@ -645,6 +651,31 @@ en:
     ssl_status:
       custom_domain_not_configured: 'Custom domain is not configured'
   super_admin:
+    account_subscription:
+      helper: "Manage account pricing, monthly quota and trial. Prices are in cents; dates are UTC. Paid clients continue above quota. Trial AI replies stop at expiry or exhaustion."
+      enabled: "Enable billing and usage panel"
+      custom_payment_cents: 'Custom one-time payment (cents)'
+      custom_payment_description: 'Custom payment description'
+      new_custom_payment: 'Issue a new payment request at the same amount'
+      monthly_limit: "Monthly conversation limit (blank means unlimited)"
+      billing_interval: "Billing interval"
+      currency: "Currency (lowercase ISO code)"
+      monthly_price_cents: "Monthly price (cents)"
+      annual_price_cents: "Custom yearly price (cents, blank uses discount)"
+      annual_discount_percent: "Yearly discount (%)"
+      setup_fee_cents: "One-time customization/setup fee (cents)"
+      trial_enabled: "Enable trial"
+      trial_days: "Trial duration (days)"
+      trial_ends_at: "Trial ends at (UTC)"
+      period_started_at: "Billing period starts at (UTC)"
+      period_ends_at: "Billing period ends at (UTC)"
+      reset_usage: "Refresh monthly quota now (preserves usage history)"
+      usage: "%{consumed} / %{limit} conversations this month"
+      unlimited: "Unlimited"
+      extend_period: 'Extend Stripe renewal to saved billing end date (must be over 48 hours ahead)'
+      period_extended: 'Stripe renewal extended to the saved date.'
+      apply_pricing: "Apply saved pricing to Stripe (future renewals, no proration)"
+      pricing_applied: "Saved pricing applied to Stripe."
     dify_configuration:
       helper_text: 'Bind this account to its own Dify workspace. Use the same embedding model and provider as its catalog.'
       base_url: 'Dify base URL'

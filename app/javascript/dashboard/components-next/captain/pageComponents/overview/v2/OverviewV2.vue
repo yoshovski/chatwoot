@@ -2,6 +2,7 @@
 import { computed, onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRoute, useRouter } from 'vue-router';
+import { useAccount } from 'dashboard/composables/useAccount';
 import { FEATURE_FLAGS } from 'dashboard/featureFlags';
 import { useMapGetter } from 'dashboard/composables/store';
 import { useCaptain } from 'dashboard/composables/useCaptain';
@@ -25,6 +26,10 @@ import CsatCard from './CsatCard.vue';
 import UsageCard from './UsageCard.vue';
 import KnowledgeCoverageCard from './KnowledgeCoverageCard.vue';
 
+const { isCloudFeatureEnabled } = useAccount();
+const summaryEnabled = computed(() =>
+  isCloudFeatureEnabled(FEATURE_FLAGS.CAPTAIN_OVERVIEW_SUMMARY)
+);
 const { t } = useI18n();
 const route = useRoute();
 const router = useRouter();
@@ -98,6 +103,7 @@ const fetchReport = async () => {
 };
 
 const fetchSummary = async () => {
+  if (!summaryEnabled.value) return;
   summaryPoints.value = [];
 
   try {
@@ -377,6 +383,7 @@ const reviewFaqs = () =>
         <CoverageBanner :knowledge="faqStats ?? undefined" />
 
         <OverviewSummaryCard
+          v-if="summaryEnabled"
           :user-name="userName"
           :points="summaryPoints"
           :featured-metrics="featuredMetrics"

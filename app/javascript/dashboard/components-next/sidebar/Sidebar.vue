@@ -1,4 +1,5 @@
 <script setup>
+import AccountUsage from 'dashboard/routes/dashboard/settings/billing/AccountUsage.vue';
 import { h, ref, computed, onMounted, watch } from 'vue';
 import { provideSidebarContext, useSidebarResize } from './provider';
 import { useAccount } from 'dashboard/composables/useAccount';
@@ -44,14 +45,22 @@ const emit = defineEmits([
   'closeMobileSidebar',
 ]);
 
-const { accountScopedRoute, isOnChatwootCloud } = useAccount();
+const {
+  accountScopedRoute,
+  isOnChatwootCloud,
+  isCloudFeatureEnabled,
+  currentAccount,
+} = useAccount();
 const { isEnterprise } = useConfig();
 const store = useStore();
 
 // Calls run on the enterprise-only API (cloud runs enterprise); hide the entry
 // on community so it doesn't lead to a dashboard/CTA the backend can't serve.
 const isCallsAvailable = computed(
-  () => isOnChatwootCloud.value || isEnterprise
+  () =>
+    Boolean(currentAccount.value?.id) &&
+    (isOnChatwootCloud.value || isEnterprise) &&
+    isCloudFeatureEnabled(FEATURE_FLAGS.CALLS)
 );
 const searchShortcut = useKbd([`$mod`, 'k']);
 const { t } = useI18n();
@@ -919,6 +928,12 @@ const menuItems = computed(() => {
             ]
           : []),
         {
+          name: 'Settings Data Exports',
+          label: t('DATA_EXPORTS.TITLE'),
+          icon: 'i-lucide-download',
+          to: accountScopedRoute('settings_data_exports'),
+        },
+        {
           name: 'Settings Audit Logs',
           label: t('SIDEBAR.AUDIT_LOGS'),
           icon: 'i-lucide-briefcase',
@@ -1077,6 +1092,7 @@ const menuItems = computed(() => {
       <div
         class="pointer-events-none absolute inset-x-0 -top-[1.938rem] h-8 bg-gradient-to-t from-n-background to-transparent"
       />
+      <AccountUsage v-if="!isEffectivelyCollapsed" compact class="w-full" />
       <SidebarChangelogCard
         v-if="
           isOnChatwootCloud &&

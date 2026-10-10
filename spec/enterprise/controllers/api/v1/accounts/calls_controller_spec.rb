@@ -15,7 +15,10 @@ RSpec.describe 'Calls API', type: :request do
     create(:call, account: account, inbox: inbox, conversation: conversation, contact: contact, accepted_by_agent: admin)
   end
 
-  before { create(:inbox_member, user: agent, inbox: inbox) }
+  before do
+    account.enable_features!('calls')
+    create(:inbox_member, user: agent, inbox: inbox)
+  end
 
   describe 'GET /api/v1/accounts/:account_id/calls' do
     it 'returns 401 when unauthenticated' do

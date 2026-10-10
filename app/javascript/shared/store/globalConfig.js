@@ -50,7 +50,11 @@ const state = {
   hCaptchaSiteKey,
   installationName,
   logo,
-  logoDark,
+  logoDark:
+    logoDark === '/brand-assets/logo_dark.svg' &&
+    logo !== '/brand-assets/logo.svg'
+      ? logo
+      : logoDark || logo,
   logoThumbnail,
   privacyURL,
   termsURL,

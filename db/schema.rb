@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_10_08_140000) do
+ActiveRecord::Schema[7.2].define(version: 2026_10_10_050000) do
   # These extensions should be enabled to support this database
   enable_extension "pg_stat_statements"
   enable_extension "pg_trgm"
@@ -28,6 +28,18 @@ ActiveRecord::Schema[7.2].define(version: 2026_10_08_140000) do
     t.index ["token"], name: "index_access_tokens_on_token", unique: true
   end
 
+  create_table "account_data_exports", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.bigint "user_id", null: false
+    t.string "status", default: "pending", null: false
+    t.string "export_type", null: false
+    t.datetime "expires_at", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id"], name: "index_account_data_exports_on_account_id"
+    t.index ["user_id"], name: "index_account_data_exports_on_user_id"
+  end
+
   create_table "account_saml_settings", force: :cascade do |t|
     t.bigint "account_id", null: false
     t.string "sso_url"
@@ -38,6 +50,36 @@ ActiveRecord::Schema[7.2].define(version: 2026_10_08_140000) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["account_id"], name: "index_account_saml_settings_on_account_id"
+  end
+
+  create_table "account_subscriptions", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.boolean "enabled", default: false, null: false
+    t.integer "monthly_limit"
+    t.string "billing_interval", default: "month", null: false
+    t.string "currency", default: "eur", null: false
+    t.integer "monthly_price_cents", default: 0, null: false
+    t.integer "annual_discount_percent", default: 0, null: false
+    t.integer "annual_price_cents"
+    t.integer "setup_fee_cents", default: 0, null: false
+    t.boolean "trial_enabled", default: false, null: false
+    t.integer "trial_days", default: 14, null: false
+    t.datetime "trial_ends_at"
+    t.datetime "period_started_at"
+    t.datetime "period_ends_at"
+    t.datetime "quota_anchor", null: false
+    t.string "payment_status", default: "manual", null: false
+    t.string "stripe_customer_id"
+    t.datetime "stripe_subscription_created_at"
+    t.integer "custom_payment_cents", default: 0, null: false
+    t.string "custom_payment_description"
+    t.string "custom_payment_revision"
+    t.datetime "custom_payment_paid_at"
+    t.string "stripe_subscription_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id"], name: "index_account_subscriptions_on_account_id", unique: true
+    t.index ["stripe_customer_id"], name: "index_account_subscriptions_on_stripe_customer_id", unique: true
   end
 
   create_table "account_users", force: :cascade do |t|
@@ -883,6 +925,22 @@ ActiveRecord::Schema[7.2].define(version: 2026_10_08_140000) do
     t.index ["user_id"], name: "index_conversation_participants_on_user_id"
   end
 
+  create_table "conversation_usage_windows", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.bigint "conversation_id"
+    t.bigint "message_id"
+    t.datetime "started_at", null: false
+    t.datetime "ends_at", null: false
+    t.datetime "quota_period_start", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id", "quota_period_start"], name: "idx_usage_account_period"
+    t.index ["account_id"], name: "index_conversation_usage_windows_on_account_id"
+    t.index ["conversation_id", "started_at"], name: "idx_usage_conversation_start"
+    t.index ["conversation_id"], name: "index_conversation_usage_windows_on_conversation_id"
+    t.index ["message_id"], name: "index_conversation_usage_windows_on_message_id", unique: true
+  end
+
   create_table "conversations", id: :serial, force: :cascade do |t|
     t.integer "account_id", null: false
     t.integer "inbox_id", null: false
@@ -1620,12 +1678,18 @@ ActiveRecord::Schema[7.2].define(version: 2026_10_08_140000) do
     t.index ["inbox_id"], name: "index_working_hours_on_inbox_id"
   end
 
+  add_foreign_key "account_data_exports", "accounts"
+  add_foreign_key "account_data_exports", "users"
+  add_foreign_key "account_subscriptions", "accounts"
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "campaign_recipients", "accounts", on_delete: :cascade
   add_foreign_key "campaign_recipients", "campaigns", on_delete: :cascade
   add_foreign_key "campaign_recipients", "contacts", on_delete: :cascade
   add_foreign_key "campaign_recipients", "inboxes", on_delete: :cascade
+  add_foreign_key "conversation_usage_windows", "accounts"
+  add_foreign_key "conversation_usage_windows", "conversations", on_delete: :nullify
+  add_foreign_key "conversation_usage_windows", "messages", on_delete: :nullify
   add_foreign_key "inboxes", "portals"
   add_foreign_key "user_sessions", "users"
   create_trigger("accounts_after_insert_row_tr", :generated => true, :compatibility => 1).

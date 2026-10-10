@@ -59,6 +59,24 @@ class SuperAdmin::AccountsController < SuperAdmin::ApplicationController
     # rubocop:enable Rails/I18nLocaleTexts
   end
 
+  def extend_subscription_period
+    return head :not_found unless ChatwootApp.enterprise?
+
+    Enterprise::Billing::AccountCheckoutService.new(account: requested_resource).extend_period
+    redirect_to [namespace, requested_resource], notice: I18n.t('super_admin.account_subscription.period_extended')
+  rescue Enterprise::Billing::AccountCheckoutService::Unavailable, Stripe::StripeError
+    redirect_to [namespace, requested_resource], alert: I18n.t('errors.account_subscription.payment_failed')
+  end
+
+  def apply_subscription_pricing
+    return head :not_found unless ChatwootApp.enterprise?
+
+    Enterprise::Billing::AccountCheckoutService.new(account: requested_resource).apply_pricing
+    redirect_to [namespace, requested_resource], notice: I18n.t('super_admin.account_subscription.pricing_applied')
+  rescue Enterprise::Billing::AccountCheckoutService::Unavailable, Stripe::StripeError
+    redirect_to [namespace, requested_resource], alert: I18n.t('errors.account_subscription.payment_failed')
+  end
+
   def reset_cache
     requested_resource.reset_cache_keys
     # rubocop:disable Rails/I18nLocaleTexts

@@ -3,6 +3,7 @@ import { frontendURL } from '../../../../helper/URLHelper';
 import SettingsWrapper from '../SettingsWrapper.vue';
 import Index from './Index.vue';
 import Show from './Show.vue';
+import Exports from './Exports.vue';
 
 export default {
   routes: [
@@ -18,6 +19,12 @@ export default {
             featureFlag: FEATURE_FLAGS.DATA_IMPORT,
             permissions: ['administrator'],
           },
+        },
+        {
+          path: 'exports',
+          name: 'settings_data_exports',
+          component: Exports,
+          meta: { permissions: ['administrator'] },
         },
         {
           path: ':dataImportId',

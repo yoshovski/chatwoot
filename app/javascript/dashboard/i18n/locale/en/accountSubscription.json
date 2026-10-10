@@ -1,0 +1,46 @@
+{
+  "ACCOUNT_SUBSCRIPTION": {
+    "CONVERSATIONS": "Billable conversations",
+    "UNLIMITED": "Unlimited",
+    "RESETS": "Quota resets: {date}",
+    "COUNTING": "One conversation per 24-hour window, regardless of message count.",
+    "WARNING": "Conversation quota nearly reached or exceeded. Paid accounts continue working.",
+    "PAUSED": "Trial AI replies are paused. Incoming messages and agent access remain available.",
+    "TRIAL_ENDS": "Trial ends: {date}",
+    "PERIOD": "Billing period: {start} \u2013 {end}",
+    "PRICE": "Monthly: {monthly} \u00b7 Yearly: {yearly}",
+    "SETUP_FEE": "One-time setup: {amount}",
+    "MONTH": "Quota period",
+    "BILLING_INTERVAL": "Billing interval",
+    "MONTHLY": "Monthly",
+    "YEARLY": "Yearly",
+    "SUBSCRIBE": "Subscribe",
+    "MANAGE": "Manage payment",
+    "NOT_CONFIGURED": "Billing has not been configured for this account.",
+    "ERROR": "Unable to load billing or open payment. Please try again.",
+    "USAGE": "{used} / {limit}",
+    "CUSTOM_PAYMENT": "Pay {amount}: {description}"
+  },
+  "DATA_EXPORTS": {
+    "TITLE": "Data exports",
+    "DESCRIPTION": "Download conversations, contacts and knowledge as a portable archive. Downloads expire after 7 days.",
+    "EXCLUSIONS": "Shopify product catalog, credentials, assistant instructions and internal strategy are excluded.",
+    "TYPE": "Export data",
+    "CREATE": "Create export",
+    "DOWNLOAD": "Download",
+    "ERROR": "Export unavailable. Please try again.",
+    "TYPES": {
+      "all": "All data",
+      "conversations": "Conversations",
+      "contacts": "Contacts",
+      "knowledge": "Knowledge bases"
+    },
+    "STATUS": {
+      "pending": "Queued",
+      "processing": "Preparing archive",
+      "completed": "Ready to download",
+      "failed": "Export failed. Please retry."
+    },
+    "ITEM": "{type} \u00b7 {date}"
+  }
+}
