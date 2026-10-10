@@ -4,7 +4,7 @@
   <% AccountSubscription::CONFIGURATION_FIELDS.each do |name| %>
     <%= label_tag "account_subscription_#{name}", t("super_admin.account_subscription.#{name}") %>
     <% value = name == 'reset_usage' ? false : field.data.public_send(name) %>
-    <% if %w[enabled trial_enabled reset_usage new_custom_payment].include?(name) %>
+    <% if %w[enabled founder_plan trial_enabled reset_usage new_custom_payment].include?(name) %>
       <%= hidden_field_tag "account[subscription_settings][#{name}]", '0' %>
       <%= check_box_tag "account[subscription_settings][#{name}]", '1', value, id: "account_subscription_#{name}" %>
     <% elsif %w[billing_interval currency custom_payment_description].include?(name) %>

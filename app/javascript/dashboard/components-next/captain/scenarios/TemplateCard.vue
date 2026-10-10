@@ -1,6 +1,7 @@
 <script setup>
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
+import Button from 'dashboard/components-next/button/Button.vue';
 import { getToolIdsFromInstruction } from './scenarioTools';
 import {
   buildFromTemplate,
@@ -70,22 +71,19 @@ const onClick = () => {
 </script>
 
 <template>
-  <button
+  <article
     v-tooltip.top="
       isAvailable
         ? null
         : t('CAPTAIN.ASSISTANTS.SCENARIOS.TEMPLATES.NEEDS_SHOPIFY_TOOLTIP')
     "
-    type="button"
     class="group relative flex flex-col gap-3 h-full w-full p-4 text-start rounded-xl border border-n-strong bg-n-solid-2 transition-colors motion-reduce:transition-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-n-brand"
     :class="
       isAvailable
         ? 'hover:border-n-slate-7 hover:bg-n-solid-3'
         : 'cursor-not-allowed'
     "
-    :aria-disabled="!isAvailable"
     :data-test="`template-${template.id}`"
-    @click="onClick"
   >
     <div class="flex items-start justify-between w-full">
       <span
@@ -140,5 +138,12 @@ const onClick = () => {
         </span>
       </span>
     </div>
-  </button>
+    <Button
+      class="mt-2 w-full"
+      :label="t('CAPTAIN.ASSISTANTS.SCENARIOS.TEMPLATES.USE_TEMPLATE')"
+      icon="i-lucide-plus"
+      :disabled="!isAvailable"
+      @click="onClick"
+    />
+  </article>
 </template>

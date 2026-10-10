@@ -67,12 +67,16 @@ class AccountDataExportService
   def captain_knowledge
     documents = Captain::Document.where(account: @account, agents_only: false)
     json_lines('knowledge/documents.jsonl', documents, %w[id assistant_id name content external_link enabled created_at updated_at]) do |document|
-      original_metadata(document.attached_file, "knowledge/originals/#{document.id}/original")
+      original_metadata(document_original(document), "knowledge/originals/#{document.id}/original")
     end
     json_lines('knowledge/faqs.jsonl', Captain::AssistantResponse.where(account: @account, agents_only: false).where(
                                          "documentable_type IS DISTINCT FROM 'Captain::Document' OR documentable_id IN (?)", documents.select(:id)
                                        ), %w[id assistant_id question answer documentable_id documentable_type enabled created_at updated_at])
-    documents.find_each { |document| attach_original(document.attached_file, "knowledge/originals/#{document.id}/original") }
+    documents.find_each { |document| attach_original(document_original(document), "knowledge/originals/#{document.id}/original") }
+  end
+
+  def document_original(document)
+    document.pdf_file.attached? ? document.pdf_file : document.markdown_file
   end
 
   def original_metadata(file, path)

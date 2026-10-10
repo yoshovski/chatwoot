@@ -1,6 +1,8 @@
 <script setup>
 import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { LineChart } from '@chatwoot/viz';
+import { useAccount } from 'dashboard/composables/useAccount';
 import { usePolicy } from 'dashboard/composables/usePolicy';
 import { useAccountSubscription } from 'dashboard/composables/useAccountSubscription';
 import api from 'dashboard/api/accountSubscription';
@@ -11,6 +13,7 @@ import SettingsLayout from '../SettingsLayout.vue';
 
 const { t, locale } = useI18n();
 const { checkPermissions } = usePolicy();
+const { currentAccount } = useAccount();
 const { billing, loading, loadFailed, refresh } = useAccountSubscription();
 const canManage = computed(() => checkPermissions(['administrator']));
 const paymentFailed = ref(false);
@@ -71,6 +74,70 @@ const annualSavings = computed(() =>
     billing.value.monthly_price_cents * 12 - billing.value.annual_price_cents
   )
 );
+const includedFeatures = computed(() => [
+  { icon: 'i-lucide-inbox', label: 'SHARED_INBOX', enabled: true },
+  {
+    icon: 'i-lucide-sparkles',
+    label: 'AI_AGENT',
+    enabled: currentAccount.value?.features?.captain_integration,
+  },
+  {
+    icon: 'i-lucide-book-open',
+    label: 'KNOWLEDGE',
+    enabled:
+      currentAccount.value?.features?.captain_integration ||
+      currentAccount.value?.features?.native_ai_knowledge,
+  },
+  {
+    icon: 'i-lucide-workflow',
+    label: 'SCENARIOS',
+    enabled: currentAccount.value?.features?.captain_integration_v2,
+  },
+]);
+const billingPeriodProgress = computed(() => {
+  const start = new Date(billing.value?.period_started_at).getTime();
+  const end = new Date(billing.value?.period_ends_at).getTime();
+  return end > start
+    ? Math.min(100, Math.max(0, ((Date.now() - start) / (end - start)) * 100))
+    : 0;
+});
+const historyChartData = computed(() => {
+  const periods = [...billing.value.history];
+  if (
+    !periods.some(
+      period =>
+        new Date(period.period_started_at).getTime() ===
+        new Date(billing.value.quota_started_at).getTime()
+    )
+  ) {
+    periods.push({
+      period_started_at: billing.value.quota_started_at,
+      consumed: billing.value.consumed,
+    });
+  }
+  periods.sort(
+    (a, b) => new Date(a.period_started_at) - new Date(b.period_started_at)
+  );
+  return {
+    categories: periods.map(period => date(period.period_started_at)),
+    series: [
+      {
+        id: 'conversations',
+        label: t('ACCOUNT_SUBSCRIPTION.CONVERSATIONS'),
+        color: 'rgb(var(--blue-9))',
+        pointBorderColor: 'rgb(var(--card-color))',
+        data: periods.map(period => period.consumed),
+      },
+    ],
+  };
+});
+const historyChartDomain = computed(() => [
+  0,
+  Math.max(
+    100,
+    Math.ceil(Math.max(...historyChartData.value.series[0].data) / 100) * 100
+  ),
+]);
 const pay = async (action = 'checkout') => {
   busy.value = true;
   paymentFailed.value = false;
@@ -125,6 +192,55 @@ const pay = async (action = 'checkout') => {
           />
           <p class="m-0 text-sm leading-6">{{ warningText }}</p>
         </div>
+        <section
+          class="overflow-hidden rounded-2xl border border-n-blue-6 bg-gradient-to-br from-n-blue-2 via-n-background to-n-iris-2 p-6"
+        >
+          <div class="flex flex-wrap items-center justify-between gap-4">
+            <div class="flex items-center gap-4">
+              <span
+                class="grid size-14 place-items-center rounded-2xl bg-n-blue-3 text-n-blue-11"
+              >
+                <span
+                  :class="
+                    billing.founder_plan
+                      ? 'i-lucide-gem'
+                      : 'i-lucide-credit-card'
+                  "
+                  class="size-7"
+                  aria-hidden="true"
+                />
+              </span>
+              <div class="flex flex-col gap-2">
+                <span class="text-sm text-n-slate-11">{{
+                  t('ACCOUNT_SUBSCRIPTION.CURRENT_PLAN')
+                }}</span>
+                <h2 class="m-0 text-2xl font-semibold text-n-slate-12">
+                  {{
+                    t(
+                      billing.founder_plan
+                        ? 'ACCOUNT_SUBSCRIPTION.FOUNDER_PLAN'
+                        : 'ACCOUNT_SUBSCRIPTION.ACCOUNT_PLAN'
+                    )
+                  }}
+                </h2>
+              </div>
+            </div>
+            <span
+              v-if="billing.founder_plan"
+              class="inline-flex items-center gap-2 rounded-full border border-n-amber-6 bg-n-amber-2 px-4 py-2 text-sm font-medium text-n-amber-11"
+            >
+              <span class="i-lucide-award size-4" aria-hidden="true" />{{
+                t('ACCOUNT_SUBSCRIPTION.FOUNDER_BADGE')
+              }}
+            </span>
+          </div>
+          <p
+            v-if="billing.founder_plan"
+            class="mb-0 mt-4 text-sm text-n-slate-11"
+          >
+            {{ t('ACCOUNT_SUBSCRIPTION.FOUNDER_HELP') }}
+          </p>
+        </section>
         <div class="grid grid-cols-1 items-start gap-6 lg:grid-cols-2">
           <section class="rounded-2xl border border-n-weak bg-n-background p-6">
             <div class="mb-6 flex items-center justify-between gap-3">
@@ -315,6 +431,22 @@ const pay = async (action = 'checkout') => {
                 {{ t('ACCOUNT_SUBSCRIPTION.MANAGED_PLAN') }}
               </p>
             </template>
+            <div
+              v-if="billing.period_started_at && billing.period_ends_at"
+              class="mt-6 rounded-xl bg-n-alpha-1 p-4"
+            >
+              <ProgressMetric
+                :label="t('ACCOUNT_SUBSCRIPTION.CURRENT_BILLING_PERIOD')"
+                :used="billingPeriodProgress"
+                :total="100"
+                :value-label="
+                  t('ACCOUNT_SUBSCRIPTION.DATE_RANGE', {
+                    start: date(billing.period_started_at),
+                    end: date(billing.period_ends_at),
+                  })
+                "
+              />
+            </div>
             <dl
               v-if="billing.trial_enabled || billing.period_ends_at"
               class="mb-0 mt-5 space-y-3 border-t border-n-weak pt-5 text-sm"
@@ -358,6 +490,52 @@ const pay = async (action = 'checkout') => {
             />
           </section>
         </div>
+        <section class="rounded-2xl border border-n-weak bg-n-background p-6">
+          <h2 class="m-0 mb-5 text-base font-semibold text-n-slate-12">
+            {{ t('ACCOUNT_SUBSCRIPTION.FEATURE_ACCESS') }}
+          </h2>
+          <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <div
+              v-for="feature in includedFeatures"
+              :key="feature.label"
+              class="flex items-center gap-3 rounded-xl bg-n-alpha-1 p-4"
+            >
+              <span
+                :class="feature.icon"
+                class="size-5 shrink-0 text-n-blue-11"
+                aria-hidden="true"
+              />
+              <div class="flex flex-col gap-1">
+                <span class="text-sm font-medium text-n-slate-12">{{
+                  t(`ACCOUNT_SUBSCRIPTION.FEATURES.${feature.label}`)
+                }}</span>
+                <span
+                  class="inline-flex items-center gap-1 text-xs"
+                  :class="
+                    feature.enabled ? 'text-n-teal-11' : 'text-n-slate-11'
+                  "
+                >
+                  <span
+                    :class="
+                      feature.enabled
+                        ? 'i-lucide-circle-check'
+                        : 'i-lucide-minus'
+                    "
+                    class="size-3"
+                    aria-hidden="true"
+                  />
+                  {{
+                    t(
+                      feature.enabled
+                        ? 'ACCOUNT_SUBSCRIPTION.INCLUDED'
+                        : 'ACCOUNT_SUBSCRIPTION.NOT_ENABLED'
+                    )
+                  }}
+                </span>
+              </div>
+            </div>
+          </div>
+        </section>
         <section
           v-if="canManage && billing.can_pay_customization"
           class="flex flex-col justify-between gap-4 rounded-2xl border border-n-weak bg-n-background p-6 sm:flex-row sm:items-center"
@@ -387,7 +565,6 @@ const pay = async (action = 'checkout') => {
           {{ t('ACCOUNT_SUBSCRIPTION.PAYMENT_ERROR') }}
         </p>
         <section
-          v-if="billing.history.length"
           class="overflow-hidden rounded-2xl border border-n-weak bg-n-background"
         >
           <h2
@@ -395,31 +572,30 @@ const pay = async (action = 'checkout') => {
           >
             {{ t('ACCOUNT_SUBSCRIPTION.HISTORY') }}
           </h2>
-          <table class="w-full text-sm">
-            <thead class="bg-n-alpha-1 text-n-slate-11">
-              <tr>
-                <th scope="col" class="px-6 py-3 text-start font-medium">
-                  {{ t('ACCOUNT_SUBSCRIPTION.MONTH') }}
-                </th>
-                <th scope="col" class="px-6 py-3 text-end font-medium">
-                  {{ t('ACCOUNT_SUBSCRIPTION.CONVERSATIONS') }}
-                </th>
-              </tr>
-            </thead>
-            <tbody class="divide-y divide-n-weak">
-              <tr
-                v-for="month in billing.history"
-                :key="month.period_started_at"
+          <div class="px-6 pt-5 pb-6">
+            <div
+              class="mb-5 flex flex-wrap items-center justify-between gap-2 text-sm text-n-slate-11"
+            >
+              <span>{{ t('ACCOUNT_SUBSCRIPTION.HISTORY_DESCRIPTION') }}</span>
+              <span
+                class="inline-flex items-center gap-1.5 rounded-full bg-n-blue-2 px-2.5 py-1 text-xs text-n-blue-11"
               >
-                <td class="px-6 py-4 text-n-slate-12">
-                  {{ date(month.period_started_at) }}
-                </td>
-                <td class="px-6 py-4 text-end tabular-nums text-n-slate-12">
-                  {{ number(month.consumed) }}
-                </td>
-              </tr>
-            </tbody>
-          </table>
+                <span class="i-lucide-clock size-3.5" aria-hidden="true" />
+                {{ t('ACCOUNT_SUBSCRIPTION.CURRENT_PERIOD_PARTIAL') }}
+              </span>
+            </div>
+            <div class="overflow-x-auto">
+              <LineChart
+                :data="historyChartData"
+                :format-value="number"
+                :y-domain="historyChartDomain"
+                :height="260"
+                :point-radius="4"
+                :aria-label="t('ACCOUNT_SUBSCRIPTION.HISTORY')"
+                class="min-w-[36rem] [--cw-viz-line-label-color:rgb(var(--slate-11))] [--cw-viz-line-axis-color:rgb(var(--slate-4))] [--cw-viz-line-tooltip-background:rgb(var(--solid-2))] [--cw-viz-line-tooltip-color:rgb(var(--slate-12))] [--cw-viz-line-tooltip-border-color:rgb(var(--border-strong))]"
+              />
+            </div>
+          </div>
         </section>
       </div>
       <div

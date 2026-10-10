@@ -1465,7 +1465,8 @@
             "1": "1",
             "2": "2",
             "3": "3"
-          }
+          },
+          "USE_TEMPLATE": "Use template"
         },
         "BULK_ACTION": {
           "SELECTED": "{count} item selected | {count} items selected",
@@ -1744,25 +1745,25 @@
         "EMPTY": "No FAQs have been generated from this document yet."
       },
       "DETAILS": {
-        "DESCRIPTION": "Review the crawled content and the FAQs generated from this source.",
+        "DESCRIPTION": "Review the source content and where it has been used.",
         "SOURCE": "Source",
         "GENERATED_FAQS": "Generated FAQs",
         "USED_IN_CONVERSATIONS": "Used in conversations",
         "LAST_UPDATED": "Last updated",
         "NOT_AVAILABLE": "Not available",
-        "CONTENT_TAB": "Crawled content",
+        "CONTENT_TAB": "Content",
         "PDF_TAB": "PDF details",
-        "CONTENT_TITLE": "Crawled content",
+        "CONTENT_TITLE": "Content",
         "PDF_TITLE": "PDF file",
         "PDF_DESCRIPTION": "Review the original PDF source.",
         "CHARACTER_COUNT": "{count} characters extracted",
         "COPY_CONTENT": "Copy",
-        "COPY_SUCCESS": "Crawled content copied to clipboard",
-        "COPY_ERROR": "Could not copy crawled content",
+        "COPY_SUCCESS": "Content copied to clipboard",
+        "COPY_ERROR": "Could not copy content",
         "VIEW_RAW": "View raw",
         "VIEW_PREVIEW": "View preview",
-        "UNREADABLE_CONTENT": "Readable content could not be extracted from this document. You can view the raw extracted content.",
-        "EMPTY_CONTENT": "No crawled content is available for this document yet.",
+        "UNREADABLE_CONTENT": "This content is not available in a readable format. Open the original source to review it.",
+        "EMPTY_CONTENT": "No content is available for this document yet.",
         "VISIBILITY_SAVED": "Visibility updated",
         "VISIBILITY_ERROR": "Could not update the visibility. Please try again."
       },

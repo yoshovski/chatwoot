@@ -37,7 +37,7 @@ describe('TemplateGallery', () => {
     const wrapper = mountGallery();
 
     await wrapper
-      .find('[data-test="template-request_a_quote"]')
+      .find('[data-test="template-request_a_quote"] button')
       .trigger('click');
 
     expect(wrapper.emitted('useTemplate')[0][0].id).toBe('request_a_quote');
@@ -47,9 +47,9 @@ describe('TemplateGallery', () => {
     const wrapper = mountGallery();
     const productFinder = wrapper.find('[data-test="template-product_finder"]');
 
-    await productFinder.trigger('click');
+    await productFinder.get('button').trigger('click');
 
-    expect(productFinder.attributes('aria-disabled')).toBe('true');
+    expect(productFinder.get('button').attributes('disabled')).toBe('');
     expect(productFinder.text()).toContain(
       'CAPTAIN.ASSISTANTS.SCENARIOS.TEMPLATES.NEEDS_SHOPIFY'
     );

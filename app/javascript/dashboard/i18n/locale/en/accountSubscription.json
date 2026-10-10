@@ -50,7 +50,23 @@
     "HISTORY": "Usage history",
     "LIMIT_REACHED_NOTICE": "Monthly conversation allowance reached.",
     "LIMIT_NEAR_NOTICE": "You are approaching your monthly conversation allowance.",
-    "PAID_LIMIT_REACHED": "You have used your monthly conversation allowance. AI and agent replies continue as usual."
+    "PAID_LIMIT_REACHED": "You have used your monthly conversation allowance. AI and agent replies continue as usual.",
+    "CURRENT_PLAN": "Your plan",
+    "FOUNDER_PLAN": "Founder plan",
+    "FOUNDER_BADGE": "Founding member",
+    "FOUNDER_HELP": "Special pricing for our early clients, with access to the features included in your account.",
+    "CURRENT_BILLING_PERIOD": "Current billing period",
+    "FEATURE_ACCESS": "Your feature access",
+    "INCLUDED": "Included",
+    "NOT_ENABLED": "Not enabled",
+    "FEATURES": {
+      "SHARED_INBOX": "Shared inbox",
+      "AI_AGENT": "Octave AI agent",
+      "KNOWLEDGE": "Knowledge library",
+      "SCENARIOS": "Scenarios"
+    },
+    "HISTORY_DESCRIPTION": "Conversations per usage period",
+    "CURRENT_PERIOD_PARTIAL": "Current period in progress"
   },
   "DATA_EXPORTS": {
     "TITLE": "Data exports",
