@@ -50,6 +50,12 @@ models:
     display_name: 'Gemini 3 Flash'
     coming_soon: true
     credit_multiplier: 1
+  # Served through the OpenAI-compatible gateway (CAPTAIN_OPEN_AI_ENDPOINT, e.g. LiteLLM),
+  # which must expose a model with this exact name.
+  gemini-3.5-flash-lite:
+    provider: gemini
+    display_name: 'Gemini 3.5 Flash-Lite'
+    credit_multiplier: 2
   gemini-3-pro:
     provider: gemini
     display_name: 'Gemini 3 Pro'
@@ -85,6 +91,7 @@ features:
     models:
       [
         gpt-6-luna,
+        gemini-3.5-flash-lite,
         gpt-4.1-mini,
         gpt-5-mini,
         gpt-4.1,
@@ -129,6 +136,7 @@ features:
     models:
       [
         gpt-6-luna,
+        gemini-3.5-flash-lite,
         gpt-4.1-mini,
         gpt-5-mini,
         gemini-3-flash,
@@ -184,6 +192,7 @@ features:
     models:
       [
         gpt-6-luna,
+        gemini-3.5-flash-lite,
         gpt-4.1-mini,
         gpt-5-mini,
         gpt-4.1,
@@ -236,6 +245,7 @@ features:
     models:
       [
         gpt-6-luna,
+        gemini-3.5-flash-lite,
         gpt-4.1-mini,
         gpt-5-mini,
       ]
