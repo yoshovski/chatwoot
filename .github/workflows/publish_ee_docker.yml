@@ -79,8 +79,10 @@ jobs:
           platforms: ${{ matrix.platform }}
           push: ${{ github.event_name == 'push' || github.event_name == 'workflow_dispatch' }}
           outputs: type=image,name=${{ env.DOCKER_REPO }},push-by-digest=true,name-canonical=true,push=true
-          cache-from: type=gha,scope=ee-${{ env.PLATFORM_PAIR }}
-          cache-to: type=gha,mode=max,scope=ee-${{ env.PLATFORM_PAIR }}
+          # Release tags cannot read GHA caches saved by previous tags.
+          # Keep intermediate dependency layers in a shared registry cache.
+          cache-from: type=registry,ref=${{ env.DOCKER_REPO }}:buildcache-ee-${{ env.PLATFORM_PAIR }}
+          cache-to: type=registry,ref=${{ env.DOCKER_REPO }}:buildcache-ee-${{ env.PLATFORM_PAIR }},mode=max
 
       - name: Export digest
         run: |
