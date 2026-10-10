@@ -44,6 +44,8 @@ export const FEATURE_FLAGS = {
   CHATWOOT_V4: 'chatwoot_v4',
   CHANNEL_INSTAGRAM: 'channel_instagram',
   CHANNEL_TIKTOK: 'channel_tiktok',
+  CALLS: 'calls',
+  CAPTAIN_OVERVIEW_SUMMARY: 'captain_overview_summary',
   CHANNEL_VOICE: 'channel_voice',
   CONTACT_CHATWOOT_SUPPORT_TEAM: 'contact_chatwoot_support_team',
   CAPTAIN_CUSTOM_TOOLS: 'custom_tools',

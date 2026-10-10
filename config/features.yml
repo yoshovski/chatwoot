@@ -283,3 +283,12 @@
   display_name: Native AI Knowledge
   enabled: false
   column: feature_flags_ext_1
+
+- name: calls
+  display_name: Calls dashboard
+  enabled: false
+  column: feature_flags_ext_1
+- name: captain_overview_summary
+  display_name: Octave AI overview summary
+  enabled: false
+  column: feature_flags_ext_1

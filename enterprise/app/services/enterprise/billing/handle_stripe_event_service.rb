@@ -9,6 +9,8 @@ class Enterprise::Billing::HandleStripeEventService
   ENTERPRISE_PLAN_FEATURES = Enterprise::Billing::ReconcilePlanFeaturesService::ENTERPRISE_PLAN_FEATURES
 
   def perform(event:)
+    return if Enterprise::Billing::AccountSubscriptionSyncService.handle(event)
+
     @event = event
 
     case @event.type

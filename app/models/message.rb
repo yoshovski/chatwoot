@@ -63,6 +63,7 @@ class Message < ApplicationRecord
     }
   }.to_json.freeze
 
+  validate :validate_trial_ai_reply, on: :create
   before_validation :ensure_content_type
   before_validation :prevent_message_flooding
   before_save :ensure_processed_message_content
@@ -131,6 +132,7 @@ class Message < ApplicationRecord
   belongs_to :conversation
   belongs_to :sender, polymorphic: true, optional: true
 
+  has_many :conversation_usage_windows, dependent: :nullify
   has_many :attachments, dependent: :destroy, autosave: true, before_add: :validate_attachments_limit
   has_one :csat_survey_response, dependent: :destroy_async
   has_many :notifications, as: :primary_actor, dependent: :destroy_async
@@ -338,11 +340,19 @@ class Message < ApplicationRecord
     self.content_type ||= Message.content_types[:text]
   end
 
+  def validate_trial_ai_reply
+    return unless outgoing? && %w[AgentBot Captain::Assistant].include?(sender_type)
+    return if account.ai_reply_allowed?(conversation)
+
+    errors.add(:base, I18n.t('errors.account_subscription.trial_exhausted'))
+  end
+
   def execute_after_create_commit_callbacks
     # rails issue with order of active record callbacks being executed https://github.com/rails/rails/issues/20911
     reopen_conversation
     mark_pending_conversation_as_open_for_human_response
     set_conversation_activity
+    ConversationUsageWindow.record(self)
     dispatch_create_events
     send_reply
     execute_message_template_hooks

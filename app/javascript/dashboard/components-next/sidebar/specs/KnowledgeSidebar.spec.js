@@ -29,6 +29,8 @@ vi.mock('dashboard/helpers/routeHelpers', () => ({
 vi.mock('dashboard/composables/useAccount', () => ({
   useAccount: () => ({
     accountId: { value: 1 },
+    currentAccount: { value: { id: 1 } },
+    isCloudFeatureEnabled: () => false,
     account: { value: {} },
     customAttributes: { value: [] },
     isFeatureEnabledonAccount: { value: () => false },

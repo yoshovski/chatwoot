@@ -106,6 +106,12 @@ class Account < ApplicationRecord
   has_many :whatsapp_channels, dependent: :destroy_async, class_name: '::Channel::Whatsapp'
   has_many :working_hours, dependent: :destroy_async
 
+  has_one :account_subscription, dependent: :destroy, autosave: true
+  has_many :conversation_usage_windows, dependent: :delete_all
+  has_many :account_data_exports, dependent: :destroy
+
+  include AccountSubscriptionSettings
+
   has_one_attached :contacts_export
 
   enum :locale, LANGUAGES_CONFIG.map { |key, val| [val[:iso_639_1_code], key] }.to_h, prefix: true

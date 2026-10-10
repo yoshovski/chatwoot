@@ -556,6 +556,7 @@ RSpec.describe 'Api::V1::Accounts::Captain::Assistants', type: :request do
     end
 
     before do
+      account.enable_features!('captain_overview_summary')
       # Test env uses a null store; swap in a real store so caching behaviour is observable.
       allow(Rails).to receive(:cache).and_return(ActiveSupport::Cache::MemoryStore.new)
       allow(Captain::OverviewSummaryService).to receive(:new).and_return(summary_service)

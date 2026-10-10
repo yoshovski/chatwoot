@@ -55,6 +55,7 @@
 #
 
 class Conversation < ApplicationRecord
+  has_many :conversation_usage_windows, dependent: :nullify
   include Labelable
   include LlmFormattable
   include AssignmentHandler

@@ -63,6 +63,8 @@ class AgentBotListener < BaseListener
   private
 
   def agent_bots_for(inbox, conversation = nil)
+    return [] unless inbox.account.ai_reply_allowed?(conversation)
+
     bots = [active_inbox_agent_bot(inbox)]
     bots << conversation.ai_assignee if conversation&.assignee_type == 'AgentBot'
 

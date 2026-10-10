@@ -141,6 +141,7 @@ class Captain::Conversation::OwnershipService
 
   def eligible_state?
     return false if conversation.blank? || assistant.blank?
+    return false unless conversation.account.ai_reply_allowed?(conversation)
     return false unless captain_configured_for_inbox?
     return false if conversation.resolved? || conversation.snoozed?
 

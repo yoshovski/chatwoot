@@ -12,6 +12,8 @@ class Api::V1::Accounts::Captain::AssistantStatsController < Api::V1::Accounts::
   end
 
   def overview_summary
+    return head :forbidden unless Current.account.feature_enabled?('captain_overview_summary')
+
     cached_result = Redis::Alfred.get(overview_summary_cache_key)
     result = cached_result ? JSON.parse(cached_result, symbolize_names: true) : generate_overview_summary
 

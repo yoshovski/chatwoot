@@ -1,0 +1,5 @@
+<%= t('super_admin.account_subscription.usage', consumed: field.data.consumed, limit: field.data.monthly_limit || t('super_admin.account_subscription.unlimited')) %>
+<% if ChatwootApp.enterprise? && field.data.stripe_subscription_id.present? %>
+  <%= button_to t('super_admin.account_subscription.apply_pricing'), apply_subscription_pricing_super_admin_account_path(field.resource), method: :post %>
+  <%= button_to t('super_admin.account_subscription.extend_period'), extend_subscription_period_super_admin_account_path(field.resource), method: :post %>
+<% end %>
