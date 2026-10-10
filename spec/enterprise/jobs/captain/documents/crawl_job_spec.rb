@@ -82,25 +82,18 @@ RSpec.describe Captain::Documents::CrawlJob, type: :job do
         allow(simple_crawler).to receive(:page_links).and_return(page_links)
       end
 
-      it 'enqueues SimplePageCrawlParserJob for each discovered link' do
-        page_links.each do |link|
-          expect(Captain::Tools::SimplePageCrawlParserJob)
-            .to receive(:perform_later)
-            .with(
-              assistant_id: assistant_id,
-              page_link: link
-            )
+      it 'enqueues SimplePageCrawlParserJob for each discovered link, a few seconds apart' do
+        freeze_time do
+          described_class.perform_now(document)
+
+          page_links.each_with_index do |link, index|
+            expect(Captain::Tools::SimplePageCrawlParserJob).to have_been_enqueued
+              .with(assistant_id: assistant_id, page_link: link).at(((index + 1) * 2).seconds.from_now)
+          end
+          # Should also crawl the original link
+          expect(Captain::Tools::SimplePageCrawlParserJob).to have_been_enqueued
+            .with(assistant_id: assistant_id, page_link: document.external_link)
         end
-
-        # Should also crawl the original link
-        expect(Captain::Tools::SimplePageCrawlParserJob)
-          .to receive(:perform_later)
-          .with(
-            assistant_id: assistant_id,
-            page_link: document.external_link
-          )
-
-        described_class.perform_now(document)
       end
 
       it 'uses SimplePageCrawlService to discover page links' do
@@ -110,23 +103,21 @@ RSpec.describe Captain::Documents::CrawlJob, type: :job do
 
       it 'skips links to other sites' do
         allow(simple_crawler).to receive(:page_links).and_return(['https://example.com/page1', 'https://facebook.com/example'])
-        allow(Captain::Tools::SimplePageCrawlParserJob).to receive(:perform_later)
 
         described_class.perform_now(document)
 
-        expect(Captain::Tools::SimplePageCrawlParserJob).not_to have_received(:perform_later)
+        expect(Captain::Tools::SimplePageCrawlParserJob).not_to have_been_enqueued
           .with(assistant_id: assistant_id, page_link: 'https://facebook.com/example')
-        expect(Captain::Tools::SimplePageCrawlParserJob).to have_received(:perform_later).twice
+        expect(Captain::Tools::SimplePageCrawlParserJob).to have_been_enqueued.twice
       end
 
       it 'adds only the page itself when linked pages are off' do
         document.update!(include_linked_pages: 'false')
-        allow(Captain::Tools::SimplePageCrawlParserJob).to receive(:perform_later)
 
         described_class.perform_now(document)
 
         expect(Captain::Tools::SimplePageCrawlService).not_to have_received(:new)
-        expect(Captain::Tools::SimplePageCrawlParserJob).to have_received(:perform_later)
+        expect(Captain::Tools::SimplePageCrawlParserJob).to have_been_enqueued
           .once.with(assistant_id: assistant_id, page_link: document.external_link)
       end
 

@@ -1,9 +1,24 @@
 class Captain::Tools::SimplePageCrawlParserJob < ApplicationJob
   class PermanentCrawlError < StandardError; end
+  # Rate limits (429), overloaded or unreachable sites: the page is retried and shown as syncing, not failed.
+  class TemporaryCrawlError < StandardError; end
+
+  # nil is a network error without an HTTP status.
+  TEMPORARY_STATUS_CODES = [nil, 408, 425, 429, 500, 502, 503, 504].freeze
+  MAX_ATTEMPTS = 6
 
   queue_as :low
 
   discard_on PermanentCrawlError
+  retry_on TemporaryCrawlError, wait: :polynomially_longer, attempts: MAX_ATTEMPTS do |job, _error|
+    job.mark_failed_after_retries
+  end
+
+  def mark_failed_after_retries
+    arguments.first => { assistant_id:, page_link: }
+    document = Captain::Document.find_by(assistant_id: assistant_id, external_link: normalize_link(page_link))
+    mark_failed!(document, 'fetch_failed') if document
+  end
 
   def perform(assistant_id:, page_link:)
     assistant = Captain::Assistant.find(assistant_id)
@@ -21,7 +36,7 @@ class Captain::Tools::SimplePageCrawlParserJob < ApplicationJob
     handle_failed_fetch!(document, crawler.status_code, page_link) unless crawler.success?
 
     persist_document!(document, normalized_link, crawler)
-  rescue PermanentCrawlError
+  rescue PermanentCrawlError, TemporaryCrawlError
     raise
   rescue StandardError => e
     raise "Failed to parse data: #{page_link} #{e.message}"
@@ -30,10 +45,14 @@ class Captain::Tools::SimplePageCrawlParserJob < ApplicationJob
   private
 
   def handle_failed_fetch!(document, status_code, page_link)
+    error_message = "Failed to fetch page: #{page_link} (HTTP #{status_code || 'none'})"
+    if TEMPORARY_STATUS_CODES.include?(status_code)
+      document.update!(sync_status: :syncing, last_sync_attempted_at: Time.current) if document.persisted?
+      raise TemporaryCrawlError, error_message
+    end
+
     error_code = http_error_code(status_code)
     mark_failed!(document, error_code) if document.persisted?
-
-    error_message = "Failed to fetch page: #{page_link}"
     raise PermanentCrawlError, error_message if permanent_failure?(error_code)
 
     raise error_message
