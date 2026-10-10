@@ -23,5 +23,14 @@ module Enterprise::Concerns::Account
     has_many :calls, dependent: :destroy_async
 
     has_one :saml_settings, dependent: :destroy_async, class_name: 'AccountSamlSettings'
+
+    # Dify dataset names carry the account name.
+    after_update_commit :describe_captain_dify_datasets, if: -> { saved_change_to_name? && dify_knowledge_enabled? }
+  end
+
+  private
+
+  def describe_captain_dify_datasets
+    captain_assistants.pluck(:id).each { |assistant_id| Captain::Dify::DescribeDatasetsJob.perform_later(assistant_id) }
   end
 end

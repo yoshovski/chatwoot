@@ -466,6 +466,13 @@ en:
       description: 'Sync your contacts and conversations with LeadSquared CRM. This integration automatically creates leads in LeadSquared when new contacts are added, and logs conversation activity to provide your sales team with complete context.'
   captain:
     copilot_message_required: Message is required
+    dify_datasets:
+      faq:
+        label: 'FAQs'
+        description: 'FAQs answered by the AI agent "%{agent}" of %{account} (Chatwoot account %{account_id}, AI agent %{agent_id}). Managed by Chatwoot: add or edit FAQs there; changes made here are overwritten.'
+      docs:
+        label: 'Documents'
+        description: 'Websites, files and pages the AI agent "%{agent}" of %{account} learns from (Chatwoot account %{account_id}, AI agent %{agent_id}). Managed by Chatwoot: add or edit sources there; changes made here are overwritten.'
     order_card:
       title: 'Order %{order} · %{date}'
       item: '%{quantity}× %{name}'

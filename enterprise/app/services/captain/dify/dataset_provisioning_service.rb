@@ -1,19 +1,20 @@
 class Captain::Dify::DatasetProvisioningService
-  DATASETS = { 'faq' => 'FAQs', 'docs' => 'Documents' }.freeze
-
   def initialize(assistant)
     @assistant = assistant
     @client = assistant.account.dify_knowledge_client
   end
 
   def perform
-    created = DATASETS.filter_map do |kind, label|
+    identity = Captain::Dify::DatasetIdentity.new(@assistant)
+    created = Captain::Dify::DatasetIdentity::KINDS.filter_map do |kind|
       @assistant.with_lock do
         key = "dify_#{kind}_dataset_id"
         next if @assistant.config[key].present?
 
         dataset = @client.create_dataset(
-          name: "Captain #{@assistant.id} #{label}", indexing_technique: 'high_quality', permission: 'only_me',
+          **identity.attributes(kind),
+          indexing_technique: 'high_quality',
+          permission: 'only_me',
           embedding_model: @assistant.account.dify_embedding_model,
           embedding_model_provider: @assistant.account.dify_embedding_model_provider
         )

@@ -6,20 +6,24 @@ RSpec.describe Captain::Dify::DatasetProvisioningService do
     create(:account, dify_base_url: 'https://dify.example.test', dify_knowledge_api_key: 'private-key',
                      dify_embedding_model: 'example-embedding', dify_embedding_model_provider: 'example/provider')
   end
-  let(:assistant) { create(:captain_assistant, account: account) }
+  let(:assistant) { create(:captain_assistant, account: account, name: 'Octave') }
+  let(:faq_name) { "##{account.id} #{account.name} · Octave · FAQs" }
+  let(:docs_name) { "##{account.id} #{account.name} · Octave · Documents" }
   let(:client) { instance_double(Dify::KnowledgeClient) }
 
   before do
     allow(account).to receive(:dify_knowledge_client).and_return(client)
   end
 
-  it 'creates both assistant datasets once with the account embedding model' do
+  it 'creates both assistant datasets once with a readable name, a description and the account embedding model' do
     allow(client).to receive(:create_dataset).with(
-      name: "Captain #{assistant.id} FAQs", indexing_technique: 'high_quality', permission: 'only_me',
+      name: faq_name, description: a_string_including('AI agent "Octave"', "Chatwoot account #{account.id}"),
+      indexing_technique: 'high_quality', permission: 'only_me',
       embedding_model: 'example-embedding', embedding_model_provider: 'example/provider'
     ).and_return('id' => 'faq-id')
     allow(client).to receive(:create_dataset).with(
-      name: "Captain #{assistant.id} Documents", indexing_technique: 'high_quality', permission: 'only_me',
+      name: docs_name, description: a_string_including('Managed by Chatwoot'),
+      indexing_technique: 'high_quality', permission: 'only_me',
       embedding_model: 'example-embedding', embedding_model_provider: 'example/provider'
     ).and_return('id' => 'docs-id')
 
@@ -32,7 +36,7 @@ RSpec.describe Captain::Dify::DatasetProvisioningService do
 
   it 'preserves the first dataset ID if creating the second fails' do
     allow(client).to receive(:create_dataset).and_return('id' => 'faq-id').once
-    allow(client).to receive(:create_dataset).with(hash_including(name: "Captain #{assistant.id} Documents"))
+    allow(client).to receive(:create_dataset).with(hash_including(name: docs_name))
                                              .and_raise(Dify::KnowledgeClient::Error, 'Dify request failed')
 
     expect { described_class.new(assistant).perform }.to raise_error(Dify::KnowledgeClient::Error)
