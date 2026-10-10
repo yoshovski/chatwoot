@@ -7,6 +7,10 @@ on:
 
 permissions:
   contents: read
+  packages: write
+
+env:
+  DOCKER_REPO: ghcr.io/${{ github.repository }}
 
 jobs:
   test-build:
@@ -23,6 +27,18 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Prepare
+        run: |
+          platform=${{ matrix.platform }}
+          echo "PLATFORM_PAIR=${platform//\//-}" >> $GITHUB_ENV
+
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
 
@@ -37,5 +53,6 @@ jobs:
           platforms: ${{ matrix.platform }}
           push: false
           load: false
-          cache-from: type=gha,scope=${{ matrix.platform }}
-          cache-to: type=gha,mode=max,scope=${{ matrix.platform }}
+          # Exercise the same shared dependency cache used by EE releases.
+          cache-from: type=registry,ref=${{ env.DOCKER_REPO }}:buildcache-ee-${{ env.PLATFORM_PAIR }}
+          cache-to: type=registry,ref=${{ env.DOCKER_REPO }}:buildcache-ee-${{ env.PLATFORM_PAIR }},mode=max
