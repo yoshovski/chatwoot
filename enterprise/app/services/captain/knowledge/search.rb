@@ -1,5 +1,6 @@
 class Captain::Knowledge::Search
   class Error < StandardError; end
+  DATASET_TOP_K = 4
   PASSAGE_CHARS = 8000
   TOTAL_CHARS = 24_000
 
@@ -64,9 +65,9 @@ class Captain::Knowledge::Search
 
   def configured_datasets
     datasets = [
-      { dataset_id: @assistant.config.fetch('dify_faq_dataset_id'), kind: 'faq', limit: 6 },
-      { dataset_id: @assistant.config.fetch('dify_docs_dataset_id'), kind: 'document', limit: 6 },
-      *@assistant.config.fetch('dify_extra_dataset_ids', []).map { |id| { dataset_id: id, kind: 'extra', limit: 6 } }
+      { dataset_id: @assistant.config.fetch('dify_faq_dataset_id'), kind: 'faq', limit: DATASET_TOP_K },
+      { dataset_id: @assistant.config.fetch('dify_docs_dataset_id'), kind: 'document', limit: DATASET_TOP_K },
+      *@assistant.config.fetch('dify_extra_dataset_ids', []).map { |id| { dataset_id: id, kind: 'extra', limit: DATASET_TOP_K } }
     ]
     catalog = shopify_catalog_dataset
     datasets << catalog if catalog
@@ -77,7 +78,7 @@ class Captain::Knowledge::Search
     hook = @account.hooks.find_by(app_id: 'shopify')
     return unless hook&.shopify_connected? && hook.shopify_catalog_sync_enabled? && hook.shopify_catalog_dataset_id.present?
 
-    { dataset_id: hook.shopify_catalog_dataset_id, kind: 'catalog', limit: 6 }
+    { dataset_id: hook.shopify_catalog_dataset_id, kind: 'catalog', limit: DATASET_TOP_K }
   end
 
   def canonical_passage(passage, datasets)

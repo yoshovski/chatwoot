@@ -733,6 +733,20 @@ en:
       period_extended: 'Stripe renewal extended to the saved date.'
       apply_pricing: "Apply saved pricing to Stripe (future renewals, no proration)"
       pricing_applied: "Saved pricing applied to Stripe."
+    dify_workspace:
+      title: Shared Dify workspace
+      description: Configure one workspace for all accounts. Every account inherits this connection, and each assistant keeps separate knowledge datasets.
+      enabled: Connect all accounts to this workspace automatically
+      inherited: Uses the shared Dify workspace
+      base_url: Dify base URL (without /v1)
+      embedding_model_provider: Embedding provider
+      embedding_model: Embedding model for new datasets
+      reranking_model_provider: Reranking provider
+      reranking_model: Reranking model
+      model_hint: Reranking changes apply to assistant searches immediately. Embedding changes apply to newly created datasets, including Shopify catalogs when Shopify tools are configured; existing datasets require a separate migration.
+      saved: Shared Dify workspace saved.
+      sync_failed: The knowledge service could not apply this configuration. Check service availability and retry to apply the settings to every service.
+      save: Save workspace
     dify_configuration:
       helper_text: 'Bind this account to its own Dify workspace. Use the same embedding model and provider as its catalog.'
       base_url: 'Dify base URL'

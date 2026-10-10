@@ -26,6 +26,7 @@ class Settings(BaseSettings):
     audience: str = "cwai-knowledge"
     originals_path: Path = Path("/data/originals")
     dify_connections: dict[str, DifyConnection]
+    default_connection_ref: str = "prod"
     knowledge_search_score_threshold: float = Field(default=0.35, ge=0, le=1)
 
 

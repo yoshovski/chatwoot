@@ -50,6 +50,13 @@ accounts = Table(
     UniqueConstraint("installation_id", "account_id"),
     CheckConstraint("account_id > 0"),
 )
+workspace_settings = Table(
+    "workspace_settings",
+    metadata,
+    Column("installation_id", String(100), primary_key=True),
+    Column("enabled", Boolean, nullable=False),
+    Column("encrypted_connection", Text),
+)
 bases = tenant_table(
     "knowledge_bases",
     Column("name", String(200), nullable=False),

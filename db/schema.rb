@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_10_10_130000) do
+ActiveRecord::Schema[7.2].define(version: 2026_10_10_180000) do
   # These extensions should be enabled to support this database
   enable_extension "pg_stat_statements"
   enable_extension "pg_trgm"
@@ -1162,6 +1162,19 @@ ActiveRecord::Schema[7.2].define(version: 2026_10_10_130000) do
     t.index ["account_id"], name: "index_data_imports_on_account_id"
     t.index ["initiated_by_id"], name: "index_data_imports_on_initiated_by_id"
     t.index ["source_provider"], name: "index_data_imports_on_source_provider"
+  end
+
+  create_table "dify_workspaces", force: :cascade do |t|
+    t.boolean "enabled", default: false, null: false
+    t.string "base_url"
+    t.text "knowledge_api_key"
+    t.string "embedding_model_provider"
+    t.string "embedding_model"
+    t.string "reranking_model_provider"
+    t.string "reranking_model"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.check_constraint "id = 1", name: "dify_workspace_singleton"
   end
 
   create_table "email_templates", force: :cascade do |t|

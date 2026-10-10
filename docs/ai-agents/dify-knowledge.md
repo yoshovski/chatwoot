@@ -1,10 +1,42 @@
 # Dify workspace binding
 
-In Super Admin → Accounts, configure the Dify base URL (without `/v1`), workspace Knowledge
-API key, embedding provider and embedding model. Use one workspace per account and the same
-embedding model as its catalog. Configure the installation's Active Record encryption keys
-before storing a Knowledge API key. The form never displays a saved key; leaving it blank
-keeps the current value. These settings are excluded from client account APIs.
+In Super Admin → Settings → Shared Dify workspace, enable the shared connection and enter
+its base URL (without `/v1`), Knowledge API key, embedding provider/model, and reranking
+provider/model once. All accounts, including newly created accounts, inherit these settings.
+Each assistant still provisions its own FAQ and document datasets. Shopify catalogs keep
+separate datasets selected through server-owned tenant bindings. Customer APIs and model
+output cannot choose dataset IDs or read the workspace credential.
+
+The key is encrypted using Active Record encryption. Its knowledge-service copy is encrypted
+at rest using a domain-separated key derived from `CWAI_SIGNING_KEY`. The saved key never
+appears in forms. Leaving the key field blank preserves it. When rotating the signing key,
+re-save the shared workspace before resuming the knowledge API and worker.
+
+Deploy both migrations (Rails and knowledge-service Alembic), and update the knowledge API
+and worker before enabling the setting. `CWAI_DEFAULT_CONNECTION_REF` selects the existing
+server connection to replace centrally (default `prod`; the lab example uses `lab`). Enabling the shared workspace rejects active bindings for other credential references;
+migrate those bindings explicitly first. Only a signed installation
+configuration token can update this connection; tenant read/write tokens cannot.
+
+The knowledge API registers an unseen account lazily on its first authenticated request.
+It does not re-enable an explicitly disabled binding. Configuration writes update API and
+worker behavior without a process restart. When Shopify tools have an admin credential
+configured, the same save updates their platform Dify defaults and preserves chunking settings.
+Existing catalog dataset connections are not rewritten by this operation.
+
+Reranking changes affect subsequent Captain searches across FAQ, document, and catalog
+knowledge. Embedding changes affect new datasets. Existing dataset indexes are never rebuilt
+implicitly; migrate them explicitly after retrieval quality checks. Disabling the shared
+setting restores legacy account settings and server connection configuration; it stops new
+automatic account bindings and does not delete existing datasets or bindings.
+
+Configuration propagation spans independent services. If a save fails after a remote service
+accepts it, the form reports failure; retry the same save to reconcile all services. Keep the
+connection in the same Dify workspace when updating a URL or rotating a key. Moving to a
+different workspace requires a separate dataset migration.
+
+Before the shared connection is enabled, legacy per-account configuration remains available
+in Super Admin → Accounts. These settings are excluded from client account APIs.
 
 New assistants in configured accounts enqueue dataset provisioning. Existing assistants
 provision on first use of `ensure_dify_datasets!`. A lock prevents concurrent creation;
@@ -88,3 +120,32 @@ bundle exec rake captain:dify:backfill_documents ASSISTANT_ID=123
 
 Repeated runs reuse document IDs and fingerprints. An interrupted create is recovered by
 its stable document name and resubmitted with current content before becoming Ready.
+
+## Voyage 4 Lite evaluation — 2026-10-10
+
+A read-only production comparison sent five representative question embeddings through
+LiteLLM, alternating model order. Both models returned 1024-dimensional vectors.
+
+| Model | Median | Mean | Samples |
+| --- | --- | --- | --- |
+| Voyage 4 | 0.299 s | 1.043 s | 5 |
+| Voyage 4 Lite | 0.395 s | 0.494 s | 5 |
+
+One Voyage 4 request took 4.020 s. These small samples do not establish a reliable median
+latency improvement for Lite.
+
+A separate process used Lite query embeddings against the existing Voyage 4 FAQ, document,
+and catalog vectors. No dataset model or index was changed. Across three questions and three
+datasets, the top vector-search result matched in 8/9 comparisons. Top-six overlap ranged
+from 3/6 to 6/6. This measures agreement, not correctness. Queries after the first dataset
+benefited from Dify's embedding cache; their timings are not cold model latency measurements.
+
+Voyage documents compatible embedding spaces across its 4 family, with matching dimensions
+and encoding. Prefer testing a separate query-model selection while keeping the existing
+document embeddings. The deployed Dify Vector implementation currently selects the dataset's
+embedding model for queries; separate query-model support is not included in this change.
+See https://blog.voyageai.com/2026/01/15/voyage-4/.
+
+Retrieval requests are capped at four results per dataset, preserving smaller caller limits.
+The assistant still accepts up to five passages across all datasets. Production uses
+`voyage/rerank-3-lite`; all FAQ, document, and catalog datasets remain searchable.

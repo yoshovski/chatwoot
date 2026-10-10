@@ -43,10 +43,13 @@ from cwai.store import (
     source_entries_changed,
     validate_source,
 )
+from cwai.workspace import connection
+from cwai.workspace import router as workspace_router
 
 app = FastAPI(title="Chatwoot AI knowledge service", version="0.1.0")
 PREFIX = "/v1/knowledge"
 app.include_router(search_router)
+app.include_router(workspace_router)
 
 
 @app.exception_handler(ProjectionError)
@@ -512,7 +515,7 @@ def retrieve(base_id: UUID, payload: Retrieval, auth: Scope = Depends(read_scope
             .all()
         )
     candidates = []
-    with Dify(settings().dify_connections[account["credential_ref"]]) as remote:
+    with Dify(connection(account["credential_ref"])) as remote:
         for projection in projections:
             for record in remote.retrieve(projection["dataset_id"], payload.query, payload.top_k):
                 segment = record["segment"]

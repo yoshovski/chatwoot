@@ -65,7 +65,7 @@ class KnowledgeSearchTest(unittest.TestCase):
         def retrieve(_remote, dataset_id, query, limit):
             barrier.wait()
             self.assertEqual(query, self.payload.query)
-            self.assertEqual(limit, 6)
+            self.assertEqual(limit, 4)
             return self.records[dataset_id]
 
         with patch.object(Dify, "search", retrieve):

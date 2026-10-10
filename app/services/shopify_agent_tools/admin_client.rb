@@ -78,6 +78,18 @@ class ShopifyAgentTools::AdminClient
     request(:get, "v1/admin/tenants/#{tenant_id}/dify")
   end
 
+  def dify_platform_settings
+    request(:get, 'v1/admin/settings/dify')
+  end
+
+  def configure_dify_platform(workspace)
+    profile_fields = %w[parent_mode parent_separator parent_max_tokens child_separator child_max_tokens normalize_whitespace remove_urls_emails]
+    payload = dify_platform_settings.slice(*profile_fields).compact.merge(
+      workspace.attributes.slice(*DifyWorkspace::CONFIGURATION_FIELDS).merge('api_key' => workspace.knowledge_api_key)
+    )
+    request(:put, 'v1/admin/settings/dify', payload)
+  end
+
   def start_catalog_import(tenant_id)
     request(:post, "v1/admin/tenants/#{tenant_id}/catalog/import")
   end

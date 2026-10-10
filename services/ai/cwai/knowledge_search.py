@@ -12,8 +12,10 @@ from cwai.config import settings
 from cwai.contracts import KnowledgePassage, KnowledgeSearch, KnowledgeSearchResult
 from cwai.db import engine
 from cwai.dify import Dify, ProjectionError
+from cwai.workspace import connection
 
 router = APIRouter(prefix="/v1/knowledge")
+MAX_DATASET_RESULTS = 4
 MAX_PASSAGES = 5
 PER_PASSAGE_CHARS = 8000
 TOTAL_CHARS = 24000
@@ -124,7 +126,15 @@ def search(config, payload, threshold):
         ThreadPoolExecutor(max_workers=len(payload.datasets)) as pool,
     ):
         futures = [
-            (dataset, pool.submit(remote.search, dataset.dataset_id, query, dataset.limit))
+            (
+                dataset,
+                pool.submit(
+                    remote.search,
+                    dataset.dataset_id,
+                    query,
+                    min(dataset.limit, MAX_DATASET_RESULTS),
+                ),
+            )
             for dataset in payload.datasets
         ]
         candidates = [
@@ -165,7 +175,7 @@ def knowledge_search(payload: KnowledgeSearch, auth: Scope = Depends(read_scope)
         raise HTTPException(403, "Account does not match service credential")
     config = settings()
     return search(
-        config.dify_connections[account["credential_ref"]],
+        connection(account["credential_ref"]),
         payload,
         config.knowledge_search_score_threshold,
     )

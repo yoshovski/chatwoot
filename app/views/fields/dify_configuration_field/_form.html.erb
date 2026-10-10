@@ -1,3 +1,9 @@
+<% if DifyWorkspace.current&.enabled? %>
+  <div class="field-unit__label"><%= f.label field.attribute %></div>
+  <div class="field-unit__field">
+    <%= link_to t('super_admin.dify_workspace.inherited'), super_admin_dify_workspace_path %>
+  </div>
+<% else %>
 <div class="field-unit__label"><%= f.label field.attribute %></div>
 <div class="field-unit__field">
   <p class="mb-3 text-xs text-n-slate-10"><%= t('super_admin.dify_configuration.helper_text') %></p>
@@ -9,3 +15,5 @@
   <%= password_field_tag 'account[dify_configuration][knowledge_api_key]', nil, id: 'account_dify_configuration_knowledge_api_key', autocomplete: 'new-password', class: 'block w-full' %>
   <p class="mt-2 text-xs text-n-slate-10"><%= t('super_admin.dify_configuration.key_hint') %></p>
 </div>
+
+<% end %>
