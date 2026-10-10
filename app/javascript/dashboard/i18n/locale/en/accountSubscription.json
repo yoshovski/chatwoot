@@ -70,14 +70,14 @@
   },
   "DATA_EXPORTS": {
     "TITLE": "Data exports",
-    "DESCRIPTION": "Download conversations, contacts and knowledge as a portable archive. Downloads expire after 7 days.",
+    "DESCRIPTION": "Get a ZIP with spreadsheets you can open in Excel, Google Sheets or Numbers, readable conversation transcripts and original files. Downloads are available for 7 days.",
     "EXCLUSIONS": "Shopify product catalog, credentials, assistant instructions and internal strategy are excluded.",
     "TYPE": "Export data",
     "CREATE": "Create export",
     "DOWNLOAD": "Download",
     "ERROR": "Export unavailable. Please try again.",
     "TYPES": {
-      "all": "All data",
+      "all": "All exportable data",
       "conversations": "Conversations",
       "contacts": "Contacts",
       "knowledge": "Knowledge bases"
@@ -86,8 +86,25 @@
       "pending": "Queued",
       "processing": "Preparing archive",
       "completed": "Ready to download",
-      "failed": "Export failed. Please retry."
+      "failed": "Export failed. Please retry.",
+      "expired": "Download expired"
     },
-    "ITEM": "{type} · {date}"
+    "ITEM": "{type} · {date}",
+    "PAGE_DESCRIPTION": "Download a copy of your contacts, conversations and knowledge. Choose what to include, track preparation and download it when it’s ready.",
+    "FORMAT_TITLE": "Your data, ready to use",
+    "DIALOG_DESCRIPTION": "Choose what to include. We’ll prepare your ZIP in the background; you can continue working while it’s being created.",
+    "EMPTY": "No exports yet",
+    "EMPTY_DESCRIPTION": "Create an export to keep a copy of your contacts, conversations or knowledge library.",
+    "LOADING": "Loading exports…",
+    "ACTIVE": "An export is already being prepared. You can create another when it finishes.",
+    "FILE_SIZE": " · {size}",
+    "EXPIRES": "Available until {date}",
+    "DOWNLOAD_ERROR": "We could not download this export. Refresh the list and try again.",
+    "CONTENTS": {
+      "all": "Contacts, conversations with private notes and attachments, and your knowledge library.",
+      "contacts": "A contact spreadsheet with names, email addresses, phone numbers and custom fields.",
+      "conversations": "Conversation and message spreadsheets, readable transcripts, private notes and original attachments.",
+      "knowledge": "Articles, documents and FAQs as spreadsheets, plus original documents and native knowledge archives."
+    }
   }
 }
