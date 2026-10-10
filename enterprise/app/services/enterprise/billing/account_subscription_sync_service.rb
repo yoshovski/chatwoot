@@ -13,7 +13,7 @@ class Enterprise::Billing::AccountSubscriptionSyncService
   def sync_subscription(object)
     subscription = AccountSubscription.find_by(stripe_customer_id: object.customer)
     return false unless subscription
-    return true unless object['metadata'].to_h['chatoctave_account_id'] == subscription.account_id.to_s
+    return true unless object['metadata'].to_h[:chatoctave_account_id] == subscription.account_id.to_s
 
     subscription.account.with_lock do
       subscription.reload
@@ -32,7 +32,7 @@ class Enterprise::Billing::AccountSubscriptionSyncService
     subscription = AccountSubscription.find_by(stripe_customer_id: object.customer)
     return false unless subscription
 
-    revision = object['metadata'].to_h['chatoctave_payment_revision']
+    revision = object['metadata'].to_h[:chatoctave_payment_revision]
     return true unless revision == subscription.custom_payment_revision
 
     remote = Stripe::Checkout::Session.retrieve(object.id)
