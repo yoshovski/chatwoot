@@ -28,7 +28,10 @@ const isLink = action => action.type === 'link' && !!action.uri;
         />
         <div class="flex flex-col flex-1 gap-1 p-2">
           <span class="font-medium text-n-slate-12">{{ item.title }}</span>
-          <span v-if="item.description" class="line-clamp-3 text-n-slate-11">
+          <span
+            v-if="item.description"
+            class="line-clamp-3 whitespace-pre-line text-n-slate-11"
+          >
             {{ item.description }}
           </span>
           <div class="flex flex-col gap-1 pt-1 mt-auto">

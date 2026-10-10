@@ -1,5 +1,5 @@
 # Decides what the customer sees for one Captain V2 run: the answer (prose, citations, suggestion buttons or the
-# empty-answer fallback) and the product cards. Returns message payloads and writes nothing, so a chat persists
+# empty-answer fallback), the order card and the product cards. Returns message payloads and writes nothing, so a chat persists
 # them and the playground only shows them.
 class Captain::Conversation::ReplyComposer
   attr_reader :assistant, :conversation, :response, :run_result, :customer_message
@@ -14,7 +14,9 @@ class Captain::Conversation::ReplyComposer
 
   # suppress_suggestions: the caller knows the run ends in a handoff (or the conversation already waits for a human).
   def messages(suppress_suggestions: false)
-    [answer_message(suppress_suggestions)] + cards_builder.build_messages(agent_name: response['agent_name'])
+    [answer_message(suppress_suggestions)] +
+      Captain::Conversation::OrderCardBuilder.new(assistant: assistant, run_result: run_result).build_messages +
+      cards_builder.build_messages(agent_name: response['agent_name'])
   end
 
   def empty_response?

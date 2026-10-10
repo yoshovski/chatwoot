@@ -71,6 +71,19 @@ RSpec.describe Captain::Conversation::ReplyComposer do
     end
   end
 
+  context 'when the run looked up an order' do
+    let(:tool_state) do
+      { Captain::Assistant::ORDER_STATE_KEY => { 'order_number' => '#1001', 'financial_status' => 'PAID', 'items' => [] } }
+    end
+
+    it 'adds the order card after the answer and keeps the suggestion buttons' do
+      answer, order_card = composer.messages
+
+      expect(answer[:content_type]).to eq('input_select')
+      expect(order_card).to include(content_type: 'cards', content: '1001')
+    end
+  end
+
   it 'keeps a plain text answer when suggestions are suppressed' do
     answer = composer.messages(suppress_suggestions: true).first
 
