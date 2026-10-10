@@ -169,7 +169,9 @@ const knowledgeChip = computed(
   () => KNOWLEDGE_STATE_CHIPS[props.knowledgeState]
 );
 // With Dify the page text is searched directly, so a page without FAQs is normal.
-const showFaqPill = computed(() => !isPdf.value && !props.knowledgeState);
+const showFaqPill = computed(
+  () => props.responsesCount > 0 || (!isPdf.value && !props.knowledgeState)
+);
 
 const typeIcon = computed(() => {
   if (isPdf.value) return 'i-lucide-file-text';

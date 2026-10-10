@@ -58,6 +58,11 @@ const showPaginationFooter = computed(
 const documentContent = computed(() => documentDetails.value?.content?.trim());
 const isPdf = computed(() => documentDetails.value?.pdf_document);
 const isMarkdown = computed(() => documentDetails.value?.markdown_document);
+const showRelatedFaqs = computed(
+  () =>
+    documentDetails.value.responses_count > 0 ||
+    (!isPdf.value && !documentDetails.value.knowledge_state)
+);
 const displayUrl = computed(() => documentDetails.value?.display_url);
 const externalLink = computed(() => documentDetails.value?.external_link);
 const sourceHref = computed(() => displayUrl.value || externalLink.value);
@@ -80,8 +85,7 @@ const tabs = computed(() => {
     { key: TAB_KEYS.CONTENT, label: contentTabLabel.value },
   ];
 
-  // PDFs are searched as chunks and never turned into FAQs.
-  if (!isPdf.value && !documentDetails.value.knowledge_state) {
+  if (showRelatedFaqs.value) {
     documentTabs.push({
       key: TAB_KEYS.FAQS,
       label: t('CAPTAIN.DOCUMENTS.RELATED_RESPONSES.TITLE'),
@@ -205,7 +209,7 @@ const handlePageChange = page => {
 
 onMounted(() => {
   panelRef.value.open();
-  if (!isPdf.value && !documentDetails.value.knowledge_state) fetchResponses();
+  if (showRelatedFaqs.value) fetchResponses();
 });
 
 onUnmounted(closeUsage);
@@ -247,12 +251,9 @@ onUnmounted(closeUsage);
               {{ displayLink }}
             </span>
           </div>
-          <div
-            v-if="!isPdf && !documentDetails.knowledge_state"
-            class="flex flex-col gap-1"
-          >
+          <div v-if="showRelatedFaqs" class="flex flex-col gap-1">
             <span class="text-xs font-medium uppercase text-n-slate-10">
-              {{ t('CAPTAIN.DOCUMENTS.DETAILS.GENERATED_FAQS') }}
+              {{ t('CAPTAIN.DOCUMENTS.RELATED_RESPONSES.TITLE') }}
             </span>
             <span class="text-sm text-n-slate-12">
               {{ totalCount }}
