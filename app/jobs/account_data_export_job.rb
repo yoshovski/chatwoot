@@ -1,5 +1,4 @@
-require 'rubygems/package'
-require 'zlib'
+require 'zip'
 require 'tempfile'
 
 class AccountDataExportJob < ApplicationJob
@@ -27,15 +26,14 @@ class AccountDataExportJob < ApplicationJob
   private
 
   def attach_archive(export)
-    Tempfile.create(['account-export', '.tar.gz']) do |file|
-      file.binmode
-      Zlib::GzipWriter.wrap(file) do |gzip|
-        Gem::Package::TarWriter.new(gzip) do |tar|
-          AccountDataExportService.new(export: export, tar: tar).perform
-        end
+    Tempfile.create(['account-export', '.zip']) do |file|
+      Zip::OutputStream.open(file.path) do |zip|
+        AccountDataExportService.new(export: export, zip: zip).perform
       end
       File.open(file.path, 'rb') do |archive|
-        export.archive.attach(io: archive, filename: "account-#{export.account_id}-#{export.id}.tar.gz", content_type: 'application/gzip')
+        name = export.account.name.parameterize.presence || "account-#{export.account_id}"
+        filename = "#{name}-#{export.export_type}-#{export.created_at.strftime('%Y-%m-%d')}-#{export.id}.zip"
+        export.archive.attach(io: archive, filename: filename, content_type: 'application/zip')
       end
     end
   end

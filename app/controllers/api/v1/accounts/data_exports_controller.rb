@@ -33,7 +33,7 @@ class Api::V1::Accounts::DataExportsController < Api::V1::Accounts::BaseControll
   private
 
   def stream_archive(blob)
-    response.headers['Content-Type'] = 'application/gzip'
+    response.headers['Content-Type'] = blob.content_type
     response.headers['Content-Disposition'] = ActionDispatch::Http::ContentDisposition.format(disposition: 'attachment', filename: blob.filename.to_s)
     response.headers['Cache-Control'] = 'no-store'
     self.response_body = Enumerator.new do |stream|
@@ -44,6 +44,9 @@ class Api::V1::Accounts::DataExportsController < Api::V1::Accounts::BaseControll
   end
 
   def export_payload(export)
-    export.slice(:id, :export_type, :status, :created_at, :expires_at)
+    export.slice(:id, :export_type, :status, :created_at, :expires_at).merge(
+      filename: export.archive.attached? ? export.archive.filename.to_s : nil,
+      byte_size: export.archive.attached? ? export.archive.blob.byte_size : nil
+    )
   end
 end

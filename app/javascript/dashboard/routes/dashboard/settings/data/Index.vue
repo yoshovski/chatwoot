@@ -34,6 +34,7 @@ const { t } = useI18n();
 const getters = useStoreGetters();
 const router = useRouter();
 
+const exportsPanel = ref(null);
 const dataImports = ref([]);
 const isLoading = ref(true);
 const isRefreshing = ref(false);
@@ -202,7 +203,11 @@ onBeforeUnmount(() => {
     <template #header>
       <BaseSettingsHeader
         :title="$t('DATA_IMPORTS.HEADER')"
-        :description="$t('DATA_IMPORTS.DESCRIPTION')"
+        :description="
+          activeTab === 'export'
+            ? $t('DATA_EXPORTS.PAGE_DESCRIPTION')
+            : $t('DATA_IMPORTS.DESCRIPTION')
+        "
       >
         <template #tabs>
           <TabBar
@@ -216,7 +221,31 @@ onBeforeUnmount(() => {
             {{ $t('DATA_IMPORTS.TABLE.COUNT', { count: dataImports.length }) }}
           </span>
         </template>
-        <template v-if="activeTab === 'import'" #actions>
+        <template v-if="activeTab === 'export'" #actions>
+          <span
+            v-if="exportsPanel?.hasPending"
+            class="hidden items-center gap-1.5 text-body-main text-n-slate-11 sm:inline-flex"
+          >
+            <span class="size-2 rounded-full bg-n-teal-9 animate-pulse" />
+            {{ $t('DATA_EXPORTS.STATUS.processing') }}
+          </span>
+          <Button
+            ghost
+            slate
+            size="sm"
+            icon="i-lucide-refresh-cw"
+            :aria-label="$t('DATA_IMPORTS.MONITOR.REFRESH')"
+            @click="exportsPanel?.load()"
+          />
+          <Button
+            size="sm"
+            icon="i-lucide-plus"
+            :label="$t('DATA_EXPORTS.CREATE')"
+            :disabled="exportsPanel?.hasPending"
+            @click="exportsPanel?.open()"
+          />
+        </template>
+        <template v-else #actions>
           <span
             v-if="hasActiveImport"
             class="hidden items-center gap-1.5 text-body-main text-n-slate-11 sm:inline-flex"
@@ -254,7 +283,7 @@ onBeforeUnmount(() => {
     </template>
 
     <template #body>
-      <Exports v-if="activeTab === 'export'" />
+      <Exports v-if="activeTab === 'export'" ref="exportsPanel" />
 
       <div
         v-else-if="!dataImports.length"
