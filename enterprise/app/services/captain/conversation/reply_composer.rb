@@ -64,9 +64,10 @@ class Captain::Conversation::ReplyComposer
     suggestions = suggested_replies
     return {} if suggestions.blank? || suppress_suggestions || contains_links?(content) || contains_cards?
 
+    # submit_value: a click sends the item's value (the full question), while the button shows its short title.
     {
       content_type: 'input_select',
-      content_attributes: { items: suggestions.map { |text| { 'title' => text, 'value' => text } } }
+      content_attributes: { items: suggestions, submit_value: true }
     }
   end
 
@@ -75,10 +76,14 @@ class Captain::Conversation::ReplyComposer
     Array(raw).filter_map { |item| clean_suggestion_item(item) }.take(assistant.max_suggested_replies)
   end
 
+  # Model output is { label, message }; older runs and scenario output may still be a plain string.
   def clean_suggestion_item(item)
-    text = item.is_a?(Hash) ? (item['title'] || item['value']) : item.to_s
-    clean = text.to_s.strip
-    clean.presence && clean.length <= 80 ? clean : nil
+    label, message = item.is_a?(Hash) ? item.values_at('label', 'message') : [item, nil]
+    label = label.to_s.strip
+    return if label.blank? || label.length > Captain::ResponseSchema::SUGGESTION_LABEL_MAX_LENGTH
+
+    message = message.to_s.strip.first(Captain::ResponseSchema::SUGGESTION_MESSAGE_MAX_LENGTH).presence || label
+    { 'title' => label, 'value' => message }
   end
 
   def contains_links?(content)

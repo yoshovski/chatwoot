@@ -90,7 +90,7 @@ watch(() => props.messages.length, scrollToBottom);
             :widget-color="widgetColor"
             :widget-text-color="widgetTextColor"
             :is-latest="index === messages.length - 1"
-            @select-option="emit('selectOption', { index, title: $event })"
+            @select-option="emit('selectOption', { index, option: $event })"
           />
           <div
             v-else

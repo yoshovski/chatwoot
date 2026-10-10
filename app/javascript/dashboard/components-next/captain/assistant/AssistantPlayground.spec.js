@@ -118,7 +118,7 @@ describe('AssistantPlayground', () => {
     });
   });
 
-  it('keeps the customer view of a reply and sends a clicked suggestion as the next message', async () => {
+  it('keeps the customer view of a reply and sends a clicked suggestion full question as the next message', async () => {
     mocks.playground.mockResolvedValueOnce({
       data: {
         response: 'Hello from Captain',
@@ -127,7 +127,10 @@ describe('AssistantPlayground', () => {
             content: 'Hello from Captain',
             content_type: 'input_select',
             content_attributes: {
-              items: [{ title: 'Track order', value: 'Track order' }],
+              items: [
+                { title: 'Track order', value: 'Where is my order 1001?' },
+              ],
+              submit_value: true,
             },
           },
         ],
@@ -143,17 +146,20 @@ describe('AssistantPlayground', () => {
       'input_select'
     );
 
-    list.vm.$emit('selectOption', { index: 1, title: 'Track order' });
+    list.vm.$emit('selectOption', {
+      index: 1,
+      option: { title: 'Track order', value: 'Where is my order 1001?' },
+    });
     await flushPromises();
 
     expect(list.props('messages')[1].selectedOption).toBe('Track order');
     expect(mocks.playground).toHaveBeenLastCalledWith(
       expect.objectContaining({
-        messageContent: 'Track order',
+        messageContent: 'Where is my order 1001?',
         messageHistory: [
           { role: 'user', content: 'Hello' },
           { role: 'assistant', content: 'Hello from Captain' },
-          { role: 'user', content: 'Track order' },
+          { role: 'user', content: 'Where is my order 1001?' },
         ],
       })
     );

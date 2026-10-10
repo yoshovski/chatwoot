@@ -70,7 +70,10 @@ const displayMessages = computed(() => {
       {
         id: -message.id,
         readOnly: true,
-        content: option.title || option.value,
+        // Suggestion buttons show a short title and send their value, the full question.
+        content: message.contentAttributes?.submitValue
+          ? option.value || option.title
+          : option.title || option.value,
         messageType: MESSAGE_TYPES.INCOMING,
         contentType: CONTENT_TYPES.TEXT,
         status: MESSAGE_STATUS.SENT,

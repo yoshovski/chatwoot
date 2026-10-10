@@ -214,6 +214,8 @@ RSpec.describe Concerns::Agentable do
       expect(schema).not_to eq(Captain::ResponseSchema)
       schema_hash = schema.new.to_json_schema[:schema]
       expect(schema_hash.dig(:properties, :suggested_replies, :maxItems)).to eq(4)
+      expect(schema_hash.dig(:properties, :suggested_replies, :items, :properties).keys).to eq(%i[label message])
+      expect(schema_hash.dig(:properties, :suggested_replies, :items, :properties, :label, :maxLength)).to eq(24)
     end
 
     it 'returns schema with product_handles when product_cards requested' do

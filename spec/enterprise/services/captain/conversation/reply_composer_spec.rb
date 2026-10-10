@@ -47,6 +47,30 @@ RSpec.describe Captain::Conversation::ReplyComposer do
     expect { composer.messages }.not_to(change { conversation.messages.count })
   end
 
+  it 'marks suggestion buttons so a click sends the value' do
+    expect(composer.messages.first[:content_attributes][:submit_value]).to be(true)
+  end
+
+  context 'with labelled suggestions' do
+    let(:response) do
+      {
+        'response' => 'Your order is paid.',
+        'response_parts' => [{ 'text' => 'Your order is paid.', 'citation_indexes' => [] }],
+        'suggested_replies' => [
+          { 'label' => 'Shipping time', 'message' => 'When will order 1001 ship?' },
+          { 'label' => 'A label that is far too long for a button', 'message' => 'Dropped' },
+          { 'label' => 'Order items', 'message' => '' }
+        ]
+      }
+    end
+
+    it 'shows the short label and sends the full message, dropping labels that are too long' do
+      expect(composer.messages.first[:content_attributes][:items]).to eq(
+        [{ 'title' => 'Shipping time', 'value' => 'When will order 1001 ship?' }, { 'title' => 'Order items', 'value' => 'Order items' }]
+      )
+    end
+  end
+
   it 'keeps a plain text answer when suggestions are suppressed' do
     answer = composer.messages(suppress_suggestions: true).first
 

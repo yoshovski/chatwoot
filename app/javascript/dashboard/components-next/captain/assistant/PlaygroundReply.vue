@@ -79,7 +79,7 @@ const isSelected = option => props.message.selectedOption === option.title;
                   : {}
               "
               :disabled="isOptionDisabled()"
-              @click="emit('selectOption', option.title)"
+              @click="emit('selectOption', option)"
             >
               {{ option.title }}
             </button>

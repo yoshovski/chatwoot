@@ -34,7 +34,7 @@ describe('MessageList', () => {
     );
   });
 
-  it('renders suggestion buttons and sends the clicked title', async () => {
+  it('renders suggestion buttons and sends the clicked option', async () => {
     const wrapper = mountList([
       userTurn,
       assistantTurn({
@@ -45,7 +45,7 @@ describe('MessageList', () => {
             content_attributes: {
               items: [
                 { title: 'Track order', value: 'Track order' },
-                { title: 'Return item', value: 'Return item' },
+                { title: 'Return item', value: 'How do I return an item?' },
               ],
             },
           },
@@ -62,7 +62,12 @@ describe('MessageList', () => {
     await buttons[1].trigger('click');
 
     expect(wrapper.emitted('selectOption')).toEqual([
-      [{ index: 1, title: 'Return item' }],
+      [
+        {
+          index: 1,
+          option: { title: 'Return item', value: 'How do I return an item?' },
+        },
+      ],
     ]);
   });
 

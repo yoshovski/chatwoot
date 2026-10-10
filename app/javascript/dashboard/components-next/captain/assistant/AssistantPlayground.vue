@@ -179,12 +179,12 @@ const sendMessage = async (text = newMessage.value) => {
   }
 };
 
-// A suggestion button is sent as the customer's next message, like in the widget.
-const selectOption = ({ index, title }) => {
+// A suggestion button sends its value (the full question) as the customer's next message, like in the widget.
+const selectOption = ({ index, option }) => {
   if (isLoading.value) return;
 
-  messages.value[index].selectedOption = title;
-  sendMessage(title);
+  messages.value[index].selectedOption = option.title;
+  sendMessage(option.value || option.title);
 };
 
 const handleEnterKey = event => {
