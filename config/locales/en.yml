@@ -652,18 +652,18 @@ en:
       custom_domain_not_configured: 'Custom domain is not configured'
   super_admin:
     account_subscription:
-      helper: "Manage account pricing, monthly quota and trial. Prices are in cents; dates are UTC. Paid clients continue above quota. Trial AI replies stop at expiry or exhaustion."
+      helper: "Manage account pricing, monthly quota and trial. Enter prices in the selected currency (for example, 40,00 or 40.00); dates are UTC. Paid clients continue above quota. Trial AI replies stop at expiry or exhaustion."
       enabled: "Enable billing and usage panel"
-      custom_payment_cents: 'Custom one-time payment (cents)'
+      custom_payment: 'Custom one-time payment'
       custom_payment_description: 'Custom payment description'
       new_custom_payment: 'Issue a new payment request at the same amount'
       monthly_limit: "Monthly conversation limit (blank means unlimited)"
       billing_interval: "Billing interval"
-      currency: "Currency (lowercase ISO code)"
-      monthly_price_cents: "Monthly price (cents)"
-      annual_price_cents: "Custom yearly price (cents, blank uses discount)"
+      currency: "Currency"
+      monthly_price: "Monthly price"
+      annual_price: "Custom yearly price (blank uses discount)"
       annual_discount_percent: "Yearly discount (%)"
-      setup_fee_cents: "One-time customization/setup fee (cents)"
+      setup_fee: "One-time customization/setup fee"
       trial_enabled: "Enable trial"
       trial_days: "Trial duration (days)"
       trial_ends_at: "Trial ends at (UTC)"

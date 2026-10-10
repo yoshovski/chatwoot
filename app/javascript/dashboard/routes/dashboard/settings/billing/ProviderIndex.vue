@@ -44,8 +44,6 @@ const isShopifyEnabled = computed(
       />
     </template>
   </SettingsLayout>
-  <template v-else>
-    <AccountUsage />
-    <StripeBilling v-if="isOnChatwootCloud" />
-  </template>
+  <StripeBilling v-else-if="isOnChatwootCloud" />
+  <AccountUsage v-else />
 </template>

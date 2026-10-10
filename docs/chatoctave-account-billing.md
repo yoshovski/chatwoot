@@ -12,7 +12,7 @@ Set Installation Name to ChatOctave, Logo to the desired login logo, and Logo Th
 
 ## Account billing
 
-Super Admin → Accounts → Edit → Subscription settings configures the account's monthly conversation limit, trial, monthly price, yearly discount, optional custom yearly price, currency, one-time setup fee and billing period dates. Supported currencies are EUR, USD, GBP and BRL. Prices use minor units (cents/pence); dates are UTC. Blank monthly limits are unlimited; zero permits no new trial conversations.
+Super Admin → Accounts → Edit → Subscription settings configures the account's monthly conversation limit, trial, monthly price, yearly discount, optional custom yearly price, currency, one-time setup fee and billing period dates. Supported currencies are EUR, USD, GBP and BRL. Enter prices in the selected currency: `40`, `40.00` and `40,00` all mean forty euros when EUR is selected. Use at most two decimal places and no thousands separators. Storage and Stripe requests retain integer cents/pence; dates are UTC. Blank monthly limits are unlimited; zero permits no new trial conversations.
 
 A billable conversation starts with a public incoming message. More messages in the same conversation during the next **24 hours** do not add usage. The first incoming message after that fixed window starts a new billable window; this is not a sliding inactivity timer. Private notes and activity messages do not count. Reopening does not reset the window. Deleting messages or conversations preserves aggregate usage.
 
@@ -22,7 +22,7 @@ Trials pause new AI conversations when the quota is reached; already admitted wi
 
 Turning on a trial initializes its expiry from Trial duration if the expiry field is blank. To restart or extend a trial, set its expiry explicitly or clear the expiry and save. Disabling a trial removes trial enforcement. A paid Stripe subscription automatically clears trial enforcement. A canceled/unpaid trial retains its expiry and restriction.
 
-Accounts see consumption, quota reset, billing period and recent usage history under **Settings → Billing**, plus a compact sidebar panel. Administrators can subscribe monthly/yearly, manage payments and pay a specific customization request. Yearly price is custom yearly price when supplied, otherwise `monthly price × 12 × (100 − yearly discount) / 100`, rounded to cents.
+Accounts see consumption, quota reset, billing period and recent usage history under **Settings → Usage & billing**. A compact notice above the workspace appears only near the limit or when trial AI replies pause; the sidebar contains no billing card. Administrators can subscribe monthly/yearly, manage payments and pay a specific customization request. Yearly price is custom yearly price when supplied, otherwise `monthly price × 12 × (100 − yearly discount) / 100`, rounded to cents.
 
 ## Stripe setup and client-specific payments
 
@@ -55,3 +55,5 @@ Only one export per account may be queued/preparing at a time. Archives are avai
 Use Stripe test mode to check monthly and yearly checkout, trial transition, customization payment, renewal date extension and payment-method management. Confirm a forged webhook is rejected and repeating a valid event does not reset usage. Confirm two messages in one conversation within 24 hours consume one unit, a later window consumes another, paid accounts continue beyond quota, trial expiry blocks bot replies, and another account cannot download an export.
 
 Validated locally on the isolated billing branch: 218 existing Ruby examples and four frontend checks passed; the frontend build passed with a 6 GiB Node heap. Runtime checks verified quota accounting, archive generation/authenticated downloads, cross-account denial and mocked Stripe flows. Live Stripe checkout and the deployed installation's configured assets still require rollout verification.
+
+Billing UX revision: normal currency inputs accept comma or dot decimal separators; the usage page separates conversation allowance, subscription and one-time payments. Local verification passed 15 frontend checks (including temporary UI scenarios), exact currency-conversion checks, Ruby lint and the Vite asset build. Browser review covered desktop and mobile layouts and monthly/yearly price selection.
