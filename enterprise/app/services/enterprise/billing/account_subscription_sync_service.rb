@@ -11,11 +11,9 @@ class Enterprise::Billing::AccountSubscriptionSyncService
   end
 
   def sync_subscription(object)
-    account_id = object.metadata['chatoctave_account_id']
-    return false if account_id.blank?
-
-    subscription = AccountSubscription.find_by(account_id: account_id, stripe_customer_id: object.customer)
-    return true unless subscription # Never resolve an account from client metadata alone.
+    subscription = AccountSubscription.find_by(stripe_customer_id: object.customer)
+    return false unless subscription
+    return true unless object['metadata']&.[]('chatoctave_account_id') == subscription.account_id.to_s
 
     subscription.account.with_lock do
       subscription.reload
@@ -31,11 +29,11 @@ class Enterprise::Billing::AccountSubscriptionSyncService
   end
 
   def sync_payment(object)
-    revision = object.metadata['chatoctave_payment_revision']
-    return false if revision.blank?
+    subscription = AccountSubscription.find_by(stripe_customer_id: object.customer)
+    return false unless subscription
 
-    subscription = AccountSubscription.find_by(stripe_customer_id: object.customer, custom_payment_revision: revision)
-    return true unless subscription
+    revision = object['metadata']&.[]('chatoctave_payment_revision')
+    return true if revision.blank? || revision != subscription.custom_payment_revision
 
     remote = Stripe::Checkout::Session.retrieve(object.id)
     return true unless remote.payment_status == 'paid'
