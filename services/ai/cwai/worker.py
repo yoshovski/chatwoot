@@ -10,6 +10,7 @@ from cwai.config import settings
 from cwai.db import engine
 from cwai.dify import Dify, ProjectionError
 from cwai.store import CONTENT, add, eligible, owned, rebuild_projection, revision
+from cwai.workspace import connection
 
 POLL_SECONDS = 5
 MAX_ATTEMPTS = 8
@@ -228,7 +229,7 @@ def tick() -> bool:
             )
             if not account["enabled"]:
                 continue
-            config = settings().dify_connections[account["credential_ref"]]
+            config = connection(account["credential_ref"])
             try:
                 with conn.begin_nested(), Dify(config) as remote:
                     state = process(conn, job, remote)

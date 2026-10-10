@@ -1,0 +1,29 @@
+<% content_for(:title) { t('super_admin.dify_workspace.title') } %>
+<header class="main-content__header">
+  <h1 class="main-content__page-title"><%= content_for(:title) %></h1>
+</header>
+<section class="main-content__body">
+  <p class="mb-6"><%= t('super_admin.dify_workspace.description') %></p>
+  <% @workspace.errors.full_messages.each do |message| %>
+    <p class="mb-3 text-red-600"><%= message %></p>
+  <% end %>
+  <%= form_with model: @workspace, url: super_admin_dify_workspace_path, method: :patch do |form| %>
+    <div class="mb-6">
+      <%= form.check_box :enabled %>
+      <%= form.label :enabled, t('super_admin.dify_workspace.enabled') %>
+    </div>
+    <% DifyWorkspace::CONFIGURATION_FIELDS.each do |field| %>
+      <div class="mb-6">
+        <%= form.label field, t("super_admin.dify_workspace.#{field}") %>
+        <%= form.text_field field, class: 'block w-full' %>
+      </div>
+    <% end %>
+    <div class="mb-6">
+      <%= form.label :knowledge_api_key, t('super_admin.dify_configuration.knowledge_api_key') %>
+      <%= form.password_field :knowledge_api_key, value: nil, autocomplete: 'new-password', class: 'block w-full' %>
+      <p class="mt-2 text-xs"><%= t('super_admin.dify_configuration.key_hint') %></p>
+    </div>
+    <p class="mb-6"><%= t('super_admin.dify_workspace.model_hint') %></p>
+    <%= form.submit t('super_admin.dify_workspace.save') %>
+  <% end %>
+</section>

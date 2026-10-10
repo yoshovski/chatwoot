@@ -89,13 +89,13 @@ class AgentCreate(Contract):
 
 class Retrieval(Contract):
     query: str = Field(min_length=1, max_length=2000)
-    top_k: int = Field(default=5, ge=1, le=20)
+    top_k: int = Field(default=4, ge=1, le=20)
 
 
 class SearchDataset(Contract):
     dataset_id: str = Field(pattern=r"^[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}$")
     kind: Literal["faq", "document", "catalog", "extra"]
-    limit: int = Field(default=6, ge=1, le=20)
+    limit: int = Field(default=4, ge=1, le=20)
 
 
 class KnowledgeSearch(Contract):

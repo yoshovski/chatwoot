@@ -9,6 +9,13 @@ module AccountDifyKnowledge
     validate :validate_dify_url, if: :dify_knowledge_enabled?
   end
 
+  (CONFIGURATION_FIELDS + ['knowledge_api_key']).each do |field|
+    define_method("dify_#{field}") do
+      workspace = DifyWorkspace.current
+      workspace&.enabled? ? workspace.public_send(field) : super()
+    end
+  end
+
   def dify_configuration
     CONFIGURATION_FIELDS.index_with { |field| public_send("dify_#{field}") }
   end

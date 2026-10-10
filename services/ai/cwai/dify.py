@@ -151,7 +151,7 @@ class Dify:
                 "retrieval_model": {
                     "search_method": "semantic_search",
                     "reranking_enable": False,
-                    "top_k": top_k,
+                    "top_k": min(top_k, 4),
                     "score_threshold_enabled": False,
                 },
             },
@@ -171,7 +171,7 @@ class Dify:
                         "reranking_provider_name": self.config.reranking_provider,
                         "reranking_model_name": self.config.reranking_model,
                     },
-                    "top_k": top_k,
+                    "top_k": min(top_k, 4),
                     "score_threshold_enabled": False,
                 },
             },

@@ -4,6 +4,7 @@ import jwt
 from fastapi import Depends, HTTPException
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy import select
+from sqlalchemy.dialects.postgresql import insert
 
 from cwai.config import settings
 from cwai.db import engine
@@ -19,7 +20,7 @@ class Scope:
     action: str
 
 
-def scope(credentials: HTTPAuthorizationCredentials | None = Depends(bearer)) -> Scope:
+def service_claims(credentials: HTTPAuthorizationCredentials | None = Depends(bearer)) -> dict:
     config = settings()
     if not config.enabled:
         raise HTTPException(404, "Knowledge is not enabled")
@@ -38,29 +39,64 @@ def scope(credentials: HTTPAuthorizationCredentials | None = Depends(bearer)) ->
             any(type(claims[k]) is not int for k in ("exp", "iat", "nbf"))
             or type(claims["sub"]) is not str
             or type(claims["account_id"]) is not int
-            or claims["account_id"] <= 0
+            or claims["account_id"] < 0
             or not claims["sub"]
             or len(claims["sub"]) > 100
             or type(claims["action"]) is not str
-            or claims["action"] not in {"knowledge:read", "knowledge:write"}
+            or claims["action"] not in {"knowledge:read", "knowledge:write", "knowledge:configure"}
             or claims["exp"] - claims["iat"] > 60
         ):
             raise jwt.InvalidTokenError()
     except jwt.InvalidTokenError:
         raise HTTPException(401, "Invalid service credential") from None
-    with engine().connect() as conn:
+    return claims
+
+
+def configuration_scope(claims: dict = Depends(service_claims)):
+    if claims["action"] != "knowledge:configure" or claims["account_id"] != 0:
+        raise HTTPException(403, "Installation configuration permission required")
+
+
+def scope(claims: dict = Depends(service_claims)) -> Scope:
+    if claims["action"] not in {"knowledge:read", "knowledge:write"} or claims["account_id"] <= 0:
+        raise HTTPException(403, "Account permission required")
+    config = settings()
+    with engine().begin() as conn:
         tenant = (
             conn.execute(
                 select(accounts).where(
                     accounts.c.installation_id == claims["iss"],
                     accounts.c.account_id == claims["account_id"],
-                    accounts.c.enabled.is_(True),
                 )
             )
             .mappings()
             .one_or_none()
         )
-    if tenant is None:
+        if tenant is None:
+            from cwai.workspace import shared_workspace
+
+            if shared_workspace(conn):
+                conn.execute(
+                    insert(accounts)
+                    .values(
+                        installation_id=claims["iss"],
+                        account_id=claims["account_id"],
+                        credential_ref=config.default_connection_ref,
+                        enabled=True,
+                    )
+                    .on_conflict_do_nothing(index_elements=["installation_id", "account_id"])
+                )
+                tenant = (
+                    conn.execute(
+                        select(accounts).where(
+                            accounts.c.installation_id == claims["iss"],
+                            accounts.c.account_id == claims["account_id"],
+                        )
+                    )
+                    .mappings()
+                    .one()
+                )
+    if tenant is None or not tenant["enabled"]:
         raise HTTPException(403, "Account is not provisioned")
     return Scope(tenant["id"], claims["sub"], claims["action"])
 
