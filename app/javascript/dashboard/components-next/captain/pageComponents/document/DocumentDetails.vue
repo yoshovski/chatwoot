@@ -16,7 +16,6 @@ import Spinner from 'dashboard/components-next/spinner/Spinner.vue';
 import SidePanel from 'dashboard/components-next/side-panel/SidePanel.vue';
 import Icon from 'dashboard/components-next/icon/Icon.vue';
 import Button from 'dashboard/components-next/button/Button.vue';
-import Checkbox from 'dashboard/components-next/checkbox/Checkbox.vue';
 import TabBar from 'dashboard/components-next/tabbar/TabBar.vue';
 import PaginationFooter from 'dashboard/components-next/pagination/PaginationFooter.vue';
 import CaptainDocumentAPI from 'dashboard/api/captain/document';
@@ -44,7 +43,6 @@ const { checkPermissions } = usePolicy();
 // the parent unmounts it only after the slide-out finishes (afterLeave).
 const panelRef = ref(null);
 const documentDetails = computed(() => props.captainDocument);
-const showRawContent = ref(false);
 const activeTabIndex = ref(0);
 const canManage = computed(() => checkPermissions(['administrator']));
 
@@ -58,9 +56,6 @@ const showPaginationFooter = computed(
   () => totalCount.value > RESPONSES_PER_PAGE
 );
 const documentContent = computed(() => documentDetails.value?.content?.trim());
-const documentContentLength = computed(
-  () => documentContent.value?.length || 0
-);
 const isPdf = computed(() => documentDetails.value?.pdf_document);
 const isMarkdown = computed(() => documentDetails.value?.markdown_document);
 const displayUrl = computed(() => documentDetails.value?.display_url);
@@ -86,7 +81,7 @@ const tabs = computed(() => {
   ];
 
   // PDFs are searched as chunks and never turned into FAQs.
-  if (!isPdf.value) {
+  if (!isPdf.value && !documentDetails.value.knowledge_state) {
     documentTabs.push({
       key: TAB_KEYS.FAQS,
       label: t('CAPTAIN.DOCUMENTS.RELATED_RESPONSES.TITLE'),
@@ -161,29 +156,6 @@ const documentTitle = computed(
   () => documentDetails.value.name || documentDetails.value.external_link
 );
 
-// The store replaces the record on update, so the panel keeps its own copy of the setting.
-const agentsOnlyValue = ref(!!props.captainDocument.agents_only);
-const isSavingVisibility = ref(false);
-const agentsOnly = computed({
-  get: () => agentsOnlyValue.value,
-  set: async value => {
-    agentsOnlyValue.value = value;
-    isSavingVisibility.value = true;
-    try {
-      await store.dispatch('captainDocuments/update', {
-        id: documentDetails.value.id,
-        document: { agents_only: value },
-      });
-      useAlert(t('CAPTAIN.DOCUMENTS.DETAILS.VISIBILITY_SAVED'));
-    } catch {
-      agentsOnlyValue.value = !value;
-      useAlert(t('CAPTAIN.DOCUMENTS.DETAILS.VISIBILITY_ERROR'));
-    } finally {
-      isSavingVisibility.value = false;
-    }
-  },
-});
-
 const fetchDocumentUsage = ({ resourceId, ...params }) =>
   CaptainDocumentAPI.getDrilldown({ documentId: resourceId, ...params });
 
@@ -233,7 +205,7 @@ const handlePageChange = page => {
 
 onMounted(() => {
   panelRef.value.open();
-  if (!isPdf.value) fetchResponses();
+  if (!isPdf.value && !documentDetails.value.knowledge_state) fetchResponses();
 });
 
 onUnmounted(closeUsage);
@@ -275,7 +247,10 @@ onUnmounted(closeUsage);
               {{ displayLink }}
             </span>
           </div>
-          <div v-if="!isPdf" class="flex flex-col gap-1">
+          <div
+            v-if="!isPdf && !documentDetails.knowledge_state"
+            class="flex flex-col gap-1"
+          >
             <span class="text-xs font-medium uppercase text-n-slate-10">
               {{ t('CAPTAIN.DOCUMENTS.DETAILS.GENERATED_FAQS') }}
             </span>
@@ -296,28 +271,6 @@ onUnmounted(closeUsage);
             </span>
           </div>
         </div>
-        <label
-          v-if="canManage"
-          class="flex gap-2 items-start"
-          :class="isSavingVisibility ? 'opacity-60' : 'cursor-pointer'"
-        >
-          <Checkbox
-            v-model="agentsOnly"
-            :disabled="isSavingVisibility"
-            class="mt-0.5 shrink-0"
-          />
-          <span class="flex flex-col gap-0.5">
-            <span class="text-sm text-n-slate-12">
-              {{ t('CAPTAIN.DOCUMENTS.FORM.AGENTS_ONLY.LABEL') }}
-            </span>
-            <span class="text-xs text-n-slate-11">
-              {{ t('CAPTAIN.DOCUMENTS.FORM.AGENTS_ONLY.HELP') }}
-            </span>
-          </span>
-        </label>
-        <span v-else-if="agentsOnly" class="text-sm text-n-slate-11">
-          {{ t('CAPTAIN.DOCUMENTS.FORM.AGENTS_ONLY.LABEL') }}
-        </span>
       </section>
 
       <TabBar
@@ -340,32 +293,11 @@ onUnmounted(closeUsage);
                     : t('CAPTAIN.DOCUMENTS.DETAILS.CONTENT_TITLE')
                 }}
               </h4>
-              <span
-                v-if="documentContent && !isPdf"
-                class="text-xs text-n-slate-10"
-              >
-                {{
-                  t('CAPTAIN.DOCUMENTS.DETAILS.CHARACTER_COUNT', {
-                    count: documentContentLength.toLocaleString(),
-                  })
-                }}
-              </span>
             </div>
             <div
               v-if="documentContent && !isPdf"
               class="flex flex-wrap items-center justify-end gap-4"
             >
-              <Button
-                :label="
-                  showRawContent
-                    ? t('CAPTAIN.DOCUMENTS.DETAILS.VIEW_PREVIEW')
-                    : t('CAPTAIN.DOCUMENTS.DETAILS.VIEW_RAW')
-                "
-                sm
-                slate
-                link
-                @click="showRawContent = !showRawContent"
-              />
               <Button
                 :label="t('CAPTAIN.DOCUMENTS.DETAILS.COPY_CONTENT')"
                 icon="i-lucide-copy"
@@ -402,7 +334,7 @@ onUnmounted(closeUsage);
           </div>
           <template v-else-if="documentContent">
             <div
-              v-if="isUnreadableContent && !showRawContent"
+              v-if="isUnreadableContent"
               class="rounded-lg border border-dashed border-n-weak p-4 text-sm text-n-slate-11"
             >
               {{ t('CAPTAIN.DOCUMENTS.DETAILS.UNREADABLE_CONTENT') }}
@@ -411,12 +343,7 @@ onUnmounted(closeUsage);
               v-else
               class="rounded-lg border border-n-weak bg-n-alpha-1 p-4"
             >
-              <pre
-                v-if="showRawContent || isUnreadableContent"
-                class="m-0 whitespace-pre-wrap break-words text-xs leading-5 text-n-slate-12"
-              ><code>{{ documentContent }}</code></pre>
               <div
-                v-else
                 v-dompurify-html="formattedDocumentContent"
                 class="prose prose-sm max-w-none break-words text-n-slate-12 prose-p:my-2 prose-headings:mb-2 prose-headings:mt-4 prose-a:text-n-blue-11 prose-ul:my-2 prose-ol:my-2 prose-li:my-1 prose-img:hidden"
               />

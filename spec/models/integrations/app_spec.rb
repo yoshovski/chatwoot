@@ -111,6 +111,7 @@ RSpec.describe Integrations::App do
       end
 
       it 'returns false if the shopify integration feature is disabled' do
+        account.disable_features('shopify_integration')
         expect(app.active?(account)).to be false
       end
     end

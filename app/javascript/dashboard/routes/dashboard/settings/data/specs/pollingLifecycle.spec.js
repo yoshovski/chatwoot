@@ -12,7 +12,10 @@ vi.mock('dashboard/api/dataImports', () => ({
 }));
 
 vi.mock('dashboard/composables/store', () => ({
-  useStoreGetters: () => ({ getCurrentAccountId: { value: 1 } }),
+  useStoreGetters: () => ({
+    getCurrentAccountId: { value: 1 },
+    'accounts/isFeatureEnabledonAccount': { value: () => true },
+  }),
 }));
 
 vi.mock('dashboard/composables', () => ({
@@ -25,8 +28,8 @@ vi.mock('vue-i18n', () => ({
 
 vi.mock('vue-router', async importOriginal => ({
   ...(await importOriginal()),
-  useRoute: () => ({ params: { dataImportId: 1 } }),
-  useRouter: () => ({ push: vi.fn() }),
+  useRoute: () => ({ params: { dataImportId: 1 }, query: {} }),
+  useRouter: () => ({ push: vi.fn(), replace: vi.fn() }),
 }));
 
 const deferredRequest = () => {

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_10_10_120000) do
+ActiveRecord::Schema[7.2].define(version: 2026_10_10_130000) do
   # These extensions should be enabled to support this database
   enable_extension "pg_stat_statements"
   enable_extension "pg_trgm"
@@ -78,6 +78,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_10_10_120000) do
     t.string "stripe_subscription_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.boolean "founder_plan", default: false, null: false
     t.index ["account_id"], name: "index_account_subscriptions_on_account_id", unique: true
     t.index ["stripe_customer_id"], name: "index_account_subscriptions_on_stripe_customer_id", unique: true
   end

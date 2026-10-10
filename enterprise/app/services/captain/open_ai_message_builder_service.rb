@@ -1,4 +1,7 @@
 class Captain::OpenAiMessageBuilderService
+  ATTACHMENT_PROMPT = 'Respond to the attachment in this message. Do not repeat an answer to an earlier text message. ' \
+                      'If you cannot read it, briefly ask the customer to describe it or send its contents as text.'.freeze
+
   pattr_initialize [:message!]
 
   # Extracts text and image URLs from multimodal content array (reverse of generate_content)
@@ -13,7 +16,10 @@ class Captain::OpenAiMessageBuilderService
   def generate_content
     parts = []
     parts << text_part(@message.content) if @message.content.present?
-    parts.concat(attachment_parts(@message.attachments)) if @message.attachments.any?
+    if @message.attachments.any?
+      parts << text_part(ATTACHMENT_PROMPT) if @message.content.blank?
+      parts.concat(attachment_parts(@message.attachments))
+    end
 
     return 'Message without content' if parts.blank?
     return parts.first[:text] if parts.one? && parts.first[:type] == 'text'

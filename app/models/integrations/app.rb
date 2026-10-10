@@ -130,9 +130,9 @@ class Integrations::App
   private
 
   # The custom app connection needs neither the Shopify Partner app nor the App Store
-  # installation switch, so only the account's own feature flag decides.
+  # installation switch. Keep existing connections visible even on accounts with an older feature configuration.
   def shopify_enabled?(account)
-    account.feature_enabled?(Shopify::FeatureGate::ACCOUNT_FEATURE)
+    account.feature_enabled?(Shopify::FeatureGate::ACCOUNT_FEATURE) || account.hooks.exists?(app_id: 'shopify')
   end
 
   def notion_enabled?(account)

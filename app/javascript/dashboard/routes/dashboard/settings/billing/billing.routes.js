@@ -5,7 +5,8 @@ import ProviderIndex from './ProviderIndex.vue';
 export default {
   routes: [
     {
-      path: frontendURL('accounts/:accountId/settings/billing'),
+      path: frontendURL('accounts/:accountId/billing'),
+      alias: frontendURL('accounts/:accountId/settings/billing'),
       meta: {
         permissions: ['administrator'],
       },

@@ -188,6 +188,7 @@ class Integrations::Hook < ApplicationRecord # rubocop:disable Metrics/ClassLeng
   end
 
   def feature_allowed?
+    return app.active?(account) if shopify?
     return true if app.blank?
 
     flag = app.params[:feature_flag]

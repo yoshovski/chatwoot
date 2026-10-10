@@ -2,7 +2,7 @@ class AccountSubscription < ApplicationRecord
   SUPPORTED_CURRENCIES = %w[eur usd gbp brl].freeze
   PRICE_FIELDS = %w[monthly_price annual_price setup_fee custom_payment].freeze
   PRICE_FORMAT = /\A\d+(?:[.,]\d{1,2})?\z/
-  CONFIGURATION_FIELDS = %w[enabled monthly_limit billing_interval currency monthly_price annual_price annual_discount_percent
+  CONFIGURATION_FIELDS = %w[enabled founder_plan monthly_limit billing_interval currency monthly_price annual_price annual_discount_percent
                             setup_fee custom_payment custom_payment_description new_custom_payment trial_enabled trial_days
                             trial_ends_at period_started_at period_ends_at reset_usage].freeze
   belongs_to :account
@@ -77,7 +77,7 @@ class AccountSubscription < ApplicationRecord
   end
 
   def pricing_summary
-    slice(:enabled, :billing_interval, :currency, :monthly_price_cents, :annual_discount_percent, :setup_fee_cents,
+    slice(:enabled, :founder_plan, :billing_interval, :currency, :monthly_price_cents, :annual_discount_percent, :setup_fee_cents,
           :period_started_at, :period_ends_at, :payment_status).symbolize_keys.merge(
             annual_price_cents: annual_amount_cents, trial_enabled: trial_active?, trial_ends_at: trial_ends_at,
             can_checkout: enabled? && (stripe_subscription_id.blank? || payment_status == 'canceled') && monthly_price_cents.positive?,

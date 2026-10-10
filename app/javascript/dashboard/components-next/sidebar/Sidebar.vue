@@ -102,13 +102,6 @@ const hasFilteredUnreadCounts = computed(() => {
   );
 });
 
-const hasDataImport = computed(() => {
-  return isFeatureEnabledonAccount.value(
-    accountId.value,
-    FEATURE_FLAGS.DATA_IMPORT
-  );
-});
-
 const fetchConversationUnreadCounts = ([currentAccountId, isEnabled]) => {
   if (!currentAccountId) return;
 
@@ -797,6 +790,14 @@ const menuItems = computed(() => {
       ],
     },
     {
+      name: 'Billing',
+      label: isOnChatwootCloud.value
+        ? t('SIDEBAR.BILLING')
+        : t('ACCOUNT_SUBSCRIPTION.TITLE'),
+      icon: 'i-lucide-credit-card',
+      to: accountScopedRoute('billing_settings_index'),
+    },
+    {
       name: 'Settings',
       label: t('SIDEBAR.SETTINGS'),
       icon: 'i-lucide-bolt',
@@ -916,21 +917,12 @@ const menuItems = computed(() => {
           icon: 'i-lucide-blocks',
           to: accountScopedRoute('settings_applications'),
         },
-        ...(hasDataImport.value
-          ? [
-              {
-                name: 'Settings Data',
-                label: t('SIDEBAR.DATA'),
-                icon: 'i-lucide-database',
-                to: accountScopedRoute('settings_data_imports'),
-              },
-            ]
-          : []),
         {
-          name: 'Settings Data Exports',
-          label: t('DATA_EXPORTS.TITLE'),
-          icon: 'i-lucide-download',
-          to: accountScopedRoute('settings_data_exports'),
+          name: 'Settings Data',
+          label: t('SIDEBAR.DATA'),
+          icon: 'i-lucide-database',
+          to: accountScopedRoute('settings_data_imports'),
+          activeOn: ['settings_data_exports', 'settings_data_import_show'],
         },
         {
           name: 'Settings Audit Logs',
@@ -961,14 +953,6 @@ const menuItems = computed(() => {
           label: t('SIDEBAR.SECURITY'),
           icon: 'i-lucide-shield',
           to: accountScopedRoute('security_settings_index'),
-        },
-        {
-          name: 'Settings Billing',
-          label: isOnChatwootCloud.value
-            ? t('SIDEBAR.BILLING')
-            : t('ACCOUNT_SUBSCRIPTION.TITLE'),
-          icon: 'i-lucide-credit-card',
-          to: accountScopedRoute('billing_settings_index'),
         },
       ],
     },

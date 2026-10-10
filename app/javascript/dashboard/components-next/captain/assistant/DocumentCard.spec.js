@@ -153,14 +153,12 @@ describe('DocumentCard', () => {
       expect(wrapper.text()).toContain(label);
     });
 
-    it('pulses the dot only while indexing', () => {
+    it('animates the status icon only while indexing', () => {
       const dotOf = knowledgeState =>
-        mountCard({ knowledgeState }).get(
-          'span.rounded-full > span.size-1\\.5'
-        );
+        mountCard({ knowledgeState }).get('[data-test="chip-dot"]');
 
-      expect(dotOf('indexing').classes()).toContain('animate-pulse');
-      expect(dotOf('searchable').classes()).not.toContain('animate-pulse');
+      expect(dotOf('indexing').classes()).toContain('animate-spin');
+      expect(dotOf('searchable').classes()).not.toContain('animate-spin');
     });
 
     it('hides the FAQ pill when the page has no FAQs', () => {
@@ -172,13 +170,13 @@ describe('DocumentCard', () => {
       expect(wrapper.find('[data-test="faq-pill"]').exists()).toBe(false);
     });
 
-    it('shows the FAQ pill when the page has FAQs', () => {
+    it('hides FAQ counts for chunked pages with legacy FAQs', () => {
       const wrapper = mountCard({
         knowledgeState: 'searchable',
         responsesCount: 3,
       });
 
-      expect(wrapper.find('[data-test="faq-pill"]').text()).toBe('3 FAQs');
+      expect(wrapper.find('[data-test="faq-pill"]').exists()).toBe(false);
     });
   });
 

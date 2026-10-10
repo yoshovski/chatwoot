@@ -7,7 +7,7 @@ import {
   ref,
 } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { useRouter } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import { useStoreGetters } from 'dashboard/composables/store';
 
 import Button from 'dashboard/components-next/button/Button.vue';
@@ -17,6 +17,8 @@ import SettingsLayout from '../SettingsLayout.vue';
 import BaseSettingsHeader from '../components/BaseSettingsHeader.vue';
 import DataImportsAPI from 'dashboard/api/dataImports';
 import NewImportDialog from './NewImportDialog.vue';
+import Exports from './Exports.vue';
+import { FEATURE_FLAGS } from 'dashboard/featureFlags';
 import { importSourceFor } from './importSources';
 import {
   POLL_INTERVAL_MS,
@@ -37,16 +39,26 @@ const isLoading = ref(true);
 const isRefreshing = ref(false);
 const isPolling = ref(false);
 const showImportDrawer = ref(false);
-const activeTab = ref('import');
+const accountId = getters.getCurrentAccountId;
+const route = useRoute();
+const canImport = computed(() =>
+  getters['accounts/isFeatureEnabledonAccount'].value(
+    accountId.value,
+    FEATURE_FLAGS.DATA_IMPORT
+  )
+);
+const activeTab = ref(route.query.tab === 'export' ? 'export' : 'import');
 let pollTimer;
 let isPageActive = false;
 
-const accountId = getters.getCurrentAccountId;
-
 const tabs = computed(() => [
-  { key: 'import', label: t('DATA_IMPORTS.TABS.IMPORT') },
+  ...(canImport.value
+    ? [{ key: 'import', label: t('DATA_IMPORTS.TABS.IMPORT') }]
+    : []),
   { key: 'export', label: t('DATA_IMPORTS.TABS.EXPORT') },
 ]);
+
+if (!canImport.value) activeTab.value = 'export';
 
 const activeTabIndex = computed(() =>
   tabs.value.findIndex(tab => tab.key === activeTab.value)
@@ -150,6 +162,7 @@ const onImportCreated = dataImportId => {
 
 const onTabChanged = tab => {
   activeTab.value = tab.key;
+  router.replace({ query: { ...route.query, tab: tab.key } });
 };
 
 const handleVisibilityChange = () => {
@@ -160,7 +173,8 @@ const handleVisibilityChange = () => {
 
 onActivated(async () => {
   isPageActive = true;
-  await refresh();
+  if (canImport.value) await refresh();
+  else isLoading.value = false;
   if (!isPageActive) return;
 
   startPolling();
@@ -240,30 +254,7 @@ onBeforeUnmount(() => {
     </template>
 
     <template #body>
-      <div
-        v-if="activeTab === 'export'"
-        class="flex min-h-80 flex-col items-center justify-center gap-4 rounded-xl border border-n-weak bg-n-solid-1 px-6 py-16 text-center"
-      >
-        <span
-          class="flex size-12 items-center justify-center rounded-full bg-n-alpha-2"
-        >
-          <Icon icon="i-lucide-upload" class="size-5 text-n-slate-11" />
-        </span>
-        <div class="flex flex-col gap-1">
-          <h3 class="text-heading-2 text-n-slate-12">
-            {{ $t('DATA_IMPORTS.EXPORT.TITLE') }}
-          </h3>
-          <p class="max-w-sm text-body-main text-n-slate-11">
-            {{ $t('DATA_IMPORTS.EXPORT.DESCRIPTION') }}
-          </p>
-        </div>
-        <span
-          class="inline-flex items-center gap-1.5 rounded-md bg-n-alpha-2 px-2 py-1 text-label-small text-n-slate-11"
-        >
-          <Icon icon="i-lucide-clock" class="size-3.5" />
-          {{ $t('DATA_IMPORTS.EXPORT.COMING_SOON') }}
-        </span>
-      </div>
+      <Exports v-if="activeTab === 'export'" />
 
       <div
         v-else-if="!dataImports.length"
