@@ -30,6 +30,10 @@ class Dify::KnowledgeClient
     request(:get, "datasets/#{dataset_id}")
   end
 
+  def update_dataset(dataset_id, **attributes)
+    request(:patch, "datasets/#{dataset_id}", attributes)
+  end
+
   def create_by_text(dataset_id:, **attributes)
     request(:post, "datasets/#{dataset_id}/document/create-by-text", attributes)
   end

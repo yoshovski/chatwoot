@@ -24,6 +24,8 @@ class Captain::Assistant < ApplicationRecord
   CITATION_DETAILS_STATE_KEY = :captain_v2_citation_details
   PRODUCT_HANDLES_STATE_KEY = :captain_v2_product_handles
   PRODUCT_SEARCH_STATS_STATE_KEY = :captain_v2_product_search_stats
+  ORDER_STATE_KEY = :captain_v2_order
+  ORDER_CARD_FIELDS = %w[order_number created_at cancelled_at financial_status fulfillment_status status_page_url items fulfillments].freeze
   SHOPIFY_CATALOG_TOOL_IDS = %w[catalog_product_search browse_catalog].freeze
   AUTO_RESOLVE_MODES = %w[disabled legacy evaluated].freeze
   DEFAULT_INACTIVITY_THRESHOLD_MINUTES = 60
@@ -275,6 +277,10 @@ class Captain::Assistant < ApplicationRecord
   def run_result_product_handles(run_result)
     state = run_result&.context&.dig(:state)
     state&.dig(PRODUCT_HANDLES_STATE_KEY) || state&.dig(:product_handles)
+  end
+
+  def run_result_order(run_result)
+    run_result&.context&.dig(:state, ORDER_STATE_KEY)
   end
 
   def run_result_product_search_stats(run_result)

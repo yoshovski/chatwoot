@@ -96,16 +96,44 @@ RSpec.describe Captain::Tools::SimplePageCrawlParserJob, type: :job do
       end
     end
 
+    context 'when the site rate-limits the fetch' do
+      before do
+        allow(crawler).to receive(:success?).and_return(false)
+        allow(crawler).to receive(:status_code).and_return(429)
+      end
+
+      it 'keeps an existing document syncing and schedules a retry instead of failing it' do
+        document = create(:captain_document, assistant: assistant, account: assistant.account,
+                                             external_link: 'https://example.com/page', status: :available, sync_status: :synced)
+
+        expect do
+          described_class.perform_now(assistant_id: assistant.id, page_link: page_link)
+        end.to have_enqueued_job(described_class).with(assistant_id: assistant.id, page_link: page_link)
+
+        expect(document.reload).to have_attributes(sync_status: 'syncing', last_sync_error_code: nil)
+      end
+
+      it 'marks the document failed once the retries are used up' do
+        document = create(:captain_document, assistant: assistant, account: assistant.account,
+                                             external_link: 'https://example.com/page', status: :available)
+        job = described_class.new(assistant_id: assistant.id, page_link: page_link)
+
+        job.mark_failed_after_retries
+
+        expect(document.reload).to have_attributes(sync_status: 'failed', last_sync_error_code: 'fetch_failed')
+      end
+    end
+
     context 'when the page fetch fails' do
       before do
         allow(crawler).to receive(:success?).and_return(false)
-        allow(crawler).to receive(:status_code).and_return(500)
+        allow(crawler).to receive(:status_code).and_return(400)
       end
 
       it 'raises an error without creating an available document' do
         expect do
           described_class.perform_now(assistant_id: assistant.id, page_link: page_link)
-        end.to raise_error("Failed to parse data: #{page_link} Failed to fetch page: #{page_link}")
+        end.to raise_error("Failed to parse data: #{page_link} Failed to fetch page: #{page_link} (HTTP 400)")
           .and not_change(assistant.documents, :count)
       end
 
@@ -121,7 +149,7 @@ RSpec.describe Captain::Tools::SimplePageCrawlParserJob, type: :job do
         freeze_time do
           expect do
             described_class.perform_now(assistant_id: assistant.id, page_link: page_link)
-          end.to raise_error("Failed to parse data: #{page_link} Failed to fetch page: #{page_link}")
+          end.to raise_error("Failed to parse data: #{page_link} Failed to fetch page: #{page_link} (HTTP 400)")
 
           expect(document.reload).to have_attributes(
             status: 'available',

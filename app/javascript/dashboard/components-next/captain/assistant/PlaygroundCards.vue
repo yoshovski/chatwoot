@@ -42,7 +42,10 @@ const actionsFor = item => {
       />
       <div class="flex flex-1 flex-col gap-1 p-3">
         <h4 class="m-0 text-sm font-medium">{{ item.title }}</h4>
-        <p v-if="item.description" class="m-0 line-clamp-3 text-n-slate-11">
+        <p
+          v-if="item.description"
+          class="m-0 line-clamp-3 whitespace-pre-line text-n-slate-11"
+        >
           {{ item.description }}
         </p>
         <div class="mt-auto flex flex-col gap-1 pt-2">

@@ -9,6 +9,9 @@ class Captain::ResponseSchema < RubyLLM::Schema
                                   'continue in this chat. False when no handoff is needed, or when you only ask whether the customer ' \
                                   'wants a human.'.freeze
 
+  SUGGESTION_LABEL_MAX_LENGTH = 24
+  SUGGESTION_MESSAGE_MAX_LENGTH = 120
+
   array :response_parts,
         description: 'Ordered parts of the message to send to the user. Keep all customer-visible text within each part text field.',
         min_items: 1 do
@@ -61,9 +64,15 @@ class Captain::ResponseSchema < RubyLLM::Schema
 
   def self.define_suggested_replies(builder, limit)
     builder.array :suggested_replies,
-                  description: "0 to #{limit} short, specific next actions for the customer, each at most 80 characters. Empty array if none apply.",
+                  description: "0 to #{limit} next steps for the customer as buttons. Empty array if none apply.",
                   max_items: limit do
-      string max_length: 80
+      object do
+        string :label, description: 'Button text: 2 to 4 words.', max_length: SUGGESTION_LABEL_MAX_LENGTH
+        string :message,
+               description: "What the customer sends when clicking: the full question or request in the customer's voice and language, " \
+                            'with specifics such as the order number or model.',
+               max_length: SUGGESTION_MESSAGE_MAX_LENGTH
+      end
     end
   end
 

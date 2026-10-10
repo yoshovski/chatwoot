@@ -34,6 +34,9 @@ module Enterprise::Message
     return nil unless item.is_a?(Hash)
 
     item = item.with_indifferent_access
+    # Captain's suggestion buttons show a short title and send their value, the full question.
+    return item[:value].presence || item[:title].presence if content_attributes&.dig('submit_value')
+
     item[:title].presence || item[:value].presence
   end
 

@@ -41,7 +41,7 @@ export default {
       >
         {{ title }}
       </h4>
-      <p class="!mb-1 line-clamp-3 text-n-slate-11">
+      <p class="!mb-1 line-clamp-3 whitespace-pre-line text-n-slate-11">
         {{ description }}
       </p>
       <!-- Pinned to the bottom so the actions line up across cards of unequal text length. -->

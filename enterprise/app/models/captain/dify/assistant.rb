@@ -6,6 +6,7 @@ module Captain::Dify::Assistant
 
   prepended do
     after_create_commit :provision_dify_datasets, if: -> { account.dify_knowledge_enabled? }
+    after_update_commit :describe_dify_datasets, if: -> { saved_change_to_name? && account.dify_knowledge_enabled? }
     before_destroy :delete_dify_faq_documents
     before_destroy :delete_dify_documents
   end
@@ -65,5 +66,9 @@ module Captain::Dify::Assistant
 
   def provision_dify_datasets
     Captain::Dify::ProvisionDatasetsJob.perform_later(id)
+  end
+
+  def describe_dify_datasets
+    Captain::Dify::DescribeDatasetsJob.perform_later(id)
   end
 end

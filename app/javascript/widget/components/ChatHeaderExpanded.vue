@@ -1,6 +1,5 @@
 <script setup>
 import HeaderActions from './HeaderActions.vue';
-import AiAgentDisclosure from './AiAgentDisclosure.vue';
 import { computed } from 'vue';
 import { useMessageFormatter } from 'shared/composables/useMessageFormatter';
 
@@ -54,6 +53,5 @@ const containerClasses = computed(() => [
       v-dompurify-html="formatMessage(introBody)"
       class="text-lg leading-normal text-n-slate-11 [&_a]:underline line-clamp-6"
     />
-    <AiAgentDisclosure class="mt-3" />
   </header>
 </template>

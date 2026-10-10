@@ -4,7 +4,6 @@ import { useRouter } from 'vue-router';
 import FluentIcon from 'shared/components/FluentIcon/Index.vue';
 import HeaderActions from './HeaderActions.vue';
 import AvailabilityContainer from 'widget/components/Availability/AvailabilityContainer.vue';
-import AiAgentDisclosure from 'widget/components/AiAgentDisclosure.vue';
 import { useAvailability } from 'widget/composables/useAvailability';
 
 const props = defineProps({
@@ -55,7 +54,6 @@ const onBackButtonClick = () => {
               ${isOnline ? 'bg-n-teal-10' : 'hidden'}`"
           />
         </div>
-        <AiAgentDisclosure />
         <AvailabilityContainer
           :agents="availableAgents"
           :show-header="false"

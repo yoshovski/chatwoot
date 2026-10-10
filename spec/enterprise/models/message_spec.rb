@@ -24,6 +24,23 @@ RSpec.describe Message do
     expect(conversation.waiting_since).to be_nil
   end
 
+  describe '#selected_option_text' do
+    let(:option) { { 'title' => 'Shipping time', 'value' => 'When will order 1001 ship?' } }
+
+    it 'returns the value of a suggestion button that sends its value' do
+      message = build(:message, content_type: :input_select,
+                                content_attributes: { 'items' => [option], 'submit_value' => true, 'submitted_values' => [option] })
+
+      expect(message.selected_option_text).to eq('When will order 1001 ship?')
+    end
+
+    it 'returns the title of other choices, whose value may be an id' do
+      message = build(:message, content_type: :input_select, content_attributes: { 'items' => [option], 'submitted_values' => [option] })
+
+      expect(message.selected_option_text).to eq('Shipping time')
+    end
+  end
+
   describe '#mark_pending_conversation_as_open_for_human_response' do
     let(:conversation) { create(:conversation, status: :pending) }
     let(:captain_assistant) { create(:captain_assistant, account: conversation.account) }

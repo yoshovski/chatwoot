@@ -34,14 +34,17 @@ class Captain::Documents::CrawlJob < ApplicationJob
     raise # Re-raise to let job framework handle retry logic
   end
 
+  # Linked pages are fetched a few seconds apart: a burst of requests gets rate-limited by sites behind a CDN.
+  PAGE_STAGGER = 2.seconds
+
   def perform_simple_crawl(document, scope)
     page_links = Captain::Tools::SimplePageCrawlService.new(document.external_link).page_links.select { |link| scope.follow?(link) }
-    page_links.each { |page_link| crawl_page(document, page_link) }
+    page_links.each_with_index { |page_link, index| crawl_page(document, page_link, wait: (index + 1) * PAGE_STAGGER) }
     crawl_page(document, document.external_link)
   end
 
-  def crawl_page(document, page_link)
-    Captain::Tools::SimplePageCrawlParserJob.perform_later(assistant_id: document.assistant_id, page_link: page_link)
+  def crawl_page(document, page_link, wait: 0)
+    Captain::Tools::SimplePageCrawlParserJob.set(wait: wait).perform_later(assistant_id: document.assistant_id, page_link: page_link)
   end
 
   def perform_firecrawl_crawl(document, scope)

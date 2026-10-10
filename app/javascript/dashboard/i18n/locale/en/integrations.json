@@ -994,7 +994,6 @@
           "ABOUT": "About the business",
           "ABOUT_PLACEHOLDER": "What you sell, who your customers are, and anything {name} should always keep in mind.",
           "PREVIEW_LABEL": "Preview in the chat window",
-          "PREVIEW_SUBTITLE": "AI agent · Can connect you to a person",
           "PREVIEW_GREETING": "Hi! I'm {name}. How can I help?",
           "PREVIEW_QUESTION": "Do you ship to Germany?",
           "REMOVE_TITLE": "Remove {name}",

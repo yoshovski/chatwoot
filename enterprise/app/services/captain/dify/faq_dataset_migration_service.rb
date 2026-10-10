@@ -59,8 +59,11 @@ class Captain::Dify::FaqDatasetMigrationService
       return if @target_id.present?
 
       dataset = @client.create_dataset(
-        name: "Captain #{@assistant.id} FAQs Q&A", indexing_technique: 'high_quality', permission: 'only_me',
-        embedding_model: @source.fetch('embedding_model'), embedding_model_provider: @source.fetch('embedding_model_provider'),
+        **Captain::Dify::DatasetIdentity.new(@assistant).attributes('faq'),
+        indexing_technique: 'high_quality',
+        permission: 'only_me',
+        embedding_model: @source.fetch('embedding_model'),
+        embedding_model_provider: @source.fetch('embedding_model_provider'),
         retrieval_model: @source.fetch('retrieval_model_dict')
       )
       @target_id = dataset.fetch('id')

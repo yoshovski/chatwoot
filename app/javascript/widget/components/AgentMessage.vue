@@ -148,6 +148,10 @@ export default {
         if (this.contentType === 'input_select') {
           const [selectionOption = {}] =
             this.messageContentAttributes.submitted_values;
+          // Suggestion buttons show a short title and send their value, the full question.
+          if (this.messageContentAttributes.submit_value) {
+            return { content: selectionOption.value || selectionOption.title };
+          }
           return { content: selectionOption.title || selectionOption.value };
         }
       }

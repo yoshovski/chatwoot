@@ -17,7 +17,7 @@ class Captain::Tools::TrackOrderTool < Captain::Tools::BasePublicTool
     validation_error = validate_input(order_number, customer_email)
     return validation_error if validation_error
 
-    lookup_and_format_order(client, order_number.to_s.strip, customer_email.to_s.strip)
+    lookup_and_format_order(client, order_number.to_s.strip, customer_email.to_s.strip, tool_context.state)
   rescue ShopifyAgentTools::Client::Error => e
     Rails.logger.warn("SAT track_order failed: #{e.message}") if defined?(Rails) && Rails.respond_to?(:logger)
     failure_result("Failed to track order: #{e.message}", tool_context.state)
@@ -48,7 +48,7 @@ class Captain::Tools::TrackOrderTool < Captain::Tools::BasePublicTool
     nil
   end
 
-  def lookup_and_format_order(client, clean_order_number, clean_email)
+  def lookup_and_format_order(client, clean_order_number, clean_email, state)
     log_tool_usage('tracking_order', { order_number: clean_order_number })
     result = client.track_order(order_number: clean_order_number, customer_email: clean_email)
     unless result && result['found']
@@ -58,13 +58,15 @@ class Captain::Tools::TrackOrderTool < Captain::Tools::BasePublicTool
     end
 
     log_tool_usage('order_found', { order_number: clean_order_number, status: result['fulfillment_status'] })
+    # The reply shows this order as a card; the last order looked up in a run wins.
+    state[Captain::Assistant::ORDER_STATE_KEY] = result.slice(*Captain::Assistant::ORDER_CARD_FIELDS)
     format_order(result)
   end
 
   def format_order(order)
     lines = ["Order: #{order['order_number']}"]
-    lines << "Status: #{order['fulfillment_status'].presence || 'Unfulfilled'}"
-    lines << "Financial status: #{order['financial_status']}" if order['financial_status'].present?
+    lines << "Status: #{order_status(order)}"
+    lines << "Payment: #{Captain::OrderStatus.payment(order['financial_status'])}" if order['financial_status'].present?
     lines << "Placed on: #{order['created_at']}" if order['created_at'].present?
 
     append_fulfillments!(lines, order['fulfillments'])
@@ -81,8 +83,14 @@ class Captain::Tools::TrackOrderTool < Captain::Tools::BasePublicTool
     fulfillments.each { |f| lines << format_fulfillment(f) }
   end
 
+  def order_status(order)
+    return Captain::OrderStatus.cancelled if order['cancelled_at'].present?
+
+    Captain::OrderStatus.fulfillment(order['fulfillment_status'])
+  end
+
   def format_fulfillment(fulfillment)
-    status_label = fulfillment['display_status'] || fulfillment['status'] || 'In transit'
+    status_label = Captain::OrderStatus.shipment(fulfillment['display_status'] || fulfillment['status']) || 'In transit'
     shipment = "  - Shipment status: #{status_label}"
     shipment += " (Estimated delivery: #{fulfillment['estimated_delivery_at']})" if fulfillment['estimated_delivery_at'].present?
 

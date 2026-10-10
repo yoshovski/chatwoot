@@ -59,9 +59,6 @@
     "COMPANY_FROM": "from",
     "BOT": "Bot"
   },
-  "AI_AGENT_HEADER": {
-    "LABEL": "{name} · AI agent · Can connect you to a person"
-  },
   "BUBBLE": {
     "LABEL": "Chat with us"
   },

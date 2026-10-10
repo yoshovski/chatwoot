@@ -1,14 +1,6 @@
 # frozen_string_literal: true
 
-require 'spec_helper'
-require 'active_support/all'
-
-module Captain; end
-module Captain::Tools; end
-
-require_relative '../../../../../enterprise/lib/captain/tools/base_public_tool'
-require_relative '../../../../../enterprise/lib/captain/tools/shopify_tool_helpers'
-require_relative '../../../../../enterprise/lib/captain/tools/track_order_tool'
+require 'rails_helper'
 
 # rubocop:disable RSpec/VerifiedDoubles
 RSpec.describe Captain::Tools::TrackOrderTool do
@@ -103,7 +95,7 @@ RSpec.describe Captain::Tools::TrackOrderTool do
       order_data = {
         'found' => true,
         'order_number' => '#1001',
-        'fulfillment_status' => 'In transit',
+        'fulfillment_status' => 'FULFILLED',
         'financial_status' => 'PAID',
         'created_at' => '2026-10-01T12:00:00Z',
         'status_page_url' => 'https://test.myshopify.com/orders/status/xyz',
@@ -112,8 +104,8 @@ RSpec.describe Captain::Tools::TrackOrderTool do
         ],
         'fulfillments' => [
           {
-            'status' => 'in_transit',
-            'display_status' => 'Out for delivery',
+            'status' => 'SUCCESS',
+            'display_status' => 'OUT_FOR_DELIVERY',
             'estimated_delivery_at' => '2026-10-07',
             'tracking' => [
               { 'company' => 'DHL Express', 'number' => 'DHL123456', 'url' => 'https://dhl.com/track/123' }
@@ -134,14 +126,29 @@ RSpec.describe Captain::Tools::TrackOrderTool do
 
       expect(result).to include(
         'Order: #1001',
-        'Status: In transit',
-        'Financial status: PAID',
+        'Status: Shipped',
+        'Payment: Paid',
         'Shipment status: Out for delivery',
         'Estimated delivery: 2026-10-07',
         'DHL Express DHL123456',
         'Shipped items: DJI Battery (x2)',
         'https://test.myshopify.com/orders/status/xyz'
       )
+      expect(result).not_to include('PAID', 'OUT_FOR_DELIVERY')
+      expect(tool_context.state[Captain::Assistant::ORDER_STATE_KEY]).to include(
+        'order_number' => '#1001', 'financial_status' => 'PAID', 'fulfillments' => order_data['fulfillments']
+      )
+      expect(tool_context.state[Captain::Assistant::ORDER_STATE_KEY]).not_to have_key('found')
+    end
+
+    it 'reports a cancelled order as cancelled' do
+      allow(sat_client).to receive(:track_order).and_return(
+        'found' => true, 'order_number' => '#1002', 'cancelled_at' => '2026-10-02T09:00:00Z', 'financial_status' => 'REFUNDED'
+      )
+
+      result = tool.perform(tool_context, order_number: '#1002', customer_email: 'customer@example.com')
+
+      expect(result).to include('Status: Cancelled', 'Payment: Refunded')
     end
 
     it 'returns failure result when Shopify is disconnected' do

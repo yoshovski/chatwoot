@@ -19,6 +19,22 @@ namespace :captain do
       puts "Enqueued #{count} document sync jobs for assistant_id=#{assistant.id}"
     end
 
+    desc 'Give every AI agent\'s Dify datasets a readable name and description. Optional: ACCOUNT_ID=123'
+    task describe_datasets: :environment do
+      scope = Captain::Assistant.all
+      scope = scope.where(account_id: ENV['ACCOUNT_ID']) if ENV['ACCOUNT_ID'].present?
+      count = 0
+      scope.find_each do |assistant|
+        next unless assistant.account.dify_knowledge_enabled?
+
+        Captain::Dify::DescribeDatasetsJob.perform_now(assistant.id)
+        count += 1
+      rescue Dify::KnowledgeClient::Error => e
+        puts "assistant_id=#{assistant.id}: #{e.message}"
+      end
+      puts "Described the Dify datasets of #{count} assistants"
+    end
+
     desc 'Enqueue FAQ sync to Dify for one assistant. Usage: rake captain:dify:backfill_faqs ASSISTANT_ID=123'
     task backfill_faqs: :environment do
       assistant = Captain::Assistant.find(ENV.fetch('ASSISTANT_ID'))

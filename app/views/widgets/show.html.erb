@@ -9,7 +9,6 @@
       window.chatwootWebChannel = {
         avatarUrl: '<%= @web_widget.inbox.avatar_url %>',
         hasAConnectedAgentBot: '<%= @web_widget.inbox.agent_bot&.name %>',
-        captainAssistant: <%= (@web_widget.inbox.try(:captain_active?) ? { name: @web_widget.inbox.captain_assistant.name } : nil).to_json.html_safe %>,
         locale: '<%= @web_widget.account.locale %>',
         websiteName: '<%= @web_widget.inbox.name %>',
         websiteToken: '<%= @web_widget.website_token %>',
