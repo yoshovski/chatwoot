@@ -1,4 +1,5 @@
 class Captain::Conversation::MemoryCompactionJob < MutexApplicationJob
+  prepend Captain::Conversation::CompactionTracing
   queue_as :low
 
   def perform(conversation, assistant)

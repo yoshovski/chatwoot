@@ -51,7 +51,13 @@ module ChatwootApp
     enterprise? && ENV.fetch('OPENSEARCH_URL', nil).present?
   end
 
+  def self.langfuse_tracing_enabled?
+    ENV['LANGFUSE_TRACING_ENABLED'] != 'false' && InstallationConfig.find_by(name: 'LANGFUSE_TRACING_ENABLED')&.value.to_s != 'false'
+  end
+
   def self.otel_enabled?
+    return false unless langfuse_tracing_enabled?
+
     otel_provider = InstallationConfig.find_by(name: 'OTEL_PROVIDER')&.value
     secret_key = InstallationConfig.find_by(name: 'LANGFUSE_SECRET_KEY')&.value
 

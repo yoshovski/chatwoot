@@ -707,6 +707,8 @@ en:
     ssl_status:
       custom_domain_not_configured: 'Custom domain is not configured'
   super_admin:
+    observability:
+      title: "AI Observability"
     account_subscription:
       helper: "Manage account pricing, monthly quota and trial. Enter prices in the selected currency (for example, 40,00 or 40.00); dates are UTC. Paid clients continue above quota. Trial AI replies stop at expiry or exhaustion."
       enabled: "Enable billing and usage panel"

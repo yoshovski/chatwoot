@@ -69,11 +69,19 @@ module Captain::Assistant::TieredRoutingHelper
     Captain::Assistant::TieredRoutingHelper.mode_for(@assistant.account_id)
   end
 
+  def record_route_trace(route, mode)
+    return unless ChatwootApp.otel_enabled?
+
+    OpenTelemetry::Trace.current_span.set_attribute('langfuse.observation.metadata.intent', route.fetch('intent'))
+    OpenTelemetry::Trace.current_span.set_attribute('langfuse.observation.metadata.routing_mode', mode)
+  end
+
   def routed_response(message, context)
     mode = routing_mode
     return unless mode.in?(%w[shadow on])
 
     route = Captain::Assistant::IntentRouter.new(assistant: @assistant).classify(message: message, context: context)
+    record_route_trace(route, mode)
     Rails.logger.info "[Captain][IntentRouting] intent=#{route.fetch('intent')} assistant_id=#{@assistant.id} mode=#{mode}"
     return if mode == 'shadow' || route['intent'] == 'action_agent'
 

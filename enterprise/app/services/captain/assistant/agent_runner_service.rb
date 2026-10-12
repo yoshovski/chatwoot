@@ -2,6 +2,7 @@ require 'agents'
 require 'agents/instrumentation'
 
 class Captain::Assistant::AgentRunnerService
+  prepend Captain::Assistant::ResponseTracing
   include Captain::Assistant::RunnerCallbacksHelper
   include Captain::Assistant::AgentRunResponse
   include Captain::Assistant::RunnerInstrumentationHelper

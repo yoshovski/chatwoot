@@ -1,8 +1,10 @@
 require 'opentelemetry/sdk'
 require 'opentelemetry/exporter/otlp'
 require 'base64'
+require 'integrations/langfuse_exporter'
 
 module OpentelemetryConfig
+  INITIALIZE_MUTEX = Mutex.new
   class << self
     def tracer
       initialize! unless initialized?
@@ -15,14 +17,17 @@ module OpentelemetryConfig
 
     def initialize!
       return if @initialized
-      return mark_initialized unless langfuse_provider?
-      return mark_initialized unless langfuse_credentials_present?
+      return unless langfuse_provider?
+      return unless langfuse_credentials_present?
 
-      configure_opentelemetry
-      mark_initialized
+      INITIALIZE_MUTEX.synchronize do
+        return if @initialized
+
+        configure_opentelemetry
+        mark_initialized
+      end
     rescue StandardError => e
-      Rails.logger.error "Failed to configure OpenTelemetry: #{e.message}"
-      mark_initialized
+      Rails.logger.error "Failed to configure OpenTelemetry: #{e.class.name}"
     end
 
     def reset!
@@ -63,7 +68,7 @@ module OpentelemetryConfig
 
     def traces_endpoint
       credentials = langfuse_credentials
-      "#{credentials[:endpoint]}/api/public/otel/v1/traces"
+      "#{credentials[:endpoint].to_s.delete_suffix('/')}/api/public/otel/v1/traces"
     end
 
     def exporter_config
@@ -85,7 +90,7 @@ module OpentelemetryConfig
     def configure_opentelemetry
       OpenTelemetry::SDK.configure do |c|
         c.service_name = 'chatwoot'
-        exporter = OpenTelemetry::Exporter::OTLP::Exporter.new(**exporter_config)
+        exporter = Integrations::LangfuseExporter.new(OpenTelemetry::Exporter::OTLP::Exporter.new(**exporter_config))
         c.add_span_processor(OpenTelemetry::SDK::Trace::Export::BatchSpanProcessor.new(exporter))
         Rails.logger.info 'OpenTelemetry initialized and configured to export to Langfuse'
       end

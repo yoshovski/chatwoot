@@ -14,6 +14,7 @@ module Integrations::LlmInstrumentation
     executed = false
     tracer.in_span(params[:span_name]) do |span|
       setup_span_attributes(span, params)
+      executed = :started
       result = yield
       executed = true
       record_completion(span, result)
@@ -21,6 +22,8 @@ module Integrations::LlmInstrumentation
     end
   rescue StandardError => e
     ChatwootExceptionTracker.new(e, account: resolve_account(params)).capture_exception
+    raise if executed == :started
+
     executed ? result : yield
   end
 
@@ -35,6 +38,7 @@ module Integrations::LlmInstrumentation
 
         # By default, the input and output of a trace are set from the root observation
         span.set_attribute(ATTR_LANGFUSE_OBSERVATION_INPUT, params[:messages].to_json)
+        executed = :started
         result = yield
         executed = true
         span.set_attribute(ATTR_LANGFUSE_OBSERVATION_OUTPUT, result.to_json)
@@ -44,6 +48,8 @@ module Integrations::LlmInstrumentation
     end
   rescue StandardError => e
     ChatwootExceptionTracker.new(e, account: resolve_account(params)).capture_exception
+    raise if executed == :started
+
     executed ? result : yield
   end
 

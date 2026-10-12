@@ -92,6 +92,7 @@ class Captain::Assistant::ResponseRewriter
   def install_instrumentation(runner)
     return unless ChatwootApp.otel_enabled?
 
+    Captain::Assistant::ModelCallTiming.install(runner)
     Agents::Instrumentation.install(
       runner,
       tracer: OpentelemetryConfig.tracer,

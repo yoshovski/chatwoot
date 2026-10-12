@@ -13,6 +13,12 @@ class Captain::Assistant::TieredLlmClient
     Rails.logger.info "[Captain][TieredLLM] stage=#{stage} duration_ms=#{elapsed} assistant_id=#{assistant.id}"
   end
 
+  def self.generate(stage, assistant, chat, input)
+    measure(stage, assistant) do
+      Captain::Tracing.generation(stage, assistant: assistant, chat: chat, input: input) { chat.ask(input) }
+    end
+  end
+
   def self.chat(model:, timeout:)
     Llm::Config.initialize!
     context = RubyLLM.context do |config|
