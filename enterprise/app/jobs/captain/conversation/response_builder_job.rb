@@ -32,13 +32,14 @@ class Captain::Conversation::ResponseBuilderJob < ApplicationJob # rubocop:disab
   rescue StandardError => e
     handle_error(e)
   ensure
-    toggle_typing(Events::Types::CONVERSATION_TYPING_OFF) if @typing
+    toggle_typing(Events::Types::CONVERSATION_TYPING_OFF) if @assistant
     Current.executed_by = nil
   end
 
   private
 
   def start_reply
+    Rails.logger.info "[Captain][ResponseBuilder] queue_ms=#{((Time.current - enqueued_at) * 1000).round}" if enqueued_at
     Current.executed_by = @assistant
     toggle_typing(Events::Types::CONVERSATION_TYPING_ON)
   end
@@ -46,7 +47,6 @@ class Captain::Conversation::ResponseBuilderJob < ApplicationJob # rubocop:disab
   # Shows "typing" in the widget and the dashboard while Captain works, also when it
   # keeps answering after a handoff.
   def toggle_typing(event)
-    @typing = event == Events::Types::CONVERSATION_TYPING_ON
     Conversations::TypingStatusManager.new(@conversation, @assistant, {}).trigger_typing_event(event, false)
   end
 
@@ -81,7 +81,9 @@ class Captain::Conversation::ResponseBuilderJob < ApplicationJob # rubocop:disab
 
   def generate_response_with_v2
     runner_service = v2_runner_service
-    message_history = Captain::Conversation::MessageHistoryBuilderService.new(conversation: @conversation).perform
+    include_ids = Captain::Assistant::TieredRoutingHelper.mode_for(@assistant.account_id).in?(%w[shadow on])
+    builder = Captain::Conversation::MessageHistoryBuilderService.new(conversation: @conversation)
+    message_history = builder.perform(include_message_ids: include_ids)
     @response = runner_service.generate_response(message_history: message_history)
     @run_result = runner_service.last_run_result
 

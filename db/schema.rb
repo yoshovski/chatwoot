@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_10_10_180000) do
+ActiveRecord::Schema[7.2].define(version: 2026_10_12_120000) do
   # These extensions should be enabled to support this database
   enable_extension "pg_stat_statements"
   enable_extension "pg_trgm"
@@ -491,6 +491,26 @@ ActiveRecord::Schema[7.2].define(version: 2026_10_10_180000) do
     t.jsonb "response_guidelines", default: []
     t.jsonb "guardrails", default: []
     t.index ["account_id"], name: "index_captain_assistants_on_account_id"
+  end
+
+  create_table "captain_conversation_memories", force: :cascade do |t|
+    t.integer "account_id", null: false
+    t.integer "conversation_id", null: false
+    t.bigint "assistant_id", null: false
+    t.text "summary", default: "", null: false
+    t.jsonb "facts", default: [], null: false
+    t.bigint "covered_message_id", default: 0, null: false
+    t.bigint "boundary_message_id", default: 0, null: false
+    t.string "source_digest"
+    t.bigint "revision", default: 0, null: false
+    t.string "model"
+    t.integer "prompt_version", default: 1, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id"], name: "index_captain_conversation_memories_on_account_id"
+    t.index ["assistant_id"], name: "index_captain_conversation_memories_on_assistant_id"
+    t.index ["conversation_id", "assistant_id"], name: "index_captain_memory_identity", unique: true
+    t.index ["conversation_id"], name: "index_captain_conversation_memories_on_conversation_id"
   end
 
   create_table "captain_custom_tools", force: :cascade do |t|
@@ -1701,6 +1721,9 @@ ActiveRecord::Schema[7.2].define(version: 2026_10_10_180000) do
   add_foreign_key "campaign_recipients", "campaigns", on_delete: :cascade
   add_foreign_key "campaign_recipients", "contacts", on_delete: :cascade
   add_foreign_key "campaign_recipients", "inboxes", on_delete: :cascade
+  add_foreign_key "captain_conversation_memories", "accounts", on_delete: :cascade
+  add_foreign_key "captain_conversation_memories", "captain_assistants", column: "assistant_id", on_delete: :cascade
+  add_foreign_key "captain_conversation_memories", "conversations", on_delete: :cascade
   add_foreign_key "conversation_usage_windows", "accounts"
   add_foreign_key "conversation_usage_windows", "conversations", on_delete: :nullify
   add_foreign_key "conversation_usage_windows", "messages", on_delete: :nullify

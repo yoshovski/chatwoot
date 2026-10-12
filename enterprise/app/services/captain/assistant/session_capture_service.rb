@@ -22,7 +22,7 @@ class Captain::Assistant::SessionCaptureService
   end
 
   def capture!
-    model = @assistant.agent_model
+    model = context.dig(:state, :generation_model) || @assistant.agent_model
     captured_sources = sources
 
     session = Captain::AgentSession.create!(
@@ -30,7 +30,7 @@ class Captain::Assistant::SessionCaptureService
       session_type: :assistant,
       subject: @conversation,
       result: result_message,
-      llm_model: "#{Llm::Models.provider_for(model)}-#{model}",
+      llm_model: model_label(model),
       credits_consumed: @credits_consumed,
       faq_ids: metadata[:faq_ids] || [],
       used_faq_ids: metadata[:used_faq_ids] || [],
@@ -45,6 +45,13 @@ class Captain::Assistant::SessionCaptureService
   end
 
   private
+
+  def model_label(model)
+    return 'canned' if context.dig(:state, :intent_route) && context.dig(:state, :generation_model).nil?
+    return "litellm-#{model}" if context.dig(:state, :generation_model)
+
+    "#{Llm::Models.provider_for(model)}-#{model}"
+  end
 
   # The dashboard shows the Sources button only on an answer whose searches found something, without loading
   # every session. Found, not cited: the model can rely on a result and still leave citation_indexes empty.

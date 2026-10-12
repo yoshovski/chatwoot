@@ -3,22 +3,35 @@ class Captain::Conversation::MessageHistoryBuilderService
 
   pattr_initialize [:conversation!]
 
-  def perform
+  def perform(include_message_ids: false)
     conversation_messages_for_context.flat_map do |message|
       message_hash = message_hash_for_context(message)
       next [] if message_hash.blank?
 
+      message_hash.merge!(source_attributes(message)) if include_message_ids
       message_hash[:agent_name] = message.additional_attributes['agent_name'] if message.additional_attributes&.dig('agent_name').present?
       result = [message_hash]
-      result << { role: 'user', content: message.selected_option_text } if message.selected_option_text.present?
+      if message.selected_option_text.present?
+        result << message_hash.slice(:message_id, :source_digest).merge(role: 'user',
+                                                                        content: message.selected_option_text)
+      end
       result
     end
   end
 
   private
 
+  def source_attributes(message)
+    # Hash stable source fields, not expiring attachment URLs or delivery status.
+    source = [message.content, message.deleted, message.content_type, message.selected_option_text,
+              message.additional_attributes.to_h[Captain::Assistant::ResponseParts::MESSAGE_ATTRIBUTE_KEY],
+              message.content_attributes.to_h['activity'], message.attachments.map(&:id)]
+    { message_id: message.id, source_digest: Digest::SHA256.hexdigest(source.to_json) }
+  end
+
   def conversation_messages_for_context
     conversation.messages
+                .includes(:attachments)
                 .where(private: false, message_type: [:incoming, :outgoing, :activity])
                 .reorder(created_at: :asc, id: :asc)
   end

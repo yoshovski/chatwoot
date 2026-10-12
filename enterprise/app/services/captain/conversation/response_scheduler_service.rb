@@ -8,6 +8,9 @@ class Captain::Conversation::ResponseSchedulerService
   end
 
   def perform
+    # Eligibility is checked by the shared incoming-message hook before scheduling.
+    Conversations::TypingStatusManager.new(@conversation, @assistant, {})
+                                      .trigger_typing_event(Events::Types::CONVERSATION_TYPING_ON, false)
     wait_time = attachment_wait_time
     return Captain::Conversation::ResponseBuilderJob.perform_later(*job_args) if wait_time.zero?
 
