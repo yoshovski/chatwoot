@@ -27,6 +27,7 @@ module Captain::Assistant::RunnerInstrumentationHelper
       },
       attribute_provider: Captain::Assistant::InstrumentationAttributeProvider.new(self)
     )
+    Captain::Assistant::ModelCallTiming.install(runner)
     register_trace_input_callback(runner)
   end
 

@@ -27,9 +27,9 @@ class Captain::Assistant::IntentRouter
     canned = canned_response(message)
     return { 'intent' => 'smalltalk', 'queries' => [], 'canned_response' => canned } if canned
 
-    response = Captain::Assistant::TieredLlmClient.measure('classify', @assistant) do
-      chat.with_instructions(instructions).ask(router_input(message, context).to_json)
-    end
+    response = Captain::Assistant::TieredLlmClient.generate(
+      'classify', @assistant, chat.with_instructions(instructions), router_input(message, context).to_json
+    )
     parsed = response.content.is_a?(Hash) ? response.content : JSON.parse(response.content)
     normalize(parsed)
   rescue StandardError => e

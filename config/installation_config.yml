@@ -600,10 +600,26 @@
 ## ------ End of Customizations for Customers ------ ##
 
 ## ----- LLM Observability ---- ##
+- name: LANGFUSE_TRACING_ENABLED
+  display_title: 'Enable Langfuse Tracing'
+  description: 'Enable or pause LLM, agent, tool and knowledge tracing without restarting. Requires the Langfuse provider and credentials.'
+  value: true
+  type: boolean
+  locked: false
+- name: LANGFUSE_CAPTURE_CONTENT
+  display_title: 'Capture Trace Content'
+  description: 'Include prompts, replies and tool inputs/results in Langfuse. Disable to retain only timing, model, usage and routing metadata.'
+  value: false
+  type: boolean
+  locked: false
 - name: OTEL_PROVIDER
   display_title: 'OpenTelemetry Provider'
-  description: 'LLM observability provider (langfuse, langsmith, etc.)'
+  description: 'Send Chatwoot AI traces to Langfuse. Choose Disabled to stop tracing.'
   value: ''
+  type: select
+  options:
+    '': 'Disabled'
+    langfuse: 'Langfuse'
   locked: false
 - name: LANGFUSE_PUBLIC_KEY
   display_title: 'Langfuse Public Key'

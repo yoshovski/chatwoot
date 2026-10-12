@@ -1,6 +1,7 @@
 require 'agents'
 
 class Captain::Tools::BasePublicTool < Agents::Tool
+  prepend Captain::Tools::ExecutionTracing
   def initialize(assistant)
     @assistant = assistant
     super()

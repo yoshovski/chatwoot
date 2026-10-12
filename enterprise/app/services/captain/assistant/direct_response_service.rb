@@ -37,7 +37,7 @@ class Captain::Assistant::DirectResponseService
 
   def generate(message, context, knowledge)
     chat = generation_chat(context, knowledge)
-    response = Captain::Assistant::TieredLlmClient.measure('generate', @assistant) { chat.ask(message) }
+    response = Captain::Assistant::TieredLlmClient.generate('knowledge_answer', @assistant, chat, message)
     [parse_output(response.content, context), response]
   end
 

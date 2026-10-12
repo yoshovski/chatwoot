@@ -50,9 +50,12 @@ class Captain::Tools::FaqLookupTool < Captain::Tools::BasePublicTool
   def retrieve_queries(queries)
     # Provision once before parallel retrieval; provisioning can update assistant configuration.
     @assistant.ensure_dify_datasets! if @assistant.account.dify_knowledge_enabled?
+    trace_context = OpenTelemetry::Context.current
     futures = queries.map do |query|
       Concurrent::Promises.future do
-        ActiveRecord::Base.connection_pool.with_connection { retrieve_query(query) }
+        OpenTelemetry::Context.with_current(trace_context) do
+          ActiveRecord::Base.connection_pool.with_connection { retrieve_query(query) }
+        end
       end
     end
     Concurrent::Promises.zip(*futures).wait!

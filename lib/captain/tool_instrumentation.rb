@@ -13,6 +13,7 @@ module Captain::ToolInstrumentation
     with_propagated_langfuse_attributes(params) do
       tracer.in_span(params[:span_name]) do |span|
         set_tool_session_attributes(span, params)
+        executed = :started
         response = yield
         executed = true
         span.set_attribute(ATTR_LANGFUSE_OBSERVATION_OUTPUT, response[:message] || response.to_json)
@@ -22,6 +23,8 @@ module Captain::ToolInstrumentation
     response
   rescue StandardError => e
     ChatwootExceptionTracker.new(e, account: account).capture_exception
+    raise if executed == :started
+
     executed ? response : yield
   end
 

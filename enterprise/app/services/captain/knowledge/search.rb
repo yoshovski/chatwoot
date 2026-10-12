@@ -1,4 +1,5 @@
 class Captain::Knowledge::Search
+  prepend Captain::Knowledge::SearchTracing
   class Error < StandardError; end
   DATASET_TOP_K = 4
   PASSAGE_CHARS = 8000

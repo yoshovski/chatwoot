@@ -11,13 +11,15 @@ class Captain::Assistant::InstrumentationAttributeProvider
     @service.send(:dynamic_trace_attributes, context_wrapper)
   end
 
-  def generation_attributes(_context_wrapper, _chat, message)
+  def generation_attributes(_context_wrapper, chat, message)
     attributes = {
       format(ATTR_LANGFUSE_OBSERVATION_METADATA, 'generation_stage') => generation_stage(message)
     }
     if @service.send(:message_burst_protection_active?)
       attributes[format(ATTR_LANGFUSE_OBSERVATION_METADATA, 'discarded')] = @service.send(:newer_customer_message_arrived?).to_s
     end
+    started_at = chat.instance_variable_get(:@captain_inference_started_at)
+    attributes['captain.inference_start_ns'] = started_at if started_at
     attributes
   end
 
