@@ -41,6 +41,7 @@ class CaptainListener < BaseListener
 
   def conversation_resolved(event)
     conversation = extract_conversation_and_account(event)[0]
+    Captain::ConversationMemory.invalidate_for_conversation!(conversation)
     ownership_service(conversation).handle_resolved! if conversation.present?
 
     tracker(conversation).record_resolution(at: event.timestamp)

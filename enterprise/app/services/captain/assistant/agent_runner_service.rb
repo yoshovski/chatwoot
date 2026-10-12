@@ -7,6 +7,7 @@ class Captain::Assistant::AgentRunnerService
   include Captain::Assistant::RunnerInstrumentationHelper
   include Captain::Assistant::TracePayloadHelper
   include Captain::Assistant::RunnerStateHelper
+  include Captain::Assistant::TieredRoutingHelper
 
   attr_reader :last_run_result
 
@@ -32,7 +33,7 @@ class Captain::Assistant::AgentRunnerService
 
   def generate_response(message_history: [])
     message_to_process, context = run_payload(message_history)
-    @last_run_result = runner.run(message_to_process, context: context, max_turns: 10)
+    @last_run_result = run_response(message_to_process, context)
     validate_agent_result!(@last_run_result)
 
     record_turn_start(@last_run_result)
@@ -67,7 +68,7 @@ class Captain::Assistant::AgentRunnerService
         role: msg[:role].to_sym,
         content: content,
         agent_name: msg[:agent_name]
-      }
+      }.merge(msg.slice(:message_id, :source_digest))
     end
     reset_resolved_scenario_attribution!(conversation_history)
 
@@ -192,13 +193,6 @@ class Captain::Assistant::AgentRunnerService
     )
   end
 
-  def wire_agents(assistant_agent, scenario_agents)
-    assistant_agent.register_handoffs(*scenario_agents) if scenario_agents.any?
-    scenario_agents.each { |scenario_agent| scenario_agent.register_handoffs(assistant_agent) }
-
-    [assistant_agent] + scenario_agents
-  end
-
   def reply_suggestion_agent
     agent = @assistant.agent
     agent.clone(
@@ -229,6 +223,6 @@ class Captain::Assistant::AgentRunnerService
     message_to_process = extract_last_user_message(message_history)
     context = build_context(message_history_without_last_user_message(message_history))
     enrich_context_with_trace_payload!(context, message_history, message_to_process)
-    [message_to_process, context]
+    [message_to_process, context.merge(captain_memory_source_history: message_history)]
   end
 end

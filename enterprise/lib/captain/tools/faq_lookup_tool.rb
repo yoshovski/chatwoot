@@ -3,6 +3,8 @@ class Captain::Tools::FaqLookupTool < Captain::Tools::BasePublicTool
 
   # Results scoring this far below the search's best hit are noise; agents don't see them unless the reply used them.
   LOW_RELEVANCE_MARGIN = 0.2
+  DIRECT_PASSAGES = 3
+  DIRECT_CONTENT_CHARS = 8000
 
   description 'Search FAQs, documents and connected knowledge for specifications, box contents, compatibility, model differences, setup, ' \
               'warranty, shipping rules, payments and store policies. Search the customer\'s latest question in a few key words.'
@@ -27,7 +29,64 @@ class Captain::Tools::FaqLookupTool < Captain::Tools::BasePublicTool
     end
   end
 
+  # Direct RAG retrieves all queries before touching shared citation state.
+  def perform_queries(tool_context, queries:)
+    normalized_queries = queries.map { |query| without_business_name(query) }
+    results = retrieve_queries(normalized_queries)
+    return 'No relevant knowledge found.' if results.empty?
+
+    if @assistant.account.dify_knowledge_enabled?
+      format_direct_passages(tool_context, results, normalized_queries.join(' '))
+    else
+      results = results.uniq(&:id).first(DIRECT_PASSAGES)
+      results = direct_budget(results) { |response| response.answer.to_s }
+      record_retrieved_sources(tool_context, results)
+      format_responses(tool_context, results)
+    end
+  end
+
   private
+
+  def retrieve_queries(queries)
+    # Provision once before parallel retrieval; provisioning can update assistant configuration.
+    @assistant.ensure_dify_datasets! if @assistant.account.dify_knowledge_enabled?
+    futures = queries.map do |query|
+      Concurrent::Promises.future do
+        ActiveRecord::Base.connection_pool.with_connection { retrieve_query(query) }
+      end
+    end
+    Concurrent::Promises.zip(*futures).wait!
+    groups = futures.map(&:value!)
+    # Give each query its best passage before filling the remaining context slots.
+    groups.filter_map(&:first) + groups.flat_map { |group| group.drop(1) }
+  end
+
+  def retrieve_query(query)
+    return Captain::Knowledge::Search.new(@assistant).search_prepared(query) if @assistant.account.dify_knowledge_enabled?
+
+    @assistant.responses.approved.enabled_for_search.visible_to_customers.search(query).includes(:documentable).to_a
+  end
+
+  def format_direct_passages(tool_context, passages, query)
+    passages = passages.uniq { |passage| [passage.source_reference, passage.content] }.first(DIRECT_PASSAGES)
+    # Reserve space for every selected passage, including both query topics.
+    passage_limit = DIRECT_CONTENT_CHARS / passages.size
+    passages = passages.map { |passage| passage.dup.tap { |copy| copy.content = copy.content.truncate(passage_limit) } }
+    record_knowledge_sources(tool_context, passages)
+    record_source_details(tool_context, passages, query)
+    passages.map { |passage| format_passage(tool_context, passage) }.join
+  end
+
+  def direct_budget(results)
+    remaining = DIRECT_CONTENT_CHARS
+    results.filter_map do |result|
+      content = yield(result)
+      next if content.length > remaining
+
+      remaining -= content.length
+      result
+    end
+  end
 
   # Models tend to prefix searches with the business name, which only adds noise to retrieval.
   def without_business_name(query)

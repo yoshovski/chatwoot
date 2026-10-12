@@ -20,7 +20,9 @@ class Captain::Assistant::ResponseRewriter
       state: run_result.context[:state],
       captain_v2_trace_input: rewrite_prompt
     }
-    rewrite_run_result = runner.run(rewrite_prompt, context: rewrite_context, max_turns: 1)
+    gateway_model = run_result.context&.dig(:state, :generation_model).presence
+    configured_runner = runner(model: gateway_model || @assistant.agent_model, gateway: gateway_model.present?)
+    rewrite_run_result = configured_runner.run(rewrite_prompt, context: rewrite_context, max_turns: 1)
     raise rewrite_run_result.error || 'Captain response rewrite failed' if rewrite_run_result.failed?
 
     rewritten_model_output = rewritten_response_with_original_citations(rewrite_run_result.output, response_parts)
@@ -72,12 +74,14 @@ class Captain::Assistant::ResponseRewriter
     rewritten_model_output
   end
 
-  def runner
+  def runner(model: @assistant.agent_model, gateway: false)
     @runner ||= begin
       agent = Agents::Agent.new(
         name: AGENT_NAME,
         instructions: INSTRUCTIONS,
-        model: @assistant.agent_model,
+        model: model,
+        provider: (:openai if gateway),
+        assume_model_exists: gateway,
         temperature: 0,
         response_schema: Captain::ResponseSchema
       )

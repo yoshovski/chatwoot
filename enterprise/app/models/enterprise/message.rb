@@ -1,6 +1,9 @@
 module Enterprise::Message
   def self.prepended(base)
     base.class_eval do
+      after_update_commit :invalidate_captain_conversation_memory, if: :captain_memory_source_changed?
+      after_destroy_commit :invalidate_captain_conversation_memory
+
       has_one :call, class_name: 'Call', foreign_key: :message_id, dependent: :nullify, inverse_of: :message
 
       scope :with_call, -> { includes(call: [:contact, { inbox: :channel }]) }
@@ -41,6 +44,22 @@ module Enterprise::Message
   end
 
   private
+
+  def captain_memory_source_changed?
+    return true if saved_changes.keys.intersect?(%w[content content_attributes private])
+    return false unless saved_change_to_additional_attributes?
+
+    before, after = saved_change_to_additional_attributes
+    key = Captain::Assistant::ResponseParts::MESSAGE_ATTRIBUTE_KEY
+    before.to_h[key] != after.to_h[key]
+  end
+
+  def invalidate_captain_conversation_memory
+    Captain::ConversationMemory.where(account_id: account_id, conversation_id: conversation_id)
+                               .where('covered_message_id >= ?', id).find_each do |memory|
+      memory.with_lock { memory.invalidate!(boundary_message_id: memory.boundary_message_id) }
+    end
+  end
 
   def first_submitted_option
     submitted = content_attributes&.dig('submitted_values')

@@ -44,6 +44,11 @@ class Captain::Knowledge::Search
 
   def search(query, kinds: nil)
     @assistant.ensure_dify_datasets!
+    search_prepared(query, kinds: kinds)
+  end
+
+  # Used after direct RAG has provisioned datasets before concurrent searches.
+  def search_prepared(query, kinds: nil)
     datasets = configured_datasets
     datasets.select! { |dataset| kinds.include?(dataset[:kind]) || (dataset[:kind] == 'catalog' && kinds.include?('product')) } if kinds
     response = AiAgents::KnowledgeClient.new(account: @account, actor: @actor).request(
