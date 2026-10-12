@@ -22,10 +22,11 @@ class Captain::Assistant::IntentRouter
   end
 
   def classify(message:, context:)
-    return ACTION unless classifiable?(message, context)
+    reason = bypass_reason(message, context)
+    return ACTION.merge('reason' => reason) if reason
 
-    canned = canned_response(message)
-    return { 'intent' => 'smalltalk', 'queries' => [], 'canned_response' => canned } if canned
+    greeting = greeting_route(message)
+    return greeting if greeting
 
     response = Captain::Assistant::TieredLlmClient.generate(
       'classify', @assistant, chat.with_instructions(instructions), router_input(message, context).to_json
@@ -35,34 +36,39 @@ class Captain::Assistant::IntentRouter
   rescue StandardError => e
     # Do not log provider error bodies: gateways can echo request headers or customer text.
     Rails.logger.warn "[Captain][IntentRouter] fallback=action_agent error=#{e.class.name}"
-    ACTION
+    ACTION.merge('reason' => e.is_a?(Faraday::TimeoutError) ? 'classifier_timeout' : 'classifier_error')
   end
 
   private
 
   def chat
+    params = { max_tokens: 200, response_format: { type: 'json_object' } }
+    effort = ENV['CAPTAIN_INTENT_ROUTER_REASONING_EFFORT'].presence
+    params[:reasoning_effort] = effort if effort
     Captain::Assistant::TieredLlmClient.chat(
       model: ENV.fetch('CAPTAIN_INTENT_ROUTER_MODEL', 'intent-router'),
       timeout: Float(ENV.fetch('CAPTAIN_INTENT_ROUTER_TIMEOUT', '1.5'))
-    ).with_params(max_tokens: 200, response_format: { type: 'json_object' })
+    ).with_params(**params)
   end
 
   def active_scenario?(context)
-    return true if context.dig(:state, :conversation_memory, :active_agent_name).present? &&
-                   context.dig(:state, :conversation_memory, :active_agent_name) != @assistant.agent_name
-
-    last_assistant = context[:conversation_history].reverse.find { |entry| entry[:role].to_s == 'assistant' }
-    last_assistant && last_assistant[:agent_name].present? && last_assistant[:agent_name] != @assistant.agent_name
+    names = @assistant.scenarios.enabled.map(&:handoff_key)
+    active_name = context.dig(:state, :conversation_memory, :active_agent_name)
+    last_name = self.class.recent_history(context).reverse.find { |entry| entry[:role].to_s == 'assistant' }&.dig(:agent_name)
+    names.include?(active_name) || names.include?(last_name)
   end
 
   def multimodal_history?(context)
     self.class.recent_history(context).any? { |entry| !entry[:content].is_a?(String) }
   end
 
-  def canned_response(message)
-    return if @assistant.guardrails.present? || @assistant.response_guidelines.present?
+  def greeting_route(message)
+    text = GREETINGS[message.strip.downcase.sub(/[.!¡¿?]+\z/, '')]
+    return unless text
 
-    GREETINGS[message.strip.downcase.sub(/[.!¡¿?]+\z/, '')]
+    route = { 'intent' => 'smalltalk', 'queries' => [], 'reason' => 'greeting' }
+    route['canned_response'] = text if @assistant.guardrails.blank? && @assistant.response_guidelines.blank?
+    route
   end
 
   def router_input(message, context)
@@ -99,11 +105,11 @@ class Captain::Assistant::IntentRouter
   end
 
   def normalize(parsed)
-    return ACTION unless valid_shape?(parsed)
-    return ACTION unless valid_queries?(parsed.fetch('queries'))
-    return ACTION unless (parsed['intent'] == 'faq_kb') == parsed['queries'].any?
+    return ACTION.merge('reason' => 'invalid_classifier_output') unless valid_shape?(parsed)
+    return ACTION.merge('reason' => 'invalid_classifier_output') unless valid_queries?(parsed.fetch('queries'))
+    return ACTION.merge('reason' => 'invalid_classifier_output') unless (parsed['intent'] == 'faq_kb') == parsed['queries'].any?
 
-    parsed.slice('intent', 'queries').merge('queries' => parsed['queries'].map(&:strip).uniq)
+    parsed.slice('intent', 'queries').merge('queries' => parsed['queries'].map(&:strip).uniq, 'reason' => 'classified')
   end
 
   def valid_shape?(parsed)
@@ -116,11 +122,13 @@ class Captain::Assistant::IntentRouter
     end
   end
 
-  def classifiable?(message, context)
-    return false if context[:memory_usable] == false
+  def bypass_reason(message, context)
+    return 'unusable_memory' if context[:memory_usable] == false
+    return 'non_text_message' unless message.is_a?(String) && message.present?
+    return 'oversized_message' if Captain::Conversation::ContextBudget.tokens(message) > Captain::Conversation::ContextBudget.hard_tokens
+    return 'active_scenario' if active_scenario?(context)
+    return 'multimodal_history' if multimodal_history?(context)
 
-    within_budget = Captain::Conversation::ContextBudget.tokens(message) <= Captain::Conversation::ContextBudget.hard_tokens
-    message.is_a?(String) && message.present? && within_budget &&
-      !active_scenario?(context) && !multimodal_history?(context)
+    nil
   end
 end

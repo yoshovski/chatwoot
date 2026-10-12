@@ -59,12 +59,20 @@ def clipped(text, limit):
 
 
 def heading_only(content):
-    lines = content.split("\n")
-    if len(lines) == 2 and BREADCRUMB_SEPARATOR in lines[0]:
+    lines = [line.strip() for line in content.splitlines() if line.strip()]
+    if lines and BREADCRUMB_SEPARATOR in lines[0]:
         lines = lines[1:]
+    lines = [
+        line
+        for line in lines
+        if not re.fullmatch(r"(?:\*\s*){3,}|(?:-\s*){3,}|(?:_\s*){3,}", line)
+        and not re.fullmatch(r"\*{0,2}Effective Date:\*{0,2}\s*[\d/-]+", line, re.I)
+    ]
+    if not lines:
+        return True
     if len(lines) > 1:
         return False
-    line = lines[0].strip()
+    line = lines[0]
     return line.startswith("#") or (
         len(line) <= MAX_HEADING_ONLY_CHARS and not SENTENCE_PUNCTUATION.search(line)
     )

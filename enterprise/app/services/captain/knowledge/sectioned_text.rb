@@ -2,6 +2,8 @@ class Captain::Knowledge::SectionedText
   HEADING = /\A {0,3}(\#{1,6})[ \t]+(.+?)(?:[ \t]+\#+)?[ \t]*\z/
   FENCE = /\A\s*(```|~~~)/
   SEPARATOR = ' > '.freeze
+  SECTION_SEPARATOR = "\n\n<!-- captain:section -->\n\n".freeze
+  THEMATIC_BREAK = /\A {0,3}(?:(?:\*\s*){3,}|(?:-\s*){3,}|(?:_\s*){3,})\z/
   MAX_BREADCRUMB_LENGTH = 200
   # Crawled pages often have section titles as plain lines; they sit below every `#` level.
   SECTION_TITLE_LEVEL = 7
@@ -25,23 +27,29 @@ class Captain::Knowledge::SectionedText
     flush_body
     release_pending_title
 
-    @blocks.join("\n\n")
+    @blocks.map { |path, text| [path.presence, text].compact.join("\n") }.join(SECTION_SEPARATOR)
   end
 
   private
 
   def read_line(line)
+    return if separator_line?(line)
+
     @in_fence = !@in_fence if line.match?(FENCE)
     heading = line.match(HEADING) unless @in_fence
     if heading
       flush_body
       release_pending_title
       add_heading(heading[1].length, heading[2])
-    elsif line.strip.empty?
+    elsif line.strip.empty? && !@in_fence
       flush_body
     else
       @body << line.rstrip
     end
+  end
+
+  def separator_line?(line)
+    !@in_fence && line.match?(THEMATIC_BREAK)
   end
 
   def add_heading(level, text)
@@ -79,7 +87,13 @@ class Captain::Knowledge::SectionedText
   end
 
   def emit(lines)
-    @blocks << [breadcrumb.presence, *lines].compact.join("\n")
+    path = breadcrumb
+    text = lines.join("\n")
+    if @blocks.last&.first == path
+      @blocks.last[1] += "\n\n#{text}"
+    else
+      @blocks << [path, text]
+    end
   end
 
   def section_title?(lines)

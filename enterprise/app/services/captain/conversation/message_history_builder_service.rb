@@ -9,7 +9,8 @@ class Captain::Conversation::MessageHistoryBuilderService
       next [] if message_hash.blank?
 
       message_hash.merge!(source_attributes(message)) if include_message_ids
-      message_hash[:agent_name] = message.additional_attributes['agent_name'] if message.additional_attributes&.dig('agent_name').present?
+      agent_name = agent_name_for_context(message)
+      message_hash[:agent_name] = agent_name if agent_name.present?
       result = [message_hash]
       if message.selected_option_text.present?
         result << message_hash.slice(:message_id, :source_digest).merge(role: 'user',
@@ -21,6 +22,15 @@ class Captain::Conversation::MessageHistoryBuilderService
 
   private
 
+  def agent_name_for_context(message)
+    name = message.additional_attributes&.dig('agent_name')
+    # Forms in older releases stored the display name instead of the runtime identity.
+    return name unless message.sender_type == 'Captain::Assistant' && name.present?
+
+    sender = message.sender
+    sender && name == sender.name ? sender.agent_name : name
+  end
+
   def source_attributes(message)
     # Hash stable source fields, not expiring attachment URLs or delivery status.
     source = [message.content, message.deleted, message.content_type, message.selected_option_text,
@@ -31,7 +41,7 @@ class Captain::Conversation::MessageHistoryBuilderService
 
   def conversation_messages_for_context
     conversation.messages
-                .includes(:attachments)
+                .includes(:attachments, :sender)
                 .where(private: false, message_type: [:incoming, :outgoing, :activity])
                 .reorder(created_at: :asc, id: :asc)
   end

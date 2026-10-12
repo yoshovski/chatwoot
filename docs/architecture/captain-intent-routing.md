@@ -87,3 +87,23 @@ Model lifecycle references (checked October 11, 2026):
 ## Local validation
 
 The implementation was checked with 344 existing regression examples, plus temporary validation harnesses exercising LiteLLM payloads, source indexes, parallel retrieval, summary persistence, incremental updates, resolution boundaries, source invalidation, account isolation, revision races, suggestion buttons, original-source lookup and summary failure fallback. No live provider latency or routing-accuracy benchmark has been run. See the conversation-memory plan for external provider candidates; adding another provider is optional.
+
+## Section repair and routing diagnostics
+
+Text documents now use the `sectioned-v3` fingerprint. Markdown paragraphs under the same heading remain in one parent, separated from the next section by `Captain::Knowledge::SectionedText::SECTION_SEPARATOR`. Horizontal rules do not become knowledge chunks; fenced examples remain intact. Parent chunks retain a 1,024-token limit and child chunks a 256-token limit. Original Chatwoot document content is unchanged.
+
+Existing Dify indexes are not rewritten during deployment. After deploying both the Rails/worker and knowledge-service fixes, enqueue only the affected canonical documents:
+
+```bash
+ACCOUNT_ID=2 DOCUMENT_IDS=25,27 bundle exec rake captain:knowledge:reindex_sections
+```
+
+The task checks account ownership, enabled status and text-document eligibility, then uses the normal sync/poll jobs. It updates existing Dify document IDs without deleting datasets or catalog documents. Verify indexing completion and retrieval before expanding the repair to other documents.
+
+For a query explicitly naming a short public document, retrieval can use its full canonical text (up to 8,000 characters). Catalog datasets remain searched; product passages with unrelated titles are omitted only when that named document is present. Both knowledge and action FAQ results use at most three passages and an 8,000-character content budget. Space unused by short passages is available to detailed product/policy evidence; each selected topic retains reserved evidence.
+
+Exact supported greetings skip model classification. Custom guardrails/guidelines still run through one direct answer-generation call; only assistants without those custom rules use a canned answer. Active scenarios are identified against actual enabled scenario keys, not any differing display name. Historical contact forms carrying the assistant display name are normalized while constructing history.
+
+`CAPTAIN_INTENT_ROUTER_REASONING_EFFORT=minimal` is optional and must be supported by the selected LiteLLM alias. It was verified with the existing Gemini 3.5 Flash-Lite alias. Leave it unset for models that do not accept this parameter. Keep the existing classifier deadline and measure fallback rates rather than adding retries or a long timeout.
+
+Intent logs include `reason`, conversation/assistant IDs, history message count and estimated history tokens. Reasons distinguish `classified`, `greeting`, `active_scenario`, `multimodal_history`, `unusable_memory`, `oversized_message`, `classifier_timeout`, `classifier_error`, and `invalid_classifier_output`. Direct-pipeline exceptions log `direct_pipeline_error`. Knowledge-context logs report selected passage count and content size without logging customer queries or provider error bodies. The intent reason is also attached to existing Langfuse traces.

@@ -1,6 +1,8 @@
 require 'rails_helper'
 
 RSpec.describe Captain::Knowledge::SectionedText do
+  let(:section_separator) { described_class::SECTION_SEPARATOR }
+
   def sectioned(markdown, title: 'Help center')
     described_class.new(markdown, title: title).to_s
   end
@@ -11,12 +13,10 @@ RSpec.describe Captain::Knowledge::SectionedText do
     expect(sectioned(markdown)).to eq("Help center > Returns > RMA requirements\nItems must be unused.\nKeep the original box.")
   end
 
-  it 'gives every paragraph of a section the same breadcrumb' do
+  it 'keeps the paragraphs of a section in one parent with one breadcrumb' do
     markdown = "## Warranty\n\nFirst condition.\n\nSecond condition.\n\nThird condition."
 
-    expect(sectioned(markdown).split("\n\n")).to eq(
-      ["Help center > Warranty\nFirst condition.", "Help center > Warranty\nSecond condition.", "Help center > Warranty\nThird condition."]
-    )
+    expect(sectioned(markdown)).to eq("Help center > Warranty\nFirst condition.\n\nSecond condition.\n\nThird condition.")
   end
 
   it 'reads a heading directly followed by its body in one block' do
@@ -25,20 +25,20 @@ RSpec.describe Captain::Knowledge::SectionedText do
 
   it 'splits a block at a heading that follows body text' do
     expect(sectioned("Intro text.\n## Shipping\nOrders ship in two days.")).to eq(
-      "Help center\nIntro text.\n\nHelp center > Shipping\nOrders ship in two days."
+      "Help center\nIntro text.#{section_separator}Help center > Shipping\nOrders ship in two days."
     )
   end
 
   it 'pops deeper headings when the level changes' do
     markdown = "# Returns\n\n## Window\n\n### Exceptions\n\nSale items.\n\n## Refunds\n\nRefunds take five days.\n\n# Warranty\n\nTwo years."
 
-    expect(sectioned(markdown).split("\n\n").map { |block| block.lines.first.chomp }).to eq(
+    expect(sectioned(markdown).split(section_separator).map { |block| block.lines.first.chomp }).to eq(
       ['Help center > Returns > Window > Exceptions', 'Help center > Returns > Refunds', 'Help center > Warranty']
     )
   end
 
   it 'uses only the title for text before the first heading' do
-    expect(sectioned("Welcome text.\n\n# Returns\n\nBody.")).to eq("Help center\nWelcome text.\n\nHelp center > Returns\nBody.")
+    expect(sectioned("Welcome text.\n\n# Returns\n\nBody.")).to eq("Help center\nWelcome text.#{section_separator}Help center > Returns\nBody.")
   end
 
   it 'removes consecutive duplicates such as an H1 equal to the title' do
@@ -75,34 +75,36 @@ RSpec.describe Captain::Knowledge::SectionedText do
       markdown = "# Refund policy\n\nGeneral Return Policy\n\nReturns need approval.\n\nRestocking Fee\n\nAn 18% fee applies."
 
       expect(sectioned(markdown, title: 'Refund policy')).to eq(
-        "Refund policy > General Return Policy\nReturns need approval.\n\nRefund policy > Restocking Fee\nAn 18% fee applies."
+        "Refund policy > General Return Policy\nReturns need approval.#{section_separator}Refund policy > Restocking Fee\nAn 18% fee applies."
       )
     end
 
     it 'keeps a title as text when no body follows it' do
       expect(sectioned("Intro text.\n\nThank you for shopping with us")).to eq(
-        "Help center\nIntro text.\n\nHelp center\nThank you for shopping with us"
+        "Help center\nIntro text.\n\nThank you for shopping with us"
       )
     end
 
     it 'keeps a title as text when a heading follows it' do
-      expect(sectioned("Some note\n\n## Returns\n\nBody text.")).to eq("Help center\nSome note\n\nHelp center > Returns\nBody text.")
+      expect(sectioned("Some note\n\n## Returns\n\nBody text.")).to eq("Help center\nSome note#{section_separator}Help center > Returns\nBody text.")
     end
 
     it 'keeps the first of two consecutive titles as text' do
-      expect(sectioned("First line\n\nSecond line\n\nBody text.")).to eq("Help center\nFirst line\n\nHelp center > Second line\nBody text.")
+      expect(sectioned("First line\n\nSecond line\n\nBody text.")).to eq(
+        "Help center\nFirst line#{section_separator}Help center > Second line\nBody text."
+      )
     end
 
     it 'nests below the last # heading and is replaced by the next title' do
       markdown = "## Returns\n\nWindow\n\nThirty days.\n\nExceptions\n\nSale items."
 
-      expect(sectioned(markdown).split("\n\n").map { |block| block.lines.first.chomp }).to eq(
+      expect(sectioned(markdown).split(section_separator).map { |block| block.lines.first.chomp }).to eq(
         ['Help center > Returns > Window', 'Help center > Returns > Exceptions']
       )
     end
 
     it 'does not treat sentences, labels, list items or long lines as titles' do
-      ['Items must be unused.', 'Effective Date: 12-29-2025', '* one item', '* * *', 'x' * 81].each do |line|
+      ['Items must be unused.', 'Effective Date: 12-29-2025', '* one item', 'x' * 81].each do |line|
         expect(sectioned("#{line}\n\nBody text.", title: nil)).to eq("#{line}\n\nBody text.")
       end
     end
