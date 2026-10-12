@@ -3,7 +3,8 @@ class Captain::Dify::DocumentSyncService
 
   PROCESS_RULE = {
     mode: 'hierarchical', rules: {
-      pre_processing_rules: [], parent_mode: 'paragraph', segmentation: { separator: "\n\n", max_tokens: 1024 },
+      pre_processing_rules: [], parent_mode: 'paragraph',
+      segmentation: { separator: Captain::Knowledge::SectionedText::SECTION_SEPARATOR, max_tokens: 1024 },
       subchunk_segmentation: { separator: "\n", max_tokens: 256 }
     }
   }.freeze

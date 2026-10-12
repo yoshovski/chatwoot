@@ -4,6 +4,7 @@ class Captain::Knowledge::Search
   DATASET_TOP_K = 4
   PASSAGE_CHARS = 8000
   TOTAL_CHARS = 24_000
+  QUERY_FILLER = %w[a an the what are is your our you do does can could please tell me about].freeze
 
   Passage = Struct.new(:kind, :title, :content, :score, :record, :document_id, :dataset_id, :source_url, :handle, keyword_init: true) do
     def source_document
@@ -59,7 +60,7 @@ class Captain::Knowledge::Search
     raise Error, "Captain knowledge search failed (HTTP #{response.code})" unless response.code == 200
 
     passages = response.parsed_response.fetch('passages').filter_map { |passage| canonical_passage(passage, datasets) }
-    self.class.within_budget(passages)
+    self.class.within_budget(focus_named_documents(passages, query))
   end
 
   def self.within_budget(passages)
@@ -68,6 +69,40 @@ class Captain::Knowledge::Search
   end
 
   private
+
+  # A short, explicitly named public document is better evidence than a title-only
+  # hit or catalog copy that happens to mention the same topic. Keep all datasets searched.
+  def focus_named_documents(passages, query)
+    terms = title_terms(query) - QUERY_FILLER
+    return passages if terms.empty?
+
+    named, other = passages.partition { |passage| named_document?(passage, terms) }
+    return passages if named.empty?
+
+    named = named.map { |passage| expand_named_document(passage) }.uniq { |passage| [passage.source_reference, passage.content] }
+    other.reject! { |passage| unrelated_catalog?(passage, terms) }
+    named + other
+  end
+
+  def named_document?(passage, terms)
+    title = title_terms(passage.title)
+    passage.record.is_a?(Captain::Document) && (terms.size > 1 || terms.first == title.first) && (terms - title).empty?
+  end
+
+  def unrelated_catalog?(passage, terms)
+    %w[product catalog].include?(passage.kind) && !terms.intersect?(title_terms(passage.title))
+  end
+
+  def expand_named_document(passage)
+    text = passage.record.content.to_s
+    return passage unless text.present? && text.length <= PASSAGE_CHARS
+
+    passage.dup.tap { |copy| copy.content = text }
+  end
+
+  def title_terms(text)
+    text.downcase.scan(/[[:alnum:]]+/).reject { |word| QUERY_FILLER.include?(word) }.map { |word| word.sub(/ies\z/, 'y').sub(/(?<!s)s\z/, '') }.uniq
+  end
 
   def configured_datasets
     datasets = [

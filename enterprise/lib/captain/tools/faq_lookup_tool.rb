@@ -5,6 +5,7 @@ class Captain::Tools::FaqLookupTool < Captain::Tools::BasePublicTool
   LOW_RELEVANCE_MARGIN = 0.2
   DIRECT_PASSAGES = 3
   DIRECT_CONTENT_CHARS = 8000
+  MIN_PASSAGE_CHARS = 512
 
   description 'Search FAQs, documents and connected knowledge for specifications, box contents, compatibility, model differences, setup, ' \
               'warranty, shipping rules, payments and store policies. Search the customer\'s latest question in a few key words.'
@@ -72,12 +73,25 @@ class Captain::Tools::FaqLookupTool < Captain::Tools::BasePublicTool
 
   def format_direct_passages(tool_context, passages, query)
     passages = passages.uniq { |passage| [passage.source_reference, passage.content] }.first(DIRECT_PASSAGES)
-    # Reserve space for every selected passage, including both query topics.
-    passage_limit = DIRECT_CONTENT_CHARS / passages.size
-    passages = passages.map { |passage| passage.dup.tap { |copy| copy.content = copy.content.truncate(passage_limit) } }
+    passages = budget_passages(passages)
+    Rails.logger.info "[Captain][KnowledgeContext] assistant_id=#{@assistant.id} passages=#{passages.size} " \
+                      "content_chars=#{passages.sum { |passage| passage.content.length }}"
     record_knowledge_sources(tool_context, passages)
     record_source_details(tool_context, passages, query)
     passages.map { |passage| format_passage(tool_context, passage) }.join
+  end
+
+  def budget_passages(passages)
+    # Small FAQ hits should not take an equal share from a detailed product or policy.
+    # Reserve evidence for every query topic, then give the best passages the unused space.
+    remaining = DIRECT_CONTENT_CHARS
+    passages.map.with_index do |passage, index|
+      reserved = passages.drop(index + 1).sum { |other| [other.content.length, MIN_PASSAGE_CHARS].min }
+      copy = passage.dup
+      copy.content = copy.content.truncate(remaining - reserved)
+      remaining -= copy.content.length
+      copy
+    end
   end
 
   def direct_budget(results)
@@ -103,10 +117,8 @@ class Captain::Tools::FaqLookupTool < Captain::Tools::BasePublicTool
     passages = Captain::Knowledge::Search.new(@assistant).search(query)
     return "No relevant knowledge found for: #{query}" if passages.empty?
 
-    record_knowledge_sources(tool_context, passages)
-    log_tool_usage('found_results', { query: query, count: passages.size })
-    record_source_details(tool_context, passages, query)
-    passages.map { |passage| format_passage(tool_context, passage) }.join
+    log_tool_usage('found_results', { query: query, count: [passages.size, DIRECT_PASSAGES].min })
+    format_direct_passages(tool_context, passages, query)
   end
 
   # A document can return several chunks; its best chunk decides the excerpt and relevance.

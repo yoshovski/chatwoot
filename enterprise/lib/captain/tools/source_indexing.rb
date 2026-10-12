@@ -24,12 +24,21 @@ module Captain::Tools::SourceIndexing
   # instead of the passage's first lines (often a page's menu).
   def matched_excerpt(text, query)
     terms = query.to_s.downcase.scan(/[[:alnum:]]{3,}/).uniq
-    sentences = plain_text(text).split(/(?<=[.!?])\s+|\n+/).map(&:squish).compact_blank
+    sentences = plain_text(citation_body(text)).split(/(?<=[.!?])\s+|\n+/).map(&:squish).compact_blank
     start = sentences.each_index.max_by { |index| [terms.count { |term| sentences[index].downcase.include?(term) }, -index] }
     source_excerpt(sentences.drop(start.to_i).join(' '), length: MATCHED_EXCERPT_LENGTH)
   end
 
   private
+
+  # Evidence previews must show the body, not a repeated breadcrumb, date or separator.
+  def citation_body(text)
+    lines = text.to_s.lines
+    lines.shift if lines.first.to_s.include?(' > ')
+    lines.reject do |line|
+      line.match?(/\A\s*(?:\#{1,6}\s|\*{0,2}Effective Date:)/i) || line.strip.match?(/\A[-*_\s]{3,}\z/)
+    end.join
+  end
 
   # Markdown links and images keep only their text; emphasis, heading and list markers go.
   def plain_text(text)

@@ -169,7 +169,7 @@ class Captain::Conversation::ContactCaptureService # rubocop:disable Metrics/Cla
 
   def post_form_message!(missing_fields)
     sender = assistant || conversation.inbox&.captain_assistant
-    additional_attrs = sender&.name.present? ? { 'agent_name' => sender.name } : {}
+    additional_attrs = sender ? { 'agent_name' => sender.agent_name } : {}
 
     conversation.messages.create!(
       self.class.form_payload(missing_fields).merge(
@@ -224,7 +224,7 @@ class Captain::Conversation::ContactCaptureService # rubocop:disable Metrics/Cla
 
   def post_acknowledgement_reply!(message)
     sender = assistant || message.conversation.inbox&.captain_assistant
-    additional_attrs = sender&.name.present? ? { 'agent_name' => sender.name } : {}
+    additional_attrs = sender ? { 'agent_name' => sender.agent_name } : {}
 
     message.conversation.messages.create!(
       message_type: :outgoing,

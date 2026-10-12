@@ -74,6 +74,16 @@ module Captain::Assistant::TieredRoutingHelper
 
     OpenTelemetry::Trace.current_span.set_attribute('langfuse.observation.metadata.intent', route.fetch('intent'))
     OpenTelemetry::Trace.current_span.set_attribute('langfuse.observation.metadata.routing_mode', mode)
+    OpenTelemetry::Trace.current_span.set_attribute('langfuse.observation.metadata.routing_reason', route.fetch('reason'))
+  end
+
+  def log_route(route, mode, context)
+    context[:state][:intent_routing_reason] = route.fetch('reason')
+    record_route_trace(route, mode)
+    history = Captain::Assistant::IntentRouter.recent_history(context)
+    Rails.logger.info "[Captain][IntentRouting] intent=#{route.fetch('intent')} reason=#{route.fetch('reason')} " \
+                      "assistant_id=#{@assistant.id} conversation_id=#{@conversation&.id || 'none'} mode=#{mode} " \
+                      "history_messages=#{history.size} history_tokens=#{Captain::Conversation::ContextBudget.tokens(history)}"
   end
 
   def routed_response(message, context)
@@ -81,8 +91,7 @@ module Captain::Assistant::TieredRoutingHelper
     return unless mode.in?(%w[shadow on])
 
     route = Captain::Assistant::IntentRouter.new(assistant: @assistant).classify(message: message, context: context)
-    record_route_trace(route, mode)
-    Rails.logger.info "[Captain][IntentRouting] intent=#{route.fetch('intent')} assistant_id=#{@assistant.id} mode=#{mode}"
+    log_route(route, mode, context)
     return if mode == 'shadow' || route['intent'] == 'action_agent'
 
     schema = Captain::ResponseSchema.for(suggested_replies: suggested_replies_enabled?, max_suggested_replies: @assistant.max_suggested_replies)
@@ -91,7 +100,7 @@ module Captain::Assistant::TieredRoutingHelper
     @response_discarded = newer_customer_message_arrived? if message_burst_protection_active?
     result
   rescue StandardError => e
-    Rails.logger.warn "[Captain][IntentRouting] fallback=action_agent error=#{e.class.name}"
+    Rails.logger.warn "[Captain][IntentRouting] fallback=action_agent reason=direct_pipeline_error error=#{e.class.name}"
     nil
   end
 end
