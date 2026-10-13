@@ -121,6 +121,7 @@ RSpec.describe Captain::BaseTaskService do
 
     before do
       allow(Llm::Config).to receive(:with_api_key).and_yield(mock_context)
+      allow(mock_chat).to receive(:with_headers).and_return(mock_chat)
       allow(mock_chat).to receive(:with_instructions)
       allow(mock_chat).to receive(:ask).and_return(mock_response)
     end
@@ -164,6 +165,7 @@ RSpec.describe Captain::BaseTaskService do
     end
 
     it 'instruments the LLM call' do
+      expect(mock_chat).to receive(:with_headers).with(**Llm::TenantTracking.headers(account_id: account.id, feature: 'test_event')).and_return(mock_chat)
       expect(service).to receive(:instrument_llm_call).and_call_original
       service.send(:make_api_call, model: model, messages: messages)
     end
@@ -217,6 +219,7 @@ RSpec.describe Captain::BaseTaskService do
 
     before do
       allow(Llm::Config).to receive(:with_api_key).and_yield(mock_context)
+      allow(mock_chat).to receive(:with_headers).and_return(mock_chat)
       allow(mock_response).to receive(:input_tokens).and_return(10)
       allow(mock_response).to receive(:output_tokens).and_return(20)
     end

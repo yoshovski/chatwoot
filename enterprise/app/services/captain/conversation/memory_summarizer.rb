@@ -9,7 +9,8 @@ class Captain::Conversation::MemorySummarizer
 
   def summarize(previous:, messages:, source_ids:, timeout: nil)
     payload = { previous_memory: previous, new_messages: messages.map { |entry| entry.slice(:role, :content, :message_id) } }
-    chat = Captain::Assistant::TieredLlmClient.chat(model: model, timeout: timeout || Float(ENV.fetch('CAPTAIN_MEMORY_SUMMARY_TIMEOUT', '30')))
+    chat = Captain::Assistant::TieredLlmClient.chat(account_id: @assistant.account_id, model: model,
+                                                    timeout: timeout || Float(ENV.fetch('CAPTAIN_MEMORY_SUMMARY_TIMEOUT', '30')))
                                               .with_schema(Captain::ConversationMemorySchema).with_params(max_tokens: 1400)
                                               .with_instructions(instructions)
     response = Captain::Assistant::TieredLlmClient.generate('summarize', @assistant, chat, payload.to_json)

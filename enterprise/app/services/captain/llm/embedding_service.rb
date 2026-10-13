@@ -17,7 +17,11 @@ class Captain::Llm::EmbeddingService
     return [] if content.blank?
 
     instrument_embedding_call(instrumentation_params(content, model)) do
-      RubyLLM.embed(content, model: model).vectors
+      # RubyLLM 1.15 has no embedding headers option. Resolve a fresh provider so its
+      # connection can carry this account's headers without leaking into another job.
+      resolved_model, provider = RubyLLM::Models.resolve(model, config: RubyLLM.config)
+      provider.connection.connection.headers.merge!(Llm::TenantTracking.headers(account_id: @account_id, feature: 'embedding'))
+      provider.embed(content, model: resolved_model.id, dimensions: nil).vectors
     end
   rescue RubyLLM::Error => e
     Rails.logger.error "Embedding API Error: #{e.message}"

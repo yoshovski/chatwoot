@@ -10,7 +10,8 @@ module Concerns::Agentable
       tools: agent_tools,
       model: agent_model,
       temperature: temperature.presence&.to_f || DEFAULT_TEMPERATURE,
-      response_schema: response_schema || agent_response_schema
+      response_schema: response_schema || agent_response_schema,
+      headers: Llm::TenantTracking.headers(account_id: account.id, feature: 'assistant')
     )
   end
 

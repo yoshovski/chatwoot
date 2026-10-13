@@ -46,7 +46,7 @@ class Captain::Assistant::IntentRouter
     effort = ENV['CAPTAIN_INTENT_ROUTER_REASONING_EFFORT'].presence
     params[:reasoning_effort] = effort if effort
     Captain::Assistant::TieredLlmClient.chat(
-      model: ENV.fetch('CAPTAIN_INTENT_ROUTER_MODEL', 'intent-router'),
+      account_id: @assistant.account_id, model: ENV.fetch('CAPTAIN_INTENT_ROUTER_MODEL', 'intent-router'),
       timeout: Float(ENV.fetch('CAPTAIN_INTENT_ROUTER_TIMEOUT', '1.5'))
     ).with_params(**params)
   end

@@ -12,11 +12,15 @@ export const useAccountSubscription = createSharedComposable(() => {
   const loadFailed = ref(false);
   let generation = 0;
 
-  const refresh = async () => {
+  const refresh = async ({ sync = true } = {}) => {
     const token = generation;
     try {
-      const { data } = await api.get();
+      const { data } = await api.get({ sync });
       if (token !== generation) return;
+      if (!sync && billing.value?.billing_sync_failed) {
+        data.billing_sync_failed = true;
+        data.can_checkout = false;
+      }
       billing.value = data;
       loadFailed.value = false;
     } catch {
@@ -37,7 +41,9 @@ export const useAccountSubscription = createSharedComposable(() => {
     },
     { immediate: true }
   );
-  useTimeoutPoll(refresh, REFRESH_INTERVAL, { immediate: true });
+  useTimeoutPoll(() => refresh({ sync: false }), REFRESH_INTERVAL, {
+    immediate: true,
+  });
 
   return { billing, loading, loadFailed, refresh };
 });

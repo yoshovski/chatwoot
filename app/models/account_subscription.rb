@@ -76,11 +76,17 @@ class AccountSubscription < ApplicationRecord
     usage_summary.merge(pricing_summary)
   end
 
+  def checkout_available?
+    enabled? && monthly_price_cents.positive? && (stripe_subscription_id.blank? || %w[canceled incomplete_expired].include?(payment_status)) &&
+      (!ChatwootApp.enterprise? || account.billing_provider == 'stripe')
+  end
+
   def pricing_summary
     slice(:enabled, :founder_plan, :billing_interval, :currency, :monthly_price_cents, :annual_discount_percent, :setup_fee_cents,
           :period_started_at, :period_ends_at, :payment_status).symbolize_keys.merge(
             annual_price_cents: annual_amount_cents, trial_enabled: trial_active?, trial_ends_at: trial_ends_at,
-            can_checkout: enabled? && (stripe_subscription_id.blank? || payment_status == 'canceled') && monthly_price_cents.positive?,
+            can_checkout: ChatwootApp.enterprise? && checkout_available?,
+            has_subscription: stripe_subscription_id.present?, stripe_details: stripe_subscription_details,
             can_manage: stripe_customer_id.present?, custom_payment_cents: custom_payment_cents,
             custom_payment_description: custom_payment_description,
             can_pay_customization: enabled? && custom_payment_cents.positive? && custom_payment_paid_at.blank?

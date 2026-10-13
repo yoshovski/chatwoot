@@ -104,7 +104,7 @@ class Integrations::LlmBaseService
     credential = llm_credential
 
     Llm::Config.with_api_key(credential[:api_key], api_base: api_base) do |context|
-      chat = context.chat(model: model)
+      chat = context.chat(model: model).with_headers(**Llm::TenantTracking.headers(account_id: hook.account_id, feature: event_name))
       setup_chat_with_messages(chat, messages)
     end
   rescue StandardError => e

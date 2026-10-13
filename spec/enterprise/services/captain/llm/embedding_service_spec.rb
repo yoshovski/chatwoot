@@ -30,7 +30,12 @@ RSpec.describe Captain::Llm::EmbeddingService, type: :service do
     it 'sends the installation embedding model to RubyLLM' do
       configure_embedding_model('custom-embedding-model')
 
-      expect(RubyLLM).to receive(:embed).with('search text', model: 'custom-embedding-model').and_return(embedding_response)
+      provider = instance_double(RubyLLM::Providers::OpenAI)
+      connection = instance_double(RubyLLM::Connection, connection: Faraday.new)
+      model = instance_double(RubyLLM::Model::Info, id: 'custom-embedding-model')
+      allow(provider).to receive(:connection).and_return(connection)
+      expect(RubyLLM::Models).to receive(:resolve).with('custom-embedding-model', config: RubyLLM.config).and_return([model, provider])
+      expect(provider).to receive(:embed).with('search text', model: 'custom-embedding-model', dimensions: nil).and_return(embedding_response)
 
       expect(described_class.new(account_id: account.id).get_embedding('search text')).to eq([0.1, 0.2])
     end
