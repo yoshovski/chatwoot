@@ -145,7 +145,9 @@ class Captain::Tools::FaqLookupTool < Captain::Tools::BasePublicTool
   end
 
   def record_catalog_handles(tool_context, passages)
-    catalog_handles = passages.select { |p| %w[catalog product].include?(p.kind) }.filter_map(&:handle)
+    catalog_handles = passages.select { |p| %w[catalog product].include?(p.kind) }.filter_map do |p|
+      p.handle.presence || p.content.to_s.match(/^\s*(?:-\s*)?Product handle:\s*([a-z0-9][a-z0-9_-]*)\s*$/i)&.captures&.first
+    end
     return if catalog_handles.blank?
 
     tool_context.state[:product_handles] = (Array(tool_context.state[:product_handles]) | catalog_handles)
