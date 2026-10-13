@@ -366,13 +366,6 @@ class Captain::Assistant < ApplicationRecord
     ['https://cdn.shopify.com/', *shopify_store_base_urls.map { |base_url| "#{base_url}cdn/" }]
   end
 
-  private
-
-  def shopify_tools_hook
-    hook = account.hooks.find_by(app_id: 'shopify')
-    hook if hook&.shopify_connected? && hook.shopify_tool_key.present?
-  end
-
   # The connected store's myshopify domain (with and without www) and its public storefront.
   def shopify_store_base_urls
     hook = account.hooks.find_by(app_id: 'shopify')
@@ -387,6 +380,13 @@ class Captain::Assistant < ApplicationRecord
       base_urls << "#{storefront_url.chomp('/')}/"
     end
     base_urls.uniq
+  end
+
+  private
+
+  def shopify_tools_hook
+    hook = account.hooks.find_by(app_id: 'shopify')
+    hook if hook&.shopify_connected? && hook.shopify_tool_key.present?
   end
 
   def assistant_event_data

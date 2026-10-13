@@ -3,7 +3,12 @@ class Api::V1::Accounts::AccountSubscriptionsController < Api::V1::Accounts::Bas
 
   def show
     subscription = Current.account.subscription_settings
-    render json: Current.account_user.administrator? ? subscription.summary : subscription.usage_summary
+    return render json: subscription.usage_summary unless Current.account_user.administrator?
+
+    sync_failed = refresh_subscription
+    subscription.reload if subscription.persisted?
+    render json: subscription.summary.merge(billing_sync_failed: sync_failed,
+                                            can_checkout: !sync_failed && subscription.pricing_summary[:can_checkout])
   end
 
   def checkout
@@ -35,5 +40,16 @@ class Api::V1::Accounts::AccountSubscriptionsController < Api::V1::Accounts::Bas
     render json: { error: I18n.t('errors.account_subscription.unavailable') }, status: :unprocessable_entity
   rescue Stripe::StripeError
     render json: { error: I18n.t('errors.account_subscription.payment_failed') }, status: :bad_gateway
+  end
+
+  private
+
+  def refresh_subscription
+    return false unless ChatwootApp.enterprise? && params[:sync] == 'true'
+
+    Enterprise::Billing::AccountSubscriptionSyncService.refresh(Current.account)
+    false
+  rescue Stripe::StripeError
+    true
   end
 end

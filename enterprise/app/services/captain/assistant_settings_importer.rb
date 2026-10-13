@@ -32,7 +32,9 @@ class Captain::AssistantSettingsImporter
   def update_assistant!
     config = assistant.config.to_h.merge(settings.fetch('config'))
     ALLOWLIST_KEYS.each do |key|
-      config[key] = (assistant.public_send("default_#{key}") + config[key]).uniq if config[key].present?
+      # Unrestricted defaults must not override explicitly imported host restrictions.
+      defaults = assistant.public_send("default_#{key}") - ['*']
+      config[key] = (defaults + config[key]).uniq if config[key].present?
     end
 
     assistant.update!(

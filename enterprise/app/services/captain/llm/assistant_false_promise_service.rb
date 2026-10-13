@@ -5,7 +5,7 @@ class Captain::Llm::AssistantFalsePromiseService < Llm::BaseAiService
   include Captain::Llm::AssistantResponseInspectionHelpers
 
   def initialize(assistant:, conversation:)
-    super()
+    super(account: conversation.account)
     @assistant = assistant
     @conversation = conversation
     @temperature = 0.0

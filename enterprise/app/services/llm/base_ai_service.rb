@@ -19,7 +19,10 @@ class Llm::BaseAiService
   end
 
   def chat(model: @model, temperature: @temperature)
-    RubyLLM.chat(model: model).with_temperature(temperature)
+    chat = RubyLLM.chat(model: model).with_temperature(temperature)
+    return chat if @llm_account.nil?
+
+    chat.with_headers(**Llm::TenantTracking.headers(account_id: @llm_account.id, feature: @llm_feature || 'assistant'))
   end
 
   private

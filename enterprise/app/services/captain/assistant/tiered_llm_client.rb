@@ -19,12 +19,13 @@ class Captain::Assistant::TieredLlmClient
     end
   end
 
-  def self.chat(model:, timeout:)
+  def self.chat(model:, timeout:, account_id:)
     Llm::Config.initialize!
     context = RubyLLM.context do |config|
       config.request_timeout = timeout
       config.max_retries = 0
     end
     context.chat(model: model, provider: :openai, assume_model_exists: true).with_temperature(0)
+           .with_headers(**Llm::TenantTracking.headers(account_id: account_id, feature: model))
   end
 end

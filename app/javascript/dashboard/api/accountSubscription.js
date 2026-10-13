@@ -6,6 +6,10 @@ class AccountSubscriptionAPI extends ApiClient {
     super('account_subscription', { accountScoped: true });
   }
 
+  get({ sync = false } = {}) {
+    return axios.get(this.url, { params: { sync } });
+  }
+
   checkout(interval) {
     return axios.post(`${this.url}/checkout`, { interval });
   }

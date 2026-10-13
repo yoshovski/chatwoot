@@ -9,7 +9,7 @@ class Captain::Documents::CrawlScope
   def initialize(document)
     @document = document
     @host = host_of(document.external_link)
-    @store = document.assistant.default_link_allowlist.any? { |base_url| host_of(base_url) == @host }
+    @store = document.assistant.shopify_store_base_urls.any? { |base_url| host_of(base_url) == @host }
   end
 
   def follow_links?

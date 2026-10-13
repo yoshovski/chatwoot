@@ -124,6 +124,7 @@ class Captain::Conversation::HandoffNoteService
   def call_llm(model:, prompt:, input:)
     response = instrument_llm_call(instrumentation_params(model, prompt, input)) do
       llm_context.chat(model: model, provider: :openai, assume_model_exists: true)
+                 .with_headers(**Llm::TenantTracking.headers(account_id: conversation.account_id, feature: 'handoff_summary'))
                  .with_temperature(TEMPERATURE)
                  .with_params(max_tokens: MAX_TOKENS)
                  .with_instructions(prompt)

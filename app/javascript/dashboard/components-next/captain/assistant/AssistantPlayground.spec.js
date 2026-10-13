@@ -27,6 +27,7 @@ vi.mock('./usePlaygroundSession', () => ({
     isInitializing: ref(false),
     loadError: ref(mocks.loadError),
     isValid: ref(true),
+    hasOverrides: computed(() => true),
     playgroundConfig: computed(() => ({
       scenario_ids: [],
       temporary_scenarios: [],

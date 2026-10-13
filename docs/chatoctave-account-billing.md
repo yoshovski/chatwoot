@@ -33,6 +33,11 @@ Use `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` and the public `FRONTEND_URL`. 
 - `customer.subscription.deleted`
 - `checkout.session.completed`
 - `checkout.session.async_payment_succeeded`
+- `invoice.paid`
+- `invoice.payment_failed`
+- `invoice.finalized`
+- `invoice.voided`
+- `invoice.marked_uncollectible`
 
 Enable the Stripe customer portal for invoices and payment methods. Checkout always uses the server's saved account price; customers cannot submit a price or another account's identity. The configured setup fee is a one-time line on a new subscription. Buying with fewer than 48 hours left in a trial starts the paid subscription immediately; longer remaining trials keep their configured expiry.
 
@@ -57,3 +62,9 @@ Use Stripe test mode to check monthly and yearly checkout, trial transition, cus
 Validated locally on the isolated billing branch: 218 existing Ruby examples and four frontend checks passed; the frontend build passed with a 6 GiB Node heap. Runtime checks verified quota accounting, archive generation/authenticated downloads, cross-account denial and mocked Stripe flows. Live Stripe checkout and the deployed installation's configured assets still require rollout verification.
 
 Billing UX revision: normal currency inputs accept comma or dot decimal separators; the usage page separates conversation allowance, subscription and one-time payments. Local verification passed 15 frontend checks (including temporary UI scenarios), exact currency-conversion checks, Ruby lint and the Vite asset build. Browser review covered desktop and mobile layouts and monthly/yearly price selection.
+
+## Subscription status and tenant usage
+
+Billing now distinguishes the absence of an online subscription, an existing subscription, its payment status and scheduled cancellation. Existing Stripe subscribers see their actual recurring item price, cadence, renewal/end date and latest invoice status, with management instead of a second checkout selector. Saved offers are used only for new subscriptions. Paid invoice status is separate from active subscription status. Stripe state is refreshed on billing page entry, retry and before subscription checkout; ordinary usage polling reads local state. An open checkout is reused, and switching its interval expires the old session before creating another.
+
+Run the new account-subscription migration before application/workers and register the invoice events above. Review the installation's customer portal configuration. Interval changes for custom-priced subscriptions remain account-team managed. See the [UX review](usage-billing-review.md) for state behavior and rollout checks, and [LiteLLM tenant usage](ai-agents/litellm-tenant-usage.md) for customer filtering and the separate Dify attribution requirement.

@@ -11,6 +11,7 @@ RSpec.describe Captain::ConversationCompletionService do
   before do
     InstallationConfig.find_or_initialize_by(name: 'CAPTAIN_OPEN_AI_API_KEY').update!(value: 'test-key')
     allow(Llm::Config).to receive(:with_api_key).and_yield(mock_context)
+    allow(mock_chat).to receive(:with_headers).and_return(mock_chat)
     allow(mock_chat).to receive(:with_instructions)
     allow(mock_chat).to receive(:with_schema).and_return(mock_chat)
     allow(account).to receive(:feature_enabled?).and_call_original

@@ -1,13 +1,13 @@
 <script setup>
-import { computed, ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { LineChart } from '@chatwoot/viz';
 import { useAccount } from 'dashboard/composables/useAccount';
 import { usePolicy } from 'dashboard/composables/usePolicy';
 import { useAccountSubscription } from 'dashboard/composables/useAccountSubscription';
 import api from 'dashboard/api/accountSubscription';
 import Button from 'dashboard/components-next/button/Button.vue';
 import ProgressMetric from 'dashboard/components-next/captain/pageComponents/overview/v2/ProgressMetric.vue';
+import SubscriptionDetails from './SubscriptionDetails.vue';
 import BaseSettingsHeader from '../components/BaseSettingsHeader.vue';
 import SettingsLayout from '../SettingsLayout.vue';
 
@@ -16,6 +16,7 @@ const { checkPermissions } = usePolicy();
 const { currentAccount } = useAccount();
 const { billing, loading, loadFailed, refresh } = useAccountSubscription();
 const canManage = computed(() => checkPermissions(['administrator']));
+onMounted(() => refresh());
 const paymentFailed = ref(false);
 const busy = ref(false);
 const interval = ref('month');
@@ -40,20 +41,6 @@ const percentage = computed(() =>
     ? Math.round((billing.value.consumed / billing.value.monthly_limit) * 100)
     : 0
 );
-const trialExpired = computed(
-  () =>
-    billing.value?.trial_enabled &&
-    new Date(billing.value.trial_ends_at) <= new Date()
-);
-const statusLabel = computed(() => {
-  if (trialExpired.value) return t('ACCOUNT_SUBSCRIPTION.TRIAL_ENDED');
-  if (billing.value?.trial_enabled) return t('ACCOUNT_SUBSCRIPTION.TRIAL');
-  if (billing.value?.payment_status === 'active')
-    return t('ACCOUNT_SUBSCRIPTION.ACTIVE');
-  if (billing.value?.payment_status === 'canceled')
-    return t('ACCOUNT_SUBSCRIPTION.SUBSCRIPTION_ENDED');
-  return t('ACCOUNT_SUBSCRIPTION.ACCOUNT_PLAN');
-});
 const warningText = computed(() => {
   if (billing.value?.ai_replies_paused) return t('ACCOUNT_SUBSCRIPTION.PAUSED');
   if (!billing.value?.warning) return '';
@@ -63,17 +50,6 @@ const warningText = computed(() => {
     return t('ACCOUNT_SUBSCRIPTION.PAID_LIMIT_REACHED');
   return t('ACCOUNT_SUBSCRIPTION.PAID_WARNING');
 });
-const selectedPrice = computed(() =>
-  interval.value === 'year'
-    ? billing.value.annual_price_cents
-    : billing.value.monthly_price_cents
-);
-const annualSavings = computed(() =>
-  Math.max(
-    0,
-    billing.value.monthly_price_cents * 12 - billing.value.annual_price_cents
-  )
-);
 const includedFeatures = computed(() => [
   { icon: 'i-lucide-inbox', label: 'SHARED_INBOX', enabled: true },
   {
@@ -94,50 +70,21 @@ const includedFeatures = computed(() => [
     enabled: currentAccount.value?.features?.captain_integration_v2,
   },
 ]);
-const billingPeriodProgress = computed(() => {
-  const start = new Date(billing.value?.period_started_at).getTime();
-  const end = new Date(billing.value?.period_ends_at).getTime();
-  return end > start
-    ? Math.min(100, Math.max(0, ((Date.now() - start) / (end - start)) * 100))
-    : 0;
-});
-const historyChartData = computed(() => {
-  const periods = [...billing.value.history];
-  if (
-    !periods.some(
-      period =>
-        new Date(period.period_started_at).getTime() ===
-        new Date(billing.value.quota_started_at).getTime()
-    )
-  ) {
-    periods.push({
+const historyPeriods = computed(() => {
+  const periods = billing.value.history.filter(
+    period =>
+      new Date(period.period_started_at).getTime() !==
+      new Date(billing.value.quota_started_at).getTime()
+  );
+  return [
+    {
       period_started_at: billing.value.quota_started_at,
       consumed: billing.value.consumed,
-    });
-  }
-  periods.sort(
-    (a, b) => new Date(a.period_started_at) - new Date(b.period_started_at)
-  );
-  return {
-    categories: periods.map(period => date(period.period_started_at)),
-    series: [
-      {
-        id: 'conversations',
-        label: t('ACCOUNT_SUBSCRIPTION.CONVERSATIONS'),
-        color: 'rgb(var(--blue-9))',
-        pointBorderColor: 'rgb(var(--card-color))',
-        data: periods.map(period => period.consumed),
-      },
-    ],
-  };
+      current: true,
+    },
+    ...periods,
+  ];
 });
-const historyChartDomain = computed(() => [
-  0,
-  Math.max(
-    100,
-    Math.ceil(Math.max(...historyChartData.value.series[0].data) / 100) * 100
-  ),
-]);
 const pay = async (action = 'checkout') => {
   busy.value = true;
   paymentFailed.value = false;
@@ -193,6 +140,7 @@ const pay = async (action = 'checkout') => {
           <p class="m-0 text-sm leading-6">{{ warningText }}</p>
         </div>
         <section
+          v-if="canManage"
           class="overflow-hidden rounded-2xl border border-n-blue-6 bg-gradient-to-br from-n-blue-2 via-n-background to-n-iris-2 p-6"
         >
           <div class="flex flex-wrap items-center justify-between gap-4">
@@ -241,7 +189,10 @@ const pay = async (action = 'checkout') => {
             {{ t('ACCOUNT_SUBSCRIPTION.FOUNDER_HELP') }}
           </p>
         </section>
-        <div class="grid grid-cols-1 items-start gap-6 lg:grid-cols-2">
+        <div
+          class="grid grid-cols-1 items-start gap-6"
+          :class="canManage ? 'lg:grid-cols-2' : ''"
+        >
           <section class="rounded-2xl border border-n-weak bg-n-background p-6">
             <div class="mb-6 flex items-center justify-between gap-3">
               <h2 class="m-0 text-base font-semibold text-n-slate-12">
@@ -318,177 +269,14 @@ const pay = async (action = 'checkout') => {
               {{ t('ACCOUNT_SUBSCRIPTION.COUNTING') }}
             </p>
           </section>
-          <section class="rounded-2xl border border-n-weak bg-n-background p-6">
-            <div class="mb-6 flex flex-wrap items-center justify-between gap-3">
-              <h2 class="m-0 text-base font-semibold text-n-slate-12">
-                {{ t('ACCOUNT_SUBSCRIPTION.SUBSCRIPTION') }}
-              </h2>
-              <span
-                class="rounded-md bg-n-alpha-2 px-2 py-1 text-xs font-medium text-n-slate-11"
-                >{{ statusLabel }}</span
-              >
-            </div>
-            <template v-if="canManage && billing.can_checkout">
-              <fieldset class="m-0 mb-5 border-0 p-0">
-                <legend class="mb-3 text-sm text-n-slate-11">
-                  {{ t('ACCOUNT_SUBSCRIPTION.BILLING_INTERVAL') }}
-                </legend>
-                <div class="grid grid-cols-2 gap-3">
-                  <label
-                    v-for="option in ['month', 'year']"
-                    :key="option"
-                    class="relative flex cursor-pointer flex-col gap-2 rounded-xl border p-4 focus-within:ring-2 focus-within:ring-n-blue-9"
-                    :class="
-                      interval === option
-                        ? 'border-n-blue-7 bg-n-blue-2'
-                        : 'border-n-weak'
-                    "
-                  >
-                    <input
-                      v-model="interval"
-                      class="sr-only"
-                      type="radio"
-                      name="billing-interval"
-                      :value="option"
-                      :disabled="busy"
-                    />
-                    <span class="text-sm font-medium text-n-slate-12">{{
-                      option === 'year'
-                        ? t('ACCOUNT_SUBSCRIPTION.YEARLY')
-                        : t('ACCOUNT_SUBSCRIPTION.MONTHLY')
-                    }}</span>
-                    <span class="text-xl font-semibold text-n-slate-12">{{
-                      money(
-                        option === 'year'
-                          ? billing.annual_price_cents
-                          : billing.monthly_price_cents
-                      )
-                    }}</span>
-                    <span class="text-xs text-n-slate-11">{{
-                      option === 'year'
-                        ? t('ACCOUNT_SUBSCRIPTION.PER_YEAR')
-                        : t('ACCOUNT_SUBSCRIPTION.PER_MONTH')
-                    }}</span>
-                    <span
-                      v-if="option === 'year' && annualSavings > 0"
-                      class="text-xs font-medium text-n-teal-11"
-                    >
-                      {{
-                        t('ACCOUNT_SUBSCRIPTION.YEARLY_SAVING', {
-                          amount: money(annualSavings),
-                        })
-                      }}
-                    </span>
-                  </label>
-                </div>
-              </fieldset>
-              <p
-                v-if="billing.setup_fee_cents"
-                class="mb-4 text-sm text-n-slate-11"
-              >
-                {{
-                  t('ACCOUNT_SUBSCRIPTION.SETUP_FEE', {
-                    amount: money(billing.setup_fee_cents),
-                  })
-                }}
-              </p>
-              <Button
-                :label="
-                  t('ACCOUNT_SUBSCRIPTION.SUBSCRIBE_PRICE', {
-                    amount: money(selectedPrice),
-                  })
-                "
-                :is-loading="busy"
-                :disabled="busy"
-                class="w-full"
-                @click="pay()"
-              />
-            </template>
-            <template v-else>
-              <p
-                v-if="billing.monthly_price_cents > 0"
-                class="mb-1 text-3xl font-semibold tracking-tight text-n-slate-12"
-              >
-                {{
-                  money(
-                    billing.billing_interval === 'year'
-                      ? billing.annual_price_cents
-                      : billing.monthly_price_cents
-                  )
-                }}
-              </p>
-              <p
-                v-if="billing.monthly_price_cents > 0"
-                class="m-0 text-sm text-n-slate-11"
-              >
-                {{
-                  billing.billing_interval === 'year'
-                    ? t('ACCOUNT_SUBSCRIPTION.PER_YEAR')
-                    : t('ACCOUNT_SUBSCRIPTION.PER_MONTH')
-                }}
-              </p>
-              <p v-else class="m-0 text-sm text-n-slate-11">
-                {{ t('ACCOUNT_SUBSCRIPTION.MANAGED_PLAN') }}
-              </p>
-            </template>
-            <div
-              v-if="billing.period_started_at && billing.period_ends_at"
-              class="mt-6 rounded-xl bg-n-alpha-1 p-4"
-            >
-              <ProgressMetric
-                :label="t('ACCOUNT_SUBSCRIPTION.CURRENT_BILLING_PERIOD')"
-                :used="billingPeriodProgress"
-                :total="100"
-                :value-label="
-                  t('ACCOUNT_SUBSCRIPTION.DATE_RANGE', {
-                    start: date(billing.period_started_at),
-                    end: date(billing.period_ends_at),
-                  })
-                "
-              />
-            </div>
-            <dl
-              v-if="billing.trial_enabled || billing.period_ends_at"
-              class="mb-0 mt-5 space-y-3 border-t border-n-weak pt-5 text-sm"
-            >
-              <div
-                v-if="billing.trial_enabled"
-                class="flex flex-wrap justify-between gap-2"
-              >
-                <dt class="text-n-slate-11">
-                  {{
-                    trialExpired
-                      ? t('ACCOUNT_SUBSCRIPTION.TRIAL_ENDED_ON')
-                      : t('ACCOUNT_SUBSCRIPTION.TRIAL_END_DATE')
-                  }}
-                </dt>
-                <dd class="m-0 font-medium text-n-slate-12">
-                  {{ date(billing.trial_ends_at) }}
-                </dd>
-              </div>
-              <div
-                v-if="billing.period_ends_at"
-                class="flex flex-wrap justify-between gap-2"
-              >
-                <dt class="text-n-slate-11">
-                  {{ t('ACCOUNT_SUBSCRIPTION.BILLING_PERIOD_END') }}
-                </dt>
-                <dd class="m-0 font-medium text-n-slate-12">
-                  {{ date(billing.period_ends_at) }}
-                </dd>
-              </div>
-            </dl>
-            <Button
-              v-if="canManage && billing.can_manage"
-              class="mt-5"
-              :label="t('ACCOUNT_SUBSCRIPTION.MANAGE')"
-              variant="outline"
-              color="slate"
-              :is-loading="busy"
-              :disabled="busy"
-              @click="pay('portal')"
-            />
-          </section>
+          <SubscriptionDetails
+            v-if="canManage"
+            v-model:interval="interval"
+            :billing="billing"
+            :busy="busy"
+            @pay="pay"
+            @refresh="refresh()"
+          />
         </div>
         <section class="rounded-2xl border border-n-weak bg-n-background p-6">
           <h2 class="m-0 mb-5 text-base font-semibold text-n-slate-12">
@@ -585,15 +373,53 @@ const pay = async (action = 'checkout') => {
               </span>
             </div>
             <div class="overflow-x-auto">
-              <LineChart
-                :data="historyChartData"
-                :format-value="number"
-                :y-domain="historyChartDomain"
-                :height="260"
-                :point-radius="4"
-                :aria-label="t('ACCOUNT_SUBSCRIPTION.HISTORY')"
-                class="min-w-[36rem] [--cw-viz-line-label-color:rgb(var(--slate-11))] [--cw-viz-line-axis-color:rgb(var(--slate-4))] [--cw-viz-line-tooltip-background:rgb(var(--solid-2))] [--cw-viz-line-tooltip-color:rgb(var(--slate-12))] [--cw-viz-line-tooltip-border-color:rgb(var(--border-strong))]"
-              />
+              <table class="w-full text-start text-sm">
+                <caption class="sr-only">
+                  {{
+                    t('ACCOUNT_SUBSCRIPTION.HISTORY_DESCRIPTION')
+                  }}
+                </caption>
+                <thead>
+                  <tr class="border-b border-n-weak">
+                    <th
+                      scope="col"
+                      class="pb-3 text-start font-medium text-n-slate-11"
+                    >
+                      {{ t('ACCOUNT_SUBSCRIPTION.MONTH') }}
+                    </th>
+                    <th
+                      scope="col"
+                      class="pb-3 text-end font-medium text-n-slate-11"
+                    >
+                      {{ t('ACCOUNT_SUBSCRIPTION.CONVERSATIONS') }}
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr
+                    v-for="period in historyPeriods"
+                    :key="period.period_started_at"
+                    class="border-b border-n-weak last:border-0"
+                  >
+                    <th
+                      scope="row"
+                      class="py-3 text-start font-normal text-n-slate-12"
+                    >
+                      {{ date(period.period_started_at) }}
+                      <span
+                        v-if="period.current"
+                        class="ms-2 text-xs text-n-blue-11"
+                        >{{ t('ACCOUNT_SUBSCRIPTION.IN_PROGRESS') }}</span
+                      >
+                    </th>
+                    <td
+                      class="py-3 text-end font-medium tabular-nums text-n-slate-12"
+                    >
+                      {{ number(period.consumed) }}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
           </div>
         </section>

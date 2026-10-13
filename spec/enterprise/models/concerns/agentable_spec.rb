@@ -50,6 +50,7 @@ RSpec.describe Concerns::Agentable do
         instructions: instance_of(Proc),
         tools: [],
         model: Llm::Models.default_model_for('assistant'),
+        headers: Llm::TenantTracking.headers(account_id: account.id, feature: 'assistant'),
         temperature: 0.8,
         response_schema: Captain::ResponseSchema
       )

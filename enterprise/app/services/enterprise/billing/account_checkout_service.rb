@@ -7,13 +7,19 @@ class Enterprise::Billing::AccountCheckoutService
 
   def checkout(interval:)
     @account.with_lock do
+      Enterprise::Billing::AccountSubscriptionSyncService.refresh(@account)
       subscription = @account.subscription_settings
+      subscription.reload if subscription.persisted?
       validate_checkout(subscription)
       ensure_customer(subscription)
+      pending = pending_checkout(subscription, interval)
+      return { url: pending.url } if pending
+
       session = Stripe::Checkout::Session.create(
         checkout_parameters(subscription, interval),
-        { idempotency_key: "account-checkout-#{subscription.id}-#{interval}-#{subscription.updated_at.to_i}-#{Time.current.to_i / 1800}" }
+        { idempotency_key: checkout_key(subscription, interval) }
       )
+      subscription.update!(stripe_checkout_session_id: session.id)
       { url: session.url }
     end
   end
@@ -71,17 +77,46 @@ class Enterprise::Billing::AccountCheckoutService
   private
 
   def validate_checkout(subscription)
-    raise Unavailable unless subscription.enabled? && subscription.monthly_price_cents.positive?
-    raise Unavailable unless subscription.stripe_subscription_id.blank? || subscription.payment_status == 'canceled'
-    raise Unavailable unless @account.billing_provider == 'stripe'
+    raise Unavailable unless subscription.checkout_available?
 
     subscription.save! if subscription.new_record?
+  end
+
+  def checkout_key(subscription, interval)
+    ['account-checkout', subscription.id, interval, subscription.updated_at.to_i,
+     subscription.stripe_checkout_session_id, Time.current.to_i / 1800].join('-')
+  end
+
+  def offer_signature(subscription)
+    Digest::SHA256.hexdigest([subscription.currency, subscription.monthly_price_cents, subscription.annual_amount_cents,
+                              subscription.setup_fee_cents, subscription.trial_active?, subscription.trial_ends_at].join(':'))
+  end
+
+  def pending_checkout(subscription, interval)
+    return if subscription.stripe_checkout_session_id.blank?
+
+    session = Stripe::Checkout::Session.retrieve(subscription.stripe_checkout_session_id)
+    if session.status == 'complete'
+      return if completed_checkout_ended?(subscription, session)
+
+      raise Unavailable
+    end
+    return unless session.status == 'open'
+    return session if session.metadata['billing_interval'] == interval && session.metadata['offer_signature'] == offer_signature(subscription)
+
+    Stripe::Checkout::Session.expire(session.id)
+    nil
+  end
+
+  def completed_checkout_ended?(subscription, session)
+    session.subscription == subscription.stripe_subscription_id && %w[canceled incomplete_expired].include?(subscription.payment_status)
   end
 
   def checkout_parameters(subscription, interval)
     data = { metadata: { chatoctave_account_id: @account.id.to_s } }
     data[:trial_end] = subscription.trial_ends_at.to_i if subscription.trial_active? && subscription.trial_ends_at > 48.hours.from_now
     { customer: subscription.stripe_customer_id, mode: 'subscription', line_items: checkout_items(subscription, interval), subscription_data: data,
+      metadata: { billing_interval: interval, offer_signature: offer_signature(subscription) },
       client_reference_id: @account.id.to_s, success_url: return_url, cancel_url: return_url }
   end
 
