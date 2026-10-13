@@ -14,6 +14,10 @@ class AccountSubscriptionAPI extends ApiClient {
     return axios.post(`${this.url}/checkout`, { interval });
   }
 
+  changeInterval(interval) {
+    return axios.post(`${this.url}/change_interval`, { interval });
+  }
+
   payment() {
     return axios.post(`${this.url}/payment`);
   }

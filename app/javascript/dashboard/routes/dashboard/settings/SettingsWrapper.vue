@@ -3,6 +3,7 @@ import { computed } from 'vue';
 import { useRoute } from 'vue-router';
 
 defineProps({
+  containScroll: { type: Boolean, default: false },
   keepAlive: {
     type: Boolean,
     default: true,
@@ -20,7 +21,8 @@ const routeKey = computed(() =>
 
 <template>
   <div
-    class="flex flex-col w-full h-full m-0 pb-8 pt-4 px-6 overflow-auto bg-n-surface-1"
+    class="flex min-h-0 flex-col w-full h-full m-0 pb-8 pt-4 px-6 overflow-auto bg-n-surface-1"
+    :class="{ 'overscroll-contain': containScroll }"
   >
     <div class="flex items-start w-full max-w-5xl mx-auto">
       <router-view v-slot="{ Component }">

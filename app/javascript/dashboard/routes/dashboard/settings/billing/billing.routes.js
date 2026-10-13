@@ -12,6 +12,7 @@ export default {
       },
       component: SettingsWrapper,
       props: {
+        containScroll: true,
         headerTitle: 'BILLING_SETTINGS.TITLE',
         icon: 'credit-card-person',
         showNewButton: false,

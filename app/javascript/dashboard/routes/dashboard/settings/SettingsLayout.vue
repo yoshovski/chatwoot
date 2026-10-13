@@ -1,5 +1,6 @@
 <script setup>
 defineProps({
+  contentSized: { type: Boolean, default: false },
   isLoading: {
     type: Boolean,
     default: false,
@@ -20,7 +21,10 @@ defineProps({
 </script>
 
 <template>
-  <div class="flex flex-col w-full h-full gap-4 font-inter">
+  <div
+    class="flex flex-col w-full gap-4 font-inter"
+    :class="contentSized ? 'h-auto' : 'h-full'"
+  >
     <slot name="header" />
     <!-- Added to render any templates that should be rendered before body -->
     <main>
