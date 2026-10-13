@@ -18,6 +18,7 @@ class Captain::Conversation::ReplySanitizer
     text = content.dup
     text = strip_images(text)
     text = filter_bare_urls(filter_autolinks(filter_markdown_links(text)))
+    text = strip_stray_citation_numbers(text)
     text = cleanup_prose_formatting(text)
     text.strip
   end
@@ -106,6 +107,10 @@ class Captain::Conversation::ReplySanitizer
     end
   end
 
+  def strip_stray_citation_numbers(text)
+    text.gsub(/(?<=\S)[ \t]*\[\d+\](?!\()/, '').gsub(/\[\d+\](?!\()[ \t]*/, '')
+  end
+
   def cleanup_prose_formatting(text)
     # Turn '*' and '+' list markers into '-'
     text = text.gsub(/^(\s*)[*+][ \t]+/, '\1- ')
@@ -117,7 +122,8 @@ class Captain::Conversation::ReplySanitizer
     text = text.gsub(/[ \t]*[—–][ \t]*/, ', ')
 
     # Clean up punctuation spacing if tags were stripped
-    text = text.gsub(/:\s*([.!?,])/, '\1')
+    text = text.gsub(/[,;:]\s*([.!?,])/, '\1')
+               .gsub(/:\s*([.!?,])/, '\1')
                .gsub(/[ \t]+([.!?,])/, '\1')
                .gsub(/,\s*,+/, ',')
                .gsub(/^,\s*/, '')

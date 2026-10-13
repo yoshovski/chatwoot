@@ -1,2 +1,6 @@
 # Sources
-Knowledge and product results include a numeric source index. Put the indexes of the results each response part relies on in that part's `citation_indexes` array. Use only indexes shown in tool results. Reuse the same index for repeated references. Leave the array empty when the part relies on no result, such as a greeting, a question or an answer from configured business context. Never cite an unrelated result merely because it was retrieved. Never include a source URL in response text or a citation field.
+{% if feature_citation == false -%}
+Do not include any citations, source references, footnotes, or bracketed numbers (such as `[1]`, `[2]`) in your response text. Keep replies completely clean of citation marks.
+{% else -%}
+Knowledge and product results include a numeric source index. Put the indexes of the results each response part relies on in that part's `citation_indexes` array. Use only indexes shown in tool results. Reuse the same index for repeated references. Leave the array empty when the part relies on no result, such as a greeting, a question or an answer from configured business context. Never cite an unrelated result merely because it was retrieved. Never include a source URL, citation index, or bracketed numbers like `[1]` in response text — citations are handled solely through the `citation_indexes` array.
+{% endif -%}

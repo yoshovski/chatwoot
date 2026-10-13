@@ -102,7 +102,17 @@ RSpec.describe Captain::PromptRenderer do
       result = described_class.render(template_name, {})
 
       expect(result).to include('citation_indexes', 'numeric source index')
+      expect(result).to include('Never include a source URL, citation index, or bracketed numbers like `[1]` in response text')
       expect(result).not_to include('[[faq:')
+    end
+
+    it 'renders clean no-citation rules when feature_citation is false' do
+      allow(File).to receive(:read).with(template_path).and_return("{% render 'citations', feature_citation: feature_citation %}")
+
+      result = described_class.render(template_name, { 'feature_citation' => false })
+
+      expect(result).to include('Do not include any citations, source references, footnotes, or bracketed numbers')
+      expect(result).not_to include('citation_indexes')
     end
 
     it 'renders the commerce rules snippet' do
