@@ -1,6 +1,5 @@
 # frozen_string_literal: true
 
-# rubocop:disable Metrics/ClassLength
 class Captain::Tools::CatalogProductSearchTool < Captain::Tools::BasePublicTool
   include Captain::Tools::ShopifyToolHelpers
   include Captain::Tools::SourceIndexing
@@ -17,14 +16,14 @@ class Captain::Tools::CatalogProductSearchTool < Captain::Tools::BasePublicTool
     end
 
     log_tool_usage('searching_products', { query: query })
-    exact_products, selected_handles = resolve_search_handles(client, query, limit)
+    selected_handles = resolve_search_handles(query, limit)
     if selected_handles.empty?
       record_product_search_stats(tool_context, 0)
       return "No products found matching: #{query}"
     end
 
     cached_products = tool_context&.state&.dig(Captain::Assistant::PRODUCT_CACHE_STATE_KEY) || {}
-    products = fetch_live_products(client, selected_handles, preloaded: exact_products, cached: cached_products)
+    products = fetch_live_products(client, selected_handles, cached: cached_products)
     record_product_search_stats(tool_context, active_products_count(products))
     process_found_products(tool_context, query, products)
   end
@@ -39,14 +38,10 @@ class Captain::Tools::CatalogProductSearchTool < Captain::Tools::BasePublicTool
     true
   end
 
-  # The Shopify search runs in the background while the knowledge search uses this thread's database connection.
-  def resolve_search_handles(client, query, limit)
-    exact_matches = in_background { fetch_exact_products(client, query) }
+  def resolve_search_handles(query, limit)
     semantic_matches = fetch_semantic_matches(query)
-    exact_products = await([exact_matches]).first
-    all_handles = (exact_products.keys + semantic_matches)
-                  .map(&:to_s).map(&:strip).reject(&:blank?).uniq(&:downcase)
-    [exact_products, all_handles.take(normalize_limit(limit))]
+    all_handles = semantic_matches.map(&:to_s).map(&:strip).reject(&:blank?).uniq(&:downcase)
+    all_handles.take(normalize_limit(limit))
   end
 
   def process_found_products(tool_context, query, products)
@@ -75,23 +70,6 @@ class Captain::Tools::CatalogProductSearchTool < Captain::Tools::BasePublicTool
     limit_val = limit.presence&.to_i || 3
     limit_val = 3 if limit_val < 1
     [limit_val, 10].min
-  end
-
-  def fetch_exact_products(client, query)
-    res = client.search_products(query: query, limit: 5)
-    extract_product_map(res)
-  rescue StandardError => e
-    Rails.logger.warn("SAT search_products failed during catalog search: #{e.message}") if defined?(Rails) && Rails.respond_to?(:logger)
-    {}
-  end
-
-  def extract_product_map(res)
-    return {} unless res && res['products'].is_a?(Array)
-
-    res['products'].each_with_object({}) do |product, map|
-      handle = product['handle'].to_s.strip.downcase
-      map[handle] = product if handle.present?
-    end
   end
 
   def fetch_semantic_matches(query)
@@ -126,16 +104,15 @@ class Captain::Tools::CatalogProductSearchTool < Captain::Tools::BasePublicTool
     cleaned.downcase if cleaned.present? && cleaned.exclude?(' ')
   end
 
-  # Live lookups reuse preloaded search records and cached products, hydrating only missing details in parallel.
-  def fetch_live_products(client, handles, preloaded: {}, cached: {})
-    needed = handles.reject { |h| product_complete?(preloaded[h]) || product_complete?(cached[h]) }
+  # Live lookups reuse cached products, hydrating missing details in parallel.
+  def fetch_live_products(client, handles, cached: {})
+    needed = handles.reject { |h| product_complete?(cached[h]) }
     loaded_map = needed.zip(await(needed.map { |h| in_background { fetch_single_product(client, h) } })).to_h
 
-    handles.map { |h| resolve_live_product(h, preloaded[h], cached[h], loaded_map[h]) }
+    handles.map { |h| resolve_live_product(h, cached[h], loaded_map[h]) }
   end
 
-  def resolve_live_product(handle, preloaded, cached, loaded)
-    return preloaded if product_complete?(preloaded)
+  def resolve_live_product(handle, cached, loaded)
     return cached if product_complete?(cached)
 
     loaded || unavailable_stub(handle)
@@ -226,4 +203,3 @@ class Captain::Tools::CatalogProductSearchTool < Captain::Tools::BasePublicTool
     info
   end
 end
-# rubocop:enable Metrics/ClassLength
