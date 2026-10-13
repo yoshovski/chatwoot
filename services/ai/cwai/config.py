@@ -13,6 +13,8 @@ class DifyConnection(BaseModel):
     embedding_model: str
     reranking_provider: str | None = None
     reranking_model: str | None = None
+    query_embedding_provider: str | None = None
+    query_embedding_model: str | None = None
 
 
 class Settings(BaseSettings):

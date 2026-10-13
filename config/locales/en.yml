@@ -745,6 +745,8 @@ en:
       embedding_model: Embedding model for new datasets
       reranking_model_provider: Reranking provider
       reranking_model: Reranking model
+      query_embedding_model_provider: Query embedding provider (optional)
+      query_embedding_model: Query embedding model (optional, for asymmetric search)
       model_hint: Reranking changes apply to assistant searches immediately. Embedding changes apply to newly created datasets, including Shopify catalogs when Shopify tools are configured; existing datasets require a separate migration.
       saved: Shared Dify workspace saved.
       sync_failed: The knowledge service could not apply this configuration. Check service availability and retry to apply the settings to every service.

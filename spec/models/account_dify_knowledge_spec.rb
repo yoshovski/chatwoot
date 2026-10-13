@@ -23,4 +23,27 @@ RSpec.describe Account, type: :model do
     expect(account.errors[:dify_base_url]).to be_present
     expect(account.errors[:dify_embedding_model]).to be_present
   end
+
+  it 'delegates query embedding model and provider to shared workspace when enabled' do
+    expect(account.dify_query_embedding_model).to be_nil
+    expect(account.dify_query_embedding_model_provider).to be_nil
+
+    workspace = DifyWorkspace.create!(
+      id: 1,
+      enabled: true,
+      base_url: 'https://dify.example.test',
+      knowledge_api_key: 'private-workspace-key',
+      embedding_model_provider: 'voyage',
+      embedding_model: 'voyage-4',
+      reranking_model_provider: 'voyage',
+      reranking_model: 'rerank-3-lite',
+      query_embedding_model_provider: 'voyage',
+      query_embedding_model: 'voyage-4-lite'
+    )
+
+    expect(account.dify_query_embedding_model).to eq('voyage-4-lite')
+    expect(account.dify_query_embedding_model_provider).to eq('voyage')
+    expect(workspace.connection[:query_embedding_model]).to eq('voyage-4-lite')
+    expect(workspace.connection[:query_embedding_provider]).to eq('voyage')
+  end
 end

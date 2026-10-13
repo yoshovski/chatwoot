@@ -13,12 +13,17 @@ unless defined?(Captain::Assistant::CITATION_SOURCES_STATE_KEY)
     CITATION_SOURCES_STATE_KEY = :captain_v2_citation_sources
     CITATION_DETAILS_STATE_KEY = :captain_v2_citation_details
     PRODUCT_HANDLES_STATE_KEY = :captain_v2_product_handles
+    PRODUCT_SEARCH_STATS_STATE_KEY = :captain_v2_product_search_stats
+    PRODUCT_CACHE_STATE_KEY = :captain_v2_product_cache
   end
 end
 
+require_relative '../../../../../enterprise/lib/captain/tools/execution_tracing'
 require_relative '../../../../../enterprise/lib/captain/tools/base_public_tool'
 require_relative '../../../../../enterprise/lib/captain/tools/shopify_tool_helpers'
+require_relative '../../../../../enterprise/lib/captain/tools/source_indexing'
 require_relative '../../../../../enterprise/lib/captain/tools/catalog_product_search_tool'
+require_relative '../../../../../enterprise/app/services/captain/knowledge/search_tracing'
 require_relative '../../../../../enterprise/app/services/captain/knowledge/search'
 
 # rubocop:disable RSpec/VerifiedDoubles
@@ -112,14 +117,8 @@ RSpec.describe Captain::Tools::CatalogProductSearchTool do
       }
     end
 
-    before do
-      allow(Captain::Knowledge::Search).to receive(:new).with(assistant).and_return(knowledge_search)
-      allow(sat_client).to receive(:search_products).and_return({ 'products' => [] })
-      allow(sat_client).to receive(:get_product).with(handle: 'agras-t40').and_return(product_hit)
-    end
-
-    it 'finds products through semantic knowledge search and fetches live product data' do
-      passage = Captain::Knowledge::Search::Passage.new(
+    let(:passage) do
+      Captain::Knowledge::Search::Passage.new(
         kind: 'catalog',
         title: 'DJI Agras T40',
         content: "Product handle: agras-t40\nSpraying drone for fields",
@@ -127,7 +126,16 @@ RSpec.describe Captain::Tools::CatalogProductSearchTool do
         handle: 'agras-t40',
         dataset_id: 'ds-catalog-1'
       )
+    end
+
+    before do
+      allow(Captain::Knowledge::Search).to receive(:new).with(assistant).and_return(knowledge_search)
+      allow(sat_client).to receive(:get_product).with(handle: 'agras-t40').and_return(product_hit)
+    end
+
+    it 'finds products through semantic knowledge search and fetches live product data' do
       allow(knowledge_search).to receive(:search).with('spraying drone', kinds: %w[catalog product]).and_return([passage])
+      expect(sat_client).not_to receive(:search_products)
 
       result = tool.perform(tool_context, query: 'spraying drone')
 
@@ -141,15 +149,23 @@ RSpec.describe Captain::Tools::CatalogProductSearchTool do
       expect(tool_context.state[Captain::Assistant::PRODUCT_HANDLES_STATE_KEY]).to include('agras-t40')
     end
 
-    it 'prioritizes exact matches from SAT search_products' do
-      allow(sat_client).to receive(:search_products).with(query: 'agras-t40', limit: 5).and_return(
-        { 'products' => [{ 'handle' => 'agras-t40', 'title' => 'DJI Agras T40' }] }
-      )
-      allow(knowledge_search).to receive(:search).and_return([])
+    it 'reuses cached products and does not perform get_product call' do
+      tool_context.state[Captain::Assistant::PRODUCT_CACHE_STATE_KEY] = {
+        'agras-t40' => product_hit
+      }
+      allow(knowledge_search).to receive(:search).and_return([passage])
+      expect(sat_client).not_to receive(:get_product)
 
       result = tool.perform(tool_context, query: 'agras-t40')
       expect(result).to include('DJI Agras T40 Spraying Drone')
-      expect(tool_context.state[:product_handles]).to eq(['agras-t40'])
+    end
+
+    it 'returns no products found message when catalog KB yields no hits' do
+      allow(knowledge_search).to receive(:search).and_return([])
+      expect(sat_client).not_to receive(:get_product)
+
+      result = tool.perform(tool_context, query: 'non-existent')
+      expect(result).to eq('No products found matching: non-existent')
     end
 
     context 'when hide_stock is enabled in hook settings' do
@@ -162,10 +178,7 @@ RSpec.describe Captain::Tools::CatalogProductSearchTool do
       end
 
       before do
-        allow(sat_client).to receive(:search_products).and_return(
-          { 'products' => [{ 'handle' => 'agras-t40' }] }
-        )
-        allow(knowledge_search).to receive(:search).and_return([])
+        allow(knowledge_search).to receive(:search).and_return([passage])
       end
 
       it 'removes availability and stock indicators from results' do
@@ -179,10 +192,15 @@ RSpec.describe Captain::Tools::CatalogProductSearchTool do
 
     context 'when product is not found or fails to fetch' do
       it 'keeps product marked unavailable on error' do
-        allow(sat_client).to receive(:search_products).and_return(
-          { 'products' => [{ 'handle' => 'broken-item' }] }
+        broken_passage = Captain::Knowledge::Search::Passage.new(
+          kind: 'catalog',
+          title: 'Broken Item',
+          content: "Product handle: broken-item\nDefective item",
+          score: 0.85,
+          handle: 'broken-item',
+          dataset_id: 'ds-catalog-1'
         )
-        allow(knowledge_search).to receive(:search).and_return([])
+        allow(knowledge_search).to receive(:search).and_return([broken_passage])
         allow(sat_client).to receive(:get_product).with(handle: 'broken-item').and_raise(StandardError, 'Network timeout')
 
         result = tool.perform(tool_context, query: 'broken-item')

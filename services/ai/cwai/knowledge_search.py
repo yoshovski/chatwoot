@@ -33,9 +33,35 @@ MAX_HEADING_ONLY_CHARS = 80
 BREADCRUMB_SEPARATOR = " > "
 SENTENCE_PUNCTUATION = re.compile(r"[.:?!]")
 EXT = re.compile(r"\.(md|txt|json|html?|pdf|docx?|csv)$", re.I)
-P_HANDLE = re.compile(r"^\s*Product handle:\s*([a-z0-9][a-z0-9_-]*)\s*$", re.I | re.M)
-P_NAME = re.compile(r"^\s*Product:\s*(.+)$", re.M)
+P_HANDLE = re.compile(r"^\s*(?:-\s*)?Product handle:\s*([a-z0-9][a-z0-9_-]*)\s*$", re.I | re.M)
+P_NAME = re.compile(r"^\s*(?:-\s*)?Product:\s*(.+)$", re.M)
+P_TITLE = re.compile(r"^\s*#\s+(.+)$", re.M)
 FAQ_Q = re.compile(r"^\s*question:\s*(.+)$", re.I | re.M)
+CATALOG_BOUND_LIMIT = 2400
+
+
+def bound_catalog_content(content):
+    if len(content) <= CATALOG_BOUND_LIMIT:
+        return content
+    sections = re.split(r"(?m)(?=^#{1,3}\s+)", content)
+    if len(sections) <= 1:
+        return clipped(content, CATALOG_BOUND_LIMIT)
+    header = sections[0].strip()
+    kept = [header]
+    total_len = len(header)
+    for section in sections[1:]:
+        clean_section = section.strip()
+        if not clean_section:
+            continue
+        if total_len + len(clean_section) + 2 <= CATALOG_BOUND_LIMIT:
+            kept.append(clean_section)
+            total_len += len(clean_section) + 2
+        else:
+            remaining = CATALOG_BOUND_LIMIT - total_len - 2
+            if remaining > 120:
+                kept.append(clipped(clean_section, remaining))
+            break
+    return "\n\n".join(kept)
 
 
 def normalize_query(question, keywords=""):
@@ -99,14 +125,19 @@ def passage(dataset, record):
         match = P_HANDLE.search(content)
         handle = metadata.get("handle") or (match.group(1).lower() if match else None)
     name_match = P_NAME.search(content)
+    title_heading_match = P_TITLE.search(content)
     question_match = FAQ_Q.search(content)
     title = EXT.sub("", document["name"]).strip() or "Untitled"
     if question_match:
         title = question_match.group(1).strip()
     if answer is not None:
         title = content
-    if dataset.kind == "catalog" and name_match:
-        title = name_match.group(1).strip()
+    if dataset.kind == "catalog":
+        if name_match:
+            title = name_match.group(1).strip()
+        elif title_heading_match:
+            title = title_heading_match.group(1).strip()
+        content = bound_catalog_content(content)
     if answer is not None:
         content = f"Question: {content}\nAnswer: {answer}"
     url = metadata.get("source_url") or metadata.get("url") or metadata.get("link")

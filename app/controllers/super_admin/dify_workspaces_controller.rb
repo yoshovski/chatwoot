@@ -6,7 +6,8 @@ class SuperAdmin::DifyWorkspacesController < SuperAdmin::ApplicationController
   def update
     @workspace = DifyWorkspace.find_or_create_by!(id: 1)
     @workspace.with_lock do
-      values = params.require(:dify_workspace).permit(:enabled, :knowledge_api_key, *DifyWorkspace::CONFIGURATION_FIELDS)
+      permitted_fields = [:enabled, :knowledge_api_key, *DifyWorkspace::CONFIGURATION_FIELDS, *DifyWorkspace::OPTIONAL_CONFIGURATION_FIELDS]
+      values = params.require(:dify_workspace).permit(*permitted_fields)
       values.delete(:knowledge_api_key) if values[:knowledge_api_key].blank?
       @workspace.assign_attributes(values)
       unless @workspace.valid?

@@ -1,5 +1,6 @@
 class DifyWorkspace < ApplicationRecord
   CONFIGURATION_FIELDS = %w[base_url embedding_model_provider embedding_model reranking_model_provider reranking_model].freeze
+  OPTIONAL_CONFIGURATION_FIELDS = %w[query_embedding_model_provider query_embedding_model].freeze
 
   encrypts :knowledge_api_key
   validates :id, inclusion: { in: [1] }
@@ -15,11 +16,16 @@ class DifyWorkspace < ApplicationRecord
   end
 
   def connection
-    {
+    conn = {
       url: "#{base_url.to_s.chomp('/')}/v1", api_key: knowledge_api_key,
       embedding_provider: embedding_model_provider, embedding_model: embedding_model,
       reranking_provider: reranking_model_provider, reranking_model: reranking_model
     }
+    if respond_to?(:query_embedding_model) && query_embedding_model.present?
+      conn[:query_embedding_provider] = query_embedding_model_provider
+      conn[:query_embedding_model] = query_embedding_model
+    end
+    conn
   end
 
   private

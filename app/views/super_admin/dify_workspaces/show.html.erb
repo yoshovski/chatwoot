@@ -18,6 +18,12 @@
         <%= form.text_field field, class: 'block w-full' %>
       </div>
     <% end %>
+    <% DifyWorkspace::OPTIONAL_CONFIGURATION_FIELDS.each do |field| %>
+      <div class="mb-6">
+        <%= form.label field, t("super_admin.dify_workspace.#{field}") %>
+        <%= form.text_field field, class: 'block w-full' %>
+      </div>
+    <% end %>
     <div class="mb-6">
       <%= form.label :knowledge_api_key, t('super_admin.dify_configuration.knowledge_api_key') %>
       <%= form.password_field :knowledge_api_key, value: nil, autocomplete: 'new-password', class: 'block w-full' %>

@@ -16,6 +16,13 @@ module AccountDifyKnowledge
     end
   end
 
+  %w[query_embedding_model query_embedding_model_provider].each do |field|
+    define_method("dify_#{field}") do
+      workspace = DifyWorkspace.current
+      workspace&.enabled? && workspace.respond_to?(field) ? workspace.public_send(field) : nil
+    end
+  end
+
   def dify_configuration
     CONFIGURATION_FIELDS.index_with { |field| public_send("dify_#{field}") }
   end

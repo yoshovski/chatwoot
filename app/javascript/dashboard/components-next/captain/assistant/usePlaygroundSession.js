@@ -72,6 +72,19 @@ export function usePlaygroundSession({ assistantId }) {
         .map(rule => rule.content)
     );
 
+  const hasOverrides = computed(
+    () =>
+      Boolean(isKnowledgeIncluded.value && knowledgeText.value.trim()) ||
+      temporaryScenarios.value.length > 0 ||
+      temporaryGuidelines.value.length > 0 ||
+      temporaryGuardrails.value.length > 0 ||
+      savedGuidelines.value.some(g => !g.included) ||
+      savedGuardrails.value.some(g => !g.included) ||
+      savedScenarios.value.some(
+        s => Boolean(s.enabled) !== includedScenarioIds.value.includes(s.id)
+      )
+  );
+
   const playgroundConfig = computed(() => ({
     scenario_ids: includedScenarios.value.map(scenario => scenario.id),
     temporary_scenarios: includedTemporaryScenarios.value.map(
@@ -88,6 +101,7 @@ export function usePlaygroundSession({ assistantId }) {
   }));
 
   const configurationSummary = () => ({
+    mode: hasOverrides.value ? 'session_preview' : 'saved_setup',
     scenarioCount:
       includedScenarios.value.length + includedTemporaryScenarios.value.length,
     guidelineCount: playgroundConfig.value.response_guidelines.length,
@@ -395,6 +409,7 @@ export function usePlaygroundSession({ assistantId }) {
     isRuleTypeSaving,
     knowledgeStats,
     playgroundConfig,
+    hasOverrides,
     isValid,
     configurationSummary,
     initialize,

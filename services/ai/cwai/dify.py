@@ -64,17 +64,17 @@ class Dify:
             raise ProjectionError("dify_duplicate_dataset")
         if matches:
             return matches[0]["id"]
-        return self.request(
-            "POST",
-            "datasets",
-            json={
-                "name": name,
-                "permission": "only_me",
-                "indexing_technique": "high_quality",
-                "embedding_model_provider": self.config.embedding_provider,
-                "embedding_model": self.config.embedding_model,
-            },
-        )["id"]
+        payload = {
+            "name": name,
+            "permission": "only_me",
+            "indexing_technique": "high_quality",
+            "embedding_model_provider": self.config.embedding_provider,
+            "embedding_model": self.config.embedding_model,
+        }
+        if self.config.query_embedding_provider and self.config.query_embedding_model:
+            payload["query_embedding_model_provider"] = self.config.query_embedding_provider
+            payload["query_embedding_model"] = self.config.query_embedding_model
+        return self.request("POST", "datasets", json=payload)["id"]
 
     def document(self, dataset_id, binding, text):
         name = "cwai-" + binding["id"]
