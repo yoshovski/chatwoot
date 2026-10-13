@@ -35,6 +35,14 @@ export const filterByUnattended = (
     : shouldFilter;
 };
 
+export const filterByBot = (shouldFilter, conversationType, meta = {}) => {
+  if (conversationType !== 'bot') return shouldFilter;
+  const isAIAssignee = ['AgentBot', 'Captain::Assistant'].includes(
+    meta.assignee_type
+  );
+  return isAIAssignee && shouldFilter;
+};
+
 export const applyPageFilters = (conversation, filters) => {
   const { inboxId, status, labels = [], teamId, conversationType } = filters;
   const {
@@ -58,6 +66,7 @@ export const applyPageFilters = (conversation, filters) => {
     firstReplyOn,
     waitingSince
   );
+  shouldFilter = filterByBot(shouldFilter, conversationType, meta);
 
   return shouldFilter;
 };

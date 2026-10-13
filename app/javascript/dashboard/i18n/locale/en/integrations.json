@@ -686,6 +686,7 @@
       "CUSTOMER_VIEW": {
         "INBOX_LABEL": "Preview as inbox",
         "DEFAULT_LOOK": "Default look",
+        "INBOX_LOOK": "Inbox: {name}",
         "OPEN_DEMO": "Open live demo",
         "FORM_THANKS": "Thanks, a colleague will continue here.",
         "VIEW_PRODUCT": "View",

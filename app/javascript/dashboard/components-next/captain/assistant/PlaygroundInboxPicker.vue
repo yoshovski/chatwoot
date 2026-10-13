@@ -25,7 +25,12 @@ const widgetInboxes = computed(() =>
 
 const options = computed(() => [
   { value: 0, label: t('CAPTAIN.PLAYGROUND.CUSTOMER_VIEW.DEFAULT_LOOK') },
-  ...widgetInboxes.value.map(inbox => ({ value: inbox.id, label: inbox.name })),
+  ...widgetInboxes.value.map(inbox => ({
+    value: inbox.id,
+    label: t('CAPTAIN.PLAYGROUND.CUSTOMER_VIEW.INBOX_LOOK', {
+      name: inbox.name,
+    }),
+  })),
 ]);
 
 const selectedId = computed({
@@ -34,6 +39,15 @@ const selectedId = computed({
     selectedInbox.value = widgetInboxes.value.find(i => i.id === id) ?? null;
   },
 });
+
+const handleDemoClick = event => {
+  if (!selectedInbox.value) {
+    event.preventDefault();
+    return;
+  }
+  event.preventDefault();
+  window.open(demoUrl(selectedInbox.value), '_blank', 'noopener,noreferrer');
+};
 
 const loadInboxes = async () => {
   selectedInbox.value = null;
@@ -60,11 +74,13 @@ watch(() => props.assistantId, loadInboxes);
       target="_blank"
       rel="noopener noreferrer"
       data-test="playground-demo-link"
+      @click="handleDemoClick"
     >
       <NextButton
         ghost
         sm
         slate
+        class="pointer-events-none"
         icon="i-lucide-external-link"
         :label="t('CAPTAIN.PLAYGROUND.CUSTOMER_VIEW.OPEN_DEMO')"
       />

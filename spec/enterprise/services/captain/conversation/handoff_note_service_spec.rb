@@ -36,4 +36,17 @@ RSpec.describe Captain::Conversation::HandoffNoteService do
 
     expect(service.generate_note_content).to eq("#{described_class::NOTE_HEADER}\n#{described_class::FALLBACK_NOTE}")
   end
+
+  it 'formats long narrative handoff reasons into clean bullet points' do
+    long_reason = 'Customer asks whether generator will keep up with their DJI T50 after another generator failed. ' \
+                  'Catalog confirms D12000iE is compatible with T50 and rated 12,000W; colleague should verify against their setup.'
+    service_with_reason = described_class.new(conversation: conversation, assistant: assistant, reason: long_reason)
+
+    expect(service_with_reason.generate_note_content).to eq(
+      "#{described_class::NOTE_HEADER}\n" \
+      "- Customer asks whether generator will keep up with their DJI T50 after another generator failed.\n" \
+      "- Catalog confirms D12000iE is compatible with T50 and rated 12,000W\n" \
+      '- colleague should verify against their setup.'
+    )
+  end
 end

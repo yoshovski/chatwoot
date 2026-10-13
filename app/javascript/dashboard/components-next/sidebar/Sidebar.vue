@@ -417,6 +417,14 @@ const menuItems = computed(() => {
           to: accountScopedRoute('conversation_unattended'),
         },
         {
+          name: 'Bot',
+          activeOn: ['conversation_through_bot'],
+          label: t('SIDEBAR.BOT_CONVERSATIONS'),
+          icon: 'i-lucide-bot',
+          badgeCount: 0,
+          to: accountScopedRoute('conversation_bot'),
+        },
+        {
           name: 'Folders',
           label: t('SIDEBAR.CUSTOM_VIEWS_FOLDER'),
           icon: 'i-lucide-folder',

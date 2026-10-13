@@ -56,7 +56,7 @@ class Captain::Conversation::HandoffNoteService
   end
 
   def generate_note_content
-    return "#{NOTE_HEADER}\n#{reason}" if reason.present?
+    return "#{NOTE_HEADER}\n#{format_reason(reason)}" if reason.present?
 
     summary = generate_summary
     "#{NOTE_HEADER}\n#{summary}"
@@ -119,6 +119,22 @@ class Captain::Conversation::HandoffNoteService
 
   def sanitize_summary(summary)
     summary.to_s.sub(/\A🔔\s*\*\*Needs your reply\*\*\s*\n?/i, '').strip
+  end
+
+  def format_reason(raw_reason)
+    cleaned = sanitize_summary(raw_reason)
+    return cleaned if cleaned.blank? || cleaned.lines.size > 1
+
+    format_sentence_bullets(cleaned) || cleaned
+  end
+
+  def format_sentence_bullets(text)
+    return nil unless text.length > 80 && text.match?(/[.;]\s+/)
+
+    parts = text.split(/(?<=[.!?])\s+|;\s+/).map(&:strip).reject(&:empty?)
+    return nil if parts.size <= 1
+
+    parts.map { |part| "- #{part.sub(/\A-+\s*/, '')}" }.join("\n")
   end
 
   def call_llm(model:, prompt:, input:)

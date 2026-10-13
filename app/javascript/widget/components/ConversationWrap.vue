@@ -169,6 +169,7 @@ export default {
   flex-direction: column;
   flex: 1;
   overflow-y: auto;
+  overflow-x: hidden;
   color-scheme: light dark;
 
   &.light-scheme {

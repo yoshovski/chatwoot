@@ -299,6 +299,17 @@ describe ConversationFinder do
       end
     end
 
+    context 'with bot' do
+      let(:params) { { status: 'open', conversation_type: 'bot' } }
+      let!(:agent_bot) { create(:agent_bot) }
+
+      it 'returns bot conversations' do
+        bot_conv = create(:conversation, account: account, inbox: inbox, assignee: nil, ai_assignee: agent_bot)
+        result = conversation_finder.perform
+        expect(result[:conversations].map(&:id)).to contain_exactly(bot_conv.id)
+      end
+    end
+
     context 'with participating' do
       let(:params) { { status: 'open', assignee_type: 'all', conversation_type: 'participating' } }
 

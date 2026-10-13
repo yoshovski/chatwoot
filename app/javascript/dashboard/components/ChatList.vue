@@ -187,7 +187,8 @@ const assigneeTabItems = computed(() => {
 const showAssigneeInConversationCard = computed(() => {
   return (
     hasAppliedFiltersOrActiveFolders.value ||
-    activeAssigneeTab.value === wootConstants.ASSIGNEE_TYPE.ALL
+    activeAssigneeTab.value === wootConstants.ASSIGNEE_TYPE.ALL ||
+    props.conversationType === wootConstants.CONVERSATION_TYPE.BOT
   );
 });
 
@@ -287,6 +288,9 @@ const pageTitle = computed(() => {
   if (props.conversationType === wootConstants.CONVERSATION_TYPE.UNATTENDED) {
     return t('CHAT_LIST.UNATTENDED_HEADING');
   }
+  if (props.conversationType === wootConstants.CONVERSATION_TYPE.BOT) {
+    return t('CHAT_LIST.BOT_HEADING');
+  }
   if (hasActiveFolders.value) {
     return activeFolder.value.name;
   }
@@ -322,6 +326,8 @@ const conversationList = computed(() => {
       localConversationList = filterByAssigneeTab(
         participatingChatsList.value(filters)
       );
+    } else if (props.conversationType === wootConstants.CONVERSATION_TYPE.BOT) {
+      localConversationList = [...allChatList.value(filters)];
     } else if (activeAssigneeTab.value === 'me') {
       localConversationList = [...mineChatsList.value(filters)];
     } else if (activeAssigneeTab.value === 'unassigned') {
@@ -921,7 +927,10 @@ watch(appliedFilters, () => resetBulkActions());
     />
 
     <ChatTypeTabs
-      v-if="!hasAppliedFiltersOrActiveFolders"
+      v-if="
+        !hasAppliedFiltersOrActiveFolders &&
+        conversationType !== wootConstants.CONVERSATION_TYPE.BOT
+      "
       :items="assigneeTabItems"
       :active-tab="activeAssigneeTab"
       is-compact

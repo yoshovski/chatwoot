@@ -10,6 +10,7 @@ import {
   isOnParticipatingView,
   isOnUnattendedView,
   isOnFoldersView,
+  isOnBotView,
 } from 'dashboard/store/modules/conversations/helpers/actionHelpers';
 import wootConstants from 'dashboard/constants/globals';
 
@@ -33,6 +34,8 @@ export function useConversationRoutePath() {
       conversationType = 'participating';
     } else if (isOnUnattendedView({ route: { name } })) {
       conversationType = 'unattended';
+    } else if (isOnBotView({ route: { name } })) {
+      conversationType = 'bot';
     }
 
     const isOnFolder = isOnFoldersView({ route: { name } });
@@ -64,6 +67,8 @@ export function useConversationRoutePath() {
       conversationType = CONVERSATION_TYPE.PARTICIPATING;
     } else if (isOnUnattendedView({ route: { name } })) {
       conversationType = CONVERSATION_TYPE.UNATTENDED;
+    } else if (isOnBotView({ route: { name } })) {
+      conversationType = CONVERSATION_TYPE.BOT;
     }
 
     const isOnFolder = isOnFoldersView({ route: { name } });

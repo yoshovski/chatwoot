@@ -33,6 +33,9 @@ RSpec.describe Captain::Conversation::ResponseBuilderJob, type: :job do
       allow(mock_action_classifier_service).to receive(:classify).and_return({ 'action' => 'continue' })
       allow(Captain::Llm::AssistantFalsePromiseService).to receive(:new).and_return(mock_false_promise_service)
       allow(mock_false_promise_service).to receive(:detect).and_return({ 'decision' => 'safe', 'reason' => 'safe_response' })
+      stub_request(:post, %r{/chat/completions})
+        .to_return(status: 200, headers: { 'Content-Type' => 'application/json' },
+                   body: { choices: [{ message: { role: 'assistant', content: 'Summary' } }] }.to_json)
     end
 
     context 'when captain_v2 is disabled' do
