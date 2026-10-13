@@ -107,6 +107,8 @@ class ConversationFinder
   end
 
   def filter_by_assignee_type
+    return if @params[:conversation_type] == 'bot'
+
     case @assignee_type
     when 'me'
       @conversations = @conversations.assigned_to(current_user)
@@ -128,6 +130,8 @@ class ConversationFinder
       @conversations = @conversations.where(id: participant_conversation_ids)
     when 'unattended'
       @conversations = @conversations.unattended
+    when 'bot'
+      @conversations = @conversations.where.not(assignee_agent_bot_id: nil)
     end
     @conversations
   end

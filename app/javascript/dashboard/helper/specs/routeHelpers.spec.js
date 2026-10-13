@@ -160,6 +160,7 @@ describe('isAConversationRoute', () => {
     expect(isAConversationRoute('team_conversations', true)).toBe(true);
     expect(isAConversationRoute('folder_conversations', true)).toBe(true);
     expect(isAConversationRoute('conversation_participating', true)).toBe(true);
+    expect(isAConversationRoute('conversation_bot', true)).toBe(true);
   });
 
   it('returns false if base conversation route name is provided and includeBase is false', () => {
@@ -173,6 +174,7 @@ describe('isAConversationRoute', () => {
     expect(isAConversationRoute('conversation_participating', false)).toBe(
       false
     );
+    expect(isAConversationRoute('conversation_bot', false)).toBe(false);
   });
 
   it('returns true if base conversation route name is provided and includeBase and includeExtended is true', () => {
@@ -190,6 +192,7 @@ describe('isAConversationRoute', () => {
     expect(isAConversationRoute('conversation_participating', true, true)).toBe(
       true
     );
+    expect(isAConversationRoute('conversation_bot', true, true)).toBe(true);
   });
 
   it('returns false if base conversation route name is not provided', () => {
@@ -218,6 +221,9 @@ describe('getConversationDashboardRoute', () => {
     expect(
       getConversationDashboardRoute('conversation_through_participating')
     ).toEqual('conversation_participating');
+    expect(getConversationDashboardRoute('conversation_through_bot')).toEqual(
+      'conversation_bot'
+    );
     expect(getConversationDashboardRoute('conversation_through_inbox')).toEqual(
       'inbox_dashboard'
     );

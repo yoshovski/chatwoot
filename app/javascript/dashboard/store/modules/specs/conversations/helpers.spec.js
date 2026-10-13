@@ -5,6 +5,7 @@ import {
   filterByTeam,
   filterByLabel,
   filterByUnattended,
+  filterByBot,
 } from '../../conversations/helpers';
 
 const conversationList = [
@@ -170,5 +171,31 @@ describe('#filterByUnattended', () => {
   });
   it('returns true if conversation type is unattended and has first reply', () => {
     expect(filterByUnattended(true, 'mentions', 123)).toEqual(true);
+  });
+});
+
+describe('#filterByBot', () => {
+  it('returns true when conversationType is not bot', () => {
+    expect(filterByBot(true, 'all', {})).toEqual(true);
+  });
+
+  it('returns true when conversationType is bot and assignee_type is AgentBot', () => {
+    expect(filterByBot(true, 'bot', { assignee_type: 'AgentBot' })).toEqual(
+      true
+    );
+  });
+
+  it('returns true when conversationType is bot and assignee_type is Captain::Assistant', () => {
+    expect(
+      filterByBot(true, 'bot', { assignee_type: 'Captain::Assistant' })
+    ).toEqual(true);
+  });
+
+  it('returns false when conversationType is bot and assignee_type is User', () => {
+    expect(filterByBot(true, 'bot', { assignee_type: 'User' })).toEqual(false);
+  });
+
+  it('returns false when conversationType is bot and meta has no assignee', () => {
+    expect(filterByBot(true, 'bot', {})).toEqual(false);
   });
 });

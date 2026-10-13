@@ -202,8 +202,8 @@ const handleEnterKey = event => {
     class="h-full rounded-xl border border-n-weak text-n-slate-11"
     :class="isV2 ? 'flex overflow-hidden' : 'flex flex-col'"
   >
-    <div class="flex min-w-0 flex-1 flex-col py-6">
-      <div class="mb-8 px-6">
+    <div class="flex min-w-0 flex-1 flex-col pt-5 pb-4">
+      <div class="mb-3 px-6">
         <div class="mb-1 flex items-center justify-between gap-3">
           <h3 class="text-lg font-medium">
             {{ t('CAPTAIN.PLAYGROUND.HEADER') }}
@@ -243,7 +243,7 @@ const handleEnterKey = event => {
         :assistant-id="assistantId"
         :widget-color="selectedInbox?.widget_color"
         :widget-text-color="selectedInbox?.widget_text_color"
-        class="mx-6 mb-4"
+        class="mx-6 mb-3"
       />
 
       <MessageList

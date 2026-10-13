@@ -137,10 +137,12 @@ class ActionCableConnector extends BaseActionCableConnector {
   };
 
   initTimer = () => {
-    // Turn off typing automatically after 30 seconds
+    // Turn off typing automatically after 60 seconds and sync messages in case of delayed response
     this.CancelTyping = setTimeout(() => {
       this.onTypingOff();
-    }, 30000);
+      this.setLastMessageId();
+      this.syncLatestMessages();
+    }, 60000);
   };
 }
 

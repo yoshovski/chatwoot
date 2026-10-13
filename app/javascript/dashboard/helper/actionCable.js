@@ -299,10 +299,10 @@ class ActionCableConnector extends BaseActionCableConnector {
 
   initTimer = ({ conversation, user }) => {
     const conversationId = conversation.id;
-    // Turn off typing automatically after 30 seconds
+    // Turn off typing automatically after 60 seconds
     this.CancelTyping[conversationId] = setTimeout(() => {
       this.onTypingOff({ conversation, user });
-    }, 30000);
+    }, 60000);
   };
 
   // eslint-disable-next-line class-methods-use-this

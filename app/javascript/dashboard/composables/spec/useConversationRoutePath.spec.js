@@ -83,6 +83,14 @@ describe('useConversationRoutePath', () => {
         '/app/accounts/1/unattended/conversations/5'
       );
     });
+
+    it('keeps the bot context', () => {
+      mockRoute.name = 'conversation_through_bot';
+      const { buildConversationPath } = useConversationRoutePath();
+      expect(buildConversationPath(5)).toBe(
+        '/app/accounts/1/bot/conversations/5'
+      );
+    });
   });
 
   describe('buildConversationListPath', () => {
@@ -146,6 +154,14 @@ describe('useConversationRoutePath', () => {
       const { buildConversationListPath } = useConversationRoutePath();
       expect(buildConversationListPath()).toBe(
         '/app/accounts/1/unattended/conversations'
+      );
+    });
+
+    it('keeps the bot context', () => {
+      mockRoute.name = 'conversation_bot';
+      const { buildConversationListPath } = useConversationRoutePath();
+      expect(buildConversationListPath()).toBe(
+        '/app/accounts/1/bot/conversations'
       );
     });
   });

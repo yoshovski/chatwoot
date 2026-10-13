@@ -219,9 +219,26 @@ class Captain::Conversation::ResponseBuilderJob < ApplicationJob # rubocop:disab
       answer = create_messages(preserve_waiting_since: true) if deliverable_v2_handoff_answer?
       # A delivered answer already tells the customer a colleague will continue.
       @handoff_message = answer || create_handoff_message(preserve_waiting_since: true)
+      ensure_handoff_note_ordering(@handoff_message) if @handoff_message
       trigger_handoff_contact_form
       apply_v2_reply_labels(handed_off: true, answer: @handoff_message&.content)
     end
+  end
+
+  def ensure_handoff_note_ordering(outgoing_message)
+    return if outgoing_message.blank?
+
+    note = find_handoff_private_note
+    return if note.blank? || !note.private?
+    return unless note.created_at <= outgoing_message.created_at
+
+    note.update!(created_at: outgoing_message.created_at + 1.second)
+  end
+
+  def find_handoff_private_note
+    note_id = @run_result&.context&.dig(:state, :captain_handoff_note_id) ||
+              @run_result&.context&.dig(:captain_handoff_note_id)
+    note_id ? @conversation.messages.find_by(id: note_id) : @conversation.messages.where(private: true).last
   end
 
   # The agent declared a handoff in its answer but never called the handoff tool,

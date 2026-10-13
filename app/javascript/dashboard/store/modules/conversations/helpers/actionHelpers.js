@@ -46,6 +46,11 @@ export const isOnFoldersView = ({ route: { name: routeName } }) => {
   return FOLDER_ROUTES.includes(routeName);
 };
 
+export const isOnBotView = ({ route: { name: routeName } }) => {
+  const BOT_ROUTES = ['conversation_bot', 'conversation_through_bot'];
+  return BOT_ROUTES.includes(routeName);
+};
+
 export const buildConversationList = (
   context,
   requestPayload,
