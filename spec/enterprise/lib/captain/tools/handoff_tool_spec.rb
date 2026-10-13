@@ -113,6 +113,19 @@ RSpec.describe Captain::Tools::HandoffTool, type: :model do
           expect(conversation.reload.status).to eq('pending')
         end
 
+        it 'marks handoff completed without error when handoff is already active' do
+          contact.update!(name: 'Jane Doe', email: 'jane@example.com')
+          conversation.update!(status: :open)
+          conversation.add_labels('needs-human')
+
+          expect do
+            result = tool.perform(tool_context, reason: 'Another handoff request')
+            expect(result).to include('Conversation handed off')
+          end.not_to change(Message, :count)
+
+          expect(tool_context.state[:captain_v2_handoff_tool_completed]).to be true
+        end
+
         it 'emits a captain handoff event with the tool source after the locked handoff completes' do
           expect(Captain::ConversationEvents).to receive(:handed_off)
             .with(conversation: conversation, assistant: assistant, source: 'tool', reason_category: 'customer_request', at: kind_of(Time))

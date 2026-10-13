@@ -1,7 +1,7 @@
 class Captain::Knowledge::Search
   prepend Captain::Knowledge::SearchTracing
   class Error < StandardError; end
-  DATASET_TOP_K = 4
+  DATASET_TOP_K = 10
   PASSAGE_CHARS = 8000
   TOTAL_CHARS = 24_000
   QUERY_FILLER = %w[a an the what are is your our you do does can could please tell me about].freeze

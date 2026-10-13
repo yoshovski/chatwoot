@@ -168,7 +168,7 @@ class Captain::Conversation::ResponseBuilderJob < ApplicationJob # rubocop:disab
     # Captain V1 infers completion from status. Captain V2 uses the completion
     # marker set inside the locked handoff.
     if captain_v2_enabled?
-      return unless v2_handoff_tool_completed? || conversation_pending?
+      return unless v2_handoff_response_deliverable?
 
       v2_handoff_tool_completed? ? process_v2_handoff : process_v1_handoff
       record_v2_failure_handoff(source: Captain::ConversationEvents::Sources::TOOL) unless v2_handoff_tool_completed?
@@ -194,6 +194,7 @@ class Captain::Conversation::ResponseBuilderJob < ApplicationJob # rubocop:disab
   def v2_handoff_tool_fired? = Captain::Conversation::HandoffDetector.tool_fired?(@response)
   def v2_handoff_tool_completed? = @v2_handoff_tool_completed == true
   def v2_handoff_declared? = Captain::Conversation::HandoffDetector.declared?(@response)
+  def v2_handoff_response_deliverable? = v2_handoff_tool_completed? || conversation_pending? || delegate_ownership_service.waiting?
 
   def process_v1_handoff
     I18n.with_locale(@assistant.account.locale) do

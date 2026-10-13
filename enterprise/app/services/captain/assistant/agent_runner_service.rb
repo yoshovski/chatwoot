@@ -1,7 +1,7 @@
 require 'agents'
 require 'agents/instrumentation'
 
-class Captain::Assistant::AgentRunnerService
+class Captain::Assistant::AgentRunnerService # rubocop:disable Metrics/ClassLength
   prepend Captain::Assistant::ResponseTracing
   include Captain::Assistant::RunnerCallbacksHelper
   include Captain::Assistant::AgentRunResponse
@@ -129,10 +129,10 @@ class Captain::Assistant::AgentRunnerService
 
     assistant_agent = build_assistant_agent(runtime_configuration: @runtime_configuration)
     scenario_agents = @runtime_configuration.scenarios.map do |scenario|
-      scenario.agent(
+      build_scenario_agent(
+        scenario,
         runtime_configuration: @runtime_configuration,
-        runtime_agent_name: @runtime_configuration.agent_name_for(scenario),
-        response_schema: response_schema_for_runner
+        runtime_agent_name: @runtime_configuration.agent_name_for(scenario)
       )
     end
 
@@ -142,10 +142,23 @@ class Captain::Assistant::AgentRunnerService
   def default_agent_graph
     assistant_agent = build_assistant_agent
     scenario_agents = @assistant.scenarios.enabled.map do |scenario|
-      scenario.agent(response_schema: response_schema_for_runner)
+      build_scenario_agent(scenario)
     end
 
     wire_agents(assistant_agent, scenario_agents)
+  end
+
+  def build_scenario_agent(scenario, runtime_configuration: nil, runtime_agent_name: nil)
+    agent = scenario.agent(
+      runtime_configuration: runtime_configuration,
+      runtime_agent_name: runtime_agent_name,
+      response_schema: response_schema_for_runner
+    )
+    return agent unless waiting_for_human?
+
+    agent.clone(
+      tools: agent.tools.reject { |tool| tool.is_a?(Captain::Tools::HandoffTool) }
+    )
   end
 
   def build_assistant_agent(runtime_configuration: nil)
