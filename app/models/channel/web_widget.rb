@@ -40,12 +40,13 @@ class Channel::WebWidget < ApplicationRecord
   include FlagShihTzu
 
   ORDERED_TEXT_OPTION_ENABLED_VALUES = [true, false, nil].freeze
+  ORDERED_TEXT_OPTION_ACTION_TYPES = %w[message url canned].freeze
 
   self.table_name = 'channel_web_widgets'
   EDITABLE_ATTRS = [:website_url, :widget_color, :widget_text_color, :widget_icon_color, :widget_height, :widget_style,
                     :welcome_title, :welcome_tagline, :reply_time, :reply_time_message, :pre_chat_form_enabled,
                     :continuity_via_email, :hmac_mandatory, :allowed_domains, :demo_mode_enabled, :demo_slug,
-                    { conversation_starters: [:id, :title, :enabled] },
+                    { conversation_starters: [:id, :title, :enabled, :action_type, :target] },
                     { pre_chat_form_options: [:pre_chat_message, :require_email,
                                               { pre_chat_fields:
                                                 [:field_type, :label, :placeholder, :name, :enabled, :type, :enabled, :required,
@@ -176,13 +177,17 @@ class Channel::WebWidget < ApplicationRecord
     return unless conversation_starters.is_a?(Array)
 
     self.conversation_starters = conversation_starters.map do |option|
-      next option unless option.is_a?(Hash)
-
-      normalized_option = option.stringify_keys
-      normalized_option['enabled'] = true if normalized_option['enabled'] == 'true'
-      normalized_option['enabled'] = false if normalized_option['enabled'] == 'false'
-      normalized_option
+      option.is_a?(Hash) ? normalize_single_starter(option) : option
     end
+  end
+
+  def normalize_single_starter(option)
+    normalized = option.stringify_keys
+    normalized['enabled'] = true if normalized['enabled'] == 'true'
+    normalized['enabled'] = false if normalized['enabled'] == 'false'
+    normalized['action_type'] = normalized['action_type'].presence || 'message'
+    normalized['target'] = normalized['target'].to_s.strip if normalized['target'].present?
+    normalized
   end
 
   def normalize_widget_colors
@@ -221,7 +226,19 @@ class Channel::WebWidget < ApplicationRecord
     return true unless option.is_a?(Hash)
 
     values = option.with_indifferent_access
+    invalid_starter_basics?(values) || invalid_starter_action?(values)
+  end
+
+  def invalid_starter_basics?(values)
     values[:title].blank? || values[:title].length > 120 || ORDERED_TEXT_OPTION_ENABLED_VALUES.exclude?(values[:enabled])
+  end
+
+  def invalid_starter_action?(values)
+    action_type = values[:action_type].presence || 'message'
+    return true unless ORDERED_TEXT_OPTION_ACTION_TYPES.include?(action_type)
+    return true if %w[url canned].include?(action_type) && values[:target].blank?
+
+    false
   end
 
   def create_contact_inbox(additional_attributes = {})

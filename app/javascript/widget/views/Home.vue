@@ -39,15 +39,17 @@ export default {
           data: { hasConversation: false },
         });
       }
+      const starterTitle =
+        typeof starter === 'object' && starter ? starter.title : starter;
       if (this.preChatFormEnabled && !this.conversationSize) {
         return this.router.replace({
           name: 'prechat-form',
-          query: starter ? { starter } : {},
+          query: starterTitle ? { starter: starterTitle } : {},
         });
       }
       await this.router.replace({ name: 'messages' });
-      if (starter) {
-        await this.sendMessage({ content: starter });
+      if (starterTitle) {
+        await this.sendMessage({ content: starterTitle });
       }
       return undefined;
     },

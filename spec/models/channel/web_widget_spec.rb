@@ -11,6 +11,25 @@ RSpec.describe Channel::WebWidget do
       expect(channel_widget.pre_chat_form_options['pre_chat_message']).to eq 'Share your queries or comments here.'
       expect(channel_widget.pre_chat_form_options['pre_chat_fields'].length).to eq 3
     end
+
+    it 'normalizes and validates conversation starters with actions' do
+      channel_widget.conversation_starters = [
+        { 'title' => 'Chat on WhatsApp', 'enabled' => 'true', 'action_type' => 'url', 'target' => ' https://wa.me/12345 ' },
+        { 'title' => 'Return policy', 'enabled' => true, 'action_type' => 'canned', 'target' => '30 days return' },
+        { 'title' => 'Ask AI', 'enabled' => false }
+      ]
+      expect(channel_widget).to be_valid
+      expect(channel_widget.conversation_starters.first['action_type']).to eq 'url'
+      expect(channel_widget.conversation_starters.first['target']).to eq 'https://wa.me/12345'
+      expect(channel_widget.conversation_starters.last['action_type']).to eq 'message'
+    end
+
+    it 'rejects conversation starters with missing targets for url and canned actions' do
+      channel_widget.conversation_starters = [
+        { 'title' => 'Chat on WhatsApp', 'enabled' => true, 'action_type' => 'url', 'target' => '' }
+      ]
+      expect(channel_widget).not_to be_valid
+    end
   end
 
   describe 'demo slug' do

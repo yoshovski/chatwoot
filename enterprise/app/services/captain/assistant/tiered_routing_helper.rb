@@ -90,7 +90,7 @@ module Captain::Assistant::TieredRoutingHelper
     mode = routing_mode
     return unless mode.in?(%w[shadow on])
 
-    route = Captain::Assistant::IntentRouter.new(assistant: @assistant).classify(message: message, context: context)
+    route = Captain::Assistant::IntentRouter.new(assistant: @assistant, conversation: @conversation).classify(message: message, context: context)
     log_route(route, mode, context)
     return if mode == 'shadow' || route['intent'] == 'action_agent'
 

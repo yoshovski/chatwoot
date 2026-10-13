@@ -59,6 +59,8 @@ const normalizeOrderedTextOptions = options =>
     id: option.id || `saved-${index}`,
     title: option.title || '',
     enabled: option.enabled !== false,
+    action_type: option.action_type || 'message',
+    target: option.target || '',
   }));
 
 const serializeOrderedTextOptions = options =>
@@ -67,6 +69,8 @@ const serializeOrderedTextOptions = options =>
       id: option.id,
       title: option.title.trim(),
       enabled: option.enabled,
+      action_type: option.action_type || 'message',
+      target: (option.target || '').trim(),
     }))
     .filter(option => option.title);
 
@@ -169,6 +173,28 @@ export default {
         this.accountId,
         FEATURE_FLAGS.INBOUND_EMAILS
       );
+    },
+    conversationStarterActionOptions() {
+      return [
+        {
+          value: 'message',
+          label: this.$t(
+            'INBOX_MGMT.WIDGET_BUILDER.WIDGET_OPTIONS.CONVERSATION_STARTERS.ACTIONS.MESSAGE'
+          ),
+        },
+        {
+          value: 'url',
+          label: this.$t(
+            'INBOX_MGMT.WIDGET_BUILDER.WIDGET_OPTIONS.CONVERSATION_STARTERS.ACTIONS.URL'
+          ),
+        },
+        {
+          value: 'canned',
+          label: this.$t(
+            'INBOX_MGMT.WIDGET_BUILDER.WIDGET_OPTIONS.CONVERSATION_STARTERS.ACTIONS.CANNED'
+          ),
+        },
+      ];
     },
     showContinuityToggle() {
       if (this.isInboundEmailEnabled) return true;
@@ -1246,6 +1272,8 @@ export default {
               >
                 <OrderedTextList
                   v-model="conversationStarters"
+                  allow-actions
+                  :action-options="conversationStarterActionOptions"
                   :add-label="
                     $t(
                       'INBOX_MGMT.WIDGET_BUILDER.WIDGET_OPTIONS.CONVERSATION_STARTERS.ADD'
@@ -1259,6 +1287,16 @@ export default {
                   :placeholder="
                     $t(
                       'INBOX_MGMT.WIDGET_BUILDER.WIDGET_OPTIONS.CONVERSATION_STARTERS.PLACEHOLDER'
+                    )
+                  "
+                  :url-placeholder="
+                    $t(
+                      'INBOX_MGMT.WIDGET_BUILDER.WIDGET_OPTIONS.CONVERSATION_STARTERS.URL_PLACEHOLDER'
+                    )
+                  "
+                  :canned-placeholder="
+                    $t(
+                      'INBOX_MGMT.WIDGET_BUILDER.WIDGET_OPTIONS.CONVERSATION_STARTERS.CANNED_PLACEHOLDER'
                     )
                   "
                   :reorder-label="

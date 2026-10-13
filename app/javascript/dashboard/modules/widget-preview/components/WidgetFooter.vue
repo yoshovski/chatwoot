@@ -42,7 +42,10 @@ const activeStarters = computed(() =>
         class="flex items-center justify-between gap-2 px-4 py-3.5 text-start text-xs font-medium text-n-slate-12 transition-colors hover:bg-n-alpha-2 [&:not(:last-child)]:border-b [&:not(:last-child)]:border-n-weak"
       >
         <span>{{ starter.title }}</span>
-        <FluentIcon icon="arrow-right" size="14" />
+        <FluentIcon
+          :icon="starter.action_type === 'url' ? 'open-outline' : 'arrow-right'"
+          size="14"
+        />
       </button>
     </div>
     <div
