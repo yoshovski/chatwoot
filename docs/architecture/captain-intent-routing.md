@@ -13,7 +13,7 @@ Eligible message → typing and scheduling → existing ownership/stale-message 
 - `action_agent` retains the existing agent graph and tools. Live prices, stock, availability, order status, product cards/links, quotes, complaints, human requests, ambiguous references and mixed requests use this route. Active scenario history, uncovered multimodal history, unusable memory snapshots and latest messages exceeding the configured hard token budget skip the classifier.
 - Router errors/timeouts/invalid JSON or direct-pipeline failures fall back to the existing agent. Retrieval has no side effects. A generated handoff decision goes through the existing delivery/handoff lifecycle.
 
-Copilot reply suggestions and runtime-configuration playground runs keep their existing behavior. The fast pipeline preserves business identity, guardrails, response guidelines, ownership instructions, language, channel limits, citation formatting and suggested replies. It does not generate live product cards.
+Copilot reply suggestions and runtime-configuration playground runs keep their existing behavior. The fast pipeline preserves business identity, guardrails, response guidelines, ownership instructions, language, channel limits, citation formatting, product cards (when referencing catalog products) and suggested replies.
 
 ## Migration
 
