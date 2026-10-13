@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_10_12_120000) do
+ActiveRecord::Schema[7.2].define(version: 2026_10_13_120000) do
   # These extensions should be enabled to support this database
   enable_extension "pg_stat_statements"
   enable_extension "pg_trgm"
@@ -1194,6 +1194,8 @@ ActiveRecord::Schema[7.2].define(version: 2026_10_12_120000) do
     t.string "reranking_model"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "query_embedding_model_provider"
+    t.string "query_embedding_model"
     t.check_constraint "id = 1", name: "dify_workspace_singleton"
   end
 

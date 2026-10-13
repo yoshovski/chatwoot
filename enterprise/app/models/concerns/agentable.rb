@@ -51,7 +51,13 @@ module Concerns::Agentable
       max_suggested_replies: state[:max_suggested_replies],
       product_cards_enabled: state[:product_cards_enabled]
     }
+    attrs.merge!(conditional_context_state_attrs(state, config))
+  end
+
+  def conditional_context_state_attrs(state, config)
+    attrs = {}
     attrs[:commerce_enabled] = state[:commerce_enabled] if state.key?(:commerce_enabled)
+    attrs[:feature_citation] = ActiveModel::Type::Boolean.new.cast(config['feature_citation']) == true if config.key?('feature_citation')
     attrs
   end
 

@@ -34,6 +34,23 @@ RSpec.describe Captain::Dify::DatasetProvisioningService do
     expect(client).to have_received(:create_dataset).twice
   end
 
+  it 'passes query embedding parameters when configured on the account' do
+    allow(assistant).to receive(:account).and_return(account)
+    allow(account).to receive(:dify_query_embedding_model).and_return('voyage-4-lite')
+    allow(account).to receive(:dify_query_embedding_model_provider).and_return('voyage')
+    allow(client).to receive(:create_dataset).with(
+      hash_including(
+        embedding_model: 'example-embedding',
+        embedding_model_provider: 'example/provider',
+        query_embedding_model: 'voyage-4-lite',
+        query_embedding_model_provider: 'voyage'
+      )
+    ).and_return('id' => 'ds-id')
+
+    described_class.new(assistant).perform
+    expect(client).to have_received(:create_dataset).twice
+  end
+
   it 'preserves the first dataset ID if creating the second fails' do
     allow(client).to receive(:create_dataset).and_return('id' => 'faq-id').once
     allow(client).to receive(:create_dataset).with(hash_including(name: docs_name))

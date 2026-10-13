@@ -9,9 +9,9 @@ module Captain::Dify::Document
   end
 
   def dify_source_fingerprint
-    return "pdf:#{pdf_file.blob.checksum}" if pdf_document?
+    return "pdf-v2:#{pdf_file.blob.checksum}" if pdf_document?
 
-    "sectioned-v3:#{Digest::SHA256.hexdigest(dify_sectioned_content)}"
+    "sectioned-v4:#{Digest::SHA256.hexdigest(dify_sectioned_content)}"
   end
 
   def dify_sectioned_content

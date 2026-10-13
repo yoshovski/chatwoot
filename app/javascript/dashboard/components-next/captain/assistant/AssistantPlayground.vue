@@ -149,7 +149,10 @@ const sendMessage = async (text = newMessage.value) => {
       assistantId: props.assistantId,
       messageContent: currentMessage,
       messageHistory: formatMessagesForApi(),
-      playgroundConfig: isV2.value ? session.playgroundConfig : undefined,
+      playgroundConfig:
+        isV2.value && session.hasOverrides
+          ? session.playgroundConfig
+          : undefined,
     });
     if (requestVersion !== conversationVersion) return;
 

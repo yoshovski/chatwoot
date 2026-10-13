@@ -13,12 +13,17 @@ unless defined?(Captain::Assistant::CITATION_SOURCES_STATE_KEY)
     CITATION_SOURCES_STATE_KEY = :captain_v2_citation_sources
     CITATION_DETAILS_STATE_KEY = :captain_v2_citation_details
     PRODUCT_HANDLES_STATE_KEY = :captain_v2_product_handles
+    PRODUCT_SEARCH_STATS_STATE_KEY = :captain_v2_product_search_stats
+    PRODUCT_CACHE_STATE_KEY = :captain_v2_product_cache
   end
 end
 
+require_relative '../../../../../enterprise/lib/captain/tools/execution_tracing'
 require_relative '../../../../../enterprise/lib/captain/tools/base_public_tool'
 require_relative '../../../../../enterprise/lib/captain/tools/shopify_tool_helpers'
+require_relative '../../../../../enterprise/lib/captain/tools/source_indexing'
 require_relative '../../../../../enterprise/lib/captain/tools/catalog_product_search_tool'
+require_relative '../../../../../enterprise/app/services/captain/knowledge/search_tracing'
 require_relative '../../../../../enterprise/app/services/captain/knowledge/search'
 
 # rubocop:disable RSpec/VerifiedDoubles
@@ -150,6 +155,31 @@ RSpec.describe Captain::Tools::CatalogProductSearchTool do
       result = tool.perform(tool_context, query: 'agras-t40')
       expect(result).to include('DJI Agras T40 Spraying Drone')
       expect(tool_context.state[:product_handles]).to eq(['agras-t40'])
+    end
+
+    it 'reuses cached products and does not perform get_product call' do
+      tool_context.state[Captain::Assistant::PRODUCT_CACHE_STATE_KEY] = {
+        'agras-t40' => product_hit
+      }
+      allow(sat_client).to receive(:search_products).with(query: 'agras-t40', limit: 5).and_return(
+        { 'products' => [{ 'handle' => 'agras-t40' }] }
+      )
+      allow(knowledge_search).to receive(:search).and_return([])
+      expect(sat_client).not_to receive(:get_product)
+
+      result = tool.perform(tool_context, query: 'agras-t40')
+      expect(result).to include('DJI Agras T40 Spraying Drone')
+    end
+
+    it 'reuses preloaded complete products from SAT search_products' do
+      allow(sat_client).to receive(:search_products).with(query: 'agras-t40', limit: 5).and_return(
+        { 'products' => [product_hit] }
+      )
+      allow(knowledge_search).to receive(:search).and_return([])
+      expect(sat_client).not_to receive(:get_product)
+
+      result = tool.perform(tool_context, query: 'agras-t40')
+      expect(result).to include('DJI Agras T40 Spraying Drone')
     end
 
     context 'when hide_stock is enabled in hook settings' do

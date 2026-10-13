@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+# rubocop:disable Metrics/ClassLength
 class Captain::Tools::CatalogProductSearchTool < Captain::Tools::BasePublicTool
   include Captain::Tools::ShopifyToolHelpers
   include Captain::Tools::SourceIndexing
@@ -16,14 +17,15 @@ class Captain::Tools::CatalogProductSearchTool < Captain::Tools::BasePublicTool
     end
 
     log_tool_usage('searching_products', { query: query })
-    selected_handles = resolve_search_handles(client, query, limit)
+    exact_products, selected_handles = resolve_search_handles(client, query, limit)
     if selected_handles.empty?
       record_product_search_stats(tool_context, 0)
       return "No products found matching: #{query}"
     end
 
-    products = fetch_live_products(client, selected_handles)
-    record_product_search_stats(tool_context, products.count { |p| p['handle'].present? && p['available'] != false })
+    cached_products = tool_context&.state&.dig(Captain::Assistant::PRODUCT_CACHE_STATE_KEY) || {}
+    products = fetch_live_products(client, selected_handles, preloaded: exact_products, cached: cached_products)
+    record_product_search_stats(tool_context, active_products_count(products))
     process_found_products(tool_context, query, products)
   end
 
@@ -39,11 +41,12 @@ class Captain::Tools::CatalogProductSearchTool < Captain::Tools::BasePublicTool
 
   # The Shopify search runs in the background while the knowledge search uses this thread's database connection.
   def resolve_search_handles(client, query, limit)
-    exact_matches = in_background { fetch_exact_matches(client, query) }
+    exact_matches = in_background { fetch_exact_products(client, query) }
     semantic_matches = fetch_semantic_matches(query)
-    all_handles = (await([exact_matches]).first + semantic_matches)
+    exact_products = await([exact_matches]).first
+    all_handles = (exact_products.keys + semantic_matches)
                   .map(&:to_s).map(&:strip).reject(&:blank?).uniq(&:downcase)
-    all_handles.take(normalize_limit(limit))
+    [exact_products, all_handles.take(normalize_limit(limit))]
   end
 
   def process_found_products(tool_context, query, products)
@@ -64,20 +67,31 @@ class Captain::Tools::CatalogProductSearchTool < Captain::Tools::BasePublicTool
     tool_context.state[Captain::Assistant::PRODUCT_SEARCH_STATS_STATE_KEY] = stats
   end
 
+  def active_products_count(products)
+    products.count { |p| p['handle'].present? && p['available'] != false }
+  end
+
   def normalize_limit(limit)
     limit_val = limit.presence&.to_i || 3
     limit_val = 3 if limit_val < 1
     [limit_val, 10].min
   end
 
-  def fetch_exact_matches(client, query)
+  def fetch_exact_products(client, query)
     res = client.search_products(query: query, limit: 5)
-    return [] unless res && res['products'].is_a?(Array)
-
-    res['products'].filter_map { |p| p['handle'] }
+    extract_product_map(res)
   rescue StandardError => e
     Rails.logger.warn("SAT search_products failed during catalog search: #{e.message}") if defined?(Rails) && Rails.respond_to?(:logger)
-    []
+    {}
+  end
+
+  def extract_product_map(res)
+    return {} unless res && res['products'].is_a?(Array)
+
+    res['products'].each_with_object({}) do |product, map|
+      handle = product['handle'].to_s.strip.downcase
+      map[handle] = product if handle.present?
+    end
   end
 
   def fetch_semantic_matches(query)
@@ -102,7 +116,7 @@ class Captain::Tools::CatalogProductSearchTool < Captain::Tools::BasePublicTool
 
   def handle_from_content(passage)
     content = passage.respond_to?(:content) ? passage.content.to_s : ''
-    match = content.match(/^\s*Product handle:\s*([a-z0-9][a-z0-9_-]*)\s*$/i)
+    match = content.match(/^\s*(?:-\s*)?Product handle:\s*([a-z0-9][a-z0-9_-]*)\s*$/i)
     match ? match[1].strip.downcase : nil
   end
 
@@ -112,18 +126,40 @@ class Captain::Tools::CatalogProductSearchTool < Captain::Tools::BasePublicTool
     cleaned.downcase if cleaned.present? && cleaned.exclude?(' ')
   end
 
-  # Live lookups are independent HTTP calls, so they run in parallel (at most 10, the search limit).
-  def fetch_live_products(client, handles)
-    await(handles.map { |handle| in_background { fetch_single_product(client, handle) } })
+  # Live lookups reuse preloaded search records and cached products, hydrating only missing details in parallel.
+  def fetch_live_products(client, handles, preloaded: {}, cached: {})
+    needed = handles.reject { |h| product_complete?(preloaded[h]) || product_complete?(cached[h]) }
+    loaded_map = needed.zip(await(needed.map { |h| in_background { fetch_single_product(client, h) } })).to_h
+
+    handles.map { |h| resolve_live_product(h, preloaded[h], cached[h], loaded_map[h]) }
+  end
+
+  def resolve_live_product(handle, preloaded, cached, loaded)
+    return preloaded if product_complete?(preloaded)
+    return cached if product_complete?(cached)
+
+    loaded || unavailable_stub(handle)
+  end
+
+  def product_complete?(product)
+    product.is_a?(Hash) && product['variants'].is_a?(Array) && product['variants'].any?
   end
 
   # For HTTP-only work. Waiting permits concurrent loads so a background thread can autoload code without deadlocking.
   def in_background(&)
-    Thread.new { Rails.application.executor.wrap(&) }
+    if defined?(Rails) && Rails.respond_to?(:application) && Rails.application.respond_to?(:executor)
+      Thread.new { Rails.application.executor.wrap(&) }
+    else
+      Thread.new(&)
+    end
   end
 
   def await(threads)
-    ActiveSupport::Dependencies.interlock.permit_concurrent_loads { threads.map(&:value) }
+    if defined?(ActiveSupport::Dependencies) && ActiveSupport::Dependencies.respond_to?(:interlock)
+      ActiveSupport::Dependencies.interlock.permit_concurrent_loads { threads.map(&:value) }
+    else
+      threads.map(&:value)
+    end
   end
 
   def fetch_single_product(client, handle)
@@ -190,3 +226,4 @@ class Captain::Tools::CatalogProductSearchTool < Captain::Tools::BasePublicTool
     info
   end
 end
+# rubocop:enable Metrics/ClassLength

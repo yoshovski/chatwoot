@@ -12,6 +12,7 @@ unless defined?(Captain::Assistant::PRODUCT_HANDLES_STATE_KEY)
   end
 end
 
+require_relative '../../../../../enterprise/lib/captain/tools/execution_tracing'
 require_relative '../../../../../enterprise/lib/captain/tools/base_public_tool'
 require_relative '../../../../../enterprise/lib/captain/tools/shopify_tool_helpers'
 require_relative '../../../../../enterprise/lib/captain/tools/browse_catalog_tool'

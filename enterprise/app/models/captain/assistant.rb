@@ -250,7 +250,7 @@ class Captain::Assistant < ApplicationRecord
   end
 
   def citations_enabled?
-    config['feature_citation']
+    ActiveModel::Type::Boolean.new.cast(config['feature_citation']) == true
   end
 
   def handoff_safety_net?
@@ -300,6 +300,7 @@ class Captain::Assistant < ApplicationRecord
       description: description,
       product_name: config['product_name'] || 'this product',
       commerce_enabled: commerce_enabled?,
+      feature_citation: citations_enabled?,
       scenarios: scenarios.enabled.map do |scenario|
         {
           title: scenario.title,
