@@ -15,7 +15,7 @@ from cwai.dify import Dify, ProjectionError
 from cwai.workspace import connection
 
 router = APIRouter(prefix="/v1/knowledge")
-MAX_DATASET_RESULTS = 4
+MAX_DATASET_RESULTS = 10
 MAX_PASSAGES = 5
 PER_PASSAGE_CHARS = 8000
 TOTAL_CHARS = 24000

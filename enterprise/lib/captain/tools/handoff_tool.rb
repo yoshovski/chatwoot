@@ -43,9 +43,8 @@ class Captain::Tools::HandoffTool < Captain::Tools::BasePublicTool
 
   def handoff_failure_message(result)
     case result
-    when :already_active then 'Handoff already active'
+    when :already_active, :completed then nil
     when :stale then 'Handoff skipped because a newer customer message arrived'
-    when :completed then nil
     else 'Handoff skipped because the conversation changed'
     end
   end
@@ -74,8 +73,17 @@ class Captain::Tools::HandoffTool < Captain::Tools::BasePublicTool
   end
 
   def handle_already_active_handoff(handoff_service, tool_context)
-    handoff_service.trigger_contact_capture_form!(triggering_message: tool_context.message)
+    triggering_message = find_triggering_message(tool_context.state, handoff_service.conversation)
+    handoff_service.trigger_contact_capture_form!(triggering_message: triggering_message)
+    tool_context.state[:captain_v2_handoff_tool_completed] = true
     :already_active
+  end
+
+  def find_triggering_message(state, conversation)
+    message_id = state&.dig(:responding_to_message_id)
+    return conversation.messages.find_by(id: message_id) if message_id.present?
+
+    conversation.messages.incoming.last
   end
 
   def trigger_legacy_handoff(tool_context, conversation, reason_category, reason)

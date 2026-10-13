@@ -171,7 +171,7 @@ class Dify:
                         "reranking_provider_name": self.config.reranking_provider,
                         "reranking_model_name": self.config.reranking_model,
                     },
-                    "top_k": min(top_k, 4),
+                    "top_k": max(top_k, 10),
                     "score_threshold_enabled": False,
                 },
             },
