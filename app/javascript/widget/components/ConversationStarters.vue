@@ -10,6 +10,14 @@ const emit = defineEmits(['select']);
 const activeStarters = computed(() =>
   props.starters.filter(starter => starter.enabled !== false && starter.title)
 );
+
+const onSelect = starter => {
+  if (starter.action_type === 'url' && starter.target) {
+    window.open(starter.target, '_blank', 'noopener,noreferrer');
+    return;
+  }
+  emit('select', starter);
+};
 </script>
 
 <template>
@@ -22,10 +30,16 @@ const activeStarters = computed(() =>
       :key="starter.id"
       type="button"
       class="flex w-full items-center justify-between gap-3 px-4 py-4 text-start text-sm font-medium text-n-slate-12 transition-colors hover:bg-n-alpha-2 [&:not(:last-child)]:border-b [&:not(:last-child)]:border-n-weak"
-      @click="emit('select', starter.title)"
+      @click="onSelect(starter)"
     >
       <span>{{ starter.title }}</span>
-      <i class="i-lucide-chevron-right size-4 shrink-0 rtl:rotate-180" />
+      <i
+        :class="
+          starter.action_type === 'url'
+            ? 'i-lucide-external-link size-4 shrink-0'
+            : 'i-lucide-chevron-right size-4 shrink-0 rtl:rotate-180'
+        "
+      />
     </button>
   </div>
 </template>

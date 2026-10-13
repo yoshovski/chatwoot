@@ -17,13 +17,17 @@ class Captain::Assistant::IntentRouter
     boundary ? history.drop(boundary + 1) : history
   end
 
-  def initialize(assistant:)
+  def initialize(assistant:, conversation: nil)
     @assistant = assistant
+    @conversation = conversation
   end
 
   def classify(message:, context:)
     reason = bypass_reason(message, context)
     return ACTION.merge('reason' => reason) if reason
+
+    canned_starter = conversation_starter_canned_route(message)
+    return canned_starter if canned_starter
 
     greeting = greeting_route(message)
     return greeting if greeting
@@ -60,6 +64,30 @@ class Captain::Assistant::IntentRouter
 
   def multimodal_history?(context)
     self.class.recent_history(context).any? { |entry| !entry[:content].is_a?(String) }
+  end
+
+  def conversation_starter_canned_route(message)
+    starters = @conversation&.inbox&.channel.try(:conversation_starters)
+    return unless starters.is_a?(Array)
+
+    match = find_matching_canned_starter(starters, message)
+    return unless match
+
+    {
+      'intent' => 'smalltalk',
+      'queries' => [],
+      'canned_response' => match['target'],
+      'reason' => 'conversation_starter_canned'
+    }
+  end
+
+  def find_matching_canned_starter(starters, message)
+    cleaned_msg = message.strip.downcase.sub(/[.!¡¿?]+\z/, '')
+    starters.find do |starter|
+      next false if starter['enabled'] == false || starter['action_type'] != 'canned' || starter['target'].blank?
+
+      starter['title'].to_s.strip.downcase.sub(/[.!¡¿?]+\z/, '') == cleaned_msg
+    end
   end
 
   def greeting_route(message)

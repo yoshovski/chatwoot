@@ -1560,7 +1560,14 @@
           "HELP": "Visitors see enabled questions in this order above the chat button.",
           "ADD": "Add starter",
           "EMPTY": "No conversation starters yet.",
-          "PLACEHOLDER": "Enter a question visitors can choose"
+          "PLACEHOLDER": "Enter button title",
+          "ACTIONS": {
+            "MESSAGE": "Send message (AI/Agent)",
+            "URL": "Open external link",
+            "CANNED": "Preset response"
+          },
+          "URL_PLACEHOLDER": "Enter URL (e.g. https://wa.me/123456789)",
+          "CANNED_PLACEHOLDER": "Enter preset response text..."
         },
         "REORDER": "Reorder item",
         "DELETE": "Delete item",
