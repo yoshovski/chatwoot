@@ -43,5 +43,17 @@ RSpec.describe Captain::Conversation::ReplySanitizer do
         'Great choice, we recommend this, check it out.'
       )
     end
+
+    it 'strips stray unlinked citation numbers while preserving linked citations' do
+      content = 'Most systems guide you through activation and firmware in the manufacturer app. [1]'
+      expect(sanitizer.sanitize_prose(content)).to eq(
+        'Most systems guide you through activation and firmware in the manufacturer app.'
+      )
+
+      linked = 'See [1](https://shop.example.com/guide) and [[2](https://shop.example.com/faq)].'
+      expect(sanitizer.sanitize_prose(linked)).to eq(
+        'See [1](https://shop.example.com/guide) and [[2](https://shop.example.com/faq)].'
+      )
+    end
   end
 end
