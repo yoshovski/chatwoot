@@ -165,7 +165,8 @@ RSpec.describe Captain::BaseTaskService do
     end
 
     it 'instruments the LLM call' do
-      expect(mock_chat).to receive(:with_headers).with(**Llm::TenantTracking.headers(account_id: account.id, feature: 'test_event')).and_return(mock_chat)
+      expect(mock_chat).to receive(:with_headers).with(**Llm::TenantTracking.headers(account_id: account.id,
+                                                                                     feature: 'test_event')).and_return(mock_chat)
       expect(service).to receive(:instrument_llm_call).and_call_original
       service.send(:make_api_call, model: model, messages: messages)
     end
