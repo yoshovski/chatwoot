@@ -32,6 +32,8 @@ class Captain::Conversation::ReplySanitizer
   end
 
   def allowed_link_url?(url)
+    return true if link_allowlist.blank? || link_allowlist.include?('*')
+
     allowed_url?(url, link_allowlist)
   end
 

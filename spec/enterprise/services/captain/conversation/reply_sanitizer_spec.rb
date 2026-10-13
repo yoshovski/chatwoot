@@ -18,6 +18,16 @@ RSpec.describe Captain::Conversation::ReplySanitizer do
       expect(sanitizer.sanitize_prose('Read [the guide](https://evil.example.net/guide).')).to eq('Read the guide.')
     end
 
+    context 'when link_allowlist is not configured (default wildcard)' do
+      let(:assistant) { create(:captain_assistant, config: {}) }
+
+      it 'allows all valid markdown links by default' do
+        expect(sanitizer.sanitize_prose('Contact us on [WhatsApp](https://api.whatsapp.com/send).')).to eq(
+          'Contact us on [WhatsApp](https://api.whatsapp.com/send).'
+        )
+      end
+    end
+
     it 'replaces em dash and en dash with comma while keeping hyphens in words and number ranges' do
       content = 'We have 10-20 sizes for this T-shirt — check it out – they are great.'
 

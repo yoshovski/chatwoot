@@ -359,7 +359,7 @@ class Captain::Assistant < ApplicationRecord
   end
 
   def default_link_allowlist
-    shopify_store_base_urls
+    ['*']
   end
 
   def default_image_allowlist
