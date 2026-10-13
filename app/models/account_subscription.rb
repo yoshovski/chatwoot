@@ -81,16 +81,31 @@ class AccountSubscription < ApplicationRecord
       (!ChatwootApp.enterprise? || account.billing_provider == 'stripe')
   end
 
+  def interval_change_available?
+    details = stripe_subscription_details
+    enabled? && payment_status == 'active' && monthly_price_cents.positive? && details['interval_change_supported'] == true &&
+      details.values_at('schedule', 'pending_update').all?(&:blank?) && currency == details['currency']
+  end
+
   def pricing_summary
     slice(:enabled, :founder_plan, :billing_interval, :currency, :monthly_price_cents, :annual_discount_percent, :setup_fee_cents,
           :period_started_at, :period_ends_at, :payment_status).symbolize_keys.merge(
             annual_price_cents: annual_amount_cents, trial_enabled: trial_active?, trial_ends_at: trial_ends_at,
             can_checkout: ChatwootApp.enterprise? && checkout_available?,
             has_subscription: stripe_subscription_id.present?, stripe_details: stripe_subscription_details,
+            can_change_interval: interval_change_available?,
             can_manage: stripe_customer_id.present?, custom_payment_cents: custom_payment_cents,
             custom_payment_description: custom_payment_description,
             can_pay_customization: enabled? && custom_payment_cents.positive? && custom_payment_paid_at.blank?
           )
+  end
+
+  def daily_usage
+    today = Time.current.utc.to_date
+    start_date = [today - 29, (created_at || Time.current).utc.to_date].max
+    counts = account.conversation_usage_windows.where(started_at: Time.utc(start_date.year, start_date.month, start_date.day)..Time.current)
+                    .group(Arel.sql('DATE(started_at)')).count
+    (start_date..today).map { |day| { date: day.iso8601, consumed: counts.fetch(day, 0) } }
   end
 
   def usage_summary
@@ -99,6 +114,7 @@ class AccountSubscription < ApplicationRecord
     {
       enabled: enabled, monthly_limit: monthly_limit, consumed: usage, quota_started_at: start_at, quota_resets_at: end_at,
       ai_replies_paused: !ai_reply_allowed?, warning: !monthly_limit.nil? && (monthly_limit.zero? || usage >= monthly_limit * 0.8),
+      daily_usage: daily_usage,
       history: account.conversation_usage_windows.group(:quota_period_start).order(quota_period_start: :desc).limit(12).count.map do |period, count|
         { period_started_at: period, consumed: count }
       end

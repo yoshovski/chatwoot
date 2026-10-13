@@ -22,6 +22,17 @@ class Api::V1::Accounts::AccountSubscriptionsController < Api::V1::Accounts::Bas
     render json: { error: I18n.t('errors.account_subscription.payment_failed') }, status: :bad_gateway
   end
 
+  def change_interval
+    return head :not_found unless ChatwootApp.enterprise?
+    return head :unprocessable_entity unless %w[month year].include?(params[:interval])
+
+    render json: Enterprise::Billing::AccountIntervalChangeService.new(account: Current.account).perform(interval: params[:interval])
+  rescue Enterprise::Billing::AccountCheckoutService::Unavailable
+    render json: { error: I18n.t('errors.account_subscription.unavailable') }, status: :unprocessable_entity
+  rescue Stripe::StripeError
+    render json: { error: I18n.t('errors.account_subscription.payment_failed') }, status: :bad_gateway
+  end
+
   def payment
     return head :not_found unless ChatwootApp.enterprise?
 

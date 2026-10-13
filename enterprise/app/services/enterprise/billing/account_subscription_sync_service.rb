@@ -27,6 +27,7 @@ class Enterprise::Billing::AccountSubscriptionSyncService
       service = new
       remote = service.remote_subscription(subscription)
       service.sync_remote(subscription, remote) if remote
+      remote
     end
   end
 
@@ -105,6 +106,12 @@ class Enterprise::Billing::AccountSubscriptionSyncService
     remote.status == 'trialing' || (subscription.trial_enabled? && remote.status != 'active')
   end
 
+  def interval_change_supported?(remote, item)
+    remote.items.data.one? && remote.collection_method == 'charge_automatically' && item.price.recurring.usage_type == 'licensed' &&
+      item.price.recurring.interval_count == 1 && item.price['billing_scheme'] == 'per_unit' &&
+      %w[month year].include?(item.price.recurring.interval)
+  end
+
   def stripe_details(remote, item)
     invoice = remote['latest_invoice']
     {
@@ -112,6 +119,8 @@ class Enterprise::Billing::AccountSubscriptionSyncService
       interval: item.price.recurring.interval, interval_count: item.price.recurring.interval_count,
       cancel_at_period_end: remote.cancel_at_period_end, cancel_at: remote['cancel_at'], ended_at: remote['ended_at'],
       paid_extension: remote.metadata['chatoctave_paid_extension'] == 'true',
+      schedule: remote['schedule'], pending_update: remote['pending_update'].present?,
+      interval_change_supported: interval_change_supported?(remote, item),
       latest_invoice: invoice.is_a?(Stripe::Invoice) ? invoice.to_h.slice(:status, :total, :currency, :created) : nil
     }
   end

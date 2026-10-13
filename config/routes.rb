@@ -58,6 +58,7 @@ Rails.application.routes.draw do
           end
           resource :account_subscription, only: [:show] do
             post :checkout
+            post :change_interval
             post :portal
             post :payment
           end

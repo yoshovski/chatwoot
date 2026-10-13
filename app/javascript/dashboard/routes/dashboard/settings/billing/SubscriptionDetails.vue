@@ -1,11 +1,13 @@
 <script setup>
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import Button from 'dashboard/components-next/button/Button.vue';
+import Dialog from 'dashboard/components-next/dialog/Dialog.vue';
 
 const props = defineProps({
   billing: { type: Object, required: true },
   busy: { type: Boolean, default: false },
+  paymentFailed: { type: Boolean, default: false },
   interval: { type: String, default: 'month' },
 });
 const emit = defineEmits(['pay', 'update:interval', 'refresh']);
@@ -75,7 +77,7 @@ const currentPrice = computed(() => {
   )
     return null;
   return money(
-    details.value.amount_cents * (details.value.quantity || 1),
+    details.value.amount_cents * (details.value.quantity ?? 1),
     details.value.currency
   );
 });
@@ -107,33 +109,67 @@ const dateLabel = computed(() => {
   if (status.value === 'renewal_deferred') return 'NEXT_PAYMENT_ON';
   return status.value === 'active' ? 'NEXT_RENEWAL' : 'BILLING_PERIOD_END';
 });
+const changeDialog = ref(null);
+const changeInterval = ref('year');
+const changeQuantity = computed(() => details.value.quantity ?? 1);
+const changePrice = option => {
+  if (option === props.billing.billing_interval)
+    return details.value.amount_cents;
+  return option === 'year'
+    ? props.billing.annual_price_cents
+    : props.billing.monthly_price_cents;
+};
+const changeSavings = computed(() =>
+  Math.max(
+    0,
+    (changePrice('month') * 12 - changePrice('year')) * changeQuantity.value
+  )
+);
+const openChange = () => {
+  changeInterval.value =
+    props.billing.billing_interval === 'year' ? 'month' : 'year';
+  changeDialog.value.open();
+};
+const reviewChange = () =>
+  emit(
+    'pay',
+    canceling.value ? 'portal' : 'changeInterval',
+    changeInterval.value
+  );
 </script>
 
 <template>
-  <section class="rounded-2xl border border-n-weak bg-n-background p-6">
-    <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
+  <section
+    class="flex h-full min-w-0 flex-col rounded-2xl border border-n-weak bg-n-background p-5 sm:p-6"
+  >
+    <div class="flex flex-wrap items-center justify-between gap-3">
       <h2 class="m-0 text-base font-semibold text-n-slate-12">
         {{ text('SUBSCRIPTION') }}
       </h2>
       <span
-        class="rounded-md px-2.5 py-1 text-xs font-medium"
+        class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium"
         :class="
           attention
             ? 'bg-n-amber-2 text-n-amber-11'
             : status === 'active'
               ? 'bg-n-teal-2 text-n-teal-11'
-              : 'bg-n-alpha-2 text-n-slate-12'
+              : 'bg-n-alpha-2 text-n-slate-11'
         "
       >
+        <span
+          :class="attention ? 'i-lucide-circle-alert' : 'i-lucide-circle-check'"
+          class="size-3.5"
+          aria-hidden="true"
+        />
         {{ text(`STATUS.${knownStatus}`) }}
       </span>
     </div>
     <div
       v-if="billing.billing_sync_failed"
-      class="mb-5 rounded-xl bg-n-amber-2 p-4"
+      class="mt-4 flex flex-wrap items-center justify-between gap-2 rounded-lg bg-n-amber-2 p-3"
       role="alert"
     >
-      <p class="m-0 mb-3 text-sm text-n-amber-11">{{ text('SYNC_ERROR') }}</p>
+      <span class="text-xs text-n-amber-11">{{ text('SYNC_ERROR') }}</span>
       <Button
         :label="text('RETRY')"
         variant="outline"
@@ -142,50 +178,43 @@ const dateLabel = computed(() => {
         @click="emit('refresh')"
       />
     </div>
-    <p class="m-0 text-sm leading-6 text-n-slate-11">
+    <div
+      v-if="billing.has_subscription && !terminal"
+      class="mt-6 flex flex-wrap items-baseline gap-2 tabular-nums"
+    >
+      <span class="text-4xl font-semibold tracking-tight text-n-slate-12">{{
+        currentPrice ?? text('PRICE_UNAVAILABLE')
+      }}</span>
+      <span v-if="currentPrice !== null" class="text-sm text-n-slate-11">{{
+        text(details.interval === 'year' ? 'YEARLY_CADENCE' : 'MONTHLY_CADENCE')
+      }}</span>
+    </div>
+    <p
+      v-if="
+        attention ||
+        knownStatus === 'manual' ||
+        terminal ||
+        knownStatus === 'trial_ended'
+      "
+      class="mb-0 mt-4 text-sm text-n-slate-11"
+    >
       {{ text(`STATUS_HELP.${knownStatus}`) }}
     </p>
-    <p v-if="canceling" class="mb-0 mt-3 text-sm leading-6 text-n-amber-11">
-      <span class="block font-medium">{{
-        text('CANCELLATION_SCHEDULED')
-      }}</span>
-      {{ text('CANCELING_HELP') }}
-    </p>
-    <div v-if="billing.has_subscription && !terminal" class="mt-5">
-      <p class="m-0 mb-1 text-xs font-medium text-n-slate-11">
-        {{ text('RECURRING_PRICE') }}
-      </p>
-      <p class="m-0 text-3xl font-semibold tracking-tight text-n-slate-12">
-        {{ currentPrice ?? text('PRICE_UNAVAILABLE') }}
-      </p>
-      <p v-if="currentPrice !== null" class="mb-0 mt-1 text-sm text-n-slate-11">
-        {{
-          t('ACCOUNT_SUBSCRIPTION.RECURS_EVERY', {
-            count: details.interval_count || 1,
-            unit:
-              details.interval === 'year'
-                ? t(
-                    'ACCOUNT_SUBSCRIPTION.YEAR_UNIT',
-                    details.interval_count || 1
-                  )
-                : t(
-                    'ACCOUNT_SUBSCRIPTION.MONTH_UNIT',
-                    details.interval_count || 1
-                  ),
-          })
-        }}
-      </p>
-      <p class="mb-0 mt-2 text-xs leading-5 text-n-slate-11">
-        {{ text('INVOICE_TOTAL_HELP') }}
-      </p>
+    <div
+      v-if="canceling"
+      class="mt-4 flex items-center gap-2 rounded-lg bg-n-amber-2 px-3 py-2 text-xs font-medium text-n-amber-11"
+    >
+      <span class="i-lucide-calendar-x size-4 shrink-0" aria-hidden="true" />{{
+        text('RENEWAL_OFF')
+      }}
     </div>
-    <dl class="mb-0 mt-5 space-y-3 text-sm">
+    <dl class="mb-0 mt-5 space-y-4 text-sm">
       <div
         v-if="billing.trial_enabled && !billing.has_subscription"
-        class="flex flex-wrap justify-between gap-2"
+        class="flex flex-wrap items-center justify-between gap-2"
       >
-        <dt class="text-n-slate-11">
-          {{
+        <dt class="inline-flex items-center gap-2 text-n-slate-11">
+          <span class="i-lucide-calendar size-4" aria-hidden="true" />{{
             text(status === 'trial_ended' ? 'TRIAL_ENDED_ON' : 'TRIAL_END_DATE')
           }}
         </dt>
@@ -195,61 +224,73 @@ const dateLabel = computed(() => {
       </div>
       <div
         v-if="billing.has_subscription && renewalDate"
-        class="flex flex-wrap justify-between gap-2"
+        class="flex flex-wrap items-center justify-between gap-2"
       >
-        <dt class="text-n-slate-11">{{ text(dateLabel) }}</dt>
+        <dt class="inline-flex items-center gap-2 text-n-slate-11">
+          <span class="i-lucide-calendar size-4" aria-hidden="true" />{{
+            text(dateLabel)
+          }}
+        </dt>
         <dd class="m-0 font-medium text-n-slate-12">{{ date(renewalDate) }}</dd>
       </div>
       <div
-        v-if="
-          billing.has_subscription &&
-          billing.period_started_at &&
-          billing.period_ends_at
-        "
-        class="flex flex-wrap justify-between gap-2"
+        v-if="invoice"
+        class="flex flex-wrap items-center justify-between gap-2"
       >
-        <dt class="text-n-slate-11">
-          {{
-            text(terminal ? 'LAST_BILLING_PERIOD' : 'CURRENT_BILLING_PERIOD')
+        <dt class="inline-flex items-center gap-2 text-n-slate-11">
+          <span class="i-lucide-receipt size-4" aria-hidden="true" />{{
+            text('LATEST_INVOICE')
           }}
         </dt>
-        <dd class="m-0 text-n-slate-12">
-          {{
-            t('ACCOUNT_SUBSCRIPTION.DATE_RANGE', {
-              start: date(billing.period_started_at),
-              end: date(billing.period_ends_at),
-            })
-          }}
-        </dd>
-      </div>
-      <div
-        v-if="invoice"
-        class="flex flex-wrap justify-between gap-2 border-t border-n-weak pt-4"
-      >
-        <dt class="text-n-slate-11">{{ text('LATEST_INVOICE') }}</dt>
         <dd
-          class="m-0 flex flex-wrap items-center gap-2 font-medium text-n-slate-12"
+          class="m-0 flex items-center gap-2 font-medium tabular-nums text-n-slate-12"
         >
           {{ money(invoice.total, invoice.currency) }}
-          <span class="rounded-md bg-n-alpha-2 px-2 py-1 text-xs">{{
-            text(`INVOICE_STATUS.${invoice.status}`)
-          }}</span>
+          <span
+            class="rounded-md px-2 py-1 text-xs"
+            :class="
+              invoice.status === 'paid'
+                ? 'bg-n-teal-2 text-n-teal-11'
+                : 'bg-n-alpha-2 text-n-slate-11'
+            "
+            >{{ text(`INVOICE_STATUS.${invoice.status}`) }}</span
+          >
         </dd>
       </div>
     </dl>
+    <details
+      v-if="billing.has_subscription"
+      class="mt-4 text-xs text-n-slate-11"
+    >
+      <summary
+        class="w-fit cursor-pointer rounded py-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-n-blue-9"
+      >
+        {{ text('BILLING_DETAILS') }}
+      </summary>
+      <p
+        v-if="billing.period_started_at && billing.period_ends_at"
+        class="mb-0 mt-2 text-xs"
+      >
+        {{
+          t('ACCOUNT_SUBSCRIPTION.DATE_RANGE', {
+            start: date(billing.period_started_at),
+            end: date(billing.period_ends_at),
+          })
+        }}
+      </p>
+      <p class="mb-0 mt-2 text-xs">{{ text('INVOICE_TOTAL_HELP') }}</p>
+    </details>
     <div
       v-if="billing.can_checkout && (!billing.has_subscription || terminal)"
-      class="mt-6 border-t border-n-weak pt-5"
+      class="mt-5"
     >
-      <fieldset class="m-0 mb-5 border-0 p-0">
-        <legend class="mb-3 text-sm font-medium text-n-slate-12">
-          {{ text('BILLING_INTERVAL') }}
-        </legend>
+      <fieldset class="m-0 mb-4 border-0 p-0">
+        <legend class="sr-only">{{ text('BILLING_INTERVAL') }}</legend>
         <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <label
             v-for="option in ['month', 'year']"
             :key="option"
-            class="relative flex cursor-pointer flex-col gap-2 rounded-xl border p-4 focus-within:ring-2 focus-within:ring-n-blue-9"
+            class="flex cursor-pointer flex-col gap-1 rounded-xl border p-3 focus-within:ring-2 focus-within:ring-n-blue-9"
             :class="
               interval === option
                 ? 'border-n-blue-7 bg-n-blue-2'
@@ -265,16 +306,9 @@ const dateLabel = computed(() => {
               :disabled="busy"
               @change="emit('update:interval', option)"
             />
-            <span
-              class="flex items-center justify-between text-sm font-medium text-n-slate-12"
-            >
-              {{ text(option === 'year' ? 'YEARLY' : 'MONTHLY') }}
-              <span
-                v-if="interval === option"
-                class="i-lucide-circle-check size-4 text-n-blue-11"
-                aria-hidden="true"
-              />
-            </span>
+            <span class="text-sm font-medium text-n-slate-12">{{
+              text(option === 'year' ? 'YEARLY' : 'MONTHLY')
+            }}</span>
             <span class="text-xl font-semibold text-n-slate-12">{{
               money(
                 option === 'year'
@@ -282,23 +316,19 @@ const dateLabel = computed(() => {
                   : billing.monthly_price_cents
               )
             }}</span>
-            <span class="text-xs text-n-slate-11">{{
-              text(option === 'year' ? 'PER_YEAR' : 'PER_MONTH')
-            }}</span>
             <span
               v-if="option === 'year' && yearlySavings > 0"
-              class="text-xs font-medium text-n-teal-11"
-            >
-              {{
+              class="text-xs text-n-teal-11"
+              >{{
                 t('ACCOUNT_SUBSCRIPTION.YEARLY_SAVING', {
                   amount: money(yearlySavings),
                 })
-              }}
-            </span>
+              }}</span
+            >
           </label>
         </div>
       </fieldset>
-      <p v-if="billing.setup_fee_cents" class="mb-4 text-sm text-n-slate-11">
+      <p v-if="billing.setup_fee_cents" class="mb-3 text-xs text-n-slate-11">
         {{
           t('ACCOUNT_SUBSCRIPTION.SETUP_FEE', {
             amount: money(billing.setup_fee_cents),
@@ -317,25 +347,107 @@ const dateLabel = computed(() => {
         class="w-full"
         @click="emit('pay', 'checkout')"
       />
-      <p class="mb-0 mt-3 text-xs leading-5 text-n-slate-11">
-        {{ text('CHECKOUT_HELP') }}
-      </p>
     </div>
-    <Button
-      v-if="billing.can_manage"
-      class="mt-5 w-full"
-      :label="text(attention ? 'RESOLVE_PAYMENT' : 'MANAGE')"
-      :variant="attention ? 'solid' : 'outline'"
-      :color="attention ? 'blue' : 'slate'"
+    <div v-if="billing.can_manage" class="mt-auto pt-5">
+      <p v-if="paymentFailed" class="mb-3 text-xs text-n-ruby-11" role="alert">
+        {{ text('PAYMENT_ERROR') }}
+      </p>
+      <div class="flex flex-wrap gap-2 border-t border-n-weak pt-4">
+        <Button
+          v-if="billing.can_change_interval && !billing.billing_sync_failed"
+          :label="text('CHANGE_BILLING')"
+          icon="i-lucide-arrow-left-right"
+          variant="outline"
+          color="blue"
+          size="sm"
+          :disabled="busy"
+          @click="openChange"
+        />
+        <Button
+          :label="text(attention ? 'RESOLVE_PAYMENT' : 'PAYMENTS_INVOICES')"
+          :variant="attention ? 'solid' : 'outline'"
+          :color="attention ? 'blue' : 'slate'"
+          size="sm"
+          :is-loading="busy"
+          :disabled="busy"
+          @click="emit('pay', 'portal')"
+        />
+      </div>
+    </div>
+    <Dialog
+      ref="changeDialog"
+      type="edit"
+      width="md"
+      :title="text('CHANGE_BILLING')"
+      :confirm-button-label="
+        text(canceling ? 'RESUME_IN_STRIPE' : 'REVIEW_CHANGE')
+      "
+      :disable-confirm-button="
+        !canceling && changeInterval === billing.billing_interval
+      "
       :is-loading="busy"
-      :disabled="busy"
-      @click="emit('pay', 'portal')"
-    />
-    <p
-      v-if="billing.can_manage"
-      class="mb-0 mt-3 text-xs leading-5 text-n-slate-11"
+      @confirm="reviewChange"
     >
-      {{ text('PORTAL_HELP') }}
-    </p>
+      <p v-if="paymentFailed" class="m-0 text-sm text-n-ruby-11" role="alert">
+        {{ text('PAYMENT_ERROR') }}
+      </p>
+      <fieldset class="m-0 border-0 p-0">
+        <legend class="sr-only">{{ text('BILLING_INTERVAL') }}</legend>
+        <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <label
+            v-for="option in ['month', 'year']"
+            :key="option"
+            class="flex cursor-pointer flex-col gap-2 rounded-xl border p-4 focus-within:ring-2 focus-within:ring-n-blue-9"
+            :class="
+              changeInterval === option
+                ? 'border-n-blue-7 bg-n-blue-2'
+                : 'border-n-weak'
+            "
+          >
+            <input
+              v-model="changeInterval"
+              class="sr-only"
+              type="radio"
+              name="change-billing-interval"
+              :value="option"
+              :disabled="busy"
+            />
+            <span
+              class="flex items-center justify-between text-sm font-medium text-n-slate-12"
+              >{{ text(option === 'year' ? 'YEARLY' : 'MONTHLY')
+              }}<span
+                v-if="option === billing.billing_interval"
+                class="text-xs text-n-slate-11"
+                >{{ text('CURRENT') }}</span
+              ></span
+            >
+            <span class="text-xl font-semibold text-n-slate-12">{{
+              money(changePrice(option) * changeQuantity)
+            }}</span>
+            <span class="text-xs text-n-slate-11">{{
+              text(option === 'year' ? 'PER_YEAR' : 'PER_MONTH')
+            }}</span>
+            <span
+              v-if="option === 'year' && changeSavings > 0"
+              class="text-xs font-medium text-n-teal-11"
+              >{{
+                t('ACCOUNT_SUBSCRIPTION.YEARLY_SAVING', {
+                  amount: money(changeSavings),
+                })
+              }}</span
+            >
+          </label>
+        </div>
+      </fieldset>
+      <p
+        v-if="canceling"
+        class="m-0 rounded-lg bg-n-amber-2 p-3 text-sm text-n-amber-11"
+      >
+        {{ text('RESUME_BEFORE_CHANGE') }}
+      </p>
+      <p v-else class="m-0 text-sm text-n-slate-11">
+        {{ text('CHANGE_REVIEW_HELP') }}
+      </p>
+    </Dialog>
   </section>
 </template>

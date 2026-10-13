@@ -1,6 +1,7 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { LineChart } from '@chatwoot/viz';
 import { useAccount } from 'dashboard/composables/useAccount';
 import { usePolicy } from 'dashboard/composables/usePolicy';
 import { useAccountSubscription } from 'dashboard/composables/useAccountSubscription';
@@ -18,13 +19,15 @@ const { billing, loading, loadFailed, refresh } = useAccountSubscription();
 const canManage = computed(() => checkPermissions(['administrator']));
 onMounted(() => refresh());
 const paymentFailed = ref(false);
+const paymentAction = ref('');
 const busy = ref(false);
 const interval = ref('month');
-const date = value =>
+const date = (value, timeZone) =>
   new Date(value).toLocaleDateString(locale.value, {
     day: 'numeric',
     month: 'short',
     year: 'numeric',
+    timeZone,
   });
 const number = value => new Intl.NumberFormat(locale.value).format(value);
 const money = cents =>
@@ -70,29 +73,54 @@ const includedFeatures = computed(() => [
     enabled: currentAccount.value?.features?.captain_integration_v2,
   },
 ]);
-const historyPeriods = computed(() => {
-  const periods = billing.value.history.filter(
-    period =>
-      new Date(period.period_started_at).getTime() !==
-      new Date(billing.value.quota_started_at).getTime()
-  );
-  return [
+const dailyUsage = computed(() => billing.value?.daily_usage || []);
+const historyChart = computed(() => ({
+  categories: dailyUsage.value.map(day =>
+    new Date(`${day.date}T12:00:00Z`).toLocaleDateString(locale.value, {
+      day: 'numeric',
+      month: 'short',
+      timeZone: 'UTC',
+    })
+  ),
+  series: [
     {
-      period_started_at: billing.value.quota_started_at,
-      consumed: billing.value.consumed,
-      current: true,
+      id: 'conversations',
+      label: t('ACCOUNT_SUBSCRIPTION.CONVERSATIONS'),
+      color: 'rgb(var(--blue-9))',
+      pointBorderColor: 'rgb(var(--card-color))',
+      data: dailyUsage.value.map(day => day.consumed),
     },
-    ...periods,
-  ];
+  ],
+}));
+// Keep the date axis legible while tooltips retain every day's full date.
+const timelineLabels = computed(() => {
+  const categories = historyChart.value.categories;
+  if (categories.length <= 5) return categories;
+  return Array.from(
+    { length: 5 },
+    (_, index) => categories[Math.round(((categories.length - 1) * index) / 4)]
+  );
 });
-const pay = async (action = 'checkout') => {
+const historyDomain = computed(() => [
+  0,
+  Math.max(
+    4,
+    Math.ceil(Math.max(0, ...dailyUsage.value.map(day => day.consumed)) / 4) * 4
+  ),
+]);
+const historyTotal = computed(() =>
+  dailyUsage.value.reduce((sum, day) => sum + day.consumed, 0)
+);
+const pay = async (action = 'checkout', chosenInterval = interval.value) => {
+  paymentAction.value = action;
   busy.value = true;
   paymentFailed.value = false;
   try {
-    const { data } = await api[action](interval.value);
+    const { data } = await api[action](chosenInterval);
     window.location.assign(data.url);
   } catch {
     paymentFailed.value = true;
+    await refresh();
   } finally {
     busy.value = false;
   }
@@ -101,6 +129,7 @@ const pay = async (action = 'checkout') => {
 
 <template>
   <SettingsLayout
+    content-sized
     :is-loading="loading"
     :loading-message="t('ACCOUNT_SUBSCRIPTION.LOADING')"
   >
@@ -127,7 +156,7 @@ const pay = async (action = 'checkout') => {
           @click="refresh"
         />
       </div>
-      <div v-if="billing?.enabled" class="flex flex-col gap-6">
+      <div v-if="billing?.enabled" class="flex flex-col gap-5">
         <div
           v-if="warningText"
           class="flex items-start gap-3 rounded-xl border border-n-amber-6 bg-n-amber-2 p-4 text-n-amber-11"
@@ -141,12 +170,12 @@ const pay = async (action = 'checkout') => {
         </div>
         <section
           v-if="canManage"
-          class="overflow-hidden rounded-2xl border border-n-blue-6 bg-gradient-to-br from-n-blue-2 via-n-background to-n-iris-2 p-6"
+          class="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-n-blue-6 bg-gradient-to-r from-n-blue-2 to-n-background px-5 py-4"
         >
           <div class="flex flex-wrap items-center justify-between gap-4">
             <div class="flex items-center gap-4">
               <span
-                class="grid size-14 place-items-center rounded-2xl bg-n-blue-3 text-n-blue-11"
+                class="grid size-10 place-items-center rounded-xl bg-n-blue-3 text-n-blue-11"
               >
                 <span
                   :class="
@@ -154,7 +183,7 @@ const pay = async (action = 'checkout') => {
                       ? 'i-lucide-gem'
                       : 'i-lucide-credit-card'
                   "
-                  class="size-7"
+                  class="size-5"
                   aria-hidden="true"
                 />
               </span>
@@ -162,7 +191,7 @@ const pay = async (action = 'checkout') => {
                 <span class="text-sm text-n-slate-11">{{
                   t('ACCOUNT_SUBSCRIPTION.CURRENT_PLAN')
                 }}</span>
-                <h2 class="m-0 text-2xl font-semibold text-n-slate-12">
+                <h2 class="m-0 text-lg font-semibold text-n-slate-12">
                   {{
                     t(
                       billing.founder_plan
@@ -182,19 +211,15 @@ const pay = async (action = 'checkout') => {
               }}
             </span>
           </div>
-          <p
-            v-if="billing.founder_plan"
-            class="mb-0 mt-4 text-sm text-n-slate-11"
-          >
-            {{ t('ACCOUNT_SUBSCRIPTION.FOUNDER_HELP') }}
-          </p>
         </section>
         <div
-          class="grid grid-cols-1 items-start gap-6"
+          class="grid grid-cols-1 items-stretch gap-5"
           :class="canManage ? 'lg:grid-cols-2' : ''"
         >
-          <section class="rounded-2xl border border-n-weak bg-n-background p-6">
-            <div class="mb-6 flex items-center justify-between gap-3">
+          <section
+            class="flex min-w-0 flex-col rounded-2xl border border-n-weak bg-n-background p-5 sm:p-6"
+          >
+            <div class="mb-6 flex flex-wrap items-center justify-between gap-3">
               <h2 class="m-0 text-base font-semibold text-n-slate-12">
                 {{ t('ACCOUNT_SUBSCRIPTION.CONVERSATIONS') }}
               </h2>
@@ -265,7 +290,7 @@ const pay = async (action = 'checkout') => {
                 </dd>
               </div>
             </dl>
-            <p class="mb-0 mt-5 text-xs leading-5 text-n-slate-11">
+            <p class="mb-0 mt-auto pt-5 text-xs leading-5 text-n-slate-11">
               {{ t('ACCOUNT_SUBSCRIPTION.COUNTING') }}
             </p>
           </section>
@@ -274,15 +299,121 @@ const pay = async (action = 'checkout') => {
             v-model:interval="interval"
             :billing="billing"
             :busy="busy"
+            :payment-failed="paymentFailed && paymentAction !== 'payment'"
             @pay="pay"
             @refresh="refresh()"
           />
         </div>
-        <section class="rounded-2xl border border-n-weak bg-n-background p-6">
-          <h2 class="m-0 mb-5 text-base font-semibold text-n-slate-12">
+
+        <section
+          v-if="canManage && billing.can_pay_customization"
+          class="flex flex-col justify-between gap-4 rounded-2xl border border-n-weak bg-n-background p-6 sm:flex-row sm:items-center"
+        >
+          <div>
+            <h2 class="m-0 text-base font-semibold text-n-slate-12">
+              {{ t('ACCOUNT_SUBSCRIPTION.PAYMENT_REQUEST') }}
+            </h2>
+            <p class="mb-0 mt-1 text-sm text-n-slate-11">
+              {{
+                billing.custom_payment_description ||
+                t('ACCOUNT_SUBSCRIPTION.CUSTOMIZATION')
+              }}
+            </p>
+            <p class="mb-0 mt-2 text-lg font-semibold text-n-slate-12">
+              {{ money(billing.custom_payment_cents) }}
+            </p>
+          </div>
+          <Button
+            :label="t('ACCOUNT_SUBSCRIPTION.PAY_NOW')"
+            :is-loading="busy"
+            :disabled="busy"
+            @click="pay('payment')"
+          />
+        </section>
+        <p
+          v-if="paymentFailed && paymentAction === 'payment'"
+          class="m-0 text-sm text-n-ruby-11"
+          role="alert"
+        >
+          {{ t('ACCOUNT_SUBSCRIPTION.PAYMENT_ERROR') }}
+        </p>
+        <section
+          class="min-w-0 rounded-2xl border border-n-weak bg-n-background p-5 sm:p-6"
+        >
+          <div class="mb-5 flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <h2 class="m-0 text-base font-semibold text-n-slate-12">
+                {{ t('ACCOUNT_SUBSCRIPTION.USAGE_TIMELINE') }}
+              </h2>
+              <p class="mb-0 mt-1 text-xs text-n-slate-11">
+                {{ t('ACCOUNT_SUBSCRIPTION.DAILY_USAGE_HELP') }}
+              </p>
+            </div>
+            <span
+              class="rounded-lg bg-n-blue-2 px-3 py-2 text-sm font-medium tabular-nums text-n-blue-11"
+              >{{
+                t('ACCOUNT_SUBSCRIPTION.TIMELINE_TOTAL', {
+                  count: number(historyTotal),
+                })
+              }}</span
+            >
+          </div>
+          <LineChart
+            v-if="dailyUsage.length > 1"
+            :data="historyChart"
+            :format-value="number"
+            :y-domain="historyDomain"
+            :height="220"
+            :point-radius="3"
+            :show-values="dailyUsage.length <= 7"
+            :x-inset="0"
+            :aria-label="t('ACCOUNT_SUBSCRIPTION.USAGE_TIMELINE')"
+            class="w-full [&_.cw-viz-line\_\_x-tick]:hidden [--cw-viz-line-label-color:rgb(var(--slate-11))] [--cw-viz-line-axis-color:rgb(var(--slate-4))] [--cw-viz-line-tooltip-background:rgb(var(--solid-2))] [--cw-viz-line-tooltip-color:rgb(var(--slate-12))] [--cw-viz-line-tooltip-border-color:rgb(var(--border-strong))]"
+          />
+          <div
+            v-if="dailyUsage.length > 1"
+            aria-hidden="true"
+            class="relative -mt-7 mb-3 flex justify-between gap-2 ps-14 pe-6 text-[0.625rem] text-n-slate-11"
+          >
+            <span v-for="label in timelineLabels" :key="label">{{
+              label
+            }}</span>
+          </div>
+          <p
+            v-else
+            class="mb-0 flex h-32 items-center justify-center text-sm text-n-slate-11"
+          >
+            {{ t('ACCOUNT_SUBSCRIPTION.TIMELINE_STARTING') }}
+          </p>
+          <details class="mt-3 text-xs text-n-slate-11">
+            <summary
+              class="w-fit cursor-pointer rounded py-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-n-blue-9"
+            >
+              {{ t('ACCOUNT_SUBSCRIPTION.VIEW_DAILY_TOTALS') }}
+            </summary>
+            <dl
+              class="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-6"
+            >
+              <div
+                v-for="day in dailyUsage"
+                :key="day.date"
+                class="rounded-lg bg-n-alpha-1 p-2"
+              >
+                <dt>{{ date(`${day.date}T12:00:00Z`, 'UTC') }}</dt>
+                <dd class="m-0 mt-1 font-medium tabular-nums text-n-slate-12">
+                  {{ number(day.consumed) }}
+                </dd>
+              </div>
+            </dl>
+          </details>
+        </section>
+        <details class="rounded-xl border border-n-weak bg-n-background p-5">
+          <summary class="cursor-pointer text-sm font-medium text-n-slate-12">
             {{ t('ACCOUNT_SUBSCRIPTION.FEATURE_ACCESS') }}
-          </h2>
-          <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          </summary>
+          <div
+            class="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4"
+          >
             <div
               v-for="feature in includedFeatures"
               :key="feature.label"
@@ -323,106 +454,7 @@ const pay = async (action = 'checkout') => {
               </div>
             </div>
           </div>
-        </section>
-        <section
-          v-if="canManage && billing.can_pay_customization"
-          class="flex flex-col justify-between gap-4 rounded-2xl border border-n-weak bg-n-background p-6 sm:flex-row sm:items-center"
-        >
-          <div>
-            <h2 class="m-0 text-base font-semibold text-n-slate-12">
-              {{ t('ACCOUNT_SUBSCRIPTION.PAYMENT_REQUEST') }}
-            </h2>
-            <p class="mb-0 mt-1 text-sm text-n-slate-11">
-              {{
-                billing.custom_payment_description ||
-                t('ACCOUNT_SUBSCRIPTION.CUSTOMIZATION')
-              }}
-            </p>
-            <p class="mb-0 mt-2 text-lg font-semibold text-n-slate-12">
-              {{ money(billing.custom_payment_cents) }}
-            </p>
-          </div>
-          <Button
-            :label="t('ACCOUNT_SUBSCRIPTION.PAY_NOW')"
-            :is-loading="busy"
-            :disabled="busy"
-            @click="pay('payment')"
-          />
-        </section>
-        <p v-if="paymentFailed" class="m-0 text-sm text-n-ruby-11" role="alert">
-          {{ t('ACCOUNT_SUBSCRIPTION.PAYMENT_ERROR') }}
-        </p>
-        <section
-          class="overflow-hidden rounded-2xl border border-n-weak bg-n-background"
-        >
-          <h2
-            class="m-0 border-b border-n-weak px-6 py-5 text-base font-semibold text-n-slate-12"
-          >
-            {{ t('ACCOUNT_SUBSCRIPTION.HISTORY') }}
-          </h2>
-          <div class="px-6 pt-5 pb-6">
-            <div
-              class="mb-5 flex flex-wrap items-center justify-between gap-2 text-sm text-n-slate-11"
-            >
-              <span>{{ t('ACCOUNT_SUBSCRIPTION.HISTORY_DESCRIPTION') }}</span>
-              <span
-                class="inline-flex items-center gap-1.5 rounded-full bg-n-blue-2 px-2.5 py-1 text-xs text-n-blue-11"
-              >
-                <span class="i-lucide-clock size-3.5" aria-hidden="true" />
-                {{ t('ACCOUNT_SUBSCRIPTION.CURRENT_PERIOD_PARTIAL') }}
-              </span>
-            </div>
-            <div class="overflow-x-auto">
-              <table class="w-full text-start text-sm">
-                <caption class="sr-only">
-                  {{
-                    t('ACCOUNT_SUBSCRIPTION.HISTORY_DESCRIPTION')
-                  }}
-                </caption>
-                <thead>
-                  <tr class="border-b border-n-weak">
-                    <th
-                      scope="col"
-                      class="pb-3 text-start font-medium text-n-slate-11"
-                    >
-                      {{ t('ACCOUNT_SUBSCRIPTION.MONTH') }}
-                    </th>
-                    <th
-                      scope="col"
-                      class="pb-3 text-end font-medium text-n-slate-11"
-                    >
-                      {{ t('ACCOUNT_SUBSCRIPTION.CONVERSATIONS') }}
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr
-                    v-for="period in historyPeriods"
-                    :key="period.period_started_at"
-                    class="border-b border-n-weak last:border-0"
-                  >
-                    <th
-                      scope="row"
-                      class="py-3 text-start font-normal text-n-slate-12"
-                    >
-                      {{ date(period.period_started_at) }}
-                      <span
-                        v-if="period.current"
-                        class="ms-2 text-xs text-n-blue-11"
-                        >{{ t('ACCOUNT_SUBSCRIPTION.IN_PROGRESS') }}</span
-                      >
-                    </th>
-                    <td
-                      class="py-3 text-end font-medium tabular-nums text-n-slate-12"
-                    >
-                      {{ number(period.consumed) }}
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </section>
+        </details>
       </div>
       <div
         v-else-if="!loadFailed"
