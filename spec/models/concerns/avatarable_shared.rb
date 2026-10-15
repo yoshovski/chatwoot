@@ -12,6 +12,13 @@ shared_examples_for 'avatarable' do
     expect(avatarable.respond_to?(:avatar_url)).to be true
   end
 
+  it 'returns a non-expiring proxy url for an attached avatar' do
+    avatarable.avatar.attach(io: Rails.root.join('spec/assets/avatar.png').open, filename: 'avatar.png', content_type: 'image/png')
+    avatarable.save!
+
+    expect(avatarable.avatar_url).to include('/rails/active_storage/representations/proxy/')
+  end
+
   context 'when avatarable has an email attribute' do
     it 'enques job when email is changed on avatarable create' do
       avatarable = build(described_class.to_s.underscore, account: create(:account))
