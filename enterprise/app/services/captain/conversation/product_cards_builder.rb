@@ -79,6 +79,11 @@ class Captain::Conversation::ProductCardsBuilder
     return [] unless products?
 
     additional_attrs = agent_name.present? ? { agent_name: agent_name } : {}
+    unless rich_cards_channel?
+      return [{ content: @text_list_lines.join("\n"), content_type: 'text',
+                additional_attributes: additional_attrs.merge(product_handles: shown_handles) }]
+    end
+
     messages = []
     messages << build_message('cards', cards_items, additional_attrs) if cards_items.any?
     messages << build_message('article', article_items, additional_attrs) if article_items.any?
@@ -133,6 +138,18 @@ class Captain::Conversation::ProductCardsBuilder
     }
   end
 
+  # Only the web widget renders cards and articles; other channels send just the message content, so they get the
+  # products as a text list. Without a conversation (the playground) cards are shown.
+  def rich_cards_channel?
+    @conversation.nil? || @conversation.inbox.web_widget?
+  end
+
+  def text_list_line(title, price, product_url)
+    parts = [title, price.presence]
+    parts << product_url if product_url.present? && allowed_link_url?(product_url)
+    "- #{parts.compact.join(' — ')}"
+  end
+
   def resolve_products!
     return if @resolved
 
@@ -141,6 +158,7 @@ class Captain::Conversation::ProductCardsBuilder
     @article_items = []
     @shown_handles = []
     @shown_product_urls = []
+    @text_list_lines = []
 
     valid_handles = extract_valid_handles
     return if valid_handles.blank?
@@ -165,8 +183,7 @@ class Captain::Conversation::ProductCardsBuilder
     return [] unless @conversation
 
     recent_ids = @conversation.messages.reorder(id: :desc).limit(RECENT_MESSAGES).select(:id)
-    @conversation.messages.where(id: recent_ids, content_type: %w[cards article])
-                 .pluck(:additional_attributes)
+    @conversation.messages.where(id: recent_ids).pluck(:additional_attributes)
                  .flat_map { |attributes| Array(attributes&.dig('product_handles')) }
   end
 
@@ -211,6 +228,7 @@ class Captain::Conversation::ProductCardsBuilder
 
     @shown_handles << handle
     @shown_product_urls << product_url if product_url.present?
+    @text_list_lines << text_list_line(title, extract_price(product), product_url)
 
     if image_url.present? && allowed_image_url?(image_url)
       @cards_items << build_card_payload(title, description, image_url, product_url)
