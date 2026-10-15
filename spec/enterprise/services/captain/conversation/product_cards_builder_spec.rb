@@ -268,5 +268,29 @@ RSpec.describe Captain::Conversation::ProductCardsBuilder do
       expect(article_msg.additional_attributes['agent_name']).to eq('Store Bot')
       expect(article_msg.preserve_waiting_since).to be(true)
     end
+
+    context 'when the inbox is not a web widget' do
+      let(:inbox) { create(:inbox, :with_email, account: account) }
+
+      it 'creates one text message listing each product with its price and link' do
+        expect(messages.size).to eq(1)
+        expect(messages.first.content_type).to eq('text')
+        expect(messages.first.content).to eq(
+          [
+            '- DJI Agras T40 Spraying Drone — 19999.00 EUR — https://example-store.myshopify.com/products/agras-t40',
+            '- DJI Mavic 3 Pro — 2099.00 EUR — https://example-store.myshopify.com/products/mavic-3-pro',
+            '- Drone Battery Charger — 599.00 EUR — https://example-store.myshopify.com/products/no-img-item'
+          ].join("\n")
+        )
+        expect(messages.first.additional_attributes['product_handles']).to contain_exactly('agras-t40', 'mavic-3-pro', 'no-img-item')
+      end
+
+      it 'does not list a product again that a recent text list already showed' do
+        create(:message, conversation: conversation, account: account, inbox: inbox, message_type: :outgoing, sender: assistant,
+                         content: '- DJI Agras T40', additional_attributes: { 'product_handles' => ['agras-t40'] })
+
+        expect(builder.shown_handles).to contain_exactly('mavic-3-pro', 'no-img-item')
+      end
+    end
   end
 end
