@@ -131,7 +131,7 @@ class ConversationFinder
     when 'unattended'
       @conversations = @conversations.unattended
     when 'bot'
-      @conversations = @conversations.where.not(assignee_agent_bot_id: nil)
+      @conversations = @conversations.ai_participated
     end
     @conversations
   end

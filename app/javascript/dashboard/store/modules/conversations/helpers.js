@@ -35,12 +35,19 @@ export const filterByUnattended = (
     : shouldFilter;
 };
 
-export const filterByBot = (shouldFilter, conversationType, meta = {}) => {
+// The AI Agents view lists every conversation an AI agent took part in,
+// including ones it already handed off to a human.
+export const filterByBot = (
+  shouldFilter,
+  conversationType,
+  meta = {},
+  aiParticipatedAt = 0
+) => {
   if (conversationType !== 'bot') return shouldFilter;
   const isAIAssignee = ['AgentBot', 'Captain::Assistant'].includes(
     meta.assignee_type
   );
-  return isAIAssignee && shouldFilter;
+  return (!!aiParticipatedAt || isAIAssignee) && shouldFilter;
 };
 
 export const applyPageFilters = (conversation, filters) => {
@@ -52,6 +59,7 @@ export const applyPageFilters = (conversation, filters) => {
     meta = {},
     first_reply_created_at: firstReplyOn,
     waiting_since: waitingSince,
+    ai_participated_at: aiParticipatedAt,
   } = conversation;
   const team = meta.team || {};
   const { id: chatTeamId } = team;
@@ -66,7 +74,12 @@ export const applyPageFilters = (conversation, filters) => {
     firstReplyOn,
     waitingSince
   );
-  shouldFilter = filterByBot(shouldFilter, conversationType, meta);
+  shouldFilter = filterByBot(
+    shouldFilter,
+    conversationType,
+    meta,
+    aiParticipatedAt
+  );
 
   return shouldFilter;
 };

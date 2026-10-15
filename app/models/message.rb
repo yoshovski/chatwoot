@@ -458,8 +458,14 @@ class Message < ApplicationRecord
 
   def set_conversation_activity
     # rubocop:disable Rails/SkipsModelValidations
-    conversation.update_columns(last_activity_at: created_at, updated_at: Time.current)
+    activity = { last_activity_at: created_at, updated_at: Time.current }
+    activity[:ai_participated_at] = created_at if ai_participation?
+    conversation.update_columns(activity)
     # rubocop:enable Rails/SkipsModelValidations
+  end
+
+  def ai_participation?
+    outgoing? && conversation.ai_participated_at.blank? && %w[AgentBot Captain::Assistant].include?(sender_type)
   end
 
   def reindex_for_search

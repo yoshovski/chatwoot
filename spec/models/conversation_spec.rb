@@ -386,6 +386,30 @@ RSpec.describe Conversation do
     end
   end
 
+  describe 'AI participation' do
+    let(:agent_bot) { create(:agent_bot) }
+
+    it 'is not set for conversations without an AI agent' do
+      expect(create(:conversation).ai_participated_at).to be_nil
+    end
+
+    it 'is set when an AI agent is assigned on create' do
+      expect(create(:conversation, ai_assignee: agent_bot).ai_participated_at).to be_present
+    end
+
+    it 'is set when an AI agent is assigned later and survives a handoff' do
+      conversation = create(:conversation)
+      conversation.update!(ai_assignee: agent_bot)
+      expect(conversation.ai_participated_at).to be_present
+
+      allow(Rails.configuration.dispatcher).to receive(:dispatch)
+      conversation.bot_handoff!
+      conversation.update!(assignee: create(:user, account: conversation.account))
+      expect(conversation.reload.ai_participated_at).to be_present
+      expect(described_class.ai_participated).to include(conversation)
+    end
+  end
+
   describe '#bot_handoff!' do
     let(:conversation) { create(:conversation, status: :pending) }
 
@@ -710,6 +734,7 @@ RSpec.describe Conversation do
         created_at: conversation.created_at.to_i,
         updated_at: conversation.updated_at.to_f,
         waiting_since: conversation.waiting_since.to_i,
+        ai_participated_at: 0,
         priority: nil,
         unread_count: 0
       }
