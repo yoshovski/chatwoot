@@ -437,7 +437,7 @@ RSpec.describe Message do
     it 'marks AI participation when an agent bot replies' do
       message.assign_attributes(message_type: :outgoing, sender: create(:agent_bot))
       message.save!
-      expect(message.conversation.reload.ai_participated_at).to eq(message.created_at)
+      expect(message.conversation.reload.ai_participated_at).to eq(message.reload.created_at)
     end
 
     it 'keeps the first AI participation time' do
