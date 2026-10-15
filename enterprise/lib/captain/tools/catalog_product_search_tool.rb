@@ -5,7 +5,7 @@ class Captain::Tools::CatalogProductSearchTool < Captain::Tools::BasePublicTool
   include Captain::Tools::SourceIndexing
 
   description 'Search active products in the Shopify catalog for product discovery, recommendations, live prices and links, or "do you sell X". ' \
-              'Keep exact variants in the query; ask for at most 3 products.'
+              'Keep exact variants in the query; ask for at most 3 products, or 5 for a broad category or need.'
   param :query, type: 'string', desc: 'The product name, SKU or a few key words, such as "a phone case" or "model X200 battery"'
   param :limit, type: 'integer', desc: 'Maximum number of products to return (default: 3, at most 10)', required: false
 
