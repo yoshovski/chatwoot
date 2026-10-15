@@ -47,8 +47,7 @@ class Captain::Tools::BrowseCatalogTool < Captain::Tools::BasePublicTool
     result&.dig('collections') || []
   end
 
-  def process_collections(tool_context, query, collections)
-    record_product_handles(tool_context, collections.filter_map { |c| c['handle'] })
+  def process_collections(_tool_context, query, collections)
     log_tool_usage('found_collections', { query: query, count: collections.size })
     format_collections(collections)
   end

@@ -81,7 +81,7 @@ RSpec.describe Captain::Tools::BrowseCatalogTool do
   end
 
   describe '#perform' do
-    it 'browses collections and records collection handles' do
+    it 'browses collections without recording their handles as product handles' do
       allow(sat_client).to receive(:browse_catalog).with(query: 'drones', limit: 10).and_return(
         {
           'collections' => [
@@ -104,7 +104,8 @@ RSpec.describe Captain::Tools::BrowseCatalogTool do
       expect(result).to include('https://test.myshopify.com/collections/agricultural-drones')
       expect(result).to include('Product count: 8')
 
-      expect(tool_context.state[:product_handles]).to include('agricultural-drones')
+      expect(tool_context.state[:product_handles]).to be_blank
+      expect(tool_context.state[Captain::Assistant::PRODUCT_HANDLES_STATE_KEY]).to be_blank
     end
 
     it 'returns friendly message when no collections found' do
