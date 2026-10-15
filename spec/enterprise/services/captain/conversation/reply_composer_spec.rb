@@ -109,6 +109,39 @@ RSpec.describe Captain::Conversation::ReplyComposer do
       expect(cards[:additional_attributes]).to include(agent_name: 'Store Bot', product_handles: %w[agras-t40])
     end
 
+    context 'when the answer ends with a question' do
+      let(:response) do
+        {
+          'agent_name' => 'Store Bot',
+          'response_parts' => [{ 'text' => 'We have two spraying drones. Which tank size do you need?', 'citation_indexes' => [] }],
+          'suggested_replies' => [{ 'label' => 'Up to 30 L', 'message' => 'I need a tank up to 30 L.' }],
+          'product_handles' => %w[agras-t40]
+        }
+      end
+
+      it 'shows the intro, then the cards, then the question with its buttons' do
+        answer, cards, question = composer.messages
+
+        expect(answer).to include(content: 'We have two spraying drones.', content_type: 'text')
+        expect(answer[:additional_attributes][Captain::Assistant::ResponseParts::MESSAGE_ATTRIBUTE_KEY]).to eq(
+          [{ 'text' => 'We have two spraying drones.', 'citation_indexes' => [] }]
+        )
+        expect(cards).to include(content_type: 'cards')
+        expect(question).to include(content: 'Which tank size do you need?', content_type: 'input_select',
+                                    additional_attributes: { agent_name: 'Store Bot' })
+        expect(question[:content_attributes]).to eq(
+          { items: [{ 'title' => 'Up to 30 L', 'value' => 'I need a tank up to 30 L.' }], submit_value: true }
+        )
+      end
+
+      it 'keeps the question in the answer when suggestions are suppressed' do
+        messages = composer.messages(suppress_suggestions: true)
+
+        expect(messages.map { |message| message[:content_type] }).to eq(%w[text cards])
+        expect(messages.first[:content]).to eq('We have two spraying drones. Which tank size do you need?')
+      end
+    end
+
     it 'shows products again when there is no conversation to remember them in' do
       conversation.messages.create!(
         message_type: :outgoing, account: account, inbox: inbox, content_type: 'cards', content: 'x',
