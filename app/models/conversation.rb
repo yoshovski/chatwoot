@@ -5,6 +5,7 @@
 #  id                     :integer          not null, primary key
 #  additional_attributes  :jsonb
 #  ai_assignee_type       :string
+#  ai_participated_at     :datetime
 #  agent_last_seen_at     :datetime
 #  assignee_last_seen_at  :datetime
 #  cached_label_list      :text
@@ -93,6 +94,7 @@ class Conversation < ApplicationRecord
   scope :sort_on_unread, lambda { |_direction|
     order(unread_messages_count_arel.desc).sort_on_last_activity_at('desc')
   }
+  scope :ai_participated, -> { where.not(ai_participated_at: nil) }
   scope :unattended, -> { where(first_reply_created_at: nil).or(where.not(waiting_since: nil)) }
   scope :resolvable_not_waiting, lambda { |auto_resolve_after|
     return none if auto_resolve_after.to_i.zero?
@@ -136,8 +138,11 @@ class Conversation < ApplicationRecord
 
   before_save :ensure_snooze_until_reset
   before_save :set_status_changed_at
+  before_save :mark_ai_participation
   before_create :determine_conversation_status
   before_create :ensure_waiting_since
+  # determine_conversation_status may assign the AI agent after before_save has run
+  before_create :mark_ai_participation
 
   after_update_commit :execute_after_update_commit_callbacks
   after_create_commit :notify_conversation_creation
@@ -297,6 +302,12 @@ class Conversation < ApplicationRecord
 
   def validate_additional_attributes
     self.additional_attributes = {} unless additional_attributes.is_a?(Hash)
+  end
+
+  def mark_ai_participation
+    return if ai_participated_at.present? || assignee_agent_bot_id.blank?
+
+    self.ai_participated_at = Time.current
   end
 
   def reset_agent_bot_when_assignee_present

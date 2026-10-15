@@ -302,9 +302,56 @@ describe ConversationFinder do
     context 'with bot' do
       let(:params) { { status: 'open', conversation_type: 'bot' } }
       let!(:agent_bot) { create(:agent_bot) }
+      let!(:bot_conv) { create(:conversation, account: account, inbox: inbox, assignee: nil, ai_assignee: agent_bot) }
 
       it 'returns bot conversations' do
-        bot_conv = create(:conversation, account: account, inbox: inbox, assignee: nil, ai_assignee: agent_bot)
+        result = conversation_finder.perform
+        expect(result[:conversations].map(&:id)).to contain_exactly(bot_conv.id)
+      end
+
+      it 'keeps conversations after the AI hands them off to a human' do
+        bot_conv.bot_handoff!(dispatch_event: false)
+        bot_conv.update!(assignee: user_2)
+
+        result = conversation_finder.perform
+        expect(result[:conversations].map(&:id)).to contain_exactly(bot_conv.id)
+      end
+
+      it 'includes conversations an AI replied to without being assigned' do
+        replied = create(:conversation, account: account, inbox: inbox, assignee: user_1)
+        create(:message, conversation: replied, account: account, inbox: inbox, message_type: :outgoing, sender: agent_bot)
+
+        result = conversation_finder.perform
+        expect(result[:conversations].map(&:id)).to contain_exactly(bot_conv.id, replied.id)
+      end
+
+      it 'ignores the assignee tab and keeps counts consistent with the list' do
+        bot_conv.update!(assignee: user_1)
+        result = described_class.new(user_1, params.merge(assignee_type: 'unassigned')).perform
+
+        expect(result[:conversations].map(&:id)).to contain_exactly(bot_conv.id)
+        expect(result[:count]).to include(all_count: 1, mine_count: 1, unassigned_count: 0, assigned_count: 1)
+      end
+
+      it 'applies status, inbox and label filters' do
+        bot_conv.update!(label_list: ['vip'])
+        resolved = create(:conversation, account: account, inbox: inbox, ai_assignee: agent_bot, status: 'resolved')
+        other_inbox = create(:inbox, account: account)
+        create(:inbox_member, user: user_1, inbox: other_inbox)
+        create(:conversation, account: account, inbox: other_inbox, ai_assignee: agent_bot)
+
+        expect(described_class.new(user_1, params.merge(status: 'resolved')).perform[:conversations].map(&:id))
+          .to contain_exactly(resolved.id)
+        expect(described_class.new(user_1, params.merge(inbox_id: inbox.id)).perform[:conversations].map(&:id))
+          .to contain_exactly(bot_conv.id)
+        expect(described_class.new(user_1, params.merge(labels: ['vip'])).perform[:conversations].map(&:id))
+          .to contain_exactly(bot_conv.id)
+      end
+
+      it 'does not return AI conversations from other accounts' do
+        other_account = create(:account)
+        create(:conversation, account: other_account, inbox: create(:inbox, account: other_account), ai_assignee: agent_bot)
+
         result = conversation_finder.perform
         expect(result[:conversations].map(&:id)).to contain_exactly(bot_conv.id)
       end

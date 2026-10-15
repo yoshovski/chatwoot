@@ -68,6 +68,29 @@ RSpec.describe 'Conversations API', type: :request do
         expect(body[:data][:meta][:all_count]).to eq(2)
         expect(body[:data][:payload].count).to eq(2)
       end
+
+      it 'returns conversations an AI agent took part in, including handed-off ones' do
+        agent_bot = create(:agent_bot, account: account)
+        ai_conversation = create(:conversation, account: account, ai_assignee: agent_bot)
+        handed_off = create(:conversation, account: account, inbox: ai_conversation.inbox, ai_assignee: agent_bot)
+        handed_off.bot_handoff!(dispatch_event: false)
+        handed_off.update!(assignee: agent)
+        human_only = create(:conversation, account: account, inbox: ai_conversation.inbox, assignee: agent)
+        create(:inbox_member, user: agent, inbox: ai_conversation.inbox)
+
+        get "/api/v1/accounts/#{account.id}/conversations",
+            headers: agent.create_new_auth_token,
+            params: { conversation_type: 'bot' },
+            as: :json
+
+        expect(response).to have_http_status(:success)
+        body = JSON.parse(response.body, symbolize_names: true)
+        ids = body[:data][:payload].pluck(:id)
+        expect(ids).to contain_exactly(ai_conversation.display_id, handed_off.display_id)
+        expect(ids).not_to include(human_only.display_id)
+        expect(body[:data][:meta][:all_count]).to eq(2)
+        expect(body[:data][:payload].pluck(:ai_participated_at)).to all(be_positive)
+      end
     end
   end
 

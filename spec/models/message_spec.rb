@@ -429,6 +429,25 @@ RSpec.describe Message do
       expect { message.save! }.to(change { message.sender.last_activity_at })
     end
 
+    it 'does not mark AI participation for messages from people' do
+      message.save!
+      expect(message.conversation.reload.ai_participated_at).to be_nil
+    end
+
+    it 'marks AI participation when an agent bot replies' do
+      message.assign_attributes(message_type: :outgoing, sender: create(:agent_bot))
+      message.save!
+      expect(message.conversation.reload.ai_participated_at).to eq(message.reload.created_at)
+    end
+
+    it 'keeps the first AI participation time' do
+      first_time = 2.days.ago.round
+      message.conversation.update!(ai_participated_at: first_time)
+      message.assign_attributes(message_type: :outgoing, sender: create(:agent_bot))
+      message.save!
+      expect(message.conversation.reload.ai_participated_at).to eq(first_time)
+    end
+
     it 'triggers ::MessageTemplates::HookExecutionService' do
       hook_execution_service = double
       allow(MessageTemplates::HookExecutionService).to receive(:new).and_return(hook_execution_service)

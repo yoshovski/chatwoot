@@ -198,4 +198,14 @@ describe('#filterByBot', () => {
   it('returns false when conversationType is bot and meta has no assignee', () => {
     expect(filterByBot(true, 'bot', {})).toEqual(false);
   });
+
+  it('returns true when an AI agent took part before handing off to a human', () => {
+    expect(
+      filterByBot(true, 'bot', { assignee_type: 'User' }, 1760000000)
+    ).toEqual(true);
+  });
+
+  it('returns false when other filters already excluded the conversation', () => {
+    expect(filterByBot(false, 'bot', {}, 1760000000)).toEqual(false);
+  });
 });
