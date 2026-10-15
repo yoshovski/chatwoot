@@ -134,6 +134,14 @@ RSpec.describe Captain::Conversation::ProductCardsBuilder do
       expect(builder.shown_handles).not_to include('fake-handle')
     end
 
+    it 'never shows a collection handle as a product, since browsing collections records no product handles' do
+      tool_state.clear
+      response['product_handles'] = %w[agricultural-drones]
+
+      expect(builder.shown_handles).to be_empty
+      expect(builder.products?).to be(false)
+    end
+
     it 'does not show a product again that a recent card message already showed' do
       create(:message, conversation: conversation, account: account, inbox: inbox, message_type: :outgoing, sender: assistant,
                        content_type: :article, content_attributes: { items: [{ 'title' => 'DJI Agras T40' }] },
