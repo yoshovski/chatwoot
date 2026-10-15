@@ -12,8 +12,10 @@ module Avatarable
     after_save :fetch_avatar_from_gravatar
   end
 
+  # Proxy URLs never expire and are cached by the browser, unlike redirect URLs whose
+  # signed storage links expire after a few minutes and leave avatars broken.
   def avatar_url
-    return url_for(avatar.representation(resize_to_fill: [250, nil])) if avatar.attached? && avatar.representable?
+    return rails_storage_proxy_url(avatar.representation(resize_to_fill: [250, nil])) if avatar.attached? && avatar.representable?
 
     ''
   end
