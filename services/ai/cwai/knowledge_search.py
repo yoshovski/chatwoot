@@ -16,6 +16,10 @@ from cwai.workspace import connection
 
 router = APIRouter(prefix="/v1/knowledge")
 MAX_DATASET_RESULTS = 10
+# The catalog is a parent-child dataset: Dify ranks child chunks and merges them into their
+# product, so 10 chunks can collapse into one or two products. A product-only search asks for
+# more chunks to reach several distinct products.
+CATALOG_ONLY_CHUNKS = 30
 MAX_PASSAGES = 5
 PER_PASSAGE_CHARS = 8000
 TOTAL_CHARS = 24000
@@ -160,6 +164,7 @@ def search(config, payload, threshold):
     if not config.reranking_provider or not config.reranking_model:
         raise ProjectionError("dify_reranker_not_configured")
     query = normalize_query(payload.query, payload.keywords)
+    catalog_only = all(dataset.kind == "catalog" for dataset in payload.datasets)
     with (
         Dify(config) as remote,
         ThreadPoolExecutor(max_workers=len(payload.datasets)) as pool,
@@ -171,7 +176,11 @@ def search(config, payload, threshold):
                     remote.search,
                     dataset.dataset_id,
                     query,
-                    min(dataset.limit, MAX_DATASET_RESULTS),
+                    (
+                        CATALOG_ONLY_CHUNKS
+                        if catalog_only
+                        else min(dataset.limit, MAX_DATASET_RESULTS)
+                    ),
                 ),
             )
             for dataset in payload.datasets
