@@ -115,17 +115,11 @@ class ChatwootHub
     ChatwootExceptionTracker.new(e).capture_exception
   end
 
+  # Relay only: Chatwoot's hub delivers to apps registered in Chatwoot's Firebase project (the
+  # official Chatwoot app). Notification::PushRoute decides which subscriptions come here.
   def self.send_push_with_response(fcm_options)
-    project_id = ENV['FIREBASE_PROJECT_ID'].presence || GlobalConfigService.load('FIREBASE_PROJECT_ID', '')
-    credentials = ENV['FIREBASE_CREDENTIALS'].presence || GlobalConfigService.load('FIREBASE_CREDENTIALS', '')
-
-    if project_id.present? && credentials.present?
-      fcm_service = Notification::FcmService.new(project_id, credentials)
-      fcm_service.fcm_client.send_v1(fcm_options)
-    elsif ActiveModel::Type::Boolean.new.cast(ENV.fetch('ENABLE_PUSH_RELAY_SERVER', true))
-      info = { fcm_options: fcm_options }
-      RestClient.post(push_notification_url, info.merge(instance_config).to_json, { content_type: :json, accept: :json })
-    end
+    info = { fcm_options: fcm_options }
+    RestClient.post(push_notification_url, info.merge(instance_config).to_json, { content_type: :json, accept: :json })
   end
 
   def self.emit_event(event_name, event_data)

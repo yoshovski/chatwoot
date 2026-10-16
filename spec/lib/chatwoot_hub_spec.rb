@@ -51,6 +51,22 @@ describe ChatwootHub do
     end
   end
 
+  context 'when relaying a push notification' do
+    it 'posts to the relay even when the installation has Firebase credentials' do
+      allow(RestClient).to receive(:post)
+      allow(Notification::FcmService).to receive(:new)
+
+      with_modified_env FIREBASE_PROJECT_ID: 'test-project', FIREBASE_CREDENTIALS: '{}' do
+        described_class.send_push(token: 'token')
+      end
+
+      expect(RestClient).to have_received(:post).with(described_class.push_notification_url,
+                                                      { fcm_options: { token: 'token' } }.merge(described_class.instance_config).to_json,
+                                                      { content_type: :json, accept: :json })
+      expect(Notification::FcmService).not_to have_received(:new)
+    end
+  end
+
   context 'when sending events' do
     let(:event_name) { 'sample_event' }
     let(:event_data) { { 'sample_data' => 'sample_data' } }
