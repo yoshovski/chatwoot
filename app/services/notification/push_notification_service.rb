@@ -8,8 +8,7 @@ class Notification::PushNotificationService
 
     notification_subscriptions.each do |subscription|
       send_browser_push(subscription)
-      send_fcm_push(subscription)
-      send_push_via_chatwoot_hub(subscription)
+      send_mobile_push(subscription)
     end
   end
 
@@ -87,40 +86,46 @@ class Notification::PushNotificationService
     end
   end
 
-  def send_fcm_push(subscription)
-    return unless firebase_credentials_present?
-    return unless subscription.fcm?
+  def send_mobile_push(subscription)
+    case Notification::PushRoute.for(subscription)
+    when :own_firebase then send_fcm_push(subscription)
+    when :chatwoot_relay then ChatwootHub.send_push(fcm_options(subscription))
+    end
+  end
 
+  def send_fcm_push(subscription)
     fcm_service = Notification::FcmService.new(
       GlobalConfigService.load('FIREBASE_PROJECT_ID', nil), GlobalConfigService.load('FIREBASE_CREDENTIALS', nil)
     )
-    fcm = fcm_service.fcm_client
-    response = fcm.send_v1(fcm_options(subscription))
-    remove_subscription_if_error(subscription, response)
+    response = fcm_service.fcm_client.send_v1(fcm_options(subscription))
+    handle_fcm_response(subscription, response)
   end
 
-  def send_push_via_chatwoot_hub(subscription)
-    return if firebase_credentials_present?
-    return unless chatwoot_hub_enabled?
-    return unless subscription.fcm?
+  # FCM v1 errors: https://firebase.google.com/docs/reference/fcm/rest/v1/ErrorCode
+  # Only a token FCM reports as gone is deleted. SENDER_ID_MISMATCH means the token belongs to
+  # another Firebase project (a routing or config mistake), so the subscription is kept.
+  def handle_fcm_response(subscription, response)
+    status_code = response[:status_code].to_i
+    return Rails.logger.info("FCM push sent to #{user.email} with title #{push_message[:title]}") if status_code.between?(200, 299)
 
-    ChatwootHub.send_push(fcm_options(subscription))
-  end
-
-  def firebase_credentials_present?
-    GlobalConfigService.load('FIREBASE_PROJECT_ID', nil) && GlobalConfigService.load('FIREBASE_CREDENTIALS', nil)
-  end
-
-  def chatwoot_hub_enabled?
-    ActiveModel::Type::Boolean.new.cast(ENV.fetch('ENABLE_PUSH_RELAY_SERVER', true))
-  end
-
-  def remove_subscription_if_error(subscription, response)
-    if JSON.parse(response[:body])['results']&.first&.keys&.include?('error')
+    error_code, error_message = fcm_error(response)
+    if dead_fcm_token?(error_code, error_message)
+      Rails.logger.info("FCM token for subscription #{subscription.id} is no longer valid (#{error_code}), removing it")
       subscription.destroy!
     else
-      Rails.logger.info("FCM push sent to #{user.email} with title #{push_message[:title]}")
+      Rails.logger.warn("FCM push failed for subscription #{subscription.id} (app #{subscription.subscription_attributes['app_id'] || 'none'}): " \
+                        "HTTP #{status_code} #{error_code} #{error_message}")
     end
+  end
+
+  def fcm_error(response)
+    error = JSON.parse(response[:body].presence || '{}')['error'] || {}
+    error_code = error['details']&.find { |detail| detail['errorCode'] }&.dig('errorCode') || error['status']
+    [error_code, error['message'].to_s]
+  end
+
+  def dead_fcm_token?(error_code, error_message)
+    error_code == 'UNREGISTERED' || (error_code == 'INVALID_ARGUMENT' && error_message.match?(/registration token/i))
   end
 
   def fcm_options(subscription)
