@@ -15,6 +15,11 @@ class Captain::Websites::ImportPageJob < ApplicationJob
     return unless selected?(document)
 
     persist_result(document, result)
+  rescue TemporaryFetchError, ActiveRecord::RecordNotFound
+    raise
+  rescue StandardError
+    document&.update!(sync_status: :failed, sync_step: nil, last_sync_error_code: 'sync_error', last_sync_attempted_at: Time.current)
+    raise
   end
 
   private
@@ -32,6 +37,8 @@ class Captain::Websites::ImportPageJob < ApplicationJob
     end
 
     content = Captain::Documents::PageKnowledgeProcessor.new(document).perform(result.content)
+    return unless selected?(document)
+
     document.metadata = document.metadata.merge('page_faqs' => result.faqs || [])
     document.update!(name: result.title.presence || document.name, content: content, status: :available,
                      sync_status: :synced, last_synced_at: Time.current, last_sync_attempted_at: Time.current, last_sync_error_code: nil)

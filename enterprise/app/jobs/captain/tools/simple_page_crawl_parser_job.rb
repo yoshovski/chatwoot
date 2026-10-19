@@ -39,10 +39,17 @@ class Captain::Tools::SimplePageCrawlParserJob < ApplicationJob
   rescue PermanentCrawlError, TemporaryCrawlError
     raise
   rescue StandardError => e
+    mark_processing_failed(document, crawler)
     raise "Failed to parse data: #{page_link} #{e.message}"
   end
 
   private
+
+  def mark_processing_failed(document, crawler)
+    return unless document&.persisted? && crawler&.success?
+
+    mark_failed!(document, 'sync_error')
+  end
 
   def handle_failed_fetch!(document, status_code, page_link)
     error_message = "Failed to fetch page: #{page_link} (HTTP #{status_code || 'none'})"

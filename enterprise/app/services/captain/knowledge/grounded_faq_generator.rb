@@ -6,9 +6,10 @@ class Captain::Knowledge::GroundedFaqGenerator
     @document = document
   end
 
-  def perform
+  def perform(force: false)
+    @force = force
     fingerprint = Digest::SHA256.hexdigest(@document.content.to_s)
-    return if @document.metadata.dig('grounded_faqs', 'fingerprint') == fingerprint
+    return if !force && @document.metadata.dig('grounded_faqs', 'fingerprint') == fingerprint
 
     paragraphs = source_passages
     faqs = generate(paragraphs)
@@ -61,7 +62,7 @@ class Captain::Knowledge::GroundedFaqGenerator
   def persist(faqs, fingerprint)
     @document.with_lock do
       raise InvalidEvidence, 'Source changed during FAQ generation' unless Digest::SHA256.hexdigest(@document.content.to_s) == fingerprint
-      return if @document.metadata.dig('grounded_faqs', 'fingerprint') == fingerprint
+      return if !@force && @document.metadata.dig('grounded_faqs', 'fingerprint') == fingerprint
 
       responses = replace_responses(faqs)
       @document.update!(metadata: @document.metadata.merge('grounded_faqs' => {
