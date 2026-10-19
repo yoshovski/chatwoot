@@ -26,6 +26,10 @@ class Dify::KnowledgeClient
     request(:post, 'datasets', attributes)
   end
 
+  def datasets(page: 1)
+    request(:get, 'datasets', params: { page: page, limit: 100 })
+  end
+
   def dataset(dataset_id)
     request(:get, "datasets/#{dataset_id}")
   end

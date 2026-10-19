@@ -1,0 +1,35 @@
+class Captain::Knowledge::BriefEvidence
+  include Captain::Tools::SourceIndexing
+
+  def initialize(assistant)
+    @assistant = assistant
+  end
+
+  def perform(tool_context)
+    brief = @assistant.knowledge_brief
+    raise ArgumentError, 'Knowledge brief is stale' unless @assistant.config['knowledge_brief_enabled'] == true && brief&.current?(brief.published)
+
+    snapshot = brief.published
+    documents = brief.source_scope.where(id: snapshot.fetch('document_ids')).index_by(&:id)
+    record_documents(tool_context, documents.keys)
+    ([snapshot.fetch('overview').merge('title' => 'Business overview')] + snapshot.fetch('topics')).map do |summary|
+      format_summary(summary, documents, tool_context)
+    end.join
+  end
+
+  private
+
+  def record_documents(tool_context, ids)
+    metadata = tool_context.state[:cw_metadata] ||= {}
+    metadata[:document_ids] = Array(metadata[:document_ids]) | ids
+  end
+
+  def format_summary(summary, documents, tool_context)
+    text = summary['text'] || summary.fetch('summary')
+    indexes = summary.fetch('document_ids').map do |id|
+      document = documents.fetch(id)
+      source_index_for(tool_context, "doc:#{id}", { kind: 'document', title: document.name, document_id: id, excerpt: source_excerpt(text) })
+    end
+    "\nApproved summary:\nTitle: #{summary.fetch('title')}\nSource indexes: #{indexes.join(', ')}\n#{text}\n"
+  end
+end

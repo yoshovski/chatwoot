@@ -32,6 +32,7 @@ class Captain::Tools::FirecrawlParserJob < ApplicationJob
   end
 
   def update_document!(document, canonical_url, title, content, faqs)
+    content = Captain::Documents::PageKnowledgeProcessor.new(document).perform(content)
     doc_metadata = (document.metadata || {}).merge('page_faqs' => faqs)
 
     document.update!(

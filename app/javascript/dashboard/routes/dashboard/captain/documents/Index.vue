@@ -12,6 +12,8 @@ import { debounce } from '@chatwoot/utils';
 import DeleteDialog from 'dashboard/components-next/captain/pageComponents/DeleteDialog.vue';
 import KnowledgeHeader from 'dashboard/components-next/captain/knowledge/KnowledgeHeader.vue';
 import ShopifyCatalogCard from 'dashboard/components-next/captain/knowledge/ShopifyCatalogCard.vue';
+import WebsiteSourcesPanel from 'dashboard/components-next/captain/knowledge/WebsiteSourcesPanel.vue';
+import KnowledgeBriefPanel from 'dashboard/components-next/captain/knowledge/KnowledgeBriefPanel.vue';
 import DocumentCard from 'dashboard/components-next/captain/assistant/DocumentCard.vue';
 import DocumentFilter from 'dashboard/components-next/captain/assistant/DocumentFilter.vue';
 import DocumentBulkActions from 'dashboard/components-next/captain/assistant/DocumentBulkActions.vue';
@@ -43,6 +45,7 @@ const isFetching = computed(() => uiFlags.value.fetchingList);
 const documentsMeta = useMapGetter('captainDocuments/getMeta');
 
 const selectedAssistantId = computed(() => Number(route.params.assistantId));
+const websiteSourcesPanel = ref(null);
 const canManageDocuments = computed(() => checkPermissions(['administrator']));
 
 const selectedDocument = ref(null);
@@ -314,6 +317,7 @@ const fetchDocumentsAfterBulkAction = () => {
 
 const onCreateSuccess = () => {
   refreshDocumentsPage(1);
+  websiteSourcesPanel.value?.load();
 };
 
 const hasActiveDocumentFilters = computed(
@@ -444,6 +448,18 @@ onUnmounted(() => {
     <template #controls>
       <KnowledgeHeader />
       <ShopifyCatalogCard :initial-hook="shopifyHook" />
+      <Policy v-if="selectedAssistantId > 0" :permissions="['administrator']">
+        <WebsiteSourcesPanel
+          :key="`websites-${selectedAssistantId}`"
+          ref="websiteSourcesPanel"
+          :assistant-id="selectedAssistantId"
+          @saved="onCreateSuccess"
+        />
+        <KnowledgeBriefPanel
+          :key="`brief-${selectedAssistantId}`"
+          :assistant-id="selectedAssistantId"
+        />
+      </Policy>
     </template>
 
     <template #body>

@@ -61,6 +61,7 @@ class Captain::Tools::SimplePageCrawlParserJob < ApplicationJob
   def persist_document!(document, normalized_link, crawler)
     content = crawler.body_markdown_without_faqs.presence || crawler.page_title.presence || ''
     content = content[0...Captain::Documents::SinglePageFetcher::CONTENT_MAX_LENGTH]
+    content = Captain::Documents::PageKnowledgeProcessor.new(document).perform(content)
     metadata = (document.metadata || {}).merge('page_faqs' => crawler.faqs)
 
     document.update!(

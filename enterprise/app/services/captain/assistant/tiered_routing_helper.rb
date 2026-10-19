@@ -9,6 +9,10 @@ module Captain::Assistant::TieredRoutingHelper
   private
 
   def run_response(message, context)
+    if @assistant.config['knowledge_brief_enabled'] == true && @assistant.published_knowledge_context.present?
+      tool_context = Agents::ToolContext.new(run_context: Agents::RunContext.new(context))
+      Captain::Knowledge::BriefEvidence.new(@assistant).perform(tool_context)
+    end
     context = prepare_memory_context(context) if @conversation && routing_mode.in?(%w[shadow on])
     Captain::Assistant::TieredLlmClient.measure('response', @assistant) do
       routed_response(message, context) || runner.run(message, context: action_context(context), max_turns: 10)

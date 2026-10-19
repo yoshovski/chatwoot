@@ -5,7 +5,7 @@ class Captain::Documents::SyncService
   class TransientSyncError < StandardError
   end
 
-  PERMANENT_ERROR_CODES = %w[not_found access_denied content_empty].freeze
+  PERMANENT_ERROR_CODES = %w[not_found access_denied content_empty rendering_required robots_disallowed].freeze
 
   def initialize(document)
     @document = document
@@ -20,9 +20,7 @@ class Captain::Documents::SyncService
       return :not_modified
     end
 
-    result = Captain::Documents::SinglePageFetcher.new(@document.external_link).fetch
-
-    handle_fetch_error(result.error_code) unless result.success
+    result = prepare_page(fetch_page)
     @page_metadata = validators&.metadata
 
     @document.update!(sync_step: 'comparing')
@@ -43,6 +41,20 @@ class Captain::Documents::SyncService
   end
 
   private
+
+  def prepare_page(result)
+    handle_fetch_error(result.error_code) unless result.success
+    result.content = Captain::Documents::PageKnowledgeProcessor.new(@document).perform(result.content)
+    result
+  end
+
+  def fetch_page
+    source_id = @document.metadata.to_h['website_source_id']
+    return Captain::Documents::SinglePageFetcher.new(@document.external_link).fetch unless source_id
+
+    source = @document.assistant.website_sources.find(source_id)
+    Captain::Websites::PageFetcher.new(source).fetch(@document.external_link)
+  end
 
   def compute_fingerprint(content)
     Digest::SHA256.hexdigest(content.gsub(/\s+/, ' ').strip)
@@ -82,6 +94,7 @@ class Captain::Documents::SyncService
       last_sync_attempted_at: Time.current,
       last_sync_error_code: nil
     )
+    mark_synced if @document.account.dify_knowledge_enabled? && !@document.previous_changes.key?('content')
   end
 
   def merged_metadata(extra = {})

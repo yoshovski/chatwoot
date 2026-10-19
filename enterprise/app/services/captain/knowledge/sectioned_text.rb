@@ -11,9 +11,10 @@ class Captain::Knowledge::SectionedText
   SECTION_TITLE_PUNCTUATION = /[.:?!]/
   LIST_OR_QUOTE = /\A[-*+>|]/
 
-  def initialize(markdown, title:)
+  def initialize(markdown, title:, infer_plain_titles: true)
     @markdown = markdown.to_s
     @title = title.to_s.strip
+    @infer_plain_titles = infer_plain_titles
   end
 
   def to_s
@@ -36,7 +37,7 @@ class Captain::Knowledge::SectionedText
     return if separator_line?(line)
 
     @in_fence = !@in_fence if line.match?(FENCE)
-    heading = line.match(HEADING) unless @in_fence
+    heading = heading_for(line)
     if heading
       flush_body
       release_pending_title
@@ -46,6 +47,17 @@ class Captain::Knowledge::SectionedText
     else
       @body << line.rstrip
     end
+  end
+
+  def numeric_heading?(heading)
+    heading && !@infer_plain_titles && heading[2].match?(/\A[\d\s.,%+]+[KMBkmb]?\z/)
+  end
+
+  def heading_for(line)
+    return if @in_fence
+
+    heading = line.match(HEADING)
+    heading unless numeric_heading?(heading)
   end
 
   def separator_line?(line)
@@ -97,6 +109,8 @@ class Captain::Knowledge::SectionedText
   end
 
   def section_title?(lines)
+    return false unless @infer_plain_titles
+
     line = lines.first.strip
     lines.one? && line.length <= SECTION_TITLE_MAX_LENGTH && line.match?(/\p{L}/) &&
       !line.match?(SECTION_TITLE_PUNCTUATION) && !line.match?(LIST_OR_QUOTE)

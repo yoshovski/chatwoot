@@ -11,11 +11,12 @@ module Captain::Dify::Document
   def dify_source_fingerprint
     return "pdf-v2:#{pdf_file.blob.checksum}" if pdf_document?
 
-    "sectioned-v4:#{Digest::SHA256.hexdigest(dify_sectioned_content)}"
+    version = assistant.config['knowledge_processing_version'] == 2 ? 'sectioned-v5' : 'sectioned-v4'
+    "#{version}:#{Digest::SHA256.hexdigest(dify_sectioned_content)}"
   end
 
   def dify_sectioned_content
-    Captain::Knowledge::SectionedText.new(content, title: name).to_s
+    Captain::Knowledge::SectionedText.new(content, title: name, infer_plain_titles: assistant.config['knowledge_processing_version'] != 2).to_s
   end
 
   def knowledge_state

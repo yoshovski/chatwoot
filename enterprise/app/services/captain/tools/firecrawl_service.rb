@@ -30,6 +30,12 @@ class Captain::Tools::FirecrawlService
     )
   end
 
+  def map(url, include_subdomains:, limit:)
+    payload = { url: url, sitemap: 'include', includeSubdomains: include_subdomains, limit: limit,
+                ignoreCache: true, ignoreQueryParameters: false, timeout: 30_000 }
+    HTTParty.post("#{BASE_URL}/map", body: payload.to_json, headers: headers, timeout: 35)
+  end
+
   private
 
   def crawl_payload(url, webhook_url, crawl_limit, include_paths)

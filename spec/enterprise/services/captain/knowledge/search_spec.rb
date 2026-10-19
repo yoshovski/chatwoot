@@ -338,6 +338,7 @@ RSpec.describe Captain::Knowledge::Search do
           id: 42,
           question: 'How to return?',
           answer: 'Return within 30 days',
+          grounded_source_current?: true,
           visible_to_customers?: true
         )
       end

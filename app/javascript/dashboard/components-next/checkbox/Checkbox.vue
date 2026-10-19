@@ -1,5 +1,9 @@
 <script setup>
 defineProps({
+  ariaLabel: {
+    type: String,
+    default: undefined,
+  },
   indeterminate: {
     type: Boolean,
     default: false,
@@ -27,6 +31,7 @@ const handleChange = event => {
   <div class="relative w-4 h-4">
     <input
       :checked="modelValue"
+      :aria-label="ariaLabel"
       :indeterminate="indeterminate"
       type="checkbox"
       :disabled="disabled"

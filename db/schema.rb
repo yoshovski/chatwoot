@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_10_15_120100) do
+ActiveRecord::Schema[7.2].define(version: 2026_10_20_120000) do
   # These extensions should be enabled to support this database
   enable_extension "pg_stat_statements"
   enable_extension "pg_trgm"
@@ -601,6 +601,20 @@ ActiveRecord::Schema[7.2].define(version: 2026_10_15_120100) do
     t.index ["inbox_id"], name: "index_captain_inboxes_on_inbox_id"
   end
 
+  create_table "captain_knowledge_briefs", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.bigint "assistant_id", null: false
+    t.string "status", default: "idle", null: false
+    t.jsonb "draft", default: {}, null: false
+    t.jsonb "published", default: {}, null: false
+    t.string "error_code"
+    t.datetime "generated_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id"], name: "index_captain_knowledge_briefs_on_account_id"
+    t.index ["assistant_id"], name: "index_captain_knowledge_briefs_on_assistant_id", unique: true
+  end
+
   create_table "captain_message_reports", force: :cascade do |t|
     t.bigint "account_id", null: false
     t.bigint "conversation_id", null: false
@@ -630,6 +644,24 @@ ActiveRecord::Schema[7.2].define(version: 2026_10_15_120100) do
     t.index ["assistant_id", "enabled"], name: "index_captain_scenarios_on_assistant_id_and_enabled"
     t.index ["assistant_id"], name: "index_captain_scenarios_on_assistant_id"
     t.index ["enabled"], name: "index_captain_scenarios_on_enabled"
+  end
+
+  create_table "captain_website_sources", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.bigint "assistant_id", null: false
+    t.text "url", null: false
+    t.boolean "include_subdomains", default: true, null: false
+    t.string "status", default: "pending", null: false
+    t.jsonb "pages", default: [], null: false
+    t.jsonb "selected_urls", default: [], null: false
+    t.jsonb "discovery_stats", default: {}, null: false
+    t.string "error_code"
+    t.datetime "discovered_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index "assistant_id, md5(url)", name: "index_captain_website_sources_on_assistant_url", unique: true
+    t.index ["account_id"], name: "index_captain_website_sources_on_account_id"
+    t.index ["assistant_id"], name: "index_captain_website_sources_on_assistant_id"
   end
 
   create_table "categories", force: :cascade do |t|
@@ -1730,6 +1762,10 @@ ActiveRecord::Schema[7.2].define(version: 2026_10_15_120100) do
   add_foreign_key "captain_conversation_memories", "accounts", on_delete: :cascade
   add_foreign_key "captain_conversation_memories", "captain_assistants", column: "assistant_id", on_delete: :cascade
   add_foreign_key "captain_conversation_memories", "conversations", on_delete: :cascade
+  add_foreign_key "captain_knowledge_briefs", "accounts", on_delete: :cascade
+  add_foreign_key "captain_knowledge_briefs", "captain_assistants", column: "assistant_id", on_delete: :cascade
+  add_foreign_key "captain_website_sources", "accounts", on_delete: :cascade
+  add_foreign_key "captain_website_sources", "captain_assistants", column: "assistant_id", on_delete: :cascade
   add_foreign_key "conversation_usage_windows", "accounts"
   add_foreign_key "conversation_usage_windows", "conversations", on_delete: :nullify
   add_foreign_key "conversation_usage_windows", "messages", on_delete: :nullify

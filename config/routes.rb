@@ -132,6 +132,14 @@ Rails.application.routes.draw do
               resources :scenarios do
                 post :draft, on: :collection
               end
+              resources :website_sources, only: [:index, :show, :create, :update] do
+                post :rediscover, on: :member
+                post :preview, on: :member
+              end
+              resource :knowledge_brief, only: [:show, :update] do
+                post :generate
+                post :publish
+              end
             end
             resources :agent_sessions, only: [:show]
             post 'conversations/:conversation_id/takeover', to: 'conversation_takeovers#create'
