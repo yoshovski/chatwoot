@@ -30,7 +30,8 @@ class Captain::Knowledge::GroundedFaqGenerator
   end
 
   def generate(paragraphs)
-    input = paragraphs.each_with_index.map { |text, index| { id: index, text: text } }
+    input = { title: @document.name, source_url: @document.customer_visible_source_url,
+              passages: paragraphs.each_with_index.map { |text, index| { id: index, text: text } } }
     model = ENV.fetch('CAPTAIN_KNOWLEDGE_FAQ_MODEL', ENV.fetch('CAPTAIN_KNOWLEDGE_ANSWER_MODEL', 'knowledge-answer'))
     chat = Captain::Assistant::TieredLlmClient.chat(account_id: @document.account_id, model: model, timeout: 90)
     response = Captain::Assistant::TieredLlmClient.generate('grounded_faqs', @document.assistant,
