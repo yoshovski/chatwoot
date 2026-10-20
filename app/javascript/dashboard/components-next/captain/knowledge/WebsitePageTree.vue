@@ -28,9 +28,16 @@ const page = computed(() => props.node.page);
 const label = computed(
   () => props.node.label || t('CAPTAIN.WEBSITES.HOME_SECTION')
 );
-const pageReason = computed(
-  () => page.value?.blocked_reason || page.value?.reason
-);
+// Pages listed by a sitemap or link but never opened have no word count yet.
+const pageReason = computed(() => {
+  if (!page.value) return null;
+  if (page.value.blocked_reason || page.value.reason) {
+    return page.value.blocked_reason || page.value.reason;
+  }
+  return page.value.words === undefined && !page.value.checked
+    ? 'unchecked'
+    : null;
+});
 const toggle = value =>
   emit('toggle', { urls: props.node.pages, selected: value });
 </script>

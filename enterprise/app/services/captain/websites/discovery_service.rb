@@ -44,9 +44,13 @@ class Captain::Websites::DiscoveryService
     record_limits
     apply_robots
     success = @stats.values_at('successful_pages', 'sitemaps', 'help_center_articles').any?(&:positive?)
-    @stats.merge!('phase' => 'done', 'classification' => ('pending' if success), 'boilerplate' => @boilerplate.to_h).compact!
+    @stats.merge!('phase' => 'done', 'classification' => ('pending' if success), 'verification' => ('pending' if success),
+                  'boilerplate' => @boilerplate.to_h).compact!
     persist(status: success ? 'ready' : 'failed', error_code: success ? nil : 'no_pages_found', discovered_at: Time.current)
-    Captain::Websites::ClassifySectionsJob.perform_later(@source.id, @stats['run']) if success
+    return unless success
+
+    Captain::Websites::ClassifySectionsJob.perform_later(@source.id, @stats['run'])
+    Captain::Websites::VerifyPagesJob.perform_later(@source.id, @stats['run'])
   end
 
   def record_limits
