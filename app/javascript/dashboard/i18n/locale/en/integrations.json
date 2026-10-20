@@ -2208,6 +2208,7 @@
         "EXCLUDED": "Pages unlikely to be useful knowledge, with the reason. You can still select most of them.",
         "ALL": "Every discovered page."
       },
+      "HIDDEN_PAGES": "{count} page was left out because it was not found or has no text. | {count} pages were left out because they were not found or have no text.",
       "SELECT_RECOMMENDED": "Select recommended",
       "CLEAR_SELECTION": "Clear selection",
       "HOME_SECTION": "Top-level pages",

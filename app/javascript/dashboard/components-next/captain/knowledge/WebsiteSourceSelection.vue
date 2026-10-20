@@ -231,6 +231,9 @@ const showPreview = async page => {
     <p class="m-0 text-xs text-n-slate-11">
       {{ $t(`CAPTAIN.WEBSITES.BUCKET_HELP.${bucket.toUpperCase()}`) }}
     </p>
+    <p v-if="source?.hidden_pages" class="m-0 text-xs text-n-slate-10">
+      {{ $t('CAPTAIN.WEBSITES.HIDDEN_PAGES', { count: source.hidden_pages }) }}
+    </p>
     <Input
       v-model="search"
       type="search"

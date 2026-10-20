@@ -2,6 +2,9 @@ class Captain::WebsiteSource < ApplicationRecord
   self.table_name = 'captain_website_sources'
   # Kept for classification and duplicate checks; the page picker does not need them.
   SERVER_ONLY_PAGE_FIELDS = %w[description fingerprint minhash canonical schema help_center_article_id updated_at].freeze
+  # Pages that can never become knowledge. They stay stored, so rediscovery does not offer them again,
+  # but the picker only shows how many were left out.
+  HIDDEN_REASONS = %w[not_found thin not_html].freeze
 
   belongs_to :account
   belongs_to :assistant, class_name: 'Captain::Assistant'
@@ -17,12 +20,14 @@ class Captain::WebsiteSource < ApplicationRecord
   end
 
   def client_payload
-    documents = assistant.documents.where(external_link: pages.pluck('url')).index_by(&:external_link)
+    hidden, visible = pages.partition { |page| HIDDEN_REASONS.include?(page['reason']) }
+    documents = assistant.documents.where(external_link: visible.pluck('url')).index_by(&:external_link)
     as_json(only: %i[id url include_subdomains status selected_urls error_code discovered_at]).merge(
       'discovery_stats' => client_stats,
       'recoverable' => status.in?(%w[pending discovering]) && updated_at < 2.hours.ago,
       'documents_available' => account.usage_limits[:captain][:documents][:current_available],
-      'pages' => pages.map { |page| page_payload(page, documents[page['url']]) }
+      'hidden_pages' => hidden.size,
+      'pages' => visible.map { |page| page_payload(page, documents[page['url']]) }
     )
   end
 

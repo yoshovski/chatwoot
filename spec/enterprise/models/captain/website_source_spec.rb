@@ -22,4 +22,15 @@ RSpec.describe Captain::WebsiteSource do
       }
     )
   end
+
+  it 'leaves pages that can never become knowledge out of the picker and counts them' do
+    source.update!(pages: source.pages + [{ 'url' => 'https://www.example.com/gone', 'bucket' => 'excluded', 'reason' => 'not_found' },
+                                          { 'url' => 'https://www.example.com/empty', 'bucket' => 'excluded', 'reason' => 'thin' },
+                                          { 'url' => 'https://www.example.com/tag/a', 'bucket' => 'excluded', 'reason' => 'listing' }])
+
+    payload = source.client_payload
+
+    expect(payload['pages'].pluck('url')).to eq(%w[https://www.example.com/careers https://www.example.com/tag/a])
+    expect(payload['hidden_pages']).to eq(2)
+  end
 end
