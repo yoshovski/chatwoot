@@ -218,12 +218,7 @@ const menuItems = computed(() => {
     });
   }
 
-  if (
-    canManage.value &&
-    !isPdf.value &&
-    !isMarkdown.value &&
-    !props.knowledgeState
-  ) {
+  if (canManage.value && !isPdf.value && !isMarkdown.value) {
     allOptions.push({
       label: t('CAPTAIN.DOCUMENTS.OPTIONS.GENERATE_FAQS'),
       value: 'generateFaqs',

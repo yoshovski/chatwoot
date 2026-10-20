@@ -75,10 +75,19 @@ class Captain::Knowledge::GroundedFaqGenerator
   def replace_responses(faqs)
     old_ids = @document.metadata.dig('grounded_faqs', 'response_ids') || []
     @document.responses.where(id: old_ids, edited: false).destroy_all
-    protected_questions = @document.responses.where(edited: true).pluck(:question).map { |question| question.downcase.strip }
-    faqs = faqs.uniq { |faq| faq['question'].downcase.strip }.reject { |faq| protected_questions.include?(faq['question'].downcase.strip) }
-    faqs.map { |faq| create_response(faq) }
+    new_faqs(faqs).map { |faq| create_response(faq) }
   end
+
+  # Edited questions are kept, and a paragraph repeated across pages (a banner, a shared intro)
+  # that already answers another FAQ of this agent is not used again.
+  def new_faqs(faqs)
+    protected_questions = @document.responses.where(edited: true).pluck(:question).to_set { |question| normalize(question) }
+    known_answers = @document.assistant.responses.pluck(:answer).to_set { |answer| normalize(answer) }
+    faqs.uniq { |faq| normalize(faq['question']) }.uniq { |faq| normalize(faq['evidence']) }
+        .reject { |faq| protected_questions.include?(normalize(faq['question'])) || known_answers.include?(normalize(faq['evidence'])) }
+  end
+
+  def normalize(text) = text.to_s.gsub(/\s+/, ' ').strip.downcase
 
   def create_response(faq)
     @document.responses.create!(assistant: @document.assistant, question: faq.fetch('question'), answer: faq.fetch('evidence'),

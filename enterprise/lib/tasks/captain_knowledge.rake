@@ -1,3 +1,4 @@
+# rubocop:disable Metrics/BlockLength
 namespace :captain do
   namespace :knowledge do
     desc 'Reindex selected account-owned text documents with the current section chunking'
@@ -35,5 +36,24 @@ namespace :captain do
       end
       puts "Agent #{assistant.id} is on processing version 3; Dify reindexing queued"
     end
+
+    desc 'Delete unedited AI-generated FAQs of one agent whose answer repeats another FAQ (DRY_RUN=1 only lists them)'
+    task dedupe_generated_faqs: :environment do
+      account = Account.find(Integer(ENV.fetch('ACCOUNT_ID')))
+      assistant = account.captain_assistants.find(Integer(ENV.fetch('ASSISTANT_ID')))
+      dry_run = ENV['DRY_RUN'] == '1'
+      responses = assistant.responses.order(:id).to_a
+      keep = responses.reject { |response| response.origin == 'ai_generated' && !response.edited }
+                      .to_set { |response| response.answer.to_s.gsub(/\s+/, ' ').strip.downcase }
+      duplicates = responses.select do |response|
+        next false unless response.origin == 'ai_generated' && !response.edited
+
+        !keep.add?(response.answer.to_s.gsub(/\s+/, ' ').strip.downcase)
+      end
+      duplicates.each { |response| puts "#{dry_run ? 'Would delete' : 'Deleting'} FAQ #{response.id}: #{response.question.first(80)}" }
+      duplicates.each(&:destroy!) unless dry_run
+      puts "#{duplicates.size} of #{responses.size} FAQs #{dry_run ? 'would be' : 'were'} deleted for agent #{assistant.id}"
+    end
   end
 end
+# rubocop:enable Metrics/BlockLength

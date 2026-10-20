@@ -1827,7 +1827,7 @@
         "VIEW_DETAILS": "View details",
         "SYNC_NOW": "Refresh now",
         "RETRY_SYNC": "Retry refresh",
-        "GENERATE_FAQS": "Generate FAQs",
+        "GENERATE_FAQS": "Suggest FAQs",
         "DELETE_DOCUMENT": "Delete Document"
       },
       "EMPTY_STATE": {

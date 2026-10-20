@@ -17,13 +17,13 @@ class Captain::Dify::PollDocumentJob < ApplicationJob
 
     dataset_id = Captain::Assistant.find(document.assistant_id).config.fetch('dify_docs_dataset_id')
     state = document.account.dify_knowledge_client.document(dataset_id: dataset_id, document_id: dify_document_id)
-    generate_faqs = document.with_lock do
+    import_page_faqs = document.with_lock do
       return unless document.dify_document_id == dify_document_id && document.dify_source_fingerprint == fingerprint
       return if document.available? && document.dify_indexing_status == 'completed'
 
       apply_state(document, state, fingerprint, poll)
     end
-    Captain::Documents::ResponseBuilderJob.perform_later(document) if generate_faqs
+    Captain::Documents::ResponseBuilderJob.perform_later(document) if import_page_faqs
   end
 
   private
