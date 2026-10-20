@@ -9,6 +9,7 @@ import SettingsPageLayout from 'dashboard/components-next/captain/pageComponents
 import AssistantBasicSettingsForm from 'dashboard/components-next/captain/pageComponents/assistant/settings/AssistantBasicSettingsForm.vue';
 import AssistantChatPreview from 'dashboard/components-next/captain/pageComponents/assistant/settings/AssistantChatPreview.vue';
 import DeleteDialog from 'dashboard/components-next/captain/pageComponents/DeleteDialog.vue';
+import KnowledgeBriefPanel from 'dashboard/components-next/captain/knowledge/KnowledgeBriefPanel.vue';
 
 const { t } = useI18n();
 const route = useRoute();
@@ -73,6 +74,11 @@ const handleDeleteSuccess = () => {
         class="lg:w-72 shrink-0"
       />
     </div>
+    <KnowledgeBriefPanel
+      v-if="assistantId"
+      :key="`brief-${assistantId}`"
+      :assistant-id="assistantId"
+    />
     <div
       class="flex flex-wrap items-center justify-between w-full gap-4 px-5 py-4 rounded-xl outline outline-1 outline-n-ruby-5 bg-n-solid-1"
     >

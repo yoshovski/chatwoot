@@ -2177,7 +2177,7 @@
         "synced": "Synced",
         "failed": "Failed"
       },
-      "CLASSIFYING": "{count} pages discovered. Sorting sections by how useful they are…",
+      "CLASSIFYING": "{count} pages discovered. Sorting sections and checking unopened pages…",
       "CLASSIFICATION_FAILED": "Sections were sorted using URL and page-content rules only. Review the Maybe tab before saving.",
       "LIMITS": {
         "time": "10-minute time limit",
@@ -2232,7 +2232,9 @@
         "other_language": "Other language",
         "not_useful": "Not useful",
         "robots_disallowed": "Blocked by robots.txt",
-        "managed_catalog": "Managed by product catalog"
+        "managed_catalog": "Managed by product catalog",
+        "not_found": "Page not found",
+        "unchecked": "Not checked"
       },
       "PREVIEW_WORDS": "{count} words of knowledge after cleaning",
       "PREVIEW_THIN": "Too little text: the import will skip this page.",
@@ -2241,23 +2243,33 @@
       "QUOTA_EXCEEDED": "This selection needs {count} new documents, but only {available} are available on your plan."
     },
     "KNOWLEDGE_BRIEF": {
-      "TITLE": "Business overview & topic summaries",
-      "REVIEW": "Review overview",
-      "HELP": "Create and review a compact business overview and topic summaries from public knowledge. Publishing enables them for this agent only.",
-      "DISABLED": "Off. Existing agent behavior is unchanged.",
-      "ENABLED": "Enabled for this agent.",
-      "GENERATING": "Generating a draft…",
-      "STALE": "Source content changed. These summaries are not used until you regenerate and publish a current draft.",
-      "SOURCES": "Summary sources ({count}/60)",
-      "SOURCES_HELP": "Choose the ready pages that best explain the business and its main topics. Only public documents from this agent are available. Up to 60 sources per draft.",
-      "NO_SOURCES": "Import documents and wait for indexing before generating summaries.",
-      "GENERATE": "Generate draft",
+      "TITLE": "Business profile",
+      "HELP": "A short overview of the business and the main topics customers ask about, written from your knowledge. The AI agent uses it for broad questions such as “What do you do?”. Nothing is used until you publish it.",
+      "STATUS": {
+        "DISABLED": "Off. Generate a draft from your knowledge to get started.",
+        "DRAFT": "Draft ready. Review it and publish to turn it on.",
+        "GENERATING": "Choosing sources and writing a draft…",
+        "ENABLED": "On. The AI agent uses this profile.",
+        "SOURCES_CHANGED": "On. Some sources changed since you published; review the updated draft below and publish it.",
+        "UNAVAILABLE": "Paused: a source was deleted, disabled or made private. Generate and publish a new draft.",
+        "FAILED": "The draft could not be generated. Try again, or choose the sources yourself."
+      },
+      "GENERATE": "Generate from knowledge",
+      "REGENERATE": "Generate again",
+      "CHOOSE_SOURCES": "Choose sources",
+      "SOURCES_HELP": "{count} of up to {max} sources selected. Pick pages that explain what the business does, its products, pricing and policies. Pages still being indexed are skipped.",
+      "GENERATE_SELECTED": "Generate from selected sources",
+      "NO_SOURCES": "Import documents and wait for indexing before generating a profile.",
       "OVERVIEW": "Business overview",
       "TOPIC": "Topic",
       "SUMMARY": "Topic summary",
-      "PUBLISH": "Publish & enable for this agent",
-      "DISABLE": "Disable summaries",
-      "ERROR": "Could not generate or save the overview. Check that the selected sources are still ready and try again."
+      "REMOVE_TOPIC": "Remove topic",
+      "BASED_ON": "Based on: {sources}",
+      "PUBLISH": "Publish",
+      "SAVE": "Save changes",
+      "DISABLE": "Turn off",
+      "ERROR": "Could not generate or save the profile. Try again.",
+      "PUBLISH_ERROR": "Could not publish. Check that the overview and every topic have text, then try again."
     }
   }
 }

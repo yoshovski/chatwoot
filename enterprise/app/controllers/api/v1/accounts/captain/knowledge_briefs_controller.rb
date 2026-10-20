@@ -7,18 +7,18 @@ class Api::V1::Accounts::Captain::KnowledgeBriefsController < Api::V1::Accounts:
     render json: brief.client_payload
   end
 
+  # Without document_ids the job picks the sources itself. Chosen sources that are still indexing are left out.
   def generate
-    ids = params.require(:document_ids)
+    ids = params[:document_ids]
+    return render_invalid_sources unless ids.nil? || Captain::Knowledge::BriefGenerator.valid_document_ids?(ids)
+
     brief = nil
     @assistant.with_lock do
       brief = @assistant.knowledge_brief || @assistant.create_knowledge_brief!(account: Current.account)
       return head :conflict if brief.status.in?(%w[queued generating]) && brief.updated_at > 20.minutes.ago
-      unless Captain::Knowledge::BriefGenerator.valid_document_ids?(ids) && brief.fingerprint(ids)
-        return render json: { error: I18n.t('captain.knowledge_briefs.invalid_sources') }, status: :unprocessable_entity
-      end
+      return render_invalid_sources unless ready_sources?(brief, ids)
 
-      brief.update!(status: 'queued', error_code: nil)
-      Captain::Knowledge::GenerateBriefJob.perform_later(@assistant.id, ids)
+      queue_generation(brief, ids)
     end
     render json: brief.client_payload, status: :accepted
   end
@@ -32,12 +32,12 @@ class Api::V1::Accounts::Captain::KnowledgeBriefsController < Api::V1::Accounts:
 
   def publish
     brief = @assistant.knowledge_brief
-    return head :unprocessable_entity unless brief&.current?(brief.draft)
+    return head :unprocessable_entity unless brief&.usable?(brief.draft)
 
     output = draft_params
     @assistant.with_lock do
       brief.lock!
-      return head :conflict unless brief.current?(brief.draft) && params[:brief][:revision] == brief.draft['revision']
+      return head :conflict unless brief.usable?(brief.draft) && params[:brief][:revision] == brief.draft['revision']
       unless Captain::Knowledge::BriefGenerator.valid_output?(output, brief.draft.fetch('document_ids'))
         return render json: { error: I18n.t('captain.knowledge_briefs.invalid_draft') }, status: :unprocessable_entity
       end
@@ -48,6 +48,17 @@ class Api::V1::Accounts::Captain::KnowledgeBriefsController < Api::V1::Accounts:
   end
 
   private
+
+  def ready_sources?(brief, ids) = (ids ? brief.source_scope.where(id: ids) : brief.source_scope).exists?
+
+  def queue_generation(brief, ids)
+    brief.update!(status: 'queued', error_code: nil)
+    Captain::Knowledge::GenerateBriefJob.perform_later(@assistant.id, ids, pick_sources: ids.nil?)
+  end
+
+  def render_invalid_sources
+    render json: { error: I18n.t('captain.knowledge_briefs.invalid_sources') }, status: :unprocessable_entity
+  end
 
   def publish_brief(brief, output)
     brief.update!(published: brief.draft.merge(output))

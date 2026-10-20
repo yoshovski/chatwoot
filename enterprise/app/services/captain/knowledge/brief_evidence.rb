@@ -7,10 +7,13 @@ class Captain::Knowledge::BriefEvidence
 
   def perform(tool_context)
     brief = @assistant.knowledge_brief
-    raise ArgumentError, 'Knowledge brief is stale' unless @assistant.config['knowledge_brief_enabled'] == true && brief&.current?(brief.published)
+    unless @assistant.config['knowledge_brief_enabled'] == true && brief&.usable?(brief.published)
+      raise ArgumentError,
+            'Knowledge brief is unavailable'
+    end
 
     snapshot = brief.published
-    documents = brief.source_scope.where(id: snapshot.fetch('document_ids')).index_by(&:id)
+    documents = @assistant.documents.where(id: snapshot.fetch('document_ids')).index_by(&:id)
     record_documents(tool_context, documents.keys)
     ([snapshot.fetch('overview').merge('title' => 'Business overview')] + snapshot.fetch('topics')).map do |summary|
       format_summary(summary, documents, tool_context)

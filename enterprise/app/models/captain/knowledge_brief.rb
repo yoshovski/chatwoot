@@ -20,6 +20,15 @@ class Captain::KnowledgeBrief < ApplicationRecord
     Digest::SHA256.hexdigest(rows.to_json)
   end
 
+  # Approved text stays in use while every source still exists, is enabled and is public.
+  # Content edits only mark it for review (sources_changed) and queue a replacement draft.
+  def usable?(snapshot)
+    ids = snapshot['document_ids']
+    return false unless ids.is_a?(Array) && ids.any?
+
+    assistant.documents.enabled.where(agents_only: false, id: ids).count == ids.uniq.size
+  end
+
   def current?(snapshot)
     ids = snapshot['document_ids']
     return false unless ids.is_a?(Array) && ids.any? && snapshot['source_fingerprint'].present?
@@ -28,7 +37,7 @@ class Captain::KnowledgeBrief < ApplicationRecord
   end
 
   def prompt_context
-    return {} unless current?(published)
+    return {} unless usable?(published)
 
     { business_overview: published.fetch('overview'), topic_summaries: published.fetch('topics') }
   end
@@ -37,7 +46,8 @@ class Captain::KnowledgeBrief < ApplicationRecord
     as_json(only: %i[status draft published error_code generated_at]).merge(
       'enabled' => assistant.config['knowledge_brief_enabled'] == true,
       'recoverable' => status.in?(%w[queued generating]) && updated_at < 20.minutes.ago,
-      'draft_current' => current?(draft), 'published_current' => current?(published),
+      'draft_usable' => usable?(draft), 'published_usable' => usable?(published),
+      'sources_changed' => usable?(published) && !current?(published),
       'sources' => source_scope.order(:name).pluck(:id, :name, :external_link).map { |id, name, url| { id: id, name: name, url: url } }
     )
   end
