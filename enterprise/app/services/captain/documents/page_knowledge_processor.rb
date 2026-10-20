@@ -1,6 +1,7 @@
 # Versioned ingestion: existing agents retain their original extraction and chunks.
 class Captain::Documents::PageKnowledgeProcessor
   class InvalidCuration < StandardError; end
+  NoContent = Class.new(InvalidCuration)
   IMAGE = /!\[([^\]]*)\]\([^)]*\)/
   MAX_INPUT = 24_000
 
@@ -18,7 +19,7 @@ class Captain::Documents::PageKnowledgeProcessor
 
     cleaned = preview(raw)
     cleaned = curate(cleaned) if noisy?(cleaned)
-    raise InvalidCuration, 'No factual website content' if cleaned.blank?
+    raise NoContent, 'No factual website content' if cleaned.blank?
 
     @document.metadata = metadata.merge('raw_crawl_content' => raw, 'knowledge_raw_fingerprint' => fingerprint,
                                         'knowledge_processing_version' => version)
@@ -29,7 +30,7 @@ class Captain::Documents::PageKnowledgeProcessor
   def preview(raw)
     case @document.assistant.knowledge_processing_version
     when 2 then clean(raw)
-    when 3 then clean(Captain::Knowledge::PageCleaner.new(raw, boilerplate: site_boilerplate).perform)
+    when 3 then clean(Captain::Knowledge::PageCleaner.new(raw, boilerplate: site_boilerplate, url: @document.external_link).perform)
     else raw
     end
   end

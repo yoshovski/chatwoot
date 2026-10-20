@@ -4,7 +4,9 @@
 # across the site (learned during discovery) and repeated copies within the page.
 class Captain::Knowledge::PageCleaner
   IMAGE = /!\[([^\]]*)\]\([^)]*\)/
-  LINK = /\[([^\]]*)\]\([^)]*\)/
+  LINK = /\[([^\]]*)\]\(([^)]*)\)/
+  # Prose with more links than this (encyclopedia-style) keeps link text only.
+  INLINE_LINKS = 3
   EMPHASIS = /(\*\*|__)(?=\S)(.+?)(?<=\S)\1/
   WORD = /[\p{L}\p{N}]+/
   DECORATIVE_ALT = /logo|icon|image|img|banner|avatar|screenshot|thumbnail|placeholder|\.(?:svg|png|jpe?g|gif|webp)\z/i
@@ -51,34 +53,48 @@ class Captain::Knowledge::PageCleaner
 
   def self.heading?(block) = block.match?(Captain::Knowledge::SectionedText::HEADING)
 
-  def initialize(markdown, boilerplate: [])
+  def initialize(markdown, boilerplate: [], url: nil)
     @markdown = markdown.to_s
     @boilerplate = boilerplate.to_set
+    @links = Captain::Knowledge::PageLinks.new(url)
   end
 
   def perform
     blocks = self.class.blocks(@markdown)
     @occurrences = blocks.map { |block| self.class.normalize(self.class.unwrap(block)) }.tally
+    @link_labels = @markdown.gsub(IMAGE, '').scan(LINK).map { |label, _| link_label(label) }.tally
+    [*drop_empty_sections(kept_blocks(blocks)), @links.section].compact.join("\n\n")
+  end
+
+  private
+
+  def kept_blocks(blocks)
     seen = Set.new
-    kept = blocks.each_with_index.filter_map do |block, index|
+    blocks.each_with_index.filter_map do |block, index|
       next clean_heading(block) if self.class.heading?(block)
       next block if block.match?(FENCE)
 
       text = clean_block(block)
       text if keep?(block, text, blocks[index + 1]) && seen.add?(self.class.normalize(text))
     end
-    drop_empty_sections(kept).join("\n\n")
   end
-
-  private
 
   def clean_heading(block)
     block.gsub(IMAGE, '').gsub(LINK, '\1').gsub(EMPHASIS, '\2').delete('`').squeeze(' ').strip
   end
 
+  # A few links in a sentence are deliberate references ("see our refund policy"): they keep a clean,
+  # absolute URL so the agent can share it. Dense links keep their text only.
   def clean_block(block)
-    block.gsub(IMAGE) { descriptive_alt(Regexp.last_match(1)) }.gsub(LINK, '\1').gsub(EMPHASIS, '\2')
-         .lines.map(&:rstrip).reject { |line| line.strip.match?(/\A[-*+]?\s*\z/) }.join("\n").strip
+    text = block.gsub(IMAGE) { descriptive_alt(Regexp.last_match(1)) }
+    inline = text.scan(LINK).size <= INLINE_LINKS
+    text = text.gsub(LINK) { inline_link(Regexp.last_match(1), Regexp.last_match(2), inline) }.gsub(EMPHASIS, '\2')
+    text.lines.map(&:rstrip).reject { |line| line.strip.match?(/\A[-*+]?\s*\z/) }.join("\n").strip
+  end
+
+  def inline_link(label, target, inline)
+    url = @links.resolve(target) if inline && label.present?
+    url ? "[#{label}](#{url})" : label
   end
 
   def descriptive_alt(alt)
@@ -87,9 +103,14 @@ class Captain::Knowledge::PageCleaner
   end
 
   def keep?(original, text, following)
+    text = self.class.unwrap(text)
     words = text.gsub(%r{https?://\S+}, '').scan(WORD).size
     return true if words.positive? && text.match?(TABLE_ROW)
-    return false if chrome?(original, text, words)
+
+    if chrome?(original, text, words)
+      collect_links(original)
+      return false
+    end
 
     label = label?(text, words)
     # A short title introducing its description stays even when the same words also appear in the site menu.
@@ -97,6 +118,21 @@ class Captain::Knowledge::PageCleaner
 
     @boilerplate.exclude?(self.class.block_hash(original))
   end
+
+  # Buttons and link lists leave the passage but their targets join the page's Links section,
+  # unless they are the site menu repeated on every page.
+  def collect_links(original)
+    return if @boilerplate.include?(self.class.block_hash(original))
+
+    original.gsub(IMAGE, '').scan(LINK).each do |label, target|
+      text = self.class.unwrap(label).delete('[]').squish
+      # A label used three or more times ("Learn more", "edit") names an on-screen action, not a destination;
+      # a label that is itself a URL names nothing.
+      @links.collect(text, target) if @link_labels[link_label(label)].to_i < 3 && !text.match?(%r{\Ahttps?://}i)
+    end
+  end
+
+  def link_label(label) = self.class.normalize(self.class.unwrap(label).delete('[]'))
 
   # Empty blocks, link lists and copyright lines are page furniture, never knowledge.
   def chrome?(original, text, words)
