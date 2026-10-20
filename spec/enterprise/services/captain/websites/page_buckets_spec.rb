@@ -21,21 +21,32 @@ RSpec.describe Captain::Websites::PageBuckets do
     ]
   end
 
-  def bucket_of(result, url) = result.find { |page| page['url'] == url }.values_at('bucket', 'reason')
-
   it 'sorts pages with URL and content rules when no section labels exist' do
-    result = described_class.new(source).perform(pages)
+    result = described_class.new(source).perform(pages).to_h { |page| [page['url'], page.values_at('bucket', 'reason')] }
 
-    expect(bucket_of(result, 'https://www.example.com')).to eq(['recommended', nil])
-    expect(bucket_of(result, 'https://www.example.com/pricing')).to eq(['recommended', nil])
-    expect(bucket_of(result, 'https://www.example.com/pricing-copy')).to eq(%w[excluded duplicate])
-    expect(bucket_of(result, 'https://www.example.com/landing')).to eq(%w[excluded duplicate])
-    expect(bucket_of(result, 'https://www.example.com/de/preise')).to eq(%w[excluded other_language])
-    expect(bucket_of(result, 'https://www.example.com/thanks')).to eq(%w[excluded thin])
-    expect(bucket_of(result, 'https://blog.example.com/launch')).to eq(['maybe', nil])
-    expect(bucket_of(result, 'https://support.example.com/hc/en-us/articles/1-Setup')).to eq(['recommended', nil])
-    expect(bucket_of(result, 'https://api.example.com/v1')).to eq(%w[excluded technical_host])
-    expect(bucket_of(result, 'https://www.example.com/private')).to eq(%w[excluded robots_disallowed])
+    expect(result).to eq(
+      'https://www.example.com' => ['recommended', nil],
+      'https://www.example.com/pricing' => ['recommended', nil],
+      'https://www.example.com/pricing-copy' => %w[excluded duplicate],
+      'https://www.example.com/de/preise' => %w[excluded other_language],
+      'https://www.example.com/thanks' => %w[excluded thin],
+      'https://www.example.com/landing' => %w[excluded duplicate],
+      'https://blog.example.com/launch' => ['maybe', nil],
+      'https://support.example.com/hc/en-us/articles/1-Setup' => ['recommended', nil],
+      'https://api.example.com/v1' => %w[excluded technical_host],
+      'https://www.example.com/private' => %w[excluded robots_disallowed]
+    )
+  end
+
+  it 'keeps one copy of the same text, preferring the canonical HTTPS page' do
+    copies = [
+      { 'url' => 'http://blog.example.com/a', 'fingerprint' => 'post', 'canonical' => 'https://blog.example.com/a', 'words' => 900 },
+      { 'url' => 'https://blog.example.com/a', 'fingerprint' => 'post', 'words' => 900 },
+      { 'url' => 'https://www.example.com/a', 'fingerprint' => 'post', 'canonical' => 'https://blog.example.com/a', 'words' => 900 }
+    ]
+    result = described_class.new(source).perform(copies)
+
+    expect(result.map { |page| page['reason'] }).to eq(['duplicate', nil, 'duplicate'])
   end
 
   it 'follows section labels over the host defaults' do
@@ -43,9 +54,9 @@ RSpec.describe Captain::Websites::PageBuckets do
                      'blog.example.com/launch' => { 'label' => 'support', 'recommended' => true, 'reason' => 'Guides' },
                      'example.com/pricing' => { 'label' => 'not_useful', 'recommended' => false, 'reason' => 'Old' }
                    } })
-    result = described_class.new(source).perform(pages)
+    result = described_class.new(source).perform(pages).to_h { |page| [page['url'], page.values_at('bucket', 'reason')] }
 
-    expect(bucket_of(result, 'https://blog.example.com/launch')).to eq(['recommended', nil])
-    expect(bucket_of(result, 'https://www.example.com/pricing')).to eq(%w[excluded not_useful])
+    expect(result.values_at('https://blog.example.com/launch', 'https://www.example.com/pricing'))
+      .to eq([['recommended', nil], %w[excluded not_useful]])
   end
 end

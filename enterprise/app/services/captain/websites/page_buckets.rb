@@ -41,9 +41,17 @@ class Captain::Websites::PageBuckets
     @urls.include?(page['canonical']) || @originals.fetch(page['fingerprint'], page['url']) != page['url']
   end
 
+  # One page per fingerprint stays: a canonical target first, then HTTPS, then the shortest path.
   def original_urls(pages)
-    pages.reject { |page| page['fingerprint'].nil? }.sort_by { |page| page['url'].length }
-         .each_with_object({}) { |page, result| result[page['fingerprint']] ||= page['url'] }
+    targets = pages.filter_map { |page| page['canonical'] }.to_set
+    pages.reject { |page| page['fingerprint'].nil? }.group_by { |page| page['fingerprint'] }.transform_values do |copies|
+      copies.min_by { |page| keep_rank(page, targets) }['url']
+    end
+  end
+
+  def keep_rank(page, targets)
+    uri = URI.parse(page['url'])
+    [targets.include?(page['url']) ? 0 : 1, uri.scheme == 'https' ? 0 : 1, uri.path.count('/'), page['url'].length, page['url']]
   end
 
   def language_reason(page)

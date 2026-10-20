@@ -49,21 +49,27 @@ RSpec.describe Captain::Websites::DiscoveryService do
 
   def page(url) = source.reload.pages.find { |item| item['url'] == url }
 
-  it 'discovers, measures and sorts pages, then asks for section labels' do
+  it 'finishes discovery and asks for section labels' do
     expect { described_class.new(source).perform }
       .to have_enqueued_job(Captain::Websites::ClassifySectionsJob).with(source.id, kind_of(String))
 
     expect(source.reload).to have_attributes(status: 'ready')
     expect(source.discovery_stats).to include('classification' => 'pending', 'limited' => false, 'help_center_articles' => 1)
-    expect(page('https://www.example.com')).to include('bucket' => 'recommended', 'title' => 'Home', 'lang' => 'en')
-    expect(page('https://www.example.com/pricing')).to include('bucket' => 'recommended')
-    expect(page('https://www.example.com/pricing')['words']).to be > 60
-    expect(page('https://www.example.com/de/preise')).to include('bucket' => 'excluded', 'reason' => 'other_language')
-    expect(page('https://www.example.com/private/report')).to include('blocked_reason' => 'robots_disallowed')
-    expect(page('https://www.example.com/tag/news')).to include('bucket' => 'excluded', 'reason' => 'listing')
-    expect(page('https://api.example.com/v1')).to include('bucket' => 'excluded', 'reason' => 'technical_host')
-    expect(page('https://support.example.com/hc/en-us/articles/7-Refunds'))
-      .to include('bucket' => 'recommended', 'section' => 'support.example.com/Payments', 'title' => 'Refunds')
+  end
+
+  it 'measures and sorts the discovered pages' do
+    described_class.new(source).perform
+
+    expect(source.reload.pages.index_by { |item| item['url'] }).to include(
+      'https://www.example.com' => a_hash_including('bucket' => 'recommended', 'title' => 'Home', 'lang' => 'en'),
+      'https://www.example.com/pricing' => a_hash_including('bucket' => 'recommended', 'words' => be > 60),
+      'https://www.example.com/de/preise' => a_hash_including('bucket' => 'excluded', 'reason' => 'other_language'),
+      'https://www.example.com/private/report' => a_hash_including('blocked_reason' => 'robots_disallowed'),
+      'https://www.example.com/tag/news' => a_hash_including('bucket' => 'excluded', 'reason' => 'listing'),
+      'https://api.example.com/v1' => a_hash_including('bucket' => 'excluded', 'reason' => 'technical_host'),
+      'https://support.example.com/hc/en-us/articles/7-Refunds' =>
+        a_hash_including('bucket' => 'recommended', 'section' => 'support.example.com/Payments', 'title' => 'Refunds')
+    )
   end
 
   it 'never fetches technical hosts or other-language copies' do
