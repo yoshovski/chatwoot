@@ -2159,7 +2159,7 @@
       "PAUSED": "{count} paused",
       "SHOW": "Show",
       "SHOW_ALL": "Show all",
-      "SELECTED": "{sections} sections selected · {count} documents",
+      "SELECTED": "Selected: {sections} · {count} documents",
       "ACTIONS": {
         "PAUSE": "Pause",
         "RESUME": "Resume",
@@ -2184,7 +2184,7 @@
       "DISCOVER": "Discover pages",
       "INCLUDE_SUBDOMAINS": "Discover linked subdomains too",
       "DISCOVERY_HELP": "Explore sitemaps and linked pages first. You choose what becomes knowledge.",
-      "SELECTION_HELP": "Pages are sorted into Recommended, Maybe and Excluded. Only selected pages are imported, using your existing document refresh settings. New pages wait for your selection; deselected website imports are paused.",
+      "SELECTION_HELP": "Pages are sorted into Recommended, Optional and Skipped. Only selected pages are imported, using your existing document refresh settings. New pages wait for your selection; deselected website imports are paused.",
       "DISCOVERING": "Discovering pages… {count} found",
       "DISCOVERED": "{count} pages discovered",
       "LIMITED": "Discovery stopped at its {limits}, so the list is partial. To explore further, add a narrower website source, such as one section or subdomain.",
