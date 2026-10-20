@@ -1,5 +1,5 @@
 class Captain::Assistant::IntentRouter
-  INTENTS = %w[smalltalk faq_kb action_agent].freeze
+  INTENTS = %w[smalltalk faq_kb action_agent business_overview].freeze
   MAX_QUERIES = 2
   MAX_QUERY_CHARS = 250
   ACTION = { 'intent' => 'action_agent', 'queries' => [] }.freeze
@@ -124,11 +124,12 @@ class Captain::Assistant::IntentRouter
       Business identity questions may use smalltalk when the configured description fully answers them, without inventing claims.
       Honor configured guardrails and response guidelines, especially any transfer requirement.
       Configured business and routing policy: #{routing_policy.to_json}
+      #{business_overview_instruction}
     PROMPT
   end
 
   def routing_policy
-    policy = @assistant.prompt_context.slice(:description, :scenarios, :response_guidelines, :guardrails)
+    policy = @assistant.prompt_context.slice(:description, :scenarios, :response_guidelines, :guardrails, :business_overview, :knowledge_topics)
     policy[:custom_capabilities] = @assistant.account.captain_custom_tools.enabled.pluck(:title, :description).map do |title, description|
       { title: title, description: description.to_s.truncate(300) }
     end
@@ -137,6 +138,9 @@ class Captain::Assistant::IntentRouter
 
   def normalize(parsed)
     return ACTION.merge('reason' => 'invalid_classifier_output') unless valid_shape?(parsed)
+    if parsed['intent'] == 'business_overview' && @assistant.published_knowledge_context.empty?
+      return ACTION.merge('reason' => 'invalid_classifier_output')
+    end
     return ACTION.merge('reason' => 'invalid_classifier_output') unless valid_queries?(parsed.fetch('queries'))
     return ACTION.merge('reason' => 'invalid_classifier_output') unless (parsed['intent'] == 'faq_kb') == parsed['queries'].any?
 
@@ -145,6 +149,15 @@ class Captain::Assistant::IntentRouter
 
   def valid_shape?(parsed)
     parsed.is_a?(Hash) && INTENTS.include?(parsed['intent']) && parsed['queries'].is_a?(Array)
+  end
+
+  def business_overview_instruction
+    return if @assistant.config['knowledge_brief_enabled'] != true
+
+    'An additional intent, business_overview, is available ONLY when the supplied policy contains business_overview. ' \
+      'Use it for broad company, capability and use-case questions fully answered by that approved context or its knowledge topics. ' \
+      'Queries must be empty. Prefer it over smalltalk for company identity. Detailed factual questions still use faq_kb; ' \
+      'live data, customer-specific requests and workflows still use action_agent.'
   end
 
   def valid_queries?(queries)

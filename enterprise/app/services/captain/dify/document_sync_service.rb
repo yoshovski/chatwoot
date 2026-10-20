@@ -15,10 +15,10 @@ class Captain::Dify::DocumentSyncService
   end
 
   def perform
+    assistant = Captain::Assistant.find(@document.assistant_id)
+    assistant.ensure_dify_datasets!
+    @dataset_id = assistant.config.fetch('dify_docs_dataset_id')
     @document.with_lock do
-      assistant = Captain::Assistant.find(@document.assistant_id)
-      assistant.ensure_dify_datasets!
-      @dataset_id = assistant.config.fetch('dify_docs_dataset_id')
       ensure_document
     end
     @document.with_lock { sync_content }

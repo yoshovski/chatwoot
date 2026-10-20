@@ -12,6 +12,10 @@ class Captain::Tools::FirecrawlParserJob < ApplicationJob
     content, faqs = parse_payload(payload_data, metadata['title'])
     update_document!(document, canonical_url, metadata['title'], content, faqs)
   rescue StandardError => e
+    if document&.persisted?
+      document&.update!(sync_status: :failed, sync_step: nil, last_sync_error_code: 'sync_error',
+                        last_sync_attempted_at: Time.current)
+    end
     raise "Failed to parse FireCrawl data: #{e.message}"
   end
 
@@ -32,6 +36,7 @@ class Captain::Tools::FirecrawlParserJob < ApplicationJob
   end
 
   def update_document!(document, canonical_url, title, content, faqs)
+    content = Captain::Documents::PageKnowledgeProcessor.new(document).perform(content)
     doc_metadata = (document.metadata || {}).merge('page_faqs' => faqs)
 
     document.update!(

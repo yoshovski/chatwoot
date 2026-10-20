@@ -13,6 +13,7 @@ RSpec.describe Captain::Dify::DatasetProvisioningService do
 
   before do
     allow(account).to receive(:dify_knowledge_client).and_return(client)
+    allow(client).to receive(:datasets).and_return('data' => [], 'has_more' => false)
   end
 
   it 'creates both assistant datasets once with a readable name, a description and the account embedding model' do

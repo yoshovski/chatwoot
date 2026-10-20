@@ -70,6 +70,15 @@ class Captain::AssistantResponse < ApplicationRecord
     documentable.customer_visible_source_url if documentable.is_a?(Captain::Document)
   end
 
+  def grounded_source_current?
+    return true if edited? || !documentable.is_a?(Captain::Document)
+
+    grounding = documentable.metadata.to_h['grounded_faqs']
+    return true unless grounding&.fetch('response_ids', [])&.include?(id)
+
+    grounding['fingerprint'] == Digest::SHA256.hexdigest(documentable.content.to_s)
+  end
+
   def visible_to_customers?
     !agents_only? && !(documentable.is_a?(Captain::Document) && documentable.agents_only?)
   end

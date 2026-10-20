@@ -465,6 +465,13 @@ en:
       short_description: 'Sync your contacts and conversations with LeadSquared CRM.'
       description: 'Sync your contacts and conversations with LeadSquared CRM. This integration automatically creates leads in LeadSquared when new contacts are added, and logs conversation activity to provide your sales team with complete context.'
   captain:
+    websites:
+      already_added: 'This website is already listed. Open its page selection to discover it again.'
+      invalid_selection: 'Select only discovered pages that are available for import.'
+      invalid_subdomain_option: 'Choose whether linked subdomains should be discovered.'
+    knowledge_briefs:
+      invalid_sources: 'Choose 1 to 60 ready, public documents belonging to this agent.'
+      invalid_draft: 'Check the overview, topic lengths and source references before publishing.'
     copilot_message_required: Message is required
     dify_datasets:
       faq:

@@ -1739,7 +1739,11 @@
         "CONTENT_EMPTY": "Page returned empty content",
         "FETCH_FAILED": "Could not fetch page",
         "SYNC_ERROR": "Unexpected error",
-        "DEFAULT": "Sync error"
+        "DEFAULT": "Sync error",
+        "RENDERING_REQUIRED": "This page needs JavaScript rendering. Configure the website renderer and retry.",
+        "ROBOTS_DISALLOWED": "This page is excluded by the website’s robots.txt.",
+        "THIN_CONTENT": "Too little text to be useful knowledge",
+        "DUPLICATE_CONTENT": "Same text as another page of this agent"
       },
       "RELATED_RESPONSES": {
         "TITLE": "Related FAQs",
@@ -1777,7 +1781,7 @@
       "FORM": {
         "TYPE": {
           "LABEL": "Document Type",
-          "URL": "URL",
+          "URL": "Single page",
           "PDF": "PDF File"
         },
         "URL": {
@@ -2140,6 +2144,120 @@
         "TITLE": "No Connected Inboxes",
         "SUBTITLE": "Connecting an inbox allows the AI agent to handle initial questions from your customers before transferring them to you."
       }
+    },
+    "WEBSITES": {
+      "TITLE": "Website sources",
+      "ENTIRE_WEBSITE": "Entire website",
+      "DISCOVER": "Discover pages",
+      "INCLUDE_SUBDOMAINS": "Discover linked subdomains too",
+      "DISCOVERY_HELP": "Explore sitemaps and linked pages first. You choose what becomes knowledge.",
+      "SELECTION_HELP": "Pages are sorted into Recommended, Maybe and Excluded. Only selected pages are imported, using your existing document refresh settings. New pages wait for your selection; deselected website imports are paused.",
+      "DISCOVERING": "Discovering pages… {count} found",
+      "DISCOVERED": "{count} pages discovered",
+      "LIMITED": "Discovery stopped at its {limits}, so the list is partial. To explore further, add a narrower website source, such as one section or subdomain.",
+      "LOAD_ERROR": "Could not load website discovery. Please try again.",
+      "SAVE_ERROR": "Could not save the page selection. Please try again.",
+      "DISCOVERY_FAILED": "Discovery could not finish. Try discovering this website again.",
+      "REDISCOVER": "Discover again",
+      "SEARCH": "Search pages, titles or domains",
+      "NO_PAGES": "No matching pages yet.",
+      "PREVIEW_LOADING": "Loading page preview…",
+      "PREVIEW_HELP": "Click a page to preview the text that would become knowledge.",
+      "SAVE_SELECTION": "Save selection ({count})",
+      "SAVED": "Selection saved. Selected pages will be imported and indexed.",
+      "SELECTED_COUNT": "{count} pages selected",
+      "MANAGE": "Select pages",
+      "EXPAND": "Expand or collapse {name}",
+      "PAGE_STATUS": {
+        "searchable": "Ready",
+        "indexing": "Indexing",
+        "not_searchable": "Needs attention",
+        "paused": "Paused",
+        "syncing": "Syncing",
+        "synced": "Synced",
+        "failed": "Failed"
+      },
+      "CLASSIFYING": "{count} pages discovered. Sorting sections by how useful they are…",
+      "CLASSIFICATION_FAILED": "Sections were sorted using URL and page-content rules only. Review the Maybe tab before saving.",
+      "LIMITS": {
+        "time": "10-minute time limit",
+        "pages": "2,000-page limit",
+        "requests": "500-page check limit",
+        "sitemaps": "40-sitemap limit",
+        "origins": "40-site limit"
+      },
+      "PHASE": {
+        "SITEMAPS": "Reading sitemaps…",
+        "HELP_CENTER": "Reading help centre articles…",
+        "PAGES": "Checking page content ({count} of {max})…"
+      },
+      "BUCKETS": {
+        "RECOMMENDED": "Recommended ({count})",
+        "MAYBE": "Maybe ({count})",
+        "EXCLUDED": "Excluded ({count})",
+        "ALL": "All ({count})"
+      },
+      "BUCKET_HELP": {
+        "RECOMMENDED": "Pages likely to help answer customer questions. They start selected; review them before saving.",
+        "MAYBE": "Pages that could help, such as blog posts or other sites. Select only what your customers ask about.",
+        "EXCLUDED": "Pages unlikely to be useful knowledge, with the reason. You can still select most of them.",
+        "ALL": "Every discovered page."
+      },
+      "SELECT_RECOMMENDED": "Select recommended",
+      "CLEAR_SELECTION": "Clear selection",
+      "HOME_SECTION": "Top-level pages",
+      "SECTION_SUMMARY": "{label} · {reason}",
+      "SECTION_LABELS": {
+        "support": "Support",
+        "product": "Product",
+        "docs": "Docs",
+        "pricing": "Pricing",
+        "legal": "Policies",
+        "company": "Company",
+        "news": "News",
+        "marketing": "Marketing",
+        "technical": "Technical",
+        "not_useful": "Not useful"
+      },
+      "REASONS": {
+        "technical_host": "Technical site",
+        "query": "Filtered URL",
+        "utility": "Account or utility page",
+        "listing": "List of links",
+        "not_html": "Not a web page",
+        "noindex": "Hidden from search",
+        "login": "Behind sign-in",
+        "duplicate": "Duplicate",
+        "thin": "Very little text",
+        "other_language": "Other language",
+        "not_useful": "Not useful",
+        "robots_disallowed": "Blocked by robots.txt",
+        "managed_catalog": "Managed by product catalog"
+      },
+      "PREVIEW_WORDS": "{count} words of knowledge after cleaning",
+      "PREVIEW_THIN": "Too little text: the import will skip this page.",
+      "NEW_DOCUMENTS": "{count} new documents",
+      "SAVE_DURING_DISCOVERY": "You can save now. Pages found later wait for your selection.",
+      "QUOTA_EXCEEDED": "This selection needs {count} new documents, but only {available} are available on your plan."
+    },
+    "KNOWLEDGE_BRIEF": {
+      "TITLE": "Business overview & topic summaries",
+      "REVIEW": "Review overview",
+      "HELP": "Create and review a compact business overview and topic summaries from public knowledge. Publishing enables them for this agent only.",
+      "DISABLED": "Off. Existing agent behavior is unchanged.",
+      "ENABLED": "Enabled for this agent.",
+      "GENERATING": "Generating a draft…",
+      "STALE": "Source content changed. These summaries are not used until you regenerate and publish a current draft.",
+      "SOURCES": "Summary sources ({count}/60)",
+      "SOURCES_HELP": "Choose the ready pages that best explain the business and its main topics. Only public documents from this agent are available. Up to 60 sources per draft.",
+      "NO_SOURCES": "Import documents and wait for indexing before generating summaries.",
+      "GENERATE": "Generate draft",
+      "OVERVIEW": "Business overview",
+      "TOPIC": "Topic",
+      "SUMMARY": "Topic summary",
+      "PUBLISH": "Publish & enable for this agent",
+      "DISABLE": "Disable summaries",
+      "ERROR": "Could not generate or save the overview. Check that the selected sources are still ready and try again."
     }
   }
 }

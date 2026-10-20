@@ -5,6 +5,13 @@ class Captain::Dify::DatasetProvisioningService
   end
 
   def perform
+    return if Captain::Dify::DatasetIdentity::KINDS.all? { |kind| @assistant.config["dify_#{kind}_dataset_id"].present? }
+
+    @assistant.with_lock do
+      if @assistant.config['dify_provisioning_key'].blank?
+        @assistant.update!(config: @assistant.config.merge('dify_provisioning_key' => SecureRandom.uuid))
+      end
+    end
     identity = Captain::Dify::DatasetIdentity.new(@assistant)
     created = Captain::Dify::DatasetIdentity::KINDS.filter_map do |kind|
       provision_dataset(identity, kind)
@@ -21,9 +28,24 @@ class Captain::Dify::DatasetProvisioningService
       return if @assistant.config[key].present?
 
       attributes = dataset_attributes(identity, kind)
-      dataset = @client.create_dataset(**attributes)
+      dataset = recover_dataset(identity.provisioning_marker(kind)) || @client.create_dataset(**attributes)
       @assistant.update!(config: @assistant.config.merge(key => dataset.fetch('id')))
     end
+  end
+
+  def recover_dataset(marker)
+    page = 1
+    matches = []
+    loop do
+      result = @client.datasets(page: page)
+      matches.concat(result.fetch('data').select { |dataset| dataset['description'].to_s.lines.map(&:strip).include?(marker) })
+      break unless result['has_more']
+
+      page += 1
+    end
+    raise Dify::KnowledgeClient::Error, 'Duplicate managed Dify datasets' if matches.size > 1
+
+    matches.first
   end
 
   def dataset_attributes(identity, kind)

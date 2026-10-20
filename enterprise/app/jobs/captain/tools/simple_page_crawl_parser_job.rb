@@ -39,10 +39,17 @@ class Captain::Tools::SimplePageCrawlParserJob < ApplicationJob
   rescue PermanentCrawlError, TemporaryCrawlError
     raise
   rescue StandardError => e
+    mark_processing_failed(document, crawler)
     raise "Failed to parse data: #{page_link} #{e.message}"
   end
 
   private
+
+  def mark_processing_failed(document, crawler)
+    return unless document&.persisted? && crawler&.success?
+
+    mark_failed!(document, 'sync_error')
+  end
 
   def handle_failed_fetch!(document, status_code, page_link)
     error_message = "Failed to fetch page: #{page_link} (HTTP #{status_code || 'none'})"
@@ -61,6 +68,7 @@ class Captain::Tools::SimplePageCrawlParserJob < ApplicationJob
   def persist_document!(document, normalized_link, crawler)
     content = crawler.body_markdown_without_faqs.presence || crawler.page_title.presence || ''
     content = content[0...Captain::Documents::SinglePageFetcher::CONTENT_MAX_LENGTH]
+    content = Captain::Documents::PageKnowledgeProcessor.new(document).perform(content)
     metadata = (document.metadata || {}).merge('page_faqs' => crawler.faqs)
 
     document.update!(

@@ -2,7 +2,7 @@
 import { reactive, computed, ref, nextTick } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useVuelidate } from '@vuelidate/core';
-import { minLength, requiredIf, url } from '@vuelidate/validators';
+import { minLength, required, url } from '@vuelidate/validators';
 import { useMapGetter } from 'dashboard/composables/store';
 import { useAlert } from 'dashboard/composables';
 
@@ -20,9 +20,10 @@ const props = defineProps({
     type: Array,
     default: () => [],
   },
+  busy: { type: Boolean, default: false },
 });
 
-const emit = defineEmits(['submit', 'cancel']);
+const emit = defineEmits(['submit', 'discover', 'cancel']);
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
@@ -37,50 +38,42 @@ const initialState = {
   url: '',
   documentType: 'url',
   pdfFile: null,
-  // null follows the default for the URL until the user picks a value.
-  includeLinkedPages: null,
   agentsOnly: false,
+  includeSubdomains: true,
 };
 
 const state = reactive({ ...initialState });
 const fileInputRef = ref(null);
 
-const validationRules = {
-  url: {
-    required: requiredIf(() => state.documentType === 'url'),
-    url: requiredIf(() => state.documentType === 'url' && url),
-    minLength: requiredIf(() => state.documentType === 'url' && minLength(1)),
-  },
-  pdfFile: {
-    required: requiredIf(() => state.documentType === 'pdf'),
-  },
-};
+const validationRules = computed(() => ({
+  url:
+    state.documentType === 'pdf'
+      ? {}
+      : { required, url, minLength: minLength(1) },
+  pdfFile: state.documentType === 'pdf' ? { required } : {},
+}));
 
 const documentTypeOptions = [
   { value: 'url', label: t('CAPTAIN.DOCUMENTS.FORM.TYPE.URL') },
+  { value: 'website', label: t('CAPTAIN.WEBSITES.ENTIRE_WEBSITE') },
   { value: 'pdf', label: t('CAPTAIN.DOCUMENTS.FORM.TYPE.PDF') },
 ];
 
 const v$ = useVuelidate(validationRules, state);
 
-const isStoreUrl = computed(() => {
+const isStoreWebsite = computed(() => {
   try {
-    const host = new URL(state.url).hostname.toLowerCase();
-    return props.storeHosts.includes(host.replace(/^www\./, ''));
+    return props.storeHosts.includes(
+      new URL(state.url).hostname.replace(/^www\./, '')
+    );
   } catch {
     return false;
   }
 });
 
-// Store pages are added alone by default: products come from the catalog sync.
-const includeLinkedPages = computed({
-  get: () => state.includeLinkedPages ?? !isStoreUrl.value,
-  set: value => {
-    state.includeLinkedPages = value;
-  },
-});
-
-const isLoading = computed(() => formState.uiFlags.value.creatingItem);
+const isLoading = computed(
+  () => props.busy || formState.uiFlags.value.creatingItem
+);
 
 const hasPdfFileError = computed(() => v$.value.pdfFile.$error);
 
@@ -133,7 +126,7 @@ const prepareDocumentDetails = () => {
   if (state.documentType === 'url') {
     formData.append('document[external_link]', state.url);
     formData.append('document[name]', state.name || state.url);
-    formData.append('document[include_linked_pages]', includeLinkedPages.value);
+    formData.append('document[include_linked_pages]', false);
   } else {
     formData.append('document[pdf_file]', state.pdfFile);
     formData.append(
@@ -149,6 +142,14 @@ const prepareDocumentDetails = () => {
 const handleSubmit = async () => {
   const isFormValid = await v$.value.$validate();
   if (!isFormValid) {
+    return;
+  }
+
+  if (state.documentType === 'website') {
+    emit('discover', {
+      url: state.url,
+      include_subdomains: state.includeSubdomains,
+    });
     return;
   }
 
@@ -174,7 +175,7 @@ const handleSubmit = async () => {
     </div>
 
     <Input
-      v-if="state.documentType === 'url'"
+      v-if="state.documentType !== 'pdf'"
       v-model="state.url"
       :label="t('CAPTAIN.DOCUMENTS.FORM.URL.LABEL')"
       :placeholder="t('CAPTAIN.DOCUMENTS.FORM.URL.PLACEHOLDER')"
@@ -183,19 +184,19 @@ const handleSubmit = async () => {
     />
 
     <label
-      v-if="state.documentType === 'url'"
+      v-if="state.documentType === 'website'"
       class="flex gap-2 items-start cursor-pointer"
     >
-      <Checkbox v-model="includeLinkedPages" class="mt-0.5 shrink-0" />
+      <Checkbox v-model="state.includeSubdomains" class="mt-0.5 shrink-0" />
       <span class="flex flex-col gap-0.5">
         <span class="text-sm text-n-slate-12">
-          {{ t('CAPTAIN.DOCUMENTS.FORM.LINKED_PAGES.LABEL') }}
+          {{ t('CAPTAIN.WEBSITES.INCLUDE_SUBDOMAINS') }}
         </span>
         <span class="text-xs text-n-slate-11">
           {{
-            isStoreUrl
+            isStoreWebsite
               ? t('CAPTAIN.DOCUMENTS.FORM.LINKED_PAGES.STORE_HELP')
-              : t('CAPTAIN.DOCUMENTS.FORM.LINKED_PAGES.HELP')
+              : t('CAPTAIN.WEBSITES.DISCOVERY_HELP')
           }}
         </span>
       </span>
@@ -255,6 +256,7 @@ const handleSubmit = async () => {
     </div>
 
     <Input
+      v-if="state.documentType !== 'website'"
       v-model="state.name"
       :label="t('CAPTAIN.DOCUMENTS.FORM.NAME.LABEL')"
       :placeholder="t('CAPTAIN.DOCUMENTS.FORM.NAME.PLACEHOLDER')"
@@ -271,7 +273,13 @@ const handleSubmit = async () => {
       />
       <Button
         type="submit"
-        :label="t('CAPTAIN.FORM.CREATE')"
+        :label="
+          t(
+            state.documentType === 'website'
+              ? 'CAPTAIN.WEBSITES.DISCOVER'
+              : 'CAPTAIN.FORM.CREATE'
+          )
+        "
         class="w-full"
         :is-loading="isLoading"
         :disabled="isLoading"

@@ -1,6 +1,11 @@
 class Captain::Dify::SyncDocumentJob < ApplicationJob
   queue_as :low
 
+  retry_on ActiveRecord::LockWaitTimeout, ActiveRecord::QueryCanceled, wait: 30.seconds, attempts: 5 do |job, error|
+    Captain::Document.find_by(id: job.arguments.first)&.mark_dify_sync_failed!('sync_error')
+    Rails.logger.error("Dify document sync database timeout document_id=#{job.arguments.first} error_class=#{error.class.name}")
+  end
+
   retry_on Dify::KnowledgeClient::Error, wait: 5.seconds, attempts: 5 do |job, error|
     document = Captain::Document.find_by(id: job.arguments.first)
     document&.mark_dify_sync_failed!("dify_http_#{error.status || 'error'}")

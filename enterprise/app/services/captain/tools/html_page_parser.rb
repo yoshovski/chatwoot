@@ -8,6 +8,9 @@ class Captain::Tools::HtmlPageParser
 
   def initialize(html)
     @doc = Nokogiri::HTML(html)
+    # Fallback markup can contain its own <main>. Remove it before choosing the
+    # content root, while retaining JSON-LD scripts for FAQ extraction.
+    @doc.css('noscript, template').remove
   end
 
   def title

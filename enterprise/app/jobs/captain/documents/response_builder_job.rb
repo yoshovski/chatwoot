@@ -21,6 +21,10 @@ class Captain::Documents::ResponseBuilderJob < ApplicationJob
 
   def perform_for_website(document, options)
     import_page_faqs(document) if page_faqs_present?(document)
+    if document.account.dify_knowledge_enabled? && document.assistant.config['knowledge_processing_version'] == 2
+      Captain::Knowledge::GroundedFaqGenerator.new(document).perform(force: options[:force_ai] == true)
+      return
+    end
     generate_ai_faqs(document) if should_generate_ai_faqs?(document, options)
   end
 

@@ -46,6 +46,7 @@ class Captain::Documents::PerformSyncJob < MutexApplicationJob
   def perform(document)
     start_time = Time.current
     return unless document.syncable?
+    return if document.metadata.to_h['website_source_id'].present? && !document.enabled?
 
     with_lock(lock_key(document), LOCK_TIMEOUT) do
       perform_sync(document, start_time)

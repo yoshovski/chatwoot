@@ -13,8 +13,14 @@ class Captain::Dify::DatasetIdentity
   def attributes(kind)
     I18n.with_locale(@account.locale) do
       label = I18n.t("captain.dify_datasets.#{kind}.label")
-      { name: name(label), description: I18n.t("captain.dify_datasets.#{kind}.description", **description_values) }
+      description = I18n.t("captain.dify_datasets.#{kind}.description", **description_values)
+      description += "\n#{provisioning_marker(kind)}" if @assistant.config['dify_provisioning_key'].present?
+      { name: name(label), description: description }
     end
+  end
+
+  def provisioning_marker(kind)
+    "ChatOctave source: #{@assistant.config.fetch('dify_provisioning_key')}:#{kind}"
   end
 
   private

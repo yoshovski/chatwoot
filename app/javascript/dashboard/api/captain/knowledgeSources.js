@@ -1,0 +1,68 @@
+/* global axios */
+import ApiClient from '../ApiClient';
+
+class KnowledgeSources extends ApiClient {
+  constructor() {
+    super('captain/assistants', { accountScoped: true });
+  }
+
+  sourcesUrl(assistantId) {
+    return `${this.url}/${assistantId}/website_sources`;
+  }
+
+  list(assistantId, signal) {
+    return axios.get(this.sourcesUrl(assistantId), { signal });
+  }
+
+  discover(assistantId, websiteSource) {
+    return axios.post(this.sourcesUrl(assistantId), {
+      website_source: websiteSource,
+    });
+  }
+
+  source(assistantId, sourceId, signal) {
+    return axios.get(`${this.sourcesUrl(assistantId)}/${sourceId}`, { signal });
+  }
+
+  select(assistantId, sourceId, selectedUrls) {
+    return axios.patch(`${this.sourcesUrl(assistantId)}/${sourceId}`, {
+      website_source: { selected_urls: selectedUrls },
+    });
+  }
+
+  rediscover(assistantId, sourceId) {
+    return axios.post(`${this.sourcesUrl(assistantId)}/${sourceId}/rediscover`);
+  }
+
+  preview(assistantId, sourceId, url, signal) {
+    return axios.post(
+      `${this.sourcesUrl(assistantId)}/${sourceId}/preview`,
+      { url },
+      { signal }
+    );
+  }
+
+  briefUrl(assistantId) {
+    return `${this.url}/${assistantId}/knowledge_brief`;
+  }
+
+  brief(assistantId, signal) {
+    return axios.get(this.briefUrl(assistantId), { signal });
+  }
+
+  generateBrief(assistantId, documentIds) {
+    return axios.post(`${this.briefUrl(assistantId)}/generate`, {
+      document_ids: documentIds,
+    });
+  }
+
+  publishBrief(assistantId, brief) {
+    return axios.post(`${this.briefUrl(assistantId)}/publish`, { brief });
+  }
+
+  disableBrief(assistantId) {
+    return axios.patch(this.briefUrl(assistantId));
+  }
+}
+
+export default new KnowledgeSources();

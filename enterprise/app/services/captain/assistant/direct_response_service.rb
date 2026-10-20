@@ -23,6 +23,10 @@ class Captain::Assistant::DirectResponseService
   private
 
   def retrieve(context, route)
+    if route['intent'] == 'business_overview'
+      tool_context = Agents::ToolContext.new(run_context: Agents::RunContext.new(context))
+      return Captain::Knowledge::BriefEvidence.new(@assistant).perform(tool_context)
+    end
     return '' unless route['intent'] == 'faq_kb'
 
     started = Process.clock_gettime(Process::CLOCK_MONOTONIC)

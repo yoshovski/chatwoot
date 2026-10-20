@@ -86,7 +86,11 @@ class Captain::Documents::SinglePageFetcher
   end
 
   def validate_content(result)
-    return result unless result.success && result.content.blank?
+    return result unless result.success
+    if result.content.to_s.length < 500 && result.content.to_s.match?(/(?:this site requires javascript|enable javascript in your browser)/i)
+      return Result.new(success: false, error_code: 'rendering_required')
+    end
+    return result if result.content.present?
 
     Result.new(success: false, error_code: 'content_empty')
   end

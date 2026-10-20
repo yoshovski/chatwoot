@@ -62,6 +62,7 @@ class Captain::Document < ApplicationRecord
   after_create_commit :update_document_usage
   after_destroy :update_document_usage
   after_commit :enqueue_response_builder_job
+  after_commit :refresh_knowledge_brief, on: %i[update destroy]
   scope :ordered, -> { order(created_at: :desc) }
   scope :enabled, -> { where(enabled: true) }
 
@@ -142,6 +143,15 @@ class Captain::Document < ApplicationRecord
   end
 
   private
+
+  def refresh_knowledge_brief
+    changes = previous_changes.keys & %w[content enabled agents_only status]
+    return if !destroyed? && changes.empty?
+    return unless assistant&.config.to_h['knowledge_brief_enabled'] == true
+    return unless assistant.knowledge_brief&.published.to_h.fetch('document_ids', []).include?(id)
+
+    Captain::Knowledge::GenerateBriefJob.perform_later(assistant_id)
+  end
 
   def customer_visible_source?
     !file_document?

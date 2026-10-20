@@ -4,14 +4,13 @@ class Captain::Documents::CrawlJob < ApplicationJob
   def perform(document)
     return perform_pdf_processing(document) if document.pdf_document?
 
-    scope = Captain::Documents::CrawlScope.new(document)
-    if !scope.follow_links?
-      crawl_page(document, document.external_link)
-    elsif InstallationConfig.find_by(name: 'CAPTAIN_FIRECRAWL_API_KEY')&.value.present?
-      perform_firecrawl_crawl(document, scope)
-    else
-      perform_simple_crawl(document, scope)
+    if document.metadata.to_h['website_source_id'].present?
+      delay = document.metadata.to_h.fetch('website_import_delay', 0).seconds
+      Captain::Websites::ImportPageJob.set(wait: delay).perform_later(document.id)
+      return
     end
+
+    perform_crawl(document)
   rescue StandardError
     # Without this the document stays "in progress" forever and offers no retry.
     mark_crawl_failed(document) unless document.pdf_document?
@@ -19,6 +18,17 @@ class Captain::Documents::CrawlJob < ApplicationJob
   end
 
   private
+
+  def perform_crawl(document)
+    scope = Captain::Documents::CrawlScope.new(document)
+    if !scope.follow_links?
+      crawl_page(document, document.external_link)
+    elsif Captain::Tools::FirecrawlService.configured?
+      perform_firecrawl_crawl(document, scope)
+    else
+      perform_simple_crawl(document, scope)
+    end
+  end
 
   def mark_crawl_failed(document)
     document.update!(status: :available, sync_status: :failed, last_sync_error_code: 'fetch_failed', last_sync_attempted_at: Time.current)

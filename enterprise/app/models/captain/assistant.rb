@@ -50,6 +50,8 @@ class Captain::Assistant < ApplicationRecord
 
   belongs_to :account
   has_many :documents, class_name: 'Captain::Document', dependent: :destroy_async
+  has_many :website_sources, class_name: 'Captain::WebsiteSource', dependent: :destroy_async
+  has_one :knowledge_brief, class_name: 'Captain::KnowledgeBrief', dependent: :destroy
   has_many :responses, class_name: 'Captain::AssistantResponse', dependent: :destroy_async
   has_many :faq_suggestions, class_name: 'Captain::FaqSuggestion', dependent: :destroy_async
   has_many :captain_inboxes,
@@ -90,6 +92,7 @@ class Captain::Assistant < ApplicationRecord
   ].freeze
 
   before_validation :set_default_auto_resolve_mode, on: :create
+  before_validation :set_knowledge_processing_version, on: :create
   before_validation :normalize_auto_resolve_after
   before_validation :normalize_boolean_config_attributes
   before_validation :normalize_max_suggested_replies
@@ -295,7 +298,7 @@ class Captain::Assistant < ApplicationRecord
   end
 
   def prompt_context
-    {
+    context = {
       name: name,
       description: description,
       product_name: config['product_name'] || 'this product',
@@ -313,6 +316,13 @@ class Captain::Assistant < ApplicationRecord
       response_guidelines: response_guidelines || [],
       guardrails: guardrails || []
     }
+    context.merge(Captain::Knowledge::BriefPrompt.new(self).context)
+  end
+
+  def published_knowledge_context
+    return {} unless config['knowledge_brief_enabled'] == true
+
+    knowledge_brief&.prompt_context || {}
   end
 
   def default_avatar_url
@@ -383,6 +393,10 @@ class Captain::Assistant < ApplicationRecord
   end
 
   private
+
+  def set_knowledge_processing_version
+    self.config = { 'knowledge_processing_version' => 2 }.merge(config)
+  end
 
   def shopify_tools_hook
     hook = account.hooks.find_by(app_id: 'shopify')
