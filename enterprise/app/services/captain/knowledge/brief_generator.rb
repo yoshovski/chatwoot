@@ -12,7 +12,8 @@ class Captain::Knowledge::BriefGenerator
     @assistant = brief.assistant
   end
 
-  def perform(ids)
+  # reasons: why the source picker chose each document, shown next to the sources for review.
+  def perform(ids, reasons: {})
     raise InvalidSources unless self.class.valid_document_ids?(ids)
 
     # Sources being re-indexed are left out of this draft rather than failing it.
@@ -27,8 +28,7 @@ class Captain::Knowledge::BriefGenerator
     output = summaries.one? ? summaries.first : generate(summaries, ids)
     raise InvalidSources unless @brief.fingerprint(ids) == fingerprint
 
-    @brief.update!(draft: output.merge('document_ids' => ids, 'source_fingerprint' => fingerprint, 'revision' => SecureRandom.uuid),
-                   status: 'ready', generated_at: Time.current, error_code: nil)
+    @brief.update!(draft: draft(output, ids, fingerprint, reasons), status: 'ready', generated_at: Time.current, error_code: nil)
   end
 
   def self.valid_output?(output, ids)
@@ -51,6 +51,11 @@ class Captain::Knowledge::BriefGenerator
   def self.valid_ids?(references, ids) = references.is_a?(Array) && references.any? && (references - ids).empty?
 
   private
+
+  def draft(output, ids, fingerprint, reasons)
+    output.merge('document_ids' => ids, 'source_fingerprint' => fingerprint, 'revision' => SecureRandom.uuid,
+                 'source_reasons' => reasons.slice(*ids).transform_keys(&:to_s))
+  end
 
   def summarize_documents(ids)
     @brief.source_scope.where(id: ids).order(:id).each_slice(BATCH_SIZE).map do |documents|

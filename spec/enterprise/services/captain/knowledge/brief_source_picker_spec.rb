@@ -16,11 +16,15 @@ RSpec.describe Captain::Knowledge::BriefSourcePicker do
     allow(Captain::Assistant::TieredLlmClient).to receive(:chat).and_return(chat)
   end
 
-  it 'keeps the ids the model picks from the candidates' do
+  it 'keeps the ids the model picks from the candidates with a short reason for each' do
+    picks = [{ 'id' => documents[3].id, 'reason' => 'Company overview' }, { 'id' => 999_999, 'reason' => 'Invented' },
+             { 'id' => documents[7].id, 'reason' => 'Pricing' }]
     allow(Captain::Assistant::TieredLlmClient).to receive(:generate)
-      .and_return(instance_double(RubyLLM::Message, content: { 'document_ids' => [documents[3].id, 999_999, documents[7].id] }))
+      .and_return(instance_double(RubyLLM::Message, content: { 'documents' => picks }))
+    picker = described_class.new(brief)
 
-    expect(described_class.new(brief).perform).to eq([documents[3].id, documents[7].id])
+    expect(picker.perform).to eq([documents[3].id, documents[7].id])
+    expect(picker.reasons).to eq(documents[3].id => 'Company overview', documents[7].id => 'Pricing')
   end
 
   it 'falls back to the shortest URLs when the model fails' do

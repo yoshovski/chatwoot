@@ -82,6 +82,48 @@ watch(
   { immediate: true }
 );
 
+const sourceSearch = ref('');
+const sourceReasons = computed(() => brief.value?.draft?.source_reasons || {});
+const suggestedIds = computed(() => brief.value?.draft?.document_ids || []);
+const matchesSearch = source => {
+  const query = sourceSearch.value.trim().toLowerCase();
+  if (!query) return true;
+  return [source.name, source.url].some(value =>
+    value?.toLowerCase().includes(query)
+  );
+};
+// Suggested sources first with the reason they were picked, then the rest by website section.
+const sourceGroups = computed(() => {
+  const sources = (brief.value?.sources || []).filter(matchesSearch);
+  const suggested = new Set(suggestedIds.value);
+  const groups = [];
+  const picked = sources.filter(source => suggested.has(source.id));
+  if (picked.length) groups.push({ key: 'suggested', sources: picked });
+  const bySection = new Map();
+  sources
+    .filter(source => !suggested.has(source.id))
+    .forEach(source => {
+      if (!bySection.has(source.section)) bySection.set(source.section, []);
+      bySection.get(source.section).push(source);
+    });
+  [...bySection.entries()]
+    .sort((a, b) => b[1].length - a[1].length)
+    .forEach(([section, items]) =>
+      groups.push({ key: section, section, sources: items })
+    );
+  return groups;
+});
+const groupLabel = group => {
+  if (group.key === 'suggested') {
+    return t('CAPTAIN.KNOWLEDGE_BRIEF.SUGGESTED_SOURCES');
+  }
+  if (group.section === 'files') return t('CAPTAIN.DOCUMENT_SECTIONS.FILES');
+  return group.section;
+};
+const selectSuggested = () => {
+  selectedIds.value = suggestedIds.value.slice(0, MAX_SOURCES);
+};
+
 const sourceName = id =>
   brief.value?.sources.find(source => source.id === id)?.name || `#${id}`;
 const sourceNames = ids => (ids || []).map(sourceName).join(', ');
@@ -197,24 +239,68 @@ const disable = async () => {
           })
         }}
       </p>
-      <div class="flex max-h-56 flex-col gap-2 overflow-auto">
-        <label
-          v-for="source in brief?.sources || []"
-          :key="source.id"
-          class="flex items-center gap-2 text-sm text-n-slate-12"
+      <p class="m-0 text-xs text-n-slate-11">
+        {{ $t('CAPTAIN.KNOWLEDGE_BRIEF.SUGGESTION_HELP') }}
+      </p>
+      <div class="flex flex-wrap items-center gap-2">
+        <Input
+          v-model="sourceSearch"
+          type="search"
+          class="flex-1 min-w-48"
+          :placeholder="$t('CAPTAIN.KNOWLEDGE_BRIEF.SEARCH_SOURCES')"
+        />
+        <Button
+          size="sm"
+          variant="faded"
+          :label="$t('CAPTAIN.KNOWLEDGE_BRIEF.SELECT_SUGGESTED')"
+          :disabled="!suggestedIds.length"
+          @click="selectSuggested"
+        />
+        <Button
+          size="sm"
+          variant="ghost"
+          color="slate"
+          :label="$t('CAPTAIN.KNOWLEDGE_BRIEF.CLEAR_SOURCES')"
+          :disabled="!selectedIds.length"
+          @click="selectedIds = []"
+        />
+      </div>
+      <div class="flex max-h-80 flex-col gap-3 overflow-auto">
+        <div
+          v-for="group in sourceGroups"
+          :key="group.key"
+          class="flex flex-col gap-1.5"
         >
-          <Checkbox
-            :model-value="selectedIds.includes(source.id)"
-            :disabled="
-              !selectedIds.includes(source.id) &&
-              selectedIds.length >= MAX_SOURCES
-            "
-            @update:model-value="include => toggleSource(source.id, include)"
-          />
-          <span class="truncate" :title="source.url">
-            {{ source.name || source.url }}
+          <span class="text-xs font-medium text-n-slate-11">
+            {{ groupLabel(group) }}
           </span>
-        </label>
+          <label
+            v-for="source in group.sources"
+            :key="source.id"
+            class="flex items-center gap-2 text-sm text-n-slate-12"
+          >
+            <Checkbox
+              :model-value="selectedIds.includes(source.id)"
+              :disabled="
+                !selectedIds.includes(source.id) &&
+                selectedIds.length >= MAX_SOURCES
+              "
+              @update:model-value="include => toggleSource(source.id, include)"
+            />
+            <span class="min-w-0 flex-1 truncate" :title="source.url">
+              {{ source.name || source.url }}
+            </span>
+            <span
+              v-if="sourceReasons[source.id]"
+              class="shrink-0 rounded-md bg-n-alpha-2 px-1.5 py-0.5 text-xs text-n-slate-11"
+            >
+              {{ sourceReasons[source.id] }}
+            </span>
+          </label>
+        </div>
+        <p v-if="!sourceGroups.length" class="m-0 text-sm text-n-slate-11">
+          {{ $t('CAPTAIN.KNOWLEDGE_BRIEF.NO_MATCHING_SOURCES') }}
+        </p>
       </div>
       <div>
         <Button

@@ -12,7 +12,7 @@ class Captain::Knowledge::GenerateBriefJob < MutexApplicationJob
       brief.reload
       return if document_ids.nil? && !pick_sources && skip_refresh?(assistant, brief)
 
-      Captain::Knowledge::BriefGenerator.new(brief).perform(source_ids(brief, document_ids, pick_sources))
+      generate(brief, document_ids, pick_sources)
     end
   rescue LockAcquisitionError
     nil
@@ -23,10 +23,11 @@ class Captain::Knowledge::GenerateBriefJob < MutexApplicationJob
 
   private
 
-  def source_ids(brief, document_ids, pick_sources)
-    return Captain::Knowledge::BriefSourcePicker.new(brief).perform if pick_sources
+  def generate(brief, document_ids, pick_sources)
+    return Captain::Knowledge::BriefGenerator.new(brief).perform(document_ids || brief.published['document_ids']) unless pick_sources
 
-    document_ids || brief.published['document_ids']
+    picker = Captain::Knowledge::BriefSourcePicker.new(brief)
+    Captain::Knowledge::BriefGenerator.new(brief).perform(picker.perform, reasons: picker.reasons)
   end
 
   def skip_refresh?(assistant, brief)
