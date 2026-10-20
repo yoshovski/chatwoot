@@ -28,24 +28,51 @@ class Captain::Dify::DatasetProvisioningService
       return if @assistant.config[key].present?
 
       attributes = dataset_attributes(identity, kind)
-      dataset = recover_dataset(identity.provisioning_marker(kind)) || @client.create_dataset(**attributes)
+      dataset = recover_dataset(identity.provisioning_marker(kind)) || create_dataset(attributes)
       @assistant.update!(config: @assistant.config.merge(key => dataset.fetch('id')))
     end
   end
 
   def recover_dataset(marker)
+    matches = all_datasets.select { |dataset| dataset['description'].to_s.lines.map(&:strip).include?(marker) }
+    raise Dify::KnowledgeClient::Error, 'Duplicate managed Dify datasets' if matches.size > 1
+
+    matches.first
+  end
+
+  # Dify rejects a second dataset with the same name (HTTP 409). An agent recreated with the name of a
+  # deleted one gets the deleted agent's dataset name; that dataset is taken over when nothing uses it.
+  def create_dataset(attributes)
+    @client.create_dataset(**attributes)
+  rescue Dify::KnowledgeClient::Error => e
+    raise unless e.status == 409
+
+    orphan = orphaned_dataset(attributes[:name])
+    raise unless orphan
+
+    @client.update_dataset(orphan.fetch('id'), name: attributes[:name], description: attributes[:description])
+    orphan
+  end
+
+  def orphaned_dataset(name)
+    matches = all_datasets.select { |dataset| dataset['name'] == name }
+    dataset = matches.first if matches.one?
+    return unless dataset && dataset['embedding_model'] == @assistant.account.dify_embedding_model
+
+    dataset unless Captain::Dify::DatasetReferences.referenced?(dataset.fetch('id'))
+  end
+
+  def all_datasets
     page = 1
-    matches = []
+    datasets = []
     loop do
       result = @client.datasets(page: page)
-      matches.concat(result.fetch('data').select { |dataset| dataset['description'].to_s.lines.map(&:strip).include?(marker) })
+      datasets.concat(result.fetch('data'))
       break unless result['has_more']
 
       page += 1
     end
-    raise Dify::KnowledgeClient::Error, 'Duplicate managed Dify datasets' if matches.size > 1
-
-    matches.first
+    datasets
   end
 
   def dataset_attributes(identity, kind)
