@@ -55,6 +55,18 @@ RSpec.describe Captain::Websites::ImportPageJob do
     expect(source.reload.pages.first).to include('reason' => 'duplicate')
   end
 
+  it 'removes a first import whose text nearly matches another enabled page' do
+    article = (1..200).map { |index| "Fact #{index} about plans, invoices and support." }.join(' ')
+    allow(fetcher).to receive(:fetch).and_return(
+      Captain::Documents::SinglePageFetcher::Result.new(success: true, title: 'Pricing', content: "#{article} Updated in May.")
+    )
+    create(:captain_document, assistant: assistant, account: assistant.account, external_link: 'https://www.example.com/plans',
+                              metadata: { 'page_minhash' => Captain::Knowledge::MinHash.of("#{article} Contact our team.") })
+    described_class.perform_now(document.id)
+
+    expect(source.reload.pages.first).to include('reason' => 'duplicate')
+  end
+
   it 'keeps an imported page as failed when a later sync finds too little text' do
     document.update!(content: content, last_synced_at: 1.day.ago)
     allow(fetcher).to receive(:fetch).and_return(

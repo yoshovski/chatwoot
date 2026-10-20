@@ -1,7 +1,7 @@
 class Captain::WebsiteSource < ApplicationRecord
   self.table_name = 'captain_website_sources'
   # Kept for classification and duplicate checks; the page picker does not need them.
-  SERVER_ONLY_PAGE_FIELDS = %w[description fingerprint canonical schema help_center_article_id updated_at].freeze
+  SERVER_ONLY_PAGE_FIELDS = %w[description fingerprint minhash canonical schema help_center_article_id updated_at].freeze
 
   belongs_to :account
   belongs_to :assistant, class_name: 'Captain::Assistant'

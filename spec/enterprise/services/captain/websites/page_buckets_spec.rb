@@ -76,4 +76,18 @@ RSpec.describe Captain::Websites::PageBuckets do
 
     expect(result.first['bucket']).to eq('maybe')
   end
+
+  it 'treats nearly the same text as a duplicate of the shorter URL, but not pages that only share a banner' do
+    article = (1..200).map { |index| "Fact #{index} about plans, invoices and support." }.join(' ')
+    other = (1..200).map { |index| "Story #{index} about streaming, sports and fans." }.join(' ')
+    banner = 'Download the retention playbook with benchmarks for every subscription business today.'
+    copies = [
+      { 'url' => 'https://www.example.com/pricing-pro', 'words' => 1200, 'minhash' => Captain::Knowledge::MinHash.of("#{article} Updated in May.") },
+      { 'url' => 'https://www.example.com/pricing', 'words' => 1200, 'minhash' => Captain::Knowledge::MinHash.of("#{article} Contact us.") },
+      { 'url' => 'https://www.example.com/a', 'words' => 400, 'minhash' => Captain::Knowledge::MinHash.of("#{article.first(1500)} #{banner}") },
+      { 'url' => 'https://www.example.com/b', 'words' => 400, 'minhash' => Captain::Knowledge::MinHash.of("#{other.first(1500)} #{banner}") }
+    ]
+
+    expect(described_class.new(source).perform(copies).map { |page| page['reason'] }).to eq(['duplicate', nil, nil, nil])
+  end
 end

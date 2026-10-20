@@ -33,7 +33,8 @@ RSpec.describe Captain::Websites::DiscoveryService do
     stub_request(:get, 'https://www.example.com')
       .to_return(body: html.call('Home', links: %w[/pricing https://api.example.com/v1 https://support.example.com/hc/en-us/articles/7-Old]),
                  headers: { 'Content-Type' => 'text/html' })
-    stub_request(:get, 'https://www.example.com/pricing').to_return(body: html.call('Pricing'), headers: { 'Content-Type' => 'text/html' })
+    pricing = 'Plans start at ten euros per month, include unlimited subscribers and can be cancelled at any time. ' * 8
+    stub_request(:get, 'https://www.example.com/pricing').to_return(body: html.call('Pricing', pricing), headers: { 'Content-Type' => 'text/html' })
     stub_request(:get, 'https://www.example.com/tag/news')
       .to_return(body: html.call('News', 'Short list.'), headers: { 'Content-Type' => 'text/html' })
     stub_request(:get, 'https://support.example.com/hc/en-us/articles/7-Old').to_return(status: 404)
