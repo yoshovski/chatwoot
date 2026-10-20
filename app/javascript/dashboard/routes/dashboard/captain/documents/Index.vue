@@ -13,6 +13,7 @@ import DeleteDialog from 'dashboard/components-next/captain/pageComponents/Delet
 import KnowledgeHeader from 'dashboard/components-next/captain/knowledge/KnowledgeHeader.vue';
 import ShopifyCatalogCard from 'dashboard/components-next/captain/knowledge/ShopifyCatalogCard.vue';
 import WebsiteSourcesPanel from 'dashboard/components-next/captain/knowledge/WebsiteSourcesPanel.vue';
+import DocumentSectionsPanel from 'dashboard/components-next/captain/knowledge/DocumentSectionsPanel.vue';
 import DocumentCard from 'dashboard/components-next/captain/assistant/DocumentCard.vue';
 import DocumentFilter from 'dashboard/components-next/captain/assistant/DocumentFilter.vue';
 import DocumentBulkActions from 'dashboard/components-next/captain/assistant/DocumentBulkActions.vue';
@@ -79,6 +80,8 @@ const handleCreateDialogClose = () => {
 const documentFilter = ref(null);
 const syncIntervalHours = ref(null);
 const searchQuery = ref('');
+const sectionFilter = ref(null);
+const documentSectionsPanel = ref(null);
 
 const currentAssistantId = () =>
   Number.isFinite(selectedAssistantId.value) ? selectedAssistantId.value : null;
@@ -92,6 +95,9 @@ const buildDocumentFilterParams = (page = 1) => {
   if (assistantId) filterParams.assistantId = assistantId;
   const trimmedQuery = searchQuery.value.trim();
   if (trimmedQuery) filterParams.searchKey = trimmedQuery;
+  if (assistantId && sectionFilter.value) {
+    filterParams.section = sectionFilter.value;
+  }
   return filterParams;
 };
 
@@ -317,12 +323,21 @@ const fetchDocumentsAfterBulkAction = () => {
 const onCreateSuccess = () => {
   refreshDocumentsPage(1);
   websiteSourcesPanel.value?.load();
+  documentSectionsPanel.value?.load();
 };
+
+const onSectionsChanged = () => {
+  fetchDocumentsAfterBulkAction();
+  websiteSourcesPanel.value?.load();
+};
+
+watch(sectionFilter, () => fetchDocuments(1));
 
 const hasActiveDocumentFilters = computed(
   () =>
     (documentFilter.value?.hasActiveFilters ?? false) ||
-    Boolean(searchQuery.value.trim())
+    Boolean(searchQuery.value.trim()) ||
+    Boolean(sectionFilter.value)
 );
 
 const shopifyHook = ref(null);
@@ -363,6 +378,7 @@ watch(
   async () => {
     documentFilter.value?.reset();
     searchQuery.value = '';
+    sectionFilter.value = null;
     bulkSelectedIds.value = new Set();
     syncIntervalHours.value = null;
     stopSyncPolling();
@@ -453,6 +469,13 @@ onUnmounted(() => {
           ref="websiteSourcesPanel"
           :assistant-id="selectedAssistantId"
           @saved="onCreateSuccess"
+        />
+        <DocumentSectionsPanel
+          :key="`sections-${selectedAssistantId}`"
+          ref="documentSectionsPanel"
+          v-model:active-section="sectionFilter"
+          :assistant-id="selectedAssistantId"
+          @changed="onSectionsChanged"
         />
       </Policy>
     </template>

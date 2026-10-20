@@ -2150,6 +2150,34 @@
         "SUBTITLE": "Connecting an inbox allows the AI agent to handle initial questions from your customers before transferring them to you."
       }
     },
+    "DOCUMENT_SECTIONS": {
+      "TITLE": "Sections ({count})",
+      "DESCRIPTION": "Pages grouped by website and section. Select sections to pause, resume, retry or delete them at once.",
+      "FILES": "Files and single documents",
+      "COUNTS": "{ready} of {count} ready",
+      "FAILED": "{count} failed",
+      "PAUSED": "{count} paused",
+      "SHOW": "Show",
+      "SHOW_ALL": "Show all",
+      "SELECTED": "{sections} sections selected · {count} documents",
+      "ACTIONS": {
+        "PAUSE": "Pause",
+        "RESUME": "Resume",
+        "RETRY": "Retry failed",
+        "SUGGEST_FAQS": "Suggest FAQs",
+        "DELETE": "Delete"
+      },
+      "DONE": {
+        "PAUSE": "Paused {count} documents",
+        "RESUME": "Resumed {count} documents",
+        "RETRY": "Retrying {count} documents",
+        "SUGGEST_FAQS": "Suggesting FAQs for {count} documents",
+        "DELETE": "Deleted {count} documents"
+      },
+      "ERROR": "Could not update these sections. Please try again.",
+      "DELETE_TITLE": "Delete these sections?",
+      "DELETE_DESCRIPTION": "{count} documents and their FAQs will be deleted. Website pages are also removed from the website selection."
+    },
     "WEBSITES": {
       "TITLE": "Website sources",
       "ENTIRE_WEBSITE": "Entire website",

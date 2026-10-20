@@ -550,6 +550,7 @@ en:
       multiple_files_error: 'A document can contain only one uploaded file'
       sync_not_supported_for_pdf: 'Sync is not supported for PDF documents'
       sync_not_supported_for_file: 'Sync is not supported for uploaded documents'
+      invalid_section_action: 'Choose at least one section and a supported action'
       sync_only_available_documents: 'Sync is only available for processed documents'
       sync_already_in_progress: 'Document sync is already in progress'
       pdf_upload_failed: 'Failed to upload PDF to OpenAI'

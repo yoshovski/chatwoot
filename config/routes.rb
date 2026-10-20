@@ -132,6 +132,7 @@ Rails.application.routes.draw do
               resources :scenarios do
                 post :draft, on: :collection
               end
+              resources :document_sections, only: [:index, :create]
               resources :website_sources, only: [:index, :show, :create, :update] do
                 post :rediscover, on: :member
                 post :preview, on: :member

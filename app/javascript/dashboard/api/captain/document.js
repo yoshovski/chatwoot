@@ -6,7 +6,15 @@ class CaptainDocument extends ApiClient {
     super('captain/documents', { accountScoped: true });
   }
 
-  get({ page = 1, searchKey, assistantId, filter, source, sort } = {}) {
+  get({
+    page = 1,
+    searchKey,
+    assistantId,
+    filter,
+    source,
+    sort,
+    section,
+  } = {}) {
     return axios.get(this.url, {
       params: {
         page,
@@ -15,6 +23,7 @@ class CaptainDocument extends ApiClient {
         filter,
         source,
         sort,
+        section,
       },
     });
   }
