@@ -70,10 +70,18 @@ RSpec.describe Captain::Dify::Document do
   end
 
   describe '#dify_source_fingerprint' do
-    it 'is versioned for text documents and follows the sectioned text' do
-      document = create(:captain_document, assistant: assistant, content: '## Returns\n\nBody')
+    it 'is versioned for text documents and follows the packed chunks of new agents' do
+      document = create(:captain_document, assistant: assistant, content: "## Returns\n\nItems must be unused.")
 
-      expect(document.dify_source_fingerprint).to eq("sectioned-v5:#{Digest::SHA256.hexdigest(document.dify_sectioned_content)}")
+      expect(document.dify_source_fingerprint).to eq("packed-v1:#{Digest::SHA256.hexdigest(document.dify_sectioned_content)}")
+      expect(document.dify_sectioned_content).to eq("#{document.name} > Returns\nItems must be unused.")
+    end
+
+    it 'keeps sectioned chunks for agents on processing version 2' do
+      assistant.update!(config: assistant.config.merge('knowledge_processing_version' => 2))
+      document = create(:captain_document, assistant: assistant, content: "## Returns\n\nItems must be unused.")
+
+      expect(document.dify_source_fingerprint).to start_with('sectioned-v5:')
     end
 
     it 'changes when the document title changes' do

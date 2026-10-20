@@ -8,6 +8,9 @@ class Captain::Dify::DocumentSyncService
       subchunk_segmentation: { separator: '', max_tokens: 768 }
     }
   }.freeze
+  PACKED_PROCESS_RULE = PROCESS_RULE.deep_merge(
+    rules: { subchunk_segmentation: { separator: Captain::Knowledge::ChunkPacker::CHILD_SEPARATOR } }
+  ).freeze
 
   def initialize(document)
     @document = document
@@ -55,7 +58,8 @@ class Captain::Dify::DocumentSyncService
   end
 
   def write_document(name:, document_id: nil)
-    attributes = { name: name, indexing_technique: 'high_quality', doc_form: 'hierarchical_model', process_rule: PROCESS_RULE }
+    attributes = { name: name, indexing_technique: 'high_quality', doc_form: 'hierarchical_model',
+                   process_rule: @document.packed_chunks? ? PACKED_PROCESS_RULE : PROCESS_RULE }
     if @document.pdf_document?
       attributes[:original_document_id] = document_id if document_id
       @document.pdf_file.blob.open do |file|

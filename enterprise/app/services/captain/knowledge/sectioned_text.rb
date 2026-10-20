@@ -18,6 +18,11 @@ class Captain::Knowledge::SectionedText
   end
 
   def to_s
+    sections.map { |path, text| [path.join(SEPARATOR).presence, text].compact.join("\n") }.join(SECTION_SEPARATOR)
+  end
+
+  # [[breadcrumb parts, text]] in page order; text keeps blank lines between paragraphs.
+  def sections
     @headings = []
     @blocks = []
     @body = []
@@ -27,8 +32,7 @@ class Captain::Knowledge::SectionedText
     @markdown.each_line(chomp: true) { |line| read_line(line) }
     flush_body
     release_pending_title
-
-    @blocks.map { |path, text| [path.presence, text].compact.join("\n") }.join(SECTION_SEPARATOR)
+    @blocks
   end
 
   private
@@ -119,6 +123,6 @@ class Captain::Knowledge::SectionedText
   def breadcrumb
     parts = [@title, *@headings.map(&:last)].compact_blank.chunk_while { |a, b| a.casecmp?(b) }.map(&:first)
     parts.shift while parts.size > 1 && parts.join(SEPARATOR).length > MAX_BREADCRUMB_LENGTH
-    parts.join(SEPARATOR)
+    parts
   end
 end

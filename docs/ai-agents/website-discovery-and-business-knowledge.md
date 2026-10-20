@@ -58,7 +58,7 @@ Rollback: disable the brief for the affected agent first. Deselect website-manag
 
 ## Versioned cleaning and grounded FAQs
 
-New AI agents default to `config.knowledge_processing_version = 2`. Existing agents without that value retain the previous processing, including fingerprints and plain-line heading inference. There is no migration or bulk reindex. An operator may opt in a specific existing agent and explicitly sync its sources; the Cleeng rollout uses this path. Scanixx remains on its existing processing.
+New AI agents default to `config.knowledge_processing_version = 3` (see below); agents created while version 2 was the default keep version 2. Existing agents without that value retain the previous processing, including fingerprints and plain-line heading inference. There is no migration or bulk reindex. An operator may opt in a specific existing agent and explicitly sync its sources; the Cleeng rollout uses this path. Scanixx remains on its existing processing.
 
 Version 2 removes image markup while preserving alternative text, deduplicates repeated paragraphs within their heading context, and identifies pages dominated by short interface fragments. Those noisy pages are curated in bounded background batches. The model selects numbered source paragraphs; the application copies original text, rejecting invalid references. It excludes demo interfaces and example prices rather than teaching them as company pricing. Raw crawl text and its fingerprint remain in the source metadata for inspection and unchanged-source reuse. Curation failure leaves a visible failed sync rather than indexing unreviewed noise. Clean prose and legal documents retain their text without an extra curation model call.
 
@@ -67,6 +67,20 @@ Version 2 uses actual Markdown headings rather than promoting short UI labels in
 After Dify completes indexing, website imports automatically generate up to twelve grounded FAQs. The model selects an existing source paragraph as evidence; that exact paragraph becomes the answer. Unsupported references are rejected. Source fingerprints and response IDs are retained in document metadata. Unedited generated FAQs are replaced when regenerated, edited FAQs are preserved, and stale generated answers are rejected by canonical retrieval as soon as their source content changes. Current generation considers the first 48,000 source characters and evidence paragraphs of 40–2,000 characters; full-document RAG remains available for the rest.
 
 `CAPTAIN_KNOWLEDGE_CURATION_MODEL` and `CAPTAIN_KNOWLEDGE_FAQ_MODEL` optionally override the background models; both default to the existing `CAPTAIN_KNOWLEDGE_ANSWER_MODEL` alias. No global model/routing change is needed.
+
+## Version 3: site-independent cleaning and packed chunks
+
+Version 3 keeps everything version 2 does (deduplication, model curation of noisy pages, grounded FAQs) and adds deterministic cleaning that works on any website before any model call:
+
+- Links become their text (URLs, tracking parameters and `**`/`__` markers are not embedded). Images are removed unless their alternative text is a descriptive phrase (logos, icons and file names never are). Zero-width characters are removed.
+- Navigation and link lists, call-to-action buttons (short lines that are links or repeat on the page, such as "See a demo"), card-link wrappers, copyright lines, and headings left without content are dropped. A short line used once and followed by a real paragraph stays as that paragraph's title.
+- Discovery learns, per host, the text blocks that appear on at least 30% of fetched pages (minimum four pages): menus, banners and calls to action outside `<nav>`/`<footer>`. They are removed from every page of that website source except its start page, so a site-wide fact is still indexed once. The block hashes live in `discovery_stats.boilerplate` and are not sent to the browser.
+
+Chunking packs the page instead of making one parent per heading. Parents (the context returned to the model) hold neighbouring sections up to about 3,000 characters and start again at a new top-level topic once they have 800. Children (what is embedded) are paragraphs packed up to about 800 characters, each starting with a short context line: the page title and the two nearest headings, without Markdown. One-line sections join their neighbour with only the differing part of their context line. Captain separates children with a blank line and Dify's child separator is a blank line for these documents, so Dify keeps Captain's boundaries exactly; PDFs keep token-based splitting. Fingerprints use `packed-v1`.
+
+Measured on nine real pages (product, help-centre, developer, government, retail and encyclopedia sites), version 3 produced one to nine parents per page instead of up to 22 one-section parents, children of 470–735 characters on average, and one child under 200 characters in total.
+
+To move an existing agent, run `ACCOUNT_ID=… ASSISTANT_ID=… bundle exec rake captain:knowledge:upgrade_processing`. It sets version 3, re-cleans each enabled website page from its stored crawl (version 1 pages use their current content), and queues Dify reindexing. Learned boilerplate applies to pages of website sources discovered after this change; rediscover a source to learn it.
 
 ## Automatic KB provisioning and recovery
 

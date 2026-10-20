@@ -392,10 +392,14 @@ class Captain::Assistant < ApplicationRecord
     base_urls.uniq
   end
 
+  # 1: original extraction and chunks; 2: cleaned and curated website text; 3: site-independent cleaning
+  # and packed parent-child chunks. Existing agents keep their version until an operator opts them in.
+  def knowledge_processing_version = config['knowledge_processing_version'].to_i
+
   private
 
   def set_knowledge_processing_version
-    self.config = { 'knowledge_processing_version' => 2 }.merge(config)
+    self.config = { 'knowledge_processing_version' => 3 }.merge(config)
   end
 
   def shopify_tools_hook

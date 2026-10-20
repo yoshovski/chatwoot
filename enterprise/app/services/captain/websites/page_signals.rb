@@ -15,8 +15,11 @@ class Captain::Websites::PageSignals
   end
 
   def links = @doc.css('a[href]').pluck('href')
+  def block_hashes = Captain::Knowledge::PageCleaner.block_hashes(markdown)
 
   private
+
+  def markdown = @markdown ||= @parser.body_markdown_without_faqs
 
   def head
     {
@@ -30,7 +33,6 @@ class Captain::Websites::PageSignals
   end
 
   def content
-    markdown = @parser.body_markdown_without_faqs
     text = markdown.gsub(LINK, '\1')
     words = text.split.size
     link_words = markdown.scan(LINK).sum { |(label)| label.split.size }

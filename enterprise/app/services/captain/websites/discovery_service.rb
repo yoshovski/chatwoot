@@ -16,6 +16,7 @@ class Captain::Websites::DiscoveryService
     @help_centers = []
     @seen_help_centers = Set.new
     @limits = Set.new
+    @boilerplate = Captain::Websites::BoilerplateLearner.new
     @language = Captain::Websites::PageRules.locale(source.url)
     @stats = { 'fetched_pages' => 0, 'successful_pages' => 0, 'sitemaps' => 0, 'help_center_articles' => 0, 'errors' => 0,
                'limited' => false, 'limits' => [], 'phase' => 'sitemaps', 'run' => SecureRandom.hex(6) }
@@ -43,7 +44,7 @@ class Captain::Websites::DiscoveryService
     record_limits
     apply_robots
     success = @stats.values_at('successful_pages', 'sitemaps', 'help_center_articles').any?(&:positive?)
-    @stats.merge!('phase' => 'done', 'classification' => ('pending' if success)).compact!
+    @stats.merge!('phase' => 'done', 'classification' => ('pending' if success), 'boilerplate' => @boilerplate.to_h).compact!
     persist(status: success ? 'ready' : 'failed', error_code: success ? nil : 'no_pages_found', discovered_at: Time.current)
     Captain::Websites::ClassifySectionsJob.perform_later(@source.id, @stats['run']) if success
   end
@@ -149,6 +150,7 @@ class Captain::Websites::DiscoveryService
   def read_page(url, html)
     signals = Captain::Websites::PageSignals.new(html, url)
     @pages[url].merge!(signals.to_h)
+    @boilerplate.add(url, signals.block_hashes)
     @language ||= @pages[url]['lang'] if url == @source.url
     signals.links.each { |link| add_page(link, 'link', base: url) }
   end

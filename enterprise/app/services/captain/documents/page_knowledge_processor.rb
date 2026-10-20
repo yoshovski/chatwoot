@@ -9,27 +9,42 @@ class Captain::Documents::PageKnowledgeProcessor
   end
 
   def perform(raw)
-    return raw unless @document.assistant.config['knowledge_processing_version'] == 2
+    version = @document.assistant.knowledge_processing_version
+    return raw if version < 2
 
     fingerprint = Digest::SHA256.hexdigest(raw)
     metadata = @document.metadata.to_h
-    return @document.content if metadata['knowledge_raw_fingerprint'] == fingerprint && metadata['knowledge_processing_version'] == 2
+    return @document.content if metadata['knowledge_raw_fingerprint'] == fingerprint && metadata['knowledge_processing_version'] == version
 
-    cleaned = clean(raw)
+    cleaned = preview(raw)
     cleaned = curate(cleaned) if noisy?(cleaned)
     raise InvalidCuration, 'No factual website content' if cleaned.blank?
 
     @document.metadata = metadata.merge('raw_crawl_content' => raw, 'knowledge_raw_fingerprint' => fingerprint,
-                                        'knowledge_processing_version' => 2)
+                                        'knowledge_processing_version' => version)
     cleaned
   end
 
   # What indexing keeps before any model curation, for previews before import.
   def preview(raw)
-    @document.assistant.config['knowledge_processing_version'] == 2 ? clean(raw) : raw
+    case @document.assistant.knowledge_processing_version
+    when 2 then clean(raw)
+    when 3 then clean(Captain::Knowledge::PageCleaner.new(raw, boilerplate: site_boilerplate).perform)
+    else raw
+    end
   end
 
   private
+
+  # Blocks discovery saw on many pages of this host: menus, banners and calls to action outside <nav>/<footer>.
+  def site_boilerplate
+    source_id = @document.metadata.to_h['website_source_id']
+    source = @document.assistant.website_sources.find_by(id: source_id) if source_id
+    # The start page keeps them, so site-wide facts are indexed once.
+    return [] if source.nil? || source.url == Captain::Websites::UrlPolicy.normalize(@document.external_link)
+
+    source.discovery_stats.dig('boilerplate', URI.parse(@document.external_link).host.delete_prefix('www.')) || []
+  end
 
   def clean(raw)
     text = raw.gsub(IMAGE) { Regexp.last_match(1).to_s.strip }
