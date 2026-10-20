@@ -4,6 +4,8 @@ class Captain::Websites::ImportPageJob < ApplicationJob
   queue_as :low
   discard_on ActiveRecord::RecordNotFound
   retry_on TemporaryFetchError, wait: :polynomially_longer, attempts: 4
+  # Below this a page is a stub or an empty shell, even when an administrator selected it.
+  MIN_WORDS = 25
 
   def perform(document_id)
     document = Captain::Document.find(document_id)
@@ -30,7 +32,7 @@ class Captain::Websites::ImportPageJob < ApplicationJob
 
   def persist_result(document, result)
     unless result.success
-      document.update!(status: :available, sync_status: :failed, last_sync_error_code: result.error_code, last_sync_attempted_at: Time.current)
+      skip(document, result.error_code)
       raise TemporaryFetchError, result.error_code if result.error_code.in?(%w[timeout fetch_failed])
 
       return
@@ -39,8 +41,27 @@ class Captain::Websites::ImportPageJob < ApplicationJob
     content = Captain::Documents::PageKnowledgeProcessor.new(document).perform(result.content)
     return unless selected?(document)
 
-    document.metadata = document.metadata.merge('page_faqs' => result.faqs || [])
+    fingerprint = Digest::SHA256.hexdigest(content.gsub(/\s+/, ' ').strip)
+    reason = skip_reason(document, content, fingerprint)
+    reason ? skip(document, reason) : store(document, result, content, fingerprint)
+  end
+
+  def store(document, result, content, fingerprint)
+    document.metadata = document.metadata.merge('page_faqs' => result.faqs || [], 'page_text_fingerprint' => fingerprint)
     document.update!(name: result.title.presence || document.name, content: content, status: :available,
                      sync_status: :synced, last_synced_at: Time.current, last_sync_attempted_at: Time.current, last_sync_error_code: nil)
+  end
+
+  def skip(document, error_code)
+    document.update!(status: :available, sync_status: :failed, last_sync_error_code: error_code, last_sync_attempted_at: Time.current)
+  end
+
+  # A stub page, or text another enabled page of this agent already holds (a mirror, print or locale copy).
+  def skip_reason(document, content, fingerprint)
+    return 'thin_content' if content.split.size < MIN_WORDS
+
+    duplicate = document.assistant.documents.where(enabled: true).where.not(id: document.id)
+                        .exists?(["metadata->>'page_text_fingerprint' = ?", fingerprint])
+    'duplicate_content' if duplicate
   end
 end

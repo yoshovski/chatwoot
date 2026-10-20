@@ -52,12 +52,21 @@ class Api::V1::Accounts::Captain::WebsiteSourcesController < Api::V1::Accounts::
       render json: { title: document.name, content: document.content.first(20_000) }
       return
     end
-    result = Captain::Websites::PageFetcher.new(@source).fetch(url)
-    render json: { title: result.title, content: result.content.to_s.first(20_000), error_code: result.error_code },
-           status: result.success ? :ok : :unprocessable_entity
+    render_fetched_preview(url)
   end
 
   private
+
+  # Shows the text indexing would keep, and whether the import would skip it as a stub.
+  def render_fetched_preview(url)
+    result = Captain::Websites::PageFetcher.new(@source).fetch(url)
+    return render json: { error_code: result.error_code }, status: :unprocessable_entity unless result.success
+
+    content = Captain::Documents::PageKnowledgeProcessor.new(@assistant.documents.new(external_link: url)).preview(result.content)
+    words = content.split.size
+    render json: { title: result.title, content: content.first(20_000), words: words,
+                   skip_reason: ('thin_content' if words < Captain::Websites::ImportPageJob::MIN_WORDS) }.compact
+  end
 
   def set_assistant
     @assistant = Current.account.captain_assistants.find(params[:assistant_id])

@@ -24,6 +24,11 @@ class Captain::Documents::PageKnowledgeProcessor
     cleaned
   end
 
+  # What indexing keeps before any model curation, for previews before import.
+  def preview(raw)
+    @document.assistant.config['knowledge_processing_version'] == 2 ? clean(raw) : raw
+  end
+
   private
 
   def clean(raw)
