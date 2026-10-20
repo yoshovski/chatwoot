@@ -1,6 +1,6 @@
 class Captain::Dify::PollDocumentJob < ApplicationJob
   queue_as :low
-  MAX_POLLS = 120
+  MAX_POLLS = Captain::Dify::IndexingSchedule::MAX_POLLS
 
   retry_on Dify::KnowledgeClient::Error, wait: 5.seconds, attempts: 5 do |job, error|
     Captain::Document.find_by(id: job.arguments.first)&.mark_dify_sync_failed!("dify_http_#{error.status || 'error'}")
@@ -30,7 +30,7 @@ class Captain::Dify::PollDocumentJob < ApplicationJob
 
   def apply_state(document, state, fingerprint, poll)
     status = state.fetch('indexing_status')
-    return complete(document, state) if status == 'completed'
+    return Captain::Dify::DocumentCompletion.new(document, state).apply if status == 'completed'
 
     if status == 'error'
       document.mark_dify_sync_failed!('dify_indexing_failed')
@@ -38,19 +38,8 @@ class Captain::Dify::PollDocumentJob < ApplicationJob
       document.mark_dify_sync_failed!('dify_indexing_timeout')
     else
       document.update!(dify_indexing_status: status) unless document.dify_indexing_status == status
-      self.class.set(wait: 5.seconds).perform_later(document.id, document.dify_document_id, fingerprint, poll + 1)
+      self.class.set(wait: Captain::Dify::IndexingSchedule.wait(poll)).perform_later(document.id, document.dify_document_id, fingerprint, poll + 1)
     end
     false
-  end
-
-  def complete(document, state)
-    unless state.fetch('enabled') && !state.fetch('archived') && state.fetch('doc_form') == 'hierarchical_model'
-      document.mark_dify_sync_failed!('dify_document_unavailable')
-      return
-    end
-
-    document.update!(status: :available, sync_status: :synced, dify_indexing_status: 'completed', sync_step: nil,
-                     last_sync_error_code: nil, last_synced_at: Time.current, last_sync_attempted_at: Time.current)
-    !document.pdf_document?
   end
 end

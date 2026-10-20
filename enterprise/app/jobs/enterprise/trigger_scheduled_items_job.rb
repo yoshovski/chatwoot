@@ -7,5 +7,8 @@ module Enterprise::TriggerScheduledItemsJob
 
     # Triggers Account Sla jobs
     Sla::TriggerSlasForAccountsJob.perform_later
+
+    # Marks knowledge Ready that Dify finished after polling gave up
+    Captain::Dify::RecheckTimedOutDocumentsJob.perform_later
   end
 end

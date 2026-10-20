@@ -11,7 +11,9 @@ class Captain::Dify::SyncDocumentJob < ApplicationJob
     document&.mark_dify_sync_failed!("dify_http_#{error.status || 'error'}")
     Rails.logger.error("Dify document sync failed document_id=#{job.arguments.first} status=#{error.status}")
   end
-  retry_on Captain::Dify::DocumentSyncService::IndexingPending, wait: 5.seconds, attempts: 120 do |job, _error|
+  retry_on Captain::Dify::DocumentSyncService::IndexingPending,
+           wait: ->(executions) { Captain::Dify::IndexingSchedule.wait(executions) },
+           attempts: Captain::Dify::IndexingSchedule::MAX_POLLS do |job, _error|
     Captain::Document.find_by(id: job.arguments.first)&.mark_dify_sync_failed!('dify_indexing_timeout')
   end
   discard_on ActiveRecord::RecordNotFound
