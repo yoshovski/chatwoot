@@ -7,12 +7,10 @@ class Captain::Websites::SelectionService
   end
 
   def perform(urls)
-    raise InvalidSelection, I18n.t('captain.websites.discovery_pending') unless @source.status == 'ready'
     raise InvalidSelection, I18n.t('captain.websites.invalid_selection') unless urls.is_a?(Array) && urls.all?(String)
 
     @source.account.with_lock do
       @source.lock!
-      raise InvalidSelection, I18n.t('captain.websites.discovery_pending') unless @source.status == 'ready'
       raise InvalidSelection, I18n.t('captain.websites.invalid_selection') unless (urls - @source.selectable_urls).empty?
 
       apply_selection(urls.uniq)

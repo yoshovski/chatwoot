@@ -467,7 +467,6 @@ en:
   captain:
     websites:
       already_added: 'This website is already listed. Open its page selection to discover it again.'
-      discovery_pending: 'Wait for website discovery to finish before saving the selection.'
       invalid_selection: 'Select only discovered pages that are available for import.'
       invalid_subdomain_option: 'Choose whether linked subdomains should be discovered.'
     knowledge_briefs:
