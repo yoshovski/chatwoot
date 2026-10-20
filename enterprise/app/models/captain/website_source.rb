@@ -21,13 +21,12 @@ class Captain::WebsiteSource < ApplicationRecord
 
   def client_payload
     hidden, visible = pages.partition { |page| HIDDEN_REASONS.include?(page['reason']) }
-    documents = assistant.documents.where(external_link: visible.pluck('url')).index_by(&:external_link)
     as_json(only: %i[id url include_subdomains status selected_urls error_code discovered_at]).merge(
       'discovery_stats' => client_stats,
       'recoverable' => status.in?(%w[pending discovering]) && updated_at < 2.hours.ago,
       'documents_available' => account.usage_limits[:captain][:documents][:current_available],
       'hidden_pages' => hidden.size,
-      'pages' => visible.map { |page| page_payload(page, documents[page['url']]) }
+      'pages' => pages_payload(visible)
     )
   end
 
@@ -41,6 +40,11 @@ class Captain::WebsiteSource < ApplicationRecord
   end
 
   private
+
+  def pages_payload(visible)
+    documents = assistant.documents.where(external_link: visible.pluck('url')).index_by(&:external_link)
+    visible.map { |page| page_payload(page, documents[page['url']]) }
+  end
 
   def page_payload(page, document)
     page.except(*SERVER_ONLY_PAGE_FIELDS).merge('document_id' => document&.id, 'sync_status' => document&.sync_status,
