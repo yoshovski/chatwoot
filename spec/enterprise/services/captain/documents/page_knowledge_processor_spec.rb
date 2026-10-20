@@ -28,6 +28,19 @@ RSpec.describe Captain::Documents::PageKnowledgeProcessor do
     expect(described_class.new(document_for('https://www.example.com/warranty')).preview(raw)).to eq(raw)
   end
 
+  it 'drops a banner repeated in one section except on that section start page' do
+    ebook = 'Download the playbook with retention benchmarks for every subscription business.'
+    fact = 'Pausing a subscription keeps the subscriber and stops billing until the chosen date.'
+    source.update!(discovery_stats: { 'boilerplate_sections' => {
+                     'example.com/resources' => { 'keep' => 'https://www.example.com/resources',
+                                                  'blocks' => [Captain::Knowledge::PageCleaner.block_hash(ebook)] }
+                   } })
+    page = "#{fact}\n\n#{ebook}"
+
+    expect(described_class.new(document_for('https://www.example.com/resources/pauses')).perform(page)).to eq(fact)
+    expect(described_class.new(document_for('https://www.example.com/resources')).perform(page)).to include(ebook)
+  end
+
   context 'when a noisy page is curated by the model' do
     let(:fragments) { (1..14).map { |index| "Menu item #{index}" } }
     let(:facts) do
