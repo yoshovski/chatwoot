@@ -35,6 +35,11 @@ module Captain::Dify::Document
     'indexing'
   end
 
+  def dify_sync_retryable?
+    account.dify_knowledge_enabled? && sync_failed? && last_sync_error_code.to_s.start_with?('dify_') &&
+      (content.present? || pdf_document?)
+  end
+
   def mark_dify_sync_failed!(error_code)
     update!(status: :in_progress, sync_status: :failed, dify_indexing_status: 'error', sync_step: nil,
             last_sync_error_code: error_code, last_sync_attempted_at: Time.current)

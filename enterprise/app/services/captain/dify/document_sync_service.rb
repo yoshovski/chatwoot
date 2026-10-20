@@ -45,16 +45,23 @@ class Captain::Dify::DocumentSyncService
 
   def sync_content
     fingerprint = @document.dify_source_fingerprint
-    if fingerprint == @document.dify_content_fingerprint
+    unchanged = fingerprint == @document.dify_content_fingerprint
+    if unchanged
       return if @document.available? && @document.dify_indexing_status == 'completed'
       return [@document.dify_document_id, fingerprint] unless @document.dify_indexing_status == 'error'
     end
-
-    state = @client.document(dataset_id: @dataset_id, document_id: @document.dify_document_id).fetch('indexing_status')
-    raise IndexingPending, 'Dify document is indexing' unless %w[completed error].include?(state)
+    # A retry after a failure Dify recovered from (a timeout, a lost response) only needs polling.
+    return [@document.dify_document_id, fingerprint] if settled_indexing_status == 'completed' && unchanged
 
     persist_write(write_document(name: "Captain Document #{@document.id}.", document_id: @document.dify_document_id))
     [@document.dify_document_id, fingerprint]
+  end
+
+  def settled_indexing_status
+    state = @client.document(dataset_id: @dataset_id, document_id: @document.dify_document_id).fetch('indexing_status')
+    raise IndexingPending, 'Dify document is indexing' unless %w[completed error].include?(state)
+
+    state
   end
 
   def write_document(name:, document_id: nil)

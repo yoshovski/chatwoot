@@ -1730,6 +1730,7 @@
         "SYNCING": "updating...",
         "STALE_SYNC": "update stalled",
         "FAILED": "Failed to sync",
+        "FAILED_REASON": "Failed to sync: {error}",
         "NEVER_SYNCED": "not updated yet"
       },
       "SYNC_ERRORS": {
@@ -1743,7 +1744,11 @@
         "RENDERING_REQUIRED": "This page needs JavaScript rendering. Configure the website renderer and retry.",
         "ROBOTS_DISALLOWED": "This page is excluded by the website’s robots.txt.",
         "THIN_CONTENT": "Too little text to be useful knowledge",
-        "DUPLICATE_CONTENT": "Same text as another page of this agent"
+        "DUPLICATE_CONTENT": "Same text as another page of this agent",
+        "INDEXING_TIMEOUT": "The knowledge base took too long to index this page. It is checked again automatically.",
+        "INDEXING_FAILED": "The knowledge base could not index this content",
+        "KNOWLEDGE_NOT_CONFIGURED": "The knowledge base is not configured for this account",
+        "KNOWLEDGE_BASE_ERROR": "The knowledge base did not accept this content. Retry, or contact support if it keeps failing."
       },
       "RELATED_RESPONSES": {
         "TITLE": "Related FAQs",

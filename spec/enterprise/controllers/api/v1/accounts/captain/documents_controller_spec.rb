@@ -581,6 +581,43 @@ RSpec.describe 'Api::V1::Accounts::Captain::Documents', type: :request do
 
         expect(response).to have_http_status(:unprocessable_entity)
       end
+
+      it 'imports a website page again when its first import failed' do
+        failed = create(:captain_document, assistant: assistant, account: account, status: :in_progress, content: nil,
+                                           sync_status: :failed, metadata: { 'website_source_id' => 1 })
+        clear_enqueued_jobs
+
+        expect do
+          post "/api/v1/accounts/#{account.id}/captain/documents/#{failed.id}/sync",
+               headers: admin.create_new_auth_token, as: :json
+        end.to have_enqueued_job(Captain::Websites::ImportPageJob).with(failed.id)
+
+        expect(response).to have_http_status(:accepted)
+        expect(failed.reload).to be_sync_syncing
+      end
+
+      context 'when only sending the page to Dify failed' do
+        include_context 'with Dify credential encryption'
+
+        before do
+          account.update!(dify_base_url: 'https://dify.example.test', dify_knowledge_api_key: 'private-key',
+                          dify_embedding_model: 'example-embedding', dify_embedding_model_provider: 'example/provider')
+        end
+
+        it 'sends the stored text to Dify again without fetching the page' do
+          failed = create(:captain_document, assistant: assistant, account: account, content: 'Stored page text')
+          failed.mark_dify_sync_failed!('dify_http_409')
+          clear_enqueued_jobs
+
+          expect do
+            post "/api/v1/accounts/#{account.id}/captain/documents/#{failed.id}/sync",
+                 headers: admin.create_new_auth_token, as: :json
+          end.to have_enqueued_job(Captain::Dify::SyncDocumentJob).with(failed.id)
+
+          expect(Captain::Documents::PerformSyncJob).not_to have_been_enqueued
+          expect(failed.reload).to have_attributes(sync_status: 'syncing', last_sync_error_code: nil)
+        end
+      end
     end
   end
 

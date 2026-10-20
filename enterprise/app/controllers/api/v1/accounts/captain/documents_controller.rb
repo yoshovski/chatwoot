@@ -38,8 +38,11 @@ class Api::V1::Accounts::Captain::DocumentsController < Api::V1::Accounts::BaseC
   end
 
   def sync
+    return retry_dify_sync if @document.dify_sync_retryable?
     return render_could_not_create_error(I18n.t('captain.documents.sync_not_supported_for_file')) unless @document.syncable?
-    return render_could_not_create_error(I18n.t('captain.documents.sync_only_available_documents')) unless @document.available?
+    unless @document.available? || @document.sync_failed?
+      return render_could_not_create_error(I18n.t('captain.documents.sync_only_available_documents'))
+    end
 
     @document.update!(
       sync_status: :syncing,
@@ -47,7 +50,12 @@ class Api::V1::Accounts::Captain::DocumentsController < Api::V1::Accounts::BaseC
       last_sync_error_code: nil,
       last_sync_attempted_at: Time.current
     )
-    Captain::Documents::PerformSyncJob.perform_later(@document)
+    # A website page whose first import failed has nothing to compare yet: import it again.
+    if @document.content.blank? && @document.metadata.to_h['website_source_id'].present?
+      Captain::Websites::ImportPageJob.perform_later(@document.id)
+    else
+      Captain::Documents::PerformSyncJob.perform_later(@document)
+    end
     head :accepted
   end
 
@@ -70,6 +78,13 @@ class Api::V1::Accounts::Captain::DocumentsController < Api::V1::Accounts::BaseC
   end
 
   private
+
+  # The page text is already stored; only sending it to Dify failed.
+  def retry_dify_sync
+    @document.update!(sync_status: :syncing, sync_step: nil, last_sync_error_code: nil, last_sync_attempted_at: Time.current)
+    Captain::Dify::SyncDocumentJob.perform_later(@document.id)
+    head :accepted
+  end
 
   def set_documents
     @documents = Current.account.captain_documents.with_attached_pdf_file.with_attached_markdown_file.includes(:assistant, :account)

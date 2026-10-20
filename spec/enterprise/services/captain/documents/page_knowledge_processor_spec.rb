@@ -27,4 +27,29 @@ RSpec.describe Captain::Documents::PageKnowledgeProcessor do
 
     expect(described_class.new(document_for('https://www.example.com/warranty')).preview(raw)).to eq(raw)
   end
+
+  context 'when a noisy page is curated by the model' do
+    let(:fragments) { (1..14).map { |index| "Menu item #{index}" } }
+    let(:facts) do
+      ['Refunds are issued within fourteen days when a subscription is cancelled before renewal.',
+       'Every plan includes email support during business hours and a status page for incidents.']
+    end
+    let(:noisy) { (fragments + ['## Billing', facts.first, facts.second]).join("\n\n") }
+    let(:chat) { instance_double(RubyLLM::Chat) }
+
+    before do
+      allow(chat).to receive_messages(with_params: chat, with_instructions: chat)
+      allow(Captain::Assistant::TieredLlmClient).to receive(:chat).and_return(chat)
+    end
+
+    it 'keeps supported sections when another section cites only a heading or an invented paragraph' do
+      sections = [{ 'title' => 'Refunds', 'paragraph_ids' => [14, 15] }, { 'title' => 'Heading only', 'paragraph_ids' => [14] },
+                  { 'title' => 'Invented', 'paragraph_ids' => [99] }, { 'title' => 'Support', 'paragraph_ids' => [16] }]
+      allow(Captain::Assistant::TieredLlmClient).to receive(:generate).and_return(Struct.new(:content).new({ 'sections' => sections }))
+
+      content = described_class.new(document_for('https://www.example.com/pricing')).perform(noisy)
+
+      expect(content).to eq("## Refunds\n\n#{facts.first}\n\n## Support\n\n#{facts.second}")
+    end
+  end
 end

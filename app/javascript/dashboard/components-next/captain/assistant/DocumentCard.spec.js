@@ -125,6 +125,19 @@ describe('DocumentCard', () => {
     expect(wrapper.find('document-sync-status-stub').exists()).toBe(false);
   });
 
+  it('offers a retry for a page whose first import failed', () => {
+    const wrapper = mountCard({
+      status: 'in_progress',
+      syncable: true,
+      syncStatus: 'failed',
+      lastSyncErrorCode: 'dify_http_409',
+    });
+
+    expect(
+      wrapper.get('document-sync-status-stub').attributes('showretry')
+    ).toBe('true');
+  });
+
   it('shows the paused state when enabled is false', () => {
     const wrapper = mountCard({ enabled: false });
 

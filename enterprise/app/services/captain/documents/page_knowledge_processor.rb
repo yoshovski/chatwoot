@@ -94,8 +94,9 @@ class Captain::Documents::PageKnowledgeProcessor
   def extract_sections(input)
     paragraphs = source_paragraphs(input)
     sections = generate_selection(paragraphs)
-    validate_sections!(sections, paragraphs)
-    sections.map { |section| section.merge('evidence' => section.fetch('paragraph_ids').map { |id| paragraphs.fetch(id) }) }
+    raise InvalidCuration unless sections.is_a?(Array) && sections.size <= 30
+
+    sections.filter_map { |section| supported_section(section, paragraphs) }
   end
 
   def source_paragraphs(input)
@@ -123,20 +124,13 @@ class Captain::Documents::PageKnowledgeProcessor
     output.fetch('sections')
   end
 
-  def validate_sections!(sections, paragraphs)
-    raise InvalidCuration unless sections.is_a?(Array) && sections.size <= 30
-    raise InvalidCuration, 'Unsupported website excerpt' unless sections.all? { |section| valid_section?(section, paragraphs) }
-  end
+  # One unsupported section (an invented ID, only headings, too little text) is dropped, not the whole page.
+  # Headings are context, never evidence.
+  def supported_section(section, paragraphs)
+    return unless section.is_a?(Hash) && valid_title?(section['title']) && valid_ids?(section['paragraph_ids'], paragraphs.size)
 
-  def valid_section?(section, paragraphs)
-    section.is_a?(Hash) && valid_title?(section['title']) && supported_selection?(section['paragraph_ids'], paragraphs)
-  end
-
-  def supported_selection?(ids, paragraphs)
-    return false unless valid_ids?(ids, paragraphs.size)
-
-    selected = ids.map { |id| paragraphs.fetch(id) }
-    selected.none? { |text| text.start_with?('#') } && selected.join("\n\n").length >= 40
+    evidence = section['paragraph_ids'].uniq.map { |id| paragraphs.fetch(id) }.reject { |text| text.start_with?('#') }
+    section.merge('evidence' => evidence) if evidence.join("\n\n").length >= 40
   end
 
   def valid_ids?(ids, size)
