@@ -181,7 +181,8 @@ const showPreview = async page => {
 </script>
 
 <template>
-  <div class="flex flex-col gap-4">
+  <!-- Only the page list and preview scroll, so Save stays visible in a short window. -->
+  <div class="flex flex-col gap-3 min-h-0 max-h-[calc(100vh-11rem)]">
     <p class="m-0 break-all text-sm text-n-slate-11">{{ source?.url }}</p>
     <p class="m-0 text-sm text-n-slate-11">
       {{ $t('CAPTAIN.WEBSITES.SELECTION_HELP') }}
@@ -234,12 +235,13 @@ const showPreview = async page => {
     <p v-if="source?.hidden_pages" class="m-0 text-xs text-n-slate-10">
       {{ $t('CAPTAIN.WEBSITES.HIDDEN_PAGES', { count: source.hidden_pages }) }}
     </p>
-    <Input
-      v-model="search"
-      type="search"
-      :placeholder="$t('CAPTAIN.WEBSITES.SEARCH')"
-    />
     <div class="flex flex-wrap items-center gap-2">
+      <Input
+        v-model="search"
+        type="search"
+        class="flex-1 min-w-48"
+        :placeholder="$t('CAPTAIN.WEBSITES.SEARCH')"
+      />
       <Button
         size="sm"
         variant="faded"
@@ -256,8 +258,10 @@ const showPreview = async page => {
         @click="clearSelection"
       />
     </div>
-    <div class="grid gap-4 md:grid-cols-2">
-      <div class="max-h-96 overflow-auto rounded-lg border border-n-weak p-3">
+    <div
+      class="grid flex-1 min-h-48 gap-4 grid-rows-[minmax(0,1fr)_minmax(0,1fr)] md:grid-cols-2 md:grid-rows-[minmax(0,1fr)]"
+    >
+      <div class="min-h-0 overflow-auto rounded-lg border border-n-weak p-3">
         <WebsitePageTree
           v-for="node in tree"
           :key="node.key"
@@ -271,7 +275,7 @@ const showPreview = async page => {
           {{ $t('CAPTAIN.WEBSITES.NO_PAGES') }}
         </p>
       </div>
-      <div class="max-h-96 overflow-auto rounded-lg border border-n-weak p-3">
+      <div class="min-h-0 overflow-auto rounded-lg border border-n-weak p-3">
         <template v-if="preview">
           <p class="break-all text-xs text-n-slate-11">{{ preview.url }}</p>
           <p
@@ -280,11 +284,13 @@ const showPreview = async page => {
           >
             {{ $t('CAPTAIN.WEBSITES.PREVIEW_LOADING') }}
           </p>
-          <p v-else-if="preview.error_code" class="text-sm text-n-ruby-11">
+          <p v-else-if="preview.error_code" class="text-sm text-n-slate-11">
             {{
-              $t(
-                `CAPTAIN.DOCUMENTS.SYNC_ERRORS.${preview.error_code.toUpperCase()}`
-              )
+              $t('CAPTAIN.WEBSITES.PREVIEW_UNAVAILABLE', {
+                reason: $t(
+                  `CAPTAIN.DOCUMENTS.SYNC_ERRORS.${preview.error_code.toUpperCase()}`
+                ),
+              })
             }}
           </p>
           <template v-else>
@@ -322,7 +328,9 @@ const showPreview = async page => {
         })
       }}
     </p>
-    <div class="flex items-center justify-between gap-3">
+    <div
+      class="flex items-center justify-between gap-3 pt-3 border-t shrink-0 border-n-weak"
+    >
       <Button
         variant="faded"
         color="slate"
