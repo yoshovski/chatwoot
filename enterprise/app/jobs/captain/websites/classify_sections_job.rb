@@ -8,7 +8,8 @@ class Captain::Websites::ClassifySectionsJob < ApplicationJob
     return unless current?(source, run)
 
     stats = begin
-      { 'sections' => Captain::Websites::SectionClassifier.new(source).perform, 'classification' => 'done' }
+      labels = Captain::Websites::SectionClassifier.new(source).perform
+      { 'sections' => labels['sections'], 'page_labels' => labels['pages'], 'classification' => 'done' }
     rescue StandardError => e
       # URL and content rules already sorted the pages; labels only refine them.
       Rails.logger.warn "[Captain][WebsiteClassification] source_id=#{source.id} error=#{e.class.name}"

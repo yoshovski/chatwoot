@@ -7,7 +7,10 @@ RSpec.describe Captain::Websites::SectionClassifier do
       assistant: assistant, url: 'https://www.example.com', status: 'ready',
       pages: [
         { 'url' => 'https://www.example.com/help/billing', 'title' => 'Billing help', 'section' => 'example.com/help', 'bucket' => 'recommended' },
+        { 'url' => 'https://www.example.com/help/login', 'title' => 'Login help', 'section' => 'example.com/help', 'bucket' => 'recommended' },
         { 'url' => 'https://blog.example.com/news', 'title' => 'Launch news', 'section' => 'blog.example.com/news', 'bucket' => 'maybe' },
+        { 'url' => 'https://www.example.com/careers', 'title' => 'Jobs', 'section' => 'example.com/careers', 'bucket' => 'recommended',
+          'words' => 300 },
         { 'url' => 'https://api.example.com/v1', 'section' => 'api.example.com/v1', 'bucket' => 'excluded' }
       ]
     )
@@ -16,7 +19,8 @@ RSpec.describe Captain::Websites::SectionClassifier do
   let(:output) do
     { 'sections' => [
       { 'id' => 0, 'label' => 'support', 'recommended' => true, 'reason' => 'Billing help articles' },
-      { 'id' => 1, 'label' => 'invented', 'recommended' => false, 'reason' => 'Unknown label' },
+      { 'id' => 1, 'label' => 'careers', 'recommended' => false, 'reason' => 'Open positions' },
+      { 'id' => 2, 'label' => 'invented', 'recommended' => false, 'reason' => 'Unknown label' },
       { 'id' => 9, 'label' => 'news', 'recommended' => false, 'reason' => 'Out of range' }
     ] }
   end
@@ -28,20 +32,23 @@ RSpec.describe Captain::Websites::SectionClassifier do
       .and_return(instance_double(RubyLLM::Message, content: output))
   end
 
-  it 'labels candidate sections and drops invalid labels' do
+  it 'labels sections, labels one-page sections page by page and drops invalid labels' do
     expect(described_class.new(source).perform).to eq(
-      'example.com/help' => { 'label' => 'support', 'recommended' => true, 'reason' => 'Billing help articles' }
+      'sections' => { 'example.com/help' => { 'label' => 'support', 'recommended' => true, 'reason' => 'Billing help articles' } },
+      'pages' => { 'https://www.example.com/careers' => { 'label' => 'careers', 'recommended' => false, 'reason' => 'Open positions' } }
     )
   end
 
-  it 'sends only non-excluded sections with the agent context' do
+  it 'sends non-excluded sections, then single pages of the start host first, with the agent context' do
     described_class.new(source).perform
 
     expect(Captain::Assistant::TieredLlmClient).to have_received(:generate) do |stage, _assistant, _chat, input|
       payload = JSON.parse(input)
       expect(stage).to eq('website_classification')
       expect(payload['agent']).to eq('name' => 'Support agent', 'description' => 'Answers subscriber questions')
-      expect(payload['sections'].pluck('section')).to eq(%w[example.com/help blog.example.com/news])
+      expect(payload['sections'].map { |item| item.values_at('kind', 'section', 'url') }).to eq(
+        [['section', 'example.com/help', nil], ['page', nil, 'https://www.example.com/careers'], ['page', nil, 'https://blog.example.com/news']]
+      )
     end
   end
 end

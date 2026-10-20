@@ -26,8 +26,14 @@ class Captain::WebsiteSource < ApplicationRecord
     )
   end
 
-  # Boilerplate block hashes are only used server-side.
-  def client_stats = discovery_stats.except('boilerplate')
+  # Boilerplate block hashes are only used server-side. A page labelled on its own is a one-page
+  # section, so the picker shows its label like any section's.
+  def client_stats
+    page_labels = discovery_stats['page_labels'] || {}
+    labelled = pages.filter_map { |page| [page['section'], page_labels[page['url']]] if page_labels.key?(page['url']) }.to_h
+    discovery_stats.except('boilerplate', 'boilerplate_sections', 'page_labels')
+                   .merge('sections' => labelled.merge(discovery_stats['sections'] || {}))
+  end
 
   private
 

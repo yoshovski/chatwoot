@@ -17,7 +17,9 @@ RSpec.describe Captain::Websites::VerifyPagesJob do
     stub_request(:get, 'https://www.example.com/robots.txt').to_return(status: 404)
     stub_request(:get, 'https://www.example.com/old-page').to_return(status: 404)
     stub_request(:get, 'https://www.example.com/account-page').to_return(status: 401)
-    stub_request(:get, 'https://www.example.com/pricing-page').to_return(status: 200, body: 'ok')
+    stub_request(:get, 'https://www.example.com/pricing-page')
+      .to_return(status: 200, body: "<html><body><main><p>#{'Plans include support and a monthly invoice. ' * 10}</p></main></body></html>",
+                 headers: { 'Content-Type' => 'text/html' })
   end
 
   it 'excludes missing and sign-in pages and marks the rest as checked' do
@@ -27,8 +29,16 @@ RSpec.describe Captain::Websites::VerifyPagesJob do
     expect(source.discovery_stats).to include('verification' => 'done', 'verified_pages' => 3)
     expect(pages['https://www.example.com/old-page']).to include('bucket' => 'excluded', 'reason' => 'not_found')
     expect(pages['https://www.example.com/account-page']).to include('bucket' => 'excluded', 'reason' => 'login')
-    expect(pages['https://www.example.com/pricing-page']).to include('bucket' => 'recommended', 'checked' => true)
+    expect(pages['https://www.example.com/pricing-page']).to include('bucket' => 'recommended', 'checked' => true, 'words' => 70)
     expect(a_request(:get, 'https://www.example.com')).not_to have_been_made
+  end
+
+  it 'only checks the status of pages beyond the reading budget, which then wait for the administrator' do
+    stub_const("#{described_class}::MAX_READ_PAGES", 0)
+
+    described_class.perform_now(source.id, 'run-1')
+
+    expect(source.reload.pages.find { |page| page['url'].end_with?('pricing-page') }).to include('bucket' => 'maybe', 'checked' => true)
   end
 
   it 'ignores an older discovery run' do

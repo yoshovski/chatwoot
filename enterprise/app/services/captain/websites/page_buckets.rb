@@ -8,6 +8,7 @@ class Captain::Websites::PageBuckets
   def initialize(source)
     @source = source
     @labels = source.discovery_stats.to_h['sections'] || {}
+    @page_labels = source.discovery_stats.to_h['page_labels'] || {}
     @start_host = URI.parse(source.url).host.delete_prefix('www.')
   end
 
@@ -26,8 +27,11 @@ class Captain::Websites::PageBuckets
 
   def exclusion(page)
     page['blocked_reason'] || Captain::Websites::PageRules.reason(page['url']) || content_reason(page) || language_reason(page) ||
-      ('not_useful' if @labels.dig(page['section'], 'label') == 'not_useful')
+      ('not_useful' if label_for(page)&.dig('label') == 'not_useful')
   end
+
+  # A page labelled on its own (a one-page section) wins over its section's label.
+  def label_for(page) = @page_labels[page['url']] || @labels[page['section']]
 
   def content_reason(page)
     page['import_issue'] || FLAGS.find { |key, _| page[key] }&.last || measured_reason(page)
@@ -63,7 +67,10 @@ class Captain::Websites::PageBuckets
   end
 
   def bucket(page)
-    label = @labels[page['section']]
+    # Only pages whose text was read can be recommended; the rest wait for the administrator.
+    return 'maybe' unless page['words']
+
+    label = label_for(page)
     return label['recommended'] ? 'recommended' : 'maybe' if label
 
     host = URI.parse(page['url']).host.delete_prefix('www.')
