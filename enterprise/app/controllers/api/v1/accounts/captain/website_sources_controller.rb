@@ -5,7 +5,7 @@ class Api::V1::Accounts::Captain::WebsiteSourcesController < Api::V1::Accounts::
 
   def index
     render json: @assistant.website_sources.order(created_at: :desc).map do |source|
-      source.as_json(only: %i[id url status selected_urls discovery_stats error_code discovered_at])
+      source.as_json(only: %i[id url status selected_urls error_code discovered_at]).merge('discovery_stats' => source.client_stats)
     end
   end
 

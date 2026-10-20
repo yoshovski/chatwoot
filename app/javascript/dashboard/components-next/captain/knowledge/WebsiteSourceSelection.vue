@@ -59,9 +59,11 @@ const discovering = computed(
     ['pending', 'discovering'].includes(source.value?.status) &&
     !source.value?.recoverable
 );
+// Sorting sections and checking unopened pages both run after discovery.
 const classifying = computed(
   () =>
-    source.value?.status === 'ready' && stats.value.classification === 'pending'
+    source.value?.status === 'ready' &&
+    [stats.value.classification, stats.value.verification].includes('pending')
 );
 const settled = computed(
   () => source.value?.status === 'ready' && !classifying.value

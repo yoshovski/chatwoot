@@ -2,17 +2,17 @@ class Captain::Knowledge::GenerateBriefJob < MutexApplicationJob
   queue_as :low
   discard_on ActiveRecord::RecordNotFound
 
-  def perform(assistant_id, document_ids = nil)
+  # document_ids nil refreshes the published sources; pick_sources lets the model choose them.
+  def perform(assistant_id, document_ids = nil, pick_sources: false)
     assistant = Captain::Assistant.find(assistant_id)
     brief = assistant.knowledge_brief
     return unless brief
 
     with_lock("captain_knowledge_brief:#{assistant_id}", 20.minutes) do
       brief.reload
-      return if document_ids.nil? && skip_refresh?(assistant, brief)
+      return if document_ids.nil? && !pick_sources && skip_refresh?(assistant, brief)
 
-      ids = document_ids || brief.published['document_ids']
-      Captain::Knowledge::BriefGenerator.new(brief).perform(ids)
+      Captain::Knowledge::BriefGenerator.new(brief).perform(source_ids(brief, document_ids, pick_sources))
     end
   rescue LockAcquisitionError
     nil
@@ -22,6 +22,12 @@ class Captain::Knowledge::GenerateBriefJob < MutexApplicationJob
   end
 
   private
+
+  def source_ids(brief, document_ids, pick_sources)
+    return Captain::Knowledge::BriefSourcePicker.new(brief).perform if pick_sources
+
+    document_ids || brief.published['document_ids']
+  end
 
   def skip_refresh?(assistant, brief)
     return true unless assistant.reload.config['knowledge_brief_enabled'] == true

@@ -19,14 +19,20 @@ class Captain::Websites::PoliteFetcher
 
   # Returns [body, content_type] for a 200 response, nil otherwise.
   def fetch(url, delay)
-    origin = URI.join(url, '/').to_s.delete_suffix('/')
-    wait = delay - (Process.clock_gettime(Process::CLOCK_MONOTONIC) - @last_requests.fetch(origin, 0))
-    sleep(wait) if wait.positive?
-    return unless before_deadline?
+    pace(url, delay) do
+      status, text, content_type = read(url)
+      [text, content_type] if status == 200
+    end
+  end
 
-    status, text, content_type = read(url)
-    @last_requests[origin] = Process.clock_gettime(Process::CLOCK_MONOTONIC)
-    [text, content_type] if status == 200
+  # The final HTTP status of a page without reading its body; nil when the request failed.
+  def probe(url, delay)
+    pace(url, delay) do
+      SafeFetch.probe(url, read_timeout: 10, headers: { 'User-Agent' => "#{Captain::Websites::RobotsPolicy::AGENT}/1.0" })&.status
+    rescue SafeFetch::Error
+      @errors += 1
+      nil
+    end
   end
 
   # Returns [status, body, content_type]; status is nil when the request itself failed.
@@ -45,6 +51,18 @@ class Captain::Websites::PoliteFetcher
   end
 
   private
+
+  # One request per origin at a time, at least `delay` seconds apart.
+  def pace(url, delay)
+    origin = URI.join(url, '/').to_s.delete_suffix('/')
+    wait = delay - (Process.clock_gettime(Process::CLOCK_MONOTONIC) - @last_requests.fetch(origin, 0))
+    sleep(wait) if wait.positive?
+    return unless before_deadline?
+
+    result = yield
+    @last_requests[origin] = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+    result
+  end
 
   def decompress(body)
     return body unless body.start_with?("\x1F\x8B".b)

@@ -18,12 +18,16 @@ class Captain::WebsiteSource < ApplicationRecord
 
   def client_payload
     documents = assistant.documents.where(external_link: pages.pluck('url')).index_by(&:external_link)
-    as_json(only: %i[id url include_subdomains status selected_urls discovery_stats error_code discovered_at]).merge(
+    as_json(only: %i[id url include_subdomains status selected_urls error_code discovered_at]).merge(
+      'discovery_stats' => client_stats,
       'recoverable' => status.in?(%w[pending discovering]) && updated_at < 2.hours.ago,
       'documents_available' => account.usage_limits[:captain][:documents][:current_available],
       'pages' => pages.map { |page| page_payload(page, documents[page['url']]) }
     )
   end
+
+  # Boilerplate block hashes are only used server-side.
+  def client_stats = discovery_stats.except('boilerplate')
 
   private
 

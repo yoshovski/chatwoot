@@ -9,9 +9,12 @@ RSpec.describe Captain::Dify::DocumentSync do
   let(:assistant) do
     create(:captain_assistant, account: account, config: { dify_faq_dataset_id: 'faq-id', dify_docs_dataset_id: 'docs-id' })
   end
-  let(:document) { create(:captain_document, assistant: assistant, content: 'First version') }
+  let(:document) { create(:captain_document, assistant: assistant, content: 'Returns are accepted within thirty days of delivery.') }
   let(:fetcher) { instance_double(Captain::Documents::SinglePageFetcher) }
-  let(:result) { Captain::Documents::SinglePageFetcher::Result.new(success: true, title: 'Synthetic', content: 'Second version') }
+  let(:result) do
+    Captain::Documents::SinglePageFetcher::Result.new(success: true, title: 'Synthetic',
+                                                      content: 'Returns are accepted within sixty days of delivery.')
+  end
 
   before do
     allow(Captain::Documents::SinglePageFetcher).to receive(:new).with(document.external_link).and_return(fetcher)
@@ -25,7 +28,7 @@ RSpec.describe Captain::Dify::DocumentSync do
     expect { Captain::Documents::SyncService.new(document).perform }
       .to have_enqueued_job(Captain::Dify::SyncDocumentJob).with(document.id)
 
-    expect(document.reload.content).to eq('Second version')
+    expect(document.reload.content).to eq('Returns are accepted within sixty days of delivery.')
     expect(document).to be_in_progress
     expect(document).to be_sync_syncing
     expect(document.dify_document_id).to eq('doc-id')

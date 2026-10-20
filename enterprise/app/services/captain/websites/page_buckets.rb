@@ -2,6 +2,8 @@
 # Section labels from Captain::Websites::SectionClassifier refine the URL and content rules.
 class Captain::Websites::PageBuckets
   THIN_WORDS = 60
+  # Page flags from discovery and verification, and the exclusion reason each one gives.
+  FLAGS = { 'missing' => 'not_found', 'not_html' => 'not_html', 'noindex' => 'noindex', 'login' => 'login', 'listing' => 'listing' }.freeze
 
   def initialize(source)
     @source = source
@@ -28,12 +30,13 @@ class Captain::Websites::PageBuckets
   end
 
   def content_reason(page)
-    flag = %w[not_html noindex login].find { |key| page[key] }
-    return flag if flag
-    return 'duplicate' if duplicate?(page)
-    return 'listing' if page['listing']
+    page['import_issue'] || FLAGS.find { |key, _| page[key] }&.last || measured_reason(page)
+  end
 
-    'thin' if page['words'] && page['words'] < THIN_WORDS
+  def measured_reason(page)
+    return 'duplicate' if duplicate?(page)
+
+    'thin' if page.fetch('words', THIN_WORDS) < THIN_WORDS
   end
 
   # A canonical link to another discovered page, or the same text as a shorter URL.

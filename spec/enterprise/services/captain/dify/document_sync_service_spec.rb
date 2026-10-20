@@ -27,7 +27,9 @@ RSpec.describe Captain::Dify::DocumentSyncService do
 
     expect(document.reload.dify_document_id).to eq('doc-id')
     expect(document).to be_in_progress
-    expect(client).to have_received(:create_by_text).with(hash_including(dataset_id: 'docs-id', doc_form: 'hierarchical_model'))
+    expect(client).to have_received(:create_by_text).with(
+      hash_including(dataset_id: 'docs-id', doc_form: 'hierarchical_model', process_rule: described_class::PACKED_PROCESS_RULE)
+    )
   end
 
   it 'sends the section-aware text instead of the raw content' do

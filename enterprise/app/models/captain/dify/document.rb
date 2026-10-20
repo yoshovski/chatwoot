@@ -11,12 +11,19 @@ module Captain::Dify::Document
   def dify_source_fingerprint
     return "pdf-v2:#{pdf_file.blob.checksum}" if pdf_document?
 
-    version = assistant.config['knowledge_processing_version'] == 2 ? 'sectioned-v5' : 'sectioned-v4'
+    version = { 2 => 'sectioned-v5', 3 => 'packed-v1' }.fetch(assistant.knowledge_processing_version, 'sectioned-v4')
     "#{version}:#{Digest::SHA256.hexdigest(dify_sectioned_content)}"
   end
 
   def dify_sectioned_content
-    Captain::Knowledge::SectionedText.new(content, title: name, infer_plain_titles: assistant.config['knowledge_processing_version'] != 2).to_s
+    return Captain::Knowledge::ChunkPacker.new(content, title: name).to_s if packed_chunks?
+
+    Captain::Knowledge::SectionedText.new(content, title: name, infer_plain_titles: assistant.knowledge_processing_version < 2).to_s
+  end
+
+  # Version 3 text documents carry their own child boundaries; PDFs keep Dify's token splitting.
+  def packed_chunks?
+    !pdf_document? && assistant.knowledge_processing_version >= 3
   end
 
   def knowledge_state
