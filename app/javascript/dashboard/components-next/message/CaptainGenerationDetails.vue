@@ -159,6 +159,7 @@ const sourceGroups = computed(() => {
       title: main?.title || title,
       excerpt: main?.excerpt,
       link: main ? sourceLink(main) : null,
+      inferred: [main, ...faqs].some(source => source?.usedBy === 'overlap'),
     };
   });
 });
@@ -441,6 +442,15 @@ const onPopoverHide = () => {
                     class="flex-1 min-w-0 text-sm font-medium break-words text-n-slate-12"
                   >
                     {{ group.title }}
+                  </span>
+                  <span
+                    v-if="group.inferred"
+                    v-tooltip="
+                      t('CONVERSATION.CAPTAIN_GENERATION.INFERRED_HINT')
+                    "
+                    class="flex-shrink-0 text-xs text-n-slate-11"
+                  >
+                    {{ t('CONVERSATION.CAPTAIN_GENERATION.INFERRED') }}
                   </span>
                   <a
                     v-if="group.link"
