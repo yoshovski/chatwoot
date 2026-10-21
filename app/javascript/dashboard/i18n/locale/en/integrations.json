@@ -779,6 +779,11 @@
           "COMPLETED": "Completed",
           "FAILED": "Failed"
         }
+      },
+      "STARTER_QUESTIONS": {
+        "EXAMPLE_1": "What do you offer?",
+        "EXAMPLE_2": "How can I contact your team?",
+        "EXAMPLE_3": "Where can I find your pricing?"
       }
     },
     "PAYWALL": {
@@ -1152,7 +1157,8 @@
             "FRIENDLY": "Great question! Yes, we ship to Germany 🙂 Delivery usually takes 3–5 days.",
             "PROFESSIONAL": "Yes, we ship to Germany. Delivery takes 3–5 business days.",
             "SHORT": "Yes, in 3–5 days."
-          }
+          },
+          "HANDOFF_QUESTION": "I'd like to talk to a person, please."
         }
       },
       "OPTIONS": {
@@ -1183,7 +1189,12 @@
             "ADD": "Add all",
             "ADD_SINGLE": "Add this",
             "SAVE": "Add and save (↵)",
-            "PLACEHOLDER": "Type in another guardrail..."
+            "PLACEHOLDER": "Type in another guardrail...",
+            "EXAMPLES": {
+              "EXAMPLE_1": "Block queries that share or request sensitive personal information (e.g. phone numbers, passwords).",
+              "EXAMPLE_2": "Reject queries that include offensive, discriminatory, or threatening language.",
+              "EXAMPLE_3": "Deflect when the assistant is asked for legal or medical diagnosis or treatment."
+            }
           },
           "NEW": {
             "TITLE": "Add a guardrail",
@@ -1228,7 +1239,12 @@
             "ADD": "Add all",
             "ADD_SINGLE": "Add this",
             "SAVE": "Add and save (↵)",
-            "PLACEHOLDER": "Type in another response guideline..."
+            "PLACEHOLDER": "Type in another response guideline...",
+            "EXAMPLES": {
+              "EXAMPLE_1": "Keep replies concise: use short paragraphs and offer more detail only when the customer asks.",
+              "EXAMPLE_2": "Reply in the customer’s language whenever possible.",
+              "EXAMPLE_3": "Maintain an empathetic and helpful tone throughout the conversation."
+            }
           },
           "NEW": {
             "TITLE": "Add a response guideline",

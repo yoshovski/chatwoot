@@ -7,6 +7,16 @@ class Api::V1::Accounts::Captain::KnowledgeBriefsController < Api::V1::Accounts:
     render json: brief.client_payload
   end
 
+  # Previews and starter examples written for this business; nil until the first generation finishes.
+  def examples
+    brief = @assistant.knowledge_brief || @assistant.create_knowledge_brief!(account: Current.account)
+    if brief.examples_due?
+      brief.update!(examples: brief.examples.merge('requested_at' => Time.current.iso8601))
+      Captain::Knowledge::GenerateExamplesJob.perform_later(@assistant.id)
+    end
+    render json: { examples: brief.examples['data'], generated_at: brief.examples['generated_at'] }
+  end
+
   # Without document_ids the job picks the sources itself. Chosen sources that are still indexing are left out.
   def generate
     ids = params[:document_ids]

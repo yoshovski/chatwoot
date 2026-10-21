@@ -1,6 +1,7 @@
 <script setup>
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { useBusinessExamples } from 'dashboard/components-next/captain/assistant/useBusinessExamples';
 import AssistantChatPreview from './AssistantChatPreview.vue';
 
 const props = defineProps({
@@ -15,28 +16,15 @@ const props = defineProps({
 });
 
 const { t } = useI18n();
-
-const BUTTON_KEYS = [
-  'BUTTON_1',
-  'BUTTON_2',
-  'BUTTON_3',
-  'BUTTON_4',
-  'BUTTON_5',
-];
+const examples = useBusinessExamples(computed(() => props.assistant.id));
 
 const config = computed(() => props.assistant.config || {});
-const tone = computed(() =>
-  ['friendly', 'professional', 'short'].includes(config.value.tone)
-    ? config.value.tone
-    : 'friendly'
-);
-const reply = computed(() =>
-  t(`CAPTAIN.ASSISTANTS.SETTINGS.PREVIEW.REPLY.${tone.value.toUpperCase()}`)
-);
+const reply = computed(() => examples.reply(config.value.tone));
 const quickReplies = computed(() =>
   config.value.suggested_replies
-    ? BUTTON_KEYS.slice(0, config.value.max_suggested_replies ?? 3).map(key =>
-        t(`CAPTAIN.ASSISTANTS.SETTINGS.BEHAVIOR.CARDS.QUICK_REPLIES.${key}`)
+    ? examples.quickReplies.value.slice(
+        0,
+        config.value.max_suggested_replies ?? 3
       )
     : []
 );
@@ -51,7 +39,7 @@ const showProductCard = computed(
     :avatar-url="assistant.avatar_url"
   >
     <p class="preview-bubble preview-bubble--customer">
-      {{ t('CAPTAIN.ASSISTANTS.SETTINGS.PREVIEW.QUESTION') }}
+      {{ examples.question.value }}
     </p>
     <div class="flex flex-col self-start gap-2 max-w-[88%]">
       <p class="preview-bubble preview-bubble--agent !max-w-full">
