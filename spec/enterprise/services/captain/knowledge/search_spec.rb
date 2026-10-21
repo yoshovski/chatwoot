@@ -63,6 +63,7 @@ RSpec.describe Captain::Knowledge::Search do
     end
 
     before do
+      allow(Shopify::FeatureGate).to receive(:enabled?).with(account: account).and_return(true)
       stub_const('AiAgents::KnowledgeClient', Class.new do
         def initialize(account:, actor:); end
       end)
@@ -82,6 +83,11 @@ RSpec.describe Captain::Knowledge::Search do
 
       before do
         allow(hooks_relation).to receive(:find_by).with(app_id: 'shopify').and_return(hook)
+      end
+
+      it 'omits commerce knowledge when Shopify is disabled for the account' do
+        allow(Shopify::FeatureGate).to receive(:enabled?).with(account: account).and_return(false)
+        expect(search_service.send(:shopify_catalog_dataset)).to be_nil
       end
 
       it 'includes catalog dataset in search request' do

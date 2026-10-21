@@ -73,7 +73,7 @@ const assistantRoutes = [
     path: frontendURL('accounts/:accountId/captain/:assistantId/products'),
     component: ProductsIndex,
     name: 'captain_assistants_products_index',
-    meta,
+    meta: { ...meta, featureFlag: FEATURE_FLAGS.SHOPIFY },
   },
   {
     path: frontendURL('accounts/:accountId/captain/:assistantId/tools'),

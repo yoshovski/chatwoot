@@ -403,6 +403,8 @@ class Captain::Assistant < ApplicationRecord
   end
 
   def shopify_tools_hook
+    return unless Shopify::FeatureGate.enabled?(account: account)
+
     hook = account.hooks.find_by(app_id: 'shopify')
     hook if hook&.shopify_connected? && hook.shopify_tool_key.present?
   end

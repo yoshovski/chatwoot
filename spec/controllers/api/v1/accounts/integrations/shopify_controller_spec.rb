@@ -15,6 +15,25 @@ RSpec.describe 'Shopify Integration API', type: :request do
   let(:unauthorized_agent) { create(:user, account: account, role: :agent) }
   let(:contact) { create(:contact, account: account, email: 'test@example.com', phone_number: '+1234567890') }
 
+  before do
+    allow(Shopify::FeatureGate).to receive(:globally_enabled?).and_return(true)
+    account.enable_features!('shopify_integration')
+  end
+
+  describe 'workspace availability' do
+    it 'rejects reads and connection requests when disabled for the authenticated account' do
+      account.disable_features!('shopify_integration')
+      headers = agent.create_new_auth_token
+
+      get "/api/v1/accounts/#{account.id}/integrations/shopify", headers: headers, as: :json
+      expect(response).to have_http_status(:not_found)
+      post "/api/v1/accounts/#{account.id}/integrations/shopify/request_connection",
+           params: { shop_domain: 'example.myshopify.com' }, headers: headers, as: :json
+      expect(response).to have_http_status(:not_found)
+      expect(account.hooks.where(app_id: 'shopify')).to be_empty
+    end
+  end
+
   describe 'POST /api/v1/accounts/:account_id/integrations/shopify/auth' do
     let(:shop_domain) { 'test-store.myshopify.com' }
 

@@ -72,10 +72,16 @@ class Api::V1::Accounts::Captain::DocumentsController < Api::V1::Accounts::BaseC
   def filtered_documents
     documents = @documents
     documents = documents.where(assistant_id: permitted_params[:assistant_id]) if permitted_params[:assistant_id].present?
+    documents = documents.merge(website_documents) if permitted_params[:website].present?
     documents = documents.merge(section_documents) if permitted_params[:section].present?
     documents = apply_source_filter(documents, permitted_params[:source])
     documents = apply_filter(documents, permitted_params[:filter])
     apply_search(documents, permitted_params[:search_key])
+  end
+
+  def website_documents
+    assistant = Current.account.captain_assistants.find(permitted_params[:assistant_id])
+    Captain::Documents::Sections.new(assistant).website_documents(permitted_params[:website])
   end
 
   def section_documents
@@ -102,7 +108,7 @@ class Api::V1::Accounts::Captain::DocumentsController < Api::V1::Accounts::BaseC
   end
 
   def permitted_params
-    params.permit(:assistant_id, :page, :id, :account_id, :filter, :source, :sort, :search_key, :section)
+    params.permit(:assistant_id, :page, :id, :account_id, :filter, :source, :sort, :search_key, :section, :website)
   end
 
   def drilldown_params

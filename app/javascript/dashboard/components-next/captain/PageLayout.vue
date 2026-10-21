@@ -1,18 +1,11 @@
 <script setup>
-import { ref, computed } from 'vue';
-import { OnClickOutside } from '@vueuse/components';
-import { useRoute } from 'vue-router';
-import { useI18n } from 'vue-i18n';
-import { useMapGetter } from 'dashboard/composables/store.js';
+import { computed } from 'vue';
 import { usePolicy } from 'dashboard/composables/usePolicy';
 import Button from 'dashboard/components-next/button/Button.vue';
 import BackButton from 'dashboard/components/widgets/BackButton.vue';
 import PaginationFooter from 'dashboard/components-next/pagination/PaginationFooter.vue';
 import Spinner from 'dashboard/components-next/spinner/Spinner.vue';
 import Policy from 'dashboard/components/policy.vue';
-import AssistantSwitcher from 'dashboard/components-next/captain/pageComponents/switcher/AssistantSwitcher.vue';
-import AssistantBrandChip from 'dashboard/components-next/captain/assistant/AssistantBrandChip.vue';
-import CreateAssistantDialog from 'dashboard/components-next/captain/pageComponents/assistant/CreateAssistantDialog.vue';
 
 const props = defineProps({
   currentPage: {
@@ -63,10 +56,6 @@ const props = defineProps({
     type: Boolean,
     default: true,
   },
-  showAssistantSwitcher: {
-    type: Boolean,
-    default: true,
-  },
   containerClass: {
     type: String,
     default: 'max-w-[71rem]',
@@ -75,27 +64,7 @@ const props = defineProps({
 
 const emit = defineEmits(['click', 'close', 'update:currentPage']);
 
-const { t } = useI18n();
-
-const route = useRoute();
 const { shouldShowPaywall } = usePolicy();
-
-const showAssistantSwitcherDropdown = ref(false);
-const createAssistantDialogRef = ref(null);
-
-const assistants = useMapGetter('captainAssistants/getRecords');
-const uiFlags = useMapGetter('captainAssistants/getUIFlags');
-
-const currentAssistantId = computed(() => route.params.assistantId);
-const isFetchingAssistants = computed(() => uiFlags.value?.fetchingList);
-
-const activeAssistantName = computed(() => {
-  return (
-    assistants.value?.find(
-      assistant => assistant.id === Number(currentAssistantId.value)
-    )?.name || t('CAPTAIN.ASSISTANT_SWITCHER.NEW_ASSISTANT')
-  );
-});
 
 const showPaywall = computed(() => {
   return shouldShowPaywall(props.featureFlag);
@@ -108,19 +77,12 @@ const handleButtonClick = () => {
 const handlePageChange = event => {
   emit('update:currentPage', event);
 };
-
-const toggleAssistantSwitcher = () => {
-  showAssistantSwitcherDropdown.value = !showAssistantSwitcherDropdown.value;
-};
-
-const handleCreateAssistant = () => {
-  showAssistantSwitcherDropdown.value = false;
-  createAssistantDialogRef.value.dialogRef.open();
-};
 </script>
 
 <template>
-  <section class="flex flex-col w-full h-full overflow-hidden bg-n-surface-1">
+  <section
+    class="flex flex-col w-full h-full overflow-hidden bg-n-surface-1 md:rounded-2xl md:border md:border-n-weak"
+  >
     <!-- Above positioned content of the page (tab bars use z-10), so header dropdowns open over it. -->
     <header class="sticky top-0 z-20 px-6">
       <div class="w-full mx-auto" :class="containerClass">
@@ -129,56 +91,13 @@ const handleCreateAssistant = () => {
         >
           <div class="flex gap-3 items-center">
             <BackButton v-if="backUrl" :back-url="backUrl" />
-            <div
-              v-if="showAssistantSwitcher && !showPaywall"
-              class="flex items-center gap-2"
-            >
-              <div class="flex items-center gap-2">
-                <span
-                  v-if="!isFetchingAssistants"
-                  class="text-xl font-medium truncate text-n-slate-12"
-                >
-                  {{ activeAssistantName }}
-                </span>
-                <AssistantBrandChip v-if="!isFetchingAssistants" />
-                <div class="relative group">
-                  <OnClickOutside
-                    @trigger="showAssistantSwitcherDropdown = false"
-                  >
-                    <Button
-                      icon="i-lucide-chevron-down"
-                      :variant="
-                        showAssistantSwitcherDropdown ? 'faded' : 'ghost'
-                      "
-                      color="slate"
-                      size="xs"
-                      :disabled="isFetchingAssistants"
-                      :is-loading="isFetchingAssistants"
-                      class="rounded-md group-hover:bg-n-slate-3 hover:bg-n-slate-3 [&>span]:size-4"
-                      @click="toggleAssistantSwitcher"
-                    />
-
-                    <AssistantSwitcher
-                      v-if="showAssistantSwitcherDropdown"
-                      class="absolute ltr:left-0 rtl:right-0 top-9"
-                      @close="showAssistantSwitcherDropdown = false"
-                      @create-assistant="handleCreateAssistant"
-                    />
-                  </OnClickOutside>
-                </div>
-              </div>
-            </div>
             <div class="flex items-center gap-4">
-              <div
-                v-if="showAssistantSwitcher && !showPaywall && headerTitle"
-                class="w-0.5 h-4 rounded-2xl bg-n-weak"
-              />
-              <span
+              <h1
                 v-if="headerTitle"
                 class="text-xl font-medium text-n-slate-12"
               >
                 {{ headerTitle }}
-              </span>
+              </h1>
               <div
                 v-if="!isEmpty && showKnowMore"
                 class="flex items-center gap-2"
@@ -241,6 +160,5 @@ const handleCreateAssistant = () => {
         @update:current-page="handlePageChange"
       />
     </footer>
-    <CreateAssistantDialog ref="createAssistantDialogRef" type="create" />
   </section>
 </template>

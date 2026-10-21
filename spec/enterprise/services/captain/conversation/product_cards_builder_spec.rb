@@ -99,6 +99,7 @@ RSpec.describe Captain::Conversation::ProductCardsBuilder do
   end
 
   before do
+    allow(Shopify::FeatureGate).to receive(:enabled?).and_return(true)
     hook
     allow(ShopifyAgentTools::Client).to receive(:new).and_return(sat_client)
     allow(sat_client).to receive(:get_product).with(handle: 'agras-t40').and_return(t40_product)

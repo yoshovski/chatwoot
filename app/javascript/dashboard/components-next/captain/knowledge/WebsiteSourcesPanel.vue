@@ -1,14 +1,24 @@
 <script setup>
-import { nextTick, ref, watch } from 'vue';
+import { computed, nextTick, ref, watch } from 'vue';
 import { useAbortableRequest } from 'dashboard/composables/useAbortableRequest';
 import api from 'dashboard/api/captain/knowledgeSources';
 import Dialog from 'dashboard/components-next/dialog/Dialog.vue';
 import Button from 'dashboard/components-next/button/Button.vue';
 import WebsiteSourceSelection from './WebsiteSourceSelection.vue';
 
-const props = defineProps({ assistantId: { type: Number, required: true } });
+const props = defineProps({
+  assistantId: { type: Number, required: true },
+  activeWebsite: { type: String, default: null },
+});
 const emit = defineEmits(['saved']);
 const sources = ref([]);
+const visibleSources = computed(() =>
+  sources.value.filter(
+    source =>
+      !props.activeWebsite ||
+      new URL(source.url).hostname.replace(/^www\./, '') === props.activeWebsite
+  )
+);
 const selectedSource = ref(null);
 const dialog = ref(null);
 const request = useAbortableRequest();
@@ -38,14 +48,14 @@ defineExpose({ load });
 
 <template>
   <section
-    v-if="sources.length"
+    v-if="visibleSources.length"
     class="mb-4 rounded-xl border border-n-weak p-4"
   >
     <h3 class="mb-3 text-sm font-medium text-n-slate-12">
       {{ $t('CAPTAIN.WEBSITES.TITLE') }}
     </h3>
     <div
-      v-for="source in sources"
+      v-for="source in visibleSources"
       :key="source.id"
       class="flex items-center justify-between gap-3 py-2"
     >

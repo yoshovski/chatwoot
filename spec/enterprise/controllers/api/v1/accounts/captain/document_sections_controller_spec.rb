@@ -34,6 +34,25 @@ RSpec.describe 'Api::V1::Accounts::Captain::DocumentSections', type: :request do
     )
   end
 
+  it 'filters pages by exact website and intersects the folder filter' do
+    get "/api/v1/accounts/#{account.id}/captain/documents",
+        params: { assistant_id: assistant.id, website: 'example.com', section: 'example.com/resources' },
+        headers: agent.create_new_auth_token, as: :json
+
+    expect(response).to have_http_status(:ok)
+    expect(json_response['payload'].pluck('id')).to match_array(resources.map(&:id))
+    expect(json_response['meta']['total_count']).to eq(2)
+  end
+
+  it 'does not accept another account assistant when filtering by website' do
+    foreign_assistant = create(:captain_assistant)
+    get "/api/v1/accounts/#{account.id}/captain/documents",
+        params: { assistant_id: foreign_assistant.id, website: 'example.com' },
+        headers: agent.create_new_auth_token, as: :json
+
+    expect(response).to have_http_status(:not_found)
+  end
+
   it 'pauses a whole section and removes its pages from the website selection' do
     post url, params: { sections: ['example.com/resources'], section_action: 'pause' }, headers: admin.create_new_auth_token, as: :json
 

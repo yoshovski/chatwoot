@@ -40,7 +40,7 @@ class SuperAdmin::AccountsController < SuperAdmin::ApplicationController
     permitted_params.extract!(:suspension_category, :suspension_reason)
     permitted_params[:limits] = permitted_params[:limits].to_h.compact if permitted_params.key?(:limits)
     permitted_params[:captain_models] = permitted_params[:captain_models].to_h.compact_blank.presence if permitted_params.key?(:captain_models)
-    permitted_params[:selected_feature_flags] = params[:enabled_features].keys.map(&:to_sym) if params[:enabled_features].present?
+    permitted_params[:selected_feature_flags] = submitted_feature_flags if params[:enabled_features].present?
     permitted_params
   end
 
@@ -94,6 +94,13 @@ class SuperAdmin::AccountsController < SuperAdmin::ApplicationController
   end
 
   private
+
+  def submitted_feature_flags
+    submitted = params[:enabled_features]
+    existing = action_name == 'update' ? requested_resource.selected_feature_flags : []
+    enabled = submitted.keys.select { |key| ActiveModel::Type::Boolean.new.cast(submitted[key]) }.map(&:to_sym)
+    (existing - submitted.keys.map(&:to_sym)) | enabled
+  end
 
   def validate_suspension_metadata
     return unless suspension_metadata_required?

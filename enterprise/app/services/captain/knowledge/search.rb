@@ -116,6 +116,8 @@ class Captain::Knowledge::Search
   end
 
   def shopify_catalog_dataset
+    return unless Shopify::FeatureGate.enabled?(account: @account)
+
     hook = @account.hooks.find_by(app_id: 'shopify')
     return unless hook&.shopify_connected? && hook.shopify_catalog_sync_enabled? && hook.shopify_catalog_dataset_id.present?
 

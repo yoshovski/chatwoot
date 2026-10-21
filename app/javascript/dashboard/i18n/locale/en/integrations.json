@@ -1654,8 +1654,8 @@
       "STATUS": {
         "PAUSED": "Paused"
       },
-      "PAUSE": "Pause source",
-      "RESUME": "Resume source",
+      "PAUSE": "Disable for AI",
+      "RESUME": "Enable for AI",
       "TOGGLE_ERROR": "Could not update source status. Please try again.",
       "GENERATE_FAQS": {
         "SUCCESS_MESSAGE": "FAQs are being generated",

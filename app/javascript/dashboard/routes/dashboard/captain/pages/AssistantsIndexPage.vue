@@ -52,16 +52,15 @@ const routeToLastActiveAssistant = () => {
   }
 
   const { navigationPath } = route.params;
-  const isAValidRoute = [
-    'captain_assistants_overview_index', // Overview page
-    'captain_assistants_responses_index', // Faq page
-    'captain_assistants_documents_index', // Document page
-    'captain_assistants_scenarios_index', // Scenario page
-    'captain_assistants_playground_index', // Playground page
-    'captain_assistants_inboxes_index', // Inboxes page
-    'captain_tools_index', // Tools page
-    'captain_assistants_settings_index', // Settings page
-  ].includes(navigationPath);
+  const isAValidRoute = router
+    .getRoutes()
+    .some(
+      candidate =>
+        candidate.name === navigationPath &&
+        String(candidate.name).startsWith('captain_') &&
+        (candidate.path.includes(':assistantId') ||
+          candidate.name === 'captain_tools_index')
+    );
 
   const navigateTo = isAValidRoute
     ? navigationPath

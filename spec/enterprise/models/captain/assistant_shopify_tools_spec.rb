@@ -8,9 +8,19 @@ RSpec.describe Captain::Assistant do
   let(:agent_tool_classes) { assistant.agent_tools.map(&:class) }
 
   before do
+    allow(Shopify::FeatureGate).to receive(:globally_enabled?).and_return(true)
+    account.enable_features!('shopify_integration')
     hook = build(:integrations_hook, :shopify, account: account, settings: settings)
     hook.shopify_tool_key = 'sat_key_123'
     hook.save!
+  end
+
+  context 'when Shopify is disabled for the account' do
+    it 'does not expose commerce tools even when a store is connected' do
+      account.disable_features!('shopify_integration')
+      expect(assistant.available_tool_ids).not_to include(*catalog_tool_ids, 'track_order')
+      expect(assistant.commerce_enabled?).to be(false)
+    end
   end
 
   context 'when the store is connected and the catalog is synced' do

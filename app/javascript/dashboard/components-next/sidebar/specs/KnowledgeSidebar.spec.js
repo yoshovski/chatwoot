@@ -99,6 +99,14 @@ describe('Sidebar Knowledge Navigation', () => {
       child => child.name === 'Knowledge'
     );
     expect(knowledgeItem).toBeDefined();
+    const actions = captainItem.children.find(
+      child => child.name === 'Actions'
+    );
+    expect(actions.children.find(child => child.name === 'Tools').to).toEqual({
+      name: 'captain_assistants_index',
+      params: { navigationPath: 'captain_tools_index' },
+      query: undefined,
+    });
 
     const expectedActiveRoutes = [
       'captain_assistants_documents_index',

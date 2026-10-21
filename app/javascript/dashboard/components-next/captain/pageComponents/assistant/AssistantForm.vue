@@ -41,6 +41,8 @@ const initialState = {
 
 const state = reactive({
   ...initialState,
+  productName:
+    props.mode === 'create' ? formState.currentAccount.value?.name || '' : '',
   name:
     props.mode === 'create' && formState.currentAccount.value?.name
       ? t('CAPTAIN.ASSISTANTS.FORM.NAME.DEFAULT', {
@@ -146,32 +148,40 @@ watch(
       :message-type="formErrors.productName ? 'error' : 'info'"
     />
 
-    <fieldset class="flex flex-col gap-2.5">
-      <legend class="mb-3 text-sm font-medium text-n-slate-12">
-        {{ t('CAPTAIN.ASSISTANTS.FORM.FEATURES.TITLE') }}
-      </legend>
+    <details
+      :open="mode === 'edit'"
+      class="rounded-lg border border-n-weak p-3"
+    >
+      <summary class="cursor-pointer text-sm font-medium text-n-slate-12">
+        {{ t('PLATFORM_NAV.ADVANCED_OPTIONS') }}
+      </summary>
+      <fieldset class="flex flex-col gap-2.5">
+        <legend class="mb-3 text-sm font-medium text-n-slate-12">
+          {{ t('CAPTAIN.ASSISTANTS.FORM.FEATURES.TITLE') }}
+        </legend>
 
-      <label class="flex items-center gap-2">
-        <input v-model="state.featureFaq" type="checkbox" />
-        <span class="text-sm font-medium text-n-slate-12">
-          {{ t('CAPTAIN.ASSISTANTS.FORM.FEATURES.ALLOW_CONVERSATION_FAQS') }}
-        </span>
-      </label>
+        <label class="flex items-center gap-2">
+          <input v-model="state.featureFaq" type="checkbox" />
+          <span class="text-sm font-medium text-n-slate-12">
+            {{ t('CAPTAIN.ASSISTANTS.FORM.FEATURES.ALLOW_CONVERSATION_FAQS') }}
+          </span>
+        </label>
 
-      <label class="flex items-center gap-2">
-        <input v-model="state.featureMemory" type="checkbox" />
-        <span class="text-sm font-medium text-n-slate-12">
-          {{ t('CAPTAIN.ASSISTANTS.FORM.FEATURES.ALLOW_MEMORIES') }}
-        </span>
-      </label>
+        <label class="flex items-center gap-2">
+          <input v-model="state.featureMemory" type="checkbox" />
+          <span class="text-sm font-medium text-n-slate-12">
+            {{ t('CAPTAIN.ASSISTANTS.FORM.FEATURES.ALLOW_MEMORIES') }}
+          </span>
+        </label>
 
-      <label class="flex items-center gap-2">
-        <input v-model="state.featureCitation" type="checkbox" />
-        <span class="text-sm font-medium text-n-slate-12">
-          {{ t('CAPTAIN.ASSISTANTS.FORM.FEATURES.ALLOW_CITATIONS') }}
-        </span>
-      </label>
-    </fieldset>
+        <label class="flex items-center gap-2">
+          <input v-model="state.featureCitation" type="checkbox" />
+          <span class="text-sm font-medium text-n-slate-12">
+            {{ t('CAPTAIN.ASSISTANTS.FORM.FEATURES.ALLOW_CITATIONS') }}
+          </span>
+        </label>
+      </fieldset>
+    </details>
 
     <div class="flex items-center justify-between w-full gap-3">
       <Button

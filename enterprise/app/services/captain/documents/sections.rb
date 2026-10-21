@@ -28,6 +28,11 @@ class Captain::Documents::Sections
     @assistant.documents.where(id: rows.filter_map { |key, _, id| id if keys.include?(key) })
   end
 
+  def website_documents(website)
+    keys = groups.filter_map { |group| group[:key] if group[:key].split('/').first == website }
+    documents(keys)
+  end
+
   private
 
   def rows

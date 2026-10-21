@@ -7,8 +7,8 @@ class ShopifyAPI extends ApiClient {
     super('integrations/shopify', { accountScoped: true });
   }
 
-  getStatus() {
-    return axios.get(this.url);
+  getStatus({ signal } = {}) {
+    return axios.get(this.url, { signal });
   }
 
   requestConnection({ shopDomain }) {

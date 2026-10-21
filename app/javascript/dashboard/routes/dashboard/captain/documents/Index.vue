@@ -11,13 +11,13 @@ import { debounce } from '@chatwoot/utils';
 
 import DeleteDialog from 'dashboard/components-next/captain/pageComponents/DeleteDialog.vue';
 import KnowledgeHeader from 'dashboard/components-next/captain/knowledge/KnowledgeHeader.vue';
-import ShopifyCatalogCard from 'dashboard/components-next/captain/knowledge/ShopifyCatalogCard.vue';
 import WebsiteSourcesPanel from 'dashboard/components-next/captain/knowledge/WebsiteSourcesPanel.vue';
-import DocumentSectionsPanel from 'dashboard/components-next/captain/knowledge/DocumentSectionsPanel.vue';
+import KnowledgeSourceBrowser from 'dashboard/components-next/captain/knowledge/KnowledgeSourceBrowser.vue';
 import DocumentCard from 'dashboard/components-next/captain/assistant/DocumentCard.vue';
 import DocumentFilter from 'dashboard/components-next/captain/assistant/DocumentFilter.vue';
 import DocumentBulkActions from 'dashboard/components-next/captain/assistant/DocumentBulkActions.vue';
 import Input from 'dashboard/components-next/input/Input.vue';
+import Button from 'next/button/Button.vue';
 import Policy from 'dashboard/components/policy.vue';
 import PageLayout from 'dashboard/components-next/captain/PageLayout.vue';
 import CaptainPaywall from 'dashboard/components-next/captain/pageComponents/Paywall.vue';
@@ -38,7 +38,7 @@ const { checkPermissions } = usePolicy();
 const SYNC_POLL_INTERVAL_MS = 5000;
 const SYNC_POLL_MAX_DURATION_MS = 15 * 60 * 1000;
 
-const { isOnChatwootCloud } = useAccount();
+const { isOnChatwootCloud, currentAccount } = useAccount();
 const uiFlags = useMapGetter('captainDocuments/getUIFlags');
 const documents = useMapGetter('captainDocuments/getRecords');
 const isFetching = computed(() => uiFlags.value.fetchingList);
@@ -81,6 +81,15 @@ const documentFilter = ref(null);
 const syncIntervalHours = ref(null);
 const searchQuery = ref('');
 const sectionFilter = ref(null);
+const websiteFilter = ref(null);
+const hasWebsiteSources = ref(false);
+const isBrowsingWebsites = computed(
+  () =>
+    hasWebsiteSources.value &&
+    !websiteFilter.value &&
+    !searchQuery.value.trim() &&
+    !documentFilter.value?.hasActiveFilters
+);
 const documentSectionsPanel = ref(null);
 
 const currentAssistantId = () =>
@@ -97,6 +106,9 @@ const buildDocumentFilterParams = (page = 1) => {
   if (trimmedQuery) filterParams.searchKey = trimmedQuery;
   if (assistantId && sectionFilter.value) {
     filterParams.section = sectionFilter.value;
+  }
+  if (assistantId && websiteFilter.value && websiteFilter.value !== '*') {
+    filterParams.website = websiteFilter.value;
   }
   return filterParams;
 };
@@ -326,18 +338,22 @@ const onCreateSuccess = () => {
   documentSectionsPanel.value?.load();
 };
 
-const onSectionsChanged = () => {
-  fetchDocumentsAfterBulkAction();
-  websiteSourcesPanel.value?.load();
+const clearFilters = () => {
+  documentFilter.value?.reset();
+  searchQuery.value = '';
+  sectionFilter.value = null;
+  websiteFilter.value = '*';
+  onFiltersChanged();
 };
 
-watch(sectionFilter, () => fetchDocuments(1));
+watch([sectionFilter, websiteFilter], onFiltersChanged);
 
 const hasActiveDocumentFilters = computed(
   () =>
     (documentFilter.value?.hasActiveFilters ?? false) ||
     Boolean(searchQuery.value.trim()) ||
-    Boolean(sectionFilter.value)
+    Boolean(sectionFilter.value) ||
+    Boolean(websiteFilter.value)
 );
 
 const shopifyHook = ref(null);
@@ -361,6 +377,7 @@ const shopifyStoreHosts = computed(() => {
 });
 
 const fetchShopifyStatus = async () => {
+  if (!currentAccount.value?.features?.shopify_integration) return;
   try {
     const { data } = await shopifyAPI.getStatus();
     shopifyHook.value = data.hook || data;
@@ -379,6 +396,8 @@ watch(
     documentFilter.value?.reset();
     searchQuery.value = '';
     sectionFilter.value = null;
+    websiteFilter.value = null;
+    hasWebsiteSources.value = false;
     bulkSelectedIds.value = new Set();
     syncIntervalHours.value = null;
     stopSyncPolling();
@@ -396,22 +415,35 @@ onUnmounted(() => {
 
 <template>
   <PageLayout
-    :header-title="$t('CAPTAIN.DOCUMENTS.HEADER')"
+    :header-title="$t('PLATFORM_NAV.DATA_SOURCES')"
     :button-label="$t('CAPTAIN.DOCUMENTS.ADD_NEW')"
     :button-policy="['administrator']"
     :total-count="documentsMeta.totalCount"
     :current-page="documentsMeta.page"
-    :show-pagination-footer="!isFetching && !!documents.length"
+    :show-pagination-footer="
+      !isBrowsingWebsites && !isFetching && !!documents.length
+    "
     :is-fetching="isFetching"
-    :is-empty="!documents.length && !hasActiveDocumentFilters"
+    :is-empty="
+      !isBrowsingWebsites && !documents.length && !hasActiveDocumentFilters
+    "
     :feature-flag="FEATURE_FLAGS.CAPTAIN"
     @update:current-page="onPageChange"
     @click="handleCreateDocument"
   >
-    <template #search>
+    <template #subHeader>
+      <Policy :permissions="['administrator']">
+        <DocumentBulkActions
+          v-model:selected-ids="bulkSelectedIds"
+          :documents="documents"
+          @bulk-sync-queued="scheduleSyncPoll({ extendWindow: true })"
+          @bulk-delete-succeeded="fetchDocumentsAfterBulkAction"
+          @bulk-updated="refreshDocumentsPage()"
+        />
+      </Policy>
       <div
-        v-if="bulkSelectedIds.size === 0"
-        class="flex gap-3 justify-between w-full items-center"
+        v-show="!bulkSelectedIds.size"
+        class="mb-3 flex flex-wrap items-center gap-3"
       >
         <Input
           v-model="searchQuery"
@@ -421,24 +453,12 @@ onUnmounted(() => {
           type="search"
           @input="debouncedSearch"
         />
-      </div>
-    </template>
-
-    <template #subHeader>
-      <Policy :permissions="['administrator']">
-        <DocumentBulkActions
-          v-model:selected-ids="bulkSelectedIds"
-          :documents="documents"
-          @bulk-sync-queued="scheduleSyncPoll({ extendWindow: true })"
-          @bulk-delete-succeeded="fetchDocumentsAfterBulkAction"
+        <DocumentFilter
+          ref="documentFilter"
+          class="mb-2"
+          @change="onFiltersChanged"
         />
-      </Policy>
-      <DocumentFilter
-        v-show="!bulkSelectedIds.size"
-        ref="documentFilter"
-        class="mb-2"
-        @change="onFiltersChanged"
-      />
+      </div>
     </template>
     <template #knowMore>
       <FeatureSpotlightPopover
@@ -462,29 +482,54 @@ onUnmounted(() => {
 
     <template #controls>
       <KnowledgeHeader />
-      <ShopifyCatalogCard :initial-hook="shopifyHook" />
-      <Policy v-if="selectedAssistantId > 0" :permissions="['administrator']">
+      <KnowledgeSourceBrowser
+        v-if="selectedAssistantId > 0"
+        v-show="
+          isBrowsingWebsites || websiteFilter || !hasActiveDocumentFilters
+        "
+        ref="documentSectionsPanel"
+        v-model:website="websiteFilter"
+        v-model:section="sectionFilter"
+        :assistant-id="selectedAssistantId"
+        @loaded="hasWebsiteSources = $event"
+      />
+      <Policy
+        v-if="selectedAssistantId > 0 && websiteFilter && websiteFilter !== '*'"
+        :permissions="['administrator']"
+      >
         <WebsiteSourcesPanel
-          :key="`websites-${selectedAssistantId}`"
           ref="websiteSourcesPanel"
           :assistant-id="selectedAssistantId"
+          :active-website="websiteFilter"
           @saved="onCreateSuccess"
         />
-        <DocumentSectionsPanel
-          :key="`sections-${selectedAssistantId}`"
-          ref="documentSectionsPanel"
-          v-model:active-section="sectionFilter"
-          :assistant-id="selectedAssistantId"
-          @changed="onSectionsChanged"
-        />
       </Policy>
+      <div
+        v-if="!isBrowsingWebsites"
+        class="mb-3 flex flex-wrap items-center gap-3 text-sm text-n-slate-11"
+      >
+        <span>{{
+          $t('PLATFORM_NAV.MATCHING_SOURCES', {
+            count: documentsMeta.totalCount || 0,
+          })
+        }}</span>
+        <Button
+          v-if="hasActiveDocumentFilters"
+          :label="$t('PLATFORM_NAV.CLEAR_FILTERS')"
+          size="sm"
+          variant="link"
+          @click="clearFilters"
+        />
+      </div>
     </template>
 
     <template #body>
       <LimitBanner class="mb-5" />
 
       <div
-        v-if="!documents.length && hasActiveDocumentFilters"
+        v-if="
+          !isBrowsingWebsites && !documents.length && hasActiveDocumentFilters
+        "
         class="flex flex-col items-center justify-center min-h-80 gap-2 text-center"
       >
         <span class="text-base font-medium text-n-slate-12">
@@ -495,7 +540,7 @@ onUnmounted(() => {
         </span>
       </div>
 
-      <div v-else class="flex flex-col gap-4">
+      <div v-else-if="!isBrowsingWebsites" class="flex flex-col gap-4">
         <DocumentCard
           v-for="doc in documents"
           :id="doc.id"

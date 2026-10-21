@@ -3,6 +3,7 @@ import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useStore } from 'dashboard/composables/store';
 import { useAlert } from 'dashboard/composables';
+import documentsAPI from 'dashboard/api/captain/document';
 
 import BulkSelectBar from 'dashboard/components-next/captain/assistant/BulkSelectBar.vue';
 import BulkDeleteDialog from 'dashboard/components-next/captain/pageComponents/BulkDeleteDialog.vue';
@@ -17,12 +18,41 @@ const emit = defineEmits([
   'update:selectedIds',
   'bulkSyncQueued',
   'bulkDeleteSucceeded',
+  'bulkUpdated',
 ]);
 
 const { t } = useI18n();
 const store = useStore();
 
 const bulkDeleteDialog = ref(null);
+
+const isUpdating = ref(false);
+const updateEnabled = async enabled => {
+  isUpdating.value = true;
+  const ids = props.documents
+    .filter(doc => props.selectedIds.has(doc.id))
+    .map(doc => doc.id);
+  try {
+    const results = await Promise.allSettled(
+      ids.map(id => documentsAPI.update(id, { document: { enabled } }))
+    );
+    const failed = ids.filter(
+      (id, index) => results[index].status === 'rejected'
+    );
+    useAlert(
+      t(
+        failed.length
+          ? 'PLATFORM_NAV.BULK_PARTIAL'
+          : 'PLATFORM_NAV.BULK_UPDATED',
+        { count: ids.length - failed.length, failed: failed.length }
+      )
+    );
+    emit('update:selectedIds', new Set(failed));
+    emit('bulkUpdated');
+  } finally {
+    isUpdating.value = false;
+  }
+};
 
 const isSyncableDocument = doc =>
   (doc.syncable ?? !doc.pdf_document) && doc.status === 'available';
@@ -91,8 +121,25 @@ const handleBulkSync = async () => {
       @update:model-value="emit('update:selectedIds', $event)"
       @bulk-delete="bulkDeleteDialog.dialogRef.open()"
     >
-      <template v-if="hasSyncableSelection" #secondaryActions>
+      <template #secondaryActions>
         <Button
+          :label="t('PLATFORM_NAV.ENABLE_AI')"
+          size="sm"
+          variant="ghost"
+          color="slate"
+          :disabled="isUpdating"
+          @click="updateEnabled(true)"
+        />
+        <Button
+          :label="t('PLATFORM_NAV.DISABLE_AI')"
+          size="sm"
+          variant="ghost"
+          color="slate"
+          :disabled="isUpdating"
+          @click="updateEnabled(false)"
+        />
+        <Button
+          v-if="hasSyncableSelection"
           :label="$t('CAPTAIN.DOCUMENTS.BULK_SYNC_BUTTON')"
           sm
           slate

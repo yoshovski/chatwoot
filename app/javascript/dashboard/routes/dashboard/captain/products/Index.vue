@@ -10,7 +10,6 @@ import CaptainPaywall from 'dashboard/components-next/captain/pageComponents/Pay
 import KnowledgeHeader from 'dashboard/components-next/captain/knowledge/KnowledgeHeader.vue';
 import ShopifyCatalogCard from 'dashboard/components-next/captain/knowledge/ShopifyCatalogCard.vue';
 import Input from 'dashboard/components-next/input/Input.vue';
-import TabBar from 'dashboard/components-next/tabbar/TabBar.vue';
 import Icon from 'dashboard/components-next/icon/Icon.vue';
 
 const PAGE_SIZE = 50;
@@ -53,10 +52,6 @@ const tabs = computed(() => {
     })),
   ];
 });
-const activeTabIndex = computed(() =>
-  tabs.value.findIndex(tab => tab.key === statusFilter.value)
-);
-
 // Shopify's CDN resizes on the fly, so the list never downloads full-size images.
 const thumbnailUrl = url => {
   if (!url) return null;
@@ -96,8 +91,8 @@ const fetchProducts = async (page = 1) => {
 
 const debouncedSearch = debounce(() => fetchProducts(1), 300);
 
-const onTabChanged = tab => {
-  statusFilter.value = tab.key;
+const onStatusChanged = event => {
+  statusFilter.value = event.target.value || null;
   fetchProducts(1);
 };
 
@@ -137,12 +132,27 @@ onMounted(() => fetchProducts(1));
       <p class="mb-3 text-sm text-n-slate-11">
         {{ $t('CAPTAIN.PRODUCTS.DESCRIPTION') }}
       </p>
-      <TabBar
-        :tabs="tabs"
-        :initial-active-tab="activeTabIndex"
-        class="mb-4"
-        @tab-changed="onTabChanged"
-      />
+      <label class="mb-4 flex items-center gap-3 text-sm text-n-slate-11">
+        {{ $t('CAPTAIN.PRODUCTS.FILTERS.ALL') }}
+        <select
+          :value="statusFilter || ''"
+          class="rounded-lg border border-n-weak bg-n-solid-1 px-3 py-2 text-sm text-n-slate-12"
+          @change="onStatusChanged"
+        >
+          <option
+            v-for="tab in tabs"
+            :key="String(tab.key)"
+            :value="tab.key || ''"
+          >
+            {{
+              $t('PLATFORM_NAV.FOLDER_COUNT', {
+                folder: tab.label,
+                count: tab.count,
+              })
+            }}
+          </option>
+        </select>
+      </label>
     </template>
 
     <template #body>

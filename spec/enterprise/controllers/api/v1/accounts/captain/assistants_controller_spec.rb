@@ -852,6 +852,9 @@ RSpec.describe 'Api::V1::Accounts::Captain::Assistants', type: :request do
       end
 
       it 'filters Shopify tools by availability' do
+        allow(Shopify::FeatureGate).to receive(:globally_enabled?).and_return(true)
+        account.enable_features!('shopify_integration')
+
         get "/api/v1/accounts/#{account.id}/captain/assistants/tools",
             headers: admin.create_new_auth_token,
             as: :json
@@ -876,6 +879,13 @@ RSpec.describe 'Api::V1::Accounts::Captain::Assistants', type: :request do
         product_search_tool = json_response.find { |t| t[:id] == 'catalog_product_search' }
         expect(product_search_tool[:emoji]).to eq('🛍️')
         expect(product_search_tool[:title]).to eq('Find products')
+
+        account.disable_features!('shopify_integration')
+        get "/api/v1/accounts/#{account.id}/captain/assistants/tools",
+            headers: admin.create_new_auth_token,
+            as: :json
+
+        expect(json_response.pluck(:id)).not_to include('catalog_product_search', 'browse_catalog', 'track_order')
       end
     end
   end
