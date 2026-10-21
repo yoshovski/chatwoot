@@ -20,6 +20,11 @@ const props = defineProps({
     type: String,
     default: 'Delete',
   },
+  // Shows only the selected count, icon-only delete and a clear button.
+  compact: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 const emit = defineEmits(['bulkDelete']);
@@ -74,7 +79,46 @@ const bulkCheckboxState = computed({
     leave-active-class="hidden opacity-0"
   >
     <div
-      v-if="hasSelected"
+      v-if="hasSelected && compact"
+      class="flex items-center gap-1 py-1 ps-3 pe-1 rounded-lg bg-n-solid-2 outline outline-1 outline-n-container shadow"
+    >
+      <Checkbox
+        v-model="bulkCheckboxState"
+        v-tooltip.top="selectAllLabel"
+        :indeterminate="isIndeterminate"
+        :aria-label="selectAllLabel"
+      />
+      <span
+        class="ms-1.5 me-2 text-sm font-medium text-n-slate-12 tabular-nums whitespace-nowrap"
+      >
+        {{ selectedCountLabel }}
+      </span>
+      <div class="h-4 w-px bg-n-strong" />
+      <slot name="secondaryActions" />
+      <slot name="actions" :selected-count="selectedCount">
+        <Button
+          v-tooltip.top="deleteLabel"
+          :aria-label="deleteLabel"
+          sm
+          ruby
+          ghost
+          icon="i-lucide-trash"
+          @click="emit('bulkDelete')"
+        />
+      </slot>
+      <div class="h-4 w-px bg-n-strong" />
+      <Button
+        v-tooltip.top="$t('CAPTAIN.BULK_SELECT.CLEAR')"
+        :aria-label="$t('CAPTAIN.BULK_SELECT.CLEAR')"
+        sm
+        slate
+        ghost
+        icon="i-lucide-x"
+        @click="modelValue = new Set()"
+      />
+    </div>
+    <div
+      v-else-if="hasSelected"
       class="flex items-center gap-3 py-1 ltr:pl-3 rtl:pr-3 ltr:pr-4 rtl:pl-4 rounded-lg bg-n-solid-2 outline outline-1 outline-n-container shadow"
     >
       <div class="flex items-center gap-3 min-w-0">

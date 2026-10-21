@@ -237,6 +237,7 @@ onMounted(() => {
             </div>
             <BulkSelectBar
               v-model="bulkSelectedIds"
+              compact
               :all-items="scenarios"
               :select-all-label="buildSelectedCountLabel"
               :selected-count-label="selectedCountLabel"

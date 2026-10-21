@@ -205,6 +205,7 @@ const addAllExample = async () => {
             </div>
             <BulkSelectBar
               v-model="bulkSelectedIds"
+              compact
               :all-items="displayGuidelines"
               :select-all-label="buildSelectedCountLabel"
               :selected-count-label="selectedCountLabel"

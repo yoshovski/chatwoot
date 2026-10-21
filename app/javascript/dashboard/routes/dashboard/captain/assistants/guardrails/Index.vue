@@ -212,6 +212,7 @@ const addAllExample = () => {
             </div>
             <BulkSelectBar
               v-model="bulkSelectedIds"
+              compact
               :all-items="displayGuardrails"
               :select-all-label="buildSelectedCountLabel"
               :selected-count-label="selectedCountLabel"
