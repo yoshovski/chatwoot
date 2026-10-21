@@ -679,7 +679,6 @@
       "MESSAGE_PLACEHOLDER": "Type your message...",
       "SEND_MESSAGE": "Send message",
       "HEADER": "Playground",
-      "DESCRIPTION": "Use this playground to send messages to your AI agent and check if it responds accurately, quickly, and in the tone you expect.",
       "CREDIT_NOTE": "Messages sent here will count toward your Captain credits.",
       "CLEAR_CONVERSATION": "Clear conversation",
       "RESPONSE_ERROR": "Captain could not complete this test run. Review the setup and try again.",
@@ -779,6 +778,15 @@
           "COMPLETED": "Completed",
           "FAILED": "Failed"
         }
+      },
+      "STARTER_QUESTIONS": {
+        "EXAMPLE_1": "What do you offer?",
+        "EXAMPLE_2": "How can I contact your team?",
+        "EXAMPLE_3": "Where can I find your pricing?"
+      },
+      "EMPTY": {
+        "TITLE": "Try {name}",
+        "DESCRIPTION": "Ask something a customer would, or start with one of these."
       }
     },
     "PAYWALL": {
@@ -1152,7 +1160,8 @@
             "FRIENDLY": "Great question! Yes, we ship to Germany 🙂 Delivery usually takes 3–5 days.",
             "PROFESSIONAL": "Yes, we ship to Germany. Delivery takes 3–5 business days.",
             "SHORT": "Yes, in 3–5 days."
-          }
+          },
+          "HANDOFF_QUESTION": "I'd like to talk to a person, please."
         }
       },
       "OPTIONS": {
@@ -1183,7 +1192,12 @@
             "ADD": "Add all",
             "ADD_SINGLE": "Add this",
             "SAVE": "Add and save (↵)",
-            "PLACEHOLDER": "Type in another guardrail..."
+            "PLACEHOLDER": "Type in another guardrail...",
+            "EXAMPLES": {
+              "EXAMPLE_1": "Block queries that share or request sensitive personal information (e.g. phone numbers, passwords).",
+              "EXAMPLE_2": "Reject queries that include offensive, discriminatory, or threatening language.",
+              "EXAMPLE_3": "Deflect when the assistant is asked for legal or medical diagnosis or treatment."
+            }
           },
           "NEW": {
             "TITLE": "Add a guardrail",
@@ -1228,7 +1242,12 @@
             "ADD": "Add all",
             "ADD_SINGLE": "Add this",
             "SAVE": "Add and save (↵)",
-            "PLACEHOLDER": "Type in another response guideline..."
+            "PLACEHOLDER": "Type in another response guideline...",
+            "EXAMPLES": {
+              "EXAMPLE_1": "Keep replies concise: use short paragraphs and offer more detail only when the customer asks.",
+              "EXAMPLE_2": "Reply in the customer’s language whenever possible.",
+              "EXAMPLE_3": "Maintain an empathetic and helpful tone throughout the conversation."
+            }
           },
           "NEW": {
             "TITLE": "Add a response guideline",
@@ -1264,7 +1283,6 @@
         "TOOLS": {
           "INHERITED": "Uses the AI agent's tools",
           "INHERITED_ALL": "Uses all of the AI agent's tools",
-          "USES": "Uses:",
           "UNAVAILABLE": "This tool isn't available for this AI agent",
           "NAMED": "Uses the AI agent's tools. Named in the instruction: {tools}"
         },
@@ -1508,8 +1526,7 @@
             "1": "1",
             "2": "2",
             "3": "3"
-          },
-          "USE_TEMPLATE": "Use template"
+          }
         },
         "BULK_ACTION": {
           "SELECTED": "{count} item selected | {count} items selected",
@@ -1574,14 +1591,12 @@
           "UPDATE": "Save changes"
         },
         "STATUS": {
-          "ENABLED": "Enabled",
-          "DISABLED": "Disabled",
           "TOGGLE": "Toggle {title}"
         },
         "LIST": {
           "SEARCH_PLACEHOLDER": "Search..."
         },
-        "EMPTY_MESSAGE": "No scenarios found. Create or add examples to begin.",
+        "EMPTY_MESSAGE": "Scenarios teach the AI agent to handle specific requests step by step, such as refunds or booking a demo.",
         "SEARCH_EMPTY_MESSAGE": "No scenarios found for this search.",
         "API": {
           "ADD": {
@@ -1631,6 +1646,12 @@
           "ALL": "All · {count}",
           "ACTIVE": "Active · {count}",
           "PAUSED": "Paused · {count}"
+        },
+        "EMPTY_TITLE": "No scenarios yet",
+        "MENU": {
+          "LABEL": "Scenario actions",
+          "EDIT": "Edit",
+          "DELETE": "Delete"
         }
       },
       "AI_AGENT_CHIP": "AI agent"
@@ -1731,7 +1752,6 @@
       },
       "USED_IN_CONVERSATIONS": "Used in {n} conversation | Used in {n} conversations",
       "NO_USED_CONVERSATIONS": "No conversations found for this document.",
-      "SELECTED": "{count} selected",
       "SELECT_ALL": "Select all ({count})",
       "UNSELECT_ALL": "Unselect all ({count})",
       "BULK_DELETE_BUTTON": "Delete",
@@ -1876,7 +1896,8 @@
         "SYNC_NOW": "Refresh now",
         "RETRY_SYNC": "Retry refresh",
         "GENERATE_FAQS": "Suggest FAQs",
-        "DELETE_DOCUMENT": "Delete Document"
+        "DELETE_DOCUMENT": "Delete Document",
+        "MORE": "More actions"
       },
       "EMPTY_STATE": {
         "TITLE": "No documents available",
@@ -1887,7 +1908,8 @@
           "TITLE": "Captain Document",
           "NOTE": "A document in Captain serves as a knowledge resource for the AI agent. By connecting your help center or guides, Captain can analyze the content and provide accurate responses for customer inquiries."
         }
-      }
+      },
+      "SELECTED_OF": "{count} of {total} selected"
     },
     "CUSTOM_TOOLS": {
       "HEADER": "Tools",
@@ -2228,28 +2250,24 @@
     },
     "WEBSITES": {
       "TITLE": "Website sources",
-      "INGESTION_TITLE": "Website Discovery & Ingestion",
-      "INGESTION_SUBTITLE": "Manage which discovered pages from this domain and its subdomains are indexed into your AI agent's knowledge base.",
-      "MANAGE_INGESTED": "Manage ingested pages",
-      "SUBDOMAIN_INFO": "Discovered via {rootDomain} · {subdomainCount} pages on {subdomain} ({totalCount} total)",
       "ENTIRE_WEBSITE": "Entire website",
       "DISCOVER": "Discover pages",
       "INCLUDE_SUBDOMAINS": "Discover linked subdomains too",
       "DISCOVERY_HELP": "Explore sitemaps and linked pages first. You choose what becomes knowledge.",
-      "SELECTION_HELP": "Pages are sorted into Recommended, Optional and Skipped. Only selected pages are imported, using your existing document refresh settings. New pages wait for your selection; deselected website imports are paused.",
-      "DISCOVERING": "Discovering pages… {count} found",
-      "DISCOVERED": "{count} pages discovered",
-      "LIMITED": "Discovery stopped at its {limits}, so the list is partial. To explore further, add a narrower website source, such as one section or subdomain.",
+      "SELECTION_HELP": "Only selected pages are imported. Pages found later wait for your choice.",
+      "DISCOVERING": "Scanning… {count} found",
+      "DISCOVERED": "{count} pages found",
+      "LIMITED": "Partial list: discovery stopped at its {limits}.",
       "LOAD_ERROR": "Could not load website discovery. Please try again.",
       "SAVE_ERROR": "Could not save the page selection. Please try again.",
-      "DISCOVERY_FAILED": "Discovery could not finish. Try discovering this website again.",
-      "REDISCOVER": "Discover again",
-      "SEARCH": "Search pages, titles or domains",
+      "DISCOVERY_FAILED": "The scan could not finish. Try scanning again.",
+      "REDISCOVER": "Scan again",
+      "SEARCH": "Search pages",
       "NO_PAGES": "No matching pages yet.",
       "PREVIEW_LOADING": "Loading page preview…",
       "PREVIEW_UNAVAILABLE": "Preview unavailable: {reason}",
-      "PREVIEW_HELP": "Click a page to preview the text that would become knowledge.",
-      "SAVE_SELECTION": "Save selection ({count})",
+      "PREVIEW_HELP": "Click a page to see the text that becomes knowledge.",
+      "SAVE_SELECTION": "Save",
       "SAVED": "Selection saved. Selected pages will be imported and indexed.",
       "SELECTED_COUNT": "{count} pages selected",
       "MANAGE": "Select pages",
@@ -2263,8 +2281,8 @@
         "synced": "Synced",
         "failed": "Failed"
       },
-      "CLASSIFYING": "{count} pages discovered. Sorting sections and checking unopened pages…",
-      "CLASSIFICATION_FAILED": "Sections were sorted using URL and page-content rules only. Review the Maybe tab before saving.",
+      "CLASSIFYING": "{count} pages found · sorting…",
+      "CLASSIFICATION_FAILED": "Sorted by URL rules only. Check the Maybe tab before saving.",
       "LIMITS": {
         "time": "10-minute time limit",
         "pages": "2,000-page limit",
@@ -2278,20 +2296,20 @@
         "PAGES": "Checking page content ({count} of {max})…"
       },
       "BUCKETS": {
-        "RECOMMENDED": "Recommended ({count})",
-        "MAYBE": "Optional ({count})",
-        "EXCLUDED": "Skipped ({count})",
-        "ALL": "All ({count})"
+        "RECOMMENDED": "Suggested",
+        "MAYBE": "Maybe",
+        "EXCLUDED": "Skipped",
+        "ALL": "All"
       },
       "BUCKET_HELP": {
-        "RECOMMENDED": "Pages likely to answer customer questions. They start selected.",
-        "MAYBE": "Could help, such as blog posts, release notes or other sites. Add only what customers ask about.",
+        "RECOMMENDED": "Likely to answer customer questions. Selected by default.",
+        "MAYBE": "Blog posts, release notes or other sites. Add only what customers ask about.",
         "EXCLUDED": "Left out with a reason. You can still add most of them.",
         "ALL": "Every discovered page."
       },
       "HIDDEN_PAGES": "{count} page was left out because it was not found or has no text. | {count} pages were left out because they were not found or have no text.",
-      "SELECT_RECOMMENDED": "Select recommended",
-      "CLEAR_SELECTION": "Clear selection",
+      "SELECT_RECOMMENDED": "Select suggested",
+      "CLEAR_SELECTION": "Clear",
       "HOME_SECTION": "Top-level pages",
       "SECTION_SUMMARY": "{label} · {reason}",
       "SECTION_LABELS": {
@@ -2327,14 +2345,16 @@
       },
       "PREVIEW_WORDS": "{count} words of knowledge after cleaning",
       "PREVIEW_THIN": "Too little text: the import will skip this page.",
-      "NEW_DOCUMENTS": "{count} new documents",
       "SAVE_DURING_DISCOVERY": "You can save now. Pages found later wait for your selection.",
-      "QUOTA_EXCEEDED": "This selection needs {count} new documents, but only {available} are available on your plan."
+      "QUOTA_EXCEEDED": "This selection needs {count} new documents, but only {available} are available on your plan.",
+      "LIMITED_HELP": "To explore further, add a narrower website source, such as one section or subdomain.",
+      "SELECTED_OF": "{selected} of {total} selected",
+      "SELECTION_SUMMARY": "{selected} selected · {new} new",
+      "HIDDEN_COUNT": "{count} hidden"
     },
     "KNOWLEDGE_BRIEF": {
       "TITLE": "Business profile",
-      "BASED_ON_SOURCES": "Synthesized from",
-      "HELP": "A short overview of the business and the main topics customers ask about, written from your knowledge. The AI agent uses it for broad questions such as “What do you do?”. Nothing is used until you publish it.",
+      "HELP": "Written from your knowledge so the AI agent can answer broad questions like “What do you do?”. Used only after you publish.",
       "STATUS": {
         "DISABLED": "Off. Generate a draft from your knowledge to get started.",
         "DRAFT": "Draft ready. Review it and publish to turn it on.",
@@ -2349,7 +2369,6 @@
       "CHOOSE_SOURCES": "Choose sources",
       "SOURCES_HELP": "{count} of up to {max} sources selected. Pick pages that explain what the business does, its products, pricing and policies. Pages still being indexed are skipped.",
       "GENERATE_SELECTED": "Generate from selected sources",
-      "SUGGESTION_HELP": "Suggested from page titles and addresses: about, products, pricing, policies and support overviews.",
       "SUGGESTED_SOURCES": "Suggested",
       "SEARCH_SOURCES": "Search sources",
       "SELECT_SUGGESTED": "Select suggested",
@@ -2357,20 +2376,31 @@
       "NO_MATCHING_SOURCES": "No sources match this search.",
       "NO_SOURCES": "Import documents and wait for indexing before generating a profile.",
       "OVERVIEW": "Business overview",
-      "TOPIC": "Topic",
-      "TOPICS_TITLE": "Core Business Topics",
+      "TOPICS_TITLE": "Topics",
       "TOPIC_NAME": "Topic name",
-      "SOURCES_LABEL": "Sources:",
-      "SHOW_LESS": "Show less",
-      "MORE_SOURCES": "+{count} more",
       "SUMMARY": "Topic summary",
       "REMOVE_TOPIC": "Remove topic",
-      "BASED_ON": "Based on: {sources}",
       "PUBLISH": "Publish",
       "SAVE": "Save changes",
       "DISABLE": "Turn off",
       "ERROR": "Could not generate or save the profile. Try again.",
-      "PUBLISH_ERROR": "Could not publish. Check that the overview and every topic have text, then try again."
+      "PUBLISH_ERROR": "Could not publish. Check that the overview and every topic have text, then try again.",
+      "EDIT": "Edit",
+      "DONE": "Done",
+      "SOURCE_COUNT": "{count} source | {count} sources",
+      "LENGTH": "{count} / {max}",
+      "STATUS_PILL": {
+        "DISABLED": "Off",
+        "DRAFT": "Draft",
+        "GENERATING": "Writing…",
+        "ENABLED": "On",
+        "SOURCES_CHANGED": "Needs review",
+        "UNAVAILABLE": "Paused",
+        "FAILED": "Failed"
+      }
+    },
+    "BULK_SELECT": {
+      "CLEAR": "Clear selection"
     }
   }
 }

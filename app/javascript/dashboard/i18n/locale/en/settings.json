@@ -1165,13 +1165,18 @@
     "WORKFLOWS": "Workflows",
     "ADMINISTRATION": "Data & administration",
     "ADVANCED_OPTIONS": "Advanced options",
-    "ENABLE_AI": "Enable for AI",
-    "DISABLE_AI": "Disable for AI",
+    "ENABLE_AI": "Use",
+    "DISABLE_AI": "Pause",
     "BULK_UPDATED": "Updated {count} sources.",
     "BULK_PARTIAL": "Updated {count} sources; {failed} could not be updated.",
     "SOURCE_COUNT": "{count} source | {count} sources",
-    "NO_FAILURES": "All good",
-    "COMPACT_VIEW": "Compact view",
-    "COMFORTABLE_VIEW": "Comfortable view"
+    "NO_FAILURES": "All ready",
+    "UPDATING_PAGES": "{count} updating",
+    "WEBSITE_DISCOVERING": "Finding pages…",
+    "WEBSITE_NOT_ADDED": "No pages added yet",
+    "CHOOSE_PAGES": "Choose pages",
+    "CHOOSE_PAGES_HINT": "Pick which pages of this website your AI agent learns from",
+    "ENABLE_AI_HINT": "Let the AI agent answer from these sources",
+    "DISABLE_AI_HINT": "Keep these sources but stop the AI agent from using them"
   }
 }

@@ -6,6 +6,7 @@ import { picoSearch } from '@chatwoot/pico-search';
 import { useStore, useMapGetter } from 'dashboard/composables/store';
 import { useAlert } from 'dashboard/composables';
 import Input from 'dashboard/components-next/input/Input.vue';
+import Button from 'dashboard/components-next/button/Button.vue';
 
 import PageLayout from 'dashboard/components-next/captain/PageLayout.vue';
 import TestAgentButton from 'dashboard/components-next/captain/TestAgentButton.vue';
@@ -237,6 +238,7 @@ onMounted(() => {
             </div>
             <BulkSelectBar
               v-model="bulkSelectedIds"
+              compact
               :all-items="scenarios"
               :select-all-label="buildSelectedCountLabel"
               :selected-count-label="selectedCountLabel"
@@ -249,10 +251,12 @@ onMounted(() => {
             />
             <div
               v-if="bulkSelectedIds.size === 0"
-              class="max-w-[22.5rem] w-full min-w-0"
+              class="w-full min-w-0 ms-auto max-w-64"
             >
               <Input
                 v-model="searchQuery"
+                size="sm"
+                type="search"
                 :placeholder="
                   t('CAPTAIN.ASSISTANTS.SCENARIOS.LIST.SEARCH_PLACEHOLDER')
                 "
@@ -288,7 +292,7 @@ onMounted(() => {
             />
           </div>
 
-          <div class="pt-6 mt-4 border-t border-n-weak">
+          <div class="pt-6 mt-2 border-t border-n-weak">
             <TemplateGallery
               :tools="captainTools"
               has-scenarios
@@ -299,10 +303,32 @@ onMounted(() => {
         </div>
 
         <!-- Empty state: Lead with templates and creation action -->
-        <div v-else class="flex flex-col gap-6">
-          <p class="m-0 text-sm text-n-slate-11">
-            {{ t('CAPTAIN.ASSISTANTS.SCENARIOS.EMPTY_MESSAGE') }}
-          </p>
+        <div v-else-if="!isFetching" class="flex flex-col gap-6">
+          <div
+            class="flex flex-col items-center gap-3 px-6 py-10 text-center rounded-xl border border-dashed border-n-strong"
+          >
+            <span
+              class="flex items-center justify-center rounded-xl size-10 bg-n-brand/10 text-n-blue-11"
+            >
+              <span class="i-lucide-route size-5" />
+            </span>
+            <div class="flex flex-col gap-1 max-w-md">
+              <h3 class="m-0 text-base font-medium text-n-slate-12">
+                {{ t('CAPTAIN.ASSISTANTS.SCENARIOS.EMPTY_TITLE') }}
+              </h3>
+              <p class="m-0 text-sm text-n-slate-11">
+                {{ t('CAPTAIN.ASSISTANTS.SCENARIOS.EMPTY_MESSAGE') }}
+              </p>
+            </div>
+            <Button
+              sm
+              icon="i-lucide-sparkles"
+              :label="
+                t('CAPTAIN.ASSISTANTS.SCENARIOS.TEMPLATES.DESCRIBE.TITLE')
+              "
+              @click="onDescribe"
+            />
+          </div>
           <TemplateGallery
             :tools="captainTools"
             :has-scenarios="false"

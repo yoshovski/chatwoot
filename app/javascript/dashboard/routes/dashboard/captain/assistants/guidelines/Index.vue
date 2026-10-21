@@ -7,6 +7,7 @@ import { picoSearch } from '@chatwoot/pico-search';
 import { useStore } from 'dashboard/composables/store';
 import { useUISettings } from 'dashboard/composables/useUISettings';
 import { useAssistantSettings } from '../settings/useAssistantSettings';
+import { useBusinessExamples } from 'dashboard/components-next/captain/assistant/useBusinessExamples';
 import Input from 'dashboard/components-next/input/Input.vue';
 import Button from 'dashboard/components-next/button/Button.vue';
 
@@ -39,22 +40,10 @@ const displayGuidelines = computed(() =>
   guidelinesContent.value.map((c, idx) => ({ id: idx, content: c }))
 );
 
-const guidelinesExample = [
-  {
-    id: 1,
-    content:
-      'Keep replies concise: use short paragraphs and offer more detail only when the customer asks.',
-  },
-  {
-    id: 2,
-    content: 'Reply in the customer’s language whenever possible.',
-  },
-  {
-    id: 3,
-    content:
-      'Maintain an empathetic and helpful tone throughout the conversation.',
-  },
-];
+const examples = useBusinessExamples(assistantId);
+const guidelinesExample = computed(() =>
+  examples.guidelines.value.map((content, id) => ({ id, content }))
+);
 
 const filteredGuidelines = computed(() => {
   const query = searchQuery.value.trim();
@@ -165,7 +154,7 @@ const bulkDeleteGuidelines = async () => {
 const addAllExample = async () => {
   updateUISettings({ show_response_guidelines_suggestions: false });
   try {
-    const exampleContents = guidelinesExample.map(example => example.content);
+    const exampleContents = examples.guidelines.value;
     const newGuidelines = [...guidelinesContent.value, ...exampleContents];
     await saveGuidelines(newGuidelines);
     useAlert(t('CAPTAIN.ASSISTANTS.RESPONSE_GUIDELINES.API.ADD.SUCCESS'));
@@ -205,6 +194,7 @@ const addAllExample = async () => {
             </div>
             <BulkSelectBar
               v-model="bulkSelectedIds"
+              compact
               :all-items="displayGuidelines"
               :select-all-label="buildSelectedCountLabel"
               :selected-count-label="selectedCountLabel"

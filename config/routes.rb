@@ -138,6 +138,7 @@ Rails.application.routes.draw do
                 post :preview, on: :member
               end
               resource :knowledge_brief, only: [:show, :update] do
+                get :examples
                 post :generate
                 post :publish
               end

@@ -55,43 +55,36 @@ const handleDeleteSuccess = () => {
       :assistant="assistant"
       :save="updateAssistant"
       @delete-avatar="deleteAssistantAvatar"
-    />
-    <KnowledgeBriefPanel
-      v-if="assistantId"
-      :key="`brief-${assistantId}`"
-      :assistant-id="assistantId"
-    />
-    <div
-      class="flex flex-wrap items-center justify-between w-full gap-4 pt-6 border-t border-n-weak"
     >
-      <div class="flex flex-col gap-0.5">
-        <span class="text-sm font-medium text-n-slate-12">
-          {{
-            t('CAPTAIN.ASSISTANTS.SETTINGS.IDENTITY.REMOVE_TITLE', {
-              name: assistant.name,
-            })
-          }}
-        </span>
-        <span class="text-sm text-n-slate-11">
+      <KnowledgeBriefPanel
+        v-if="assistantId"
+        :key="`brief-${assistantId}`"
+        :assistant-id="assistantId"
+      />
+      <div
+        class="flex flex-wrap items-center justify-between gap-3 px-1 pt-2 text-xs text-n-slate-11"
+      >
+        <span class="min-w-0">
           {{
             t('CAPTAIN.ASSISTANTS.SETTINGS.IDENTITY.REMOVE_DESCRIPTION', {
               name: assistant.name,
             })
           }}
         </span>
+        <Button
+          :label="
+            t('CAPTAIN.ASSISTANTS.SETTINGS.IDENTITY.REMOVE_TITLE', {
+              name: assistant.name,
+            })
+          "
+          color="ruby"
+          variant="ghost"
+          size="xs"
+          icon="i-lucide-trash-2"
+          @click="handleDelete"
+        />
       </div>
-      <Button
-        :label="
-          t('CAPTAIN.ASSISTANTS.SETTINGS.IDENTITY.REMOVE_TITLE', {
-            name: assistant.name,
-          })
-        "
-        color="ruby"
-        variant="faded"
-        size="sm"
-        @click="handleDelete"
-      />
-    </div>
+    </AssistantBasicSettingsForm>
     <DeleteDialog
       v-if="assistant"
       ref="deleteAssistantDialog"

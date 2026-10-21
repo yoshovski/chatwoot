@@ -406,6 +406,7 @@ onUnmounted(() => {
       <BulkSelectBar
         v-if="bulkSelectedIds.size > 0"
         v-model="bulkSelectedIds"
+        compact
         :all-items="responses"
         :select-all-label="buildSelectedCountLabel"
         :selected-count-label="selectedCountLabel"

@@ -44,13 +44,16 @@ const statusKey = computed(() => {
   if (brief.value?.enabled) return 'UNAVAILABLE';
   return hasDraft.value ? 'DRAFT' : 'DISABLED';
 });
-const statusTone = computed(() => {
-  if (statusKey.value === 'FAILED' || statusKey.value === 'UNAVAILABLE') {
-    return 'text-n-ruby-11';
-  }
-  if (statusKey.value === 'SOURCES_CHANGED') return 'text-n-amber-11';
-  return 'text-n-slate-11';
-});
+const STATUS_PILL_CLASSES = {
+  ENABLED: 'bg-n-teal-3 text-n-teal-11',
+  SOURCES_CHANGED: 'bg-n-amber-3 text-n-amber-11',
+  UNAVAILABLE: 'bg-n-ruby-3 text-n-ruby-11',
+  FAILED: 'bg-n-ruby-3 text-n-ruby-11',
+  GENERATING: 'bg-n-blue-3 text-n-blue-11',
+  DRAFT: 'bg-n-blue-3 text-n-blue-11',
+  DISABLED: 'bg-n-alpha-2 text-n-slate-11',
+};
+const statusPillClass = computed(() => STATUS_PILL_CLASSES[statusKey.value]);
 
 let poll;
 const load = async () => {
@@ -124,21 +127,16 @@ const selectSuggested = () => {
   selectedIds.value = suggestedIds.value.slice(0, MAX_SOURCES);
 };
 
-const getSourceObj = id =>
-  brief.value?.sources.find(source => source.id === id) || {
-    id,
-    name: `#${id}`,
-  };
-const getSourcesList = ids => (ids || []).map(getSourceObj);
+const sourceNames = ids =>
+  (ids || [])
+    .map(
+      id =>
+        brief.value?.sources.find(source => source.id === id)?.name || `#${id}`
+    )
+    .join(', ');
 
-const expandedTopics = ref({});
-const toggleTopicSources = index => {
-  expandedTopics.value[index] = !expandedTopics.value[index];
-};
-const isOverviewSourcesExpanded = ref(false);
-const toggleOverviewSources = () => {
-  isOverviewSourcesExpanded.value = !isOverviewSourcesExpanded.value;
-};
+const editingOverview = ref(false);
+const editingTopic = ref(null);
 
 const toggleSource = (id, include) => {
   const ids = new Set(selectedIds.value);
@@ -163,7 +161,10 @@ const generate = async ids => {
     saving.value = false;
   }
 };
-const removeTopic = index => draft.value.topics.splice(index, 1);
+const removeTopic = index => {
+  draft.value.topics.splice(index, 1);
+  editingTopic.value = null;
+};
 const publish = async () => {
   error.value = '';
   saving.value = true;
@@ -193,24 +194,42 @@ const disable = async () => {
 
 <template>
   <section
-    class="flex flex-col gap-4 rounded-xl px-5 py-4 outline outline-1 outline-n-weak bg-n-solid-1"
+    class="flex flex-col gap-4 px-5 py-4 rounded-xl outline outline-1 outline-n-weak bg-n-solid-1"
   >
-    <div class="flex flex-wrap items-start justify-between gap-3">
-      <div class="flex min-w-0 flex-col gap-0.5">
-        <h3 class="m-0 text-sm font-medium text-n-slate-12">
-          {{ $t('CAPTAIN.KNOWLEDGE_BRIEF.TITLE') }}
-        </h3>
+    <header class="flex flex-wrap items-start justify-between gap-3">
+      <div class="flex flex-col min-w-0 gap-1">
+        <div class="flex items-center gap-2">
+          <h3 class="m-0 text-sm font-semibold text-n-slate-12">
+            {{ $t('CAPTAIN.KNOWLEDGE_BRIEF.TITLE') }}
+          </h3>
+          <span
+            v-if="brief"
+            v-tooltip.top="$t(`CAPTAIN.KNOWLEDGE_BRIEF.STATUS.${statusKey}`)"
+            class="px-2 py-0.5 text-xs font-medium rounded-full"
+            :class="statusPillClass"
+            role="status"
+          >
+            {{ $t(`CAPTAIN.KNOWLEDGE_BRIEF.STATUS_PILL.${statusKey}`) }}
+          </span>
+        </div>
         <p class="m-0 text-sm text-n-slate-11">
           {{ $t('CAPTAIN.KNOWLEDGE_BRIEF.HELP') }}
         </p>
-        <p class="m-0 text-xs" :class="statusTone" role="status">
-          {{ $t(`CAPTAIN.KNOWLEDGE_BRIEF.STATUS.${statusKey}`) }}
-        </p>
       </div>
-      <div class="flex flex-wrap items-center gap-2">
+      <div class="flex items-center gap-1">
+        <Button
+          size="sm"
+          variant="ghost"
+          color="slate"
+          :label="$t('CAPTAIN.KNOWLEDGE_BRIEF.CHOOSE_SOURCES')"
+          :disabled="generating || !brief?.sources.length"
+          @click="choosingSources = !choosingSources"
+        />
         <Button
           size="sm"
           :variant="hasDraft ? 'faded' : 'solid'"
+          :color="hasDraft ? 'slate' : 'blue'"
+          :icon="hasDraft ? 'i-lucide-refresh-cw' : 'i-lucide-sparkles'"
           :label="
             $t(
               hasDraft
@@ -222,16 +241,8 @@ const disable = async () => {
           :disabled="generating || saving || !brief?.sources.length"
           @click="generate()"
         />
-        <Button
-          size="sm"
-          variant="ghost"
-          color="slate"
-          :label="$t('CAPTAIN.KNOWLEDGE_BRIEF.CHOOSE_SOURCES')"
-          :disabled="generating || !brief?.sources.length"
-          @click="choosingSources = !choosingSources"
-        />
       </div>
-    </div>
+    </header>
 
     <p
       v-if="brief && !brief.sources.length"
@@ -239,10 +250,16 @@ const disable = async () => {
     >
       {{ $t('CAPTAIN.KNOWLEDGE_BRIEF.NO_SOURCES') }}
     </p>
+    <p
+      v-else-if="brief && statusKey !== 'ENABLED' && statusKey !== 'DRAFT'"
+      class="m-0 text-xs text-n-slate-11"
+    >
+      {{ $t(`CAPTAIN.KNOWLEDGE_BRIEF.STATUS.${statusKey}`) }}
+    </p>
 
     <div
       v-if="choosingSources"
-      class="flex flex-col gap-2 rounded-lg border border-n-weak p-3"
+      class="flex flex-col gap-2 p-3 rounded-lg bg-n-alpha-1"
     >
       <p class="m-0 text-xs text-n-slate-11">
         {{
@@ -251,9 +268,6 @@ const disable = async () => {
             max: MAX_SOURCES,
           })
         }}
-      </p>
-      <p class="m-0 text-xs text-n-slate-11">
-        {{ $t('CAPTAIN.KNOWLEDGE_BRIEF.SUGGESTION_HELP') }}
       </p>
       <div class="flex flex-wrap items-center gap-2">
         <Input
@@ -278,11 +292,11 @@ const disable = async () => {
           @click="selectedIds = []"
         />
       </div>
-      <div class="flex max-h-80 flex-col gap-3 overflow-auto">
+      <div class="flex flex-col gap-3 overflow-auto max-h-72">
         <div
           v-for="group in sourceGroups"
           :key="group.key"
-          class="flex flex-col gap-1.5"
+          class="flex flex-col gap-1"
         >
           <span class="text-xs font-medium text-n-slate-11">
             {{ groupLabel(group) }}
@@ -300,7 +314,7 @@ const disable = async () => {
               "
               @update:model-value="include => toggleSource(source.id, include)"
             />
-            <span class="min-w-0 flex-1 truncate" :title="source.url">
+            <span class="flex-1 min-w-0 truncate" :title="source.url">
               {{ source.name || source.url }}
             </span>
             <span
@@ -326,171 +340,160 @@ const disable = async () => {
     </div>
 
     <template v-if="hasDraft">
-      <div
-        class="flex flex-col gap-2 rounded-lg border border-n-weak bg-n-background/40 p-4"
-      >
+      <div class="flex flex-col gap-1.5">
         <div class="flex items-center justify-between gap-2">
-          <label class="text-sm font-semibold text-n-slate-12">
+          <h4 class="m-0 text-xs font-medium uppercase text-n-slate-10">
             {{ $t('CAPTAIN.KNOWLEDGE_BRIEF.OVERVIEW') }}
-          </label>
-          <span class="text-xs text-n-slate-10">
-            {{ (draft.overview.text || '').length }} / {{ OVERVIEW_LENGTH }}
-          </span>
-        </div>
-        <textarea
-          v-model="draft.overview.text"
-          :maxlength="OVERVIEW_LENGTH"
-          rows="4"
-          class="w-full rounded-lg border border-n-weak bg-n-background p-3 text-sm font-normal text-n-slate-12 focus:border-n-brand focus:outline-none"
-        />
-        <div
-          v-if="draft.overview.document_ids?.length"
-          class="mt-1 flex flex-col gap-1.5"
-        >
-          <span class="text-xs font-medium text-n-slate-11">
-            {{
-              $t('CAPTAIN.KNOWLEDGE_BRIEF.BASED_ON_SOURCES') ||
-              'Synthesized from'
-            }}:
-          </span>
-          <div class="flex flex-wrap items-center gap-1.5">
+          </h4>
+          <div class="flex items-center gap-1">
             <span
-              v-for="source in isOverviewSourcesExpanded
-                ? getSourcesList(draft.overview.document_ids)
-                : getSourcesList(draft.overview.document_ids).slice(0, 4)"
-              :key="source.id"
-              class="inline-flex items-center gap-1 rounded-md bg-n-alpha-2 px-2 py-0.5 text-xs text-n-slate-11"
-              :title="source.name"
-            >
-              <span class="i-lucide-file-text size-3 text-n-slate-10" />
-              <span class="max-w-44 truncate">{{ source.name }}</span>
-            </span>
-            <button
-              v-if="draft.overview.document_ids.length > 4"
-              type="button"
-              class="rounded-md px-1.5 py-0.5 text-xs font-medium text-n-brand hover:underline"
-              @click="toggleOverviewSources"
+              v-if="draft.overview.document_ids?.length"
+              v-tooltip.top="sourceNames(draft.overview.document_ids)"
+              class="px-1.5 py-0.5 text-xs rounded-md bg-n-alpha-2 text-n-slate-11"
             >
               {{
-                isOverviewSourcesExpanded
-                  ? 'Show less'
-                  : `+${draft.overview.document_ids.length - 4} more`
+                $t('CAPTAIN.KNOWLEDGE_BRIEF.SOURCE_COUNT', {
+                  count: draft.overview.document_ids.length,
+                })
               }}
-            </button>
+            </span>
+            <Button
+              size="xs"
+              variant="ghost"
+              color="slate"
+              :label="
+                $t(
+                  editingOverview
+                    ? 'CAPTAIN.KNOWLEDGE_BRIEF.DONE'
+                    : 'CAPTAIN.KNOWLEDGE_BRIEF.EDIT'
+                )
+              "
+              @click="editingOverview = !editingOverview"
+            />
           </div>
         </div>
+        <template v-if="editingOverview">
+          <textarea
+            v-model="draft.overview.text"
+            :maxlength="OVERVIEW_LENGTH"
+            rows="5"
+            :aria-label="$t('CAPTAIN.KNOWLEDGE_BRIEF.OVERVIEW')"
+            class="w-full p-3 mb-0 text-sm rounded-lg border border-n-weak bg-n-background text-n-slate-12 focus:border-n-brand focus:outline-none"
+          />
+          <span class="text-xs text-end text-n-slate-10">
+            {{
+              $t('CAPTAIN.KNOWLEDGE_BRIEF.LENGTH', {
+                count: (draft.overview.text || '').length,
+                max: OVERVIEW_LENGTH,
+              })
+            }}
+          </span>
+        </template>
+        <p
+          v-else
+          class="m-0 text-sm leading-relaxed whitespace-pre-line text-n-slate-12"
+        >
+          {{ draft.overview.text }}
+        </p>
       </div>
 
-      <div class="flex flex-col gap-3">
-        <div class="flex items-center justify-between">
-          <h4 class="m-0 text-sm font-semibold text-n-slate-12">
-            {{
-              $t('CAPTAIN.KNOWLEDGE_BRIEF.TOPICS_TITLE') ||
-              'Core Business Topics'
-            }}
-          </h4>
-          <span class="text-xs text-n-slate-11">
-            {{ draft.topics.length }}
-            {{ draft.topics.length === 1 ? 'topic' : 'topics' }}
-          </span>
-        </div>
-
-        <div
-          v-for="(topic, index) in draft.topics"
-          :key="index"
-          class="flex flex-col gap-2.5 rounded-lg border border-n-weak bg-n-solid-1 p-4 shadow-xs transition-colors hover:border-n-slate-6"
-        >
-          <div class="flex items-center justify-between gap-3">
-            <div class="flex items-center gap-2 flex-1 min-w-0">
-              <span
-                class="shrink-0 rounded bg-n-brand/10 px-1.5 py-0.5 text-xs font-semibold text-n-blue-text"
-              >
-                {{ $t('CAPTAIN.KNOWLEDGE_BRIEF.TOPIC') }} {{ index + 1 }}
-              </span>
+      <div class="flex flex-col gap-1">
+        <h4 class="m-0 text-xs font-medium uppercase text-n-slate-10">
+          {{ $t('CAPTAIN.KNOWLEDGE_BRIEF.TOPICS_TITLE') }}
+        </h4>
+        <ul class="flex flex-col m-0 divide-y list-none divide-n-weak">
+          <li
+            v-for="(topic, index) in draft.topics"
+            :key="index"
+            class="flex flex-col gap-2 py-2.5"
+          >
+            <template v-if="editingTopic === index">
               <Input
                 v-model="topic.title"
-                class="flex-1"
                 :placeholder="$t('CAPTAIN.KNOWLEDGE_BRIEF.TOPIC_NAME')"
               />
-            </div>
-            <div class="flex items-center gap-2 shrink-0">
+              <textarea
+                v-model="topic.summary"
+                :maxlength="TOPIC_LENGTH"
+                rows="3"
+                :aria-label="$t('CAPTAIN.KNOWLEDGE_BRIEF.SUMMARY')"
+                class="w-full p-3 mb-0 text-sm rounded-lg border border-n-weak bg-n-background text-n-slate-12 focus:border-n-brand focus:outline-none"
+              />
+              <div class="flex items-center justify-between gap-2">
+                <span class="text-xs text-n-slate-10">
+                  {{
+                    $t('CAPTAIN.KNOWLEDGE_BRIEF.LENGTH', {
+                      count: (topic.summary || '').length,
+                      max: TOPIC_LENGTH,
+                    })
+                  }}
+                </span>
+                <Button
+                  size="xs"
+                  variant="faded"
+                  color="slate"
+                  :label="$t('CAPTAIN.KNOWLEDGE_BRIEF.DONE')"
+                  @click="editingTopic = null"
+                />
+              </div>
+            </template>
+            <div v-else class="flex items-start gap-3 group">
+              <div class="flex flex-col flex-1 min-w-0 gap-0.5">
+                <span class="text-sm font-medium text-n-slate-12">
+                  {{ topic.title }}
+                </span>
+                <span class="text-sm text-n-slate-11 line-clamp-2">
+                  {{ topic.summary }}
+                </span>
+              </div>
               <span
                 v-if="topic.document_ids?.length"
-                class="text-xs text-n-slate-10 hidden sm:inline"
+                v-tooltip.top="sourceNames(topic.document_ids)"
+                class="shrink-0 px-1.5 py-0.5 text-xs rounded-md bg-n-alpha-2 text-n-slate-11"
               >
-                {{ topic.document_ids.length }}
-                {{ topic.document_ids.length === 1 ? 'source' : 'sources' }}
+                {{
+                  $t('CAPTAIN.KNOWLEDGE_BRIEF.SOURCE_COUNT', {
+                    count: topic.document_ids.length,
+                  })
+                }}
               </span>
-              <Button
-                size="sm"
-                variant="ghost"
-                color="slate"
-                icon="i-lucide-trash-2"
-                :aria-label="$t('CAPTAIN.KNOWLEDGE_BRIEF.REMOVE_TOPIC')"
-                @click="removeTopic(index)"
-              />
+              <div
+                class="flex items-center opacity-0 shrink-0 group-hover:opacity-100 focus-within:opacity-100"
+              >
+                <Button
+                  size="xs"
+                  variant="ghost"
+                  color="slate"
+                  icon="i-lucide-pencil"
+                  :aria-label="$t('CAPTAIN.KNOWLEDGE_BRIEF.EDIT')"
+                  @click="editingTopic = index"
+                />
+                <Button
+                  size="xs"
+                  variant="ghost"
+                  color="slate"
+                  icon="i-lucide-trash-2"
+                  :aria-label="$t('CAPTAIN.KNOWLEDGE_BRIEF.REMOVE_TOPIC')"
+                  @click="removeTopic(index)"
+                />
+              </div>
             </div>
-          </div>
-          <div class="relative">
-            <textarea
-              v-model="topic.summary"
-              :maxlength="TOPIC_LENGTH"
-              rows="3"
-              :aria-label="$t('CAPTAIN.KNOWLEDGE_BRIEF.SUMMARY')"
-              class="w-full rounded-lg border border-n-weak bg-n-background p-3 text-sm text-n-slate-12 focus:border-n-brand focus:outline-none"
-            />
-            <span
-              class="absolute bottom-2 end-2 text-[10px] text-n-slate-10 bg-n-background/80 px-1 rounded"
-            >
-              {{ (topic.summary || '').length }} / {{ TOPIC_LENGTH }}
-            </span>
-          </div>
-          <div
-            v-if="topic.document_ids?.length"
-            class="flex flex-wrap items-center gap-1.5"
-          >
-            <span class="text-xs text-n-slate-10">{{
-              $t('CAPTAIN.KNOWLEDGE_BRIEF.SOURCES_LABEL')
-            }}</span>
-            <span
-              v-for="source in expandedTopics[index]
-                ? getSourcesList(topic.document_ids)
-                : getSourcesList(topic.document_ids).slice(0, 3)"
-              :key="source.id"
-              class="inline-flex items-center gap-1 rounded bg-n-alpha-2 px-1.5 py-0.5 text-xs text-n-slate-11"
-              :title="source.name"
-            >
-              <span class="i-lucide-file-text size-3 text-n-slate-10" />
-              <span class="max-w-40 truncate">{{ source.name }}</span>
-            </span>
-            <button
-              v-if="topic.document_ids.length > 3"
-              type="button"
-              class="text-xs font-medium text-n-brand hover:underline"
-              @click="toggleTopicSources(index)"
-            >
-              {{
-                expandedTopics[index]
-                  ? $t('CAPTAIN.KNOWLEDGE_BRIEF.SHOW_LESS')
-                  : `+${topic.document_ids.length - 3} more`
-              }}
-            </button>
-          </div>
-        </div>
+          </li>
+        </ul>
       </div>
     </template>
 
     <p v-if="error" role="alert" class="m-0 text-sm text-n-ruby-11">
       {{ error }}
     </p>
-    <div
+    <footer
       v-if="hasDraft || brief?.enabled"
-      class="flex flex-wrap items-center justify-between gap-3"
+      class="flex flex-wrap items-center justify-end gap-2 pt-3 border-t border-n-weak"
     >
       <Button
         v-if="brief?.enabled"
         size="sm"
-        variant="faded"
+        variant="ghost"
         color="slate"
         :disabled="saving"
         :label="$t('CAPTAIN.KNOWLEDGE_BRIEF.DISABLE')"
@@ -499,7 +502,6 @@ const disable = async () => {
       <Button
         v-if="hasDraft"
         size="sm"
-        class="ms-auto"
         :label="
           $t(
             active && draftIsPublished
@@ -511,6 +513,6 @@ const disable = async () => {
         :is-loading="saving"
         @click="publish"
       />
-    </div>
+    </footer>
   </section>
 </template>

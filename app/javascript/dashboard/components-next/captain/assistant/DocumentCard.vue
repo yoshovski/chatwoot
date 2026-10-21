@@ -13,7 +13,6 @@ import {
 } from 'shared/helpers/documentHelper';
 
 import Icon from 'dashboard/components-next/icon/Icon.vue';
-import CardLayout from 'dashboard/components-next/CardLayout.vue';
 import DropdownMenu from 'dashboard/components-next/dropdown-menu/DropdownMenu.vue';
 import Button from 'dashboard/components-next/button/Button.vue';
 import Checkbox from 'dashboard/components-next/checkbox/Checkbox.vue';
@@ -94,10 +93,6 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
-  selectable: {
-    type: Boolean,
-    default: false,
-  },
   showSelectionControl: {
     type: Boolean,
     default: false,
@@ -105,10 +100,6 @@ const props = defineProps({
   showMenu: {
     type: Boolean,
     default: true,
-  },
-  compact: {
-    type: Boolean,
-    default: false,
   },
 });
 
@@ -138,6 +129,7 @@ const KNOWLEDGE_STATE_CHIPS = {
 };
 
 const exactTimestamp = useExactTimestamp();
+const timestamp = computed(() => props.lastSyncedAt || props.createdAt);
 const route = useRoute();
 
 const { checkPermissions } = usePolicy();
@@ -172,7 +164,10 @@ const canSync = computed(
     (props.syncable || isFailed.value) &&
     (isAvailable.value || isFailed.value)
 );
-const showSyncStatus = computed(() => props.syncable);
+// The row has room for one status: sync trouble wins over the knowledge state.
+const showSyncStatus = computed(
+  () => props.syncable && (isFailed.value || isSyncing.value)
+);
 const knowledgeChip = computed(
   () => KNOWLEDGE_STATE_CHIPS[props.knowledgeState]
 );
@@ -243,7 +238,6 @@ const menuItems = computed(() => {
   return allOptions;
 });
 
-const createdAtLabel = computed(() => dynamicTime(props.createdAt));
 const responsesCountLabel = computed(() =>
   t('CAPTAIN.DOCUMENTS.FAQ_COUNT', { n: props.responsesCount })
 );
@@ -253,11 +247,6 @@ const displayLink = computed(() => {
 
   return getDocumentDisplayPath(props.externalLink);
 });
-const linkIcon = computed(() => {
-  if (isMarkdown.value) return 'i-lucide-file-text';
-  return isPdf.value ? 'i-ph-file-pdf' : 'i-ph-link-simple';
-});
-
 const handleAction = ({ action, value }) => {
   toggleDropdown(false);
   emit('action', { action, value, id: props.id });
@@ -274,8 +263,7 @@ const handleRetry = () => {
 
 <template>
   <div
-    v-if="compact"
-    class="relative flex items-center justify-between gap-3 px-3.5 py-2.5 rounded-lg border border-n-weak bg-n-solid-1 hover:border-n-slate-6 transition-all"
+    class="relative flex items-center justify-between gap-3 px-3.5 py-2.5 rounded-lg border border-n-weak bg-n-solid-1 hover:border-n-slate-6 transition-colors"
     :class="{
       'opacity-60': !enabled,
       'ring-1 ring-n-brand bg-n-brand/5': isSelected,
@@ -284,20 +272,24 @@ const handleRetry = () => {
     @mouseleave="emit('hover', false)"
   >
     <div class="flex items-center gap-2.5 min-w-0 flex-1">
-      <Checkbox
-        v-if="showSelectionControl"
-        v-model="modelValue"
-        class="shrink-0"
-      />
-      <div
-        class="flex items-center justify-center size-6 rounded shrink-0"
-        :class="typeIconClasses"
-      >
-        <Icon :icon="typeIcon" class="size-3.5" />
+      <!-- The checkbox takes the type icon's place, so hovering never moves the title. -->
+      <div class="flex items-center justify-center size-6 shrink-0">
+        <Checkbox
+          v-if="showSelectionControl"
+          v-model="modelValue"
+          :aria-label="name"
+        />
+        <div
+          v-else
+          class="flex items-center justify-center size-6 rounded"
+          :class="typeIconClasses"
+        >
+          <Icon :icon="typeIcon" class="size-3.5" />
+        </div>
       </div>
       <button
         type="button"
-        class="p-0 text-sm font-medium text-left bg-transparent border-0 outline-transparent text-n-slate-12 truncate max-w-xs md:max-w-md hover:underline"
+        class="p-0 text-sm font-medium text-start bg-transparent border-0 outline-transparent text-n-slate-12 truncate max-w-xs md:max-w-md underline-offset-2 hover:underline focus-visible:underline"
         @click="handleViewDetails"
       >
         {{ name }}
@@ -308,7 +300,7 @@ const handleRetry = () => {
         :title="externalLink"
         target="_blank"
         rel="noopener noreferrer"
-        class="hidden sm:inline-flex items-center gap-1 text-xs text-n-slate-10 hover:text-n-slate-12 truncate max-w-xs"
+        class="hidden sm:inline-flex flex-1 min-w-0 items-center gap-1 text-xs text-n-slate-10 hover:text-n-slate-12 truncate"
         @click.stop
       >
         <span class="truncate">{{ displayLink }}</span>
@@ -322,12 +314,32 @@ const handleRetry = () => {
       </span>
     </div>
     <div class="flex items-center gap-2.5 shrink-0">
+      <DocumentSyncStatus
+        v-if="showSyncStatus"
+        class="!text-xs"
+        :status="syncStatus"
+        :last-synced-at="lastSyncedAt"
+        :error-code="lastSyncErrorCode"
+        :sync-in-progress="syncInProgress"
+        :stale-after-hours="syncStaleAfterHours"
+        :show-retry="canSync && isRetryableSync"
+        @retry="handleRetry"
+      />
       <span
-        v-if="knowledgeChip"
+        v-else-if="knowledgeChip"
+        v-tooltip.top="{
+          content: t('CAPTAIN.DOCUMENTS.KNOWLEDGE_STATE.TOOLTIP'),
+          delay: { show: 500, hide: 0 },
+        }"
         class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-xs font-medium shrink-0"
         :class="knowledgeChip.chip"
       >
-        <span class="size-3" :class="knowledgeChip.icon" />
+        <span
+          data-test="chip-dot"
+          class="size-3"
+          :class="knowledgeChip.icon"
+          aria-hidden="true"
+        />
         <span class="hidden md:inline">{{ t(knowledgeChip.label) }}</span>
       </span>
       <router-link
@@ -338,11 +350,25 @@ const handleRetry = () => {
       >
         {{ responsesCountLabel }}
       </router-link>
-      <span class="text-xs text-n-slate-10 shrink-0 hidden lg:inline">
-        {{ lastSyncedAt ? dynamicTime(lastSyncedAt) : createdAtLabel }}
+      <span
+        v-tooltip.top="{
+          content: exactTimestamp(timestamp),
+          delay: { show: 500, hide: 0 },
+        }"
+        class="text-xs text-n-slate-10 shrink-0 hidden lg:inline"
+      >
+        {{ dynamicTime(timestamp) }}
       </span>
       <Policy v-if="canManage" :permissions="['administrator']">
-        <Switch v-model="enabledState" size="sm" />
+        <Switch
+          v-model="enabledState"
+          size="sm"
+          :aria-label="
+            enabled
+              ? t('CAPTAIN.DOCUMENTS.PAUSE')
+              : t('CAPTAIN.DOCUMENTS.RESUME')
+          "
+        />
       </Policy>
       <div
         v-if="showMenu && menuItems.length"
@@ -354,162 +380,16 @@ const handleRetry = () => {
           color="slate"
           size="xs"
           class="rounded-md"
+          :aria-label="t('CAPTAIN.DOCUMENTS.OPTIONS.MORE')"
           @click="toggleDropdown()"
         />
         <DropdownMenu
           v-if="showActionsDropdown"
           :menu-items="menuItems"
-          class="top-full mt-1 right-0 z-30"
+          class="top-full mt-1 ltr:right-0 rtl:left-0 z-30"
           @action="handleAction($event)"
         />
       </div>
     </div>
   </div>
-
-  <CardLayout
-    v-else
-    :selectable="selectable"
-    class="relative"
-    :class="{ 'opacity-60': !enabled }"
-    @mouseenter="emit('hover', true)"
-    @mouseleave="emit('hover', false)"
-  >
-    <div
-      v-show="showSelectionControl"
-      class="absolute top-7 ltr:left-3 rtl:right-3"
-    >
-      <Checkbox v-model="modelValue" />
-    </div>
-    <div class="flex gap-3 justify-between items-center w-full">
-      <div class="flex items-center gap-2.5 min-w-0 flex-1">
-        <div
-          class="flex items-center justify-center size-8 rounded-lg shrink-0"
-          :class="typeIconClasses"
-        >
-          <Icon :icon="typeIcon" class="size-4" />
-        </div>
-        <button
-          type="button"
-          class="p-0 text-base text-left bg-transparent border-0 outline-transparent text-n-slate-12 line-clamp-1 underline-offset-2 hover:underline focus-visible:underline"
-          @click="handleViewDetails"
-        >
-          {{ name }}
-        </button>
-        <span
-          v-if="!enabled"
-          class="inline-flex items-center px-1.5 py-0.5 text-xs font-medium rounded bg-n-slate-3 text-n-slate-11 shrink-0"
-        >
-          {{ $t('CAPTAIN.DOCUMENTS.STATUS.PAUSED') }}
-        </span>
-      </div>
-      <div class="flex items-center gap-2 shrink-0">
-        <Policy
-          v-if="canManage"
-          :permissions="['administrator']"
-          class="flex items-center"
-        >
-          <Switch
-            v-model="enabledState"
-            :aria-label="
-              enabled
-                ? t('CAPTAIN.DOCUMENTS.PAUSE')
-                : t('CAPTAIN.DOCUMENTS.RESUME')
-            "
-          />
-        </Policy>
-        <div
-          v-if="showMenu && menuItems.length"
-          v-on-clickaway="() => toggleDropdown(false)"
-          class="flex relative items-center group"
-        >
-          <Button
-            icon="i-lucide-ellipsis-vertical"
-            color="slate"
-            size="xs"
-            class="rounded-md group-hover:bg-n-alpha-2"
-            @click="toggleDropdown()"
-          />
-          <DropdownMenu
-            v-if="showActionsDropdown"
-            :menu-items="menuItems"
-            class="top-full mt-1 ltr:right-0 rtl:left-0 xl:ltr:right-0 xl:rtl:left-0"
-            @action="handleAction($event)"
-          />
-        </div>
-      </div>
-    </div>
-    <div class="flex gap-4 justify-between items-center w-full">
-      <span
-        class="flex gap-1 items-center text-sm truncate shrink-0 text-n-slate-11"
-      >
-        <Icon icon="i-woot-captain" />
-        {{ assistant?.name || '' }}
-      </span>
-      <a
-        v-if="!isPdf && !isMarkdown && hasSafeLink"
-        :href="externalLink"
-        :title="externalLink"
-        target="_blank"
-        rel="noopener noreferrer"
-        class="flex flex-1 gap-1 justify-start items-center text-sm truncate text-n-slate-11 hover:text-n-slate-12 hover:underline"
-        @click.stop
-      >
-        <Icon :icon="linkIcon" class="shrink-0" />
-        <span class="truncate">{{ displayLink }}</span>
-        <Icon icon="i-lucide-external-link size-3 shrink-0 opacity-70" />
-      </a>
-      <span
-        v-else
-        class="flex flex-1 gap-1 justify-start items-center text-sm truncate text-n-slate-11"
-      >
-        <Icon :icon="linkIcon" class="shrink-0" />
-        <span class="truncate">{{ displayLink }}</span>
-      </span>
-      <span
-        v-if="knowledgeChip"
-        v-tooltip.top="{
-          content: t('CAPTAIN.DOCUMENTS.KNOWLEDGE_STATE.TOOLTIP'),
-          delay: { show: 500, hide: 0 },
-        }"
-        class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium shrink-0"
-        :class="knowledgeChip.chip"
-      >
-        <span
-          data-test="chip-dot"
-          class="size-3.5"
-          :class="knowledgeChip.icon"
-          aria-hidden="true"
-        />
-        {{ t(knowledgeChip.label) }}
-      </span>
-      <router-link
-        v-if="showFaqPill"
-        :to="faqsFilteredRoute"
-        class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-n-alpha-2 hover:bg-n-alpha-3 text-n-slate-11 hover:text-n-slate-12 transition-colors shrink-0"
-        @click.stop
-      >
-        {{ responsesCountLabel }}
-      </router-link>
-      <DocumentSyncStatus
-        v-if="showSyncStatus"
-        :status="syncStatus"
-        :last-synced-at="lastSyncedAt"
-        :error-code="lastSyncErrorCode"
-        :sync-in-progress="syncInProgress"
-        :stale-after-hours="syncStaleAfterHours"
-        :show-retry="canSync && isRetryableSync"
-        @retry="handleRetry"
-      />
-      <div
-        v-else
-        v-tooltip.top="{
-          content: exactTimestamp(createdAt),
-          delay: { show: 500, hide: 0 },
-        }"
-        class="text-sm shrink-0 text-n-slate-11 line-clamp-1"
-      >
-        {{ createdAtLabel }}
-      </div>
-    </div>
-  </CardLayout>
 </template>

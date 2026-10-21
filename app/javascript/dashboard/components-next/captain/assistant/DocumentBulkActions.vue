@@ -77,7 +77,10 @@ const selectAllLabel = computed(() => {
 });
 
 const selectedCountLabel = computed(() =>
-  t('CAPTAIN.DOCUMENTS.SELECTED', { count: props.selectedIds.size })
+  t('CAPTAIN.DOCUMENTS.SELECTED_OF', {
+    count: props.selectedIds.size,
+    total: props.documents.length,
+  })
 );
 
 const handleBulkSync = async () => {
@@ -116,6 +119,7 @@ const handleBulkSync = async () => {
       :select-all-label="selectAllLabel"
       :selected-count-label="selectedCountLabel"
       :delete-label="$t('CAPTAIN.DOCUMENTS.BULK_DELETE_BUTTON')"
+      compact
       class="w-fit"
       :class="{ 'mb-2': selectedIds.size > 0 }"
       @update:model-value="emit('update:selectedIds', $event)"
@@ -123,7 +127,9 @@ const handleBulkSync = async () => {
     >
       <template #secondaryActions>
         <Button
+          v-tooltip.top="t('PLATFORM_NAV.ENABLE_AI_HINT')"
           :label="t('PLATFORM_NAV.ENABLE_AI')"
+          icon="i-lucide-circle-play"
           size="sm"
           variant="ghost"
           color="slate"
@@ -131,7 +137,9 @@ const handleBulkSync = async () => {
           @click="updateEnabled(true)"
         />
         <Button
+          v-tooltip.top="t('PLATFORM_NAV.DISABLE_AI_HINT')"
           :label="t('PLATFORM_NAV.DISABLE_AI')"
+          icon="i-lucide-circle-pause"
           size="sm"
           variant="ghost"
           color="slate"
@@ -140,12 +148,12 @@ const handleBulkSync = async () => {
         />
         <Button
           v-if="hasSyncableSelection"
-          :label="$t('CAPTAIN.DOCUMENTS.BULK_SYNC_BUTTON')"
-          sm
-          slate
-          ghost
+          v-tooltip.top="$t('CAPTAIN.DOCUMENTS.BULK_SYNC_BUTTON')"
+          :aria-label="$t('CAPTAIN.DOCUMENTS.BULK_SYNC_BUTTON')"
+          size="sm"
+          variant="ghost"
+          color="slate"
           icon="i-lucide-refresh-cw"
-          class="!px-1.5"
           @click="handleBulkSync"
         />
       </template>

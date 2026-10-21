@@ -10,7 +10,7 @@ import { usePolicy } from 'dashboard/composables/usePolicy';
 import { debounce } from '@chatwoot/utils';
 
 import DeleteDialog from 'dashboard/components-next/captain/pageComponents/DeleteDialog.vue';
-import WebsiteSourcesPanel from 'dashboard/components-next/captain/knowledge/WebsiteSourcesPanel.vue';
+import WebsitePagesDialog from 'dashboard/components-next/captain/knowledge/WebsitePagesDialog.vue';
 import KnowledgeSourceBrowser from 'dashboard/components-next/captain/knowledge/KnowledgeSourceBrowser.vue';
 import DocumentCard from 'dashboard/components-next/captain/assistant/DocumentCard.vue';
 import DocumentFilter from 'dashboard/components-next/captain/assistant/DocumentFilter.vue';
@@ -45,7 +45,7 @@ const isFetching = computed(() => uiFlags.value.fetchingList);
 const documentsMeta = useMapGetter('captainDocuments/getMeta');
 
 const selectedAssistantId = computed(() => Number(route.params.assistantId));
-const websiteSourcesPanel = ref(null);
+const websitePagesDialog = ref(null);
 const canManageDocuments = computed(() => checkPermissions(['administrator']));
 
 const selectedDocument = ref(null);
@@ -82,7 +82,6 @@ const syncIntervalHours = ref(null);
 const searchQuery = ref('');
 const sectionFilter = ref(null);
 const websiteFilter = ref(null);
-const isCompactView = ref(true);
 const hasWebsiteSources = ref(false);
 const documentSectionsPanel = ref(null);
 
@@ -328,7 +327,6 @@ const fetchDocumentsAfterBulkAction = () => {
 
 const onCreateSuccess = () => {
   refreshDocumentsPage(1);
-  websiteSourcesPanel.value?.load();
   documentSectionsPanel.value?.load();
 };
 
@@ -480,19 +478,10 @@ onUnmounted(() => {
         v-model:website="websiteFilter"
         v-model:section="sectionFilter"
         :assistant-id="selectedAssistantId"
+        :can-manage="canManageDocuments"
         @loaded="hasWebsiteSources = $event"
+        @manage="websitePagesDialog.open($event)"
       />
-      <Policy
-        v-if="selectedAssistantId > 0 && websiteFilter && websiteFilter !== '*'"
-        :permissions="['administrator']"
-      >
-        <WebsiteSourcesPanel
-          ref="websiteSourcesPanel"
-          :assistant-id="selectedAssistantId"
-          :active-website="websiteFilter"
-          @saved="onCreateSuccess"
-        />
-      </Policy>
       <div
         class="mb-3 flex flex-wrap items-center justify-between gap-3 text-sm text-n-slate-11"
       >
@@ -508,28 +497,6 @@ onUnmounted(() => {
             size="sm"
             variant="link"
             @click="clearFilters"
-          />
-        </div>
-        <div
-          class="flex items-center gap-1 bg-n-solid-1 border border-n-weak rounded-lg p-0.5"
-        >
-          <Button
-            size="xs"
-            :variant="isCompactView ? 'faded' : 'ghost'"
-            :color="isCompactView ? 'blue' : 'slate'"
-            icon="i-lucide-list"
-            :aria-label="$t('PLATFORM_NAV.COMPACT_VIEW')"
-            :title="$t('PLATFORM_NAV.COMPACT_VIEW')"
-            @click="isCompactView = true"
-          />
-          <Button
-            size="xs"
-            :variant="!isCompactView ? 'faded' : 'ghost'"
-            :color="!isCompactView ? 'blue' : 'slate'"
-            icon="i-lucide-layout-list"
-            :aria-label="$t('PLATFORM_NAV.COMFORTABLE_VIEW')"
-            :title="$t('PLATFORM_NAV.COMFORTABLE_VIEW')"
-            @click="isCompactView = false"
           />
         </div>
       </div>
@@ -550,15 +517,11 @@ onUnmounted(() => {
         </span>
       </div>
 
-      <div
-        v-else
-        :class="isCompactView ? 'flex flex-col gap-2' : 'flex flex-col gap-4'"
-      >
+      <div v-else class="flex flex-col gap-2">
         <DocumentCard
           v-for="doc in documents"
           :id="doc.id"
           :key="doc.id"
-          :compact="isCompactView"
           :name="doc.name || doc.external_link"
           :external-link="doc.external_link"
           :pdf-document="doc.pdf_document"
@@ -576,7 +539,6 @@ onUnmounted(() => {
           :responses-count="doc.responses_count"
           :knowledge-state="doc.knowledge_state"
           :is-selected="canManageDocuments && bulkSelectedIds.has(doc.id)"
-          :selectable="canManageDocuments"
           :show-selection-control="shouldShowSelectionControl(doc.id)"
           :show-menu="!bulkSelectedIds.has(doc.id)"
           @action="handleAction"
@@ -599,6 +561,12 @@ onUnmounted(() => {
       :store-hosts="shopifyStoreHosts"
       @create-success="onCreateSuccess"
       @close="handleCreateDialogClose"
+    />
+    <WebsitePagesDialog
+      v-if="canManageDocuments && selectedAssistantId > 0"
+      ref="websitePagesDialog"
+      :assistant-id="selectedAssistantId"
+      @saved="onCreateSuccess"
     />
     <DeleteDialog
       v-if="selectedDocument"

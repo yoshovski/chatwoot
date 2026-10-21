@@ -6,6 +6,7 @@ import { picoSearch } from '@chatwoot/pico-search';
 import { useStore } from 'dashboard/composables/store';
 import { useUISettings } from 'dashboard/composables/useUISettings';
 import { useAssistantSettings } from '../settings/useAssistantSettings';
+import { useBusinessExamples } from 'dashboard/components-next/captain/assistant/useBusinessExamples';
 import Input from 'dashboard/components-next/input/Input.vue';
 import Button from 'dashboard/components-next/button/Button.vue';
 
@@ -43,23 +44,10 @@ const displayGuardrails = computed(() =>
   guardrailsContent.value.map((c, idx) => ({ id: idx, content: c }))
 );
 
-const guardrailsExample = [
-  {
-    id: 1,
-    content:
-      'Block queries that share or request sensitive personal information (e.g. phone numbers, passwords).',
-  },
-  {
-    id: 2,
-    content:
-      'Reject queries that include offensive, discriminatory, or threatening language.',
-  },
-  {
-    id: 3,
-    content:
-      'Deflect when the assistant is asked for legal or medical diagnosis or treatment.',
-  },
-];
+const examples = useBusinessExamples(assistantId);
+const guardrailsExample = computed(() =>
+  examples.guardrails.value.map((content, id) => ({ id, content }))
+);
 
 const filteredGuardrails = computed(() => {
   const query = searchQuery.value.trim();
@@ -166,7 +154,7 @@ const bulkDeleteGuardrails = async () => {
 const addAllExample = () => {
   updateUISettings({ show_guardrails_suggestions: false });
   try {
-    const exampleContents = guardrailsExample.map(example => example.content);
+    const exampleContents = examples.guardrails.value;
     const newGuardrails = [...guardrailsContent.value, ...exampleContents];
     saveGuardrails(newGuardrails);
   } catch {
@@ -212,6 +200,7 @@ const addAllExample = () => {
             </div>
             <BulkSelectBar
               v-model="bulkSelectedIds"
+              compact
               :all-items="displayGuardrails"
               :select-all-label="buildSelectedCountLabel"
               :selected-count-label="selectedCountLabel"
@@ -308,7 +297,7 @@ const addAllExample = () => {
           :avatar-url="assistant.avatar_url"
         >
           <p class="preview-bubble preview-bubble--customer">
-            {{ t('CAPTAIN.ASSISTANTS.SETTINGS.PREVIEW.OFF_TOPIC_QUESTION') }}
+            {{ examples.offLimitsQuestion.value }}
           </p>
           <p class="preview-bubble preview-bubble--agent">
             {{

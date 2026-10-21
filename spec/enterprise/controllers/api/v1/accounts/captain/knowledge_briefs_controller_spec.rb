@@ -27,4 +27,47 @@ RSpec.describe 'Api::V1::Accounts::Captain::KnowledgeBriefs', type: :request do
 
     expect(response).to have_http_status(:unprocessable_entity)
   end
+
+  describe 'GET examples' do
+    let(:examples_url) { "/api/v1/accounts/#{account.id}/captain/assistants/#{assistant.id}/knowledge_brief/examples" }
+
+    it 'queues the first generation and returns no examples yet' do
+      get examples_url, headers: admin.create_new_auth_token, as: :json
+
+      expect(response.parsed_body['examples']).to be_nil
+      expect(Captain::Knowledge::GenerateExamplesJob).to have_been_enqueued.with(assistant.id)
+    end
+
+    it 'returns stored examples without queueing while the business details are unchanged' do
+      brief = Captain::KnowledgeBrief.create!(assistant: assistant)
+      brief.update!(examples: { 'data' => { 'question' => 'Do you ship abroad?' }, 'fingerprint' => brief.examples_fingerprint })
+
+      get examples_url, headers: admin.create_new_auth_token, as: :json
+
+      expect(response.parsed_body.dig('examples', 'question')).to eq('Do you ship abroad?')
+      expect(Captain::Knowledge::GenerateExamplesJob).not_to have_been_enqueued
+    end
+
+    it 'waits a month between regenerations for a settled agent' do
+      assistant.update!(created_at: 30.days.ago)
+      brief = Captain::KnowledgeBrief.create!(assistant: assistant,
+                                              published: { 'document_ids' => [ready.id], 'overview' => { 'text' => 'Old' }, 'topics' => [] })
+      brief.update!(examples: { 'fingerprint' => 'old', 'requested_at' => 2.days.ago.iso8601 })
+
+      get examples_url, headers: admin.create_new_auth_token, as: :json
+      expect(Captain::Knowledge::GenerateExamplesJob).not_to have_been_enqueued
+
+      brief.update!(examples: { 'fingerprint' => 'old', 'requested_at' => 31.days.ago.iso8601 })
+      get examples_url, headers: admin.create_new_auth_token, as: :json
+      expect(Captain::Knowledge::GenerateExamplesJob).to have_been_enqueued.with(assistant.id)
+    end
+
+    it 'refreshes hourly while the agent is new' do
+      Captain::KnowledgeBrief.create!(assistant: assistant, examples: { 'fingerprint' => 'old', 'requested_at' => 2.hours.ago.iso8601 })
+
+      get examples_url, headers: admin.create_new_auth_token, as: :json
+
+      expect(Captain::Knowledge::GenerateExamplesJob).to have_been_enqueued.with(assistant.id)
+    end
+  end
 end

@@ -1,5 +1,10 @@
 class Captain::KnowledgeBrief < ApplicationRecord
   self.table_name = 'captain_knowledge_briefs'
+  EXAMPLE_DOCUMENTS = 30
+  # New agents and unpublished briefs change quickly; settled agents refresh their examples at most monthly.
+  EXAMPLES_SETTLING_AGE = 14.days
+  EXAMPLES_SETTLING_INTERVAL = 1.hour
+  EXAMPLES_SETTLED_INTERVAL = 30.days
 
   belongs_to :account
   belongs_to :assistant, class_name: 'Captain::Assistant'
@@ -40,6 +45,30 @@ class Captain::KnowledgeBrief < ApplicationRecord
     return {} unless usable?(published)
 
     { business_overview: published.fetch('overview'), topic_summaries: published.fetch('topics') }
+  end
+
+  def examples_input
+    snapshot = usable?(published) ? published : draft
+    {
+      name: assistant.name, product_name: assistant.config['product_name'], description: assistant.description,
+      overview: snapshot.dig('overview', 'text'), topics: Array(snapshot['topics']).pluck('title'),
+      documents: source_scope.order(updated_at: :desc).limit(EXAMPLE_DOCUMENTS).pluck(:name)
+    }
+  end
+
+  def examples_fingerprint(input = examples_input) = Digest::SHA256.hexdigest(input.to_json)
+
+  # Regenerates only when the business details changed and the last request is older than the interval.
+  def examples_due?
+    return false if examples['fingerprint'] == examples_fingerprint
+
+    requested_at = examples['requested_at']
+    requested_at.nil? || Time.zone.parse(requested_at) < examples_interval.ago
+  end
+
+  def examples_interval
+    settling = assistant.created_at > EXAMPLES_SETTLING_AGE.ago || !usable?(published)
+    settling ? EXAMPLES_SETTLING_INTERVAL : EXAMPLES_SETTLED_INTERVAL
   end
 
   def client_payload

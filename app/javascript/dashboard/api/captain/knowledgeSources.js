@@ -63,6 +63,10 @@ class KnowledgeSources extends ApiClient {
     return axios.get(this.briefUrl(assistantId), { signal });
   }
 
+  examples(assistantId) {
+    return axios.get(`${this.briefUrl(assistantId)}/examples`);
+  }
+
   generateBrief(assistantId, documentIds) {
     return axios.post(`${this.briefUrl(assistantId)}/generate`, {
       document_ids: documentIds,

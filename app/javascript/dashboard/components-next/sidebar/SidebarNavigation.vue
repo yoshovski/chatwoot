@@ -136,7 +136,7 @@ watch(
     </div>
     <div class="flex items-center justify-between gap-2 px-4 pb-2 pt-4">
       <h2
-        class="m-0 min-w-0 truncate text-lg font-semibold text-n-slate-12"
+        class="m-0 min-w-0 truncate text-base font-semibold text-n-slate-12"
         :title="activeModule?.label"
       >
         {{ activeModule?.label }}
