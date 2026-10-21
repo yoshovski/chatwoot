@@ -125,8 +125,11 @@ class Api::V1::Accounts::Integrations::ShopifyController < Api::V1::Accounts::In
 
   private
 
+  # Only the App Store OAuth entry point needs the installation switch; the custom-app connection follows the workspace switch.
   def ensure_shopify_enabled
-    head :not_found unless Shopify::FeatureGate.enabled?(account: Current.account)
+    account = Current.account
+    enabled = action_name == 'auth' ? Shopify::FeatureGate.enabled?(account: account) : Shopify::FeatureGate.workspace_enabled?(account)
+    head :not_found unless enabled
   end
 
   def redirect_uri

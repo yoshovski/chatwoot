@@ -7,6 +7,7 @@ import {
   groupPlatformNavigation,
   navigationLeaves,
   activeNavigationLeaf,
+  moduleForArea,
 } from './platformNavigation';
 import Icon from 'next/icon/Icon.vue';
 import SidebarUnreadBadge from './SidebarUnreadBadge.vue';
@@ -41,7 +42,9 @@ const activeModule = computed(
   () =>
     modules.value.find(item =>
       navigationLeaves(item).includes(activeLeaf.value)
-    ) || modules.value[0]
+    ) ||
+    moduleForArea(modules.value, route, resolvePath) ||
+    modules.value[0]
 );
 const panelItems = computed(() => {
   const item = activeModule.value;
@@ -82,10 +85,10 @@ watch(
 <template>
   <nav
     :aria-label="t('PLATFORM_NAV.PRODUCT_AREAS')"
-    class="flex w-[4.5rem] shrink-0 flex-col items-center gap-4 border-e border-n-weak bg-n-background py-4"
+    class="flex w-[3.75rem] shrink-0 flex-col items-center gap-3 border-e border-n-weak bg-n-background py-3"
   >
     <slot name="brand" />
-    <div class="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto px-2">
+    <div class="flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto px-2">
       <button
         v-for="item in mainModules"
         :key="item.name"
@@ -93,19 +96,19 @@ watch(
         type="button"
         :aria-label="item.label"
         :aria-current="activeModule?.name === item.name ? 'true' : undefined"
-        class="relative flex size-14 shrink-0 items-center justify-center rounded-xl transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-n-brand"
+        class="relative flex size-10 shrink-0 items-center justify-center rounded-lg transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-n-brand"
         :class="
           activeModule?.name === item.name
             ? 'bg-n-brand/10 text-n-blue-text'
-            : 'text-n-slate-11 hover:bg-n-alpha-2'
+            : 'text-n-slate-11 hover:bg-n-alpha-2 hover:text-n-slate-12'
         "
         @click="selectModule(item)"
       >
-        <Icon :icon="item.icon" class="size-7" />
+        <Icon :icon="item.icon" class="size-5" />
         <SidebarUnreadBadge
           v-if="item.badgeCount"
           :count="item.badgeCount"
-          class="absolute end-0 top-0"
+          class="absolute -end-1 -top-1"
         />
       </button>
     </div>
@@ -115,13 +118,15 @@ watch(
       type="button"
       :aria-label="settingsModule.label"
       :aria-current="activeModule?.name === 'Settings' ? 'true' : undefined"
-      class="flex size-14 shrink-0 items-center justify-center rounded-xl text-n-slate-11 hover:bg-n-alpha-2"
-      :class="{
-        'bg-n-brand/10 text-n-blue-text': activeModule?.name === 'Settings',
-      }"
+      class="flex size-10 shrink-0 items-center justify-center rounded-lg transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-n-brand"
+      :class="
+        activeModule?.name === 'Settings'
+          ? 'bg-n-brand/10 text-n-blue-text'
+          : 'text-n-slate-11 hover:bg-n-alpha-2 hover:text-n-slate-12'
+      "
       @click="selectModule(settingsModule)"
     >
-      <Icon :icon="settingsModule.icon" class="size-7" />
+      <Icon :icon="settingsModule.icon" class="size-5" />
     </button>
     <slot name="profile" />
   </nav>
@@ -129,11 +134,16 @@ watch(
     <div class="border-b border-n-weak px-3 py-3">
       <slot name="account" />
     </div>
-    <div class="flex items-center justify-between gap-2 px-5 pb-2 pt-5">
-      <h2 class="m-0 min-w-0 truncate text-xl font-semibold text-n-slate-12">
+    <div class="flex items-center justify-between gap-2 px-4 pb-2 pt-4">
+      <h2
+        class="m-0 min-w-0 truncate text-lg font-semibold text-n-slate-12"
+        :title="activeModule?.label"
+      >
         {{ activeModule?.label }}
       </h2>
-      <slot name="actions" />
+      <div class="flex shrink-0 items-center gap-0.5">
+        <slot name="actions" />
+      </div>
     </div>
     <AssistantNavigation v-if="activeModule?.name === 'Captain'" />
     <nav

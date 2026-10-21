@@ -395,7 +395,7 @@ class Captain::Conversation::ProductCardsBuilder
   end
 
   def shopify_sat_client
-    return nil unless Shopify::FeatureGate.enabled?(account: @assistant.account)
+    return nil unless Shopify::FeatureGate.workspace_enabled?(@assistant.account)
 
     hook = shopify_hook
     return nil unless hook&.shopify_connected? && hook.shopify_tool_key.present?

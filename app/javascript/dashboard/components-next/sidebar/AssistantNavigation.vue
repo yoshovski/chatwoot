@@ -7,6 +7,13 @@ import { usePolicy } from 'dashboard/composables/usePolicy';
 import { useAccount } from 'dashboard/composables/useAccount';
 import { FEATURE_FLAGS } from 'dashboard/featureFlags';
 import Button from 'next/button/Button.vue';
+import Avatar from 'next/avatar/Avatar.vue';
+import Icon from 'next/icon/Icon.vue';
+import {
+  DropdownContainer,
+  DropdownBody,
+  DropdownItem,
+} from 'next/dropdown-menu/base';
 import CreateAssistantDialog from 'next/captain/pageComponents/assistant/CreateAssistantDialog.vue';
 
 const { t } = useI18n();
@@ -17,7 +24,10 @@ const { checkPermissions, shouldShowPaywall } = usePolicy();
 const { currentAccount } = useAccount();
 const assistants = useMapGetter('captainAssistants/getRecords');
 const dialog = ref(null);
-const selectedId = computed(() => route.params.assistantId || '');
+const selectedId = computed(() => String(route.params.assistantId || ''));
+const selectedAssistant = computed(() =>
+  assistants.value.find(assistant => String(assistant.id) === selectedId.value)
+);
 const canCreate = computed(
   () =>
     checkPermissions(['administrator']) &&
@@ -25,6 +35,7 @@ const canCreate = computed(
     !shouldShowPaywall(FEATURE_FLAGS.CAPTAIN)
 );
 const openAgent = id => {
+  if (String(id) === selectedId.value) return;
   const name = route.params.assistantId
     ? route.name
     : 'captain_assistants_overview_index';
@@ -47,34 +58,72 @@ watch(
 </script>
 
 <template>
-  <div class="flex flex-col gap-3 px-4 py-3">
-    <label
-      v-if="assistants.length"
-      class="flex flex-col gap-1 text-xs text-n-slate-11"
-    >
-      {{ t('PLATFORM_NAV.AI_AGENT') }}
-      <select
-        :value="selectedId"
-        class="w-full rounded-lg border border-n-weak bg-n-alpha-1 px-3 py-2 text-sm font-medium text-n-slate-12"
-        @change="openAgent($event.target.value)"
-      >
-        <option v-if="!selectedId" value="" disabled>
-          {{ t('PLATFORM_NAV.SELECT_AGENT') }}
-        </option>
-        <option
+  <div class="flex flex-col gap-2 px-4 pb-3 pt-1">
+    <DropdownContainer v-if="assistants.length">
+      <template #trigger="{ toggle, isOpen }">
+        <button
+          type="button"
+          :aria-label="t('PLATFORM_NAV.AI_AGENT')"
+          aria-haspopup="listbox"
+          :aria-expanded="isOpen"
+          class="flex h-10 w-full items-center gap-2 rounded-lg border border-n-weak bg-n-alpha-1 px-2.5 text-start transition-colors hover:border-n-strong"
+          :class="{ 'border-n-brand': isOpen }"
+          @click="toggle"
+        >
+          <Avatar
+            v-if="selectedAssistant"
+            :src="selectedAssistant.avatar_url"
+            :name="selectedAssistant.name"
+            :size="20"
+            icon-name="i-lucide-bot"
+            rounded-full
+          />
+          <Icon v-else icon="i-lucide-bot" class="size-5 text-n-slate-10" />
+          <span
+            class="min-w-0 flex-1 truncate text-sm font-medium"
+            :class="selectedAssistant ? 'text-n-slate-12' : 'text-n-slate-10'"
+          >
+            {{ selectedAssistant?.name || t('PLATFORM_NAV.SELECT_AGENT') }}
+          </span>
+          <Icon
+            :icon="isOpen ? 'i-lucide-chevron-up' : 'i-lucide-chevron-down'"
+            class="size-4 shrink-0 text-n-slate-10"
+          />
+        </button>
+      </template>
+      <DropdownBody class="z-50 w-56 max-h-80 overflow-y-auto">
+        <DropdownItem
           v-for="assistant in assistants"
           :key="assistant.id"
-          :value="assistant.id"
+          :click="() => openAgent(assistant.id)"
         >
-          {{ assistant.name }}
-        </option>
-      </select>
-    </label>
+          <template #icon>
+            <Avatar
+              :src="assistant.avatar_url"
+              :name="assistant.name"
+              :size="20"
+              icon-name="i-lucide-bot"
+              rounded-full
+            />
+          </template>
+          <template #label>
+            <span class="min-w-0 flex-1 truncate">{{ assistant.name }}</span>
+            <Icon
+              v-if="String(assistant.id) === selectedId"
+              icon="i-lucide-check"
+              class="size-4 shrink-0 text-n-teal-11"
+            />
+          </template>
+        </DropdownItem>
+      </DropdownBody>
+    </DropdownContainer>
     <Button
       v-if="canCreate"
       :label="t('CAPTAIN.ASSISTANT_SWITCHER.NEW_ASSISTANT')"
       icon="i-lucide-plus"
       size="sm"
+      variant="faded"
+      color="slate"
       class="w-full"
       @click="dialog.dialogRef.open()"
     />

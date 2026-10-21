@@ -303,7 +303,7 @@ const menuItems = computed(() => {
       name: 'Conversation',
       badgeCount: notificationUnreadCount.value,
       label: t('SIDEBAR.CONVERSATIONS'),
-      icon: 'i-lucide-message-circle',
+      icon: 'i-lucide-messages-square',
       children: [
         {
           name: 'All',
@@ -438,7 +438,7 @@ const menuItems = computed(() => {
     },
     {
       name: 'Captain',
-      icon: 'i-lucide-bot',
+      icon: 'i-lucide-bot-message-square',
       label: t('SIDEBAR.CAPTAIN'),
       children: [
         {
@@ -659,7 +659,7 @@ const menuItems = computed(() => {
     {
       name: 'Contacts',
       label: t('SIDEBAR.CONTACTS'),
-      icon: 'i-lucide-contact',
+      icon: 'i-lucide-users-round',
       children: [
         {
           name: 'All Contacts',
@@ -743,7 +743,7 @@ const menuItems = computed(() => {
     {
       name: 'Reports',
       label: t('SIDEBAR.REPORTS'),
-      icon: 'i-lucide-chart-spline',
+      icon: 'i-lucide-chart-no-axes-column',
       children: [
         {
           name: 'Report Overview',
@@ -798,7 +798,7 @@ const menuItems = computed(() => {
     {
       name: 'Portals',
       label: t('SIDEBAR.HELP_CENTER.TITLE'),
-      icon: 'i-lucide-library-big',
+      icon: 'i-lucide-book-open-text',
       children: [
         {
           name: 'Articles',
@@ -853,7 +853,7 @@ const menuItems = computed(() => {
     {
       name: 'Settings',
       label: t('SIDEBAR.SETTINGS'),
-      icon: 'i-lucide-bolt',
+      icon: 'i-lucide-settings',
       children: [
         {
           name: 'Settings Account Settings',
@@ -1025,14 +1025,14 @@ const menuItems = computed(() => {
         ],
       },
     ]"
-    class="fixed top-0 z-40 flex h-full w-[20rem] max-w-full shrink-0 border-e border-n-weak bg-n-background transition-transform start-0 md:relative md:translate-x-0"
+    class="fixed top-0 z-40 flex h-full w-[18.5rem] max-w-full shrink-0 border-e border-n-weak bg-n-background transition-transform start-0 md:relative md:translate-x-0"
     :class="{
       'ltr:-translate-x-full rtl:translate-x-full':
         !isMobileSidebarOpen && isMobile,
     }"
   >
     <SidebarNavigation :items="menuItems" @navigate="closeMobileSidebar">
-      <template #brand><Logo class="size-7 text-n-blue-text" /></template>
+      <template #brand><Logo class="size-6 text-n-blue-text" /></template>
       <template #profile>
         <SidebarProfileMenu
           is-collapsed

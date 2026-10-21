@@ -2,11 +2,33 @@ import {
   groupPlatformNavigation,
   activeNavigationLeaf,
   navigationLeaves,
+  moduleForArea,
 } from '../platformNavigation';
 
 const route = (name, params = {}) => ({ name, params });
 
 describe('platform navigation', () => {
+  it('keeps pages outside the menu, like creating a first portal, in their area', () => {
+    const conversations = {
+      name: 'Conversation',
+      children: [{ name: 'All', to: route('home') }],
+    };
+    const helpCenter = {
+      name: 'Portals',
+      children: [{ name: 'Articles', to: route('portals_index') }],
+    };
+    const paths = {
+      home: '/app/accounts/4/dashboard',
+      portals_index: '/app/accounts/4/portals/portals_articles_index',
+    };
+    const match = moduleForArea(
+      [conversations, helpCenter],
+      { name: 'portals_new', path: '/app/accounts/4/portals/new' },
+      to => paths[to.name]
+    );
+    expect(match).toBe(helpCenter);
+  });
+
   it('keeps existing inbox, company and billing destinations in their new areas', () => {
     const items = [
       { name: 'Inbox', to: route('notifications') },

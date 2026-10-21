@@ -16,11 +16,21 @@ RSpec.describe 'Shopify Integration API', type: :request do
   let(:contact) { create(:contact, account: account, email: 'test@example.com', phone_number: '+1234567890') }
 
   before do
-    allow(Shopify::FeatureGate).to receive(:globally_enabled?).and_return(true)
+    # The custom-app connection only needs the workspace switch; App Store OAuth also needs the installation switch.
+    allow(Shopify::FeatureGate).to receive(:globally_enabled?).and_return(false)
     account.enable_features!('shopify_integration')
   end
 
   describe 'workspace availability' do
+    it 'serves the connection status when only the workspace switch is on' do
+      create(:integrations_hook, :shopify, account: account)
+
+      get "/api/v1/accounts/#{account.id}/integrations/shopify", headers: agent.create_new_auth_token, as: :json
+
+      expect(response).to have_http_status(:ok)
+      expect(response.parsed_body['shop_domain']).to be_present
+    end
+
     it 'rejects reads and connection requests when disabled for the authenticated account' do
       account.disable_features!('shopify_integration')
       headers = agent.create_new_auth_token
@@ -36,6 +46,17 @@ RSpec.describe 'Shopify Integration API', type: :request do
 
   describe 'POST /api/v1/accounts/:account_id/integrations/shopify/auth' do
     let(:shop_domain) { 'test-store.myshopify.com' }
+
+    before { allow(Shopify::FeatureGate).to receive(:globally_enabled?).and_return(true) }
+
+    it 'is unavailable without the installation switch' do
+      allow(Shopify::FeatureGate).to receive(:globally_enabled?).and_return(false)
+
+      post "/api/v1/accounts/#{account.id}/integrations/shopify/auth",
+           params: { shop_domain: shop_domain }, headers: agent.create_new_auth_token, as: :json
+
+      expect(response).to have_http_status(:not_found)
+    end
 
     context 'when it is an authenticated user' do
       it 'returns a redirect URL for Shopify OAuth' do
