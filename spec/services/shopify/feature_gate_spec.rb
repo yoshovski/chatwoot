@@ -24,6 +24,14 @@ RSpec.describe Shopify::FeatureGate do
       expect(described_class.enabled?).to be false
       expect(described_class.enabled?(account: account)).to be false
     end
+
+    it 'keeps the custom-app connection on the workspace switch' do
+      expect(described_class.workspace_enabled?(account)).to be false
+
+      account.enable_features(described_class::ACCOUNT_FEATURE)
+
+      expect(described_class.workspace_enabled?(account)).to be true
+    end
   end
 
   context 'when the installation switch is enabled' do

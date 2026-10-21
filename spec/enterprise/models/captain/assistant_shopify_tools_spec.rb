@@ -8,7 +8,8 @@ RSpec.describe Captain::Assistant do
   let(:agent_tool_classes) { assistant.agent_tools.map(&:class) }
 
   before do
-    allow(Shopify::FeatureGate).to receive(:globally_enabled?).and_return(true)
+    # The custom-app connection works without the App Store installation switch.
+    allow(Shopify::FeatureGate).to receive(:globally_enabled?).and_return(false)
     account.enable_features!('shopify_integration')
     hook = build(:integrations_hook, :shopify, account: account, settings: settings)
     hook.shopify_tool_key = 'sat_key_123'

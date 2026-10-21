@@ -63,7 +63,7 @@ class Integrations::App
     when 'linear'
       account.feature_enabled?('linear_integration') && GlobalConfigService.load('LINEAR_CLIENT_ID', nil).present?
     when 'shopify'
-      shopify_enabled?(account)
+      Shopify::FeatureGate.workspace_enabled?(account)
     when 'leadsquared'
       account.feature_enabled?('crm_integration')
     when 'notion'
@@ -128,12 +128,6 @@ class Integrations::App
   end
 
   private
-
-  # The custom app connection needs neither the Shopify Partner app nor the App Store
-  # installation switch. Keep existing connections visible even on accounts with an older feature configuration.
-  def shopify_enabled?(account)
-    account.feature_enabled?(Shopify::FeatureGate::ACCOUNT_FEATURE) || account.hooks.exists?(app_id: 'shopify')
-  end
 
   def notion_enabled?(account)
     account.feature_enabled?('notion_integration') && GlobalConfigService.load('NOTION_CLIENT_ID', nil).present?

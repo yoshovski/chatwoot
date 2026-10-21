@@ -27,7 +27,7 @@ if resource.custom_attributes.present?
 end
 json.domain @account.domain
 features = @account.enabled_features
-features.delete(Shopify::FeatureGate::ACCOUNT_FEATURE) unless Shopify::FeatureGate.enabled?(account: @account)
+features.delete(Shopify::FeatureGate::ACCOUNT_FEATURE) unless Shopify::FeatureGate.workspace_enabled?(@account)
 json.features features
 json.id @account.id
 json.locale @account.locale

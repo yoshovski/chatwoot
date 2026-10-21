@@ -30,7 +30,7 @@ Website and folder filtering resolve the assistant through `Current.account.capt
 
 Use Super Admin → Accounts → Edit → Shopify Integration to enable or disable the existing account feature. New accounts default to disabled. Stored feature bits for existing accounts are preserved; this change does not disconnect stores or delete credentials, documents or remote catalog data.
 
-The installation-wide `ENABLE_SHOPIFY_INTEGRATION` switch must also be enabled. The account response exposes the effective feature state. Unchecked feature values are saved as disabled; features omitted from the form retain their current state.
+The custom-app connection through Shopify Agent Tools (status, Products, catalog knowledge, commerce tools and product cards) follows the workspace switch alone. The installation-wide `ENABLE_SHOPIFY_INTEGRATION` switch additionally gates the App Store OAuth entry point, Shopify webhooks and Shopify billing. The account response exposes the workspace state. Unchecked feature values are saved as disabled; features omitted from the form retain their current state.
 
 Disabled accounts do not fetch Shopify status from the navigation, see Products navigation, receive a connection offer in Knowledge, or access the Shopify integration API. Catalog retrieval, commerce tools and product-card enrichment also respect availability. Connection setup lives in Settings → Integrations. Products appears after a store has been connected. Administrators manage integrations; agents retain their existing read permissions.
 
@@ -38,4 +38,4 @@ Disabling the ChatOctave feature does not revoke credentials for the separate Sh
 
 ## Verification
 
-Review the rail with an administrator and a restricted agent, open behavior and knowledge URLs directly, create an agent, switch agents, browse websites and folders, search within a website, clear filters and change pages after selecting documents. Verify Shopify changes independently for two accounts, including disabling a connected store. The feature must remain hidden when the installation-wide switch is off.
+Review the rail with an administrator and a restricted agent, open behavior and knowledge URLs directly, create an agent, switch agents, browse websites and folders, search within a website, clear filters and change pages after selecting documents. Verify Shopify changes independently for two accounts, including disabling a connected store. A connected store must keep working when the installation-wide switch is off.

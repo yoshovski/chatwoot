@@ -114,3 +114,14 @@ export const activeNavigationLeaf = (items, route, resolvePath) =>
     }))
     .filter(match => match.score > 0)
     .sort((a, b) => b.score - a.score)[0]?.item;
+
+const areaPath = path => path.split('/').slice(0, 5).join('/');
+
+// Pages outside the menu, such as creating the first Help Center portal, still belong to the
+// area whose destinations share their /app/accounts/:accountId/<area> prefix.
+export const moduleForArea = (modules, route, resolvePath) => {
+  const area = areaPath(route.path);
+  return modules.find(item =>
+    navigationLeaves(item).some(leaf => areaPath(resolvePath(leaf.to)) === area)
+  );
+};
