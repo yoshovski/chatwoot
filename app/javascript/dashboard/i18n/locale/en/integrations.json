@@ -2285,6 +2285,7 @@
     },
     "KNOWLEDGE_BRIEF": {
       "TITLE": "Business profile",
+      "BASED_ON_SOURCES": "Synthesized from",
       "HELP": "A short overview of the business and the main topics customers ask about, written from your knowledge. The AI agent uses it for broad questions such as “What do you do?”. Nothing is used until you publish it.",
       "STATUS": {
         "DISABLED": "Off. Generate a draft from your knowledge to get started.",

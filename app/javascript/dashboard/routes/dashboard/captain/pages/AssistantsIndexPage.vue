@@ -1,5 +1,5 @@
 <script setup>
-import { computed, nextTick, onMounted } from 'vue';
+import { computed, nextTick, onMounted, watch } from 'vue';
 import { useStore } from 'vuex';
 import { useRoute, useRouter } from 'vue-router';
 import { useUISettings } from 'dashboard/composables/useUISettings';
@@ -78,6 +78,15 @@ const performRouting = async () => {
 };
 
 onMounted(() => performRouting());
+
+watch(
+  () => route.params.navigationPath,
+  newPath => {
+    if (newPath) {
+      performRouting();
+    }
+  }
+);
 </script>
 
 <template>

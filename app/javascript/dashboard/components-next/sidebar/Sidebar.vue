@@ -1,5 +1,6 @@
 <script setup>
 import { h, ref, computed, onMounted, watch } from 'vue';
+import { useRoute } from 'vue-router';
 import { provideSidebarContext } from './provider';
 import { useAccount } from 'dashboard/composables/useAccount';
 import { useShopifyIntegration } from 'dashboard/composables/useShopifyIntegration';
@@ -63,6 +64,32 @@ const { t } = useI18n();
 
 const { width: windowWidth } = useWindowSize();
 const isMobile = computed(() => windowWidth.value < 768);
+
+const route = useRoute();
+const uiSettings = useMapGetter('getUISettings');
+const captainAssistants = useMapGetter('captainAssistants/getRecords');
+
+const activeAssistantId = computed(() => {
+  if (route.params?.assistantId) return Number(route.params.assistantId);
+  const lastActive = uiSettings.value?.last_active_assistant_id;
+  if (captainAssistants.value?.some(a => a.id === Number(lastActive))) {
+    return Number(lastActive);
+  }
+  return captainAssistants.value?.[0]?.id || null;
+});
+
+const captainAssistantRoute = (name, params = {}) => {
+  if (activeAssistantId.value) {
+    return accountScopedRoute(name, {
+      assistantId: activeAssistantId.value,
+      ...params,
+    });
+  }
+  return accountScopedRoute('captain_assistants_index', {
+    navigationPath: name,
+    ...params,
+  });
+};
 
 const accountId = useMapGetter('getCurrentAccountId');
 const currentUserId = useMapGetter('getCurrentUserID');
@@ -442,21 +469,6 @@ const menuItems = computed(() => {
       label: t('SIDEBAR.CAPTAIN'),
       children: [
         {
-          name: 'Agents',
-          label: t('PLATFORM_NAV.AI_AGENTS'),
-          icon: 'i-lucide-bot',
-          to: accountScopedRoute('captain_assistants_create_index'),
-        },
-        {
-          name: 'captain_assistants_overview_index',
-          label: t('SIDEBAR.CAPTAIN_OVERVIEW'),
-          icon: 'i-lucide-circle-gauge',
-          to: accountScopedRoute('captain_assistants_index', {
-            navigationPath: 'captain_assistants_overview_index',
-          }),
-          activeOn: ['captain_assistants_overview_index'],
-        },
-        {
           name: 'Knowledge',
           label: t('PLATFORM_NAV.KNOWLEDGE'),
           icon: 'i-lucide-database',
@@ -471,27 +483,21 @@ const menuItems = computed(() => {
               name: 'captain_assistants_documents_index',
               label: t('PLATFORM_NAV.DATA_SOURCES'),
               icon: 'i-lucide-files',
-              to: accountScopedRoute('captain_assistants_index', {
-                navigationPath: 'captain_assistants_documents_index',
-              }),
+              to: captainAssistantRoute('captain_assistants_documents_index'),
               activeOn: ['captain_assistants_documents_index'],
             },
             {
               name: 'captain_assistants_responses_index',
-              label: t('CAPTAIN.KNOWLEDGE.TABS.FAQS'),
+              label: t('PLATFORM_NAV.FAQS'),
               icon: 'i-lucide-messages-square',
-              to: accountScopedRoute('captain_assistants_index', {
-                navigationPath: 'captain_assistants_responses_index',
-              }),
+              to: captainAssistantRoute('captain_assistants_responses_index'),
               activeOn: ['captain_assistants_responses_index'],
             },
             {
               name: 'captain_assistants_faq_suggestions',
               label: t('PLATFORM_NAV.SUGGESTIONS'),
               icon: 'i-lucide-lightbulb',
-              to: accountScopedRoute('captain_assistants_index', {
-                navigationPath: 'captain_assistants_faq_suggestions',
-              }),
+              to: captainAssistantRoute('captain_assistants_faq_suggestions'),
               activeOn: ['captain_assistants_faq_suggestions'],
             },
             ...(isShopifyConnected.value
@@ -500,9 +506,9 @@ const menuItems = computed(() => {
                     name: 'captain_assistants_products_index',
                     label: t('CAPTAIN.KNOWLEDGE.TABS.PRODUCTS'),
                     icon: 'i-lucide-shopping-bag',
-                    to: accountScopedRoute('captain_assistants_index', {
-                      navigationPath: 'captain_assistants_products_index',
-                    }),
+                    to: captainAssistantRoute(
+                      'captain_assistants_products_index'
+                    ),
                     activeOn: ['captain_assistants_products_index'],
                   },
                 ]
@@ -517,37 +523,33 @@ const menuItems = computed(() => {
             {
               name: 'captain_assistants_guidelines_index',
               label: t('PLATFORM_NAV.INSTRUCTIONS'),
-              icon: 'i-lucide-message-circle',
-              to: accountScopedRoute('captain_assistants_index', {
-                navigationPath: 'captain_assistants_guidelines_index',
-              }),
+              icon: 'i-lucide-scan-text',
+              to: captainAssistantRoute('captain_assistants_guidelines_index'),
               activeOn: ['captain_assistants_guidelines_index'],
             },
             {
               name: 'captain_assistants_guardrails_index',
               label: t('PLATFORM_NAV.BOUNDARIES'),
-              icon: 'i-lucide-shield',
-              to: accountScopedRoute('captain_assistants_index', {
-                navigationPath: 'captain_assistants_guardrails_index',
-              }),
+              icon: 'i-lucide-shield-check',
+              to: captainAssistantRoute('captain_assistants_guardrails_index'),
               activeOn: ['captain_assistants_guardrails_index'],
             },
             {
               name: 'captain_assistants_settings_system_index',
               label: t('PLATFORM_NAV.HANDOFF'),
-              icon: 'i-lucide-arrow-right-left',
-              to: accountScopedRoute('captain_assistants_index', {
-                navigationPath: 'captain_assistants_settings_system_index',
-              }),
+              icon: 'i-lucide-user-round-check',
+              to: captainAssistantRoute(
+                'captain_assistants_settings_system_index'
+              ),
               activeOn: ['captain_assistants_settings_system_index'],
             },
             {
               name: 'captain_assistants_settings_after_chat_index',
               label: t('PLATFORM_NAV.AFTER_CHAT'),
-              icon: 'i-lucide-check-check',
-              to: accountScopedRoute('captain_assistants_index', {
-                navigationPath: 'captain_assistants_settings_after_chat_index',
-              }),
+              icon: 'i-lucide-circle-check',
+              to: captainAssistantRoute(
+                'captain_assistants_settings_after_chat_index'
+              ),
               activeOn: ['captain_assistants_settings_after_chat_index'],
             },
           ],
@@ -561,70 +563,67 @@ const menuItems = computed(() => {
               name: 'captain_assistants_scenarios_index',
               label: t('SIDEBAR.CAPTAIN_SCENARIOS'),
               icon: 'i-lucide-git-branch',
-              to: accountScopedRoute('captain_assistants_index', {
-                navigationPath: 'captain_assistants_scenarios_index',
-              }),
+              to: captainAssistantRoute('captain_assistants_scenarios_index'),
               activeOn: ['captain_assistants_scenarios_index'],
             },
             {
               name: 'Tools',
               label: t('SIDEBAR.CAPTAIN_TOOLS'),
               icon: 'i-lucide-wrench',
-              to: accountScopedRoute('captain_assistants_index', {
-                navigationPath: 'captain_tools_index',
-              }),
+              to: captainAssistantRoute('captain_tools_index'),
               activeOn: ['captain_tools_index'],
             },
           ],
         },
         {
-          name: 'captain_assistants_playground_index',
-          label: t('PLATFORM_NAV.TEST_AGENT'),
-          icon: 'i-lucide-circle-play',
-          to: accountScopedRoute('captain_assistants_index', {
-            navigationPath: 'captain_assistants_playground_index',
-          }),
-          activeOn: ['captain_assistants_playground_index'],
-        },
-        {
-          name: 'captain_assistants_inboxes_index',
-          label: t('PLATFORM_NAV.CHANNELS'),
-          icon: 'i-lucide-radio',
-          to: accountScopedRoute('captain_assistants_index', {
-            navigationPath: 'captain_assistants_inboxes_index',
-          }),
-          activeOn: ['captain_assistants_inboxes_index'],
-        },
-        {
           name: 'Configure',
           label: t('PLATFORM_NAV.CONFIGURE'),
-          icon: 'i-lucide-settings',
+          icon: 'i-lucide-settings-2',
           children: [
             {
               name: 'captain_assistants_settings_index',
-              label: t('CAPTAIN.ASSISTANTS.SETTINGS.TABS.IDENTITY'),
-              icon: 'i-lucide-id-card',
-              to: accountScopedRoute('captain_assistants_index', {
-                navigationPath: 'captain_assistants_settings_index',
-              }),
+              label: t('PLATFORM_NAV.IDENTITY'),
+              icon: 'i-lucide-contact',
+              to: captainAssistantRoute('captain_assistants_settings_index'),
               activeOn: ['captain_assistants_settings_index'],
+            },
+          ],
+        },
+        {
+          name: 'Manage',
+          label: t('PLATFORM_NAV.MANAGE'),
+          icon: 'i-lucide-sliders',
+          children: [
+            {
+              name: 'captain_assistants_overview_index',
+              label: t('SIDEBAR.CAPTAIN_OVERVIEW'),
+              icon: 'i-lucide-circle-gauge',
+              to: captainAssistantRoute('captain_assistants_overview_index'),
+              activeOn: ['captain_assistants_overview_index'],
+            },
+            {
+              name: 'captain_assistants_inboxes_index',
+              label: t('PLATFORM_NAV.CHANNELS'),
+              icon: 'i-lucide-radio',
+              to: captainAssistantRoute('captain_assistants_inboxes_index'),
+              activeOn: ['captain_assistants_inboxes_index'],
             },
             {
               name: 'captain_assistants_settings_schedule_index',
               label: t('CAPTAIN.ASSISTANTS.SETTINGS.TABS.WORKING_HOURS'),
               icon: 'i-lucide-clock',
-              to: accountScopedRoute('captain_assistants_index', {
-                navigationPath: 'captain_assistants_settings_schedule_index',
-              }),
+              to: captainAssistantRoute(
+                'captain_assistants_settings_schedule_index'
+              ),
               activeOn: ['captain_assistants_settings_schedule_index'],
             },
             {
               name: 'captain_assistants_settings_audience_index',
               label: t('PLATFORM_NAV.AUDIENCE'),
               icon: 'i-lucide-users',
-              to: accountScopedRoute('captain_assistants_index', {
-                navigationPath: 'captain_assistants_settings_audience_index',
-              }),
+              to: captainAssistantRoute(
+                'captain_assistants_settings_audience_index'
+              ),
               activeOn: ['captain_assistants_settings_audience_index'],
             },
           ],

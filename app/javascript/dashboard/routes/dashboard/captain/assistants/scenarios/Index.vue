@@ -6,9 +6,9 @@ import { picoSearch } from '@chatwoot/pico-search';
 import { useStore, useMapGetter } from 'dashboard/composables/store';
 import { useAlert } from 'dashboard/composables';
 import Input from 'dashboard/components-next/input/Input.vue';
+import Button from 'dashboard/components-next/button/Button.vue';
 
 import PageLayout from 'dashboard/components-next/captain/PageLayout.vue';
-import SettingsHeader from 'dashboard/components-next/captain/pageComponents/settings/SettingsHeader.vue';
 import { getToolIdsFromInstruction } from 'dashboard/components-next/captain/scenarios/scenarioTools';
 import TemplateGallery from 'dashboard/components-next/captain/scenarios/TemplateGallery.vue';
 import ScenariosCard from 'dashboard/components-next/captain/assistant/ScenariosCard.vue';
@@ -184,86 +184,129 @@ onMounted(() => {
     :is-fetching="isFetching"
     :show-know-more="false"
     :show-pagination-footer="false"
+    :button-label="$t('CAPTAIN.ASSISTANTS.SCENARIOS.ADD.NEW.TITLE')"
+    @click="() => addScenarioDialog.open()"
   >
-    <template #body>
-      <SettingsHeader
-        :heading="$t('CAPTAIN.ASSISTANTS.SCENARIOS.TITLE')"
-        :description="$t('CAPTAIN.ASSISTANTS.SCENARIOS.DESCRIPTION')"
-      />
-      <div class="mt-7">
-        <TemplateGallery
-          :tools="captainTools"
-          :has-scenarios="scenarios.length > 0"
-          @use-template="onUseTemplate"
-          @describe="onDescribe"
+    <template #headerActions>
+      <router-link
+        v-if="assistantId"
+        :to="{
+          name: 'captain_assistants_playground_index',
+          params: {
+            accountId: route.params.accountId,
+            assistantId: assistantId,
+          },
+        }"
+      >
+        <Button
+          :label="$t('PLATFORM_NAV.TEST_AGENT')"
+          icon="i-lucide-play"
+          variant="outline"
+          color="slate"
+          size="sm"
         />
-      </div>
-      <div class="flex mt-7 flex-col gap-4">
-        <div class="flex justify-between items-center">
-          <BulkSelectBar
-            v-model="bulkSelectedIds"
-            :all-items="scenarios"
-            :select-all-label="buildSelectedCountLabel"
-            :selected-count-label="selectedCountLabel"
-            :delete-label="
-              $t('CAPTAIN.ASSISTANTS.SCENARIOS.BULK_ACTION.BULK_DELETE_BUTTON')
-            "
-            @bulk-delete="bulkDeleteScenarios"
-          >
-            <template #default-actions>
-              <AddNewScenariosDialog
-                ref="addScenarioDialog"
-                :assistant-id="assistantId"
-                :assistant="assistant"
-                :tools="captainTools"
-                @add="addScenario"
-              />
-            </template>
-          </BulkSelectBar>
-          <div
-            v-if="scenarios.length && bulkSelectedIds.size === 0"
-            class="max-w-[22.5rem] w-full min-w-0"
-          >
-            <Input
-              v-model="searchQuery"
-              :placeholder="
-                t('CAPTAIN.ASSISTANTS.SCENARIOS.LIST.SEARCH_PLACEHOLDER')
+      </router-link>
+    </template>
+    <template #body>
+      <div class="flex w-full flex-col gap-6 pb-8">
+        <p class="m-0 text-sm text-n-slate-11">
+          {{ $t('CAPTAIN.ASSISTANTS.SCENARIOS.DESCRIPTION') }}
+        </p>
+
+        <!-- If scenarios exist, lead with the scenario list -->
+        <div v-if="scenarios.length > 0" class="flex flex-col gap-4">
+          <div class="flex justify-between items-center">
+            <BulkSelectBar
+              v-model="bulkSelectedIds"
+              :all-items="scenarios"
+              :select-all-label="buildSelectedCountLabel"
+              :selected-count-label="selectedCountLabel"
+              :delete-label="
+                $t(
+                  'CAPTAIN.ASSISTANTS.SCENARIOS.BULK_ACTION.BULK_DELETE_BUTTON'
+                )
               "
+              @bulk-delete="bulkDeleteScenarios"
+            />
+            <div
+              v-if="bulkSelectedIds.size === 0"
+              class="max-w-[22.5rem] w-full min-w-0"
+            >
+              <Input
+                v-model="searchQuery"
+                :placeholder="
+                  t('CAPTAIN.ASSISTANTS.SCENARIOS.LIST.SEARCH_PLACEHOLDER')
+                "
+              />
+            </div>
+          </div>
+
+          <div v-if="filteredScenarios.length === 0" class="mt-1 mb-2">
+            <span class="text-n-slate-11 text-sm">
+              {{ t('CAPTAIN.ASSISTANTS.SCENARIOS.SEARCH_EMPTY_MESSAGE') }}
+            </span>
+          </div>
+          <div v-else class="flex flex-col gap-2">
+            <ScenariosCard
+              v-for="scenario in filteredScenarios"
+              :id="scenario.id"
+              :key="scenario.id"
+              :title="scenario.title"
+              :description="scenario.description"
+              :instruction="scenario.instruction"
+              :tools="scenario.tools"
+              :enabled="scenario.enabled"
+              :is-updating="pendingToggleIds.has(scenario.id)"
+              :is-selected="bulkSelectedIds.has(scenario.id)"
+              :selectable="
+                hoveredCard === scenario.id || bulkSelectedIds.size > 0
+              "
+              @select="handleRuleSelect"
+              @delete="deleteScenario(scenario.id)"
+              @update="updateScenario"
+              @toggle="toggleScenario"
+              @hover="isHovered => handleRuleHover(isHovered, scenario.id)"
+            />
+          </div>
+
+          <div class="mt-8 border-t border-n-weak pt-6">
+            <TemplateGallery
+              :tools="captainTools"
+              has-scenarios
+              @use-template="onUseTemplate"
+              @describe="onDescribe"
             />
           </div>
         </div>
-        <div v-if="scenarios.length === 0" class="mt-1 mb-2">
-          <span class="text-n-slate-11 text-sm">
-            {{ t('CAPTAIN.ASSISTANTS.SCENARIOS.EMPTY_MESSAGE') }}
-          </span>
-        </div>
-        <div v-else-if="filteredScenarios.length === 0" class="mt-1 mb-2">
-          <span class="text-n-slate-11 text-sm">
-            {{ t('CAPTAIN.ASSISTANTS.SCENARIOS.SEARCH_EMPTY_MESSAGE') }}
-          </span>
-        </div>
-        <div v-else class="flex flex-col gap-2">
-          <ScenariosCard
-            v-for="scenario in filteredScenarios"
-            :id="scenario.id"
-            :key="scenario.id"
-            :title="scenario.title"
-            :description="scenario.description"
-            :instruction="scenario.instruction"
-            :tools="scenario.tools"
-            :enabled="scenario.enabled"
-            :is-updating="pendingToggleIds.has(scenario.id)"
-            :is-selected="bulkSelectedIds.has(scenario.id)"
-            :selectable="
-              hoveredCard === scenario.id || bulkSelectedIds.size > 0
-            "
-            @select="handleRuleSelect"
-            @delete="deleteScenario(scenario.id)"
-            @update="updateScenario"
-            @toggle="toggleScenario"
-            @hover="isHovered => handleRuleHover(isHovered, scenario.id)"
+
+        <!-- Empty state: Lead with templates and creation action -->
+        <div v-else class="flex flex-col gap-6">
+          <div class="flex items-center justify-between">
+            <span class="text-n-slate-11 text-sm">
+              {{ t('CAPTAIN.ASSISTANTS.SCENARIOS.EMPTY_MESSAGE') }}
+            </span>
+            <Button
+              :label="$t('CAPTAIN.ASSISTANTS.SCENARIOS.ADD.NEW.TITLE')"
+              icon="i-lucide-plus"
+              size="sm"
+              @click="() => addScenarioDialog.open()"
+            />
+          </div>
+          <TemplateGallery
+            :tools="captainTools"
+            :has-scenarios="false"
+            @use-template="onUseTemplate"
+            @describe="onDescribe"
           />
         </div>
+
+        <AddNewScenariosDialog
+          ref="addScenarioDialog"
+          :assistant-id="assistantId"
+          :assistant="assistant"
+          :tools="captainTools"
+          @add="addScenario"
+        />
       </div>
     </template>
   </PageLayout>

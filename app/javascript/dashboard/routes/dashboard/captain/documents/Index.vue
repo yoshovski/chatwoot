@@ -10,7 +10,6 @@ import { usePolicy } from 'dashboard/composables/usePolicy';
 import { debounce } from '@chatwoot/utils';
 
 import DeleteDialog from 'dashboard/components-next/captain/pageComponents/DeleteDialog.vue';
-import KnowledgeHeader from 'dashboard/components-next/captain/knowledge/KnowledgeHeader.vue';
 import WebsiteSourcesPanel from 'dashboard/components-next/captain/knowledge/WebsiteSourcesPanel.vue';
 import KnowledgeSourceBrowser from 'dashboard/components-next/captain/knowledge/KnowledgeSourceBrowser.vue';
 import DocumentCard from 'dashboard/components-next/captain/assistant/DocumentCard.vue';
@@ -432,6 +431,26 @@ onUnmounted(() => {
     @update:current-page="onPageChange"
     @click="handleCreateDocument"
   >
+    <template #headerActions>
+      <router-link
+        v-if="selectedAssistantId"
+        :to="{
+          name: 'captain_assistants_playground_index',
+          params: {
+            accountId: $route.params.accountId,
+            assistantId: selectedAssistantId,
+          },
+        }"
+      >
+        <Button
+          :label="$t('PLATFORM_NAV.TEST_AGENT')"
+          icon="i-lucide-play"
+          variant="outline"
+          color="slate"
+          size="sm"
+        />
+      </router-link>
+    </template>
     <template #subHeader>
       <Policy :permissions="['administrator']">
         <DocumentBulkActions
@@ -482,7 +501,6 @@ onUnmounted(() => {
     </template>
 
     <template #controls>
-      <KnowledgeHeader />
       <KnowledgeSourceBrowser
         v-if="selectedAssistantId > 0"
         v-show="

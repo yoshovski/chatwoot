@@ -44,17 +44,16 @@ const guidelinesExample = [
   {
     id: 1,
     content:
-      'Block queries that share or request sensitive personal information (e.g. phone numbers, passwords).',
+      'Keep replies concise: use short paragraphs and offer more detail only when the customer asks.',
   },
   {
     id: 2,
-    content:
-      'Reject queries that include offensive, discriminatory, or threatening language.',
+    content: 'Reply in the customer’s language whenever possible.',
   },
   {
     id: 3,
     content:
-      'Deflect when the assistant is asked for legal or medical diagnosis or treatment.',
+      'Maintain an empathetic and helpful tone throughout the conversation.',
   },
 ];
 
