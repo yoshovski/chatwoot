@@ -140,74 +140,72 @@ defineExpose({ load });
           />
         </div>
         <ul
-          class="m-0 list-none grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 p-0"
+          class="grid grid-cols-1 gap-3 p-0 m-0 list-none sm:grid-cols-2 lg:grid-cols-3"
         >
-          <li
-            v-for="site in websites"
-            :key="site.host"
-            class="flex flex-col justify-between rounded-xl border border-n-weak bg-n-solid-1 p-3.5 hover:border-n-brand/60 hover:shadow-xs transition-all cursor-pointer"
-            @click="browse(site.host)"
-          >
-            <div>
-              <div class="flex items-center justify-between mb-2">
+          <li v-for="site in websites" :key="site.host">
+            <button
+              type="button"
+              class="flex flex-col w-full h-full gap-3 p-4 text-start transition-colors border rounded-xl border-n-weak bg-n-solid-1 hover:border-n-brand/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-n-brand"
+              @click="browse(site.host)"
+            >
+              <span class="flex items-center w-full gap-3">
                 <span
-                  class="size-8 rounded-lg bg-n-brand/10 text-n-brand flex items-center justify-center shrink-0"
+                  class="flex items-center justify-center rounded-lg size-9 shrink-0 bg-n-brand/10 text-n-brand"
+                  aria-hidden="true"
                 >
                   <span
+                    class="size-4"
                     :class="
                       site.host === 'files'
-                        ? 'i-lucide-file-text size-4'
-                        : 'i-lucide-globe size-4'
+                        ? 'i-lucide-file-text'
+                        : 'i-lucide-globe'
                     "
                   />
                 </span>
-                <Button
-                  :label="t('PLATFORM_NAV.MANAGE_PAGES')"
-                  icon="i-lucide-arrow-right"
-                  trailing-icon
-                  color="slate"
-                  variant="faded"
-                  size="xs"
-                  @click.stop="browse(site.host)"
-                />
-              </div>
-              <span class="break-words text-sm font-semibold text-n-slate-12">
-                {{ label(site.host) }}
-              </span>
-              <p class="m-0 mt-1 text-xs text-n-slate-11">
-                {{
-                  t(
-                    site.host === 'files'
-                      ? 'PLATFORM_NAV.SOURCE_COUNT'
-                      : 'PLATFORM_NAV.PAGES',
-                    { count: site.count }
-                  )
-                }}
-                <span
-                  v-if="site.failed"
-                  class="ms-1.5 text-n-ruby-11 font-medium"
-                >
-                  {{ t('PLATFORM_NAV.FAILED_PAGES', { count: site.failed }) }}
+                <span class="flex flex-col flex-1 min-w-0">
+                  <span class="text-sm font-semibold truncate text-n-slate-12">
+                    {{ label(site.host) }}
+                  </span>
+                  <span class="text-xs text-n-slate-11">
+                    {{
+                      t(
+                        site.host === 'files'
+                          ? 'PLATFORM_NAV.SOURCE_COUNT'
+                          : 'PLATFORM_NAV.PAGES',
+                        { count: site.count }
+                      )
+                    }}
+                  </span>
                 </span>
-              </p>
-            </div>
-            <div
-              v-if="site.count > 0"
-              class="mt-3 h-1 w-full bg-n-slate-3 rounded-full overflow-hidden flex"
-              :aria-label="`${site.count - site.failed} ready, ${site.failed} failed`"
-            >
-              <div
-                class="bg-n-teal-9 h-full"
-                :style="{
-                  width: `${((site.count - site.failed) / site.count) * 100}%`,
-                }"
-              />
-              <div
-                v-if="site.failed"
-                class="bg-n-ruby-9 h-full"
-                :style="{ width: `${(site.failed / site.count) * 100}%` }"
-              />
-            </div>
+                <span
+                  class="i-lucide-chevron-right size-4 text-n-slate-10 rtl:rotate-180"
+                  aria-hidden="true"
+                />
+              </span>
+              <span class="flex items-center w-full gap-2">
+                <span
+                  v-if="site.count > 0"
+                  class="flex flex-1 h-1.5 overflow-hidden rounded-full bg-n-slate-4"
+                  aria-hidden="true"
+                >
+                  <span
+                    v-if="site.failed"
+                    class="h-full bg-n-ruby-9"
+                    :style="{ width: `${(site.failed / site.count) * 100}%` }"
+                  />
+                </span>
+                <span
+                  class="text-xs font-medium shrink-0"
+                  :class="site.failed ? 'text-n-ruby-11' : 'text-n-slate-10'"
+                >
+                  {{
+                    site.failed
+                      ? t('PLATFORM_NAV.FAILED_PAGES', { count: site.failed })
+                      : t('PLATFORM_NAV.NO_FAILURES')
+                  }}
+                </span>
+              </span>
+            </button>
           </li>
         </ul>
       </div>

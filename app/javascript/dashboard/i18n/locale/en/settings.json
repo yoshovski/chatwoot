@@ -1131,19 +1131,14 @@
     "SUGGESTIONS": "Suggestions",
     "BEHAVIOR": "Behavior",
     "INSTRUCTIONS": "Instructions",
-    "INSTRUCTIONS_DESC": "Tone, guidance, and style rules for replies.",
     "BOUNDARIES": "Boundaries",
-    "BOUNDARIES_DESC": "Topics to avoid, customer information access, and safety boundaries.",
     "HANDOFF": "Handoff",
-    "HANDOFF_DESC": "Handoff message, teammate fallback routing, and waiting behavior.",
     "AFTER_CHAT": "After chat",
-    "AFTER_CHAT_DESC": "Inactivity delay, resolution behavior, and conversation tags.",
     "ACTIONS": "Actions",
     "TEST_AGENT": "Test agent",
     "CHANNELS": "Channels",
     "CONFIGURE": "Configure",
     "IDENTITY": "Identity",
-    "IDENTITY_DESC": "Agent profile, customer-facing avatar, and business overview.",
     "MANAGE": "Manage",
     "AUDIENCE": "Audience",
     "COMPOSE": "Compose conversation",
@@ -1174,6 +1169,9 @@
     "DISABLE_AI": "Disable for AI",
     "BULK_UPDATED": "Updated {count} sources.",
     "BULK_PARTIAL": "Updated {count} sources; {failed} could not be updated.",
-    "SOURCE_COUNT": "{count} source | {count} sources"
+    "SOURCE_COUNT": "{count} source | {count} sources",
+    "NO_FAILURES": "All good",
+    "COMPACT_VIEW": "Compact view",
+    "COMFORTABLE_VIEW": "Comfortable view"
   }
 }

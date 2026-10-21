@@ -9,10 +9,7 @@ const { assistant, updateAssistant } = useAssistantSettings();
 </script>
 
 <template>
-  <SettingsPageLayout
-    :heading="t('PLATFORM_NAV.HANDOFF')"
-    :description="t('PLATFORM_NAV.HANDOFF_DESC')"
-  >
-    <AssistantHandoverForm :assistant="assistant" @submit="updateAssistant" />
+  <SettingsPageLayout :heading="t('PLATFORM_NAV.HANDOFF')">
+    <AssistantHandoverForm :assistant="assistant" :save="updateAssistant" />
   </SettingsPageLayout>
 </template>

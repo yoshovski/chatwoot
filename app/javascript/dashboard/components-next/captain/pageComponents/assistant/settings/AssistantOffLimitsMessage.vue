@@ -1,5 +1,5 @@
 <script setup>
-import { ref, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import Button from 'dashboard/components-next/button/Button.vue';
 import TextArea from 'dashboard/components-next/textarea/TextArea.vue';
@@ -14,15 +14,30 @@ const props = defineProps({
 
 const emit = defineEmits(['submit']);
 
+// Mirrors the unsaved text so the page can preview it live.
+const draft = defineModel('draft', { type: String, default: '' });
+
 const { t } = useI18n();
 
 const MAX_LENGTH = 500;
 const message = ref('');
+const savedMessage = computed(
+  () => props.assistant?.config?.off_limits_message || ''
+);
+const isDirty = computed(() => message.value.trim() !== savedMessage.value);
 
 watch(
-  () => props.assistant?.config?.off_limits_message,
+  savedMessage,
   value => {
-    message.value = value || '';
+    message.value = value;
+  },
+  { immediate: true }
+);
+
+watch(
+  message,
+  value => {
+    draft.value = value;
   },
   { immediate: true }
 );
@@ -54,11 +69,18 @@ const save = () =>
           t('CAPTAIN.ASSISTANTS.SETTINGS.BOUNDARIES.OFF_LIMITS.PLACEHOLDER')
         "
       />
-      <div>
+      <div v-if="isDirty" class="flex items-center gap-2">
         <Button
           :label="t('CAPTAIN.ASSISTANTS.SETTINGS.SAVE')"
           size="sm"
           @click="save"
+        />
+        <Button
+          :label="t('CAPTAIN.ASSISTANTS.SETTINGS.SAVE_BAR.DISCARD')"
+          variant="ghost"
+          color="slate"
+          size="sm"
+          @click="message = savedMessage"
         />
       </div>
     </div>

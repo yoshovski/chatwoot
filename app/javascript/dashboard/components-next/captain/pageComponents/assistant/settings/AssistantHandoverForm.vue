@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onMounted, reactive, watch } from 'vue';
+import { computed, onMounted, reactive, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useVuelidate } from '@vuelidate/core';
 import { minLength } from '@vuelidate/validators';
@@ -8,20 +8,25 @@ import { useAccount } from 'dashboard/composables/useAccount';
 import { useAdmin } from 'dashboard/composables/useAdmin';
 import { useStore, useMapGetter } from 'dashboard/composables/store';
 
-import Button from 'dashboard/components-next/button/Button.vue';
 import Editor from 'dashboard/components-next/Editor/Editor.vue';
 import Select from 'dashboard/components-next/select/Select.vue';
 import SettingsCard from './SettingsCard.vue';
 import SettingsSwitchRow from './SettingsSwitchRow.vue';
+import SettingsSaveBar from './SettingsSaveBar.vue';
+import SettingsSplit from './SettingsSplit.vue';
+import HandoffFlow from './HandoffFlow.vue';
 
 const props = defineProps({
   assistant: {
     type: Object,
     default: () => ({}),
   },
+  // Async save so the form knows when the request has finished.
+  save: {
+    type: Function,
+    required: true,
+  },
 });
-
-const emit = defineEmits(['submit']);
 
 const { t } = useI18n();
 const { isCloudFeatureEnabled } = useAccount();
@@ -59,6 +64,11 @@ const validationRules = {
 };
 
 const v$ = useVuelidate(validationRules, state);
+
+const isSaving = ref(false);
+const savedSnapshot = ref('');
+const snapshot = () => JSON.stringify(state);
+const isDirty = computed(() => snapshot() !== savedSnapshot.value);
 
 const getErrorMessage = field =>
   v$.value[field].$error ? v$.value[field].$errors[0].$message : '';
@@ -99,7 +109,24 @@ const updateStateFromAssistant = assistant => {
   state.handoffSafetyNet = config.handoff_safety_net || false;
   state.resolutionMessage = config.resolution_message;
   state.instructions = config.instructions;
+  savedSnapshot.value = snapshot();
 };
+
+const discard = () => {
+  v$.value.$reset();
+  updateStateFromAssistant(props.assistant);
+};
+
+const fallbackTeam = computed(() =>
+  (teamsList.value || []).find(
+    team => team.id === Number(state.handoffFallbackTeamId)
+  )
+);
+const fallbackAgent = computed(() =>
+  (agentsList.value || []).find(
+    agent => agent.id === Number(state.handoffFallbackAgentId)
+  )
+);
 
 const fieldsToValidate = () =>
   isCaptainV2Enabled.value
@@ -135,7 +162,12 @@ const handleSubmit = async () => {
     payload.config.instructions = state.instructions;
   }
 
-  emit('submit', payload);
+  isSaving.value = true;
+  try {
+    await props.save(payload);
+  } finally {
+    isSaving.value = false;
+  }
 };
 
 watch(
@@ -148,7 +180,7 @@ watch(
 </script>
 
 <template>
-  <div class="flex flex-col gap-6">
+  <SettingsSplit>
     <SettingsCard
       :title="t('CAPTAIN.ASSISTANTS.SETTINGS.HANDOVER.MESSAGE_TITLE', { name })"
     >
@@ -161,31 +193,40 @@ watch(
       />
     </SettingsCard>
 
-    <div
+    <SettingsCard
       v-if="isAdmin"
-      class="flex flex-wrap items-center gap-2 px-5 py-4 text-sm rounded-xl outline outline-1 outline-n-weak bg-n-solid-1 text-n-slate-12"
+      :title="t('CAPTAIN.ASSISTANTS.SETTINGS.HANDOVER.FALLBACK_TITLE')"
+      :description="t('CAPTAIN.ASSISTANTS.SETTINGS.HANDOVER.FALLBACK_PREFIX')"
     >
-      <span>{{
-        t('CAPTAIN.ASSISTANTS.SETTINGS.HANDOVER.FALLBACK_PREFIX')
-      }}</span>
-      <Select
-        v-model="state.handoffFallbackTeamId"
-        :options="teamOptions"
-        :aria-label="
-          t('CAPTAIN.ASSISTANTS.FORM.FALLBACK_ASSIGNMENTS.TEAM_LABEL')
-        "
-        class="[&>select]:w-full min-w-40"
-      />
-      <span>{{ t('CAPTAIN.ASSISTANTS.SETTINGS.HANDOVER.FALLBACK_OR') }}</span>
-      <Select
-        v-model="state.handoffFallbackAgentId"
-        :options="agentOptions"
-        :aria-label="
-          t('CAPTAIN.ASSISTANTS.FORM.FALLBACK_ASSIGNMENTS.AGENT_LABEL')
-        "
-        class="[&>select]:w-full min-w-40"
-      />
-    </div>
+      <div class="grid gap-3 pt-3 pb-1 sm:grid-cols-2">
+        <div class="flex flex-col gap-1.5">
+          <span class="text-xs font-medium text-n-slate-11">
+            {{ t('CAPTAIN.ASSISTANTS.FORM.FALLBACK_ASSIGNMENTS.TEAM_LABEL') }}
+          </span>
+          <Select
+            v-model="state.handoffFallbackTeamId"
+            :options="teamOptions"
+            :aria-label="
+              t('CAPTAIN.ASSISTANTS.FORM.FALLBACK_ASSIGNMENTS.TEAM_LABEL')
+            "
+            class="w-full [&>select]:w-full"
+          />
+        </div>
+        <div class="flex flex-col gap-1.5">
+          <span class="text-xs font-medium text-n-slate-11">
+            {{ t('CAPTAIN.ASSISTANTS.FORM.FALLBACK_ASSIGNMENTS.AGENT_LABEL') }}
+          </span>
+          <Select
+            v-model="state.handoffFallbackAgentId"
+            :options="agentOptions"
+            :aria-label="
+              t('CAPTAIN.ASSISTANTS.FORM.FALLBACK_ASSIGNMENTS.AGENT_LABEL')
+            "
+            class="w-full [&>select]:w-full"
+          />
+        </div>
+      </div>
+    </SettingsCard>
 
     <SettingsCard>
       <SettingsSwitchRow
@@ -229,11 +270,26 @@ watch(
       />
     </template>
 
-    <div>
-      <Button
-        :label="t('CAPTAIN.ASSISTANTS.SETTINGS.SAVE')"
-        @click="handleSubmit"
+    <SettingsSaveBar
+      :is-dirty="isDirty"
+      :is-saving="isSaving"
+      @save="handleSubmit"
+      @discard="discard"
+    />
+
+    <template #preview>
+      <HandoffFlow
+        :name="name"
+        :message="state.handoffMessage"
+        :fallback-team="fallbackTeam?.name"
+        :fallback-agent="
+          fallbackAgent?.name ||
+          fallbackAgent?.available_name ||
+          fallbackAgent?.email
+        "
+        :keep-helping="state.continueWhileWaiting"
+        :safety-net="state.handoffSafetyNet"
       />
-    </div>
-  </div>
+    </template>
+  </SettingsSplit>
 </template>

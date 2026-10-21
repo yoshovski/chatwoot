@@ -11,11 +11,11 @@ import Button from 'dashboard/components-next/button/Button.vue';
 
 import SettingsPageLayout from 'dashboard/components-next/captain/pageComponents/assistant/settings/SettingsPageLayout.vue';
 import SettingsCard from 'dashboard/components-next/captain/pageComponents/assistant/settings/SettingsCard.vue';
+import SettingsSplit from 'dashboard/components-next/captain/pageComponents/assistant/settings/SettingsSplit.vue';
+import AssistantChatPreview from 'dashboard/components-next/captain/pageComponents/assistant/settings/AssistantChatPreview.vue';
 import AssistantOffLimitsMessage from 'dashboard/components-next/captain/pageComponents/assistant/settings/AssistantOffLimitsMessage.vue';
 import SettingsSwitchRow from 'dashboard/components-next/captain/pageComponents/assistant/settings/SettingsSwitchRow.vue';
-import SettingsHeader from 'dashboard/components-next/captain/pageComponents/settings/SettingsHeader.vue';
 import SuggestedRules from 'dashboard/components-next/captain/assistant/SuggestedRules.vue';
-import AddNewRulesInput from 'dashboard/components-next/captain/assistant/AddNewRulesInput.vue';
 import AddNewRulesDialog from 'dashboard/components-next/captain/assistant/AddNewRulesDialog.vue';
 import RuleCard from 'dashboard/components-next/captain/assistant/RuleCard.vue';
 import BulkSelectBar from 'dashboard/components-next/captain/assistant/BulkSelectBar.vue';
@@ -34,7 +34,7 @@ const contactAccess = computed({
 });
 
 const searchQuery = ref('');
-const newInlineRule = ref('');
+const offLimitsDraft = ref('');
 const newDialogRule = ref('');
 
 const guardrailsContent = computed(() => assistant.value?.guardrails || []);
@@ -67,9 +67,12 @@ const filteredGuardrails = computed(() => {
   return picoSearch(displayGuardrails.value, query, ['content']);
 });
 
-const shouldShowSuggestedRules = computed(() => {
-  return uiSettings.value?.show_guardrails_suggestions !== false;
-});
+// Starter examples only help while the list is empty.
+const shouldShowSuggestedRules = computed(
+  () =>
+    !guardrailsContent.value.length &&
+    uiSettings.value?.show_guardrails_suggestions !== false
+);
 
 const closeSuggestedRules = () => {
   updateUISettings({ show_guardrails_suggestions: false });
@@ -173,135 +176,148 @@ const addAllExample = () => {
 </script>
 
 <template>
-  <SettingsPageLayout
-    :heading="t('PLATFORM_NAV.BOUNDARIES')"
-    :description="t('PLATFORM_NAV.BOUNDARIES_DESC')"
-  >
-    <SettingsCard>
-      <SettingsSwitchRow
-        v-model="contactAccess"
-        class="!py-0"
-        :title="
-          t('CAPTAIN.ASSISTANTS.SETTINGS.BOUNDARIES.CONTACT_ACCESS.TITLE')
-        "
-        :description="
-          t('CAPTAIN.ASSISTANTS.SETTINGS.BOUNDARIES.CONTACT_ACCESS.DESC', {
-            name: assistant.name,
-          })
-        "
-      />
-    </SettingsCard>
-    <SettingsHeader
-      class="pt-2"
-      :heading="t('CAPTAIN.ASSISTANTS.SETTINGS.BOUNDARIES.LIST_TITLE')"
-      :description="t('CAPTAIN.ASSISTANTS.GUARDRAILS.DESCRIPTION')"
-    />
-    <SuggestedRules
-      v-if="shouldShowSuggestedRules"
-      :title="t('CAPTAIN.ASSISTANTS.GUARDRAILS.ADD.SUGGESTED.TITLE')"
-      :items="guardrailsExample"
-      @add="addAllExample"
-      @close="closeSuggestedRules"
-    >
-      <template #default="{ item }">
-        <div class="flex items-center justify-between w-full">
-          <span class="text-sm text-n-slate-12">
-            {{ item.content }}
-          </span>
-          <Button
-            :label="t('CAPTAIN.ASSISTANTS.GUARDRAILS.ADD.SUGGESTED.ADD_SINGLE')"
-            ghost
-            xs
-            slate
-            class="!text-sm !text-n-slate-11 flex-shrink-0"
-            @click="addGuardrail(item.content)"
-          />
-        </div>
-      </template>
-    </SuggestedRules>
-    <div class="flex flex-col gap-4">
-      <div class="flex justify-between items-center">
-        <BulkSelectBar
-          v-model="bulkSelectedIds"
-          :all-items="displayGuardrails"
-          :select-all-label="buildSelectedCountLabel"
-          :selected-count-label="selectedCountLabel"
-          :delete-label="
-            t('CAPTAIN.ASSISTANTS.GUARDRAILS.BULK_ACTION.BULK_DELETE_BUTTON')
+  <SettingsPageLayout :heading="t('PLATFORM_NAV.BOUNDARIES')">
+    <SettingsSplit>
+      <SettingsCard>
+        <SettingsSwitchRow
+          v-model="contactAccess"
+          class="!py-0"
+          :title="
+            t('CAPTAIN.ASSISTANTS.SETTINGS.BOUNDARIES.CONTACT_ACCESS.TITLE')
           "
-          @bulk-delete="bulkDeleteGuardrails"
-        >
-          <template #default-actions>
-            <AddNewRulesDialog
-              v-model="newDialogRule"
-              :placeholder="
-                t('CAPTAIN.ASSISTANTS.GUARDRAILS.ADD.NEW.PLACEHOLDER')
+          :description="
+            t('CAPTAIN.ASSISTANTS.SETTINGS.BOUNDARIES.CONTACT_ACCESS.DESC', {
+              name: assistant.name,
+            })
+          "
+        />
+      </SettingsCard>
+      <section class="flex flex-col gap-3">
+        <div class="flex items-center justify-between gap-3">
+          <h3 class="text-base font-semibold text-n-slate-12">
+            {{ t('CAPTAIN.ASSISTANTS.SETTINGS.BOUNDARIES.LIST_TITLE') }}
+          </h3>
+          <div class="flex items-center gap-2">
+            <div
+              v-if="displayGuardrails.length > 3 && bulkSelectedIds.size === 0"
+              class="w-full min-w-0 max-w-60"
+            >
+              <Input
+                v-model="searchQuery"
+                size="sm"
+                :placeholder="
+                  t('CAPTAIN.ASSISTANTS.GUARDRAILS.LIST.SEARCH_PLACEHOLDER')
+                "
+              />
+            </div>
+            <BulkSelectBar
+              v-model="bulkSelectedIds"
+              :all-items="displayGuardrails"
+              :select-all-label="buildSelectedCountLabel"
+              :selected-count-label="selectedCountLabel"
+              :delete-label="
+                t(
+                  'CAPTAIN.ASSISTANTS.GUARDRAILS.BULK_ACTION.BULK_DELETE_BUTTON'
+                )
               "
-              :button-label="t('CAPTAIN.ASSISTANTS.GUARDRAILS.ADD.NEW.TITLE')"
-              :confirm-label="t('CAPTAIN.ASSISTANTS.GUARDRAILS.ADD.NEW.CREATE')"
-              :cancel-label="t('CAPTAIN.ASSISTANTS.GUARDRAILS.ADD.NEW.CANCEL')"
-              @add="addGuardrail"
-            />
-            <!-- Will enable this feature in future -->
-            <!-- <div class="h-4 w-px bg-n-strong" />
-            <Button
-              :label="t('CAPTAIN.ASSISTANTS.GUARDRAILS.ADD.NEW.TEST_ALL')"
-              xs
-              ghost
-              slate
-              class="!text-sm"
-            /> -->
-          </template>
-        </BulkSelectBar>
-        <div
-          v-if="displayGuardrails.length && bulkSelectedIds.size === 0"
-          class="max-w-[22.5rem] w-full min-w-0"
+              @bulk-delete="bulkDeleteGuardrails"
+            >
+              <template #default-actions>
+                <AddNewRulesDialog
+                  v-model="newDialogRule"
+                  :placeholder="
+                    t('CAPTAIN.ASSISTANTS.GUARDRAILS.ADD.NEW.PLACEHOLDER')
+                  "
+                  :button-label="
+                    t('CAPTAIN.ASSISTANTS.GUARDRAILS.ADD.NEW.TITLE')
+                  "
+                  :confirm-label="
+                    t('CAPTAIN.ASSISTANTS.GUARDRAILS.ADD.NEW.CREATE')
+                  "
+                  :cancel-label="
+                    t('CAPTAIN.ASSISTANTS.GUARDRAILS.ADD.NEW.CANCEL')
+                  "
+                  @add="addGuardrail"
+                />
+              </template>
+            </BulkSelectBar>
+          </div>
+        </div>
+        <SuggestedRules
+          v-if="shouldShowSuggestedRules"
+          :title="t('CAPTAIN.ASSISTANTS.GUARDRAILS.ADD.SUGGESTED.TITLE')"
+          :items="guardrailsExample"
+          @add="addAllExample"
+          @close="closeSuggestedRules"
         >
-          <Input
-            v-model="searchQuery"
-            :placeholder="
-              t('CAPTAIN.ASSISTANTS.GUARDRAILS.LIST.SEARCH_PLACEHOLDER')
+          <template #default="{ item }">
+            <div class="flex items-center justify-between w-full">
+              <span class="text-sm text-n-slate-12">
+                {{ item.content }}
+              </span>
+              <Button
+                :label="
+                  t('CAPTAIN.ASSISTANTS.GUARDRAILS.ADD.SUGGESTED.ADD_SINGLE')
+                "
+                ghost
+                xs
+                slate
+                class="!text-sm !text-n-slate-11 flex-shrink-0"
+                @click="addGuardrail(item.content)"
+              />
+            </div>
+          </template>
+        </SuggestedRules>
+        <p
+          v-else-if="displayGuardrails.length === 0"
+          class="m-0 text-sm text-n-slate-11"
+        >
+          {{ t('CAPTAIN.ASSISTANTS.GUARDRAILS.EMPTY_MESSAGE') }}
+        </p>
+        <p
+          v-else-if="filteredGuardrails.length === 0"
+          class="m-0 text-sm text-n-slate-11"
+        >
+          {{ t('CAPTAIN.ASSISTANTS.GUARDRAILS.SEARCH_EMPTY_MESSAGE') }}
+        </p>
+        <div v-else class="flex flex-col gap-2">
+          <RuleCard
+            v-for="guardrail in filteredGuardrails"
+            :id="guardrail.id"
+            :key="guardrail.id"
+            :content="guardrail.content"
+            :is-selected="bulkSelectedIds.has(guardrail.id)"
+            :selectable="
+              hoveredCard === guardrail.id || bulkSelectedIds.size > 0
             "
+            @select="handleRuleSelect"
+            @edit="editGuardrail"
+            @delete="deleteGuardrail"
+            @hover="isHovered => handleRuleHover(isHovered, guardrail.id)"
           />
         </div>
-      </div>
-      <div v-if="displayGuardrails.length === 0" class="mt-1 mb-2">
-        <span class="text-n-slate-11 text-sm">
-          {{ t('CAPTAIN.ASSISTANTS.GUARDRAILS.EMPTY_MESSAGE') }}
-        </span>
-      </div>
-      <div v-else-if="filteredGuardrails.length === 0" class="mt-1 mb-2">
-        <span class="text-n-slate-11 text-sm">
-          {{ t('CAPTAIN.ASSISTANTS.GUARDRAILS.SEARCH_EMPTY_MESSAGE') }}
-        </span>
-      </div>
-      <div v-else class="flex flex-col gap-2">
-        <RuleCard
-          v-for="guardrail in filteredGuardrails"
-          :id="guardrail.id"
-          :key="guardrail.id"
-          :content="guardrail.content"
-          :is-selected="bulkSelectedIds.has(guardrail.id)"
-          :selectable="hoveredCard === guardrail.id || bulkSelectedIds.size > 0"
-          @select="handleRuleSelect"
-          @edit="editGuardrail"
-          @delete="deleteGuardrail"
-          @hover="isHovered => handleRuleHover(isHovered, guardrail.id)"
-        />
-      </div>
-      <AddNewRulesInput
-        v-model="newInlineRule"
-        :placeholder="
-          t('CAPTAIN.ASSISTANTS.GUARDRAILS.ADD.SUGGESTED.PLACEHOLDER')
-        "
-        :label="t('CAPTAIN.ASSISTANTS.GUARDRAILS.ADD.SUGGESTED.SAVE')"
-        @add="addGuardrail"
+      </section>
+      <AssistantOffLimitsMessage
+        v-model:draft="offLimitsDraft"
+        :assistant="assistant"
+        @submit="updateAssistant"
       />
-    </div>
-    <AssistantOffLimitsMessage
-      :assistant="assistant"
-      class="mt-2"
-      @submit="updateAssistant"
-    />
+      <template #preview>
+        <AssistantChatPreview
+          :name="assistant.name"
+          :avatar-url="assistant.avatar_url"
+        >
+          <p class="preview-bubble preview-bubble--customer">
+            {{ t('CAPTAIN.ASSISTANTS.SETTINGS.PREVIEW.OFF_TOPIC_QUESTION') }}
+          </p>
+          <p class="preview-bubble preview-bubble--agent">
+            {{
+              offLimitsDraft.trim() ||
+              t('CAPTAIN.ASSISTANTS.SETTINGS.BOUNDARIES.OFF_LIMITS.PLACEHOLDER')
+            }}
+          </p>
+        </AssistantChatPreview>
+      </template>
+    </SettingsSplit>
   </SettingsPageLayout>
 </template>

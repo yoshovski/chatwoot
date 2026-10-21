@@ -40,10 +40,6 @@ vi.mock('dashboard/composables/usePolicy', () => ({
   usePolicy: () => ({ checkPermissions: () => true }),
 }));
 
-vi.mock('dashboard/composables/useAccount', () => ({
-  useAccount: () => ({ isOnChatwootCloud: false }),
-}));
-
 vi.mock('dashboard/composables', () => ({
   useAlert: vi.fn(),
 }));

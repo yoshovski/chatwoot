@@ -24,10 +24,13 @@ describe('TemplateGallery', () => {
     uiSettings.value = {};
   });
 
-  it('shows five templates and the describe tile', () => {
+  it('shows only the templates this account can use, plus the describe tile', () => {
     const wrapper = mountGallery();
 
-    expect(wrapper.findAll('[data-test^="template-"]')).toHaveLength(6);
+    expect(wrapper.findAll('[data-test^="template-"]')).toHaveLength(5);
+    expect(wrapper.find('[data-test="template-product_finder"]').exists()).toBe(
+      false
+    );
     expect(wrapper.text()).not.toContain(
       'CAPTAIN.ASSISTANTS.SCENARIOS.TEMPLATES.NEEDS_SHOPIFY_TOOLTIP'
     );
@@ -43,17 +46,21 @@ describe('TemplateGallery', () => {
     expect(wrapper.emitted('useTemplate')[0][0].id).toBe('request_a_quote');
   });
 
-  it('does not start a template whose required tool is missing', async () => {
-    const wrapper = mountGallery();
-    const productFinder = wrapper.find('[data-test="template-product_finder"]');
+  it('offers integration templates once their tools are connected', () => {
+    const wrapper = mountGallery({
+      tools: [
+        ...tools,
+        {
+          id: 'catalog_product_search',
+          title: 'Search products',
+          emoji: '🛍️',
+        },
+      ],
+    });
 
-    await productFinder.get('button').trigger('click');
-
-    expect(productFinder.get('button').attributes('disabled')).toBe('');
-    expect(productFinder.text()).toContain(
-      'CAPTAIN.ASSISTANTS.SCENARIOS.TEMPLATES.NEEDS_SHOPIFY'
+    expect(wrapper.find('[data-test="template-product_finder"]').exists()).toBe(
+      true
     );
-    expect(wrapper.emitted('useTemplate')).toBeUndefined();
   });
 
   it('opens the builder from the describe tile', async () => {

@@ -19,6 +19,7 @@ import Input from 'dashboard/components-next/input/Input.vue';
 import Button from 'next/button/Button.vue';
 import Policy from 'dashboard/components/policy.vue';
 import PageLayout from 'dashboard/components-next/captain/PageLayout.vue';
+import TestAgentButton from 'dashboard/components-next/captain/TestAgentButton.vue';
 import CaptainPaywall from 'dashboard/components-next/captain/pageComponents/Paywall.vue';
 import DocumentDetails from 'dashboard/components-next/captain/pageComponents/document/DocumentDetails.vue';
 import CreateDocumentDialog from 'dashboard/components-next/captain/pageComponents/document/CreateDocumentDialog.vue';
@@ -421,24 +422,7 @@ onUnmounted(() => {
     @click="handleCreateDocument"
   >
     <template #headerActions>
-      <router-link
-        v-if="selectedAssistantId"
-        :to="{
-          name: 'captain_assistants_playground_index',
-          params: {
-            accountId: $route.params.accountId,
-            assistantId: selectedAssistantId,
-          },
-        }"
-      >
-        <Button
-          :label="$t('PLATFORM_NAV.TEST_AGENT')"
-          icon="i-lucide-play"
-          variant="outline"
-          color="slate"
-          size="sm"
-        />
-      </router-link>
+      <TestAgentButton :assistant-id="selectedAssistantId" />
     </template>
     <template #subHeader>
       <Policy :permissions="['administrator']">
@@ -534,7 +518,8 @@ onUnmounted(() => {
             :variant="isCompactView ? 'faded' : 'ghost'"
             :color="isCompactView ? 'blue' : 'slate'"
             icon="i-lucide-list"
-            label="Compact"
+            :aria-label="$t('PLATFORM_NAV.COMPACT_VIEW')"
+            :title="$t('PLATFORM_NAV.COMPACT_VIEW')"
             @click="isCompactView = true"
           />
           <Button
@@ -542,7 +527,8 @@ onUnmounted(() => {
             :variant="!isCompactView ? 'faded' : 'ghost'"
             :color="!isCompactView ? 'blue' : 'slate'"
             icon="i-lucide-layout-list"
-            label="Comfortable"
+            :aria-label="$t('PLATFORM_NAV.COMFORTABLE_VIEW')"
+            :title="$t('PLATFORM_NAV.COMFORTABLE_VIEW')"
             @click="isCompactView = false"
           />
         </div>

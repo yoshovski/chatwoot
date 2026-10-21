@@ -9,10 +9,7 @@ const { assistant, updateAssistant } = useAssistantSettings();
 </script>
 
 <template>
-  <SettingsPageLayout
-    :heading="t('PLATFORM_NAV.AFTER_CHAT')"
-    :description="t('PLATFORM_NAV.AFTER_CHAT_DESC')"
-  >
-    <AssistantAfterChatForm :assistant="assistant" @submit="updateAssistant" />
+  <SettingsPageLayout :heading="t('PLATFORM_NAV.AFTER_CHAT')">
+    <AssistantAfterChatForm :assistant="assistant" :save="updateAssistant" />
   </SettingsPageLayout>
 </template>
