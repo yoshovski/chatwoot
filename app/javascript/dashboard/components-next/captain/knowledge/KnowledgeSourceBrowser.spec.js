@@ -34,10 +34,9 @@ describe('KnowledgeSourceBrowser', () => {
     await flushPromises();
     expect(wrapper.findAll('li')).toHaveLength(2);
     expect(wrapper.find('input[type="checkbox"]').exists()).toBe(false);
-    const manage = wrapper
-      .findAll('button')
-      .find(button => button.text() === 'PLATFORM_NAV.MANAGE_PAGES');
-    await manage.trigger('click');
+    expect(wrapper.text()).toContain('PLATFORM_NAV.FAILED_PAGES');
+    expect(wrapper.text()).toContain('PLATFORM_NAV.NO_FAILURES');
+    await wrapper.findAll('li button')[0].trigger('click');
     expect(wrapper.emitted('update:website').at(-1)).toEqual(['example.com']);
   });
 

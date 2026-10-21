@@ -11,10 +11,10 @@ import Input from 'dashboard/components-next/input/Input.vue';
 import Button from 'dashboard/components-next/button/Button.vue';
 
 import SettingsPageLayout from 'dashboard/components-next/captain/pageComponents/assistant/settings/SettingsPageLayout.vue';
+import SettingsSplit from 'dashboard/components-next/captain/pageComponents/assistant/settings/SettingsSplit.vue';
+import InstructionsPreview from 'dashboard/components-next/captain/pageComponents/assistant/settings/InstructionsPreview.vue';
 import AssistantBehaviorSettings from 'dashboard/components-next/captain/pageComponents/assistant/settings/AssistantBehaviorSettings.vue';
-import SettingsHeader from 'dashboard/components-next/captain/pageComponents/settings/SettingsHeader.vue';
 import SuggestedRules from 'dashboard/components-next/captain/assistant/SuggestedRules.vue';
-import AddNewRulesInput from 'dashboard/components-next/captain/assistant/AddNewRulesInput.vue';
 import AddNewRulesDialog from 'dashboard/components-next/captain/assistant/AddNewRulesDialog.vue';
 import RuleCard from 'dashboard/components-next/captain/assistant/RuleCard.vue';
 import BulkSelectBar from 'dashboard/components-next/captain/assistant/BulkSelectBar.vue';
@@ -29,7 +29,6 @@ const saveBehavior = patch =>
   updateAssistant({ config: { ...assistant.value.config, ...patch } });
 
 const searchQuery = ref('');
-const newInlineRule = ref('');
 const newDialogRule = ref('');
 
 const guidelinesContent = computed(
@@ -63,9 +62,12 @@ const filteredGuidelines = computed(() => {
   return picoSearch(displayGuidelines.value, query, ['content']);
 });
 
-const shouldShowSuggestedRules = computed(() => {
-  return uiSettings.value?.show_response_guidelines_suggestions !== false;
-});
+// Starter examples only help while the list is empty.
+const shouldShowSuggestedRules = computed(
+  () =>
+    !guidelinesContent.value.length &&
+    uiSettings.value?.show_response_guidelines_suggestions !== false
+);
 
 const closeSuggestedRules = () => {
   updateUISettings({ show_response_guidelines_suggestions: false });
@@ -174,136 +176,130 @@ const addAllExample = async () => {
 </script>
 
 <template>
-  <SettingsPageLayout
-    :heading="t('PLATFORM_NAV.INSTRUCTIONS')"
-    :description="t('PLATFORM_NAV.INSTRUCTIONS_DESC')"
-  >
-    <AssistantBehaviorSettings
-      :assistant="assistant"
-      :show-product-cards="isShopifyConnected"
-      @update="saveBehavior"
-    />
-    <SettingsHeader
-      class="pt-2"
-      :heading="t('CAPTAIN.ASSISTANTS.SETTINGS.BEHAVIOR.RULES.TITLE')"
-      :description="t('CAPTAIN.ASSISTANTS.SETTINGS.BEHAVIOR.RULES.DESCRIPTION')"
-    />
-    <SuggestedRules
-      v-if="shouldShowSuggestedRules"
-      :title="t('CAPTAIN.ASSISTANTS.RESPONSE_GUIDELINES.TITLE')"
-      :items="guidelinesExample"
-      @add="addAllExample"
-      @close="closeSuggestedRules"
-    >
-      <template #default="{ item }">
-        <div class="flex items-center justify-between w-full">
-          <span class="text-sm text-n-slate-12">
-            {{ item.content }}
-          </span>
-          <Button
-            :label="
-              t(
-                'CAPTAIN.ASSISTANTS.RESPONSE_GUIDELINES.ADD.SUGGESTED.ADD_SINGLE'
-              )
-            "
-            ghost
-            xs
-            slate
-            class="!text-sm !text-n-slate-11 flex-shrink-0"
-            @click="addGuideline(item.content)"
-          />
-        </div>
-      </template>
-    </SuggestedRules>
-    <div class="flex flex-col gap-4">
-      <div class="flex justify-between items-center">
-        <BulkSelectBar
-          v-model="bulkSelectedIds"
-          :all-items="displayGuidelines"
-          :select-all-label="buildSelectedCountLabel"
-          :selected-count-label="selectedCountLabel"
-          :delete-label="
-            t(
-              'CAPTAIN.ASSISTANTS.RESPONSE_GUIDELINES.BULK_ACTION.BULK_DELETE_BUTTON'
-            )
-          "
-          @bulk-delete="bulkDeleteGuidelines"
-        >
-          <template #default-actions>
-            <AddNewRulesDialog
-              v-model="newDialogRule"
-              :placeholder="
-                t('CAPTAIN.ASSISTANTS.RESPONSE_GUIDELINES.ADD.NEW.PLACEHOLDER')
-              "
-              :button-label="
-                t('CAPTAIN.ASSISTANTS.RESPONSE_GUIDELINES.ADD.NEW.TITLE')
-              "
-              :confirm-label="
-                t('CAPTAIN.ASSISTANTS.RESPONSE_GUIDELINES.ADD.NEW.CREATE')
-              "
-              :cancel-label="
-                t('CAPTAIN.ASSISTANTS.RESPONSE_GUIDELINES.ADD.NEW.CANCEL')
-              "
-              @add="addGuideline"
-            />
-            <!-- Will enable this feature in future -->
-            <!-- <div class="h-4 w-px bg-n-strong" />
-            <Button
-              :label="
-                t('CAPTAIN.ASSISTANTS.RESPONSE_GUIDELINES.ADD.NEW.TEST_ALL')
-              "
-              sm
-              ghost
-              slate
-            /> -->
-          </template>
-        </BulkSelectBar>
-        <div
-          v-if="displayGuidelines.length && bulkSelectedIds.size === 0"
-          class="max-w-[22.5rem] w-full min-w-0"
-        >
-          <Input
-            v-model="searchQuery"
-            :placeholder="
-              t(
-                'CAPTAIN.ASSISTANTS.RESPONSE_GUIDELINES.LIST.SEARCH_PLACEHOLDER'
-              )
-            "
-          />
-        </div>
-      </div>
-      <div v-if="displayGuidelines.length === 0" class="mt-1 mb-2">
-        <span class="text-n-slate-11 text-sm">
-          {{ t('CAPTAIN.ASSISTANTS.RESPONSE_GUIDELINES.EMPTY_MESSAGE') }}
-        </span>
-      </div>
-      <div v-else-if="filteredGuidelines.length === 0" class="mt-1 mb-2">
-        <span class="text-n-slate-11 text-sm">
-          {{ t('CAPTAIN.ASSISTANTS.RESPONSE_GUIDELINES.SEARCH_EMPTY_MESSAGE') }}
-        </span>
-      </div>
-      <div v-else class="flex flex-col gap-2">
-        <RuleCard
-          v-for="guideline in filteredGuidelines"
-          :id="guideline.id"
-          :key="guideline.id"
-          :content="guideline.content"
-          :is-selected="bulkSelectedIds.has(guideline.id)"
-          :selectable="hoveredCard === guideline.id || bulkSelectedIds.size > 0"
-          @select="handleRuleSelect"
-          @hover="isHovered => handleRuleHover(isHovered, guideline.id)"
-          @edit="editGuideline"
-          @delete="deleteGuideline"
-        />
-      </div>
-      <AddNewRulesInput
-        v-model="newInlineRule"
-        :placeholder="
-          t('CAPTAIN.ASSISTANTS.RESPONSE_GUIDELINES.ADD.SUGGESTED.PLACEHOLDER')
-        "
-        :label="t('CAPTAIN.ASSISTANTS.RESPONSE_GUIDELINES.ADD.SUGGESTED.SAVE')"
-        @add="addGuideline"
+  <SettingsPageLayout :heading="t('PLATFORM_NAV.INSTRUCTIONS')">
+    <SettingsSplit>
+      <AssistantBehaviorSettings
+        :assistant="assistant"
+        :show-product-cards="isShopifyConnected"
+        @update="saveBehavior"
       />
-    </div>
+      <section class="flex flex-col gap-3">
+        <div class="flex items-center justify-between gap-3">
+          <h3 class="text-base font-semibold text-n-slate-12">
+            {{ t('CAPTAIN.ASSISTANTS.SETTINGS.BEHAVIOR.RULES.TITLE') }}
+          </h3>
+          <div class="flex items-center gap-2">
+            <div
+              v-if="displayGuidelines.length > 3 && bulkSelectedIds.size === 0"
+              class="max-w-60 w-full min-w-0"
+            >
+              <Input
+                v-model="searchQuery"
+                size="sm"
+                :placeholder="
+                  t(
+                    'CAPTAIN.ASSISTANTS.RESPONSE_GUIDELINES.LIST.SEARCH_PLACEHOLDER'
+                  )
+                "
+              />
+            </div>
+            <BulkSelectBar
+              v-model="bulkSelectedIds"
+              :all-items="displayGuidelines"
+              :select-all-label="buildSelectedCountLabel"
+              :selected-count-label="selectedCountLabel"
+              :delete-label="
+                t(
+                  'CAPTAIN.ASSISTANTS.RESPONSE_GUIDELINES.BULK_ACTION.BULK_DELETE_BUTTON'
+                )
+              "
+              @bulk-delete="bulkDeleteGuidelines"
+            >
+              <template #default-actions>
+                <AddNewRulesDialog
+                  v-model="newDialogRule"
+                  :placeholder="
+                    t(
+                      'CAPTAIN.ASSISTANTS.RESPONSE_GUIDELINES.ADD.NEW.PLACEHOLDER'
+                    )
+                  "
+                  :button-label="
+                    t('CAPTAIN.ASSISTANTS.RESPONSE_GUIDELINES.ADD.NEW.TITLE')
+                  "
+                  :confirm-label="
+                    t('CAPTAIN.ASSISTANTS.RESPONSE_GUIDELINES.ADD.NEW.CREATE')
+                  "
+                  :cancel-label="
+                    t('CAPTAIN.ASSISTANTS.RESPONSE_GUIDELINES.ADD.NEW.CANCEL')
+                  "
+                  @add="addGuideline"
+                />
+              </template>
+            </BulkSelectBar>
+          </div>
+        </div>
+        <SuggestedRules
+          v-if="shouldShowSuggestedRules"
+          :title="t('CAPTAIN.ASSISTANTS.RESPONSE_GUIDELINES.TITLE')"
+          :items="guidelinesExample"
+          @add="addAllExample"
+          @close="closeSuggestedRules"
+        >
+          <template #default="{ item }">
+            <div class="flex items-center justify-between w-full">
+              <span class="text-sm text-n-slate-12">
+                {{ item.content }}
+              </span>
+              <Button
+                :label="
+                  t(
+                    'CAPTAIN.ASSISTANTS.RESPONSE_GUIDELINES.ADD.SUGGESTED.ADD_SINGLE'
+                  )
+                "
+                ghost
+                xs
+                slate
+                class="!text-sm !text-n-slate-11 flex-shrink-0"
+                @click="addGuideline(item.content)"
+              />
+            </div>
+          </template>
+        </SuggestedRules>
+        <p
+          v-else-if="displayGuidelines.length === 0"
+          class="m-0 text-sm text-n-slate-11"
+        >
+          {{ t('CAPTAIN.ASSISTANTS.RESPONSE_GUIDELINES.EMPTY_MESSAGE') }}
+        </p>
+        <p
+          v-else-if="filteredGuidelines.length === 0"
+          class="m-0 text-sm text-n-slate-11"
+        >
+          {{ t('CAPTAIN.ASSISTANTS.RESPONSE_GUIDELINES.SEARCH_EMPTY_MESSAGE') }}
+        </p>
+        <div v-else class="flex flex-col gap-2">
+          <RuleCard
+            v-for="guideline in filteredGuidelines"
+            :id="guideline.id"
+            :key="guideline.id"
+            :content="guideline.content"
+            :is-selected="bulkSelectedIds.has(guideline.id)"
+            :selectable="
+              hoveredCard === guideline.id || bulkSelectedIds.size > 0
+            "
+            @select="handleRuleSelect"
+            @hover="isHovered => handleRuleHover(isHovered, guideline.id)"
+            @edit="editGuideline"
+            @delete="deleteGuideline"
+          />
+        </div>
+      </section>
+      <template #preview>
+        <InstructionsPreview
+          :assistant="assistant"
+          :show-product-cards="isShopifyConnected"
+        />
+      </template>
+    </SettingsSplit>
   </SettingsPageLayout>
 </template>

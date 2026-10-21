@@ -1007,46 +1007,45 @@
             "TITLE": "Tone",
             "FRIENDLY": {
               "LABEL": "Friendly",
-              "DESC": "“Great question! Here's what I found…”"
+              "DESC": "Warm and conversational"
             },
             "PROFESSIONAL": {
               "LABEL": "Professional",
-              "DESC": "“Thank you for your question. Here's…”"
+              "DESC": "Clear and businesslike"
             },
             "SHORT": {
               "LABEL": "Short and direct",
-              "DESC": "“Yes, it ships in 2 days.”"
+              "DESC": "Straight to the point"
             }
           },
           "CARDS": {
-            "TITLE": "What customers see",
+            "TITLE": "Reply format",
             "QUICK_REPLIES": {
               "TITLE": "Quick replies",
-              "PREVIEW_TEXT": "Need help choosing?",
               "BUTTON_1": "Compare products",
               "BUTTON_2": "Track my order",
               "BUTTON_3": "Talk to a person",
               "MAX": "Buttons per message",
               "FEWER": "Fewer buttons",
-              "MORE": "More buttons"
+              "MORE": "More buttons",
+              "DESC": "Tappable suggestions under each reply.",
+              "BUTTON_4": "Shipping times",
+              "BUTTON_5": "Return an item"
             },
             "PRODUCT_CARDS": {
               "TITLE": "Product cards",
               "PREVIEW_NAME": "Example product",
               "PREVIEW_PRICE": "€49.00 · In stock",
-              "PREVIEW_LINK": "View product",
               "NOTE": "Price and stock come live from Shopify."
             },
             "SOURCES": {
               "TITLE": "Show sources",
-              "PREVIEW_TEXT": "Every order comes with a 30-day return window.",
               "PREVIEW_LINK": "Source: Returns policy",
               "NOTE": "Links to the page {name} used."
             }
           },
           "RULES": {
-            "TITLE": "Style rules",
-            "DESCRIPTION": "Short instructions, like you'd give a new teammate."
+            "TITLE": "Style rules"
           }
         },
         "WORKING_HOURS": {
@@ -1078,8 +1077,7 @@
           "TITLE": "Handing over to your team",
           "DESCRIPTION": "Customers can always ask for a person. Here's how {name} passes the conversation on.",
           "MESSAGE_TITLE": "What {name} says when handing over",
-          "FALLBACK_PREFIX": "If nobody's online, give the conversation to",
-          "FALLBACK_OR": "or",
+          "FALLBACK_PREFIX": "Who gets the conversation if no teammate is available.",
           "KEEP_HELPING": {
             "TITLE": "Keep helping until a teammate replies",
             "DESC": "{name} keeps answering simple questions while the customer waits."
@@ -1087,6 +1085,19 @@
           "SAFETY_NET": {
             "TITLE": "Hand over when {name} can't help",
             "DESC": "Instead of a vague answer, {name} passes the conversation to your team."
+          },
+          "FALLBACK_TITLE": "When nobody is online",
+          "FLOW": {
+            "TITLE": "What happens",
+            "TRIGGER": "Customer asks for a person",
+            "TRIGGER_OR_STUCK": "Customer asks for a person, or {name} can’t help",
+            "SAYS": "{name} says",
+            "DEFAULT_MESSAGE": "Connecting you with our team now.",
+            "ASSIGN": "The conversation moves to your team",
+            "NO_FALLBACK": "Your inbox’s usual assignment applies.",
+            "FALLBACK": "If nobody is online: {assignee}",
+            "KEEPS_HELPING": "{name} keeps answering simple questions while the customer waits",
+            "WAITS": "{name} stays quiet until a teammate replies"
           }
         },
         "AFTER_CHAT": {
@@ -1110,6 +1121,37 @@
           "MEMORIES": {
             "TITLE": "Remember returning customers",
             "DESC": "{name} keeps key details, like what a customer bought, for next time."
+          },
+          "FLOW": {
+            "TITLE": "What happens",
+            "QUIET": "Customer stops replying",
+            "WAIT": "{duration} pass with no reply",
+            "HOURS": "{count} h",
+            "MINUTES": "{count} min",
+            "REVIEWS": "{name} checks whether it was solved",
+            "SOLVED": "Solved: the conversation closes",
+            "UNSOLVED": "Not solved: handed to your team",
+            "CLOSES": "The conversation closes",
+            "STAYS_OPEN": "The conversation stays open",
+            "SAYS_GOODBYE": "When it closes, {name} says",
+            "DEFAULT_GOODBYE": "Thanks for chatting with us. Message us anytime if you need more help."
+          }
+        },
+        "SAVE_BAR": {
+          "UNSAVED": "Unsaved changes",
+          "DISCARD": "Discard",
+          "LEAVE": "You have unsaved changes. Leave without saving?"
+        },
+        "PREVIEW": {
+          "LABEL": "Customer preview · example",
+          "AI_AGENT": "AI agent",
+          "COMPOSER": "Type a message…",
+          "QUESTION": "Do you ship to Germany?",
+          "OFF_TOPIC_QUESTION": "Can you help me with my tax return?",
+          "REPLY": {
+            "FRIENDLY": "Great question! Yes, we ship to Germany 🙂 Delivery usually takes 3–5 days.",
+            "PROFESSIONAL": "Yes, we ship to Germany. Delivery takes 3–5 business days.",
+            "SHORT": "Yes, in 3–5 days."
           }
         }
       },
@@ -1583,6 +1625,12 @@
             "NONE": "None linked. Your AI agent can still use all of its tools.",
             "REMOVE": "Remove {tool} from the steps"
           }
+        },
+        "FILTER": {
+          "LABEL": "Filter by status",
+          "ALL": "All · {count}",
+          "ACTIVE": "Active · {count}",
+          "PAUSED": "Paused · {count}"
         }
       },
       "AI_AGENT_CHIP": "AI agent"

@@ -4,7 +4,7 @@ import { useI18n } from 'vue-i18n';
 import { useUISettings } from 'dashboard/composables/useUISettings';
 import Button from 'dashboard/components-next/button/Button.vue';
 import TemplateCard from './TemplateCard.vue';
-import { SCENARIO_TEMPLATES } from './scenarioTemplates';
+import { SCENARIO_TEMPLATES, isTemplateAvailable } from './scenarioTemplates';
 
 const props = defineProps({
   tools: {
@@ -25,6 +25,13 @@ const { uiSettings, updateUISettings } = useUISettings();
 // Until the user toggles it, show the gallery only while there is nothing to manage yet.
 const isExpanded = computed(
   () => uiSettings.value?.show_scenarios_suggestions ?? !props.hasScenarios
+);
+
+// Templates that need an integration this account doesn't have only add noise.
+const availableTemplates = computed(() =>
+  SCENARIO_TEMPLATES.filter(template =>
+    isTemplateAvailable(template, props.tools)
+  )
 );
 
 const toggleExpanded = () => {
@@ -63,7 +70,7 @@ const toggleExpanded = () => {
       class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3"
     >
       <TemplateCard
-        v-for="template in SCENARIO_TEMPLATES"
+        v-for="template in availableTemplates"
         :key="template.id"
         :template="template"
         :tools="tools"

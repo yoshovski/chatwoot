@@ -26,6 +26,11 @@ const props = defineProps({
     type: Object,
     default: () => ({}),
   },
+  // Pages with their own primary create button open the dialog via ref.
+  showTrigger: {
+    type: Boolean,
+    default: true,
+  },
 });
 
 const emit = defineEmits(['add']);
@@ -197,6 +202,7 @@ defineExpose({
 <template>
   <div class="inline-flex">
     <Button
+      v-if="showTrigger"
       :label="t('CAPTAIN.ASSISTANTS.SCENARIOS.ADD.NEW.CREATE')"
       sm
       slate

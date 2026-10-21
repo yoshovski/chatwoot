@@ -3,6 +3,7 @@ import { computed, ref } from 'vue';
 import { useToggle } from '@vueuse/core';
 import { useI18n } from 'vue-i18n';
 import { dynamicTime } from 'shared/helpers/timeHelper';
+import { useMessageFormatter } from 'shared/composables/useMessageFormatter';
 import { useExactTimestamp } from 'shared/composables/useExactTimestamp';
 import { usePolicy } from 'dashboard/composables/usePolicy';
 
@@ -93,6 +94,9 @@ const { checkPermissions } = usePolicy();
 
 const [showActionsDropdown, toggleDropdown] = useToggle();
 const isExpanded = ref(false);
+const { formatMessage, getPlainText } = useMessageFormatter();
+const formattedAnswer = computed(() => formatMessage(props.answer || ''));
+const answerExcerpt = computed(() => getPlainText(props.answer || ''));
 
 const modelValue = computed({
   get: () => props.isSelected,
@@ -229,6 +233,7 @@ const originInfo = computed(() => {
       <button
         type="button"
         class="text-left font-medium text-base text-n-slate-12 hover:text-n-blue-11 transition-colors flex items-center gap-2 min-w-0"
+        :aria-expanded="isExpanded"
         @click="isExpanded = !isExpanded"
       >
         <span class="line-clamp-1">{{ question }}</span>
@@ -282,12 +287,11 @@ const originInfo = computed(() => {
     </div>
     <div
       v-if="isExpanded"
-      class="text-n-slate-12 text-sm leading-relaxed whitespace-pre-line p-3 bg-n-alpha-1 rounded-lg mt-2"
-    >
-      {{ answer }}
-    </div>
-    <span v-else class="text-n-slate-11 text-xs line-clamp-1 mt-1">
-      {{ answer }}
+      v-dompurify-html="formattedAnswer"
+      class="p-3 mt-2 text-sm leading-relaxed rounded-lg text-n-slate-12 bg-n-alpha-1 [&_p]:mb-2 [&_p:last-child]:mb-0 [&_ul]:ps-5 [&_ul]:list-disc [&_ol]:ps-5 [&_ol]:list-decimal [&_a]:text-n-blue-11 [&_a]:underline"
+    />
+    <span v-else class="mt-1 text-xs text-n-slate-11 line-clamp-1">
+      {{ answerExcerpt }}
     </span>
     <div
       v-if="!compact"

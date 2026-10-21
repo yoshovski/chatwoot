@@ -1,5 +1,5 @@
 <script setup>
-import { computed, reactive, watch } from 'vue';
+import { computed, reactive, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useVuelidate } from '@vuelidate/core';
 import { maxValue, minLength, minValue, required } from '@vuelidate/validators';
@@ -7,14 +7,14 @@ import { FEATURE_FLAGS } from 'dashboard/featureFlags';
 import { useAccount } from 'dashboard/composables/useAccount';
 
 import Banner from 'dashboard/components-next/banner/Banner.vue';
-import Button from 'dashboard/components-next/button/Button.vue';
 import Editor from 'dashboard/components-next/Editor/Editor.vue';
-import RadioCard from 'dashboard/components-next/radioCard/RadioCard.vue';
-import SettingsToggleSection from 'dashboard/components-next/Settings/SettingsToggleSection.vue';
-import Switch from 'dashboard/components-next/switch/Switch.vue';
 import DurationSelect from './DurationSelect.vue';
 import SettingsCard from './SettingsCard.vue';
 import SettingsSwitchRow from './SettingsSwitchRow.vue';
+import SettingsSaveBar from './SettingsSaveBar.vue';
+import SettingsSplit from './SettingsSplit.vue';
+import ChoiceCard from './ChoiceCard.vue';
+import AfterChatFlow from './AfterChatFlow.vue';
 import { useAdmin } from 'dashboard/composables/useAdmin';
 
 const props = defineProps({
@@ -22,9 +22,12 @@ const props = defineProps({
     type: Object,
     default: () => ({}),
   },
+  // Async save so the form knows when the request has finished.
+  save: {
+    type: Function,
+    required: true,
+  },
 });
-
-const emit = defineEmits(['submit']);
 
 const { t } = useI18n();
 const { isCloudFeatureEnabled } = useAccount();
@@ -55,6 +58,7 @@ const name = computed(() => props.assistant.name);
 const autoResolveOptions = computed(() => [
   {
     value: 'evaluated',
+    icon: 'i-lucide-sparkles',
     label: t(
       'CAPTAIN.ASSISTANTS.FORM.INACTIVITY_RESOLUTION.MODES.EVALUATED.LABEL',
       { name: name.value }
@@ -66,6 +70,7 @@ const autoResolveOptions = computed(() => [
   },
   {
     value: 'legacy',
+    icon: 'i-lucide-circle-check',
     label: t(
       'CAPTAIN.ASSISTANTS.FORM.INACTIVITY_RESOLUTION.MODES.LEGACY.LABEL',
       { name: name.value }
@@ -77,6 +82,7 @@ const autoResolveOptions = computed(() => [
   },
   {
     value: 'disabled',
+    icon: 'i-lucide-circle-pause',
     label: t(
       'CAPTAIN.ASSISTANTS.FORM.INACTIVITY_RESOLUTION.MODES.DISABLED.LABEL',
       { name: name.value }
@@ -108,6 +114,11 @@ const validationRules = {
 
 const v$ = useVuelidate(validationRules, state);
 
+const isSaving = ref(false);
+const savedSnapshot = ref('');
+const snapshot = () => JSON.stringify(state);
+const isDirty = computed(() => snapshot() !== savedSnapshot.value);
+
 const getErrorMessage = field => {
   return v$.value[field].$error ? v$.value[field].$errors[0].$message : '';
 };
@@ -128,6 +139,12 @@ const updateStateFromAssistant = assistant => {
   state.outcomeLabels = config.outcome_labels || false;
   state.conversationFaqs = config.feature_faq || false;
   state.memories = config.feature_memory || false;
+  savedSnapshot.value = snapshot();
+};
+
+const discard = () => {
+  v$.value.$reset();
+  updateStateFromAssistant(props.assistant);
 };
 
 const fieldsToValidate = () => {
@@ -166,7 +183,12 @@ const handleSubmit = async () => {
     });
   }
 
-  emit('submit', payload);
+  isSaving.value = true;
+  try {
+    await props.save(payload);
+  } finally {
+    isSaving.value = false;
+  }
 };
 
 watch(
@@ -179,146 +201,103 @@ watch(
 </script>
 
 <template>
-  <div class="flex flex-col gap-6">
-    <SettingsToggleSection
-      v-if="isCaptainV2Enabled"
-      hide-toggle
-      :header="t('CAPTAIN.ASSISTANTS.SETTINGS.AFTER_CHAT.QUIET_TITLE')"
-    >
-      <div class="flex w-full flex-col gap-4 pt-3">
-        <div
-          class="flex flex-col gap-3 px-4"
-          role="radiogroup"
-          :aria-label="
-            t('CAPTAIN.ASSISTANTS.FORM.INACTIVITY_RESOLUTION.MODE_LABEL')
-          "
-        >
-          <RadioCard
-            v-for="option in autoResolveOptions"
-            :id="`auto-resolve-${option.value}`"
-            :key="option.value"
-            :label="option.label"
-            :description="option.description"
-            name="auto-resolve-mode"
-            :is-active="state.autoResolveMode === option.value"
-            @select="state.autoResolveMode = option.value"
-          />
-        </div>
-
-        <div
-          v-if="shouldShowInactivityDuration"
-          class="flex flex-col gap-3 border-t border-n-weak pt-4 px-4"
-        >
-          <div
-            class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between"
-          >
-            <span class="text-body-main font-medium text-n-slate-12">
-              {{ initialActionTimingLabel }}
-            </span>
-            <DurationSelect
-              v-model="state.inactivityThresholdMinutes"
-              :error="formErrors.inactivityThresholdMinutes"
-              :hours-aria-label="
-                t(
-                  'CAPTAIN.ASSISTANTS.FORM.INACTIVITY_RESOLUTION.DURATION_HOURS_ARIA_LABEL'
-                )
-              "
-              :minutes-aria-label="
-                t(
-                  'CAPTAIN.ASSISTANTS.FORM.INACTIVITY_RESOLUTION.DURATION_MINUTES_ARIA_LABEL'
-                )
-              "
-            />
-          </div>
-          <p
-            v-if="formErrors.inactivityThresholdMinutes"
-            class="mb-0 text-xs text-n-ruby-9"
-          >
-            {{ formErrors.inactivityThresholdMinutes }}
-          </p>
-        </div>
-
-        <Banner
-          v-if="state.autoResolveMode === 'legacy'"
-          color="amber"
-          class="mx-4"
-        >
-          <div class="flex items-start gap-2">
-            <span class="i-lucide-triangle-alert mt-0.5 size-4 shrink-0" />
-            {{
-              t(
-                'CAPTAIN.ASSISTANTS.FORM.INACTIVITY_RESOLUTION.ALWAYS_WARNING',
-                {
-                  name,
-                }
-              )
-            }}
-          </div>
-        </Banner>
-
-        <Banner
-          v-if="state.autoResolveMode === 'disabled'"
-          color="blue"
-          class="mx-4"
-        >
-          <div class="flex items-start gap-2">
-            <span class="i-lucide-info mt-0.5 size-4 shrink-0" />
-            {{
-              t('CAPTAIN.ASSISTANTS.FORM.INACTIVITY_RESOLUTION.PENDING_INFO')
-            }}
-          </div>
-        </Banner>
-
-        <div
-          v-if="shouldShowInactivityDuration"
-          class="flex flex-col gap-2 border-t border-n-weak pt-4 pb-1 px-4"
-        >
-          <div class="flex items-start justify-between gap-3">
-            <div class="flex flex-col gap-1">
-              <span class="text-body-main font-medium text-n-slate-12">
-                {{
-                  t(
-                    'CAPTAIN.ASSISTANTS.FORM.INACTIVITY_RESOLUTION.RESOLUTION_MESSAGE.TITLE'
-                  )
-                }}
-              </span>
-              <span class="text-body-main text-n-slate-11">
-                {{
-                  t(
-                    'CAPTAIN.ASSISTANTS.FORM.INACTIVITY_RESOLUTION.RESOLUTION_MESSAGE.DESCRIPTION'
-                  )
-                }}
-              </span>
-            </div>
-            <Switch
-              v-model="state.sendInactivityResolutionMessage"
-              :aria-label="
-                t(
-                  'CAPTAIN.ASSISTANTS.FORM.INACTIVITY_RESOLUTION.RESOLUTION_MESSAGE.TITLE'
-                )
-              "
-            />
-          </div>
-        </div>
+  <SettingsSplit>
+    <section v-if="isCaptainV2Enabled" class="flex flex-col gap-3">
+      <h3 class="text-base font-semibold text-n-slate-12">
+        {{ t('CAPTAIN.ASSISTANTS.SETTINGS.AFTER_CHAT.QUIET_TITLE') }}
+      </h3>
+      <div
+        class="flex flex-col gap-2"
+        role="radiogroup"
+        :aria-label="
+          t('CAPTAIN.ASSISTANTS.FORM.INACTIVITY_RESOLUTION.MODE_LABEL')
+        "
+      >
+        <ChoiceCard
+          v-for="option in autoResolveOptions"
+          :key="option.value"
+          name="auto-resolve-mode"
+          :value="option.value"
+          :icon="option.icon"
+          :label="option.label"
+          :description="option.description"
+          :is-active="state.autoResolveMode === option.value"
+          @select="state.autoResolveMode = option.value"
+        />
       </div>
 
-      <template
-        v-if="
-          shouldShowInactivityDuration && state.sendInactivityResolutionMessage
-        "
-        #editor
-      >
-        <Editor
-          v-model="state.resolutionMessage"
-          :placeholder="
-            t('CAPTAIN.ASSISTANTS.FORM.RESOLUTION_MESSAGE.PLACEHOLDER')
+      <Banner v-if="state.autoResolveMode === 'legacy'" color="amber">
+        <div class="flex items-start gap-2">
+          <span class="i-lucide-triangle-alert mt-0.5 size-4 shrink-0" />
+          {{
+            t('CAPTAIN.ASSISTANTS.FORM.INACTIVITY_RESOLUTION.ALWAYS_WARNING', {
+              name,
+            })
+          }}
+        </div>
+      </Banner>
+
+      <Banner v-if="state.autoResolveMode === 'disabled'" color="blue">
+        <div class="flex items-start gap-2">
+          <span class="i-lucide-info mt-0.5 size-4 shrink-0" />
+          {{ t('CAPTAIN.ASSISTANTS.FORM.INACTIVITY_RESOLUTION.PENDING_INFO') }}
+        </div>
+      </Banner>
+
+      <SettingsCard v-if="shouldShowInactivityDuration">
+        <div
+          class="flex flex-col gap-3 py-3.5 lg:flex-row lg:items-center lg:justify-between"
+        >
+          <span class="text-sm font-medium text-n-slate-12">
+            {{ initialActionTimingLabel }}
+          </span>
+          <DurationSelect
+            v-model="state.inactivityThresholdMinutes"
+            :error="formErrors.inactivityThresholdMinutes"
+            :hours-aria-label="
+              t(
+                'CAPTAIN.ASSISTANTS.FORM.INACTIVITY_RESOLUTION.DURATION_HOURS_ARIA_LABEL'
+              )
+            "
+            :minutes-aria-label="
+              t(
+                'CAPTAIN.ASSISTANTS.FORM.INACTIVITY_RESOLUTION.DURATION_MINUTES_ARIA_LABEL'
+              )
+            "
+          />
+        </div>
+        <p
+          v-if="formErrors.inactivityThresholdMinutes"
+          class="pb-3 mb-0 text-xs text-n-ruby-9"
+        >
+          {{ formErrors.inactivityThresholdMinutes }}
+        </p>
+        <SettingsSwitchRow
+          v-model="state.sendInactivityResolutionMessage"
+          :title="
+            t(
+              'CAPTAIN.ASSISTANTS.FORM.INACTIVITY_RESOLUTION.RESOLUTION_MESSAGE.TITLE'
+            )
           "
-          :message="formErrors.resolutionMessage"
-          :message-type="formErrors.resolutionMessage ? 'error' : 'info'"
-          class="z-0 [&_.editor-wrapper]:!min-h-32 [&_.editor-wrapper]:!border-0 [&_.editor-wrapper]:!bg-transparent [&_.editor-wrapper]:!p-0"
+          :description="
+            t(
+              'CAPTAIN.ASSISTANTS.FORM.INACTIVITY_RESOLUTION.RESOLUTION_MESSAGE.DESCRIPTION'
+            )
+          "
         />
-      </template>
-    </SettingsToggleSection>
+        <div v-if="state.sendInactivityResolutionMessage" class="pt-1 pb-3">
+          <Editor
+            v-model="state.resolutionMessage"
+            :placeholder="
+              t('CAPTAIN.ASSISTANTS.FORM.RESOLUTION_MESSAGE.PLACEHOLDER')
+            "
+            :message="formErrors.resolutionMessage"
+            :message-type="formErrors.resolutionMessage ? 'error' : 'info'"
+            class="z-0"
+          />
+        </div>
+      </SettingsCard>
+    </section>
 
     <SettingsCard
       v-if="isAdmin"
@@ -357,11 +336,23 @@ watch(
       />
     </SettingsCard>
 
-    <div>
-      <Button
-        :label="t('CAPTAIN.ASSISTANTS.SETTINGS.SAVE')"
-        @click="handleSubmit"
+    <SettingsSaveBar
+      :is-dirty="isDirty"
+      :is-saving="isSaving"
+      @save="handleSubmit"
+      @discard="discard"
+    />
+
+    <template v-if="isCaptainV2Enabled" #preview>
+      <AfterChatFlow
+        :name="name"
+        :mode="state.autoResolveMode"
+        :minutes="state.inactivityThresholdMinutes"
+        :goodbye="
+          state.sendInactivityResolutionMessage ? state.resolutionMessage : ''
+        "
+        :send-goodbye="state.sendInactivityResolutionMessage"
       />
-    </div>
-  </div>
+    </template>
+  </SettingsSplit>
 </template>

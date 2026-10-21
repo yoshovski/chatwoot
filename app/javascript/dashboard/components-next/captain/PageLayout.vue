@@ -94,7 +94,7 @@ const handlePageChange = event => {
             <div class="flex items-center gap-4">
               <h1
                 v-if="headerTitle"
-                class="text-xl font-medium text-n-slate-12"
+                class="text-2xl font-semibold tracking-tight text-n-slate-12"
               >
                 {{ headerTitle }}
               </h1>

@@ -1,49 +1,66 @@
 import { shallowMount } from '@vue/test-utils';
-import RadioCard from 'dashboard/components-next/radioCard/RadioCard.vue';
+import Button from 'dashboard/components-next/button/Button.vue';
 import AssistantBehaviorSettings from './AssistantBehaviorSettings.vue';
-import ReplyPreviewCard from './ReplyPreviewCard.vue';
+import ChoiceCard from './ChoiceCard.vue';
+import SettingsSwitchRow from './SettingsSwitchRow.vue';
 
 vi.mock('vue-i18n', () => ({
   useI18n: () => ({ t: key => key }),
 }));
 
-const mountSettings = config =>
+const mountSettings = (config, showProductCards = true) =>
   shallowMount(AssistantBehaviorSettings, {
-    props: { assistant: { name: 'Luna', config }, showProductCards: true },
+    props: { assistant: { name: 'Luna', config }, showProductCards },
+    global: { stubs: { SettingsCard: false } },
   });
 
 describe('AssistantBehaviorSettings', () => {
   it('hides commerce settings when Shopify is unavailable', () => {
-    const wrapper = shallowMount(AssistantBehaviorSettings, {
-      props: { assistant: { name: 'Luna', config: {} } },
-    });
-    expect(wrapper.findAllComponents(ReplyPreviewCard)).toHaveLength(2);
+    const wrapper = mountSettings({}, false);
+    expect(wrapper.findAllComponents(SettingsSwitchRow)).toHaveLength(2);
   });
 
   it('marks the saved tone and emits a new one', () => {
     const wrapper = mountSettings({ tone: 'professional' });
-    const tones = wrapper.findAllComponents(RadioCard);
+    const tones = wrapper.findAllComponents(ChoiceCard);
 
     expect(tones.map(tone => tone.props('isActive'))).toEqual([
       false,
       true,
       false,
     ]);
-    tones[2].vm.$emit('select');
+    tones[2].vm.$emit('select', 'short');
     expect(wrapper.emitted('update')[0][0]).toEqual({ tone: 'short' });
   });
 
-  it('emits each reply card switch as its own config key', () => {
+  it('emits each reply format switch as its own config key', () => {
     const wrapper = mountSettings({ suggested_replies: true });
-    const cards = wrapper.findAllComponents(ReplyPreviewCard);
+    const rows = wrapper.findAllComponents(SettingsSwitchRow);
 
-    expect(cards[0].props('modelValue')).toBe(true);
-    cards[1].vm.$emit('update:modelValue', true);
-    cards[2].vm.$emit('update:modelValue', true);
+    expect(rows[0].props('modelValue')).toBe(true);
+    rows[1].vm.$emit('update:modelValue', true);
+    rows[2].vm.$emit('update:modelValue', true);
 
     expect(wrapper.emitted('update')).toEqual([
-      [{ product_cards: true }],
       [{ feature_citation: true }],
+      [{ product_cards: true }],
+    ]);
+  });
+
+  it('shows the button count only while quick replies are on', () => {
+    expect(mountSettings({}).findAllComponents(Button)).toHaveLength(0);
+
+    const wrapper = mountSettings({
+      suggested_replies: true,
+      max_suggested_replies: 2,
+    });
+    const [fewer, more] = wrapper.findAllComponents(Button);
+    more.vm.$emit('click');
+    fewer.vm.$emit('click');
+
+    expect(wrapper.emitted('update')).toEqual([
+      [{ max_suggested_replies: 3 }],
+      [{ max_suggested_replies: 1 }],
     ]);
   });
 });

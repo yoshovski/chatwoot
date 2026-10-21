@@ -1,8 +1,9 @@
 import { nextTick, ref } from 'vue';
 import { flushPromises, shallowMount } from '@vue/test-utils';
-import Button from 'dashboard/components-next/button/Button.vue';
 import AssistantHandoverForm from './AssistantHandoverForm.vue';
 import SettingsSwitchRow from './SettingsSwitchRow.vue';
+import SettingsSaveBar from './SettingsSaveBar.vue';
+import HandoffFlow from './HandoffFlow.vue';
 
 vi.mock('vue-i18n', () => ({
   useI18n: () => ({ t: key => key }),
@@ -35,8 +36,8 @@ const assistant = {
 
 const mountForm = () =>
   shallowMount(AssistantHandoverForm, {
-    props: { assistant },
-    global: { stubs: { SettingsCard: false } },
+    props: { assistant, save: vi.fn().mockResolvedValue() },
+    global: { stubs: { SettingsCard: false, SettingsSplit: false } },
   });
 
 describe('AssistantHandoverForm', () => {
@@ -47,10 +48,13 @@ describe('AssistantHandoverForm', () => {
       .findAllComponents(SettingsSwitchRow)[0]
       .vm.$emit('update:modelValue', true);
     await nextTick();
-    wrapper.findComponent(Button).vm.$emit('click');
+    expect(wrapper.findComponent(SettingsSaveBar).props('isDirty')).toBe(true);
+    expect(wrapper.findComponent(HandoffFlow).props('keepHelping')).toBe(true);
+
+    wrapper.findComponent(SettingsSaveBar).vm.$emit('save');
     await flushPromises();
 
-    expect(wrapper.emitted('submit')[0][0]).toEqual({
+    expect(wrapper.props('save')).toHaveBeenCalledWith({
       config: {
         ...assistant.config,
         continue_while_waiting: true,

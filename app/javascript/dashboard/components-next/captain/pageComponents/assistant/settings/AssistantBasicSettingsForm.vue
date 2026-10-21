@@ -1,22 +1,29 @@
 <script setup>
-import { reactive, computed, watch } from 'vue';
+import { reactive, computed, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useVuelidate } from '@vuelidate/core';
 import { required, minLength } from '@vuelidate/validators';
 
 import Input from 'dashboard/components-next/input/Input.vue';
-import Button from 'dashboard/components-next/button/Button.vue';
 import Editor from 'dashboard/components-next/Editor/Editor.vue';
 import Avatar from 'dashboard/components-next/avatar/Avatar.vue';
+import AssistantChatPreview from './AssistantChatPreview.vue';
+import SettingsSaveBar from './SettingsSaveBar.vue';
+import SettingsSplit from './SettingsSplit.vue';
 
 const props = defineProps({
   assistant: {
     type: Object,
     default: () => ({}),
   },
+  // Async save so the form knows when the request has finished.
+  save: {
+    type: Function,
+    required: true,
+  },
 });
 
-const emit = defineEmits(['submit', 'deleteAvatar']);
+const emit = defineEmits(['deleteAvatar']);
 
 const { t } = useI18n();
 
@@ -36,6 +43,14 @@ const validationRules = {
 
 const v$ = useVuelidate(validationRules, state);
 
+const isSaving = ref(false);
+const savedSnapshot = ref('');
+const snapshot = () =>
+  JSON.stringify([state.name, state.description, state.productName]);
+const isDirty = computed(
+  () => Boolean(state.avatar) || snapshot() !== savedSnapshot.value
+);
+
 const getErrorMessage = field => {
   return v$.value[field].$error ? v$.value[field].$errors[0].$message : '';
 };
@@ -53,6 +68,12 @@ const updateStateFromAssistant = assistant => {
   state.avatarUrl = assistant.avatar_url || '';
   state.avatar = null;
   state.productName = config.product_name;
+  savedSnapshot.value = snapshot();
+};
+
+const discard = () => {
+  v$.value.$reset();
+  updateStateFromAssistant(props.assistant);
 };
 
 const handleImageUpload = ({ file, url }) => {
@@ -83,7 +104,12 @@ const handleBasicInfoUpdate = async () => {
     payload.avatar = state.avatar;
   }
 
-  emit('submit', payload);
+  isSaving.value = true;
+  try {
+    await props.save(payload);
+  } finally {
+    isSaving.value = false;
+  }
 };
 
 watch(
@@ -96,12 +122,12 @@ watch(
 </script>
 
 <template>
-  <div class="flex flex-col gap-5">
+  <SettingsSplit>
     <div class="flex items-center gap-4">
       <Avatar
         :src="state.avatarUrl"
         :name="state.name"
-        :size="68"
+        :size="64"
         allow-upload
         icon-name="i-lucide-bot-message-square"
         rounded-full
@@ -113,25 +139,27 @@ watch(
       </span>
     </div>
 
-    <Input
-      v-model="state.name"
-      :label="t('CAPTAIN.ASSISTANTS.FORM.NAME.LABEL')"
-      :placeholder="t('CAPTAIN.ASSISTANTS.FORM.NAME.PLACEHOLDER')"
-      :message="
-        formErrors.name || t('CAPTAIN.ASSISTANTS.FORM.NAME.AI_BADGE_NOTE')
-      "
-      :message-type="formErrors.name ? 'error' : 'info'"
-    />
+    <div class="grid gap-5 sm:grid-cols-2">
+      <Input
+        v-model="state.name"
+        :label="t('CAPTAIN.ASSISTANTS.FORM.NAME.LABEL')"
+        :placeholder="t('CAPTAIN.ASSISTANTS.FORM.NAME.PLACEHOLDER')"
+        :message="
+          formErrors.name || t('CAPTAIN.ASSISTANTS.FORM.NAME.AI_BADGE_NOTE')
+        "
+        :message-type="formErrors.name ? 'error' : 'info'"
+      />
 
-    <Input
-      v-model="state.productName"
-      :label="t('CAPTAIN.ASSISTANTS.SETTINGS.IDENTITY.WORKS_FOR')"
-      :placeholder="
-        t('CAPTAIN.ASSISTANTS.SETTINGS.IDENTITY.WORKS_FOR_PLACEHOLDER')
-      "
-      :message="formErrors.productName"
-      :message-type="formErrors.productName ? 'error' : 'info'"
-    />
+      <Input
+        v-model="state.productName"
+        :label="t('CAPTAIN.ASSISTANTS.SETTINGS.IDENTITY.WORKS_FOR')"
+        :placeholder="
+          t('CAPTAIN.ASSISTANTS.SETTINGS.IDENTITY.WORKS_FOR_PLACEHOLDER')
+        "
+        :message="formErrors.productName"
+        :message-type="formErrors.productName ? 'error' : 'info'"
+      />
+    </div>
 
     <Editor
       v-model="state.description"
@@ -147,11 +175,15 @@ watch(
       class="z-0"
     />
 
-    <div>
-      <Button
-        :label="t('CAPTAIN.ASSISTANTS.SETTINGS.SAVE')"
-        @click="handleBasicInfoUpdate"
-      />
-    </div>
-  </div>
+    <SettingsSaveBar
+      :is-dirty="isDirty"
+      :is-saving="isSaving"
+      @save="handleBasicInfoUpdate"
+      @discard="discard"
+    />
+
+    <template #preview>
+      <AssistantChatPreview :name="state.name" :avatar-url="state.avatarUrl" />
+    </template>
+  </SettingsSplit>
 </template>

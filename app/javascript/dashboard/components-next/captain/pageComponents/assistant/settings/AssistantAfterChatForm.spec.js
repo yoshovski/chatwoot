@@ -1,10 +1,9 @@
 import { nextTick } from 'vue';
 import { flushPromises, shallowMount } from '@vue/test-utils';
 import { describe, expect, it, vi } from 'vitest';
-import Button from 'dashboard/components-next/button/Button.vue';
-import RadioCard from 'dashboard/components-next/radioCard/RadioCard.vue';
-import Switch from 'dashboard/components-next/switch/Switch.vue';
 import AssistantAfterChatForm from './AssistantAfterChatForm.vue';
+import ChoiceCard from './ChoiceCard.vue';
+import SettingsSaveBar from './SettingsSaveBar.vue';
 import DurationSelect from './DurationSelect.vue';
 import SettingsSwitchRow from './SettingsSwitchRow.vue';
 
@@ -35,27 +34,37 @@ const assistant = {
   },
 };
 
-const mountComponent = () =>
+const mountComponent = (save = vi.fn().mockResolvedValue()) =>
   shallowMount(AssistantAfterChatForm, {
-    props: { assistant },
+    props: { assistant, save },
     global: {
       stubs: {
         Banner: false,
-        SettingsToggleSection: false,
         SettingsCard: false,
+        SettingsSplit: false,
       },
     },
   });
 
 const submitForm = async wrapper => {
-  wrapper.findAllComponents(Button).at(-1).vm.$emit('click');
+  wrapper.findComponent(SettingsSaveBar).vm.$emit('save');
   await flushPromises();
 };
+
+const savedPayload = wrapper => wrapper.props('save').mock.calls[0][0];
+const goodbyeRows = wrapper =>
+  wrapper
+    .findAllComponents(SettingsSwitchRow)
+    .filter(row =>
+      row
+        .props('title')
+        .endsWith('INACTIVITY_RESOLUTION.RESOLUTION_MESSAGE.TITLE')
+    );
 
 describe('AssistantAfterChatForm', () => {
   it('shows the evaluated policy controls from the saved config', () => {
     const wrapper = mountComponent();
-    const modeCards = wrapper.findAllComponents(RadioCard);
+    const modeCards = wrapper.findAllComponents(ChoiceCard);
 
     expect(modeCards).toHaveLength(3);
     expect(
@@ -63,7 +72,7 @@ describe('AssistantAfterChatForm', () => {
     ).toBe(true);
     expect(modeCards[0].props('isActive')).toBe(true);
     expect(wrapper.findAllComponents(DurationSelect)).toHaveLength(1);
-    expect(wrapper.findAllComponents(Switch)).toHaveLength(1);
+    expect(goodbyeRows(wrapper)).toHaveLength(1);
     expect(wrapper.text()).toContain(
       'CAPTAIN.ASSISTANTS.FORM.INACTIVITY_RESOLUTION.REVIEW_AFTER'
     );
@@ -72,18 +81,18 @@ describe('AssistantAfterChatForm', () => {
   it('hides inactive actions and saves disabled mode without clearing settings', async () => {
     const wrapper = mountComponent();
 
-    wrapper.findAllComponents(RadioCard)[2].vm.$emit('select');
+    wrapper.findAllComponents(ChoiceCard)[2].vm.$emit('select');
     await nextTick();
 
     expect(wrapper.findAllComponents(DurationSelect)).toHaveLength(0);
-    expect(wrapper.findAllComponents(Switch)).toHaveLength(0);
+    expect(goodbyeRows(wrapper)).toHaveLength(0);
     expect(wrapper.text()).toContain(
       'CAPTAIN.ASSISTANTS.FORM.INACTIVITY_RESOLUTION.PENDING_INFO'
     );
 
     await submitForm(wrapper);
 
-    expect(wrapper.emitted('submit')[0][0]).toEqual({
+    expect(savedPayload(wrapper)).toEqual({
       config: {
         ...assistant.config,
         auto_resolve_mode: 'disabled',
@@ -101,7 +110,7 @@ describe('AssistantAfterChatForm', () => {
     await nextTick();
     await submitForm(wrapper);
 
-    expect(wrapper.emitted('submit')[0][0]).toEqual({
+    expect(savedPayload(wrapper)).toEqual({
       config: {
         ...assistant.config,
         auto_resolve_after: 130,
@@ -111,15 +120,26 @@ describe('AssistantAfterChatForm', () => {
 
   it('saves the label and learning switches with the other settings', async () => {
     const wrapper = mountComponent();
-    const rows = wrapper.findAllComponents(SettingsSwitchRow);
+    const rows = wrapper
+      .findAllComponents(SettingsSwitchRow)
+      .filter(
+        row =>
+          !row
+            .props('title')
+            .endsWith('INACTIVITY_RESOLUTION.RESOLUTION_MESSAGE.TITLE')
+      );
+    const byTitle = suffix =>
+      wrapper
+        .findAllComponents(SettingsSwitchRow)
+        .find(row => row.props('title').endsWith(suffix));
 
     expect(rows).toHaveLength(4);
-    rows[1].vm.$emit('update:modelValue', true);
-    rows[3].vm.$emit('update:modelValue', true);
+    byTitle('OUTCOME_LABELS.TITLE').vm.$emit('update:modelValue', true);
+    byTitle('MEMORIES.TITLE').vm.$emit('update:modelValue', true);
     await nextTick();
     await submitForm(wrapper);
 
-    expect(wrapper.emitted('submit')[0][0]).toEqual({
+    expect(savedPayload(wrapper)).toEqual({
       config: {
         ...assistant.config,
         outcome_labels: true,
@@ -128,14 +148,32 @@ describe('AssistantAfterChatForm', () => {
     });
   });
 
+  it('shows the save bar only after a change and discards it', async () => {
+    const wrapper = mountComponent();
+    const saveBar = () => wrapper.findComponent(SettingsSaveBar);
+
+    expect(saveBar().props('isDirty')).toBe(false);
+
+    wrapper.findAllComponents(ChoiceCard)[1].vm.$emit('select');
+    await nextTick();
+    expect(saveBar().props('isDirty')).toBe(true);
+
+    saveBar().vm.$emit('discard');
+    await nextTick();
+    expect(saveBar().props('isDirty')).toBe(false);
+    expect(wrapper.findAllComponents(ChoiceCard)[0].props('isActive')).toBe(
+      true
+    );
+  });
+
   it('shows the warning in always resolve mode', async () => {
     const wrapper = mountComponent();
 
-    wrapper.findAllComponents(RadioCard)[1].vm.$emit('select');
+    wrapper.findAllComponents(ChoiceCard)[1].vm.$emit('select');
     await nextTick();
 
     expect(wrapper.findAllComponents(DurationSelect)).toHaveLength(1);
-    expect(wrapper.findAllComponents(Switch)).toHaveLength(1);
+    expect(goodbyeRows(wrapper)).toHaveLength(1);
     expect(wrapper.text()).toContain(
       'CAPTAIN.ASSISTANTS.FORM.INACTIVITY_RESOLUTION.ALWAYS_WARNING'
     );

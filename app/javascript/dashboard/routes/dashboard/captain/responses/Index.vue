@@ -7,7 +7,6 @@ import { useI18n } from 'vue-i18n';
 import { useRouter, useRoute } from 'vue-router';
 import { FEATURE_FLAGS } from 'dashboard/featureFlags';
 import { debounce } from '@chatwoot/utils';
-import { useAccount } from 'dashboard/composables/useAccount';
 import CaptainResponseAPI from 'dashboard/api/captain/response';
 
 import Banner from 'dashboard/components-next/banner/Banner.vue';
@@ -19,18 +18,17 @@ import BulkSelectBar from 'dashboard/components-next/captain/assistant/BulkSelec
 import DeleteDialog from 'dashboard/components-next/captain/pageComponents/DeleteDialog.vue';
 import BulkDeleteDialog from 'dashboard/components-next/captain/pageComponents/BulkDeleteDialog.vue';
 import PageLayout from 'dashboard/components-next/captain/PageLayout.vue';
+import TestAgentButton from 'dashboard/components-next/captain/TestAgentButton.vue';
 import CaptainPaywall from 'dashboard/components-next/captain/pageComponents/Paywall.vue';
 import ResponseCard from 'dashboard/components-next/captain/assistant/ResponseCard.vue';
 import CreateResponseDialog from 'dashboard/components-next/captain/pageComponents/response/CreateResponseDialog.vue';
 import ResponsePageEmptyState from 'dashboard/components-next/captain/pageComponents/emptyStates/ResponsePageEmptyState.vue';
-import FeatureSpotlightPopover from 'dashboard/components-next/feature-spotlight/FeatureSpotlightPopover.vue';
 import LimitBanner from 'dashboard/components-next/captain/pageComponents/response/LimitBanner.vue';
 import ConversationUsageDrawer from 'dashboard/components-next/captain/pageComponents/ConversationUsageDrawer.vue';
 
 const router = useRouter();
 const route = useRoute();
 const store = useStore();
-const { isOnChatwootCloud } = useAccount();
 const uiFlags = useMapGetter('captainResponses/getUIFlags');
 const responseMeta = useMapGetter('captainResponses/getMeta');
 const responses = useMapGetter('captainResponses/getRecords');
@@ -375,6 +373,7 @@ onUnmounted(() => {
     :current-page="responseMeta.page"
     :button-policy="['administrator']"
     :header-title="$t('PLATFORM_NAV.FAQS')"
+    :show-know-more="false"
     :button-label="$t('CAPTAIN.RESPONSES.ADD_NEW')"
     :is-fetching="isFetching"
     :is-empty="!responses.length"
@@ -384,37 +383,8 @@ onUnmounted(() => {
     @click="handleCreate"
   >
     <template #headerActions>
-      <router-link
-        v-if="selectedAssistantId"
-        :to="{
-          name: 'captain_assistants_playground_index',
-          params: {
-            accountId: route.params.accountId,
-            assistantId: selectedAssistantId,
-          },
-        }"
-      >
-        <Button
-          :label="$t('PLATFORM_NAV.TEST_AGENT')"
-          icon="i-lucide-play"
-          variant="outline"
-          color="slate"
-          size="sm"
-        />
-      </router-link>
+      <TestAgentButton :assistant-id="selectedAssistantId" />
     </template>
-    <template #knowMore>
-      <FeatureSpotlightPopover
-        :button-label="$t('CAPTAIN.HEADER_KNOW_MORE')"
-        :title="$t('CAPTAIN.RESPONSES.EMPTY_STATE.FEATURE_SPOTLIGHT.TITLE')"
-        :note="$t('CAPTAIN.RESPONSES.EMPTY_STATE.FEATURE_SPOTLIGHT.NOTE')"
-        :hide-actions="!isOnChatwootCloud"
-        fallback-thumbnail="/assets/images/dashboard/captain/faqs-popover-light.svg"
-        fallback-thumbnail-dark="/assets/images/dashboard/captain/faqs-popover-dark.svg"
-        learn-more-url="https://chwt.app/captain-faq"
-      />
-    </template>
-
     <template #search>
       <div
         v-if="bulkSelectedIds.size === 0"

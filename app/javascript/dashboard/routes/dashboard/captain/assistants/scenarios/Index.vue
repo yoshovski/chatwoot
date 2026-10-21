@@ -6,9 +6,9 @@ import { picoSearch } from '@chatwoot/pico-search';
 import { useStore, useMapGetter } from 'dashboard/composables/store';
 import { useAlert } from 'dashboard/composables';
 import Input from 'dashboard/components-next/input/Input.vue';
-import Button from 'dashboard/components-next/button/Button.vue';
 
 import PageLayout from 'dashboard/components-next/captain/PageLayout.vue';
+import TestAgentButton from 'dashboard/components-next/captain/TestAgentButton.vue';
 import { getToolIdsFromInstruction } from 'dashboard/components-next/captain/scenarios/scenarioTools';
 import TemplateGallery from 'dashboard/components-next/captain/scenarios/TemplateGallery.vue';
 import ScenariosCard from 'dashboard/components-next/captain/assistant/ScenariosCard.vue';
@@ -162,9 +162,22 @@ const addScenario = async scenario => {
   }
 };
 
+const STATUS_FILTERS = ['all', 'active', 'paused'];
+const statusFilter = ref('all');
+
+const statusCounts = computed(() => ({
+  all: scenarios.value.length,
+  active: scenarios.value.filter(scenario => scenario.enabled).length,
+  paused: scenarios.value.filter(scenario => !scenario.enabled).length,
+}));
+
 const filteredScenarios = computed(() => {
   const query = searchQuery.value.trim();
-  const source = scenarios.value;
+  const source = scenarios.value.filter(scenario => {
+    if (statusFilter.value === 'active') return scenario.enabled;
+    if (statusFilter.value === 'paused') return !scenario.enabled;
+    return true;
+  });
   if (!query) return source;
   return picoSearch(source, query, ['title', 'description', 'instruction']);
 });
@@ -188,34 +201,40 @@ onMounted(() => {
     @click="() => addScenarioDialog.open()"
   >
     <template #headerActions>
-      <router-link
-        v-if="assistantId"
-        :to="{
-          name: 'captain_assistants_playground_index',
-          params: {
-            accountId: route.params.accountId,
-            assistantId: assistantId,
-          },
-        }"
-      >
-        <Button
-          :label="$t('PLATFORM_NAV.TEST_AGENT')"
-          icon="i-lucide-play"
-          variant="outline"
-          color="slate"
-          size="sm"
-        />
-      </router-link>
+      <TestAgentButton :assistant-id="assistantId" />
     </template>
     <template #body>
       <div class="flex w-full flex-col gap-6 pb-8">
-        <p class="m-0 text-sm text-n-slate-11">
-          {{ $t('CAPTAIN.ASSISTANTS.SCENARIOS.DESCRIPTION') }}
-        </p>
-
         <!-- If scenarios exist, lead with the scenario list -->
         <div v-if="scenarios.length > 0" class="flex flex-col gap-4">
-          <div class="flex justify-between items-center">
+          <div class="flex flex-wrap items-center justify-between gap-3">
+            <div
+              v-if="bulkSelectedIds.size === 0"
+              class="flex items-center gap-1 p-0.5 rounded-lg bg-n-alpha-1"
+              role="group"
+              :aria-label="t('CAPTAIN.ASSISTANTS.SCENARIOS.FILTER.LABEL')"
+            >
+              <button
+                v-for="filter in STATUS_FILTERS"
+                :key="filter"
+                type="button"
+                class="px-3 py-1 text-sm rounded-md transition-colors"
+                :class="
+                  statusFilter === filter
+                    ? 'bg-n-solid-1 text-n-slate-12 font-medium shadow-sm'
+                    : 'text-n-slate-11 hover:text-n-slate-12'
+                "
+                :aria-pressed="statusFilter === filter"
+                @click="statusFilter = filter"
+              >
+                {{
+                  t(
+                    `CAPTAIN.ASSISTANTS.SCENARIOS.FILTER.${filter.toUpperCase()}`,
+                    { count: statusCounts[filter] }
+                  )
+                }}
+              </button>
+            </div>
             <BulkSelectBar
               v-model="bulkSelectedIds"
               :all-items="scenarios"
@@ -269,7 +288,7 @@ onMounted(() => {
             />
           </div>
 
-          <div class="mt-8 border-t border-n-weak pt-6">
+          <div class="pt-6 mt-4 border-t border-n-weak">
             <TemplateGallery
               :tools="captainTools"
               has-scenarios
@@ -281,17 +300,9 @@ onMounted(() => {
 
         <!-- Empty state: Lead with templates and creation action -->
         <div v-else class="flex flex-col gap-6">
-          <div class="flex items-center justify-between">
-            <span class="text-n-slate-11 text-sm">
-              {{ t('CAPTAIN.ASSISTANTS.SCENARIOS.EMPTY_MESSAGE') }}
-            </span>
-            <Button
-              :label="$t('CAPTAIN.ASSISTANTS.SCENARIOS.ADD.NEW.TITLE')"
-              icon="i-lucide-plus"
-              size="sm"
-              @click="() => addScenarioDialog.open()"
-            />
-          </div>
+          <p class="m-0 text-sm text-n-slate-11">
+            {{ t('CAPTAIN.ASSISTANTS.SCENARIOS.EMPTY_MESSAGE') }}
+          </p>
           <TemplateGallery
             :tools="captainTools"
             :has-scenarios="false"
@@ -305,6 +316,7 @@ onMounted(() => {
           :assistant-id="assistantId"
           :assistant="assistant"
           :tools="captainTools"
+          :show-trigger="false"
           @add="addScenario"
         />
       </div>

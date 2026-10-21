@@ -50,25 +50,19 @@ const handleDeleteSuccess = () => {
 </script>
 
 <template>
-  <SettingsPageLayout
-    :heading="t('PLATFORM_NAV.IDENTITY')"
-    :description="t('PLATFORM_NAV.IDENTITY_DESC')"
-  >
-    <div class="flex flex-col gap-6">
-      <AssistantBasicSettingsForm
-        :assistant="assistant"
-        class="w-full"
-        @submit="updateAssistant"
-        @delete-avatar="deleteAssistantAvatar"
-      />
-    </div>
+  <SettingsPageLayout :heading="t('PLATFORM_NAV.IDENTITY')">
+    <AssistantBasicSettingsForm
+      :assistant="assistant"
+      :save="updateAssistant"
+      @delete-avatar="deleteAssistantAvatar"
+    />
     <KnowledgeBriefPanel
       v-if="assistantId"
       :key="`brief-${assistantId}`"
       :assistant-id="assistantId"
     />
     <div
-      class="flex flex-wrap items-center justify-between w-full gap-4 px-5 py-4 rounded-xl outline outline-1 outline-n-ruby-5 bg-n-solid-1"
+      class="flex flex-wrap items-center justify-between w-full gap-4 pt-6 border-t border-n-weak"
     >
       <div class="flex flex-col gap-0.5">
         <span class="text-sm font-medium text-n-slate-12">
