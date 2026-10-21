@@ -64,6 +64,7 @@ watch(() => props.assistantId, loadInboxes);
 <template>
   <div class="flex items-center gap-2">
     <Select
+      v-if="widgetInboxes.length > 1"
       v-model="selectedId"
       :options="options"
       :aria-label="t('CAPTAIN.PLAYGROUND.CUSTOMER_VIEW.INBOX_LABEL')"

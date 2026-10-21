@@ -14,7 +14,6 @@ const isV2 = computed(() => isFeatureFlagEnabled(FEATURE_FLAGS.CAPTAIN_V2));
 
 <template>
   <PageLayout
-    show-assistant-switcher
     :show-pagination-footer="false"
     :show-know-more="false"
     :container-class="isV2 ? 'max-w-none' : undefined"

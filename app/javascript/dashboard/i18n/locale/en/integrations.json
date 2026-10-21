@@ -679,7 +679,6 @@
       "MESSAGE_PLACEHOLDER": "Type your message...",
       "SEND_MESSAGE": "Send message",
       "HEADER": "Playground",
-      "DESCRIPTION": "Use this playground to send messages to your AI agent and check if it responds accurately, quickly, and in the tone you expect.",
       "CREDIT_NOTE": "Messages sent here will count toward your Captain credits.",
       "CLEAR_CONVERSATION": "Clear conversation",
       "RESPONSE_ERROR": "Captain could not complete this test run. Review the setup and try again.",
@@ -784,6 +783,10 @@
         "EXAMPLE_1": "What do you offer?",
         "EXAMPLE_2": "How can I contact your team?",
         "EXAMPLE_3": "Where can I find your pricing?"
+      },
+      "EMPTY": {
+        "TITLE": "Try {name}",
+        "DESCRIPTION": "Ask something a customer would, or start with one of these."
       }
     },
     "PAYWALL": {

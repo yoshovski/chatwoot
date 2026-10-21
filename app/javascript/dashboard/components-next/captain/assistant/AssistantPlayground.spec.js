@@ -14,6 +14,20 @@ vi.mock('vue-i18n', () => ({
   useI18n: () => ({ t: key => key }),
 }));
 
+vi.mock('dashboard/composables/store.js', async () => {
+  const vue = await import('vue');
+  return { useFunctionGetter: () => vue.ref({ name: 'Ava' }) };
+});
+
+vi.mock('./useBusinessExamples', async () => {
+  const vue = await import('vue');
+  return {
+    useBusinessExamples: () => ({
+      starterQuestions: vue.ref(['Do you ship abroad?']),
+    }),
+  };
+});
+
 vi.mock('dashboard/api/captain/assistant', () => ({
   default: { playground: mocks.playground },
 }));
@@ -166,6 +180,19 @@ describe('AssistantPlayground', () => {
     );
   });
 
+  it('sends a starter question from the empty state', async () => {
+    const wrapper = mountPlayground();
+    await wrapper
+      .findAll('button')
+      .find(button => button.text() === 'Do you ship abroad?')
+      .trigger('click');
+    await flushPromises();
+
+    expect(mocks.playground).toHaveBeenCalledWith(
+      expect.objectContaining({ messageContent: 'Do you ship abroad?' })
+    );
+  });
+
   it('shows request errors in the chat', async () => {
     mocks.playground.mockRejectedValue({
       response: { data: { error: 'Invalid playground configuration' } },
@@ -198,8 +225,9 @@ describe('AssistantPlayground', () => {
     });
   });
 
-  it('constrains the setup panel wrapper on desktop', () => {
+  it('constrains the setup panel wrapper on desktop', async () => {
     const wrapper = mountPlayground();
+    await wrapper.get('[data-icon="i-lucide-settings-2"]').trigger('click');
     const setupWrapper = wrapper.getComponent({ name: 'PlaygroundTestSetup' })
       .element.parentElement;
 
@@ -210,6 +238,7 @@ describe('AssistantPlayground', () => {
 
   it('resets the test setup and remounts the panel to clear its drafts', async () => {
     const wrapper = mountPlayground();
+    await wrapper.get('[data-icon="i-lucide-settings-2"]').trigger('click');
     await wrapper.get('input').setValue('Hello');
     await wrapper.get('input').trigger('keydown', { key: 'Enter' });
     await flushPromises();
@@ -262,6 +291,7 @@ describe('AssistantPlayground', () => {
 
   it('clears messages and resets session state when assistants change', async () => {
     const wrapper = mountPlayground();
+    await wrapper.get('[data-icon="i-lucide-settings-2"]').trigger('click');
     const keyBefore = wrapper.getComponent({ name: 'PlaygroundTestSetup' }).vm.$
       .vnode.key;
     await wrapper.get('input').setValue('Hello');
@@ -290,6 +320,7 @@ describe('AssistantPlayground', () => {
       const playgroundRequest = deferred();
       mocks.playground.mockReturnValue(playgroundRequest.promise);
       const wrapper = mountPlayground();
+      await wrapper.get('[data-icon="i-lucide-settings-2"]').trigger('click');
       await wrapper.get('input').setValue('Hello');
       await wrapper.get('input').trigger('keydown', { key: 'Enter' });
 
