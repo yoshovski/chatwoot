@@ -715,6 +715,7 @@ en:
     ssl_status:
       custom_domain_not_configured: 'Custom domain is not configured'
   super_admin:
+    shopify_feature_description: "Allow this workspace to connect Shopify and use product and order information. The installation-wide Shopify setting must also be enabled."
     observability:
       title: "AI Observability"
     account_subscription:

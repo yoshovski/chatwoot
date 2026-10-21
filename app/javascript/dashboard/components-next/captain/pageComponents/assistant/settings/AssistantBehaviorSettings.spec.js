@@ -9,10 +9,17 @@ vi.mock('vue-i18n', () => ({
 
 const mountSettings = config =>
   shallowMount(AssistantBehaviorSettings, {
-    props: { assistant: { name: 'Luna', config } },
+    props: { assistant: { name: 'Luna', config }, showProductCards: true },
   });
 
 describe('AssistantBehaviorSettings', () => {
+  it('hides commerce settings when Shopify is unavailable', () => {
+    const wrapper = shallowMount(AssistantBehaviorSettings, {
+      props: { assistant: { name: 'Luna', config: {} } },
+    });
+    expect(wrapper.findAllComponents(ReplyPreviewCard)).toHaveLength(2);
+  });
+
   it('marks the saved tone and emits a new one', () => {
     const wrapper = mountSettings({ tone: 'professional' });
     const tones = wrapper.findAllComponents(RadioCard);

@@ -77,6 +77,7 @@ RSpec.describe Captain::Tools::CatalogProductSearchTool do
   let(:sat_client) { double('ShopifyAgentTools::Client') }
 
   before do
+    allow(Shopify::FeatureGate).to receive(:enabled?).and_return(true)
     allow(hooks_relation).to receive(:find_by).with(app_id: 'shopify').and_return(hook)
     allow(tool).to receive(:log_tool_usage)
   end

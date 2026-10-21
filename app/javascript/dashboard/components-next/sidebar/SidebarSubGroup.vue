@@ -76,7 +76,7 @@ const CHILDREN_TRUNK =
   "before:content-[''] before:absolute before:top-0 before:bottom-0 before:w-0.5 before:bg-n-slate-4 before:start-[-0.5rem]";
 
 const hideLeafTreeLine = computed(
-  () => props.showTreeLine && !props.isExpanded
+  () => !props.showTreeLine || !props.isExpanded
 );
 
 const toggleSubGroup = () => {

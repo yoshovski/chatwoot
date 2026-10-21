@@ -6,6 +6,8 @@ module Captain::Tools::ShopifyToolHelpers
   end
 
   def shopify_sat_client
+    return nil unless Shopify::FeatureGate.enabled?(account: @assistant.account)
+
     hook = shopify_hook
     return nil unless hook&.shopify_connected? && hook.shopify_tool_key.present?
 

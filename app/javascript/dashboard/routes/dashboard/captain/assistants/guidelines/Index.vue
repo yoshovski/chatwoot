@@ -2,6 +2,7 @@
 import { computed, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useAlert } from 'dashboard/composables';
+import { useAccount } from 'dashboard/composables/useAccount';
 import { picoSearch } from '@chatwoot/pico-search';
 import { useStore } from 'dashboard/composables/store';
 import { useUISettings } from 'dashboard/composables/useUISettings';
@@ -20,6 +21,7 @@ import BulkSelectBar from 'dashboard/components-next/captain/assistant/BulkSelec
 
 const { t } = useI18n();
 const store = useStore();
+const { currentAccount } = useAccount();
 const { uiSettings, updateUISettings } = useUISettings();
 const { assistantId, assistant, updateAssistant } = useAssistantSettings();
 
@@ -183,7 +185,13 @@ const addAllExample = async () => {
       })
     "
   >
-    <AssistantBehaviorSettings :assistant="assistant" @update="saveBehavior" />
+    <AssistantBehaviorSettings
+      :assistant="assistant"
+      :show-product-cards="
+        Boolean(currentAccount?.features?.shopify_integration)
+      "
+      @update="saveBehavior"
+    />
     <SettingsHeader
       class="pt-2"
       :heading="t('CAPTAIN.ASSISTANTS.SETTINGS.BEHAVIOR.RULES.TITLE')"

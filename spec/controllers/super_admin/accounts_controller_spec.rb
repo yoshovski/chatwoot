@@ -6,6 +6,30 @@ RSpec.describe 'Super Admin accounts API', type: :request do
   let!(:super_admin) { create(:super_admin) }
   let!(:account) { create(:account) }
 
+  describe 'workspace Shopify availability' do
+    it 'persists an unchecked feature without disabling unsubmitted internal flags' do
+      account.enable_features!('shopify_integration', 'captain_integration')
+      sign_in(super_admin, scope: :super_admin)
+
+      patch "/super_admin/accounts/#{account.id}", params: {
+        account: { name: account.name }, enabled_features: { feature_shopify_integration: 'false' }
+      }
+
+      expect(response).to have_http_status(:redirect)
+      expect(account.reload.feature_enabled?('shopify_integration')).to be(false)
+      expect(account.feature_enabled?('captain_integration')).to be(true)
+    end
+
+    it 'persists an enabled feature' do
+      sign_in(super_admin, scope: :super_admin)
+      patch "/super_admin/accounts/#{account.id}", params: {
+        account: { name: account.name }, enabled_features: { feature_shopify_integration: 'true' }
+      }
+      expect(response).to have_http_status(:redirect)
+      expect(account.reload.feature_enabled?('shopify_integration')).to be(true)
+    end
+  end
+
   describe 'GET /super_admin/accounts' do
     context 'when it is an unauthenticated user' do
       it 'returns unauthorized' do

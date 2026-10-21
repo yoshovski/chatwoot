@@ -6,6 +6,7 @@ import RadioCard from 'dashboard/components-next/radioCard/RadioCard.vue';
 import ReplyPreviewCard from './ReplyPreviewCard.vue';
 
 const props = defineProps({
+  showProductCards: { type: Boolean, default: false },
   assistant: {
     type: Object,
     default: () => ({}),
@@ -158,6 +159,7 @@ const changeMaxButtons = delta => {
         </ReplyPreviewCard>
 
         <ReplyPreviewCard
+          v-if="showProductCards"
           v-model="productCards"
           :title="
             t('CAPTAIN.ASSISTANTS.SETTINGS.BEHAVIOR.CARDS.PRODUCT_CARDS.TITLE')

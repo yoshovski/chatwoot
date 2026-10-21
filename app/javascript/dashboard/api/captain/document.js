@@ -14,6 +14,7 @@ class CaptainDocument extends ApiClient {
     source,
     sort,
     section,
+    website,
   } = {}) {
     return axios.get(this.url, {
       params: {
@@ -24,6 +25,7 @@ class CaptainDocument extends ApiClient {
         source,
         sort,
         section,
+        website,
       },
     });
   }

@@ -1,17 +1,21 @@
 <script setup>
-import { computed, ref, nextTick } from 'vue';
+import { computed, ref, nextTick, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
-import { useMapGetter } from 'dashboard/composables/store';
+import { useMapGetter, useStore } from 'dashboard/composables/store';
+import Button from 'next/button/Button.vue';
+import Policy from 'dashboard/components/policy.vue';
 import { FEATURE_FLAGS } from 'dashboard/featureFlags';
 import { useAccount } from 'dashboard/composables/useAccount';
 
 import PageLayout from 'dashboard/components-next/captain/PageLayout.vue';
 import CaptainPaywall from 'dashboard/components-next/captain/pageComponents/Paywall.vue';
 import CreateAssistantDialog from 'dashboard/components-next/captain/pageComponents/assistant/CreateAssistantDialog.vue';
-import AssistantPageEmptyState from 'dashboard/components-next/captain/pageComponents/emptyStates/AssistantPageEmptyState.vue';
 import FeatureSpotlightPopover from 'dashboard/components-next/feature-spotlight/FeatureSpotlightPopover.vue';
 
-const { isOnChatwootCloud } = useAccount();
+const { isOnChatwootCloud, accountScopedRoute } = useAccount();
+const store = useStore();
+const assistants = useMapGetter('captainAssistants/getRecords');
+onMounted(() => store.dispatch('captainAssistants/get'));
 
 const dialogType = ref('');
 const uiFlags = useMapGetter('captainAssistants/getUIFlags');
@@ -35,7 +39,7 @@ const handleAfterCreate = newAssistant => {
   // Navigate directly to documents page with the new assistant ID
   if (newAssistant?.id) {
     router.push({
-      name: 'captain_assistants_responses_index',
+      name: 'captain_assistants_overview_index',
       params: {
         accountId: router.currentRoute.value.params.accountId,
         assistantId: newAssistant.id,
@@ -47,11 +51,13 @@ const handleAfterCreate = newAssistant => {
 
 <template>
   <PageLayout
-    :header-title="$t('CAPTAIN.ASSISTANTS.HEADER')"
+    :header-title="$t('PLATFORM_NAV.AI_AGENTS')"
+    :button-label="$t('CAPTAIN.ASSISTANT_SWITCHER.NEW_ASSISTANT')"
+    :button-policy="['administrator']"
     :show-pagination-footer="false"
     :is-fetching="isFetching"
     :feature-flag="FEATURE_FLAGS.CAPTAIN"
-    is-empty
+    :is-empty="!assistants.length"
     @click="handleCreate"
   >
     <template #knowMore>
@@ -66,7 +72,46 @@ const handleAfterCreate = newAssistant => {
       />
     </template>
     <template #emptyState>
-      <AssistantPageEmptyState @click="handleCreate" />
+      <div
+        class="flex min-h-80 flex-col items-center justify-center gap-4 text-center"
+      >
+        <h2 class="text-xl font-semibold text-n-slate-12">
+          {{ $t('PLATFORM_NAV.NO_AGENT') }}
+        </h2>
+        <p class="max-w-md text-sm text-n-slate-11">
+          {{ $t('PLATFORM_NAV.NO_AGENT_DESCRIPTION') }}
+        </p>
+        <Policy :permissions="['administrator']">
+          <Button
+            :label="$t('CAPTAIN.ASSISTANT_SWITCHER.NEW_ASSISTANT')"
+            icon="i-lucide-plus"
+            @click="handleCreate"
+          />
+        </Policy>
+      </div>
+    </template>
+    <template #body>
+      <ul
+        class="m-0 flex list-none flex-col divide-y divide-n-weak rounded-xl border border-n-weak p-0"
+      >
+        <li
+          v-for="assistant in assistants"
+          :key="assistant.id"
+          class="flex flex-wrap items-center justify-between gap-4 p-5"
+        >
+          <span class="font-medium text-n-slate-12">{{ assistant.name }}</span>
+          <RouterLink
+            :to="
+              accountScopedRoute('captain_assistants_overview_index', {
+                assistantId: assistant.id,
+              })
+            "
+            class="text-sm text-n-blue-text hover:underline"
+          >
+            {{ $t('PLATFORM_NAV.MANAGE_AGENT') }}
+          </RouterLink>
+        </li>
+      </ul>
     </template>
 
     <template #paywall>
