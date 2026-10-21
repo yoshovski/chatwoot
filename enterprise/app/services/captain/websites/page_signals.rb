@@ -41,7 +41,8 @@ class Captain::Websites::PageSignals
       'login' => @doc.at_css('input[type="password"]').present? && words < 300,
       # Index pages are mostly links: category, section and archive listings.
       'listing' => words.between?(1, 600) && link_words.fdiv(words) > 0.6,
-      'fingerprint' => (Digest::SHA256.hexdigest(text.gsub(/\s+/, ' ').strip).first(16) if words.positive?)
+      'fingerprint' => (Digest::SHA256.hexdigest(text.gsub(/\s+/, ' ').strip).first(16) if words.positive?),
+      'minhash' => Captain::Knowledge::MinHash.of(text)
     }
   end
 

@@ -37,14 +37,28 @@ class Captain::Documents::PageKnowledgeProcessor
 
   private
 
-  # Blocks discovery saw on many pages of this host: menus, banners and calls to action outside <nav>/<footer>.
+  # Blocks discovery saw on many pages of this host (menus, banners and calls to action outside
+  # <nav>/<footer>) or of this page's section (a banner on every /resources page).
   def site_boilerplate
     source_id = @document.metadata.to_h['website_source_id']
     source = @document.assistant.website_sources.find_by(id: source_id) if source_id
-    # The start page keeps them, so site-wide facts are indexed once.
-    return [] if source.nil? || source.url == Captain::Websites::UrlPolicy.normalize(@document.external_link)
+    return [] if source.nil?
 
-    source.discovery_stats.dig('boilerplate', URI.parse(@document.external_link).host.delete_prefix('www.')) || []
+    url = Captain::Websites::UrlPolicy.normalize(@document.external_link)
+    host_blocks(source, url) + section_blocks(source, url)
+  end
+
+  # The start page keeps them, so site-wide facts are indexed once.
+  def host_blocks(source, url)
+    return [] if source.url == url
+
+    source.discovery_stats.dig('boilerplate', URI.parse(url).host.delete_prefix('www.')) || []
+  end
+
+  # The section's shortest URL keeps them, so the section's shared fact is indexed once.
+  def section_blocks(source, url)
+    section = source.discovery_stats.dig('boilerplate_sections', Captain::Websites::PageRules.section(url))
+    section.nil? || section['keep'] == url ? [] : section['blocks']
   end
 
   def clean(raw)
@@ -94,8 +108,9 @@ class Captain::Documents::PageKnowledgeProcessor
   def extract_sections(input)
     paragraphs = source_paragraphs(input)
     sections = generate_selection(paragraphs)
-    validate_sections!(sections, paragraphs)
-    sections.map { |section| section.merge('evidence' => section.fetch('paragraph_ids').map { |id| paragraphs.fetch(id) }) }
+    raise InvalidCuration unless sections.is_a?(Array) && sections.size <= 30
+
+    sections.filter_map { |section| supported_section(section, paragraphs) }
   end
 
   def source_paragraphs(input)
@@ -123,20 +138,13 @@ class Captain::Documents::PageKnowledgeProcessor
     output.fetch('sections')
   end
 
-  def validate_sections!(sections, paragraphs)
-    raise InvalidCuration unless sections.is_a?(Array) && sections.size <= 30
-    raise InvalidCuration, 'Unsupported website excerpt' unless sections.all? { |section| valid_section?(section, paragraphs) }
-  end
+  # One unsupported section (an invented ID, only headings, too little text) is dropped, not the whole page.
+  # Headings are context, never evidence.
+  def supported_section(section, paragraphs)
+    return unless section.is_a?(Hash) && valid_title?(section['title']) && valid_ids?(section['paragraph_ids'], paragraphs.size)
 
-  def valid_section?(section, paragraphs)
-    section.is_a?(Hash) && valid_title?(section['title']) && supported_selection?(section['paragraph_ids'], paragraphs)
-  end
-
-  def supported_selection?(ids, paragraphs)
-    return false unless valid_ids?(ids, paragraphs.size)
-
-    selected = ids.map { |id| paragraphs.fetch(id) }
-    selected.none? { |text| text.start_with?('#') } && selected.join("\n\n").length >= 40
+    evidence = section['paragraph_ids'].uniq.map { |id| paragraphs.fetch(id) }.reject { |text| text.start_with?('#') }
+    section.merge('evidence' => evidence) if evidence.join("\n\n").length >= 40
   end
 
   def valid_ids?(ids, size)

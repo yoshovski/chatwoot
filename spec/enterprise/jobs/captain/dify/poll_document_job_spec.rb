@@ -40,6 +40,18 @@ RSpec.describe Captain::Dify::PollDocumentJob do
     expect(Captain::Documents::ResponseBuilderJob).not_to have_been_enqueued
   end
 
+  it 'backs off while a large import waits in the Dify queue instead of failing after ten minutes' do
+    state[:indexing_status] = 'waiting'
+    stub_request(:get, url).to_return(body: state.to_json)
+
+    freeze_time do
+      described_class.perform_now(document.id, 'doc-id', document.dify_source_fingerprint, 120)
+
+      expect(document.reload.last_sync_error_code).to be_nil
+      expect(described_class).to have_been_enqueued.with(document.id, 'doc-id', document.dify_source_fingerprint, 121).at(2.minutes.from_now)
+    end
+  end
+
   it 'does not mark newer content Ready from a stale polling result' do
     old_fingerprint = document.dify_source_fingerprint
     document.update!(content: 'Newer content')

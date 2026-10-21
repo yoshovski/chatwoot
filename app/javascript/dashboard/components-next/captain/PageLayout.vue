@@ -121,7 +121,8 @@ const handleCreateAssistant = () => {
 
 <template>
   <section class="flex flex-col w-full h-full overflow-hidden bg-n-surface-1">
-    <header class="sticky top-0 z-10 px-6">
+    <!-- Above positioned content of the page (tab bars use z-10), so header dropdowns open over it. -->
+    <header class="sticky top-0 z-20 px-6">
       <div class="w-full mx-auto" :class="containerClass">
         <div
           class="flex items-start lg:items-center justify-between w-full py-6 lg:py-0 lg:h-20 gap-4 lg:gap-2 flex-col lg:flex-row"

@@ -156,13 +156,17 @@ const isMarkdown = computed(() => props.markdownDocument);
 const hasSafeLink = computed(() => isSafeHttpLink(props.externalLink));
 const canManage = computed(() => checkPermissions(['administrator']));
 const isAvailable = computed(() => props.status === 'available');
-const canSync = computed(
-  () => canManage.value && props.syncable && isAvailable.value
-);
 const isSyncing = computed(() => props.syncStatus === 'syncing');
 const isFailed = computed(() => props.syncStatus === 'failed');
 const isRetryableSync = computed(
   () => isFailed.value || (isSyncing.value && !props.syncInProgress)
+);
+// A failed first import is not available yet but must still be retryable.
+const canSync = computed(
+  () =>
+    canManage.value &&
+    (props.syncable || isFailed.value) &&
+    (isAvailable.value || isFailed.value)
 );
 const showSyncStatus = computed(() => props.syncable);
 const knowledgeChip = computed(
@@ -214,12 +218,7 @@ const menuItems = computed(() => {
     });
   }
 
-  if (
-    canManage.value &&
-    !isPdf.value &&
-    !isMarkdown.value &&
-    !props.knowledgeState
-  ) {
+  if (canManage.value && !isPdf.value && !isMarkdown.value) {
     allOptions.push({
       label: t('CAPTAIN.DOCUMENTS.OPTIONS.GENERATE_FAQS'),
       value: 'generateFaqs',

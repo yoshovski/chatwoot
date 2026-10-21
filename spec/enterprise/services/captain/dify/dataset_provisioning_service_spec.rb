@@ -68,4 +68,40 @@ RSpec.describe Captain::Dify::DatasetProvisioningService do
     expect { assistant.dify_extra_dataset_ids = ['foreign-id'] }.to raise_error(Dify::KnowledgeClient::Error)
     expect(assistant.config).not_to have_key('dify_extra_dataset_ids')
   end
+
+  context 'when a deleted agent left a dataset with the same name' do
+    let(:conflict) { Dify::KnowledgeClient::Error.new('Dify request failed (HTTP 409)', status: 409) }
+    let(:orphans) do
+      [{ 'id' => 'old-faq-id', 'name' => faq_name, 'embedding_model' => 'example-embedding' },
+       { 'id' => 'old-docs-id', 'name' => docs_name, 'embedding_model' => 'example-embedding' }]
+    end
+
+    before do
+      allow(client).to receive(:datasets).and_return('data' => orphans, 'has_more' => false)
+      allow(client).to receive(:create_dataset).and_raise(conflict)
+      allow(client).to receive(:update_dataset)
+    end
+
+    it 'takes over the unused datasets and marks them as this agent\'s' do
+      described_class.new(assistant).perform
+
+      expect(assistant.reload.config).to include('dify_faq_dataset_id' => 'old-faq-id', 'dify_docs_dataset_id' => 'old-docs-id')
+      expect(client).to have_received(:update_dataset).with(
+        'old-docs-id', name: docs_name, description: a_string_including("ChatOctave source: #{assistant.config['dify_provisioning_key']}:docs")
+      )
+    end
+
+    it 'keeps failing when another agent still uses the dataset' do
+      create(:captain_assistant, account: account, config: { dify_faq_dataset_id: 'old-faq-id', dify_docs_dataset_id: 'other-id' })
+
+      expect { described_class.new(assistant).perform }.to raise_error(Dify::KnowledgeClient::Error)
+      expect(assistant.reload.config).not_to have_key('dify_faq_dataset_id')
+    end
+
+    it 'does not take over a dataset with another embedding model' do
+      orphans.each { |dataset| dataset['embedding_model'] = 'other-embedding' }
+
+      expect { described_class.new(assistant).perform }.to raise_error(Dify::KnowledgeClient::Error)
+    end
+  end
 end

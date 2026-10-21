@@ -6,11 +6,11 @@ RSpec.describe Captain::Websites::ClassifySectionsJob do
     Captain::WebsiteSource.create!(
       assistant: assistant, url: 'https://www.example.com', status: 'ready',
       discovery_stats: { 'run' => 'run-1', 'classification' => 'pending' },
-      pages: [{ 'url' => 'https://blog.example.com/guide', 'section' => 'blog.example.com/guide', 'bucket' => 'maybe' }]
+      pages: [{ 'url' => 'https://blog.example.com/guide', 'section' => 'blog.example.com/guide', 'bucket' => 'maybe', 'words' => 300 }]
     )
   end
   let(:labels) { { 'blog.example.com/guide' => { 'label' => 'support', 'recommended' => true, 'reason' => 'Setup guides' } } }
-  let(:classifier) { instance_double(Captain::Websites::SectionClassifier, perform: labels) }
+  let(:classifier) { instance_double(Captain::Websites::SectionClassifier, perform: { 'sections' => labels, 'pages' => {} }) }
 
   before { allow(Captain::Websites::SectionClassifier).to receive(:new).and_return(classifier) }
 

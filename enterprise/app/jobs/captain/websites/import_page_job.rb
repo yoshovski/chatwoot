@@ -46,8 +46,9 @@ class Captain::Websites::ImportPageJob < ApplicationJob
     return unless selected?(document)
 
     fingerprint = Digest::SHA256.hexdigest(content.gsub(/\s+/, ' ').strip)
-    reason = skip_reason(document, content, fingerprint)
-    reason ? skip(document, reason) : store(document, result, content, fingerprint)
+    minhash = Captain::Knowledge::MinHash.of(content)
+    reason = skip_reason(document, content, fingerprint, minhash)
+    reason ? skip(document, reason) : store(document, result, content, fingerprint, minhash)
   end
 
   # nil when cleaning leaves no factual text.
@@ -57,8 +58,9 @@ class Captain::Websites::ImportPageJob < ApplicationJob
     nil
   end
 
-  def store(document, result, content, fingerprint)
-    document.metadata = document.metadata.merge('page_faqs' => result.faqs || [], 'page_text_fingerprint' => fingerprint)
+  def store(document, result, content, fingerprint, minhash)
+    document.metadata = document.metadata.merge('page_faqs' => result.faqs || [], 'page_text_fingerprint' => fingerprint,
+                                                'page_minhash' => minhash)
     document.update!(name: result.title.presence || document.name, content: content, status: :available,
                      sync_status: :synced, last_synced_at: Time.current, last_sync_attempted_at: Time.current, last_sync_error_code: nil)
   end
@@ -80,12 +82,15 @@ class Captain::Websites::ImportPageJob < ApplicationJob
     document.destroy!
   end
 
-  # A stub page, or text another enabled page of this agent already holds (a mirror, print or locale copy).
-  def skip_reason(document, content, fingerprint)
+  # A stub page, or text another enabled page of this agent already holds, exactly or nearly
+  # (a mirror, print or locale copy, or the same page with another footer or date).
+  def skip_reason(document, content, fingerprint, minhash)
     return 'thin_content' if content.split.size < MIN_WORDS
 
-    duplicate = document.assistant.documents.where(enabled: true).where.not(id: document.id)
-                        .exists?(["metadata->>'page_text_fingerprint' = ?", fingerprint])
+    others = document.assistant.documents.where(enabled: true).where.not(id: document.id)
+    duplicate = others.exists?(["metadata->>'page_text_fingerprint' = ?", fingerprint]) ||
+                others.where("metadata ? 'page_minhash'").pluck(Arel.sql("metadata->>'page_minhash'"))
+                      .any? { |other| Captain::Knowledge::MinHash.near?(other, minhash) }
     'duplicate_content' if duplicate
   end
 end

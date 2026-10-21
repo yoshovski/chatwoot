@@ -30,6 +30,19 @@ class KnowledgeSources extends ApiClient {
     });
   }
 
+  sections(assistantId, signal) {
+    return axios.get(`${this.url}/${assistantId}/document_sections`, {
+      signal,
+    });
+  }
+
+  sectionAction(assistantId, sections, action) {
+    return axios.post(`${this.url}/${assistantId}/document_sections`, {
+      sections,
+      section_action: action,
+    });
+  }
+
   rediscover(assistantId, sourceId) {
     return axios.post(`${this.sourcesUrl(assistantId)}/${sourceId}/rediscover`);
   }

@@ -38,17 +38,11 @@ class Api::V1::Accounts::Captain::DocumentsController < Api::V1::Accounts::BaseC
   end
 
   def sync
-    return render_could_not_create_error(I18n.t('captain.documents.sync_not_supported_for_file')) unless @document.syncable?
-    return render_could_not_create_error(I18n.t('captain.documents.sync_only_available_documents')) unless @document.available?
-
-    @document.update!(
-      sync_status: :syncing,
-      sync_step: nil,
-      last_sync_error_code: nil,
-      last_sync_attempted_at: Time.current
-    )
-    Captain::Documents::PerformSyncJob.perform_later(@document)
-    head :accepted
+    case Captain::Documents::SyncRequest.new(@document).perform
+    when :unsupported then render_could_not_create_error(I18n.t('captain.documents.sync_not_supported_for_file'))
+    when :not_ready then render_could_not_create_error(I18n.t('captain.documents.sync_only_available_documents'))
+    else head :accepted
+    end
   end
 
   def generate_faqs
@@ -78,9 +72,15 @@ class Api::V1::Accounts::Captain::DocumentsController < Api::V1::Accounts::BaseC
   def filtered_documents
     documents = @documents
     documents = documents.where(assistant_id: permitted_params[:assistant_id]) if permitted_params[:assistant_id].present?
+    documents = documents.merge(section_documents) if permitted_params[:section].present?
     documents = apply_source_filter(documents, permitted_params[:source])
     documents = apply_filter(documents, permitted_params[:filter])
     apply_search(documents, permitted_params[:search_key])
+  end
+
+  def section_documents
+    assistant = Current.account.captain_assistants.find(permitted_params[:assistant_id])
+    Captain::Documents::Sections.new(assistant).documents([permitted_params[:section]])
   end
 
   def with_responses_count(scope)
@@ -102,7 +102,7 @@ class Api::V1::Accounts::Captain::DocumentsController < Api::V1::Accounts::BaseC
   end
 
   def permitted_params
-    params.permit(:assistant_id, :page, :id, :account_id, :filter, :source, :sort, :search_key)
+    params.permit(:assistant_id, :page, :id, :account_id, :filter, :source, :sort, :search_key, :section)
   end
 
   def drilldown_params

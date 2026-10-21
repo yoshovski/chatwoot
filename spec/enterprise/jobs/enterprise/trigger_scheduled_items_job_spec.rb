@@ -7,4 +7,9 @@ RSpec.describe TriggerScheduledItemsJob do
     expect(Sla::TriggerSlasForAccountsJob).to receive(:perform_later).once
     described_class.perform_now
   end
+
+  it 'rechecks knowledge documents whose Dify indexing timed out' do
+    expect(Captain::Dify::RecheckTimedOutDocumentsJob).to receive(:perform_later).once
+    described_class.perform_now
+  end
 end

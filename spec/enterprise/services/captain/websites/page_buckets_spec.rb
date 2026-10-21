@@ -59,4 +59,35 @@ RSpec.describe Captain::Websites::PageBuckets do
     expect(result.values_at('https://blog.example.com/launch', 'https://www.example.com/pricing'))
       .to eq([['recommended', nil], %w[excluded not_useful]])
   end
+
+  it 'never recommends a page whose text was not read' do
+    unread = [{ 'url' => 'https://www.example.com/guide', 'checked' => true },
+              { 'url' => 'https://support.example.com/setup' }]
+
+    expect(described_class.new(source).perform(unread).pluck('bucket')).to eq(%w[maybe maybe])
+  end
+
+  it 'follows a page label over its section label' do
+    source.update!(discovery_stats: {
+                     'sections' => { 'example.com/careers' => { 'label' => 'company', 'recommended' => true, 'reason' => 'About' } },
+                     'page_labels' => { 'https://www.example.com/careers' => { 'label' => 'careers', 'recommended' => false, 'reason' => 'Jobs' } }
+                   })
+    result = described_class.new(source).perform([{ 'url' => 'https://www.example.com/careers', 'words' => 300 }])
+
+    expect(result.first['bucket']).to eq('maybe')
+  end
+
+  it 'treats nearly the same text as a duplicate of the shorter URL, but not pages that only share a banner' do
+    article = (1..200).map { |index| "Fact #{index} about plans, invoices and support." }.join(' ')
+    other = (1..200).map { |index| "Story #{index} about streaming, sports and fans." }.join(' ')
+    banner = 'Download the retention playbook with benchmarks for every subscription business today.'
+    copies = [
+      { 'url' => 'https://www.example.com/pricing-pro', 'words' => 1200, 'minhash' => Captain::Knowledge::MinHash.of("#{article} Updated in May.") },
+      { 'url' => 'https://www.example.com/pricing', 'words' => 1200, 'minhash' => Captain::Knowledge::MinHash.of("#{article} Contact us.") },
+      { 'url' => 'https://www.example.com/a', 'words' => 400, 'minhash' => Captain::Knowledge::MinHash.of("#{article.first(1500)} #{banner}") },
+      { 'url' => 'https://www.example.com/b', 'words' => 400, 'minhash' => Captain::Knowledge::MinHash.of("#{other.first(1500)} #{banner}") }
+    ]
+
+    expect(described_class.new(source).perform(copies).map { |page| page['reason'] }).to eq(['duplicate', nil, nil, nil])
+  end
 end

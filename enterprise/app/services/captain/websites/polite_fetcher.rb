@@ -25,6 +25,11 @@ class Captain::Websites::PoliteFetcher
     end
   end
 
+  # Returns [status, body, content_type] like #read, paced per origin; nil past the deadline.
+  def read_paced(url, delay)
+    pace(url, delay) { read(url) }
+  end
+
   # The final HTTP status of a page without reading its body; nil when the request failed.
   def probe(url, delay)
     pace(url, delay) do

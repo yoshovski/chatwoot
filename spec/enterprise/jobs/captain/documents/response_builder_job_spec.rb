@@ -141,4 +141,33 @@ RSpec.describe Captain::Documents::ResponseBuilderJob, type: :job do
       end
     end
   end
+
+  context 'with chunked Dify knowledge (processing version 2 or later)' do
+    let(:assistant) { create(:captain_assistant, config: { 'knowledge_processing_version' => 3 }) }
+    let(:generator) { instance_double(Captain::Knowledge::GroundedFaqGenerator, perform: nil) }
+
+    include_context 'with Dify credential encryption'
+
+    before do
+      assistant.account.update!(dify_base_url: 'https://dify.example.test', dify_knowledge_api_key: 'private-key',
+                                dify_embedding_model: 'example-embedding', dify_embedding_model_provider: 'example/provider')
+      allow(Captain::Knowledge::GroundedFaqGenerator).to receive(:new).with(document).and_return(generator)
+      document.update!(status: :available, metadata: { 'page_faqs' => [{ 'question' => 'How to return?', 'answer' => 'Within 30 days.' }],
+                                                       'dify_indexing_status' => 'completed' })
+      document.reload
+    end
+
+    it 'imports the page FAQs but suggests no AI FAQs after an import' do
+      expect { described_class.new.perform(document) }.not_to(change { document.responses.where(origin: 'ai_generated').count })
+
+      expect(document.responses.where(origin: 'page_import').pluck(:question)).to eq(['How to return?'])
+      expect(generator).not_to have_received(:perform)
+    end
+
+    it 'suggests AI FAQs when an administrator asks' do
+      described_class.new.perform(document, force_ai: true)
+
+      expect(generator).to have_received(:perform).with(force: true)
+    end
+  end
 end

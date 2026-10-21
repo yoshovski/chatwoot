@@ -225,6 +225,23 @@ RSpec.describe Captain::Assistant::SessionCaptureService do
       )
     end
 
+    it 'marks a source as used when an uncited reply repeats its wording' do
+      run_context[:state].merge!(
+        Captain::Assistant::CITATION_SOURCES_STATE_KEY => { 1 => 'doc:7', 2 => 'doc:8' },
+        Captain::Assistant::CITATION_DETAILS_STATE_KEY => {
+          'doc:7' => { kind: 'document', title: 'Retention playbook',
+                       excerpt: 'Learn how a 5% improvement in retention can boost profits by up to 95%.' },
+          'doc:8' => { kind: 'document', title: 'Pricing', excerpt: 'Plans start at ten euros per month.' }
+        }
+      )
+      run_result.output = {
+        'response_parts' => [{ 'text' => 'A 5% improvement in retention can boost profits by up to 95%.', 'citation_indexes' => [] }]
+      }
+
+      expect(service.capture!.sources.map { |source| source.values_at('reference', 'used', 'used_by') })
+        .to eq([['doc:7', true, 'overlap'], ['doc:8', false, nil]])
+    end
+
     it 'extracts every scenario that authored a message in the current turn' do
       first_scenario = create(:captain_scenario, assistant: assistant, account: account)
       second_scenario = create(:captain_scenario, assistant: assistant, account: account)

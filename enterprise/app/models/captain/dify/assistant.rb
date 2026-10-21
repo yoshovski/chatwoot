@@ -9,6 +9,7 @@ module Captain::Dify::Assistant
     after_update_commit :describe_dify_datasets, if: -> { saved_change_to_name? && account.dify_knowledge_enabled? }
     before_destroy :delete_dify_faq_documents
     before_destroy :delete_dify_documents
+    after_destroy_commit :delete_dify_datasets
   end
 
   def client_config
@@ -61,6 +62,14 @@ module Captain::Dify::Assistant
   def delete_dify_faq_documents
     responses.where.not(dify_document_id: nil).find_each do |response|
       Captain::Dify::DeleteFaqJob.perform_later(response.id, account_id, config.fetch('dify_faq_dataset_id'), response.dify_document_id)
+    end
+  end
+
+  def delete_dify_datasets
+    return unless account.dify_knowledge_enabled?
+
+    config.values_at('dify_faq_dataset_id', 'dify_docs_dataset_id').compact_blank.each do |dataset_id|
+      Captain::Dify::DeleteDatasetJob.perform_later(account_id, dataset_id)
     end
   end
 

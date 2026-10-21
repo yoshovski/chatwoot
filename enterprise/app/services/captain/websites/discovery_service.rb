@@ -45,7 +45,7 @@ class Captain::Websites::DiscoveryService
     apply_robots
     success = @stats.values_at('successful_pages', 'sitemaps', 'help_center_articles').any?(&:positive?)
     @stats.merge!('phase' => 'done', 'classification' => ('pending' if success), 'verification' => ('pending' if success),
-                  'boilerplate' => @boilerplate.to_h).compact!
+                  'boilerplate' => @boilerplate.to_h, 'boilerplate_sections' => @boilerplate.sections).compact!
     persist(status: success ? 'ready' : 'failed', error_code: success ? nil : 'no_pages_found', discovered_at: Time.current)
     return unless success
 

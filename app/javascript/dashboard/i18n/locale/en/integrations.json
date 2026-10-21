@@ -1730,6 +1730,7 @@
         "SYNCING": "updating...",
         "STALE_SYNC": "update stalled",
         "FAILED": "Failed to sync",
+        "FAILED_REASON": "Failed to sync: {error}",
         "NEVER_SYNCED": "not updated yet"
       },
       "SYNC_ERRORS": {
@@ -1743,7 +1744,11 @@
         "RENDERING_REQUIRED": "This page needs JavaScript rendering. Configure the website renderer and retry.",
         "ROBOTS_DISALLOWED": "This page is excluded by the website’s robots.txt.",
         "THIN_CONTENT": "Too little text to be useful knowledge",
-        "DUPLICATE_CONTENT": "Same text as another page of this agent"
+        "DUPLICATE_CONTENT": "Same text as another page of this agent",
+        "INDEXING_TIMEOUT": "The knowledge base took too long to index this page. It is checked again automatically.",
+        "INDEXING_FAILED": "The knowledge base could not index this content",
+        "KNOWLEDGE_NOT_CONFIGURED": "The knowledge base is not configured for this account",
+        "KNOWLEDGE_BASE_ERROR": "The knowledge base did not accept this content. Retry, or contact support if it keeps failing."
       },
       "RELATED_RESPONSES": {
         "TITLE": "Related FAQs",
@@ -1822,7 +1827,7 @@
         "VIEW_DETAILS": "View details",
         "SYNC_NOW": "Refresh now",
         "RETRY_SYNC": "Retry refresh",
-        "GENERATE_FAQS": "Generate FAQs",
+        "GENERATE_FAQS": "Suggest FAQs",
         "DELETE_DOCUMENT": "Delete Document"
       },
       "EMPTY_STATE": {
@@ -2145,13 +2150,41 @@
         "SUBTITLE": "Connecting an inbox allows the AI agent to handle initial questions from your customers before transferring them to you."
       }
     },
+    "DOCUMENT_SECTIONS": {
+      "TITLE": "Sections ({count})",
+      "DESCRIPTION": "Pages grouped by website and section. Select sections to pause, resume, retry or delete them at once.",
+      "FILES": "Files and single documents",
+      "COUNTS": "{ready} of {count} ready",
+      "FAILED": "{count} failed",
+      "PAUSED": "{count} paused",
+      "SHOW": "Show",
+      "SHOW_ALL": "Show all",
+      "SELECTED": "Selected: {sections} · {count} documents",
+      "ACTIONS": {
+        "PAUSE": "Pause",
+        "RESUME": "Resume",
+        "RETRY": "Retry failed",
+        "SUGGEST_FAQS": "Suggest FAQs",
+        "DELETE": "Delete"
+      },
+      "DONE": {
+        "PAUSE": "Paused {count} documents",
+        "RESUME": "Resumed {count} documents",
+        "RETRY": "Retrying {count} documents",
+        "SUGGEST_FAQS": "Suggesting FAQs for {count} documents",
+        "DELETE": "Deleted {count} documents"
+      },
+      "ERROR": "Could not update these sections. Please try again.",
+      "DELETE_TITLE": "Delete these sections?",
+      "DELETE_DESCRIPTION": "{count} documents and their FAQs will be deleted. Website pages are also removed from the website selection."
+    },
     "WEBSITES": {
       "TITLE": "Website sources",
       "ENTIRE_WEBSITE": "Entire website",
       "DISCOVER": "Discover pages",
       "INCLUDE_SUBDOMAINS": "Discover linked subdomains too",
       "DISCOVERY_HELP": "Explore sitemaps and linked pages first. You choose what becomes knowledge.",
-      "SELECTION_HELP": "Pages are sorted into Recommended, Maybe and Excluded. Only selected pages are imported, using your existing document refresh settings. New pages wait for your selection; deselected website imports are paused.",
+      "SELECTION_HELP": "Pages are sorted into Recommended, Optional and Skipped. Only selected pages are imported, using your existing document refresh settings. New pages wait for your selection; deselected website imports are paused.",
       "DISCOVERING": "Discovering pages… {count} found",
       "DISCOVERED": "{count} pages discovered",
       "LIMITED": "Discovery stopped at its {limits}, so the list is partial. To explore further, add a narrower website source, such as one section or subdomain.",
@@ -2162,6 +2195,7 @@
       "SEARCH": "Search pages, titles or domains",
       "NO_PAGES": "No matching pages yet.",
       "PREVIEW_LOADING": "Loading page preview…",
+      "PREVIEW_UNAVAILABLE": "Preview unavailable: {reason}",
       "PREVIEW_HELP": "Click a page to preview the text that would become knowledge.",
       "SAVE_SELECTION": "Save selection ({count})",
       "SAVED": "Selection saved. Selected pages will be imported and indexed.",
@@ -2193,16 +2227,17 @@
       },
       "BUCKETS": {
         "RECOMMENDED": "Recommended ({count})",
-        "MAYBE": "Maybe ({count})",
-        "EXCLUDED": "Excluded ({count})",
+        "MAYBE": "Optional ({count})",
+        "EXCLUDED": "Skipped ({count})",
         "ALL": "All ({count})"
       },
       "BUCKET_HELP": {
-        "RECOMMENDED": "Pages likely to help answer customer questions. They start selected; review them before saving.",
-        "MAYBE": "Pages that could help, such as blog posts or other sites. Select only what your customers ask about.",
-        "EXCLUDED": "Pages unlikely to be useful knowledge, with the reason. You can still select most of them.",
+        "RECOMMENDED": "Pages likely to answer customer questions. They start selected.",
+        "MAYBE": "Could help, such as blog posts, release notes or other sites. Add only what customers ask about.",
+        "EXCLUDED": "Left out with a reason. You can still add most of them.",
         "ALL": "Every discovered page."
       },
+      "HIDDEN_PAGES": "{count} page was left out because it was not found or has no text. | {count} pages were left out because they were not found or have no text.",
       "SELECT_RECOMMENDED": "Select recommended",
       "CLEAR_SELECTION": "Clear selection",
       "HOME_SECTION": "Top-level pages",
@@ -2215,6 +2250,8 @@
         "legal": "Policies",
         "company": "Company",
         "news": "News",
+        "events": "Events",
+        "careers": "Careers",
         "marketing": "Marketing",
         "technical": "Technical",
         "not_useful": "Not useful"
@@ -2259,6 +2296,12 @@
       "CHOOSE_SOURCES": "Choose sources",
       "SOURCES_HELP": "{count} of up to {max} sources selected. Pick pages that explain what the business does, its products, pricing and policies. Pages still being indexed are skipped.",
       "GENERATE_SELECTED": "Generate from selected sources",
+      "SUGGESTION_HELP": "Suggested from page titles and addresses: about, products, pricing, policies and support overviews.",
+      "SUGGESTED_SOURCES": "Suggested",
+      "SEARCH_SOURCES": "Search sources",
+      "SELECT_SUGGESTED": "Select suggested",
+      "CLEAR_SOURCES": "Clear",
+      "NO_MATCHING_SOURCES": "No sources match this search.",
       "NO_SOURCES": "Import documents and wait for indexing before generating a profile.",
       "OVERVIEW": "Business overview",
       "TOPIC": "Topic",

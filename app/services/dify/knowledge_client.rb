@@ -38,6 +38,10 @@ class Dify::KnowledgeClient
     request(:patch, "datasets/#{dataset_id}", attributes)
   end
 
+  def delete_dataset(dataset_id)
+    request(:delete, "datasets/#{dataset_id}")
+  end
+
   def create_by_text(dataset_id:, **attributes)
     request(:post, "datasets/#{dataset_id}/document/create-by-text", attributes)
   end

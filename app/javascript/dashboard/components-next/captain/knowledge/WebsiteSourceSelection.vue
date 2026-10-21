@@ -181,131 +181,145 @@ const showPreview = async page => {
 </script>
 
 <template>
-  <div class="flex flex-col gap-4">
-    <p class="m-0 break-all text-sm text-n-slate-11">{{ source?.url }}</p>
-    <p class="m-0 text-sm text-n-slate-11">
-      {{ $t('CAPTAIN.WEBSITES.SELECTION_HELP') }}
-    </p>
-    <div class="flex items-center justify-between gap-3">
-      <div class="flex min-w-0 flex-col" role="status">
-        <span class="text-sm text-n-slate-12">{{ statusText }}</span>
-        <span v-if="phaseText" class="text-xs text-n-slate-11">
-          {{ phaseText }}
-        </span>
-      </div>
-      <Button
-        v-if="source && !discovering"
-        size="sm"
-        variant="faded"
-        :label="$t('CAPTAIN.WEBSITES.REDISCOVER')"
-        @click="rediscover"
-      />
-    </div>
-    <p v-if="limitsText" class="m-0 text-sm text-n-amber-11">
-      {{ $t('CAPTAIN.WEBSITES.LIMITED', { limits: limitsText }) }}
-    </p>
-    <p
-      v-if="stats.classification === 'failed'"
-      class="m-0 text-sm text-n-slate-11"
-    >
-      {{ $t('CAPTAIN.WEBSITES.CLASSIFICATION_FAILED') }}
-    </p>
-    <p v-if="source?.status === 'failed'" class="m-0 text-sm text-n-ruby-11">
-      {{ $t('CAPTAIN.WEBSITES.DISCOVERY_FAILED') }}
-    </p>
-    <div class="flex flex-wrap items-center gap-2">
-      <Button
-        v-for="filter in FILTERS"
-        :key="filter"
-        size="sm"
-        :variant="bucket === filter ? 'solid' : 'faded'"
-        :color="bucket === filter ? 'blue' : 'slate'"
-        :label="
-          $t(`CAPTAIN.WEBSITES.BUCKETS.${filter.toUpperCase()}`, {
-            count: counts[filter],
-          })
-        "
-        @click="chosenBucket = filter"
-      />
-    </div>
-    <p class="m-0 text-xs text-n-slate-11">
-      {{ $t(`CAPTAIN.WEBSITES.BUCKET_HELP.${bucket.toUpperCase()}`) }}
-    </p>
-    <Input
-      v-model="search"
-      type="search"
-      :placeholder="$t('CAPTAIN.WEBSITES.SEARCH')"
-    />
-    <div class="flex flex-wrap items-center gap-2">
-      <Button
-        size="sm"
-        variant="faded"
-        :label="$t('CAPTAIN.WEBSITES.SELECT_RECOMMENDED')"
-        :disabled="!counts.recommended"
-        @click="selectRecommended"
-      />
-      <Button
-        size="sm"
-        variant="ghost"
-        color="slate"
-        :label="$t('CAPTAIN.WEBSITES.CLEAR_SELECTION')"
-        :disabled="!selected.length"
-        @click="clearSelection"
-      />
-    </div>
-    <div class="grid gap-4 md:grid-cols-2">
-      <div class="max-h-96 overflow-auto rounded-lg border border-n-weak p-3">
-        <WebsitePageTree
-          v-for="node in tree"
-          :key="node.key"
-          :node="node"
-          :selected="selected"
-          :section-labels="stats.sections || {}"
-          @toggle="toggle"
-          @preview="showPreview"
+  <!-- Everything above the footer scrolls, so Save stays visible in a short window. -->
+  <div class="flex flex-col gap-3 min-h-0 max-h-[calc(100vh-14rem)]">
+    <div class="flex flex-col flex-1 min-h-0 gap-3 overflow-y-auto">
+      <p class="m-0 break-all text-sm text-n-slate-11">{{ source?.url }}</p>
+      <p class="m-0 text-sm text-n-slate-11">
+        {{ $t('CAPTAIN.WEBSITES.SELECTION_HELP') }}
+      </p>
+      <div class="flex items-center justify-between gap-3">
+        <div class="flex min-w-0 flex-col" role="status">
+          <span class="text-sm text-n-slate-12">{{ statusText }}</span>
+          <span v-if="phaseText" class="text-xs text-n-slate-11">
+            {{ phaseText }}
+          </span>
+        </div>
+        <Button
+          v-if="source && !discovering"
+          size="sm"
+          variant="faded"
+          :label="$t('CAPTAIN.WEBSITES.REDISCOVER')"
+          @click="rediscover"
         />
-        <p v-if="!tree.length" class="text-sm text-n-slate-11">
-          {{ $t('CAPTAIN.WEBSITES.NO_PAGES') }}
-        </p>
       </div>
-      <div class="max-h-96 overflow-auto rounded-lg border border-n-weak p-3">
-        <template v-if="preview">
-          <p class="break-all text-xs text-n-slate-11">{{ preview.url }}</p>
-          <p
-            v-if="previewRequest.isPending.value"
-            class="text-sm text-n-slate-11"
-          >
-            {{ $t('CAPTAIN.WEBSITES.PREVIEW_LOADING') }}
+      <p v-if="limitsText" class="m-0 text-sm text-n-amber-11">
+        {{ $t('CAPTAIN.WEBSITES.LIMITED', { limits: limitsText }) }}
+      </p>
+      <p
+        v-if="stats.classification === 'failed'"
+        class="m-0 text-sm text-n-slate-11"
+      >
+        {{ $t('CAPTAIN.WEBSITES.CLASSIFICATION_FAILED') }}
+      </p>
+      <p v-if="source?.status === 'failed'" class="m-0 text-sm text-n-ruby-11">
+        {{ $t('CAPTAIN.WEBSITES.DISCOVERY_FAILED') }}
+      </p>
+      <div class="flex flex-wrap items-center gap-2">
+        <Button
+          v-for="filter in FILTERS"
+          :key="filter"
+          size="sm"
+          :variant="bucket === filter ? 'solid' : 'faded'"
+          :color="bucket === filter ? 'blue' : 'slate'"
+          :label="
+            $t(`CAPTAIN.WEBSITES.BUCKETS.${filter.toUpperCase()}`, {
+              count: counts[filter],
+            })
+          "
+          @click="chosenBucket = filter"
+        />
+      </div>
+      <p class="m-0 text-xs text-n-slate-11">
+        {{ $t(`CAPTAIN.WEBSITES.BUCKET_HELP.${bucket.toUpperCase()}`) }}
+      </p>
+      <p v-if="source?.hidden_pages" class="m-0 text-xs text-n-slate-10">
+        {{
+          $t('CAPTAIN.WEBSITES.HIDDEN_PAGES', { count: source.hidden_pages })
+        }}
+      </p>
+      <div class="flex flex-wrap items-center gap-2">
+        <Input
+          v-model="search"
+          type="search"
+          class="flex-1 min-w-48"
+          :placeholder="$t('CAPTAIN.WEBSITES.SEARCH')"
+        />
+        <Button
+          size="sm"
+          variant="faded"
+          :label="$t('CAPTAIN.WEBSITES.SELECT_RECOMMENDED')"
+          :disabled="!counts.recommended"
+          @click="selectRecommended"
+        />
+        <Button
+          size="sm"
+          variant="ghost"
+          color="slate"
+          :label="$t('CAPTAIN.WEBSITES.CLEAR_SELECTION')"
+          :disabled="!selected.length"
+          @click="clearSelection"
+        />
+      </div>
+      <div class="grid gap-4 md:grid-cols-2">
+        <div class="h-80 overflow-auto rounded-lg border border-n-weak p-3">
+          <WebsitePageTree
+            v-for="node in tree"
+            :key="node.key"
+            :node="node"
+            :selected="selected"
+            :section-labels="stats.sections || {}"
+            @toggle="toggle"
+            @preview="showPreview"
+          />
+          <p v-if="!tree.length" class="text-sm text-n-slate-11">
+            {{ $t('CAPTAIN.WEBSITES.NO_PAGES') }}
           </p>
-          <p v-else-if="preview.error_code" class="text-sm text-n-ruby-11">
-            {{
-              $t(
-                `CAPTAIN.DOCUMENTS.SYNC_ERRORS.${preview.error_code.toUpperCase()}`
-              )
-            }}
-          </p>
-          <template v-else>
-            <p v-if="preview.skip_reason" class="mb-2 text-sm text-n-amber-11">
-              {{ $t('CAPTAIN.WEBSITES.PREVIEW_THIN') }}
-            </p>
+        </div>
+        <div class="h-80 overflow-auto rounded-lg border border-n-weak p-3">
+          <template v-if="preview">
+            <p class="break-all text-xs text-n-slate-11">{{ preview.url }}</p>
             <p
-              v-else-if="preview.words !== undefined"
-              class="mb-2 text-xs text-n-slate-11"
+              v-if="previewRequest.isPending.value"
+              class="text-sm text-n-slate-11"
             >
+              {{ $t('CAPTAIN.WEBSITES.PREVIEW_LOADING') }}
+            </p>
+            <p v-else-if="preview.error_code" class="text-sm text-n-slate-11">
               {{
-                $t('CAPTAIN.WEBSITES.PREVIEW_WORDS', { count: preview.words })
+                $t('CAPTAIN.WEBSITES.PREVIEW_UNAVAILABLE', {
+                  reason: $t(
+                    `CAPTAIN.DOCUMENTS.SYNC_ERRORS.${preview.error_code.toUpperCase()}`
+                  ),
+                })
               }}
             </p>
-            <div
-              class="whitespace-pre-wrap break-words font-sans text-sm text-n-slate-12"
-            >
-              {{ preview.content }}
-            </div>
+            <template v-else>
+              <p
+                v-if="preview.skip_reason"
+                class="mb-2 text-sm text-n-amber-11"
+              >
+                {{ $t('CAPTAIN.WEBSITES.PREVIEW_THIN') }}
+              </p>
+              <p
+                v-else-if="preview.words !== undefined"
+                class="mb-2 text-xs text-n-slate-11"
+              >
+                {{
+                  $t('CAPTAIN.WEBSITES.PREVIEW_WORDS', { count: preview.words })
+                }}
+              </p>
+              <div
+                class="whitespace-pre-wrap break-words font-sans text-sm text-n-slate-12"
+              >
+                {{ preview.content }}
+              </div>
+            </template>
           </template>
-        </template>
-        <p v-else class="text-sm text-n-slate-11">
-          {{ $t('CAPTAIN.WEBSITES.PREVIEW_HELP') }}
-        </p>
+          <p v-else class="text-sm text-n-slate-11">
+            {{ $t('CAPTAIN.WEBSITES.PREVIEW_HELP') }}
+          </p>
+        </div>
       </div>
     </div>
     <p v-if="error" role="alert" class="m-0 text-sm text-n-ruby-11">
@@ -319,7 +333,9 @@ const showPreview = async page => {
         })
       }}
     </p>
-    <div class="flex items-center justify-between gap-3">
+    <div
+      class="flex items-center justify-between gap-3 pt-3 border-t shrink-0 border-n-weak"
+    >
       <Button
         variant="faded"
         color="slate"

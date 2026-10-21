@@ -56,7 +56,14 @@ const ERROR_CODE_LABELS = {
   robots_disallowed: 'CAPTAIN.DOCUMENTS.SYNC_ERRORS.ROBOTS_DISALLOWED',
   thin_content: 'CAPTAIN.DOCUMENTS.SYNC_ERRORS.THIN_CONTENT',
   duplicate_content: 'CAPTAIN.DOCUMENTS.SYNC_ERRORS.DUPLICATE_CONTENT',
+  dify_indexing_timeout: 'CAPTAIN.DOCUMENTS.SYNC_ERRORS.INDEXING_TIMEOUT',
+  dify_indexing_failed: 'CAPTAIN.DOCUMENTS.SYNC_ERRORS.INDEXING_FAILED',
+  dify_document_unavailable: 'CAPTAIN.DOCUMENTS.SYNC_ERRORS.INDEXING_FAILED',
+  dify_not_configured: 'CAPTAIN.DOCUMENTS.SYNC_ERRORS.KNOWLEDGE_NOT_CONFIGURED',
 };
+// Other Dify failures (HTTP status codes, dataset setup) share one message.
+const DIFY_ERROR_PREFIX = 'dify_';
+const DIFY_ERROR_LABEL = 'CAPTAIN.DOCUMENTS.SYNC_ERRORS.KNOWLEDGE_BASE_ERROR';
 const DEFAULT_ERROR_LABEL = 'CAPTAIN.DOCUMENTS.SYNC_ERRORS.DEFAULT';
 
 const hasSyncingStatus = computed(() => props.status === SYNCING);
@@ -87,9 +94,15 @@ const isStale = computed(
     ageInHours.value >= staleAfterHours.value
 );
 
-const errorLabel = computed(() =>
-  t(ERROR_CODE_LABELS[props.errorCode] || DEFAULT_ERROR_LABEL)
-);
+const errorLabel = computed(() => {
+  if (ERROR_CODE_LABELS[props.errorCode]) {
+    return t(ERROR_CODE_LABELS[props.errorCode]);
+  }
+  if (props.errorCode?.startsWith(DIFY_ERROR_PREFIX)) {
+    return t(DIFY_ERROR_LABEL);
+  }
+  return t(DEFAULT_ERROR_LABEL);
+});
 
 const label = computed(() => {
   if (isSyncing.value) return t('CAPTAIN.DOCUMENTS.SYNC_STATUS.SYNCING');
@@ -106,7 +119,7 @@ const fullLabel = computed(() => {
   if (isSyncing.value) return t('CAPTAIN.DOCUMENTS.SYNC_STATUS.SYNCING');
   if (isStaleSync.value) return t('CAPTAIN.DOCUMENTS.SYNC_STATUS.STALE_SYNC');
   if (isFailed.value)
-    return t('CAPTAIN.DOCUMENTS.SYNC_STATUS.FAILED', {
+    return t('CAPTAIN.DOCUMENTS.SYNC_STATUS.FAILED_REASON', {
       error: errorLabel.value,
     });
   if (hasBeenSynced.value)

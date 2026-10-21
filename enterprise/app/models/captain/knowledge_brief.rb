@@ -48,7 +48,9 @@ class Captain::KnowledgeBrief < ApplicationRecord
       'recoverable' => status.in?(%w[queued generating]) && updated_at < 20.minutes.ago,
       'draft_usable' => usable?(draft), 'published_usable' => usable?(published),
       'sources_changed' => usable?(published) && !current?(published),
-      'sources' => source_scope.order(:name).pluck(:id, :name, :external_link).map { |id, name, url| { id: id, name: name, url: url } }
+      'sources' => source_scope.order(:name).pluck(:id, :name, :external_link).map do |id, name, url|
+        { id: id, name: name, url: url, section: Captain::Documents::Sections.key_for(url) }
+      end
     )
   end
 end
