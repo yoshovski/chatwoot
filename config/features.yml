@@ -288,6 +288,6 @@
   enabled: false
   column: feature_flags_ext_1
 - name: captain_overview_summary
-  display_name: Octave AI overview summary
+  display_name: Octave AI Agents overview summary
   enabled: false
   column: feature_flags_ext_1

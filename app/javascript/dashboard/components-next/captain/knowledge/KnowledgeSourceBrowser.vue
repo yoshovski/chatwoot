@@ -87,31 +87,45 @@ defineExpose({ load });
         <span class="text-sm font-medium text-n-slate-12">
           {{ website === '*' ? t('PLATFORM_NAV.ALL_SOURCES') : label(website) }}
         </span>
-        <label
+        <div
           v-if="folders.length"
-          class="ms-auto flex flex-wrap items-center gap-2 text-sm text-n-slate-11"
+          class="ms-auto flex items-center gap-2 text-sm text-n-slate-11"
         >
-          {{ t('PLATFORM_NAV.FILTER_BY_FOLDER') }}
-          <select
-            :value="section || ''"
-            class="max-w-full rounded-lg border border-n-weak bg-n-solid-1 px-3 py-2 text-sm text-n-slate-12"
-            @change="section = $event.target.value || null"
+          <span class="text-xs font-medium text-n-slate-10 hidden sm:inline">
+            {{ t('PLATFORM_NAV.FILTER_BY_FOLDER') }}:
+          </span>
+          <div
+            class="relative flex items-center rounded-lg border border-n-weak bg-n-solid-1 px-2.5 py-1.5 text-sm text-n-slate-12 hover:bg-n-alpha-1 hover:border-n-slate-6 transition-all shadow-xs"
           >
-            <option value="">{{ t('PLATFORM_NAV.WEBSITE_FOLDERS') }}</option>
-            <option
-              v-for="folder in folders"
-              :key="folder.key"
-              :value="folder.key"
+            <span
+              class="i-lucide-folder size-4 text-n-slate-10 shrink-0 me-1.5"
+              aria-hidden="true"
+            />
+            <select
+              :value="section || ''"
+              class="appearance-none bg-transparent pe-6 text-sm font-medium text-n-slate-12 focus:outline-none cursor-pointer"
+              @change="section = $event.target.value || null"
             >
-              {{
-                t('PLATFORM_NAV.FOLDER_COUNT', {
-                  folder: folder.key.slice(website.length),
-                  count: folder.count,
-                })
-              }}
-            </option>
-          </select>
-        </label>
+              <option value="">{{ t('PLATFORM_NAV.WEBSITE_FOLDERS') }}</option>
+              <option
+                v-for="folder in folders"
+                :key="folder.key"
+                :value="folder.key"
+              >
+                {{
+                  t('PLATFORM_NAV.FOLDER_COUNT', {
+                    folder: folder.key.slice(website.length),
+                    count: folder.count,
+                  })
+                }}
+              </option>
+            </select>
+            <span
+              class="i-lucide-chevron-down size-3.5 text-n-slate-10 pointer-events-none absolute end-2.5"
+              aria-hidden="true"
+            />
+          </div>
+        </div>
       </div>
       <div v-else>
         <div class="mb-3 flex items-center justify-between gap-3">

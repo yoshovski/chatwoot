@@ -6,9 +6,18 @@
       <% feature_key, display_name = key_array %>
       <div class="flex items-center justify-between p-3 bg-white rounded-md outline outline-n-container outline-1 shadow-sm">
         <span class="text-sm text-n-slate-12"><%= display_name %></span>
-        <span class="<%= val.present? ? 'bg-green-400 text-white': 'bg-slate-50 text-slate-800' %> rounded-full p-1 inline-flex right-4 top-5">
-          <svg width="12" height="12"><use xlink:href="#icon-tick-line" /></svg>
-        </span>
+        <% if val %>
+          <span class="bg-green-400 text-white rounded-full p-1 inline-flex right-4 top-5" title="Enabled">
+            <svg width="12" height="12"><use xlink:href="#icon-tick-line" /></svg>
+          </span>
+        <% else %>
+          <span class="bg-slate-100 text-slate-400 rounded-full p-1 inline-flex right-4 top-5" title="Disabled">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </span>
+        <% end %>
       </div>
     <% end %>
   </div>
@@ -25,9 +34,18 @@
           </span>
           <span class="text-sm text-n-slate-12"><%= display_name %></span>
         </div>
-        <span class="<%= val.present? ? 'bg-green-400 text-white': 'bg-slate-50 text-slate-800' %> rounded-full p-1 inline-flex right-4 top-5">
-          <svg width="12" height="12"><use xlink:href="#icon-tick-line" /></svg>
-        </span>
+        <% if val %>
+          <span class="bg-green-400 text-white rounded-full p-1 inline-flex right-4 top-5" title="Enabled">
+            <svg width="12" height="12"><use xlink:href="#icon-tick-line" /></svg>
+          </span>
+        <% else %>
+          <span class="bg-slate-100 text-slate-400 rounded-full p-1 inline-flex right-4 top-5" title="Disabled">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </span>
+        <% end %>
       </div>
     <% end %>
   </div>

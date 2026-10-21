@@ -79,15 +79,20 @@ class Captain::Websites::PageBuckets
   end
 
   def bucket(page)
-    # Only pages whose text was read can be recommended; the rest wait for the administrator.
-    return 'maybe' unless page['words']
+    return 'maybe' unless readable?(page)
 
     label = label_for(page)
     return label['recommended'] ? 'recommended' : 'maybe' if label
 
+    recommended_host?(page) ? 'recommended' : 'maybe'
+  end
+
+  def readable?(page) = page['words'] || page['help_center_article_id']
+
+  def recommended_host?(page)
     host = URI.parse(page['url']).host.delete_prefix('www.')
-    recommended = host == @start_host || page['discovered_from'] == 'help_center' || Captain::Websites::PageRules.support_host?(host)
-    recommended ? 'recommended' : 'maybe'
+    host == @start_host || page['discovered_from'] == 'help_center' ||
+      page['help_center_article_id'].present? || Captain::Websites::PageRules.support_host?(host)
   end
 
   def primary_language(pages)

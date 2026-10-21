@@ -39,6 +39,13 @@ describe('applyCaptainBrand', () => {
     ).toEqual({ A: 'Настройки на Tony за вашия акаунт' });
   });
 
+  it('upgrades legacy Octave brand name to Octave AI Agents', () => {
+    const messages = { A: 'Captain settings' };
+    expect(applyCaptainBrand(messages, 'Octave')).toEqual({
+      A: 'Octave AI Agents settings',
+    });
+  });
+
   it('inserts names containing replacement patterns literally', () => {
     expect(applyCaptainBrand({ A: 'Captain' }, 'T$&ny')).toEqual({
       A: 'T$&ny',
