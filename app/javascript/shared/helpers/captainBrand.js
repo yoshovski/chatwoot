@@ -9,11 +9,13 @@ const DEFAULT_NAME = 'Captain';
  * @returns {*} - the same shape with the product name applied
  */
 export const applyCaptainBrand = (messages, brandName) => {
-  if (!brandName || brandName === DEFAULT_NAME) return messages;
+  const effectiveBrand =
+    brandName === 'Octave' ? 'Octave AI Agents' : brandName;
+  if (!effectiveBrand || effectiveBrand === DEFAULT_NAME) return messages;
 
   const walk = node => {
     if (typeof node === 'string') {
-      return node.replace(CAPTAIN_WORD, () => brandName);
+      return node.replace(CAPTAIN_WORD, () => effectiveBrand);
     }
     if (Array.isArray(node)) return node.map(walk);
     if (node && typeof node === 'object') {

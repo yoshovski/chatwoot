@@ -34,4 +34,14 @@ RSpec.describe Captain::Knowledge::BriefSourcePicker do
     expect(picked.size).to eq(described_class::MAX_PICKS)
     expect(Captain::Document.where(id: picked).pluck(:external_link)).to all(satisfy { |link| link.count('/') <= 5 })
   end
+
+  it 'prioritizes uploaded docs, homepages, and core business pages over blogs' do
+    expect(described_class.relevance_rank('Company Guide', nil).first).to eq(0)
+    expect(described_class.relevance_rank('Home', 'https://example.com/').first).to eq(1)
+    expect(described_class.relevance_rank('Pricing', 'https://example.com/pricing').first).to eq(2)
+    expect(described_class.relevance_rank('Features', 'https://example.com/products/retention').first).to eq(2)
+    expect(described_class.relevance_rank('Blog', 'https://example.com/blog/article-1').first).to eq(4)
+    expect(described_class.relevance_rank('Podcast', 'https://example.com/podcasts/ep-1').first).to eq(4)
+    expect(described_class.relevance_rank('Other Page', 'https://example.com/other').first).to eq(3)
+  end
 end

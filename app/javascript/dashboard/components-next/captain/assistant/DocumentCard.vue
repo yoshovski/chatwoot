@@ -106,6 +106,10 @@ const props = defineProps({
     type: Boolean,
     default: true,
   },
+  compact: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 const emit = defineEmits(['action', 'select', 'hover', 'toggle']);
@@ -269,7 +273,101 @@ const handleRetry = () => {
 </script>
 
 <template>
+  <div
+    v-if="compact"
+    class="relative flex items-center justify-between gap-3 px-3.5 py-2.5 rounded-lg border border-n-weak bg-n-solid-1 hover:border-n-slate-6 transition-all"
+    :class="{
+      'opacity-60': !enabled,
+      'ring-1 ring-n-brand bg-n-brand/5': isSelected,
+    }"
+    @mouseenter="emit('hover', true)"
+    @mouseleave="emit('hover', false)"
+  >
+    <div class="flex items-center gap-2.5 min-w-0 flex-1">
+      <Checkbox
+        v-if="showSelectionControl"
+        v-model="modelValue"
+        class="shrink-0"
+      />
+      <div
+        class="flex items-center justify-center size-6 rounded shrink-0"
+        :class="typeIconClasses"
+      >
+        <Icon :icon="typeIcon" class="size-3.5" />
+      </div>
+      <button
+        type="button"
+        class="p-0 text-sm font-medium text-left bg-transparent border-0 outline-transparent text-n-slate-12 truncate max-w-xs md:max-w-md hover:underline"
+        @click="handleViewDetails"
+      >
+        {{ name }}
+      </button>
+      <a
+        v-if="!isPdf && !isMarkdown && hasSafeLink"
+        :href="externalLink"
+        :title="externalLink"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="hidden sm:inline-flex items-center gap-1 text-xs text-n-slate-10 hover:text-n-slate-12 truncate max-w-xs"
+        @click.stop
+      >
+        <span class="truncate">{{ displayLink }}</span>
+        <Icon icon="i-lucide-external-link size-3 shrink-0 opacity-70" />
+      </a>
+      <span
+        v-if="!enabled"
+        class="inline-flex items-center px-1.5 py-0.5 text-[10px] font-medium rounded bg-n-slate-3 text-n-slate-11 shrink-0"
+      >
+        {{ $t('CAPTAIN.DOCUMENTS.STATUS.PAUSED') }}
+      </span>
+    </div>
+    <div class="flex items-center gap-2.5 shrink-0">
+      <span
+        v-if="knowledgeChip"
+        class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-xs font-medium shrink-0"
+        :class="knowledgeChip.chip"
+      >
+        <span class="size-3" :class="knowledgeChip.icon" />
+        <span class="hidden md:inline">{{ t(knowledgeChip.label) }}</span>
+      </span>
+      <router-link
+        v-if="showFaqPill"
+        :to="faqsFilteredRoute"
+        class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-n-alpha-2 hover:bg-n-alpha-3 text-n-slate-11 shrink-0"
+        @click.stop
+      >
+        {{ responsesCountLabel }}
+      </router-link>
+      <span class="text-xs text-n-slate-10 shrink-0 hidden lg:inline">
+        {{ lastSyncedAt ? dynamicTime(lastSyncedAt) : createdAtLabel }}
+      </span>
+      <Policy v-if="canManage" :permissions="['administrator']">
+        <Switch v-model="enabledState" size="sm" />
+      </Policy>
+      <div
+        v-if="showMenu && menuItems.length"
+        v-on-clickaway="() => toggleDropdown(false)"
+        class="relative flex items-center"
+      >
+        <Button
+          icon="i-lucide-ellipsis-vertical"
+          color="slate"
+          size="xs"
+          class="rounded-md"
+          @click="toggleDropdown()"
+        />
+        <DropdownMenu
+          v-if="showActionsDropdown"
+          :menu-items="menuItems"
+          class="top-full mt-1 right-0 z-30"
+          @action="handleAction($event)"
+        />
+      </div>
+    </div>
+  </div>
+
   <CardLayout
+    v-else
     :selectable="selectable"
     class="relative"
     :class="{ 'opacity-60': !enabled }"

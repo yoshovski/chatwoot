@@ -12,8 +12,9 @@ RSpec.describe Captain::Llm::SystemPromptsService do
       expect(described_class.copilot_response_generator('Acme', [])).to include('You are Luna Copilot, a helpful and friendly copilot assistant')
     end
 
-    it 'defaults to Octave' do
-      expect(described_class.copilot_response_generator('Acme', [])).to include('You are Octave Copilot, a helpful and friendly copilot assistant')
+    it 'defaults to Octave AI Agents' do
+      prompt = described_class.copilot_response_generator('Acme', [])
+      expect(prompt).to include('You are Octave AI Agents Copilot, a helpful and friendly copilot assistant')
     end
   end
 end

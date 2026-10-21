@@ -20,6 +20,19 @@ RSpec.describe 'Super Admin accounts API', type: :request do
       expect(account.feature_enabled?('captain_integration')).to be(true)
     end
 
+    it 'persists an unchecked calls dashboard feature' do
+      account.enable_features!('calls', 'captain_integration')
+      sign_in(super_admin, scope: :super_admin)
+
+      patch "/super_admin/accounts/#{account.id}", params: {
+        account: { name: account.name }, enabled_features: { feature_calls: 'false' }
+      }
+
+      expect(response).to have_http_status(:redirect)
+      expect(account.reload.feature_enabled?('calls')).to be(false)
+      expect(account.feature_enabled?('captain_integration')).to be(true)
+    end
+
     it 'persists an enabled feature' do
       sign_in(super_admin, scope: :super_admin)
       patch "/super_admin/accounts/#{account.id}", params: {

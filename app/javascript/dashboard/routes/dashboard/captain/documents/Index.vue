@@ -82,6 +82,7 @@ const syncIntervalHours = ref(null);
 const searchQuery = ref('');
 const sectionFilter = ref(null);
 const websiteFilter = ref(null);
+const isCompactView = ref(true);
 const hasWebsiteSources = ref(false);
 const isBrowsingWebsites = computed(
   () =>
@@ -506,20 +507,42 @@ onUnmounted(() => {
       </Policy>
       <div
         v-if="!isBrowsingWebsites"
-        class="mb-3 flex flex-wrap items-center gap-3 text-sm text-n-slate-11"
+        class="mb-3 flex flex-wrap items-center justify-between gap-3 text-sm text-n-slate-11"
       >
-        <span>{{
-          $t('PLATFORM_NAV.MATCHING_SOURCES', {
-            count: documentsMeta.totalCount || 0,
-          })
-        }}</span>
-        <Button
-          v-if="hasActiveDocumentFilters"
-          :label="$t('PLATFORM_NAV.CLEAR_FILTERS')"
-          size="sm"
-          variant="link"
-          @click="clearFilters"
-        />
+        <div class="flex items-center gap-3">
+          <span>{{
+            $t('PLATFORM_NAV.MATCHING_SOURCES', {
+              count: documentsMeta.totalCount || 0,
+            })
+          }}</span>
+          <Button
+            v-if="hasActiveDocumentFilters"
+            :label="$t('PLATFORM_NAV.CLEAR_FILTERS')"
+            size="sm"
+            variant="link"
+            @click="clearFilters"
+          />
+        </div>
+        <div
+          class="flex items-center gap-1 bg-n-solid-1 border border-n-weak rounded-lg p-0.5"
+        >
+          <Button
+            size="xs"
+            :variant="isCompactView ? 'faded' : 'ghost'"
+            :color="isCompactView ? 'blue' : 'slate'"
+            icon="i-lucide-list"
+            label="Compact"
+            @click="isCompactView = true"
+          />
+          <Button
+            size="xs"
+            :variant="!isCompactView ? 'faded' : 'ghost'"
+            :color="!isCompactView ? 'blue' : 'slate'"
+            icon="i-lucide-layout-list"
+            label="Comfortable"
+            @click="isCompactView = false"
+          />
+        </div>
       </div>
     </template>
 
@@ -540,11 +563,15 @@ onUnmounted(() => {
         </span>
       </div>
 
-      <div v-else-if="!isBrowsingWebsites" class="flex flex-col gap-4">
+      <div
+        v-else-if="!isBrowsingWebsites"
+        :class="isCompactView ? 'flex flex-col gap-2' : 'flex flex-col gap-4'"
+      >
         <DocumentCard
           v-for="doc in documents"
           :id="doc.id"
           :key="doc.id"
+          :compact="isCompactView"
           :name="doc.name || doc.external_link"
           :external-link="doc.external_link"
           :pdf-document="doc.pdf_document"

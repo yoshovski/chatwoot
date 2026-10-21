@@ -7,7 +7,6 @@ import { useAssistantSettings } from './useAssistantSettings';
 import Button from 'dashboard/components-next/button/Button.vue';
 import SettingsPageLayout from 'dashboard/components-next/captain/pageComponents/assistant/settings/SettingsPageLayout.vue';
 import AssistantBasicSettingsForm from 'dashboard/components-next/captain/pageComponents/assistant/settings/AssistantBasicSettingsForm.vue';
-import AssistantChatPreview from 'dashboard/components-next/captain/pageComponents/assistant/settings/AssistantChatPreview.vue';
 import DeleteDialog from 'dashboard/components-next/captain/pageComponents/DeleteDialog.vue';
 import KnowledgeBriefPanel from 'dashboard/components-next/captain/knowledge/KnowledgeBriefPanel.vue';
 
@@ -61,17 +60,12 @@ const handleDeleteSuccess = () => {
       })
     "
   >
-    <div class="flex flex-col gap-6 lg:flex-row lg:items-start">
+    <div class="flex flex-col gap-6">
       <AssistantBasicSettingsForm
         :assistant="assistant"
-        class="flex-1 min-w-0"
+        class="w-full"
         @submit="updateAssistant"
         @delete-avatar="deleteAssistantAvatar"
-      />
-      <AssistantChatPreview
-        :name="assistant.name"
-        :avatar-url="assistant.avatar_url"
-        class="lg:w-72 shrink-0"
       />
     </div>
     <KnowledgeBriefPanel

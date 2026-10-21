@@ -6,6 +6,37 @@ class Captain::Knowledge::BriefSourcePicker
   MAX_PICKS = 20
   REASON_LENGTH = 80
 
+  CORE_BUSINESS_PATTERNS = %r{
+    /(?:about|about-us|company|who-we-are|mission)\b|
+    /(?:pricing|plans|packages|rates)\b|
+    /(?:products?|solutions?|features?|offerings?|services?)\b|
+    /(?:faq|faqs|help|support|knowledge-?base)\b|
+    /(?:terms|privacy|refund|returns|shipping|billing)\b
+  }xi
+
+  LOW_VALUE_PATTERNS = %r{
+    /(?:blog|news|press|events?|webinars?|podcasts?|articles?|tags?|category|careers?|jobs?|changelog|release-notes?)/\b|
+    /\d{4}/\d{2}/
+  }xi
+
+  def self.relevance_rank(name, url)
+    link = url.to_s
+    title = name.to_s.downcase
+
+    return [0, 0, link] if url.nil?
+    return [1, 0, link] if link.match?(%r{\Ahttps?://[^/]+/?\z})
+
+    if link.match?(CORE_BUSINESS_PATTERNS) || title.match?(/\b(?:about|pricing|plans|features|solutions|overview|faq|support|policies|terms)\b/)
+      return [2, link.length, link]
+    end
+
+    if link.match?(LOW_VALUE_PATTERNS) || title.match?(/\b(?:podcast|episode|webinar|release note|changelog|career|job)\b/)
+      return [4, link.length, link]
+    end
+
+    [3, link.length, link]
+  end
+
   # Why each picked document was chosen ({ id => short reason }); empty when the model did not pick.
   attr_reader :reasons
 
@@ -16,8 +47,7 @@ class Captain::Knowledge::BriefSourcePicker
   end
 
   def perform
-    candidates = @brief.source_scope.order(Arel.sql('length(external_link) NULLS LAST'), :id).limit(MAX_CANDIDATES)
-                       .pluck(:id, :name, :external_link)
+    candidates = fetch_candidates
     raise Captain::Knowledge::BriefGenerator::InvalidSources if candidates.empty?
 
     ids = candidates.map(&:first)
@@ -29,6 +59,12 @@ class Captain::Knowledge::BriefSourcePicker
   end
 
   private
+
+  def fetch_candidates
+    records = @brief.source_scope.order(Arel.sql('length(external_link) NULLS LAST'), :id).limit(MAX_CANDIDATES * 2)
+                    .pluck(:id, :name, :external_link)
+    records.sort_by { |_id, name, link| self.class.relevance_rank(name, link) }.first(MAX_CANDIDATES)
+  end
 
   # { id => reason } in the model's order. The top-level pages are a reasonable overview set when
   # the model is unavailable.
