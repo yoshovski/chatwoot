@@ -51,14 +51,8 @@ const handleDeleteSuccess = () => {
 
 <template>
   <SettingsPageLayout
-    :heading="
-      t('CAPTAIN.ASSISTANTS.SETTINGS.IDENTITY.TITLE', { name: assistant.name })
-    "
-    :description="
-      t('CAPTAIN.ASSISTANTS.SETTINGS.IDENTITY.DESCRIPTION', {
-        name: assistant.name,
-      })
-    "
+    :heading="t('PLATFORM_NAV.IDENTITY')"
+    :description="t('PLATFORM_NAV.IDENTITY_DESC')"
   >
     <div class="flex flex-col gap-6">
       <AssistantBasicSettingsForm

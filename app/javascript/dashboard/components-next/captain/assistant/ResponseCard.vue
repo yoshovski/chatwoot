@@ -1,5 +1,5 @@
 <script setup>
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import { useToggle } from '@vueuse/core';
 import { useI18n } from 'vue-i18n';
 import { dynamicTime } from 'shared/helpers/timeHelper';
@@ -47,10 +47,6 @@ const props = defineProps({
     type: Object,
     default: null,
   },
-  assistant: {
-    type: Object,
-    default: () => ({}),
-  },
   updatedAt: {
     type: Number,
     required: true,
@@ -96,6 +92,7 @@ const { t } = useI18n();
 const { checkPermissions } = usePolicy();
 
 const [showActionsDropdown, toggleDropdown] = useToggle();
+const isExpanded = ref(false);
 
 const modelValue = computed({
   get: () => props.isSelected,
@@ -228,11 +225,19 @@ const originInfo = computed(() => {
     <div v-show="selectable" class="absolute top-7 ltr:left-3 rtl:right-3">
       <Checkbox v-model="modelValue" />
     </div>
-    <div class="flex relative justify-between w-full gap-1 items-center">
-      <span class="text-base text-n-slate-12 line-clamp-1">
-        {{ question }}
-      </span>
-      <div v-if="!compact" class="flex items-center gap-2">
+    <div class="flex relative justify-between w-full gap-2 items-center">
+      <button
+        type="button"
+        class="text-left font-medium text-base text-n-slate-12 hover:text-n-blue-11 transition-colors flex items-center gap-2 min-w-0"
+        @click="isExpanded = !isExpanded"
+      >
+        <span class="line-clamp-1">{{ question }}</span>
+        <Icon
+          :icon="isExpanded ? 'i-lucide-chevron-up' : 'i-lucide-chevron-down'"
+          class="size-4 shrink-0 text-n-slate-10"
+        />
+      </button>
+      <div v-if="!compact" class="flex items-center gap-2 shrink-0">
         <span
           v-if="!enabled"
           class="inline-flex items-center px-1.5 py-0.5 text-xs font-medium rounded bg-n-slate-3 text-n-slate-11 shrink-0"
@@ -275,12 +280,18 @@ const originInfo = computed(() => {
         </Policy>
       </div>
     </div>
-    <span class="text-n-slate-11 text-sm line-clamp-5">
+    <div
+      v-if="isExpanded"
+      class="text-n-slate-12 text-sm leading-relaxed whitespace-pre-line p-3 bg-n-alpha-1 rounded-lg mt-2"
+    >
+      {{ answer }}
+    </div>
+    <span v-else class="text-n-slate-11 text-xs line-clamp-1 mt-1">
       {{ answer }}
     </span>
     <div
       v-if="!compact"
-      class="flex items-start justify-between flex-col-reverse md:flex-row gap-3"
+      class="flex items-start justify-between flex-col-reverse md:flex-row gap-3 mt-2"
     >
       <Policy v-if="showActions" :permissions="['administrator']">
         <div class="flex items-center gap-2 sm:gap-5 w-full">
@@ -327,13 +338,6 @@ const originInfo = computed(() => {
         :class="{ 'justify-between w-full': !showActions }"
       >
         <div class="inline-flex items-center gap-2.5 min-w-0">
-          <span
-            v-if="status === 'approved'"
-            class="text-sm shrink-0 truncate text-n-slate-11 inline-flex items-center gap-1"
-          >
-            <Icon icon="i-woot-captain" class="size-3.5" />
-            {{ assistant?.name || '' }}
-          </span>
           <span
             class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium shrink-0"
             :class="originInfo.class"

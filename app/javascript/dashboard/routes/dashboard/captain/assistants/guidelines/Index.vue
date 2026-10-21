@@ -2,7 +2,7 @@
 import { computed, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useAlert } from 'dashboard/composables';
-import { useAccount } from 'dashboard/composables/useAccount';
+import { useShopifyIntegration } from 'dashboard/composables/useShopifyIntegration';
 import { picoSearch } from '@chatwoot/pico-search';
 import { useStore } from 'dashboard/composables/store';
 import { useUISettings } from 'dashboard/composables/useUISettings';
@@ -21,7 +21,7 @@ import BulkSelectBar from 'dashboard/components-next/captain/assistant/BulkSelec
 
 const { t } = useI18n();
 const store = useStore();
-const { currentAccount } = useAccount();
+const { isConnected: isShopifyConnected } = useShopifyIntegration();
 const { uiSettings, updateUISettings } = useUISettings();
 const { assistantId, assistant, updateAssistant } = useAssistantSettings();
 
@@ -175,20 +175,12 @@ const addAllExample = async () => {
 
 <template>
   <SettingsPageLayout
-    :heading="
-      t('CAPTAIN.ASSISTANTS.SETTINGS.BEHAVIOR.TITLE', { name: assistant.name })
-    "
-    :description="
-      t('CAPTAIN.ASSISTANTS.SETTINGS.BEHAVIOR.DESCRIPTION', {
-        name: assistant.name,
-      })
-    "
+    :heading="t('PLATFORM_NAV.INSTRUCTIONS')"
+    :description="t('PLATFORM_NAV.INSTRUCTIONS_DESC')"
   >
     <AssistantBehaviorSettings
       :assistant="assistant"
-      :show-product-cards="
-        Boolean(currentAccount?.features?.shopify_integration)
-      "
+      :show-product-cards="isShopifyConnected"
       @update="saveBehavior"
     />
     <SettingsHeader
