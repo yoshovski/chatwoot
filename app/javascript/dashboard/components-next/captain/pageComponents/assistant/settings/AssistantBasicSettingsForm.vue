@@ -7,7 +7,9 @@ import { required, minLength } from '@vuelidate/validators';
 import Input from 'dashboard/components-next/input/Input.vue';
 import Editor from 'dashboard/components-next/Editor/Editor.vue';
 import Avatar from 'dashboard/components-next/avatar/Avatar.vue';
+import { useBusinessExamples } from 'dashboard/components-next/captain/assistant/useBusinessExamples';
 import AssistantChatPreview from './AssistantChatPreview.vue';
+import SettingsCard from './SettingsCard.vue';
 import SettingsSaveBar from './SettingsSaveBar.vue';
 import SettingsSplit from './SettingsSplit.vue';
 
@@ -26,6 +28,10 @@ const props = defineProps({
 const emit = defineEmits(['deleteAvatar']);
 
 const { t } = useI18n();
+const examples = useBusinessExamples(computed(() => props.assistant.id));
+const previewReply = computed(() =>
+  examples.reply(props.assistant.config?.tone)
+);
 
 const state = reactive({
   name: '',
@@ -123,57 +129,71 @@ watch(
 
 <template>
   <SettingsSplit>
-    <div class="flex items-center gap-4">
-      <Avatar
-        :src="state.avatarUrl"
-        :name="state.name"
-        :size="64"
-        allow-upload
-        icon-name="i-lucide-bot-message-square"
-        rounded-full
-        @upload="handleImageUpload"
-        @delete="handleAvatarDelete"
-      />
-      <span class="text-sm text-n-slate-11">
-        {{ t('CAPTAIN.ASSISTANTS.FORM.AVATAR.HELP_TEXT') }}
-      </span>
-    </div>
-
-    <div class="grid gap-5 sm:grid-cols-2">
-      <Input
-        v-model="state.name"
-        :label="t('CAPTAIN.ASSISTANTS.FORM.NAME.LABEL')"
-        :placeholder="t('CAPTAIN.ASSISTANTS.FORM.NAME.PLACEHOLDER')"
-        :message="
-          formErrors.name || t('CAPTAIN.ASSISTANTS.FORM.NAME.AI_BADGE_NOTE')
-        "
-        :message-type="formErrors.name ? 'error' : 'info'"
-      />
-
-      <Input
-        v-model="state.productName"
-        :label="t('CAPTAIN.ASSISTANTS.SETTINGS.IDENTITY.WORKS_FOR')"
-        :placeholder="
-          t('CAPTAIN.ASSISTANTS.SETTINGS.IDENTITY.WORKS_FOR_PLACEHOLDER')
-        "
-        :message="formErrors.productName"
-        :message-type="formErrors.productName ? 'error' : 'info'"
-      />
-    </div>
-
-    <Editor
-      v-model="state.description"
-      :max-length="500"
-      :label="t('CAPTAIN.ASSISTANTS.SETTINGS.IDENTITY.ABOUT')"
-      :placeholder="
-        t('CAPTAIN.ASSISTANTS.SETTINGS.IDENTITY.ABOUT_PLACEHOLDER', {
+    <SettingsCard
+      :title="
+        t('CAPTAIN.ASSISTANTS.SETTINGS.IDENTITY.TITLE', { name: state.name })
+      "
+      :description="
+        t('CAPTAIN.ASSISTANTS.SETTINGS.IDENTITY.DESCRIPTION', {
           name: state.name,
         })
       "
-      :message="formErrors.description"
-      :message-type="formErrors.description ? 'error' : 'info'"
-      class="z-0"
-    />
+    >
+      <div class="flex flex-col gap-5 pt-4">
+        <div class="flex flex-col gap-4 sm:flex-row sm:items-start">
+          <div
+            v-tooltip.bottom="t('CAPTAIN.ASSISTANTS.FORM.AVATAR.HELP_TEXT')"
+            class="shrink-0"
+          >
+            <Avatar
+              :src="state.avatarUrl"
+              :name="state.name"
+              :size="56"
+              allow-upload
+              icon-name="i-lucide-bot-message-square"
+              rounded-full
+              @upload="handleImageUpload"
+              @delete="handleAvatarDelete"
+            />
+          </div>
+          <div class="grid flex-1 min-w-0 gap-4 sm:grid-cols-2">
+            <Input
+              v-model="state.name"
+              :label="t('CAPTAIN.ASSISTANTS.FORM.NAME.LABEL')"
+              :placeholder="t('CAPTAIN.ASSISTANTS.FORM.NAME.PLACEHOLDER')"
+              :message="
+                formErrors.name ||
+                t('CAPTAIN.ASSISTANTS.FORM.NAME.AI_BADGE_NOTE')
+              "
+              :message-type="formErrors.name ? 'error' : 'info'"
+            />
+            <Input
+              v-model="state.productName"
+              :label="t('CAPTAIN.ASSISTANTS.SETTINGS.IDENTITY.WORKS_FOR')"
+              :placeholder="
+                t('CAPTAIN.ASSISTANTS.SETTINGS.IDENTITY.WORKS_FOR_PLACEHOLDER')
+              "
+              :message="formErrors.productName"
+              :message-type="formErrors.productName ? 'error' : 'info'"
+            />
+          </div>
+        </div>
+
+        <Editor
+          v-model="state.description"
+          :max-length="500"
+          :label="t('CAPTAIN.ASSISTANTS.SETTINGS.IDENTITY.ABOUT')"
+          :placeholder="
+            t('CAPTAIN.ASSISTANTS.SETTINGS.IDENTITY.ABOUT_PLACEHOLDER', {
+              name: state.name,
+            })
+          "
+          :message="formErrors.description"
+          :message-type="formErrors.description ? 'error' : 'info'"
+          class="z-0"
+        />
+      </div>
+    </SettingsCard>
 
     <SettingsSaveBar
       :is-dirty="isDirty"
@@ -182,8 +202,24 @@ watch(
       @discard="discard"
     />
 
+    <slot />
+
     <template #preview>
-      <AssistantChatPreview :name="state.name" :avatar-url="state.avatarUrl" />
+      <AssistantChatPreview :name="state.name" :avatar-url="state.avatarUrl">
+        <p class="preview-bubble preview-bubble--agent">
+          {{
+            t('CAPTAIN.ASSISTANTS.SETTINGS.IDENTITY.PREVIEW_GREETING', {
+              name: state.name,
+            })
+          }}
+        </p>
+        <p class="preview-bubble preview-bubble--customer">
+          {{ examples.question.value }}
+        </p>
+        <p class="preview-bubble preview-bubble--agent">
+          {{ previewReply }}
+        </p>
+      </AssistantChatPreview>
     </template>
   </SettingsSplit>
 </template>

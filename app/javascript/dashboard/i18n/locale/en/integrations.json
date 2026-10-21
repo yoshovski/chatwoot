@@ -2349,8 +2349,7 @@
     },
     "KNOWLEDGE_BRIEF": {
       "TITLE": "Business profile",
-      "BASED_ON_SOURCES": "Synthesized from",
-      "HELP": "A short overview of the business and the main topics customers ask about, written from your knowledge. The AI agent uses it for broad questions such as “What do you do?”. Nothing is used until you publish it.",
+      "HELP": "Written from your knowledge so the AI agent can answer broad questions like “What do you do?”. Used only after you publish.",
       "STATUS": {
         "DISABLED": "Off. Generate a draft from your knowledge to get started.",
         "DRAFT": "Draft ready. Review it and publish to turn it on.",
@@ -2365,7 +2364,6 @@
       "CHOOSE_SOURCES": "Choose sources",
       "SOURCES_HELP": "{count} of up to {max} sources selected. Pick pages that explain what the business does, its products, pricing and policies. Pages still being indexed are skipped.",
       "GENERATE_SELECTED": "Generate from selected sources",
-      "SUGGESTION_HELP": "Suggested from page titles and addresses: about, products, pricing, policies and support overviews.",
       "SUGGESTED_SOURCES": "Suggested",
       "SEARCH_SOURCES": "Search sources",
       "SELECT_SUGGESTED": "Select suggested",
@@ -2373,20 +2371,28 @@
       "NO_MATCHING_SOURCES": "No sources match this search.",
       "NO_SOURCES": "Import documents and wait for indexing before generating a profile.",
       "OVERVIEW": "Business overview",
-      "TOPIC": "Topic",
-      "TOPICS_TITLE": "Core Business Topics",
+      "TOPICS_TITLE": "Topics",
       "TOPIC_NAME": "Topic name",
-      "SOURCES_LABEL": "Sources:",
-      "SHOW_LESS": "Show less",
-      "MORE_SOURCES": "+{count} more",
       "SUMMARY": "Topic summary",
       "REMOVE_TOPIC": "Remove topic",
-      "BASED_ON": "Based on: {sources}",
       "PUBLISH": "Publish",
       "SAVE": "Save changes",
       "DISABLE": "Turn off",
       "ERROR": "Could not generate or save the profile. Try again.",
-      "PUBLISH_ERROR": "Could not publish. Check that the overview and every topic have text, then try again."
+      "PUBLISH_ERROR": "Could not publish. Check that the overview and every topic have text, then try again.",
+      "EDIT": "Edit",
+      "DONE": "Done",
+      "SOURCE_COUNT": "{count} source | {count} sources",
+      "LENGTH": "{count} / {max}",
+      "STATUS_PILL": {
+        "DISABLED": "Off",
+        "DRAFT": "Draft",
+        "GENERATING": "Writing…",
+        "ENABLED": "On",
+        "SOURCES_CHANGED": "Needs review",
+        "UNAVAILABLE": "Paused",
+        "FAILED": "Failed"
+      }
     },
     "BULK_SELECT": {
       "CLEAR": "Clear selection"
