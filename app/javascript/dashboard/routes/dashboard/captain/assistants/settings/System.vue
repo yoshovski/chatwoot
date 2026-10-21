@@ -10,12 +10,8 @@ const { assistant, updateAssistant } = useAssistantSettings();
 
 <template>
   <SettingsPageLayout
-    :heading="t('CAPTAIN.ASSISTANTS.SETTINGS.HANDOVER.TITLE')"
-    :description="
-      t('CAPTAIN.ASSISTANTS.SETTINGS.HANDOVER.DESCRIPTION', {
-        name: assistant.name,
-      })
-    "
+    :heading="t('PLATFORM_NAV.HANDOFF')"
+    :description="t('PLATFORM_NAV.HANDOFF_DESC')"
   >
     <AssistantHandoverForm :assistant="assistant" @submit="updateAssistant" />
   </SettingsPageLayout>

@@ -15,7 +15,6 @@ import Button from 'dashboard/components-next/button/Button.vue';
 import DropdownMenu from 'dashboard/components-next/dropdown-menu/DropdownMenu.vue';
 import Icon from 'dashboard/components-next/icon/Icon.vue';
 import Input from 'dashboard/components-next/input/Input.vue';
-import KnowledgeHeader from 'dashboard/components-next/captain/knowledge/KnowledgeHeader.vue';
 import BulkSelectBar from 'dashboard/components-next/captain/assistant/BulkSelectBar.vue';
 import DeleteDialog from 'dashboard/components-next/captain/pageComponents/DeleteDialog.vue';
 import BulkDeleteDialog from 'dashboard/components-next/captain/pageComponents/BulkDeleteDialog.vue';
@@ -375,7 +374,7 @@ onUnmounted(() => {
     :total-count="responseMeta.totalCount"
     :current-page="responseMeta.page"
     :button-policy="['administrator']"
-    :header-title="$t('CAPTAIN.RESPONSES.HEADER')"
+    :header-title="$t('PLATFORM_NAV.FAQS')"
     :button-label="$t('CAPTAIN.RESPONSES.ADD_NEW')"
     :is-fetching="isFetching"
     :is-empty="!responses.length"
@@ -384,6 +383,26 @@ onUnmounted(() => {
     @update:current-page="onPageChange"
     @click="handleCreate"
   >
+    <template #headerActions>
+      <router-link
+        v-if="selectedAssistantId"
+        :to="{
+          name: 'captain_assistants_playground_index',
+          params: {
+            accountId: route.params.accountId,
+            assistantId: selectedAssistantId,
+          },
+        }"
+      >
+        <Button
+          :label="$t('PLATFORM_NAV.TEST_AGENT')"
+          icon="i-lucide-play"
+          variant="outline"
+          color="slate"
+          size="sm"
+        />
+      </router-link>
+    </template>
     <template #knowMore>
       <FeatureSpotlightPopover
         :button-label="$t('CAPTAIN.HEADER_KNOW_MORE')"
@@ -411,10 +430,6 @@ onUnmounted(() => {
           @input="handleSearchInput"
         />
       </div>
-    </template>
-
-    <template #controls>
-      <KnowledgeHeader />
     </template>
 
     <template #subHeader>
@@ -495,7 +510,6 @@ onUnmounted(() => {
           :key="response.id"
           :question="response.question"
           :answer="response.answer"
-          :assistant="response.assistant"
           :documentable="response.documentable"
           :status="response.status"
           :origin="response.origin"

@@ -174,16 +174,8 @@ const addAllExample = () => {
 
 <template>
   <SettingsPageLayout
-    :heading="
-      t('CAPTAIN.ASSISTANTS.SETTINGS.BOUNDARIES.TITLE', {
-        name: assistant.name,
-      })
-    "
-    :description="
-      t('CAPTAIN.ASSISTANTS.SETTINGS.BOUNDARIES.DESCRIPTION', {
-        name: assistant.name,
-      })
-    "
+    :heading="t('PLATFORM_NAV.BOUNDARIES')"
+    :description="t('PLATFORM_NAV.BOUNDARIES_DESC')"
   >
     <SettingsCard>
       <SettingsSwitchRow

@@ -115,10 +115,24 @@ watch(
             />
           </template>
         </DropdownItem>
+        <DropdownItem
+          v-if="canCreate"
+          class="border-t border-n-weak"
+          :click="() => dialog.dialogRef.open()"
+        >
+          <template #icon>
+            <Icon icon="i-lucide-plus" class="size-4 text-n-slate-10" />
+          </template>
+          <template #label>
+            <span class="min-w-0 flex-1 truncate font-medium">
+              {{ t('CAPTAIN.ASSISTANT_SWITCHER.NEW_ASSISTANT') }}
+            </span>
+          </template>
+        </DropdownItem>
       </DropdownBody>
     </DropdownContainer>
     <Button
-      v-if="canCreate"
+      v-if="canCreate && !assistants.length"
       :label="t('CAPTAIN.ASSISTANT_SWITCHER.NEW_ASSISTANT')"
       icon="i-lucide-plus"
       size="sm"

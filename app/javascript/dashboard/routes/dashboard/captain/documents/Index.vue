@@ -10,7 +10,6 @@ import { usePolicy } from 'dashboard/composables/usePolicy';
 import { debounce } from '@chatwoot/utils';
 
 import DeleteDialog from 'dashboard/components-next/captain/pageComponents/DeleteDialog.vue';
-import KnowledgeHeader from 'dashboard/components-next/captain/knowledge/KnowledgeHeader.vue';
 import WebsiteSourcesPanel from 'dashboard/components-next/captain/knowledge/WebsiteSourcesPanel.vue';
 import KnowledgeSourceBrowser from 'dashboard/components-next/captain/knowledge/KnowledgeSourceBrowser.vue';
 import DocumentCard from 'dashboard/components-next/captain/assistant/DocumentCard.vue';
@@ -84,13 +83,6 @@ const sectionFilter = ref(null);
 const websiteFilter = ref(null);
 const isCompactView = ref(true);
 const hasWebsiteSources = ref(false);
-const isBrowsingWebsites = computed(
-  () =>
-    hasWebsiteSources.value &&
-    !websiteFilter.value &&
-    !searchQuery.value.trim() &&
-    !documentFilter.value?.hasActiveFilters
-);
 const documentSectionsPanel = ref(null);
 
 const currentAssistantId = () =>
@@ -421,17 +413,33 @@ onUnmounted(() => {
     :button-policy="['administrator']"
     :total-count="documentsMeta.totalCount"
     :current-page="documentsMeta.page"
-    :show-pagination-footer="
-      !isBrowsingWebsites && !isFetching && !!documents.length
-    "
+    :show-pagination-footer="!isFetching && !!documents.length"
     :is-fetching="isFetching"
-    :is-empty="
-      !isBrowsingWebsites && !documents.length && !hasActiveDocumentFilters
-    "
+    :is-empty="!documents.length && !hasActiveDocumentFilters"
     :feature-flag="FEATURE_FLAGS.CAPTAIN"
     @update:current-page="onPageChange"
     @click="handleCreateDocument"
   >
+    <template #headerActions>
+      <router-link
+        v-if="selectedAssistantId"
+        :to="{
+          name: 'captain_assistants_playground_index',
+          params: {
+            accountId: $route.params.accountId,
+            assistantId: selectedAssistantId,
+          },
+        }"
+      >
+        <Button
+          :label="$t('PLATFORM_NAV.TEST_AGENT')"
+          icon="i-lucide-play"
+          variant="outline"
+          color="slate"
+          size="sm"
+        />
+      </router-link>
+    </template>
     <template #subHeader>
       <Policy :permissions="['administrator']">
         <DocumentBulkActions
@@ -482,12 +490,8 @@ onUnmounted(() => {
     </template>
 
     <template #controls>
-      <KnowledgeHeader />
       <KnowledgeSourceBrowser
         v-if="selectedAssistantId > 0"
-        v-show="
-          isBrowsingWebsites || websiteFilter || !hasActiveDocumentFilters
-        "
         ref="documentSectionsPanel"
         v-model:website="websiteFilter"
         v-model:section="sectionFilter"
@@ -506,7 +510,6 @@ onUnmounted(() => {
         />
       </Policy>
       <div
-        v-if="!isBrowsingWebsites"
         class="mb-3 flex flex-wrap items-center justify-between gap-3 text-sm text-n-slate-11"
       >
         <div class="flex items-center gap-3">
@@ -550,9 +553,7 @@ onUnmounted(() => {
       <LimitBanner class="mb-5" />
 
       <div
-        v-if="
-          !isBrowsingWebsites && !documents.length && hasActiveDocumentFilters
-        "
+        v-if="!documents.length && hasActiveDocumentFilters"
         class="flex flex-col items-center justify-center min-h-80 gap-2 text-center"
       >
         <span class="text-base font-medium text-n-slate-12">
@@ -564,7 +565,7 @@ onUnmounted(() => {
       </div>
 
       <div
-        v-else-if="!isBrowsingWebsites"
+        v-else
         :class="isCompactView ? 'flex flex-col gap-2' : 'flex flex-col gap-4'"
       >
         <DocumentCard

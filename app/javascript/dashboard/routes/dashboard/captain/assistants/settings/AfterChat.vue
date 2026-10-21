@@ -10,8 +10,8 @@ const { assistant, updateAssistant } = useAssistantSettings();
 
 <template>
   <SettingsPageLayout
-    :heading="t('CAPTAIN.ASSISTANTS.SETTINGS.AFTER_CHAT.TITLE')"
-    :description="t('CAPTAIN.ASSISTANTS.SETTINGS.AFTER_CHAT.DESCRIPTION')"
+    :heading="t('PLATFORM_NAV.AFTER_CHAT')"
+    :description="t('PLATFORM_NAV.AFTER_CHAT_DESC')"
   >
     <AssistantAfterChatForm :assistant="assistant" @submit="updateAssistant" />
   </SettingsPageLayout>

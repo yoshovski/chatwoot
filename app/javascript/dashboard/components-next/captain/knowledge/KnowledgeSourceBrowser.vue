@@ -127,30 +127,53 @@ defineExpose({ load });
           </div>
         </div>
       </div>
-      <div v-else>
+      <div v-else class="mb-4">
         <div class="mb-3 flex items-center justify-between gap-3">
-          <h2 class="m-0 text-base font-semibold text-n-slate-12">
+          <h2 class="m-0 text-sm font-semibold text-n-slate-12">
             {{ t('PLATFORM_NAV.BROWSE_WEBSITES') }}
           </h2>
           <Button
             :label="t('PLATFORM_NAV.ALL_SOURCES')"
-            size="sm"
+            size="xs"
             variant="link"
             @click="browse('*')"
           />
         </div>
         <ul
-          class="m-0 list-none divide-y divide-n-weak rounded-xl border border-n-weak p-0"
+          class="m-0 list-none grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 p-0"
         >
           <li
             v-for="site in websites"
             :key="site.host"
-            class="flex flex-wrap items-center justify-between gap-3 px-5 py-4"
+            class="flex flex-col justify-between rounded-xl border border-n-weak bg-n-solid-1 p-3.5 hover:border-n-brand/60 hover:shadow-xs transition-all cursor-pointer"
+            @click="browse(site.host)"
           >
-            <div class="min-w-0">
-              <span class="break-words text-sm font-medium text-n-slate-12">{{
-                label(site.host)
-              }}</span>
+            <div>
+              <div class="flex items-center justify-between mb-2">
+                <span
+                  class="size-8 rounded-lg bg-n-brand/10 text-n-brand flex items-center justify-center shrink-0"
+                >
+                  <span
+                    :class="
+                      site.host === 'files'
+                        ? 'i-lucide-file-text size-4'
+                        : 'i-lucide-globe size-4'
+                    "
+                  />
+                </span>
+                <Button
+                  :label="t('PLATFORM_NAV.MANAGE_PAGES')"
+                  icon="i-lucide-arrow-right"
+                  trailing-icon
+                  color="slate"
+                  variant="faded"
+                  size="xs"
+                  @click.stop="browse(site.host)"
+                />
+              </div>
+              <span class="break-words text-sm font-semibold text-n-slate-12">
+                {{ label(site.host) }}
+              </span>
               <p class="m-0 mt-1 text-xs text-n-slate-11">
                 {{
                   t(
@@ -160,20 +183,31 @@ defineExpose({ load });
                     { count: site.count }
                   )
                 }}
-                <span v-if="site.failed" class="ms-2 text-n-ruby-11">{{
-                  t('PLATFORM_NAV.FAILED_PAGES', { count: site.failed })
-                }}</span>
+                <span
+                  v-if="site.failed"
+                  class="ms-1.5 text-n-ruby-11 font-medium"
+                >
+                  {{ t('PLATFORM_NAV.FAILED_PAGES', { count: site.failed }) }}
+                </span>
               </p>
             </div>
-            <Button
-              :label="t('PLATFORM_NAV.MANAGE_PAGES')"
-              icon="i-lucide-arrow-right"
-              trailing-icon
-              color="slate"
-              variant="faded"
-              size="sm"
-              @click="browse(site.host)"
-            />
+            <div
+              v-if="site.count > 0"
+              class="mt-3 h-1 w-full bg-n-slate-3 rounded-full overflow-hidden flex"
+              :aria-label="`${site.count - site.failed} ready, ${site.failed} failed`"
+            >
+              <div
+                class="bg-n-teal-9 h-full"
+                :style="{
+                  width: `${((site.count - site.failed) / site.count) * 100}%`,
+                }"
+              />
+              <div
+                v-if="site.failed"
+                class="bg-n-ruby-9 h-full"
+                :style="{ width: `${(site.failed / site.count) * 100}%` }"
+              />
+            </div>
           </li>
         </ul>
       </div>
