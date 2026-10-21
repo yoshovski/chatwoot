@@ -40,7 +40,7 @@ describe('TemplateGallery', () => {
     const wrapper = mountGallery();
 
     await wrapper
-      .find('[data-test="template-request_a_quote"] button')
+      .find('[data-test="template-request_a_quote"]')
       .trigger('click');
 
     expect(wrapper.emitted('useTemplate')[0][0].id).toBe('request_a_quote');

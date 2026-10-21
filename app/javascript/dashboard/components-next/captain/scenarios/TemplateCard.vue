@@ -1,7 +1,6 @@
 <script setup>
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
-import Button from 'dashboard/components-next/button/Button.vue';
 import { getToolIdsFromInstruction } from './scenarioTools';
 import {
   buildFromTemplate,
@@ -71,79 +70,68 @@ const onClick = () => {
 </script>
 
 <template>
-  <article
+  <button
     v-tooltip.top="
       isAvailable
         ? null
         : t('CAPTAIN.ASSISTANTS.SCENARIOS.TEMPLATES.NEEDS_SHOPIFY_TOOLTIP')
     "
-    class="group relative flex flex-col gap-3 h-full w-full p-4 text-start rounded-xl border border-n-strong bg-n-solid-2 transition-colors motion-reduce:transition-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-n-brand"
+    type="button"
+    class="group flex items-start w-full h-full gap-3 p-3 text-start rounded-xl border border-n-weak bg-n-solid-1 transition-colors motion-reduce:transition-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-n-brand"
     :class="
       isAvailable
-        ? 'hover:border-n-slate-7 hover:bg-n-solid-3'
-        : 'cursor-not-allowed'
+        ? 'hover:border-n-strong hover:bg-n-alpha-1'
+        : 'cursor-not-allowed opacity-70'
     "
+    :aria-disabled="!isAvailable"
     :data-test="`template-${template.id}`"
+    @click="onClick"
   >
-    <div class="flex items-start justify-between w-full">
-      <span
-        class="flex items-center justify-center size-9 rounded-lg"
-        :class="ICON_COLORS[template.color]"
-      >
-        <span class="size-5" :class="template.icon" />
-      </span>
-      <span
-        v-if="isAvailable"
-        class="i-lucide-arrow-up-right size-4 text-n-slate-10 opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100 transition-opacity motion-reduce:transition-none"
-      />
-    </div>
-
-    <div class="flex flex-col gap-1">
+    <span
+      class="flex items-center justify-center rounded-lg size-8 shrink-0"
+      :class="ICON_COLORS[template.color]"
+    >
+      <span class="size-4" :class="template.icon" />
+    </span>
+    <span class="flex flex-col flex-1 min-w-0 gap-0.5">
       <span class="text-sm font-medium text-n-slate-12">
         {{ t(`${i18nKey}.TITLE`) }}
       </span>
-      <span class="text-sm text-n-slate-11 line-clamp-2">
+      <span class="text-xs text-n-slate-11 line-clamp-2">
         {{ t(`${i18nKey}.TAGLINE`) }}
       </span>
-    </div>
-
-    <div
-      class="mt-auto flex items-center justify-between w-full text-xs text-n-slate-10"
-    >
-      <span v-if="isAvailable">
-        {{ t('CAPTAIN.ASSISTANTS.SCENARIOS.TEMPLATES.STEPS', stepCount) }}
-      </span>
-      <span v-else class="inline-flex items-center gap-1 text-n-amber-11">
-        <span class="i-lucide-plug size-3.5" />
-        {{ t('CAPTAIN.ASSISTANTS.SCENARIOS.TEMPLATES.NEEDS_SHOPIFY') }}
-      </span>
-
-      <span
-        v-if="usedTools.length"
-        v-tooltip.top="toolsTooltip"
-        class="flex items-center"
-      >
-        <span
-          v-for="tool in visibleTools"
-          :key="tool.id"
-          class="flex items-center justify-center size-6 -ms-1.5 first:ms-0 rounded-full bg-n-alpha-2 ring-2 ring-n-solid-2 text-xs"
-        >
-          {{ tool.emoji }}
+      <span class="flex items-center gap-2 mt-1 text-xs text-n-slate-10">
+        <span v-if="isAvailable">
+          {{ t('CAPTAIN.ASSISTANTS.SCENARIOS.TEMPLATES.STEPS', stepCount) }}
+        </span>
+        <span v-else class="inline-flex items-center gap-1 text-n-amber-11">
+          <span class="i-lucide-plug size-3" />
+          {{ t('CAPTAIN.ASSISTANTS.SCENARIOS.TEMPLATES.NEEDS_SHOPIFY') }}
         </span>
         <span
-          v-if="hiddenToolCount"
-          class="flex items-center justify-center size-6 -ms-1.5 rounded-full bg-n-alpha-2 ring-2 ring-n-solid-2 text-xs text-n-slate-11"
+          v-if="usedTools.length"
+          v-tooltip.top="toolsTooltip"
+          class="flex items-center"
         >
-          {{ `+${hiddenToolCount}` }}
+          <span
+            v-for="tool in visibleTools"
+            :key="tool.id"
+            class="flex items-center justify-center size-5 -ms-1 first:ms-0 rounded-full bg-n-alpha-2 ring-2 ring-n-solid-1 text-[0.625rem]"
+          >
+            {{ tool.emoji }}
+          </span>
+          <span
+            v-if="hiddenToolCount"
+            class="flex items-center justify-center size-5 -ms-1 rounded-full bg-n-alpha-2 ring-2 ring-n-solid-1 text-[0.625rem] text-n-slate-11"
+          >
+            {{ `+${hiddenToolCount}` }}
+          </span>
         </span>
       </span>
-    </div>
-    <Button
-      class="mt-2 w-full"
-      :label="t('CAPTAIN.ASSISTANTS.SCENARIOS.TEMPLATES.USE_TEMPLATE')"
-      icon="i-lucide-plus"
-      :disabled="!isAvailable"
-      @click="onClick"
+    </span>
+    <span
+      v-if="isAvailable"
+      class="i-lucide-plus size-4 shrink-0 text-n-slate-10 opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100 transition-opacity motion-reduce:transition-none"
     />
-  </article>
+  </button>
 </template>

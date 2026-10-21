@@ -1,13 +1,13 @@
 <script setup>
 import { computed, reactive, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { useToggle, useElementSize } from '@vueuse/core';
+import { useToggle } from '@vueuse/core';
 import { useMessageFormatter } from 'shared/composables/useMessageFormatter';
 import { useMapGetter } from 'dashboard/composables/store';
 import Button from 'dashboard/components-next/button/Button.vue';
 import CardLayout from 'dashboard/components-next/CardLayout.vue';
 import Checkbox from 'dashboard/components-next/checkbox/Checkbox.vue';
-import Icon from 'dashboard/components-next/icon/Icon.vue';
+import DropdownMenu from 'dashboard/components-next/dropdown-menu/DropdownMenu.vue';
 import Switch from 'dashboard/components-next/switch/Switch.vue';
 import Policy from 'dashboard/components/policy.vue';
 import ToolChip from 'dashboard/components-next/captain/scenarios/ToolChip.vue';
@@ -68,10 +68,10 @@ const enabledState = computed({
   set: enabled => emit('toggle', { id: props.id, enabled }),
 });
 
-const statusLabel = computed(() =>
-  props.enabled
-    ? t('CAPTAIN.ASSISTANTS.SCENARIOS.STATUS.ENABLED')
-    : t('CAPTAIN.ASSISTANTS.SCENARIOS.STATUS.DISABLED')
+const MAX_VISIBLE_TOOLS = 3;
+const visibleTools = computed(() => props.tools.slice(0, MAX_VISIBLE_TOOLS));
+const hiddenToolCount = computed(
+  () => props.tools.length - visibleTools.value.length
 );
 
 const state = reactive({
@@ -82,13 +82,24 @@ const state = reactive({
 
 const scenarioFormRef = ref(null);
 
-const instructionContentRef = ref();
-
 const [isEditing, toggleEditing] = useToggle();
 const [isInstructionExpanded, toggleInstructionExpanded] = useToggle();
+const [showMenu, toggleMenu] = useToggle();
 
-const { height: contentHeight } = useElementSize(instructionContentRef);
-const needsOverlay = computed(() => contentHeight.value > 160);
+const menuItems = computed(() => [
+  {
+    label: t('CAPTAIN.ASSISTANTS.SCENARIOS.MENU.EDIT'),
+    action: 'edit',
+    value: 'edit',
+    icon: 'i-lucide-pencil-line',
+  },
+  {
+    label: t('CAPTAIN.ASSISTANTS.SCENARIOS.MENU.DELETE'),
+    action: 'delete',
+    value: 'delete',
+    icon: 'i-lucide-trash',
+  },
+]);
 
 const captainTools = useMapGetter('captainTools/getRecords');
 const formattedInstruction = computed(() =>
@@ -107,6 +118,12 @@ const startEdit = () => {
   toggleEditing(true);
 };
 
+const handleMenuAction = ({ action }) => {
+  toggleMenu(false);
+  if (action === 'edit') startEdit();
+  else emit('delete', props.id);
+};
+
 const onClickUpdate = () => {
   if (!scenarioFormRef.value.validate()) return;
   emit('update', { id: props.id, ...state });
@@ -120,9 +137,9 @@ const LINK_INSTRUCTION_CLASS =
 <template>
   <CardLayout
     selectable
-    class="relative [&>div]:!py-4"
+    class="relative [&>div]:!py-3"
     :class="{
-      '[&>div]:ltr:!pr-4 [&>div]:rtl:!pl-4': !isEditing,
+      '[&>div]:ltr:!pr-3 [&>div]:rtl:!pl-3': !isEditing,
       '[&>div]:ltr:!pr-10 [&>div]:rtl:!pl-10': isEditing,
     }"
     layout="row"
@@ -131,97 +148,95 @@ const LINK_INSTRUCTION_CLASS =
   >
     <div
       v-show="selectable && !isEditing"
-      class="absolute top-[1.125rem] ltr:left-3 rtl:right-3"
+      class="absolute top-3.5 ltr:left-3 rtl:right-3"
     >
       <Checkbox v-model="modelValue" />
     </div>
 
-    <div v-if="!isEditing" class="flex flex-col w-full">
-      <div class="flex items-start justify-between w-full gap-2">
-        <div class="flex flex-col items-start">
-          <span class="text-sm text-n-slate-12 font-medium">{{ title }}</span>
-          <span class="text-sm text-n-slate-11 mt-2">
+    <div v-if="!isEditing" class="flex flex-col w-full min-w-0">
+      <div class="flex items-center w-full gap-3">
+        <button
+          type="button"
+          class="flex flex-col flex-1 min-w-0 p-0 text-start bg-transparent border-0"
+          :aria-expanded="isInstructionExpanded"
+          @click="toggleInstructionExpanded()"
+        >
+          <span class="flex items-center gap-1.5 min-w-0">
+            <span class="text-sm font-medium truncate text-n-slate-12">
+              {{ title }}
+            </span>
+            <span
+              class="size-3.5 shrink-0 text-n-slate-10 transition-transform i-lucide-chevron-down"
+              :class="[{ 'rotate-180': isInstructionExpanded }]"
+            />
+          </span>
+          <span class="text-sm truncate text-n-slate-11">
             {{ description }}
           </span>
-        </div>
-        <div class="flex items-center gap-2">
-          <span class="text-xs text-n-slate-11">
-            {{ statusLabel }}
+        </button>
+        <div
+          v-if="tools.length"
+          class="items-center hidden gap-1 md:flex shrink-0"
+        >
+          <ToolChip
+            v-for="toolId in visibleTools"
+            :key="toolId"
+            :tool-id="toolId"
+          />
+          <span v-if="hiddenToolCount" class="text-xs text-n-slate-10">
+            {{ `+${hiddenToolCount}` }}
           </span>
-          <Policy
-            as="span"
-            :permissions="['administrator']"
-            class="inline-flex items-center"
-          >
-            <Switch
-              v-model="enabledState"
-              :disabled="isUpdating"
-              :aria-label="
-                t('CAPTAIN.ASSISTANTS.SCENARIOS.STATUS.TOGGLE', { title })
-              "
-              :class="{ 'opacity-50 cursor-not-allowed': isUpdating }"
-            />
-          </Policy>
-          <span class="w-px h-4 bg-n-weak" />
-          <!-- <Button label="Test" slate xs ghost class="!text-sm" />
-          <span class="w-px h-4 bg-n-weak" /> -->
-          <Button icon="i-lucide-pen" slate xs ghost @click="startEdit" />
-          <span class="w-px h-4 bg-n-weak" />
+        </div>
+        <Policy
+          as="span"
+          :permissions="['administrator']"
+          class="inline-flex items-center shrink-0"
+        >
+          <Switch
+            v-model="enabledState"
+            :disabled="isUpdating"
+            :aria-label="
+              t('CAPTAIN.ASSISTANTS.SCENARIOS.STATUS.TOGGLE', { title })
+            "
+            :class="{ 'opacity-50 cursor-not-allowed': isUpdating }"
+          />
+        </Policy>
+        <div
+          v-on-clickaway="() => toggleMenu(false)"
+          class="relative flex items-center shrink-0"
+        >
           <Button
-            icon="i-lucide-trash"
+            icon="i-lucide-ellipsis-vertical"
             slate
             xs
             ghost
-            @click="emit('delete', id)"
+            :aria-label="t('CAPTAIN.ASSISTANTS.SCENARIOS.MENU.LABEL')"
+            @click="toggleMenu()"
+          />
+          <DropdownMenu
+            v-if="showMenu"
+            :menu-items="menuItems"
+            class="z-20 mt-1 min-w-36 ltr:right-0 rtl:left-0 top-full"
+            @action="handleMenuAction"
           />
         </div>
       </div>
 
       <div
-        class="relative overflow-hidden transition-all duration-300 ease-in-out group/expandable"
-        :class="{ 'cursor-pointer': needsOverlay }"
-        :style="{
-          maxHeight: isInstructionExpanded ? `${contentHeight}px` : '10rem',
-        }"
-        @click="needsOverlay ? toggleInstructionExpanded() : null"
+        v-if="isInstructionExpanded"
+        class="flex flex-col gap-2 pt-3 mt-3 border-t border-n-weak"
       >
-        <div ref="instructionContentRef">
-          <p
-            v-dompurify-html:toolLinks="formattedInstruction"
-            class="text-sm text-n-slate-12 py-4 mb-0 prose prose-sm min-w-0 break-words max-w-none"
-            :class="LINK_INSTRUCTION_CLASS"
-          />
-        </div>
-
-        <div
-          class="absolute bottom-0 w-full flex items-end justify-center text-xs text-n-slate-11 bg-gradient-to-t h-40 from-n-solid-2 via-n-solid-2 via-10% to-transparent transition-all duration-500 ease-in-out px-2 py-1 rounded pointer-events-none"
-          :class="{
-            'visible opacity-100': !isInstructionExpanded,
-            'invisible opacity-0': isInstructionExpanded || !needsOverlay,
-          }"
-        >
-          <Icon
-            icon="i-lucide-chevron-down"
-            class="text-n-slate-7 mb-4 size-4 group-hover/expandable:text-n-slate-11 transition-colors duration-200"
-          />
-        </div>
-      </div>
-      <div
-        v-if="tools && tools.length"
-        class="flex items-center gap-1.5 flex-wrap mt-2 mb-1"
-      >
-        <span class="text-xs text-n-slate-11 font-medium">
-          {{ t('CAPTAIN.ASSISTANTS.SCENARIOS.TOOLS.USES') }}
-        </span>
-        <ToolChip v-for="toolId in tools" :key="toolId" :tool-id="toolId" />
-      </div>
-      <div v-else class="flex items-center gap-1.5 mt-2 mb-1">
-        <span class="text-xs text-n-slate-11 font-medium">
+        <p
+          v-dompurify-html:toolLinks="formattedInstruction"
+          class="mb-0 text-sm prose-sm prose min-w-0 break-words text-n-slate-12 max-w-none"
+          :class="LINK_INSTRUCTION_CLASS"
+        />
+        <span v-if="!tools.length" class="text-xs text-n-slate-11">
           {{ t('CAPTAIN.ASSISTANTS.SCENARIOS.TOOLS.INHERITED_ALL') }}
         </span>
       </div>
     </div>
-    <div v-else class="relative flex flex-col gap-4 w-full">
+    <div v-else class="relative flex flex-col w-full gap-4">
       <ScenarioForm
         ref="scenarioFormRef"
         v-model:title="state.title"

@@ -1283,7 +1283,6 @@
         "TOOLS": {
           "INHERITED": "Uses the AI agent's tools",
           "INHERITED_ALL": "Uses all of the AI agent's tools",
-          "USES": "Uses:",
           "UNAVAILABLE": "This tool isn't available for this AI agent",
           "NAMED": "Uses the AI agent's tools. Named in the instruction: {tools}"
         },
@@ -1527,8 +1526,7 @@
             "1": "1",
             "2": "2",
             "3": "3"
-          },
-          "USE_TEMPLATE": "Use template"
+          }
         },
         "BULK_ACTION": {
           "SELECTED": "{count} item selected | {count} items selected",
@@ -1593,14 +1591,12 @@
           "UPDATE": "Save changes"
         },
         "STATUS": {
-          "ENABLED": "Enabled",
-          "DISABLED": "Disabled",
           "TOGGLE": "Toggle {title}"
         },
         "LIST": {
           "SEARCH_PLACEHOLDER": "Search..."
         },
-        "EMPTY_MESSAGE": "No scenarios found. Create or add examples to begin.",
+        "EMPTY_MESSAGE": "Scenarios teach the AI agent to handle specific requests step by step, such as refunds or booking a demo.",
         "SEARCH_EMPTY_MESSAGE": "No scenarios found for this search.",
         "API": {
           "ADD": {
@@ -1650,6 +1646,12 @@
           "ALL": "All · {count}",
           "ACTIVE": "Active · {count}",
           "PAUSED": "Paused · {count}"
+        },
+        "EMPTY_TITLE": "No scenarios yet",
+        "MENU": {
+          "LABEL": "Scenario actions",
+          "EDIT": "Edit",
+          "DELETE": "Delete"
         }
       },
       "AI_AGENT_CHIP": "AI agent"
