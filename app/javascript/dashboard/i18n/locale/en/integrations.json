@@ -1013,7 +1013,6 @@
           "DESCRIPTION": "Tone, and what customers see in {name}'s messages.",
           "BUSINESS_TYPE": {
             "TITLE": "Business type",
-            "DESC": "Shapes how answers are written: short replies for shops, step-by-step guidance for software, subscriptions and services.",
             "AUTO": "Detect automatically ({type})",
             "OPTIONS": {
               "COMMERCE": "Online store",
@@ -1021,6 +1020,13 @@
               "SUBSCRIPTION": "Subscriptions and media",
               "SERVICES": "Services and bookings",
               "GENERAL": "Other"
+            },
+            "HINTS": {
+              "COMMERCE": "Short answers about products, orders and shipping.",
+              "SOFTWARE": "Step-by-step answers with links to your docs.",
+              "SUBSCRIPTION": "Clear answers about plans, billing and access.",
+              "SERVICES": "Explains what you offer and how to book.",
+              "GENERAL": "Balanced answers from your knowledge."
             }
           },
           "TONE": {
