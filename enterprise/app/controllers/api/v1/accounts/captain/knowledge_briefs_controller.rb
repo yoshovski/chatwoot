@@ -10,7 +10,7 @@ class Api::V1::Accounts::Captain::KnowledgeBriefsController < Api::V1::Accounts:
   # Previews and starter examples written for this business; nil until the first generation finishes.
   def examples
     brief = @assistant.knowledge_brief || @assistant.create_knowledge_brief!(account: Current.account)
-    if brief.examples_due?
+    if brief.examples_due?(refresh: params[:refresh] == 'true')
       brief.update!(examples: brief.examples.merge('requested_at' => Time.current.iso8601))
       Captain::Knowledge::GenerateExamplesJob.perform_later(@assistant.id)
     end

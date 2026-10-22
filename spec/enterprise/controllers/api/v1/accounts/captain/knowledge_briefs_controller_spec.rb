@@ -59,6 +59,18 @@ RSpec.describe 'Api::V1::Accounts::Captain::KnowledgeBriefs', type: :request do
       expect(Captain::Knowledge::GenerateExamplesJob).to have_been_enqueued.with(assistant.id)
     end
 
+    it 'regenerates at once after the owner changed the business details' do
+      brief = Captain::KnowledgeBrief.create!(assistant: assistant)
+      brief.update!(examples: { 'fingerprint' => brief.examples_fingerprint, 'requested_at' => 1.minute.ago.iso8601 })
+      assistant.update!(description: 'We sell refurbished cameras.')
+
+      get examples_url, headers: admin.create_new_auth_token, as: :json
+      expect(Captain::Knowledge::GenerateExamplesJob).not_to have_been_enqueued
+
+      get "#{examples_url}?refresh=true", headers: admin.create_new_auth_token, as: :json
+      expect(Captain::Knowledge::GenerateExamplesJob).to have_been_enqueued.with(assistant.id)
+    end
+
     it 'waits a month between regenerations for a settled agent' do
       assistant.update!(created_at: 30.days.ago)
       brief = Captain::KnowledgeBrief.create!(assistant: assistant,

@@ -63,8 +63,11 @@ class KnowledgeSources extends ApiClient {
     return axios.get(this.briefUrl(assistantId), { signal });
   }
 
-  examples(assistantId) {
-    return axios.get(`${this.briefUrl(assistantId)}/examples`);
+  // refresh asks for new examples right after the owner saved business details.
+  examples(assistantId, { refresh = false } = {}) {
+    return axios.get(`${this.briefUrl(assistantId)}/examples`, {
+      params: refresh ? { refresh: true } : {},
+    });
   }
 
   generateBrief(assistantId, documentIds) {

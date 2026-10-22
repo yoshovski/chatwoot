@@ -3,6 +3,7 @@ import { useRoute } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { useAlert } from 'dashboard/composables';
 import { useStore, useFunctionGetter } from 'dashboard/composables/store';
+import { refreshBusinessExamples } from 'dashboard/components-next/captain/assistant/useBusinessExamples';
 
 export function useAssistantSettings() {
   const { t } = useI18n();
@@ -22,6 +23,8 @@ export function useAssistantSettings() {
         ...updatedAssistant,
       });
       useAlert(t('CAPTAIN.ASSISTANTS.EDIT.SUCCESS_MESSAGE'));
+      // Previews and suggestions follow the saved name, description and business type.
+      refreshBusinessExamples(assistantId.value);
     } catch (error) {
       useAlert(error?.message || t('CAPTAIN.ASSISTANTS.EDIT.ERROR_MESSAGE'));
     }

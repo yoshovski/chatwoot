@@ -52,6 +52,7 @@ class Captain::KnowledgeBrief < ApplicationRecord
     snapshot = usable?(published) ? published : draft
     {
       name: assistant.name, product_name: assistant.config['product_name'], description: assistant.description,
+      business_type: assistant.effective_business_type,
       overview: snapshot.dig('overview', 'text'), topics: Array(snapshot['topics']).pluck('title'),
       documents: source_scope.order(updated_at: :desc).limit(EXAMPLE_DOCUMENTS).pluck(:name)
     }
@@ -61,8 +62,10 @@ class Captain::KnowledgeBrief < ApplicationRecord
   def examples_fingerprint(input = examples_input) = Digest::SHA256.hexdigest([EXAMPLES_VERSION, input].to_json)
 
   # Regenerates only when the business details changed and the last request is older than the interval.
-  def examples_due?
+  # A save by the owner (refresh) skips the interval, so previews follow what they just changed.
+  def examples_due?(refresh: false)
     return false if examples['fingerprint'] == examples_fingerprint
+    return true if refresh
 
     requested_at = examples['requested_at']
     requested_at.nil? || Time.zone.parse(requested_at) < examples_interval.ago
