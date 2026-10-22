@@ -6,6 +6,10 @@ class Captain::KnowledgeBrief < ApplicationRecord
   EXAMPLES_SETTLING_AGE = 14.days
   EXAMPLES_SETTLING_INTERVAL = 1.hour
   EXAMPLES_SETTLED_INTERVAL = 30.days
+  # Automatic profile refreshes slow down as an agent settles: every 3 hours on its first day, daily in its first
+  # week, then weekly. Each runs only when knowledge changed since the last draft, or to retry a failed one.
+  REFRESH_INTERVALS = { 1.day => 3.hours, 7.days => 1.day }.freeze
+  SETTLED_REFRESH_INTERVAL = 7.days
 
   belongs_to :account
   belongs_to :assistant, class_name: 'Captain::Assistant'
@@ -74,6 +78,20 @@ class Captain::KnowledgeBrief < ApplicationRecord
   def examples_interval
     settling = assistant.created_at > EXAMPLES_SETTLING_AGE.ago || !usable?(published) || examples['version'] != EXAMPLES_VERSION
     settling ? EXAMPLES_SETTLING_INTERVAL : EXAMPLES_SETTLED_INTERVAL
+  end
+
+  def refresh_due?
+    interval = refresh_interval
+    return updated_at < interval.ago if status == 'failed'
+    return false if generated_at&.after?(interval.ago)
+
+    scope = source_scope
+    generated_at ? scope.exists?(['captain_documents.updated_at > ?', generated_at]) : scope.exists?
+  end
+
+  def refresh_interval
+    age = Time.current - assistant.created_at
+    REFRESH_INTERVALS.find { |limit, _interval| age < limit }&.last || SETTLED_REFRESH_INTERVAL
   end
 
   def client_payload

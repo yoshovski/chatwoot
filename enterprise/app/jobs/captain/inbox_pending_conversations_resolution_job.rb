@@ -167,7 +167,6 @@ class Captain::InboxPendingConversationsResolutionJob < ApplicationJob
     ::MessageTemplates::Template::OutOfOffice.perform_if_applicable(conversation) if conversation.campaign.blank?
   end
 
-
   def create_resolution_message(conversation)
     Captain::Conversation::ResolutionMessageService.new(
       conversation: conversation,
