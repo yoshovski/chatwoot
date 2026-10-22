@@ -184,7 +184,9 @@ const showPreview = async page => {
           <span class="truncate text-sm font-medium text-n-slate-12">
             {{ source?.url }}
           </span>
-          <span class="inline-flex items-center gap-1.5 text-xs text-n-slate-11">
+          <span
+            class="inline-flex items-center gap-1.5 text-xs text-n-slate-11"
+          >
             <span
               v-if="working"
               class="i-lucide-loader-circle size-3 animate-spin"

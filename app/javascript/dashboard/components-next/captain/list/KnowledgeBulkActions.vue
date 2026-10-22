@@ -46,9 +46,12 @@ const setEnabled = async enabled => {
 const sync = async () => {
   busy.value = true;
   try {
-    const { count } = await store.dispatch('captainBulkActions/handleBulkSync', {
-      target: props.selection.target(),
-    });
+    const { count } = await store.dispatch(
+      'captainBulkActions/handleBulkSync',
+      {
+        target: props.selection.target(),
+      }
+    );
     useAlert(t('KNOWLEDGE_LIST.REFRESH_QUEUED', { count }));
     props.selection.clear();
     if (count) emit('syncQueued');

@@ -46,10 +46,26 @@ const enabledState = computed({
 });
 
 const ORIGINS = {
-  page: { key: 'FROM_PAGE', icon: 'i-lucide-globe', tone: 'bg-n-blue-3 text-n-blue-11' },
-  file: { key: 'FROM_FILE', icon: 'i-lucide-file-text', tone: 'bg-n-ruby-3 text-n-ruby-11' },
-  conversation: { key: 'FROM_CONVERSATION', icon: 'i-lucide-messages-square', tone: 'bg-n-amber-3 text-n-amber-11' },
-  hand: { key: 'BY_HAND', icon: 'i-lucide-pencil', tone: 'bg-n-teal-3 text-n-teal-11' },
+  page: {
+    key: 'FROM_PAGE',
+    icon: 'i-lucide-globe',
+    tone: 'bg-n-blue-3 text-n-blue-11',
+  },
+  file: {
+    key: 'FROM_FILE',
+    icon: 'i-lucide-file-text',
+    tone: 'bg-n-ruby-3 text-n-ruby-11',
+  },
+  conversation: {
+    key: 'FROM_CONVERSATION',
+    icon: 'i-lucide-messages-square',
+    tone: 'bg-n-amber-3 text-n-amber-11',
+  },
+  hand: {
+    key: 'BY_HAND',
+    icon: 'i-lucide-pencil',
+    tone: 'bg-n-teal-3 text-n-teal-11',
+  },
 };
 
 const origin = computed(() => {
@@ -152,7 +168,11 @@ const origin = computed(() => {
       </span>
       <Button
         v-if="canManage && documentable?.type === 'User'"
-        v-tooltip.top="$t('CAPTAIN.DOCUMENTS.USED_IN_CONVERSATIONS', { n: usedInConversationsCount })"
+        v-tooltip.top="
+          $t('CAPTAIN.DOCUMENTS.USED_IN_CONVERSATIONS', {
+            n: usedInConversationsCount,
+          })
+        "
         :label="String(usedInConversationsCount)"
         :disabled="!usedInConversationsCount"
         icon="i-lucide-messages-square"
