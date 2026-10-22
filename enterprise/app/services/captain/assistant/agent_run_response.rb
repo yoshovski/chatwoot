@@ -54,7 +54,8 @@ module Captain::Assistant::AgentRunResponse
 
   def customer_message_content(run_result)
     response_parts = Captain::Assistant::ResponseParts.from_response(run_result.output)
-    response_parts.customer_message_content(citation_urls: @assistant.trusted_citation_urls(run_result))
+    response_parts.customer_message_content(citation_urls: @assistant.trusted_citation_urls(run_result),
+                                            citation_titles: @assistant.citation_titles(run_result))
   end
 
   def message_length_limit

@@ -282,6 +282,15 @@ class Captain::Assistant < ApplicationRecord
     customer_visible_citation_urls(citation_document_ids, details: details, allowed_product_handles: product_handles)
   end
 
+  # Index => page or document title, for the source links under a reply.
+  def citation_titles(run_result)
+    return {} unless citations_enabled?
+
+    state = run_result&.context&.dig(:state) || {}
+    details = state.fetch(CITATION_DETAILS_STATE_KEY, {})
+    state.fetch(CITATION_SOURCES_STATE_KEY, {}).to_h { |index, reference| [index.to_i, details.dig(reference, :title)] }.compact
+  end
+
   def run_result_product_handles(run_result)
     state = run_result&.context&.dig(:state)
     state&.dig(PRODUCT_HANDLES_STATE_KEY) || state&.dig(:product_handles)

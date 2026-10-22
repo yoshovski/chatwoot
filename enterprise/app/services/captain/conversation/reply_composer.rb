@@ -79,7 +79,9 @@ class Captain::Conversation::ReplyComposer
     @formatted_prose ||= begin
       citation_urls = cards_builder.filter_citation_urls(assistant.trusted_citation_urls(run_result))
       cards_builder.clean_prose_content(
-        Captain::Assistant::ResponseParts.from_response(response).customer_message_content(citation_urls: citation_urls)
+        Captain::Assistant::ResponseParts.from_response(response).customer_message_content(
+          citation_urls: citation_urls, citation_titles: assistant.citation_titles(run_result)
+        )
       )
     end
   end

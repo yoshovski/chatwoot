@@ -79,7 +79,8 @@ class Captain::Copilot::ReplySuggestionService
   def persist_response(response, runner, conversation, target_message)
     response_parts = Captain::Assistant::ResponseParts.from_response(response)
     content = response_parts.customer_message_content(
-      citation_urls: @assistant.trusted_citation_urls(runner.last_run_result)
+      citation_urls: @assistant.trusted_citation_urls(runner.last_run_result),
+      citation_titles: @assistant.citation_titles(runner.last_run_result)
     )
 
     @copilot_thread.with_lock do
