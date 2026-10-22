@@ -721,7 +721,7 @@ RSpec.describe Captain::Conversation::ResponseBuilderJob, type: :job do
           described_class.perform_now(conversation, assistant)
 
           expect(conversation.messages.outgoing.last.content).to eq(
-            'Hey, welcome to Captain V2 [[1](https://help.example.com/password)]'
+            "Hey, welcome to Captain V2\n\n→ [Password](https://help.example.com/password)"
           )
           cited_document_id = mock_agent_runner_service.last_run_result.context[:state][Captain::Assistant::CITATION_SOURCES_STATE_KEY][1]
           expect(Captain::AgentSession.last.cited_document_ids).to eq([cited_document_id])
@@ -740,13 +740,13 @@ RSpec.describe Captain::Conversation::ResponseBuilderJob, type: :job do
           described_class.perform_now(conversation, assistant)
 
           content = conversation.messages.outgoing.last.content
-          expect(content).to eq('Hey, welcome to Captain V2 [[1](https://help.example.com/guides/reset_%28new%29)]')
+          expect(content).to eq("Hey, welcome to Captain V2\n\n→ [Reset (new)](https://help.example.com/guides/reset_%28new%29)")
           expect(ChatwootMarkdownRenderer.new(content).render_message.to_s).to include(
-            '<a href="https://help.example.com/guides/reset_%28new%29">1</a>'
+            '<a href="https://help.example.com/guides/reset_%28new%29">Reset (new)</a>'
           )
         end
 
-        it 'renders a citation after a closing code fence' do
+        it 'puts the source links on their own line after a closing code fence' do
           v2_response_parts.replace(
             [
               { 'text' => "```ruby\nputs 'hello'\n```", 'citation_indexes' => [1] },
@@ -758,16 +758,16 @@ RSpec.describe Captain::Conversation::ResponseBuilderJob, type: :job do
 
           content = conversation.messages.outgoing.last.content
           expect(content).to eq(
-            "```ruby\nputs 'hello'\n```\n[[1](https://help.example.com/password)]\n\n" \
-            'Continue with the next step. [[2](https://help.example.com/email)]'
+            "```ruby\nputs 'hello'\n```\n\nContinue with the next step.\n\n" \
+            '→ [Password](https://help.example.com/password) · [Email](https://help.example.com/email)'
           )
 
           rendered_content = ChatwootMarkdownRenderer.new(content).render_message.to_s
-          expect(rendered_content).to include("</code></pre>\n<p>[<a href=\"https://help.example.com/password\">1</a>]</p>")
+          expect(rendered_content).to include('<a href="https://help.example.com/password">Password</a>')
           expect(rendered_content).to include('<p>Continue with the next step.')
         end
 
-        it 'preserves response part order and numbers trusted sources by first appearance' do
+        it 'preserves response part order and lists sources by first citation' do
           v2_response_parts.replace(
             [
               { 'text' => 'Email changes are in settings.', 'citation_indexes' => [2] },
@@ -778,12 +778,23 @@ RSpec.describe Captain::Conversation::ResponseBuilderJob, type: :job do
           described_class.perform_now(conversation, assistant)
 
           expect(conversation.messages.outgoing.last.content).to eq(
-            "Email changes are in settings. [[1](https://help.example.com/email)]\n\n" \
-            'Password resets use the reset link. [[2](https://help.example.com/password)]'
+            "Email changes are in settings.\n\nPassword resets use the reset link.\n\n" \
+            '→ [Email](https://help.example.com/email) · [Password](https://help.example.com/password)'
           )
         end
 
-        it 'reuses a display number when a response cites the same source more than once' do
+        it 'names a source by the title its search recorded' do
+          state = mock_agent_runner_service.last_run_result.context[:state]
+          reference = state[Captain::Assistant::CITATION_SOURCES_STATE_KEY][1]
+          state[Captain::Assistant::CITATION_DETAILS_STATE_KEY] = { reference => { title: 'Reset your password' } }
+          v2_response_parts.first['citation_indexes'] = [1]
+
+          described_class.perform_now(conversation, assistant)
+
+          expect(conversation.messages.outgoing.last.content).to end_with('→ [Reset your password](https://help.example.com/password)')
+        end
+
+        it 'lists a source once when a response cites it more than once' do
           v2_response_parts.replace(
             [
               { 'text' => 'Use the reset link.', 'citation_indexes' => [1, 1] },
@@ -794,8 +805,7 @@ RSpec.describe Captain::Conversation::ResponseBuilderJob, type: :job do
           described_class.perform_now(conversation, assistant)
 
           expect(conversation.messages.outgoing.last.content).to eq(
-            "Use the reset link. [[1](https://help.example.com/password)]\n\n" \
-            'The same page has the next steps. [[1](https://help.example.com/password)]'
+            "Use the reset link.\n\nThe same page has the next steps.\n\n→ [Password](https://help.example.com/password)"
           )
         end
 
@@ -813,7 +823,7 @@ RSpec.describe Captain::Conversation::ResponseBuilderJob, type: :job do
           described_class.perform_now(conversation, assistant)
 
           content = conversation.messages.outgoing.last.content
-          expect(content).to eq('Hey, welcome to Captain V2 [[1](https://help.example.com/email)]')
+          expect(content).to eq("Hey, welcome to Captain V2\n\n→ [Email](https://help.example.com/email)")
           expect(content).not_to include('model.example')
         end
 

@@ -9,6 +9,8 @@ class Captain::Conversation::HandoffNoteService
   TIMEOUT_SECONDS = 10
   MAX_TRANSCRIPT_CHARS = 6000
   MAX_TRANSCRIPT_MESSAGES = 40
+  # The prompt says to omit empty lines; small models still write "Details: None".
+  EMPTY_FIELD = %r{\A\s*\w+:\s*(none|n/a|not specified|unknown|-)?\s*\.?\s*\z}i
 
   DEFAULT_SYSTEM_PROMPT = <<~PROMPT.strip.freeze
     You write the short internal note a colleague leaves when handing a live chat to someone else. Input is a transcript between a customer and an online store's support assistant.
@@ -118,7 +120,7 @@ class Captain::Conversation::HandoffNoteService
   end
 
   def sanitize_summary(summary)
-    summary.to_s.sub(/\A🔔\s*\*\*Needs your reply\*\*\s*\n?/i, '').strip
+    summary.to_s.sub(/\A🔔\s*\*\*Needs your reply\*\*\s*\n?/i, '').lines.grep_v(EMPTY_FIELD).join.strip
   end
 
   def format_reason(raw_reason)

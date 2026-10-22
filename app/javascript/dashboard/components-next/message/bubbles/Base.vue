@@ -111,7 +111,10 @@ const shouldShowMeta = computed(
 // the sources they cited; the oldest have no count and keep the button with the footer,
 // except on cards and forms.
 const showCaptainSources = computed(() => {
-  if (!isCaptainMessage.value) return false;
+  // Private notes (handoff, resolution) are for the team; sources belong on customer answers.
+  if (!isCaptainMessage.value || variant.value === MESSAGE_VARIANTS.PRIVATE) {
+    return false;
+  }
 
   const { captainSourcesFound, captainSourcesUsed } =
     additionalAttributes.value || {};

@@ -1066,8 +1066,8 @@
             },
             "SOURCES": {
               "TITLE": "Show sources",
-              "PREVIEW_LINK": "Source: Returns policy",
-              "NOTE": "Links to the page {name} used."
+              "PREVIEW_LINK": "→ Returns policy",
+              "NOTE": "Adds links to up to 3 pages {name} used, under the reply."
             }
           },
           "RULES": {

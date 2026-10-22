@@ -58,9 +58,9 @@ class Captain::Assistant::SessionCaptureService
 
   # The dashboard shows the Sources button only on an answer whose searches found something, without loading
   # every session. Found, not cited: the model can rely on a result and still leave citation_indexes empty.
-  # On a handoff the session sits on the private note, so the note shows the same button for the teammate.
+  # On a handoff the session sits on the private note, but the button stays on the customer answer: notes carry no sources.
   def record_sources_found(count)
-    [@result_message, result_message].compact.uniq.each { |message| mark_sources_found(message, count) }
+    mark_sources_found(@result_message, count) unless @result_message.private?
   end
 
   def mark_sources_found(message, count)

@@ -127,7 +127,7 @@ RSpec.describe Captain::Copilot::ReplySuggestionService do
     message = copilot_thread.copilot_messages.last
     expect(message).to be_assistant
     expect(message.message).to eq(
-      'content' => "Chatwoot's mascot is Bob the Builder. [[1](https://example.com/mascot)]",
+      'content' => "Chatwoot's mascot is Bob the Builder.\n\n→ [Mascot](https://example.com/mascot)",
       'reasoning' => 'Found the answer in the approved FAQ.',
       'reply_suggestion' => true
     )

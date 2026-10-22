@@ -44,7 +44,8 @@ class Captain::Assistant < ApplicationRecord
   # Picks the business add-on of the reply prompt; detected while writing the business profile, changeable in settings.
   BUSINESS_TYPES = %w[commerce software subscription services general].freeze
   # Customers of these businesses mostly ask how to do something, which reads best as short numbered steps.
-  GUIDE_BUSINESS_TYPES = %w[software subscription services].freeze
+  # Shops answer in one or two sentences and show details on product cards; everyone else gets steps, lists and links.
+  COMPACT_BUSINESS_TYPES = %w[commerce].freeze
 
   include Avatarable
   include Concerns::CaptainToolsHelpers
@@ -282,6 +283,15 @@ class Captain::Assistant < ApplicationRecord
     customer_visible_citation_urls(citation_document_ids, details: details, allowed_product_handles: product_handles)
   end
 
+  # Index => page or document title, for the source links under a reply.
+  def citation_titles(run_result)
+    return {} unless citations_enabled?
+
+    state = run_result&.context&.dig(:state) || {}
+    details = state.fetch(CITATION_DETAILS_STATE_KEY, {})
+    state.fetch(CITATION_SOURCES_STATE_KEY, {}).to_h { |index, reference| [index.to_i, details.dig(reference, :title)] }.compact
+  end
+
   def run_result_product_handles(run_result)
     state = run_result&.context&.dig(:state)
     state&.dig(PRODUCT_HANDLES_STATE_KEY) || state&.dig(:product_handles)
@@ -327,7 +337,7 @@ class Captain::Assistant < ApplicationRecord
   # The business add-on and answer shape of the reply prompt.
   def business_prompt_context
     type = effective_business_type
-    { business_type: type, answer_format: GUIDE_BUSINESS_TYPES.include?(type) ? 'guide' : 'compact' }
+    { business_type: type, answer_format: COMPACT_BUSINESS_TYPES.include?(type) ? 'compact' : 'guide' }
   end
 
   # The type the user chose, else the one detected from their knowledge, else a connected store makes it commerce.

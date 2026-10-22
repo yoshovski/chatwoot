@@ -93,14 +93,15 @@ class Captain::InboxPendingConversationsResolutionJob < ApplicationJob
     nil
   end
 
+  # The activity line ("marked resolved by …") is enough for the team; the reason goes to the log, not a note.
   def resolve_conversation(conversation, _inbox, reason)
     resolved = with_inference_activity_context(conversation, CAPTAIN_INFERENCE_RESOLVE_ACTIVITY_REASON) do
       perform_locked_transition(conversation) do
         conversation.resolved!
-        create_private_note(conversation, "Auto-resolved: #{reason}")
         create_resolution_message(conversation)
       end
     end
+    Rails.logger.info("[Captain][AutoResolve] conversation=#{conversation.id} reason=#{reason}") if resolved
     record_inference_resolution(conversation) if resolved
   rescue ActiveRecord::RecordNotFound
     nil
@@ -164,17 +165,6 @@ class Captain::InboxPendingConversationsResolutionJob < ApplicationJob
 
   def send_out_of_office_message_if_applicable(conversation)
     ::MessageTemplates::Template::OutOfOffice.perform_if_applicable(conversation) if conversation.campaign.blank?
-  end
-
-  def create_private_note(conversation, content)
-    conversation.messages.create!(
-      message_type: :outgoing,
-      private: true,
-      sender: captain_assistant,
-      account_id: conversation.account_id,
-      inbox_id: conversation.inbox_id,
-      content: content
-    )
   end
 
   def create_resolution_message(conversation)

@@ -14,7 +14,7 @@ Before every reply, check whether the user's latest message belongs to this scen
 
 {% render 'current_time', current_time: current_time %}
 
-{% render 'core_rules', commerce_enabled: commerce_enabled %}
+{% render 'core_rules', commerce_enabled: commerce_enabled, answer_format: answer_format %}
 
 {% if commerce_enabled -%}
 {% render 'commerce_rules' %}

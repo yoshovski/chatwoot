@@ -1,4 +1,4 @@
-import { computed, ref, unref, watch } from 'vue';
+import { computed, reactive, unref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import api from 'dashboard/api/captain/knowledgeSources';
 
@@ -12,38 +12,69 @@ const QUICK_REPLY_KEYS = [
   'BUTTON_5',
 ];
 
+const REFRESH_POLL_MS = 3000;
+const REFRESH_POLL_ATTEMPTS = 20;
+
 // One request per agent and page load; the server decides when examples are regenerated.
 const requests = new Map();
+// Examples per agent, shared by every preview on the page so a refresh updates all of them.
+const store = reactive({});
+
 const fetchExamples = assistantId => {
   if (!requests.has(assistantId)) {
     requests.set(
       assistantId,
       api
         .examples(assistantId)
-        .then(({ data }) => data.examples)
+        .then(({ data }) => data)
         .catch(() => null)
-        .then(examples => {
+        .then(data => {
           // Generation runs in the background, so try again on the next visit.
-          if (!examples) requests.delete(assistantId);
-          return examples;
+          if (!data?.examples) requests.delete(assistantId);
+          return data;
         })
     );
   }
   return requests.get(assistantId);
 };
 
+const wait = ms =>
+  new Promise(resolve => {
+    setTimeout(resolve, ms);
+  });
+
+// After the owner saves business details: ask for new examples now and poll until they arrive.
+export async function refreshBusinessExamples(assistantId) {
+  requests.delete(assistantId);
+  try {
+    const { data } = await api.examples(assistantId, { refresh: true });
+    const previous = data.generated_at;
+    for (let attempt = 0; attempt < REFRESH_POLL_ATTEMPTS; attempt += 1) {
+      // eslint-disable-next-line no-await-in-loop
+      await wait(REFRESH_POLL_MS);
+      // eslint-disable-next-line no-await-in-loop
+      const { data: next } = await api.examples(assistantId);
+      if (next.generated_at && next.generated_at !== previous) {
+        store[assistantId] = next.examples;
+        return;
+      }
+    }
+  } catch {
+    // The next page visit picks the new examples up.
+  }
+}
+
 // Examples written for this business, with generic copy until they are ready.
 export function useBusinessExamples(assistantId) {
   const { t } = useI18n();
-  const examples = ref(null);
+  const examples = computed(() => store[unref(assistantId)] || null);
 
   watch(
     () => unref(assistantId),
     async id => {
-      examples.value = null;
-      if (!id) return;
+      if (!id || store[id]) return;
       const data = await fetchExamples(id);
-      if (unref(assistantId) === id) examples.value = data;
+      if (data?.examples) store[id] = data.examples;
     },
     { immediate: true }
   );
