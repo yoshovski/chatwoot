@@ -6,6 +6,7 @@ class Captain::Tools::FaqLookupTool < Captain::Tools::BasePublicTool
   DIRECT_PASSAGES = 3
   DIRECT_CONTENT_CHARS = 8000
   MIN_PASSAGE_CHARS = 512
+  NO_DIRECT_RESULTS = 'No relevant knowledge found.'.freeze
 
   description 'Search FAQs, documents and connected knowledge for specifications, box contents, compatibility, model differences, setup, ' \
               'warranty, shipping rules, payments and store policies. Search the customer\'s latest question in a few key words.'
@@ -34,7 +35,7 @@ class Captain::Tools::FaqLookupTool < Captain::Tools::BasePublicTool
   def perform_queries(tool_context, queries:)
     normalized_queries = queries.map { |query| without_business_name(query) }
     results = retrieve_queries(normalized_queries)
-    return 'No relevant knowledge found.' if results.empty?
+    return NO_DIRECT_RESULTS if results.empty?
 
     if @assistant.account.dify_knowledge_enabled?
       format_direct_passages(tool_context, results, normalized_queries.join(' '))

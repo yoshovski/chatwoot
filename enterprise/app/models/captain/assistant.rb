@@ -44,7 +44,8 @@ class Captain::Assistant < ApplicationRecord
   # Picks the business add-on of the reply prompt; detected while writing the business profile, changeable in settings.
   BUSINESS_TYPES = %w[commerce software subscription services general].freeze
   # Customers of these businesses mostly ask how to do something, which reads best as short numbered steps.
-  GUIDE_BUSINESS_TYPES = %w[software subscription services].freeze
+  # Shops answer in one or two sentences and show details on product cards; everyone else gets steps, lists and links.
+  COMPACT_BUSINESS_TYPES = %w[commerce].freeze
 
   include Avatarable
   include Concerns::CaptainToolsHelpers
@@ -336,7 +337,7 @@ class Captain::Assistant < ApplicationRecord
   # The business add-on and answer shape of the reply prompt.
   def business_prompt_context
     type = effective_business_type
-    { business_type: type, answer_format: GUIDE_BUSINESS_TYPES.include?(type) ? 'guide' : 'compact' }
+    { business_type: type, answer_format: COMPACT_BUSINESS_TYPES.include?(type) ? 'compact' : 'guide' }
   end
 
   # The type the user chose, else the one detected from their knowledge, else a connected store makes it commerce.

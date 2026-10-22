@@ -16,6 +16,9 @@ class Captain::Assistant::DirectResponseService
     return canned_result(message, context, route['canned_response']) if route['canned_response']
 
     knowledge = retrieve(context, route)
+    # The routed queries found nothing: the action agent searches again in its own words before saying it doesn't know.
+    return if knowledge == Captain::Tools::FaqLookupTool::NO_DIRECT_RESULTS
+
     output, response = generate(message, context, knowledge)
     finish_result(message, context, output, response)
   end
