@@ -8,11 +8,16 @@ import Button from 'dashboard/components-next/button/Button.vue';
 import Checkbox from 'dashboard/components-next/checkbox/Checkbox.vue';
 import Input from 'dashboard/components-next/input/Input.vue';
 
-const props = defineProps({ assistantId: { type: Number, required: true } });
+const props = defineProps({
+  assistantId: { type: Number, required: true },
+  // The owner's "About your business" text; the generated overview is offered as a suggestion for it.
+  summary: { type: String, default: '' },
+  summaryMaxLength: { type: Number, required: true },
+});
+const emit = defineEmits(['useOverview']);
 
 const POLL_INTERVAL = 2500;
 const MAX_SOURCES = 60;
-const OVERVIEW_LENGTH = 1000;
 const TOPIC_LENGTH = 400;
 
 const { t } = useI18n();
@@ -48,7 +53,7 @@ const STATUS_PILL_CLASSES = {
   ENABLED: 'bg-n-teal-3 text-n-teal-11',
   SOURCES_CHANGED: 'bg-n-amber-3 text-n-amber-11',
   UNAVAILABLE: 'bg-n-ruby-3 text-n-ruby-11',
-  FAILED: 'bg-n-ruby-3 text-n-ruby-11',
+  FAILED: 'bg-n-alpha-2 text-n-slate-11',
   GENERATING: 'bg-n-blue-3 text-n-blue-11',
   DRAFT: 'bg-n-blue-3 text-n-blue-11',
   DISABLED: 'bg-n-alpha-2 text-n-slate-11',
@@ -135,7 +140,19 @@ const sourceNames = ids =>
     )
     .join(', ');
 
-const editingOverview = ref(false);
+// Cuts at the last full sentence that fits the summary field.
+const fitSummary = text => {
+  if (text.length <= props.summaryMaxLength) return text;
+  const cut = text.slice(0, props.summaryMaxLength);
+  const end = cut.lastIndexOf('. ');
+  return end > 0 ? cut.slice(0, end + 1) : cut;
+};
+const dismissedOverview = ref('');
+const suggestedOverview = computed(() => {
+  const text = fitSummary(draft.value?.overview?.text?.trim() || '');
+  if (!text || text === props.summary.trim()) return '';
+  return text === dismissedOverview.value ? '' : text;
+});
 const editingTopic = ref(null);
 
 const toggleSource = (id, include) => {
@@ -219,14 +236,6 @@ const disable = async () => {
       <div class="flex items-center gap-1">
         <Button
           size="sm"
-          variant="ghost"
-          color="slate"
-          :label="$t('CAPTAIN.KNOWLEDGE_BRIEF.CHOOSE_SOURCES')"
-          :disabled="generating || !brief?.sources.length"
-          @click="choosingSources = !choosingSources"
-        />
-        <Button
-          size="sm"
           :variant="hasDraft ? 'faded' : 'solid'"
           :color="hasDraft ? 'slate' : 'blue'"
           :icon="hasDraft ? 'i-lucide-refresh-cw' : 'i-lucide-sparkles'"
@@ -277,10 +286,10 @@ const disable = async () => {
           :placeholder="$t('CAPTAIN.KNOWLEDGE_BRIEF.SEARCH_SOURCES')"
         />
         <Button
+          v-if="suggestedIds.length"
           size="sm"
           variant="faded"
           :label="$t('CAPTAIN.KNOWLEDGE_BRIEF.SELECT_SUGGESTED')"
-          :disabled="!suggestedIds.length"
           @click="selectSuggested"
         />
         <Button
@@ -329,72 +338,56 @@ const disable = async () => {
           {{ $t('CAPTAIN.KNOWLEDGE_BRIEF.NO_MATCHING_SOURCES') }}
         </p>
       </div>
-      <div>
+      <div class="flex gap-2">
         <Button
           size="sm"
           :label="$t('CAPTAIN.KNOWLEDGE_BRIEF.GENERATE_SELECTED')"
           :disabled="generating || saving || !selectedIds.length"
           @click="generate(selectedIds)"
         />
+        <Button
+          size="sm"
+          variant="ghost"
+          color="slate"
+          :label="$t('CAPTAIN.FORM.CANCEL')"
+          @click="choosingSources = false"
+        />
       </div>
     </div>
 
     <template v-if="hasDraft">
-      <div class="flex flex-col gap-1.5">
-        <div class="flex items-center justify-between gap-2">
-          <h4 class="m-0 text-xs font-medium uppercase text-n-slate-10">
-            {{ $t('CAPTAIN.KNOWLEDGE_BRIEF.OVERVIEW') }}
-          </h4>
-          <div class="flex items-center gap-1">
-            <span
-              v-if="draft.overview.document_ids?.length"
-              v-tooltip.top="sourceNames(draft.overview.document_ids)"
-              class="px-1.5 py-0.5 text-xs rounded-md bg-n-alpha-2 text-n-slate-11"
-            >
-              {{
-                $t('CAPTAIN.KNOWLEDGE_BRIEF.SOURCE_COUNT', {
-                  count: draft.overview.document_ids.length,
-                })
-              }}
-            </span>
-            <Button
-              size="xs"
-              variant="ghost"
-              color="slate"
-              :label="
-                $t(
-                  editingOverview
-                    ? 'CAPTAIN.KNOWLEDGE_BRIEF.DONE'
-                    : 'CAPTAIN.KNOWLEDGE_BRIEF.EDIT'
-                )
-              "
-              @click="editingOverview = !editingOverview"
-            />
-          </div>
-        </div>
-        <template v-if="editingOverview">
-          <textarea
-            v-model="draft.overview.text"
-            :maxlength="OVERVIEW_LENGTH"
-            rows="5"
-            :aria-label="$t('CAPTAIN.KNOWLEDGE_BRIEF.OVERVIEW')"
-            class="w-full p-3 mb-0 text-sm rounded-lg border border-n-weak bg-n-background text-n-slate-12 focus:border-n-brand focus:outline-none"
-          />
-          <span class="text-xs text-end text-n-slate-10">
-            {{
-              $t('CAPTAIN.KNOWLEDGE_BRIEF.LENGTH', {
-                count: (draft.overview.text || '').length,
-                max: OVERVIEW_LENGTH,
-              })
-            }}
+      <div
+        v-if="suggestedOverview"
+        class="flex flex-col gap-3 p-4 rounded-lg outline outline-1 outline-n-teal-6 bg-n-teal-2"
+      >
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <span class="text-sm font-medium text-n-slate-12">
+            {{ $t('CAPTAIN.KNOWLEDGE_BRIEF.SUGGESTED_SUMMARY') }}
           </span>
-        </template>
-        <p
-          v-else
-          class="m-0 text-sm leading-relaxed whitespace-pre-line text-n-slate-12"
-        >
-          {{ draft.overview.text }}
+          <span
+            v-tooltip.top="sourceNames(draft.overview.document_ids)"
+            class="text-xs text-n-slate-11"
+          >
+            {{ $t('CAPTAIN.KNOWLEDGE_BRIEF.SUGGESTED_SUMMARY_HELP') }}
+          </span>
+        </div>
+        <p class="m-0 text-sm leading-relaxed text-n-slate-12">
+          {{ suggestedOverview }}
         </p>
+        <div class="flex flex-wrap gap-2">
+          <Button
+            size="sm"
+            :label="$t('CAPTAIN.KNOWLEDGE_BRIEF.USE_SUMMARY')"
+            @click="emit('useOverview', suggestedOverview)"
+          />
+          <Button
+            size="sm"
+            variant="ghost"
+            color="slate"
+            :label="$t('CAPTAIN.KNOWLEDGE_BRIEF.DISMISS')"
+            @click="dismissedOverview = suggestedOverview"
+          />
+        </div>
       </div>
 
       <div class="flex flex-col gap-1">
@@ -487,9 +480,19 @@ const disable = async () => {
       {{ error }}
     </p>
     <footer
-      v-if="hasDraft || brief?.enabled"
+      v-if="hasDraft || brief?.enabled || brief?.sources.length"
       class="flex flex-wrap items-center justify-end gap-2 pt-3 border-t border-n-weak"
     >
+      <Button
+        v-if="brief?.sources.length && !choosingSources"
+        class="me-auto"
+        size="xs"
+        variant="link"
+        color="slate"
+        :label="$t('CAPTAIN.KNOWLEDGE_BRIEF.CHOOSE_SOURCES')"
+        :disabled="generating"
+        @click="choosingSources = true"
+      />
       <Button
         v-if="brief?.enabled"
         size="sm"

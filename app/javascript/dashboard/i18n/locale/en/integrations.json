@@ -1000,7 +1000,7 @@
           "DESCRIPTION": "The name and photo customers see, and who {name} works for.",
           "WORKS_FOR": "Works for",
           "WORKS_FOR_PLACEHOLDER": "Your shop or product name",
-          "ABOUT": "About the business",
+          "ABOUT": "About your business",
           "ABOUT_PLACEHOLDER": "What you sell, who your customers are, and anything {name} should always keep in mind.",
           "PREVIEW_LABEL": "Preview in the chat window",
           "PREVIEW_GREETING": "Hi! I'm {name}. How can I help?",
@@ -2347,8 +2347,8 @@
       "PAGES_FROM": "Pages from {host}"
     },
     "KNOWLEDGE_BRIEF": {
-      "TITLE": "Business profile",
-      "HELP": "Written from your knowledge so the AI agent can answer broad questions like “What do you do?”. Used only after you publish.",
+      "TITLE": "Topics customers ask about",
+      "HELP": "Written from your knowledge. The AI agent uses them, with “About your business”, for broad questions like “What do you do?”.",
       "STATUS": {
         "DISABLED": "Off. Generate a draft from your knowledge to get started.",
         "DRAFT": "Draft ready. Review it and publish to turn it on.",
@@ -2356,11 +2356,11 @@
         "ENABLED": "On. The AI agent uses this profile.",
         "SOURCES_CHANGED": "On. Some sources changed since you published; review the updated draft below and publish it.",
         "UNAVAILABLE": "Paused: a source was deleted, disabled or made private. Generate and publish a new draft.",
-        "FAILED": "The draft could not be generated. Try again, or choose the sources yourself."
+        "FAILED": "The last update could not be written. Nothing you saved has changed; try again later."
       },
       "GENERATE": "Generate from knowledge",
       "REGENERATE": "Generate again",
-      "CHOOSE_SOURCES": "Choose sources",
+      "CHOOSE_SOURCES": "Pick sources by hand",
       "SOURCES_HELP": "{count} of up to {max} sources selected. Pick pages that explain what the business does, its products, pricing and policies. Pages still being indexed are skipped.",
       "GENERATE_SELECTED": "Generate from selected sources",
       "SUGGESTED_SOURCES": "Suggested",
@@ -2374,7 +2374,7 @@
       "TOPIC_NAME": "Topic name",
       "SUMMARY": "Topic summary",
       "REMOVE_TOPIC": "Remove topic",
-      "PUBLISH": "Publish",
+      "PUBLISH": "Turn on",
       "SAVE": "Save changes",
       "DISABLE": "Turn off",
       "ERROR": "Could not generate or save the profile. Try again.",
@@ -2390,8 +2390,12 @@
         "ENABLED": "On",
         "SOURCES_CHANGED": "Needs review",
         "UNAVAILABLE": "Paused",
-        "FAILED": "Failed"
-      }
+        "FAILED": "Not updated"
+      },
+      "SUGGESTED_SUMMARY": "Suggested “About your business”",
+      "SUGGESTED_SUMMARY_HELP": "From your knowledge · your text stays until you save",
+      "USE_SUMMARY": "Use this text",
+      "DISMISS": "Dismiss"
     },
     "BULK_SELECT": {
       "CLEAR": "Clear selection"
