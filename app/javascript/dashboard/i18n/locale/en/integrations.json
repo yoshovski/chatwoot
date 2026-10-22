@@ -1770,10 +1770,6 @@
       },
       "USED_IN_CONVERSATIONS": "Used in {n} conversation | Used in {n} conversations",
       "NO_USED_CONVERSATIONS": "No conversations found for this document.",
-      "SELECT_ALL": "Select all ({count})",
-      "UNSELECT_ALL": "Unselect all ({count})",
-      "BULK_DELETE_BUTTON": "Delete",
-      "BULK_SYNC_BUTTON": "Refresh",
       "BULK_DELETE": {
         "TITLE": "Delete documents?",
         "DESCRIPTION": "Are you sure you want to delete the selected documents? This action cannot be undone.",
@@ -1792,11 +1788,6 @@
         "ERROR_MESSAGE": "Could not queue refresh, please try again."
       },
       "FILTERS": {
-        "SOURCE": {
-          "ALL": "All sources",
-          "WEB": "Web pages",
-          "PDF": "PDFs"
-        },
         "STATUS": {
           "ANY": "Any status",
           "ON": "On",
@@ -1928,8 +1919,7 @@
           "TITLE": "Captain Document",
           "NOTE": "A document in Captain serves as a knowledge resource for the AI agent. By connecting your help center or guides, Captain can analyze the content and provide accurate responses for customer inquiries."
         }
-      },
-      "SELECTED_OF": "{count} of {total} selected"
+      }
     },
     "CUSTOM_TOOLS": {
       "HEADER": "Tools",
@@ -2087,9 +2077,7 @@
       "TOGGLE_ERROR": "Could not update FAQ status. Please try again.",
       "FILTERS": {
         "SOURCE": {
-          "ALL": "All sources",
-          "HAND_TYPED": "Typed by hand",
-          "CONVERSATION": "From conversations"
+          "ALL": "All sources"
         },
         "FROM_SOURCE": "From: {name}"
       },
@@ -2103,14 +2091,10 @@
       "DOCUMENTABLE": {
         "CONVERSATION": "Conversation #{id}"
       },
-      "SELECTED": "{count} selected",
-      "SELECT_ALL": "Select all ({count})",
-      "UNSELECT_ALL": "Unselect all ({count})",
       "SEARCH_PLACEHOLDER": "Search FAQs...",
       "ERRORS": {
         "LOAD": "There was an error loading FAQs. Please try again."
       },
-      "BULK_DELETE_BUTTON": "Delete",
       "BULK_DELETE": {
         "TITLE": "Delete FAQs?",
         "DESCRIPTION": "Are you sure you want to delete the selected FAQs? This action cannot be undone.",
