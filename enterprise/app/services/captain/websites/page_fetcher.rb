@@ -8,8 +8,11 @@ class Captain::Websites::PageFetcher
     policy = robots_policy(origin)
     return failure('robots_disallowed') unless policy.allowed?(url)
 
-    article_id = @source.pages.find { |page| page['url'] == url }&.dig('help_center_article_id')
-    (help_center_article(origin, article_id, policy) if article_id) || Captain::Documents::SinglePageFetcher.new(url).fetch
+    page = @source.pages.find { |item| item['url'] == url }
+    article_id = page&.dig('help_center_article_id')
+    markdown_url = page&.dig('markdown_url')
+    (help_center_article(origin, article_id, policy) if article_id) || (markdown_page(markdown_url, policy) if markdown_url) ||
+      Captain::Documents::SinglePageFetcher.new(url).fetch
   rescue SafeFetch::Error
     failure('fetch_failed')
   end
@@ -38,6 +41,13 @@ class Captain::Websites::PageFetcher
     Captain::Documents::SinglePageFetcher::Result.new(success: true, title: article[:title].to_s.first(255), content: article[:content],
                                                       faqs: article[:faqs])
   rescue SafeFetch::Error, JSON::ParserError, KeyError
+    nil
+  end
+
+  # The markdown copy listed in llms.txt; the page itself is the fallback.
+  def markdown_page(markdown_url, policy)
+    Captain::Websites::LlmsIndex.page(markdown_url) if policy.allowed?(markdown_url)
+  rescue SafeFetch::Error
     nil
   end
 

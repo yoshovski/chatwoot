@@ -26,7 +26,7 @@ RSpec.describe Captain::Websites::DiscoveryService do
     %w[www.example.com support.example.com api.example.com].each do |host|
       allow(Resolv).to receive(:getaddresses).with(host).and_return(['93.184.216.34'])
     end
-    stub_request(:get, %r{\Ahttps://[a-z.]+/(robots\.txt|sitemap(_index)?\.xml)\z}).to_return(status: 404)
+    stub_request(:get, %r{\Ahttps://[a-z.]+/(robots\.txt|llms\.txt|sitemap(_index)?\.xml)\z}).to_return(status: 404)
     stub_request(:get, 'https://www.example.com/robots.txt')
       .to_return(body: "User-agent: *\nDisallow: /private\nSitemap: https://www.example.com/sitemap.xml\n")
     stub_request(:get, 'https://www.example.com/sitemap.xml').to_return(body: sitemap)
@@ -71,6 +71,16 @@ RSpec.describe Captain::Websites::DiscoveryService do
       'https://support.example.com/hc/en-us/articles/7-Refunds' =>
         a_hash_including('bucket' => 'recommended', 'section' => 'support.example.com/Payments', 'title' => 'Refunds')
     )
+  end
+
+  it 'remembers the markdown copies a documentation site lists in llms.txt' do
+    stub_request(:get, 'https://www.example.com/llms.txt')
+      .to_return(body: "# Example\n\n- [Pricing [2026]](https://www.example.com/pricing.md): Plans and billing\n")
+    described_class.new(source).perform
+
+    expect(page('https://www.example.com/pricing')).to include('markdown_url' => 'https://www.example.com/pricing.md',
+                                                                'description' => 'Plans and billing')
+    expect(a_request(:get, %r{\Ahttps://api\.example\.com})).not_to have_been_made
   end
 
   it 'never fetches technical hosts or other-language copies' do
