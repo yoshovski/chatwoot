@@ -1,9 +1,12 @@
 <script setup>
 import { computed, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { vOnClickOutside } from '@vueuse/components';
 import { useAbortableRequest } from 'dashboard/composables/useAbortableRequest';
 import api from 'dashboard/api/captain/knowledgeSources';
 import Button from 'next/button/Button.vue';
+import Icon from 'dashboard/components-next/icon/Icon.vue';
+import DropdownMenu from 'dashboard/components-next/dropdown-menu/DropdownMenu.vue';
 import { hostOf, sourceForHost } from './websiteSourceHosts';
 
 const props = defineProps({
@@ -12,90 +15,106 @@ const props = defineProps({
   canManage: { type: Boolean, default: false },
 });
 const emit = defineEmits(['loaded', 'manage']);
-const website = defineModel('website', { type: String, default: null });
-const section = defineModel('section', { type: String, default: null });
+// 'all', 'pdf', 'text', or a website host.
+const source = defineModel('source', { type: String, default: 'all' });
 const { t } = useI18n();
 const request = useAbortableRequest();
 const sourcesRequest = useAbortableRequest();
 const sections = ref([]);
 const websiteSources = ref([]);
 const error = ref(false);
+const menuOpen = ref(false);
 
-const STATE_BARS = [
-  ['ready', 'bg-n-teal-9'],
-  ['syncing', 'bg-n-amber-9'],
-  ['failed', 'bg-n-ruby-9'],
-  ['paused', 'bg-n-slate-7'],
+const FILE_SOURCES = [
+  {
+    value: 'pdf',
+    labelKey: 'KNOWLEDGE_LIST.SOURCE.FILES',
+    icon: 'i-lucide-file-text',
+  },
+  {
+    value: 'text',
+    labelKey: 'KNOWLEDGE_LIST.SOURCE.TEXT',
+    icon: 'i-lucide-align-left',
+  },
 ];
 
 const websites = computed(() => {
-  const grouped = new Map();
+  const counts = new Map();
   sections.value.forEach(item => {
     const host = item.key.split('/')[0];
-    const group = grouped.get(host) || {
-      host,
-      count: 0,
-      ready: 0,
-      syncing: 0,
-      failed: 0,
-      paused: 0,
-    };
-    group.count += item.count;
-    STATE_BARS.forEach(([state]) => {
-      group[state] += item[state] || 0;
-    });
-    grouped.set(host, group);
+    if (host !== 'files')
+      counts.set(host, (counts.get(host) || 0) + item.count);
   });
-  return [...grouped.values()].map(group => ({
-    ...group,
-    source: sourceForHost(websiteSources.value, group.host),
+  const imported = [...counts].map(([host, count]) => ({
+    host,
+    count,
+    source: sourceForHost(websiteSources.value, host),
   }));
+  // Discovered websites without imported pages yet still need a way in.
+  const pending = websiteSources.value
+    .filter(
+      item =>
+        !imported.some(
+          site => site.source?.id === item.id || site.host === hostOf(item.url)
+        )
+    )
+    .map(item => ({ host: hostOf(item.url), count: 0, source: item }));
+  return [...imported, ...pending];
 });
-// Discovered websites without imported pages yet still need a way in.
-const pendingSources = computed(() =>
-  websiteSources.value.filter(
-    source =>
-      !websites.value.some(site => site.source?.id === source.id) &&
-      !websites.value.some(site => site.host === hostOf(source.url))
-  )
+
+const activeSite = computed(() =>
+  websites.value.find(site => site.host === source.value)
 );
-const hasCards = computed(
-  () => websites.value.length > 0 || pendingSources.value.length > 0
-);
-const folders = computed(() =>
-  sections.value.filter(item => item.key.startsWith(`${website.value}/`))
-);
-const activeSource = computed(() =>
-  website.value && website.value !== '*'
-    ? sourceForHost(websiteSources.value, website.value)
-    : null
-);
-const label = host => (host === 'files' ? t('PLATFORM_NAV.FILES') : host);
-const segments = site =>
-  STATE_BARS.filter(([state]) => site[state] > 0).map(([state, color]) => ({
-    state,
-    color,
-    width: `${(site[state] / site.count) * 100}%`,
-  }));
-const health = site => {
-  if (site.failed) {
-    return {
-      text: t('PLATFORM_NAV.FAILED_PAGES', { count: site.failed }),
-      tone: 'text-n-ruby-11',
-    };
-  }
-  if (site.syncing) {
-    return {
-      text: t('PLATFORM_NAV.UPDATING_PAGES', { count: site.syncing }),
-      tone: 'text-n-amber-11',
-    };
-  }
-  return { text: t('PLATFORM_NAV.NO_FAILURES'), tone: 'text-n-slate-10' };
-};
-const pendingText = source =>
-  ['pending', 'discovering'].includes(source.status)
+const selectedLabel = computed(() => {
+  const file = FILE_SOURCES.find(item => item.value === source.value);
+  if (file) return t(file.labelKey);
+  return activeSite.value?.host || t('PLATFORM_NAV.ALL_SOURCES');
+});
+const menuSections = computed(() => [
+  {
+    items: [
+      {
+        label: t('PLATFORM_NAV.ALL_SOURCES'),
+        value: 'all',
+        icon: 'i-lucide-files',
+        isSelected: source.value === 'all',
+      },
+    ],
+  },
+  {
+    title: t('KNOWLEDGE_LIST.SOURCE.WEBSITES'),
+    items: websites.value.map(site => ({
+      label: t('KNOWLEDGE_LIST.SOURCE.WEBSITE_COUNT', {
+        host: site.host,
+        count: site.count,
+      }),
+      value: site.host,
+      icon: 'i-lucide-globe',
+      isSelected: source.value === site.host,
+    })),
+  },
+  {
+    title: t('KNOWLEDGE_LIST.SOURCE.OTHER'),
+    items: FILE_SOURCES.map(item => ({
+      label: t(item.labelKey),
+      value: item.value,
+      icon: item.icon,
+      isSelected: source.value === item.value,
+    })),
+  },
+]);
+const siteSummary = computed(() => {
+  const site = activeSite.value;
+  if (site.count) return t('PLATFORM_NAV.PAGES', { count: site.count });
+  return ['pending', 'discovering'].includes(site.source?.status)
     ? t('PLATFORM_NAV.WEBSITE_DISCOVERING')
     : t('PLATFORM_NAV.WEBSITE_NOT_ADDED');
+});
+
+const pick = ({ value }) => {
+  menuOpen.value = false;
+  source.value = value;
+};
 
 const loadSources = async () => {
   try {
@@ -121,10 +140,6 @@ const load = async () => {
     error.value = true;
   }
 };
-const browse = host => {
-  section.value = null;
-  website.value = host;
-};
 watch(
   () => props.assistantId,
   () => {
@@ -139,10 +154,32 @@ defineExpose({ load });
 </script>
 
 <template>
-  <div class="mb-4">
-    <div
+  <div class="flex flex-col gap-3 mb-3">
+    <div class="flex flex-wrap items-center gap-2">
+      <slot />
+      <div v-on-click-outside="() => (menuOpen = false)" class="relative">
+        <Button
+          icon="i-lucide-layers"
+          slate
+          size="sm"
+          :class="{ 'bg-n-slate-9/10': menuOpen }"
+          @click="menuOpen = !menuOpen"
+        >
+          <span class="min-w-0 truncate max-w-56">{{ selectedLabel }}</span>
+          <Icon icon="i-lucide-chevron-down" class="shrink-0 size-4" />
+        </Button>
+        <DropdownMenu
+          v-if="menuOpen"
+          :menu-sections="menuSections"
+          class="z-30 mt-2 top-full min-w-72 max-h-96 overflow-y-auto ltr:left-0 rtl:right-0"
+          @action="pick"
+        />
+      </div>
+      <slot name="filters" />
+    </div>
+    <p
       v-if="error"
-      class="flex items-center gap-3 py-3 text-sm text-n-ruby-11"
+      class="flex items-center gap-3 m-0 text-sm text-n-ruby-11"
       role="alert"
     >
       {{ t('PLATFORM_NAV.LOAD_ERROR') }}
@@ -152,185 +189,42 @@ defineExpose({ load });
         size="sm"
         @click="load"
       />
-    </div>
-    <div v-if="website" class="mb-4 flex flex-wrap items-center gap-3">
-      <Button
-        :label="t('PLATFORM_NAV.ALL_WEBSITES')"
-        variant="link"
-        size="sm"
-        @click="browse(null)"
-      />
+    </p>
+    <div
+      v-if="activeSite"
+      class="flex flex-wrap items-center gap-3 px-4 py-3 border rounded-xl border-n-brand/20 bg-n-brand/5"
+    >
       <span
-        class="i-lucide-chevron-right size-4 text-n-slate-10 rtl:rotate-180"
+        class="flex items-center justify-center rounded-lg size-8 shrink-0 bg-n-brand/10 text-n-brand"
         aria-hidden="true"
-      />
-      <span class="text-sm font-medium text-n-slate-12">
-        {{ website === '*' ? t('PLATFORM_NAV.ALL_SOURCES') : label(website) }}
+      >
+        <span class="i-lucide-globe size-4" />
       </span>
+      <div class="flex flex-col flex-1 min-w-0">
+        <span class="text-sm font-semibold truncate text-n-slate-12">
+          {{ activeSite.host }}
+        </span>
+        <span class="text-xs text-n-slate-11">{{ siteSummary }}</span>
+      </div>
       <Button
-        v-if="canManage && activeSource"
-        size="xs"
-        variant="faded"
+        v-if="canManage && activeSite.source"
+        v-tooltip.top="t('PLATFORM_NAV.CHOOSE_PAGES_HINT')"
+        size="sm"
+        variant="outline"
+        color="slate"
         icon="i-lucide-list-checks"
-        :label="t('PLATFORM_NAV.CHOOSE_PAGES')"
-        @click="emit('manage', activeSource)"
+        :label="t('PLATFORM_NAV.MANAGE_PAGES')"
+        @click="emit('manage', activeSite.source)"
       />
-      <div
-        v-if="folders.length"
-        class="ms-auto flex items-center gap-2 text-sm text-n-slate-11"
-      >
-        <div
-          class="relative flex items-center rounded-lg border border-n-weak bg-n-solid-1 px-2.5 py-1.5 text-sm text-n-slate-12 hover:bg-n-alpha-1 hover:border-n-slate-6 transition-all shadow-xs"
-        >
-          <span
-            class="i-lucide-folder size-4 text-n-slate-10 shrink-0 me-1.5"
-            aria-hidden="true"
-          />
-          <select
-            :value="section || ''"
-            :aria-label="t('PLATFORM_NAV.FILTER_BY_FOLDER')"
-            class="appearance-none bg-transparent pe-6 text-sm font-medium text-n-slate-12 focus:outline-none cursor-pointer"
-            @change="section = $event.target.value || null"
-          >
-            <option value="">{{ t('PLATFORM_NAV.WEBSITE_FOLDERS') }}</option>
-            <option
-              v-for="folder in folders"
-              :key="folder.key"
-              :value="folder.key"
-            >
-              {{
-                t('PLATFORM_NAV.FOLDER_COUNT', {
-                  folder: folder.key.slice(website.length),
-                  count: folder.count,
-                })
-              }}
-            </option>
-          </select>
-          <span
-            class="i-lucide-chevron-down size-3.5 text-n-slate-10 pointer-events-none absolute end-2.5"
-            aria-hidden="true"
-          />
-        </div>
-      </div>
-    </div>
-    <div v-else-if="hasCards" class="mb-2">
-      <div class="mb-3 flex items-center justify-between gap-3">
-        <h2 class="m-0 text-sm font-semibold text-n-slate-12">
-          {{ t('PLATFORM_NAV.BROWSE_WEBSITES') }}
-        </h2>
-        <Button
-          :label="t('PLATFORM_NAV.ALL_SOURCES')"
-          size="xs"
-          variant="link"
-          @click="browse('*')"
-        />
-      </div>
-      <ul
-        class="grid grid-cols-1 gap-3 p-0 m-0 list-none sm:grid-cols-2 xl:grid-cols-3"
-      >
-        <li
-          v-for="site in websites"
-          :key="site.host"
-          class="relative flex flex-col gap-3 p-4 transition-colors border rounded-xl border-n-weak bg-n-solid-1 hover:border-n-brand/60 focus-within:border-n-brand/60"
-        >
-          <div class="flex items-center w-full gap-3">
-            <span
-              class="flex items-center justify-center rounded-lg size-9 shrink-0 bg-n-brand/10 text-n-brand"
-              aria-hidden="true"
-            >
-              <span
-                class="size-4"
-                :class="
-                  site.host === 'files'
-                    ? 'i-lucide-file-text'
-                    : 'i-lucide-globe'
-                "
-              />
-            </span>
-            <!-- The stretched button makes the whole card open the website. -->
-            <button
-              type="button"
-              class="flex flex-col flex-1 min-w-0 text-start after:absolute after:inset-0 after:rounded-xl focus-visible:outline-none"
-              @click="browse(site.host)"
-            >
-              <span class="text-sm font-semibold truncate text-n-slate-12">
-                {{ label(site.host) }}
-              </span>
-              <span class="text-xs text-n-slate-11">
-                {{
-                  t(
-                    site.host === 'files'
-                      ? 'PLATFORM_NAV.SOURCE_COUNT'
-                      : 'PLATFORM_NAV.PAGES',
-                    { count: site.count }
-                  )
-                }}
-              </span>
-            </button>
-            <Button
-              v-if="canManage && site.source"
-              v-tooltip.top="t('PLATFORM_NAV.CHOOSE_PAGES_HINT')"
-              class="relative z-10"
-              size="xs"
-              variant="faded"
-              icon="i-lucide-list-checks"
-              :label="t('PLATFORM_NAV.CHOOSE_PAGES')"
-              @click="emit('manage', site.source)"
-            />
-          </div>
-          <div class="flex items-center w-full gap-2">
-            <span
-              v-if="site.count > 0"
-              class="flex flex-1 h-1.5 overflow-hidden rounded-full bg-n-slate-4"
-              data-test="health-bar"
-              aria-hidden="true"
-            >
-              <span
-                v-for="segment in segments(site)"
-                :key="segment.state"
-                class="h-full"
-                :class="segment.color"
-                :style="{ width: segment.width }"
-              />
-            </span>
-            <span
-              class="text-xs font-medium shrink-0"
-              :class="health(site).tone"
-            >
-              {{ health(site).text }}
-            </span>
-          </div>
-        </li>
-        <li
-          v-for="source in pendingSources"
-          :key="`source-${source.id}`"
-          class="flex flex-col gap-3 p-4 border border-dashed rounded-xl border-n-strong"
-        >
-          <div class="flex items-center w-full gap-3">
-            <span
-              class="flex items-center justify-center rounded-lg size-9 shrink-0 bg-n-alpha-2 text-n-slate-11"
-              aria-hidden="true"
-            >
-              <span class="i-lucide-globe size-4" />
-            </span>
-            <span class="flex flex-col flex-1 min-w-0">
-              <span class="text-sm font-semibold truncate text-n-slate-12">
-                {{ hostOf(source.url) }}
-              </span>
-              <span class="text-xs text-n-slate-11">
-                {{ pendingText(source) }}
-              </span>
-            </span>
-          </div>
-          <Button
-            v-if="canManage"
-            size="sm"
-            icon="i-lucide-list-checks"
-            :label="t('PLATFORM_NAV.CHOOSE_PAGES')"
-            @click="emit('manage', source)"
-          />
-        </li>
-      </ul>
+      <Button
+        v-tooltip.top="t('PLATFORM_NAV.CLEAR_FILTERS')"
+        :aria-label="t('PLATFORM_NAV.CLEAR_FILTERS')"
+        icon="i-lucide-x"
+        size="sm"
+        variant="ghost"
+        color="slate"
+        @click="source = 'all'"
+      />
     </div>
   </div>
 </template>

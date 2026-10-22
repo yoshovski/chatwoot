@@ -1793,6 +1793,8 @@
         },
         "STATUS": {
           "ANY": "Any status",
+          "ON": "On",
+          "OFF": "Off",
           "UPDATED": "Updated",
           "NEEDS_UPDATE": "Needs update",
           "UPDATING": "Updating",

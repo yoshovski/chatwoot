@@ -1,53 +1,75 @@
 import { shallowMount, flushPromises } from '@vue/test-utils';
 import KnowledgeSourceBrowser from './KnowledgeSourceBrowser.vue';
 
-const { sections } = vi.hoisted(() => ({ sections: vi.fn() }));
-vi.mock('dashboard/api/captain/knowledgeSources', () => ({
-  default: { sections },
+const { sections, list } = vi.hoisted(() => ({
+  sections: vi.fn(),
+  list: vi.fn(),
 }));
-vi.mock('vue-i18n', () => ({ useI18n: () => ({ t: key => key }) }));
+vi.mock('dashboard/api/captain/knowledgeSources', () => ({
+  default: { sections, list },
+}));
+vi.mock('vue-i18n', () => ({
+  useI18n: () => ({
+    t: (key, params) =>
+      params?.host ? `${params.host} (${params.count})` : key,
+  }),
+}));
 const mountBrowser = props =>
   shallowMount(KnowledgeSourceBrowser, {
-    props: { assistantId: 2, ...props },
+    props: { assistantId: 2, canManage: true, ...props },
     global: {
+      directives: { tooltip: {} },
       stubs: {
-        Button: { props: ['label'], template: '<button>{{ label }}</button>' },
+        Button: {
+          props: ['label'],
+          emits: ['click'],
+          template:
+            '<button @click="$emit(\'click\')">{{ label }}<slot /></button>',
+        },
+        DropdownMenu: {
+          name: 'DropdownMenu',
+          props: ['menuSections'],
+          template: '<div data-test="menu" />',
+        },
       },
     },
   });
 
 describe('KnowledgeSourceBrowser', () => {
-  beforeEach(() =>
+  beforeEach(() => {
     sections.mockResolvedValue({
       data: {
         sections: [
-          { key: 'example.com/resources', count: 2, failed: 1 },
-          { key: 'example.com/solutions', count: 1, failed: 0 },
-          { key: 'support.example.com/articles', count: 3, failed: 0 },
+          { key: 'example.com/resources', count: 2 },
+          { key: 'example.com/solutions', count: 1 },
+          { key: 'support.example.com/articles', count: 3 },
+          { key: 'files/pdf', count: 4 },
         ],
       },
-    })
-  );
-
-  it('groups by exact host and opens pages without selecting them for a bulk action', async () => {
-    const wrapper = mountBrowser();
-    await flushPromises();
-    expect(wrapper.findAll('li')).toHaveLength(2);
-    expect(wrapper.find('input[type="checkbox"]').exists()).toBe(false);
-    expect(wrapper.text()).toContain('PLATFORM_NAV.FAILED_PAGES');
-    expect(wrapper.text()).toContain('PLATFORM_NAV.NO_FAILURES');
-    await wrapper.findAll('li button')[0].trigger('click');
-    expect(wrapper.emitted('update:website').at(-1)).toEqual(['example.com']);
+    });
+    list.mockResolvedValue({
+      data: [{ id: 7, url: 'https://example.com', status: 'ready' }],
+    });
   });
 
-  it('offers only folders belonging to the opened website', async () => {
-    const wrapper = mountBrowser({ website: 'example.com' });
+  it('lists each website once with its page count in the source menu', async () => {
+    const wrapper = mountBrowser();
     await flushPromises();
-    expect(wrapper.findAll('option')).toHaveLength(3);
-    await wrapper.find('select').setValue('example.com/solutions');
-    expect(wrapper.emitted('update:section').at(-1)).toEqual([
-      'example.com/solutions',
-    ]);
-    expect(wrapper.html()).not.toContain('support.example.com/articles');
+    await wrapper.find('button').trigger('click');
+    const menu = wrapper.findComponent({ name: 'DropdownMenu' });
+    const websites = menu
+      .props('menuSections')[1]
+      .items.map(item => item.label);
+    expect(websites).toEqual(['example.com (3)', 'support.example.com (3)']);
+  });
+
+  it('shows Manage pages for the chosen website', async () => {
+    const wrapper = mountBrowser({ source: 'example.com' });
+    await flushPromises();
+    const manage = wrapper
+      .findAll('button')
+      .find(button => button.text() === 'PLATFORM_NAV.MANAGE_PAGES');
+    await manage.trigger('click');
+    expect(wrapper.emitted('manage')[0][0].id).toBe(7);
   });
 });

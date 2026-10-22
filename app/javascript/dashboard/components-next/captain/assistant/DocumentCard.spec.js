@@ -141,7 +141,7 @@ describe('DocumentCard', () => {
   it('shows the paused state when enabled is false', () => {
     const wrapper = mountCard({ enabled: false });
 
-    expect(wrapper.text()).toContain('CAPTAIN.DOCUMENTS.STATUS.PAUSED');
+    expect(wrapper.text()).toContain('KNOWLEDGE_LIST.OFF');
   });
 
   it('emits toggle event when switch is toggled', async () => {

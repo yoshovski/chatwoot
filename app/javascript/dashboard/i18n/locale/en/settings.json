@@ -1178,5 +1178,39 @@
     "CHOOSE_PAGES_HINT": "Pick which pages of this website your AI agent learns from",
     "ENABLE_AI_HINT": "Let the AI agent answer from these sources",
     "DISABLE_AI_HINT": "Keep these sources but stop the AI agent from using them"
+  },
+  "KNOWLEDGE_LIST": {
+    "BULK_ACTIONS": "Bulk actions",
+    "SELECTED": "{count} selected",
+    "USE_IN_ANSWERS": "Use in answers",
+    "TURN_ON": "Turn on",
+    "TURN_OFF": "Turn off",
+    "REFRESH": "Refresh",
+    "DELETE": "Delete",
+    "EDIT": "Edit",
+    "CLEAR": "Clear selection",
+    "OFF": "Off",
+    "SELECT_PAGE": "Select all on this page",
+    "PAGE_SELECTED": "All {count} on this page are selected.",
+    "SELECT_MATCHING": "Select all {count} matching",
+    "ALL_MATCHING_SELECTED": "All {count} matching are selected.",
+    "MATCHING_FAQS": "{count} matching FAQs",
+    "TURNED_ON": "Turned on {count}.",
+    "TURNED_OFF": "Turned off {count}.",
+    "UPDATE_ERROR": "Could not update the selection. Try again.",
+    "REFRESH_QUEUED": "Refreshing {count} pages.",
+    "SOURCE": {
+      "WEBSITES": "Websites",
+      "OTHER": "Other",
+      "FILES": "Files",
+      "TEXT": "Text",
+      "WEBSITE_COUNT": "{host} ({count})"
+    },
+    "ORIGIN": {
+      "FROM_PAGE": "From website pages",
+      "FROM_FILE": "From files",
+      "BY_HAND": "Written by hand",
+      "FROM_CONVERSATION": "From conversations"
+    }
   }
 }

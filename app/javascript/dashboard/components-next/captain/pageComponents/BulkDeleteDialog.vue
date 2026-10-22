@@ -10,7 +10,8 @@ const props = defineProps({
     type: String,
     required: true,
   },
-  bulkIds: {
+  // { ids } or { select_all, filters }, see useListSelection.
+  target: {
     type: Object,
     required: true,
   },
@@ -29,12 +30,10 @@ const i18nKey = computed(() => {
   return i18nTypeMap[props.type];
 });
 
-const handleBulkDelete = async ids => {
-  if (!ids) return;
-
+const handleDialogConfirm = async () => {
   try {
     await store.dispatch('captainBulkActions/handleBulkDelete', {
-      ids: Array.from(props.bulkIds),
+      target: props.target,
       type: props.type,
     });
 
@@ -43,10 +42,6 @@ const handleBulkDelete = async ids => {
   } catch (error) {
     useAlert(t(`CAPTAIN.${i18nKey.value}.BULK_DELETE.ERROR_MESSAGE`));
   }
-};
-
-const handleDialogConfirm = async () => {
-  await handleBulkDelete(Array.from(props.bulkIds));
   bulkDeleteDialogRef.value?.close();
 };
 
