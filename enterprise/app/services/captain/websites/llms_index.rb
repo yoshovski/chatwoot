@@ -8,7 +8,7 @@ class Captain::Websites::LlmsIndex
 
   # Page hashes for each markdown link, keyed to the HTML page the copy belongs to.
   def self.pages(text, origin)
-    text.to_s.scan(ENTRY).filter_map do |title, link, description|
+    text.to_s.dup.force_encoding(Encoding::UTF_8).scrub.scan(ENTRY).filter_map do |title, link, description|
       markdown_url = Captain::Websites::UrlPolicy.normalize(link, base: origin)
       next unless markdown_url&.end_with?('.md')
 

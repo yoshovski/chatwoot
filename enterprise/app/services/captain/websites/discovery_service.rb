@@ -35,7 +35,8 @@ class Captain::Websites::DiscoveryService # rubocop:disable Metrics/ClassLength
     discover
     finish
   rescue StandardError => e
-    @source.update!(status: 'failed', error_code: 'discovery_failed')
+    # Discard unsaved page data so a serialization failure cannot also break this update.
+    @source.reload.update!(status: 'failed', error_code: 'discovery_failed')
     Rails.logger.warn "[Captain][WebsiteDiscovery] source_id=#{@source.id} error=#{e.class.name}"
     raise
   end
