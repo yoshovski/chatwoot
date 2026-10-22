@@ -1011,6 +1011,18 @@
         "BEHAVIOR": {
           "TITLE": "How {name} replies",
           "DESCRIPTION": "Tone, and what customers see in {name}'s messages.",
+          "BUSINESS_TYPE": {
+            "TITLE": "Business type",
+            "DESC": "Shapes how answers are written: short replies for shops, step-by-step guidance for software, subscriptions and services.",
+            "AUTO": "Detect automatically ({type})",
+            "OPTIONS": {
+              "COMMERCE": "Online store",
+              "SOFTWARE": "Software and SaaS",
+              "SUBSCRIPTION": "Subscriptions and media",
+              "SERVICES": "Services and bookings",
+              "GENERAL": "Other"
+            }
+          },
           "TONE": {
             "TITLE": "Tone",
             "FRIENDLY": {

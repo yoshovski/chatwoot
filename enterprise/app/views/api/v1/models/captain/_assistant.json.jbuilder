@@ -10,6 +10,7 @@ json.config resource.client_config.merge(
   'image_allowlist' => resource.image_allowlist
 )
 json.created_at resource.created_at.to_i
+json.detected_business_type resource.detected_business_type
 json.description resource.description
 json.guardrails resource.guardrails
 json.id resource.id

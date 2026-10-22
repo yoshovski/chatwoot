@@ -41,6 +41,10 @@ class Captain::Assistant < ApplicationRecord
     'professional' => 'Write in a polite, professional tone.',
     'short' => 'Keep replies short and direct. Skip pleasantries.'
   }.freeze
+  # Picks the business add-on of the reply prompt; detected while writing the business profile, changeable in settings.
+  BUSINESS_TYPES = %w[commerce software subscription services general].freeze
+  # Customers of these businesses mostly ask how to do something, which reads best as short numbered steps.
+  GUIDE_BUSINESS_TYPES = %w[software subscription services].freeze
 
   include Avatarable
   include Concerns::CaptainToolsHelpers
@@ -75,7 +79,7 @@ class Captain::Assistant < ApplicationRecord
                  :continue_while_waiting, :suggested_replies, :max_suggested_replies, :product_cards,
                  :link_allowlist, :image_allowlist, :handoff_safety_net, :handoff_safety_net_keywords,
                  :reply_labels, :reply_label_keywords, :outcome_labels,
-                 :handoff_fallback_agent_id, :handoff_fallback_team_id, :tone, :off_limits_message
+                 :handoff_fallback_agent_id, :handoff_fallback_team_id, :tone, :off_limits_message, :business_type
 
   BOOLEAN_CONFIG_KEYS = %w[
     feature_faq
@@ -116,6 +120,7 @@ class Captain::Assistant < ApplicationRecord
             },
             allow_nil: true
   validates :tone, inclusion: { in: TONE_INSTRUCTIONS.keys }, allow_blank: true
+  validates :business_type, inclusion: { in: BUSINESS_TYPES }, allow_blank: true
   validates :off_limits_message, length: { maximum: OFF_LIMITS_MESSAGE_LENGTH_LIMIT }
   validates :max_suggested_replies,
             numericality: {
@@ -316,7 +321,22 @@ class Captain::Assistant < ApplicationRecord
       response_guidelines: response_guidelines || [],
       guardrails: guardrails || []
     }
-    context.merge(Captain::Knowledge::BriefPrompt.new(self).context)
+    context.merge(business_prompt_context, Captain::Knowledge::BriefPrompt.new(self).context)
+  end
+
+  # The business add-on and answer shape of the reply prompt.
+  def business_prompt_context
+    type = effective_business_type
+    { business_type: type, answer_format: GUIDE_BUSINESS_TYPES.include?(type) ? 'guide' : 'compact' }
+  end
+
+  # The type the user chose, else the one detected from their knowledge, else a connected store makes it commerce.
+  def effective_business_type
+    business_type.presence || detected_business_type || (commerce_enabled? ? 'commerce' : 'general')
+  end
+
+  def detected_business_type
+    knowledge_brief&.published&.dig('business_type') || knowledge_brief&.draft&.dig('business_type')
   end
 
   def published_knowledge_context

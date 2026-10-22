@@ -4,7 +4,7 @@ class Api::V1::Accounts::Captain::AssistantsController < Api::V1::Accounts::Base
   before_action :set_assistant, only: [:show, :update, :destroy, :playground, :playground_run, :metrics, :faq_stats, :summary, :drilldown, :avatar]
 
   def index
-    @assistants = account_assistants.ordered
+    @assistants = account_assistants.ordered.includes(:knowledge_brief)
   end
 
   def show; end
@@ -138,7 +138,7 @@ class Api::V1::Accounts::Captain::AssistantsController < Api::V1::Accounts::Base
       :feature_contact_attributes, :welcome_message, :handoff_message,
       :resolution_message, :instructions, :temperature, :auto_resolve_mode,
       :response_window, :continue_while_waiting, :suggested_replies,
-      :max_suggested_replies, :product_cards, :tone, :off_limits_message,
+      :max_suggested_replies, :product_cards, :tone, :off_limits_message, :business_type,
       { link_allowlist: [], image_allowlist: [] }
     ]
     if Current.account.feature_enabled?('captain_integration_v2')
