@@ -63,9 +63,10 @@ class Captain::Knowledge::ChunkPacker
     [parts.drop(shared).join(CONTEXT_SEPARATOR).presence, body].compact.join("\n")
   end
 
-  # The page title and the two nearest headings: enough to place a passage without repeating the whole path.
+  # The page title, its top-level section and the two nearest headings: long guides repeat subheadings
+  # ("Prerequisites", "Test your integration") under every section, so the section tells them apart.
   def context(parts)
-    parts = [parts.first, *parts.last(2)] if parts.size > 3
+    parts = [*parts.first(2), *parts.last(2)] if parts.size > 4
     parts.join(CONTEXT_SEPARATOR).truncate(CONTEXT_LENGTH).presence
   end
 

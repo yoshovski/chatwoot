@@ -23,7 +23,8 @@ class Captain::Websites::LlmsIndex
                                          headers: { 'User-Agent' => "#{Captain::Websites::RobotsPolicy::AGENT}/1.0" }) do |result|
       result.tempfile.read
     end
-    content = Captain::Knowledge::OpenApiMarkdown.convert(text.force_encoding(Encoding::UTF_8).scrub.sub(/\A---\n.*?\n---\n/m, '')).strip
+    markdown = text.force_encoding(Encoding::UTF_8).scrub.sub(/\A---\n.*?\n---\n/m, '')
+    content = Captain::Knowledge::HtmlTables.convert(Captain::Knowledge::OpenApiMarkdown.convert(markdown)).strip
     return if content.empty?
 
     Captain::Documents::SinglePageFetcher::Result.new(
