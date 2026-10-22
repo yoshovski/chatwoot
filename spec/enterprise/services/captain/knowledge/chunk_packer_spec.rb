@@ -37,9 +37,16 @@ RSpec.describe Captain::Knowledge::ChunkPacker do
     expect(children.map(&:length).max).to be <= described_class::CHILD_TARGET + 150
   end
 
-  it 'shortens deep breadcrumbs to the title and the two nearest headings and drops markdown' do
-    markdown = "# **Guide**\n\n## Setup\n\n### [Payments](/payments)\n\n#### Cards\n\n#{sentence}"
+  it 'shortens deep breadcrumbs to the title, top section and two nearest headings and drops markdown' do
+    markdown = "# **Guide**\n\n## Setup\n\n### [Payments](/payments)\n\n#### Cards\n\n##### Visa\n\n#{sentence}"
 
-    expect(pack(markdown, title: 'Docs').lines.first.chomp).to eq('Docs > Payments > Cards')
+    expect(pack(markdown, title: 'Docs').lines.first.chomp).to eq('Docs > Guide > Cards > Visa')
+  end
+
+  it 'tells repeated subheadings apart by their section' do
+    markdown = "## Apple Pay setup\n\n### Prerequisites\n\n#{sentence * 2}\n\n## Google Pay setup\n\n### Prerequisites\n\n#{sentence * 2}"
+    contexts = pack(markdown, title: 'Adyen').split(/\n\n|#{Regexp.escape(parent_separator)}/).map { |child| child.lines.first.chomp }
+
+    expect(contexts).to eq(['Adyen > Apple Pay setup > Prerequisites', 'Adyen > Google Pay setup > Prerequisites'])
   end
 end

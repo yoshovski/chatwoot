@@ -2,6 +2,7 @@
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import Button from 'dashboard/components-next/button/Button.vue';
+import Select from 'dashboard/components-next/select/Select.vue';
 import ChoiceCard from './ChoiceCard.vue';
 import SettingsCard from './SettingsCard.vue';
 import SettingsSwitchRow from './SettingsSwitchRow.vue';
@@ -22,6 +23,14 @@ const TONES = [
   { id: 'friendly', icon: 'i-lucide-smile' },
   { id: 'professional', icon: 'i-lucide-briefcase' },
   { id: 'short', icon: 'i-lucide-zap' },
+];
+// Mirrors Captain::Assistant::BUSINESS_TYPES; an empty value lets the server detect it.
+const BUSINESS_TYPES = [
+  'commerce',
+  'software',
+  'subscription',
+  'services',
+  'general',
 ];
 const MIN_BUTTONS = 1;
 const MAX_BUTTONS = 5;
@@ -45,7 +54,34 @@ const toneOptions = computed(() =>
   }))
 );
 
+const businessTypeLabel = type =>
+  t(
+    `CAPTAIN.ASSISTANTS.SETTINGS.BEHAVIOR.BUSINESS_TYPE.OPTIONS.${type.toUpperCase()}`
+  );
+const detectedBusinessType = computed(
+  () =>
+    props.assistant.detected_business_type ||
+    (props.showProductCards ? 'commerce' : 'general')
+);
+const businessTypeOptions = computed(() => [
+  {
+    value: '',
+    label: t('CAPTAIN.ASSISTANTS.SETTINGS.BEHAVIOR.BUSINESS_TYPE.AUTO', {
+      type: businessTypeLabel(detectedBusinessType.value),
+    }),
+  },
+  ...BUSINESS_TYPES.map(type => ({
+    value: type,
+    label: businessTypeLabel(type),
+  })),
+]);
+
 const update = patch => emit('update', patch);
+
+const businessType = computed({
+  get: () => config.value.business_type || '',
+  set: value => update({ business_type: value }),
+});
 
 const toggle = key =>
   computed({
@@ -68,6 +104,24 @@ const changeMaxButtons = delta => {
 
 <template>
   <div class="flex flex-col gap-6">
+    <section class="flex flex-col gap-3">
+      <div class="flex flex-col gap-1">
+        <h3 class="text-base font-semibold text-n-slate-12">
+          {{ t('CAPTAIN.ASSISTANTS.SETTINGS.BEHAVIOR.BUSINESS_TYPE.TITLE') }}
+        </h3>
+        <p class="text-sm text-n-slate-11">
+          {{ t('CAPTAIN.ASSISTANTS.SETTINGS.BEHAVIOR.BUSINESS_TYPE.DESC') }}
+        </p>
+      </div>
+      <Select
+        v-model="businessType"
+        :options="businessTypeOptions"
+        :aria-label="
+          t('CAPTAIN.ASSISTANTS.SETTINGS.BEHAVIOR.BUSINESS_TYPE.TITLE')
+        "
+      />
+    </section>
+
     <section class="flex flex-col gap-3">
       <h3 class="text-base font-semibold text-n-slate-12">
         {{ t('CAPTAIN.ASSISTANTS.SETTINGS.BEHAVIOR.TONE.TITLE') }}

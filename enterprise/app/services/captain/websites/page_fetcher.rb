@@ -8,8 +8,8 @@ class Captain::Websites::PageFetcher
     policy = robots_policy(origin)
     return failure('robots_disallowed') unless policy.allowed?(url)
 
-    article_id = @source.pages.find { |page| page['url'] == url }&.dig('help_center_article_id')
-    (help_center_article(origin, article_id, policy) if article_id) || Captain::Documents::SinglePageFetcher.new(url).fetch
+    page = @source.pages.find { |item| item['url'] == url } || {}
+    listed_copy(origin, page, policy) || Captain::Documents::SinglePageFetcher.new(url).fetch
   rescue SafeFetch::Error
     failure('fetch_failed')
   end
@@ -28,6 +28,13 @@ class Captain::Websites::PageFetcher
     end
   end
 
+  # Help-centre articles are read from their API and documentation pages from their llms.txt markdown copy.
+  def listed_copy(origin, page, policy)
+    return help_center_article(origin, page['help_center_article_id'], policy) if page['help_center_article_id']
+
+    markdown_page(page['markdown_url'], policy) if page['markdown_url']
+  end
+
   # Help centres can restrict their API; the article page itself is the fallback.
   def help_center_article(origin, article_id, policy)
     return unless policy.allowed?("#{origin}/api/v2/help_center/articles/#{article_id}.json")
@@ -38,6 +45,13 @@ class Captain::Websites::PageFetcher
     Captain::Documents::SinglePageFetcher::Result.new(success: true, title: article[:title].to_s.first(255), content: article[:content],
                                                       faqs: article[:faqs])
   rescue SafeFetch::Error, JSON::ParserError, KeyError
+    nil
+  end
+
+  # The markdown copy listed in llms.txt; the page itself is the fallback.
+  def markdown_page(markdown_url, policy)
+    Captain::Websites::LlmsIndex.page(markdown_url) if policy.allowed?(markdown_url)
+  rescue SafeFetch::Error
     nil
   end
 

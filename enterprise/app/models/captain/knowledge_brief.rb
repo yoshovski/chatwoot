@@ -1,6 +1,7 @@
 class Captain::KnowledgeBrief < ApplicationRecord
   self.table_name = 'captain_knowledge_briefs'
   EXAMPLE_DOCUMENTS = 30
+  EXAMPLES_VERSION = 2
   # New agents and unpublished briefs change quickly; settled agents refresh their examples at most monthly.
   EXAMPLES_SETTLING_AGE = 14.days
   EXAMPLES_SETTLING_INTERVAL = 1.hour
@@ -56,7 +57,8 @@ class Captain::KnowledgeBrief < ApplicationRecord
     }
   end
 
-  def examples_fingerprint(input = examples_input) = Digest::SHA256.hexdigest(input.to_json)
+  # Bumping EXAMPLES_VERSION regenerates every agent's examples, at the settling pace, after a prompt change.
+  def examples_fingerprint(input = examples_input) = Digest::SHA256.hexdigest([EXAMPLES_VERSION, input].to_json)
 
   # Regenerates only when the business details changed and the last request is older than the interval.
   def examples_due?
@@ -67,7 +69,7 @@ class Captain::KnowledgeBrief < ApplicationRecord
   end
 
   def examples_interval
-    settling = assistant.created_at > EXAMPLES_SETTLING_AGE.ago || !usable?(published)
+    settling = assistant.created_at > EXAMPLES_SETTLING_AGE.ago || !usable?(published) || examples['version'] != EXAMPLES_VERSION
     settling ? EXAMPLES_SETTLING_INTERVAL : EXAMPLES_SETTLED_INTERVAL
   end
 

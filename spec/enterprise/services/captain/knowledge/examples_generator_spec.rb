@@ -8,7 +8,7 @@ RSpec.describe Captain::Knowledge::ExamplesGenerator do
     {
       'question' => 'Do you repair e-bikes?',
       'replies' => { 'friendly' => 'Happy to help!', 'professional' => 'Certainly.', 'short' => 'Yes.' },
-      'quick_replies' => ['Book a repair', 'Opening hours', 'Talk to someone'],
+      'quick_replies' => ['Book a repair', 'Opening hours', 'Talk to someone', 'Service prices', 'E-bike batteries'],
       'off_limits_question' => 'Which stock should I buy?',
       'guardrails' => ['No medical advice.', 'No payment details.', 'No competitor comparisons.'],
       'guidelines' => ['Keep replies short.', 'Use plain language.', 'Offer next steps.'],
@@ -36,6 +36,12 @@ RSpec.describe Captain::Knowledge::ExamplesGenerator do
     described_class.new(brief).perform
 
     expect(Captain::Assistant::TieredLlmClient).not_to have_received(:generate)
+  end
+
+  it 'rejects fewer quick replies than the preview can show' do
+    output['quick_replies'] = output['quick_replies'].first(3)
+
+    expect { described_class.new(brief).perform }.to raise_error(TypeError)
   end
 
   it 'rejects output with missing tones' do

@@ -354,6 +354,28 @@ RSpec.describe Captain::Assistant, type: :model do
       expect(instructions).not_to include('You are drafting a reply for a support agent to review.')
     end
 
+    it 'writes software answers as short steps with the software add-on' do
+      assistant.create_knowledge_brief!(account: account, draft: { 'business_type' => 'software' })
+
+      expect(assistant.effective_business_type).to eq('software')
+      expect(assistant.agent_instructions).to include('up to 5 short numbered steps', '# Business Context', 'API keys')
+      expect(assistant.agent_instructions).not_to include('Do not use lists')
+    end
+
+    it 'keeps compact spoken replies when the chosen type overrides the detected one' do
+      assistant.create_knowledge_brief!(account: account, draft: { 'business_type' => 'software' })
+      assistant.update!(config: assistant.config.merge('business_type' => 'general'))
+
+      expect(assistant.agent_instructions).to include('Do not use lists', 'about 40 words')
+      expect(assistant.agent_instructions).not_to include('# Business Context')
+    end
+
+    it 'rejects an unknown business type' do
+      assistant.config['business_type'] = 'casino'
+
+      expect(assistant).not_to be_valid
+    end
+
     it 'adds the tone line only when a tone is chosen' do
       expect(assistant.agent_instructions).not_to include('# Tone')
 

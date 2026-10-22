@@ -33,6 +33,9 @@ class Captain::Knowledge::GenerateBriefJob < MutexApplicationJob
   def skip_refresh?(assistant, brief)
     return true unless assistant.reload.config['knowledge_brief_enabled'] == true
     return true if brief.status.in?(%w[queued generating]) && brief.updated_at > 20.minutes.ago
+    # With every published source deleted, disabled or made private there is nothing to refresh from: the profile
+    # stays paused (published sources unusable) until the user generates and publishes a new draft.
+    return brief.update!(status: 'idle', error_code: nil) unless brief.source_scope.exists?(id: brief.published['document_ids'])
 
     return false unless brief.draft['document_ids'] == brief.published['document_ids'] && brief.current?(brief.draft)
 

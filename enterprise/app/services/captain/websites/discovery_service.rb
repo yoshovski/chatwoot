@@ -1,4 +1,4 @@
-class Captain::Websites::DiscoveryService
+class Captain::Websites::DiscoveryService # rubocop:disable Metrics/ClassLength
   MAX_PAGES = 2000
   MAX_HTML_FETCHES = 500
   MAX_SITEMAPS = 40
@@ -15,6 +15,8 @@ class Captain::Websites::DiscoveryService
     @seen_sitemaps = Set.new
     @help_centers = []
     @seen_help_centers = Set.new
+    @llms_indexes = []
+    @seen_llms_indexes = Set.new
     @limits = Set.new
     @boilerplate = Captain::Websites::BoilerplateLearner.new
     @language = Captain::Websites::PageRules.locale(source.url)
@@ -71,6 +73,8 @@ class Captain::Websites::DiscoveryService
   def discover_next
     if @help_centers.any?
       discover_help_center(@help_centers.shift)
+    elsif @llms_indexes.any?
+      discover_llms_index(@llms_indexes.shift)
     elsif @sitemaps.any? && @seen_sitemaps.size < MAX_SITEMAPS
       discover_sitemap(@sitemaps.shift)
     elsif (url = next_page)
@@ -118,7 +122,10 @@ class Captain::Websites::DiscoveryService
   def queue(url)
     origin = URI.join(url, '/').to_s.delete_suffix('/')
     @help_centers << origin if Captain::Websites::HelpCenter.candidate?(url) && @seen_help_centers.add?(origin)
-    @queue.push(url) unless @pages[url]['blocked_reason'] || Captain::Websites::PageRules.reason(url).in?(UNFETCHED_REASONS)
+    return if @pages[url]['blocked_reason'] || Captain::Websites::PageRules.reason(url).in?(UNFETCHED_REASONS)
+
+    @queue.push(url)
+    @llms_indexes << origin if @seen_llms_indexes.add?(origin)
   end
 
   def discover_help_center(origin)
@@ -131,6 +138,12 @@ class Captain::Websites::DiscoveryService
       @stats['help_center_articles'] += 1
       add_page(page.delete('url'), 'help_center', attributes: page)
     end
+  end
+
+  def discover_llms_index(origin)
+    robots = @robots.for(origin)
+    text, = @fetcher.fetch("#{origin}/llms.txt", robots.delay) if robots&.allowed?("#{origin}/llms.txt")
+    Captain::Websites::LlmsIndex.pages(text, origin).each { |page| add_page(page.delete('url'), 'llms', attributes: page) }
   end
 
   def discover_page(url)
