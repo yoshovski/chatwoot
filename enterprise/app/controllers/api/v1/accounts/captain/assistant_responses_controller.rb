@@ -9,7 +9,7 @@ class Api::V1::Accounts::Captain::AssistantResponsesController < Api::V1::Accoun
   RESULTS_PER_PAGE = 25
 
   def index
-    filtered_query = apply_filters(@responses)
+    filtered_query = Captain::Faqs::ListFilter.new(permitted_params).apply(@responses)
     @responses_count = filtered_query.count
     @responses = filtered_query.page(@current_page).per(RESULTS_PER_PAGE)
     set_response_usage_counts if can_view_drilldown?
@@ -58,25 +58,6 @@ class Api::V1::Accounts::Captain::AssistantResponsesController < Api::V1::Accoun
     params.permit(:page, :per_page)
   end
 
-  def apply_filters(base_query)
-    query = base_query
-    query = query.where(assistant_id: permitted_params[:assistant_id]) if permitted_params[:assistant_id].present?
-    if permitted_params[:document_id].present?
-      query = query.where(
-        documentable_id: permitted_params[:document_id],
-        documentable_type: 'Captain::Document'
-      )
-    end
-    query = query.where(documentable_type: permitted_params[:documentable_type]) if permitted_params[:documentable_type].present?
-    if permitted_params[:search].present?
-      query = query.where(
-        'question ILIKE :search OR answer ILIKE :search',
-        search: "%#{permitted_params[:search]}%"
-      )
-    end
-    query
-  end
-
   def set_assistant
     @assistant = Current.account.captain_assistants.find_by(id: response_params[:assistant_id])
   end
@@ -94,7 +75,7 @@ class Api::V1::Accounts::Captain::AssistantResponsesController < Api::V1::Accoun
   end
 
   def permitted_params
-    params.permit(:id, :assistant_id, :page, :document_id, :account_id, :search, :documentable_type)
+    params.permit(:id, :assistant_id, :page, :document_id, :account_id, :search, :origin)
   end
 
   def response_params
