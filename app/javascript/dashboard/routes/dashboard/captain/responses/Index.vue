@@ -14,13 +14,15 @@ import Button from 'dashboard/components-next/button/Button.vue';
 import DropdownMenu from 'dashboard/components-next/dropdown-menu/DropdownMenu.vue';
 import Icon from 'dashboard/components-next/icon/Icon.vue';
 import Input from 'dashboard/components-next/input/Input.vue';
-import BulkSelectBar from 'dashboard/components-next/captain/assistant/BulkSelectBar.vue';
 import DeleteDialog from 'dashboard/components-next/captain/pageComponents/DeleteDialog.vue';
-import BulkDeleteDialog from 'dashboard/components-next/captain/pageComponents/BulkDeleteDialog.vue';
 import PageLayout from 'dashboard/components-next/captain/PageLayout.vue';
 import TestAgentButton from 'dashboard/components-next/captain/TestAgentButton.vue';
 import CaptainPaywall from 'dashboard/components-next/captain/pageComponents/Paywall.vue';
-import ResponseCard from 'dashboard/components-next/captain/assistant/ResponseCard.vue';
+import FaqRow from 'dashboard/components-next/captain/list/FaqRow.vue';
+import ListHeader from 'dashboard/components-next/captain/list/ListHeader.vue';
+import KnowledgeBulkActions from 'dashboard/components-next/captain/list/KnowledgeBulkActions.vue';
+import { useListSelection } from 'dashboard/components-next/captain/list/useListSelection';
+import { usePolicy } from 'dashboard/composables/usePolicy';
 import CreateResponseDialog from 'dashboard/components-next/captain/pageComponents/response/CreateResponseDialog.vue';
 import ResponsePageEmptyState from 'dashboard/components-next/captain/pageComponents/emptyStates/ResponsePageEmptyState.vue';
 import LimitBanner from 'dashboard/components-next/captain/pageComponents/response/LimitBanner.vue';
@@ -38,7 +40,6 @@ const selectedResponse = ref(null);
 const usageResponse = ref(null);
 const showResponseUsage = ref(false);
 const deleteDialog = ref(null);
-const bulkDeleteDialog = ref(null);
 
 const documentIdFilter = ref(
   route.query.document_id ? Number(route.query.document_id) : null
@@ -53,6 +54,20 @@ const { t } = useI18n();
 const createDialog = ref(null);
 
 const selectedAssistantId = computed(() => Number(route.params.assistantId));
+
+const { checkPermissions } = usePolicy();
+const canManage = computed(() => checkPermissions(['administrator']));
+
+const selection = useListSelection({
+  items: responses,
+  total: computed(() => responseMeta.value?.totalCount || 0),
+  filters: () => ({
+    assistant_id: selectedAssistantId.value || undefined,
+    search: searchQuery.value || undefined,
+    document_id: documentIdFilter.value || undefined,
+    origin: sourceTypeFilter.value || undefined,
+  }),
+});
 
 const suggestionCount = useMapGetter('captainFaqSuggestions/getOpenCount');
 
@@ -106,20 +121,42 @@ const handleResponseUsageClose = () => {
   showResponseUsage.value = false;
 };
 
-const sourceOptions = computed(() => [
+const SOURCE_OPTIONS = [
   {
-    label: t('CAPTAIN.RESPONSES.FILTERS.SOURCE.ALL'),
+    labelKey: 'CAPTAIN.RESPONSES.FILTERS.SOURCE.ALL',
     value: null,
+    icon: 'i-lucide-files',
   },
   {
-    label: t('CAPTAIN.RESPONSES.FILTERS.SOURCE.HAND_TYPED'),
-    value: 'User',
+    labelKey: 'KNOWLEDGE_LIST.ORIGIN.FROM_PAGE',
+    value: 'page',
+    icon: 'i-lucide-globe',
   },
   {
-    label: t('CAPTAIN.RESPONSES.FILTERS.SOURCE.CONVERSATION'),
-    value: 'Conversation',
+    labelKey: 'KNOWLEDGE_LIST.ORIGIN.FROM_FILE',
+    value: 'file',
+    icon: 'i-lucide-file-text',
   },
-]);
+  {
+    labelKey: 'KNOWLEDGE_LIST.ORIGIN.BY_HAND',
+    value: 'hand',
+    icon: 'i-lucide-pencil',
+  },
+  {
+    labelKey: 'KNOWLEDGE_LIST.ORIGIN.FROM_CONVERSATION',
+    value: 'conversation',
+    icon: 'i-lucide-messages-square',
+  },
+];
+
+const sourceOptions = computed(() =>
+  SOURCE_OPTIONS.map(option => ({
+    label: t(option.labelKey),
+    value: option.value,
+    icon: option.icon,
+    isSelected: option.value === sourceTypeFilter.value,
+  }))
+);
 
 const currentSourceLabel = computed(() => {
   const match = sourceOptions.value.find(
@@ -190,7 +227,7 @@ const fetchResponses = async (page = 1) => {
     filterParams.documentId = documentIdFilter.value;
   }
   if (sourceTypeFilter.value) {
-    filterParams.documentableType = sourceTypeFilter.value;
+    filterParams.origin = sourceTypeFilter.value;
   }
 
   // Update URL with current filters
@@ -225,6 +262,7 @@ const handleSourceSelect = ({ value }) => {
   openSourceMenu.value = false;
   sourceTypeFilter.value = value;
   documentIdFilter.value = null;
+  selection.clear();
   fetchResponses(1);
 };
 
@@ -233,63 +271,32 @@ const clearDocumentFilter = () => {
   fetchResponses(1);
 };
 
-// Bulk action
-const bulkSelectedIds = ref(new Set());
-const hoveredCard = ref(null);
-
-const buildSelectedCountLabel = computed(() => {
-  const count = responses.value?.length || 0;
-  const isAllSelected = bulkSelectedIds.value.size === count && count > 0;
-  return isAllSelected
-    ? t('CAPTAIN.RESPONSES.UNSELECT_ALL', { count })
-    : t('CAPTAIN.RESPONSES.SELECT_ALL', { count });
-});
-
-const selectedCountLabel = computed(() => {
-  return t('CAPTAIN.RESPONSES.SELECTED', {
-    count: bulkSelectedIds.value.size,
-  });
-});
-
-const handleCardHover = (isHovered, id) => {
-  hoveredCard.value = isHovered ? id : null;
-};
-
-const handleCardSelect = id => {
-  const selected = new Set(bulkSelectedIds.value);
-  selected[selected.has(id) ? 'delete' : 'add'](id);
-  bulkSelectedIds.value = selected;
-};
-
-const fetchResponseAfterBulkAction = () => {
+const fetchResponsesAfterBulkDelete = () => {
+  const currentPage = responseMeta.value?.page || 1;
   const hasNoResponsesLeft = responses.value?.length === 0;
-  const currentPage = responseMeta.value?.page;
+  fetchResponses(hasNoResponsesLeft && currentPage > 1 ? currentPage - 1 : 1);
+};
 
-  if (hasNoResponsesLeft) {
-    // Page is now empty after bulk action.
-    // Fetch the previous page if not already on the first page.
-    const pageToFetch = currentPage > 1 ? currentPage - 1 : currentPage;
-    fetchResponses(pageToFetch);
-  } else {
-    // Page still has responses left, re-fetch the same page.
-    fetchResponses(currentPage);
-  }
+const hasActiveFilters = computed(
+  () =>
+    Boolean(searchQuery.value) ||
+    Boolean(documentIdFilter.value) ||
+    Boolean(sourceTypeFilter.value)
+);
 
-  // Clear selection
-  bulkSelectedIds.value = new Set();
+const clearFilters = () => {
+  searchQuery.value = '';
+  documentIdFilter.value = null;
+  sourceTypeFilter.value = null;
+  selection.clear();
+  fetchResponses(1);
 };
 
 const onPageChange = page => {
-  const hadSelection = bulkSelectedIds.value.size > 0;
-
   showResponseUsage.value = false;
   usageResponse.value = null;
-
+  selection.clear();
   fetchResponses(page);
-
-  if (hadSelection) {
-    bulkSelectedIds.value = new Set();
-  }
 };
 
 const onDeleteSuccess = () => {
@@ -298,16 +305,13 @@ const onDeleteSuccess = () => {
   }
 };
 
-const onBulkDeleteSuccess = () => {
-  fetchResponseAfterBulkAction();
-};
-
 const debouncedSearch = debounce(async () => {
   fetchResponses(1);
 }, 500);
 
 const handleSearchInput = () => {
   abortListRequest();
+  selection.clear();
   debouncedSearch();
 };
 
@@ -348,7 +352,7 @@ watch(
     selectedResponse.value = null;
     usageResponse.value = null;
     showResponseUsage.value = false;
-    bulkSelectedIds.value = new Set();
+    selection.clear();
     store.dispatch('captainResponses/setRecords', {
       records: [],
       meta: { page: 1, total_count: 0 },
@@ -376,7 +380,7 @@ onUnmounted(() => {
     :show-know-more="false"
     :button-label="$t('CAPTAIN.RESPONSES.ADD_NEW')"
     :is-fetching="isFetching"
-    :is-empty="!responses.length"
+    :is-empty="!responses.length && !hasActiveFilters"
     :show-pagination-footer="!isFetching && !!responses.length"
     :feature-flag="FEATURE_FLAGS.CAPTAIN"
     @update:current-page="onPageChange"
@@ -385,50 +389,31 @@ onUnmounted(() => {
     <template #headerActions>
       <TestAgentButton :assistant-id="selectedAssistantId" />
     </template>
-    <template #search>
-      <div
-        v-if="bulkSelectedIds.size === 0"
-        class="flex gap-3 justify-between w-full items-center"
-      >
+    <template #subHeader>
+      <div class="flex flex-wrap items-center gap-2 mb-3">
         <Input
           v-model="searchQuery"
           :placeholder="$t('CAPTAIN.RESPONSES.SEARCH_PLACEHOLDER')"
-          class="w-64"
+          class="max-w-64 min-w-0 w-full"
           size="sm"
           type="search"
-          autofocus
           @input="handleSearchInput"
         />
-      </div>
-    </template>
-
-    <template #subHeader>
-      <BulkSelectBar
-        v-if="bulkSelectedIds.size > 0"
-        v-model="bulkSelectedIds"
-        compact
-        :all-items="responses"
-        :select-all-label="buildSelectedCountLabel"
-        :selected-count-label="selectedCountLabel"
-        :delete-label="$t('CAPTAIN.RESPONSES.BULK_DELETE_BUTTON')"
-        class="w-fit mb-2"
-        @bulk-delete="bulkDeleteDialog.dialogRef.open()"
-      />
-      <div v-else class="flex flex-wrap items-center gap-2 mb-3">
         <div v-on-clickaway="() => (openSourceMenu = false)" class="relative">
           <Button
-            :label="currentSourceLabel"
-            icon="i-lucide-chevron-down"
-            trailing-icon
-            size="xs"
-            variant="faded"
-            color="slate"
+            icon="i-lucide-layers"
+            slate
+            size="sm"
+            :class="{ 'bg-n-slate-9/10': openSourceMenu }"
             @click="openSourceMenu = !openSourceMenu"
-          />
+          >
+            <span class="min-w-0 truncate">{{ currentSourceLabel }}</span>
+            <Icon icon="i-lucide-chevron-down" class="shrink-0 size-4" />
+          </Button>
           <DropdownMenu
             v-if="openSourceMenu"
             :menu-items="sourceOptions"
-            class="top-full mt-1 ltr:left-0 rtl:right-0 z-20 min-w-40"
+            class="top-full mt-2 ltr:left-0 rtl:right-0 z-30 min-w-56"
             @action="handleSourceSelect"
           />
         </div>
@@ -474,32 +459,55 @@ onUnmounted(() => {
         {{ $t('CAPTAIN.RESPONSES.SUGGESTIONS_BANNER.TITLE') }}
       </Banner>
 
-      <div class="flex flex-col gap-4">
-        <ResponseCard
+      <section
+        :aria-label="$t('PLATFORM_NAV.FAQS')"
+        class="overflow-hidden border rounded-xl border-n-weak bg-n-solid-1"
+      >
+        <ListHeader
+          :selection="selection"
+          :selectable="canManage"
+          :total="responseMeta.totalCount || 0"
+          :page-count="responses.length"
+          :label="
+            $t('KNOWLEDGE_LIST.MATCHING_FAQS', {
+              count: responseMeta.totalCount || 0,
+            })
+          "
+        >
+          <Button
+            v-if="hasActiveFilters"
+            :label="$t('PLATFORM_NAV.CLEAR_FILTERS')"
+            size="xs"
+            variant="link"
+            @click="clearFilters"
+          />
+        </ListHeader>
+        <FaqRow
           v-for="response in responses"
           :id="response.id"
           :key="response.id"
           :question="response.question"
           :answer="response.answer"
           :documentable="response.documentable"
-          :status="response.status"
-          :origin="response.origin"
           :enabled="response.enabled !== false"
-          :created-at="response.created_at"
-          :updated-at="response.updated_at"
+          :updated-at="response.updated_at || response.created_at"
           :used-in-conversations-count="response.used_in_conversations_count"
-          :is-selected="bulkSelectedIds.has(response.id)"
-          :selectable="hoveredCard === response.id || bulkSelectedIds.size > 0"
-          :show-menu="!bulkSelectedIds.has(response.id)"
-          :show-actions="false"
+          :can-manage="canManage"
+          :is-selected="selection.isSelected(response.id)"
           @action="handleAction"
           @navigate="handleNavigationAction"
-          @select="handleCardSelect"
+          @select="selection.toggle"
           @toggle="handleToggleResponse"
-          @hover="isHovered => handleCardHover(isHovered, response.id)"
           @view-conversations="handleShowResponseUsage"
         />
-      </div>
+      </section>
+      <KnowledgeBulkActions
+        v-if="canManage"
+        type="AssistantResponse"
+        :selection="selection"
+        @updated="fetchResponses(responseMeta.page)"
+        @deleted="fetchResponsesAfterBulkDelete"
+      />
     </template>
 
     <ConversationUsageDrawer
@@ -518,14 +526,6 @@ onUnmounted(() => {
       :entity="selectedResponse"
       type="Responses"
       @delete-success="onDeleteSuccess"
-    />
-
-    <BulkDeleteDialog
-      v-if="bulkSelectedIds"
-      ref="bulkDeleteDialog"
-      :bulk-ids="bulkSelectedIds"
-      type="AssistantResponse"
-      @delete-success="onBulkDeleteSuccess"
     />
 
     <CreateResponseDialog

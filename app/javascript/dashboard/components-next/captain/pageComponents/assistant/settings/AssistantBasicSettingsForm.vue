@@ -33,6 +33,8 @@ const previewReply = computed(() =>
   examples.reply(props.assistant.config?.tone)
 );
 
+const DESCRIPTION_MAX_LENGTH = 500;
+
 const state = reactive({
   name: '',
   description: '',
@@ -125,6 +127,11 @@ watch(
   },
   { immediate: true }
 );
+
+// A suggested summary fills the field; the owner still saves it with the save bar.
+const setDescription = text => {
+  state.description = text;
+};
 </script>
 
 <template>
@@ -181,7 +188,7 @@ watch(
 
         <Editor
           v-model="state.description"
-          :max-length="500"
+          :max-length="DESCRIPTION_MAX_LENGTH"
           :label="t('CAPTAIN.ASSISTANTS.SETTINGS.IDENTITY.ABOUT')"
           :placeholder="
             t('CAPTAIN.ASSISTANTS.SETTINGS.IDENTITY.ABOUT_PLACEHOLDER', {
@@ -202,7 +209,11 @@ watch(
       @discard="discard"
     />
 
-    <slot />
+    <slot
+      :description="state.description"
+      :description-max-length="DESCRIPTION_MAX_LENGTH"
+      :set-description="setDescription"
+    />
 
     <template #preview>
       <AssistantChatPreview :name="state.name" :avatar-url="state.avatarUrl">

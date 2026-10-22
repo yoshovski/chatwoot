@@ -54,7 +54,7 @@ RSpec.describe 'Api::V1::Accounts::Captain::BulkActions', type: :request do
         }
       end
 
-      it 'deletes the responses and returns an empty array' do
+      it 'deletes the responses and returns the deleted count' do
         expect do
           post "/api/v1/accounts/#{account.id}/captain/bulk_actions",
                params: delete_params,
@@ -63,7 +63,7 @@ RSpec.describe 'Api::V1::Accounts::Captain::BulkActions', type: :request do
         end.to change(Captain::AssistantResponse, :count).by(-2)
 
         expect(response).to have_http_status(:ok)
-        expect(json_response).to eq([])
+        expect(json_response).to eq({ count: 2 })
 
         # Verify responses were deleted
         responses.each do |response|
@@ -113,6 +113,54 @@ RSpec.describe 'Api::V1::Accounts::Captain::BulkActions', type: :request do
 
         expect(response).to have_http_status(:ok)
         expect(json_response).to eq({ count: documents.size })
+      end
+    end
+
+    context 'when turning documents on or off' do
+      it 'turns off the selected documents' do
+        post "/api/v1/accounts/#{account.id}/captain/bulk_actions",
+             params: { type: 'AssistantDocument', ids: [documents.first.id], fields: { status: 'disable' } },
+             headers: admin.create_new_auth_token,
+             as: :json
+
+        expect(response).to have_http_status(:ok)
+        expect(json_response).to eq({ count: 1 })
+        expect(documents.map { |document| document.reload.enabled }).to eq([false, true])
+      end
+
+      it 'turns off every document matching the filters when select_all is set' do
+        other_assistant = create(:captain_assistant, account: account)
+        other_document = create(:captain_document, assistant: other_assistant, account: account)
+
+        post "/api/v1/accounts/#{account.id}/captain/bulk_actions",
+             params: { type: 'AssistantDocument', select_all: true, filters: { assistant_id: assistant.id }, fields: { status: 'disable' } },
+             headers: admin.create_new_auth_token,
+             as: :json
+
+        expect(json_response).to eq({ count: 2 })
+        expect(documents.map { |document| document.reload.enabled }).to all(be(false))
+        expect(other_document.reload.enabled).to be(true)
+      end
+
+      it 'turns FAQs back on' do
+        responses.each { |faq| faq.update!(enabled: false) }
+
+        post "/api/v1/accounts/#{account.id}/captain/bulk_actions",
+             params: { type: 'AssistantResponse', select_all: true, filters: { assistant_id: assistant.id }, fields: { status: 'enable' } },
+             headers: admin.create_new_auth_token,
+             as: :json
+
+        expect(json_response).to eq({ count: 2 })
+        expect(responses.map { |faq| faq.reload.enabled }).to all(be(true))
+      end
+
+      it 'rejects select_all without filters' do
+        post "/api/v1/accounts/#{account.id}/captain/bulk_actions",
+             params: { type: 'AssistantDocument', select_all: true, fields: { status: 'delete' } },
+             headers: admin.create_new_auth_token,
+             as: :json
+
+        expect(response).to have_http_status(:unprocessable_content)
       end
     end
 

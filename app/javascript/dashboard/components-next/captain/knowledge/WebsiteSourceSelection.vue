@@ -8,9 +8,9 @@ import Input from 'dashboard/components-next/input/Input.vue';
 import Button from 'dashboard/components-next/button/Button.vue';
 import WebsitePageTree from './WebsitePageTree.vue';
 import {
-  BUCKETS,
+  TABS,
   buildWebsiteTree,
-  countByBucket,
+  countByTab,
   recommendedUrls,
 } from './websitePageTree';
 
@@ -21,8 +21,6 @@ const props = defineProps({
 const emit = defineEmits(['saved', 'cancel']);
 
 const POLL_INTERVAL = 2500;
-const MAX_PAGE_CHECKS = 500;
-const FILTERS = [...BUCKETS, 'all'];
 const { t } = useI18n();
 const request = useAbortableRequest();
 const previewRequest = useAbortableRequest();
@@ -31,7 +29,7 @@ const selected = ref([]);
 const initialized = ref(false);
 // Recommended pages are pre-checked once, unless the administrator already chose.
 const touched = ref(false);
-// Recommended until the administrator picks a tab; All for sources sorted before buckets existed.
+// Recommended until the administrator picks a tab; Other for sources sorted before buckets existed.
 const chosenBucket = ref(null);
 const search = ref('');
 const saving = ref(false);
@@ -43,9 +41,10 @@ const stats = computed(() => source.value?.discovery_stats || {});
 const startHost = computed(() =>
   source.value ? new URL(source.value.url).host.replace(/^www\./, '') : ''
 );
-const counts = computed(() => countByBucket(pages.value));
+const counts = computed(() => countByTab(pages.value));
 const bucket = computed(
-  () => chosenBucket.value || (counts.value.recommended ? 'recommended' : 'all')
+  () =>
+    chosenBucket.value || (counts.value.recommended ? 'recommended' : 'other')
 );
 const tree = computed(() =>
   buildWebsiteTree(pages.value, {
@@ -68,31 +67,21 @@ const classifying = computed(
 const settled = computed(
   () => source.value?.status === 'ready' && !classifying.value
 );
+// Discovery limits are a server-side cost guard; the picker only says whether it is still working.
+const working = computed(() => discovering.value || classifying.value);
 const statusText = computed(() => {
   const count = pages.value.length;
-  if (classifying.value) return t('CAPTAIN.WEBSITES.CLASSIFYING', { count });
-  if (!discovering.value) return t('CAPTAIN.WEBSITES.DISCOVERED', { count });
-  return t('CAPTAIN.WEBSITES.DISCOVERING', { count });
-});
-const phaseText = computed(() => {
-  if (!discovering.value || !stats.value.phase) return '';
-  return t(`CAPTAIN.WEBSITES.PHASE.${stats.value.phase.toUpperCase()}`, {
-    count: stats.value.fetched_pages || 0,
-    max: MAX_PAGE_CHECKS,
-  });
+  return working.value
+    ? t('CAPTAIN.WEBSITES.STILL_FINDING', { count })
+    : t('CAPTAIN.WEBSITES.DISCOVERED', { count });
 });
 const filterTabs = computed(() =>
-  FILTERS.map(filter => ({
-    key: filter,
-    label: t(`CAPTAIN.WEBSITES.BUCKETS.${filter.toUpperCase()}`),
-    count: counts.value[filter],
-    help: t(`CAPTAIN.WEBSITES.BUCKET_HELP.${filter.toUpperCase()}`),
+  TABS.map(tab => ({
+    key: tab,
+    label: t(`CAPTAIN.WEBSITES.TABS.${tab.toUpperCase()}`),
+    count: counts.value[tab],
+    help: t(`CAPTAIN.WEBSITES.TAB_HELP.${tab.toUpperCase()}`),
   }))
-);
-const limitsText = computed(() =>
-  (stats.value.limits || [])
-    .map(limit => t(`CAPTAIN.WEBSITES.LIMITS.${limit}`))
-    .join(', ')
 );
 const pageByUrl = computed(
   () => new Map(pages.value.map(page => [page.url, page]))
@@ -142,8 +131,6 @@ const toggle = ({ urls, selected: include }) => {
   urls.forEach(url => (include ? next.add(url) : next.delete(url)));
   selected.value = [...next];
 };
-const selectRecommended = () =>
-  toggle({ urls: recommendedUrls(pages.value), selected: true });
 const clearSelection = () => {
   touched.value = true;
   selected.value = [];
@@ -197,8 +184,15 @@ const showPreview = async page => {
           <span class="truncate text-sm font-medium text-n-slate-12">
             {{ source?.url }}
           </span>
-          <span class="text-xs text-n-slate-11">
-            {{ phaseText || statusText }}
+          <span
+            class="inline-flex items-center gap-1.5 text-xs text-n-slate-11"
+          >
+            <span
+              v-if="working"
+              class="i-lucide-loader-circle size-3 animate-spin"
+              aria-hidden="true"
+            />
+            {{ statusText }}
           </span>
         </div>
         <Button
@@ -213,19 +207,6 @@ const showPreview = async page => {
       </div>
       <p class="m-0 text-xs text-n-slate-11">
         {{ $t('CAPTAIN.WEBSITES.SELECTION_HELP') }}
-      </p>
-      <p
-        v-if="limitsText"
-        v-tooltip.top="$t('CAPTAIN.WEBSITES.LIMITED_HELP')"
-        class="m-0 text-xs text-n-amber-11 w-fit"
-      >
-        {{ $t('CAPTAIN.WEBSITES.LIMITED', { limits: limitsText }) }}
-      </p>
-      <p
-        v-if="stats.classification === 'failed'"
-        class="m-0 text-xs text-n-slate-11"
-      >
-        {{ $t('CAPTAIN.WEBSITES.CLASSIFICATION_FAILED') }}
       </p>
       <p v-if="source?.status === 'failed'" class="m-0 text-xs text-n-ruby-11">
         {{ $t('CAPTAIN.WEBSITES.DISCOVERY_FAILED') }}
@@ -272,19 +253,10 @@ const showPreview = async page => {
               {{
                 $t('CAPTAIN.WEBSITES.SELECTED_OF', {
                   selected: selected.length,
-                  total: counts.all,
+                  total: pages.length,
                 })
               }}
             </span>
-            <span class="rounded-full size-1 bg-n-slate-8" aria-hidden="true" />
-            <button
-              type="button"
-              class="p-0 text-xs bg-transparent border-0 text-n-blue-11 hover:underline disabled:opacity-50 disabled:no-underline"
-              :disabled="!counts.recommended"
-              @click="selectRecommended"
-            >
-              {{ $t('CAPTAIN.WEBSITES.SELECT_RECOMMENDED') }}
-            </button>
             <span class="rounded-full size-1 bg-n-slate-8" aria-hidden="true" />
             <button
               type="button"

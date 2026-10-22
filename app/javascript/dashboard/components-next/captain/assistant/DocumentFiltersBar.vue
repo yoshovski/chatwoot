@@ -9,12 +9,13 @@ import Button from 'dashboard/components-next/button/Button.vue';
 import DropdownMenu from 'dashboard/components-next/dropdown-menu/DropdownMenu.vue';
 
 const props = defineProps({
-  activeSourceFilter: { type: String, default: 'all' },
+  // Sync states only apply to websites, so files show no status menu.
+  showStatus: { type: Boolean, default: true },
   activeStatusFilter: { type: String, default: null },
   activeSort: { type: String, default: 'recently_updated' },
 });
 
-const emit = defineEmits(['selectSource', 'selectStatus', 'selectSort']);
+const emit = defineEmits(['selectStatus', 'selectSort']);
 
 const { t } = useI18n();
 const { checkPermissions } = usePolicy();
@@ -24,21 +25,21 @@ const canViewUsage = computed(() => checkPermissions(['administrator']));
 
 const MENU_CONFIG = [
   {
-    key: 'source',
-    activeKey: 'activeSourceFilter',
-    dropdownClass: 'min-w-48',
-    options: [
-      { labelKey: 'SOURCE.ALL', value: 'all', icon: 'i-lucide-files' },
-      { labelKey: 'SOURCE.WEB', value: 'web', icon: 'i-lucide-link' },
-      { labelKey: 'SOURCE.PDF', value: 'pdf', icon: 'i-lucide-file-text' },
-    ],
-  },
-  {
     key: 'status',
     activeKey: 'activeStatusFilter',
     dropdownClass: 'min-w-52',
     options: [
       { labelKey: 'STATUS.ANY', value: null, icon: 'i-lucide-circle-dashed' },
+      {
+        labelKey: 'STATUS.ON',
+        value: 'enabled',
+        icon: 'i-lucide-toggle-right',
+      },
+      {
+        labelKey: 'STATUS.OFF',
+        value: 'disabled',
+        icon: 'i-lucide-toggle-left',
+      },
       {
         labelKey: 'STATUS.UPDATED',
         value: 'synced',
@@ -86,25 +87,25 @@ const MENU_CONFIG = [
 ];
 
 const filterMenus = computed(() =>
-  MENU_CONFIG.filter(
-    menu => !(menu.key === 'status' && props.activeSourceFilter === 'pdf')
-  ).map(menu => {
-    const active = props[menu.activeKey];
-    const items = menu.options
-      .filter(option => option.value !== 'most_used' || canViewUsage.value)
-      .map(opt => ({
-        label: t(`CAPTAIN.DOCUMENTS.FILTERS.${opt.labelKey}`),
-        value: opt.value,
-        icon: opt.icon,
-        action: menu.key,
-        isSelected: opt.value === active,
-      }));
-    return {
-      ...menu,
-      items,
-      selected: items.find(item => item.isSelected) || items[0],
-    };
-  })
+  MENU_CONFIG.filter(menu => menu.key !== 'status' || props.showStatus).map(
+    menu => {
+      const active = props[menu.activeKey];
+      const items = menu.options
+        .filter(option => option.value !== 'most_used' || canViewUsage.value)
+        .map(opt => ({
+          label: t(`CAPTAIN.DOCUMENTS.FILTERS.${opt.labelKey}`),
+          value: opt.value,
+          icon: opt.icon,
+          action: menu.key,
+          isSelected: opt.value === active,
+        }));
+      return {
+        ...menu,
+        items,
+        selected: items.find(item => item.isSelected) || items[0],
+      };
+    }
+  )
 );
 
 const closeMenu = () => {
@@ -117,8 +118,7 @@ const toggleMenu = menu => {
 
 const handleMenuAction = ({ action, value }) => {
   closeMenu();
-  if (action === 'source') emit('selectSource', value);
-  else if (action === 'status') emit('selectStatus', value);
+  if (action === 'status') emit('selectStatus', value);
   else if (action === 'sort') emit('selectSort', value);
 };
 </script>
@@ -126,7 +126,7 @@ const handleMenuAction = ({ action, value }) => {
 <template>
   <div
     v-on-click-outside="closeMenu"
-    class="inline-flex flex-wrap items-center gap-2 pt-2 w-fit"
+    class="inline-flex flex-wrap items-center gap-2 w-fit"
   >
     <div v-for="menu in filterMenus" :key="menu.key" class="relative">
       <Button

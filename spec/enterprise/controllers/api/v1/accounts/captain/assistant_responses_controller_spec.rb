@@ -178,7 +178,7 @@ RSpec.describe 'Api::V1::Accounts::Captain::AssistantResponses', type: :request 
       end
     end
 
-    context 'when filtering by documentable_type' do
+    context 'when filtering by origin' do
       let(:conversation) { create(:conversation, account: account) }
 
       before do
@@ -192,15 +192,30 @@ RSpec.describe 'Api::V1::Accounts::Captain::AssistantResponses', type: :request 
                     documentable: conversation)
       end
 
-      it 'returns only responses matching the documentable_type' do
+      it 'returns only responses from that origin' do
         get "/api/v1/accounts/#{account.id}/captain/assistant_responses",
-            params: { documentable_type: 'Conversation' },
+            params: { origin: 'conversation' },
             headers: agent.create_new_auth_token,
             as: :json
 
         expect(response).to have_http_status(:ok)
         expect(json_response[:payload].length).to eq(3)
         expect(json_response[:payload].all? { |r| r[:documentable][:type] == 'Conversation' }).to be(true)
+      end
+
+      it 'separates website pages from files' do
+        page = create(:captain_document, assistant: assistant, account: account, external_link: 'https://example.com/help')
+        file = create(:captain_document, assistant: assistant, account: account)
+        file.update_column(:external_link, 'MARKDOWN:returns-policy') # rubocop:disable Rails/SkipsModelValidations
+        page_faq = create(:captain_assistant_response, account: account, assistant: assistant, documentable: page)
+        create(:captain_assistant_response, account: account, assistant: assistant, documentable: file)
+
+        get "/api/v1/accounts/#{account.id}/captain/assistant_responses",
+            params: { origin: 'page' },
+            headers: agent.create_new_auth_token,
+            as: :json
+
+        expect(json_response[:payload].pluck(:id)).to eq([page_faq.id])
       end
     end
 

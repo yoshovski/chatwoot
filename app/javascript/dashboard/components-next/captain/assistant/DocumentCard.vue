@@ -1,7 +1,6 @@
 <script setup>
 import { computed } from 'vue';
 import { useRoute } from 'vue-router';
-import { useToggle } from '@vueuse/core';
 import { useI18n } from 'vue-i18n';
 import { dynamicTime } from 'shared/helpers/timeHelper';
 import { useExactTimestamp } from 'shared/composables/useExactTimestamp';
@@ -13,7 +12,6 @@ import {
 } from 'shared/helpers/documentHelper';
 
 import Icon from 'dashboard/components-next/icon/Icon.vue';
-import DropdownMenu from 'dashboard/components-next/dropdown-menu/DropdownMenu.vue';
 import Button from 'dashboard/components-next/button/Button.vue';
 import Checkbox from 'dashboard/components-next/checkbox/Checkbox.vue';
 import Switch from 'dashboard/components-next/switch/Switch.vue';
@@ -93,17 +91,14 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
-  showSelectionControl: {
+  // Administrators get a checkbox for bulk actions.
+  selectable: {
     type: Boolean,
     default: false,
   },
-  showMenu: {
-    type: Boolean,
-    default: true,
-  },
 });
 
-const emit = defineEmits(['action', 'select', 'hover', 'toggle']);
+const emit = defineEmits(['action', 'select', 'toggle']);
 
 const KNOWLEDGE_STATE_CHIPS = {
   searchable: {
@@ -136,7 +131,6 @@ const { checkPermissions } = usePolicy();
 
 const { t } = useI18n();
 
-const [showActionsDropdown, toggleDropdown] = useToggle();
 const modelValue = computed({
   get: () => props.isSelected,
   set: () => emit('select', props.id),
@@ -247,9 +241,8 @@ const displayLink = computed(() => {
 
   return getDocumentDisplayPath(props.externalLink);
 });
-const handleAction = ({ action, value }) => {
-  toggleDropdown(false);
-  emit('action', { action, value, id: props.id });
+const handleAction = action => {
+  emit('action', { action, id: props.id });
 };
 
 const handleViewDetails = () => {
@@ -263,33 +256,21 @@ const handleRetry = () => {
 
 <template>
   <div
-    class="relative flex items-center justify-between gap-3 px-3.5 py-2.5 rounded-lg border border-n-weak bg-n-solid-1 hover:border-n-slate-6 transition-colors"
-    :class="{
-      'opacity-60': !enabled,
-      'ring-1 ring-n-brand bg-n-brand/5': isSelected,
-    }"
-    @mouseenter="emit('hover', true)"
-    @mouseleave="emit('hover', false)"
+    class="group relative flex items-center justify-between gap-3 px-4 py-2.5 border-b border-n-weak last:border-b-0 transition-colors hover:bg-n-alpha-1"
+    :class="{ 'bg-n-brand/5': isSelected }"
   >
-    <div class="flex items-center gap-2.5 min-w-0 flex-1">
-      <!-- The checkbox takes the type icon's place, so hovering never moves the title. -->
-      <div class="flex items-center justify-center size-6 shrink-0">
-        <Checkbox
-          v-if="showSelectionControl"
-          v-model="modelValue"
-          :aria-label="name"
-        />
-        <div
-          v-else
-          class="flex items-center justify-center size-6 rounded"
-          :class="typeIconClasses"
-        >
-          <Icon :icon="typeIcon" class="size-3.5" />
-        </div>
+    <div class="flex items-center gap-3 min-w-0 flex-1">
+      <Checkbox v-if="selectable" v-model="modelValue" :aria-label="name" />
+      <div
+        class="flex items-center justify-center size-6 rounded shrink-0"
+        :class="[typeIconClasses, { 'opacity-60': !enabled }]"
+      >
+        <Icon :icon="typeIcon" class="size-3.5" />
       </div>
       <button
         type="button"
-        class="p-0 text-sm font-medium text-start bg-transparent border-0 outline-transparent text-n-slate-12 truncate max-w-xs md:max-w-md underline-offset-2 hover:underline focus-visible:underline"
+        class="p-0 text-sm font-medium text-start bg-transparent border-0 outline-transparent truncate max-w-xs md:max-w-md underline-offset-2 hover:underline focus-visible:underline"
+        :class="enabled ? 'text-n-slate-12' : 'text-n-slate-11'"
         @click="handleViewDetails"
       >
         {{ name }}
@@ -306,14 +287,24 @@ const handleRetry = () => {
         <span class="truncate">{{ displayLink }}</span>
         <Icon icon="i-lucide-external-link size-3 shrink-0 opacity-70" />
       </a>
-      <span
-        v-if="!enabled"
-        class="inline-flex items-center px-1.5 py-0.5 text-[10px] font-medium rounded bg-n-slate-3 text-n-slate-11 shrink-0"
-      >
-        {{ $t('CAPTAIN.DOCUMENTS.STATUS.PAUSED') }}
-      </span>
     </div>
     <div class="flex items-center gap-2.5 shrink-0">
+      <div
+        v-if="menuItems.length"
+        class="flex items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100"
+      >
+        <Button
+          v-for="item in menuItems"
+          :key="item.action"
+          v-tooltip.top="item.label"
+          :aria-label="item.label"
+          :icon="item.icon"
+          :color="item.action === 'delete' ? 'ruby' : 'slate'"
+          variant="ghost"
+          size="xs"
+          @click="handleAction(item.action)"
+        />
+      </div>
       <DocumentSyncStatus
         v-if="showSyncStatus"
         class="!text-xs"
@@ -325,6 +316,12 @@ const handleRetry = () => {
         :show-retry="canSync && isRetryableSync"
         @retry="handleRetry"
       />
+      <span
+        v-else-if="!enabled"
+        class="inline-flex items-center px-1.5 py-0.5 text-xs font-medium rounded-full bg-n-slate-3 text-n-slate-11 shrink-0"
+      >
+        {{ $t('KNOWLEDGE_LIST.OFF') }}
+      </span>
       <span
         v-else-if="knowledgeChip"
         v-tooltip.top="{
@@ -370,26 +367,6 @@ const handleRetry = () => {
           "
         />
       </Policy>
-      <div
-        v-if="showMenu && menuItems.length"
-        v-on-clickaway="() => toggleDropdown(false)"
-        class="relative flex items-center"
-      >
-        <Button
-          icon="i-lucide-ellipsis-vertical"
-          color="slate"
-          size="xs"
-          class="rounded-md"
-          :aria-label="t('CAPTAIN.DOCUMENTS.OPTIONS.MORE')"
-          @click="toggleDropdown()"
-        />
-        <DropdownMenu
-          v-if="showActionsDropdown"
-          :menu-items="menuItems"
-          class="top-full mt-1 ltr:right-0 rtl:left-0 z-30"
-          @action="handleAction($event)"
-        />
-      </div>
     </div>
   </div>
 </template>

@@ -2,6 +2,7 @@
 import { nextTick, ref } from 'vue';
 import Dialog from 'dashboard/components-next/dialog/Dialog.vue';
 import WebsiteSourceSelection from './WebsiteSourceSelection.vue';
+import { hostOf } from './websiteSourceHosts';
 
 defineProps({
   assistantId: { type: Number, required: true },
@@ -27,7 +28,7 @@ defineExpose({ open });
     v-if="source"
     ref="dialog"
     width="5xl"
-    :title="$t('CAPTAIN.WEBSITES.TITLE')"
+    :title="$t('CAPTAIN.WEBSITES.PAGES_FROM', { host: hostOf(source.url) })"
     :show-cancel-button="false"
     :show-confirm-button="false"
     @close="source = null"

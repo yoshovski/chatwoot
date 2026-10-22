@@ -82,6 +82,14 @@ const businessType = computed({
   get: () => config.value.business_type || '',
   set: value => update({ business_type: value }),
 });
+// One short line about what the chosen (or detected) type changes.
+const businessTypeHint = computed(() =>
+  t(
+    `CAPTAIN.ASSISTANTS.SETTINGS.BEHAVIOR.BUSINESS_TYPE.HINTS.${(
+      businessType.value || detectedBusinessType.value
+    ).toUpperCase()}`
+  )
+);
 
 const toggle = key =>
   computed({
@@ -105,14 +113,9 @@ const changeMaxButtons = delta => {
 <template>
   <div class="flex flex-col gap-6">
     <section class="flex flex-col gap-3">
-      <div class="flex flex-col gap-1">
-        <h3 class="text-base font-semibold text-n-slate-12">
-          {{ t('CAPTAIN.ASSISTANTS.SETTINGS.BEHAVIOR.BUSINESS_TYPE.TITLE') }}
-        </h3>
-        <p class="text-sm text-n-slate-11">
-          {{ t('CAPTAIN.ASSISTANTS.SETTINGS.BEHAVIOR.BUSINESS_TYPE.DESC') }}
-        </p>
-      </div>
+      <h3 class="text-base font-semibold text-n-slate-12">
+        {{ t('CAPTAIN.ASSISTANTS.SETTINGS.BEHAVIOR.BUSINESS_TYPE.TITLE') }}
+      </h3>
       <Select
         v-model="businessType"
         :options="businessTypeOptions"
@@ -120,6 +123,7 @@ const changeMaxButtons = delta => {
           t('CAPTAIN.ASSISTANTS.SETTINGS.BEHAVIOR.BUSINESS_TYPE.TITLE')
         "
       />
+      <p class="m-0 text-xs text-n-slate-11">{{ businessTypeHint }}</p>
     </section>
 
     <section class="flex flex-col gap-3">

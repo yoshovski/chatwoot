@@ -1,4 +1,10 @@
 export const BUCKETS = ['recommended', 'maybe', 'excluded'];
+// The picker shows two tabs: recommended pages, and everything else.
+export const TABS = ['recommended', 'other'];
+
+const inTab = (page, tab) =>
+  tab === 'all' ||
+  (tab === 'other' ? page.bucket !== 'recommended' : page.bucket === tab);
 
 const hostOf = url => new URL(url).host.replace(/^www\./, '');
 
@@ -23,7 +29,7 @@ export const buildWebsiteTree = (
   const query = search.trim().toLowerCase();
   const hosts = new Map();
   pages.forEach(page => {
-    if (bucket !== 'all' && page.bucket !== bucket) return;
+    if (!inTab(page, bucket)) return;
     if (!matches(page, query)) return;
 
     const host = hostOf(page.url);
@@ -81,6 +87,14 @@ export const countByBucket = pages =>
     },
     { all: 0, recommended: 0, maybe: 0, excluded: 0 }
   );
+
+export const countByTab = pages => {
+  const counts = countByBucket(pages);
+  return {
+    recommended: counts.recommended,
+    other: counts.all - counts.recommended,
+  };
+};
 
 export const recommendedUrls = pages =>
   pages

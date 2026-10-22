@@ -70,23 +70,7 @@ class Api::V1::Accounts::Captain::DocumentsController < Api::V1::Accounts::BaseC
   end
 
   def filtered_documents
-    documents = @documents
-    documents = documents.where(assistant_id: permitted_params[:assistant_id]) if permitted_params[:assistant_id].present?
-    documents = documents.merge(website_documents) if permitted_params[:website].present?
-    documents = documents.merge(section_documents) if permitted_params[:section].present?
-    documents = apply_source_filter(documents, permitted_params[:source])
-    documents = apply_filter(documents, permitted_params[:filter])
-    apply_search(documents, permitted_params[:search_key])
-  end
-
-  def website_documents
-    assistant = Current.account.captain_assistants.find(permitted_params[:assistant_id])
-    Captain::Documents::Sections.new(assistant).website_documents(permitted_params[:website])
-  end
-
-  def section_documents
-    assistant = Current.account.captain_assistants.find(permitted_params[:assistant_id])
-    Captain::Documents::Sections.new(assistant).documents([permitted_params[:section]])
+    Captain::Documents::ListFilter.new(Current.account, permitted_params).apply(@documents)
   end
 
   def with_responses_count(scope)
@@ -119,31 +103,6 @@ class Api::V1::Accounts::Captain::DocumentsController < Api::V1::Accounts::BaseC
     policy(Captain::Assistant).drilldown?
   end
 
-  def apply_source_filter(scope, source)
-    case source
-    when 'web' then scope.syncable
-    when 'pdf' then scope.pdf_documents
-    else scope
-    end
-  end
-
-  def apply_filter(scope, filter)
-    case filter
-    when 'stale' then stale_documents(scope.syncable)
-    when 'synced' then up_to_date_documents(scope.syncable)
-    when 'syncing' then scope.syncable.sync_in_progress
-    when 'failed' then scope.syncable.sync_failed
-    else scope
-    end
-  end
-
-  def apply_search(scope, search_key)
-    return scope if search_key.blank?
-
-    query = "%#{ActiveRecord::Base.sanitize_sql_like(search_key)}%"
-    scope.where('captain_documents.name ILIKE :query OR captain_documents.external_link ILIKE :query', query: query)
-  end
-
   def apply_sort(scope, sort)
     case sort
     when 'recently_created' then scope.order(created_at: :desc)
@@ -156,19 +115,6 @@ class Api::V1::Accounts::Captain::DocumentsController < Api::V1::Accounts::BaseC
       )
     else scope.order(updated_at: :desc)
     end
-  end
-
-  def stale_documents(scope)
-    return scope.none unless current_sync_interval
-
-    scope.sync_synced.where(Captain::Document.arel_table[:last_synced_at].lt(current_sync_interval.ago))
-  end
-
-  def up_to_date_documents(scope)
-    documents = scope.sync_synced
-    return documents unless current_sync_interval
-
-    documents.where(Captain::Document.arel_table[:last_synced_at].gteq(current_sync_interval.ago))
   end
 
   def current_sync_interval

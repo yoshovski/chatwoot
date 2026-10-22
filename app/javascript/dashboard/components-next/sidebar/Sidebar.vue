@@ -466,7 +466,8 @@ const menuItems = computed(() => {
     {
       name: 'Captain',
       icon: 'i-lucide-bot-message-square',
-      label: t('SIDEBAR.CAPTAIN'),
+      // The branded product name ("Octave AI Agents") is too long for the panel title.
+      label: t('PLATFORM_NAV.AI_AGENTS'),
       children: [
         {
           name: 'Knowledge',

@@ -14,10 +14,11 @@ import WebsitePagesDialog from 'dashboard/components-next/captain/knowledge/Webs
 import KnowledgeSourceBrowser from 'dashboard/components-next/captain/knowledge/KnowledgeSourceBrowser.vue';
 import DocumentCard from 'dashboard/components-next/captain/assistant/DocumentCard.vue';
 import DocumentFilter from 'dashboard/components-next/captain/assistant/DocumentFilter.vue';
-import DocumentBulkActions from 'dashboard/components-next/captain/assistant/DocumentBulkActions.vue';
+import KnowledgeBulkActions from 'dashboard/components-next/captain/list/KnowledgeBulkActions.vue';
+import ListHeader from 'dashboard/components-next/captain/list/ListHeader.vue';
+import { useListSelection } from 'dashboard/components-next/captain/list/useListSelection';
 import Input from 'dashboard/components-next/input/Input.vue';
 import Button from 'next/button/Button.vue';
-import Policy from 'dashboard/components/policy.vue';
 import PageLayout from 'dashboard/components-next/captain/PageLayout.vue';
 import TestAgentButton from 'dashboard/components-next/captain/TestAgentButton.vue';
 import CaptainPaywall from 'dashboard/components-next/captain/pageComponents/Paywall.vue';
@@ -50,8 +51,6 @@ const canManageDocuments = computed(() => checkPermissions(['administrator']));
 
 const selectedDocument = ref(null);
 const deleteDocumentDialog = ref(null);
-const bulkSelectedIds = ref(new Set());
-const hoveredCard = ref(null);
 
 const handleDelete = () => {
   deleteDocumentDialog.value.dialogRef.open();
@@ -80,9 +79,8 @@ const handleCreateDialogClose = () => {
 const documentFilter = ref(null);
 const syncIntervalHours = ref(null);
 const searchQuery = ref('');
-const sectionFilter = ref(null);
-const websiteFilter = ref(null);
-const hasWebsiteSources = ref(false);
+// 'all', 'pdf', 'text', or a website host.
+const sourceFilter = ref('all');
 const documentSectionsPanel = ref(null);
 
 const currentAssistantId = () =>
@@ -97,14 +95,32 @@ const buildDocumentFilterParams = (page = 1) => {
   if (assistantId) filterParams.assistantId = assistantId;
   const trimmedQuery = searchQuery.value.trim();
   if (trimmedQuery) filterParams.searchKey = trimmedQuery;
-  if (assistantId && sectionFilter.value) {
-    filterParams.section = sectionFilter.value;
-  }
-  if (assistantId && websiteFilter.value && websiteFilter.value !== '*') {
-    filterParams.website = websiteFilter.value;
+  if (['pdf', 'text'].includes(sourceFilter.value)) {
+    filterParams.source = sourceFilter.value;
+  } else if (assistantId && sourceFilter.value !== 'all') {
+    filterParams.website = sourceFilter.value;
   }
   return filterParams;
 };
+
+// The same filters in the API's own names, for bulk actions on all matching sources.
+const bulkFilters = () => {
+  const { assistantId, searchKey, filter, source, website } =
+    buildDocumentFilterParams();
+  return {
+    assistant_id: assistantId,
+    search_key: searchKey,
+    filter,
+    source,
+    website,
+  };
+};
+
+const selection = useListSelection({
+  items: documents,
+  total: computed(() => documentsMeta.value?.totalCount || 0),
+  filters: bulkFilters,
+});
 
 let documentsRequestId = 0;
 let fetchingListRequestId = null;
@@ -112,19 +128,6 @@ let fetchingListRequestId = null;
 const isCurrentDocumentRequest = (requestId, filterParams) =>
   requestId === documentsRequestId &&
   (filterParams.assistantId || null) === currentAssistantId();
-
-const pruneSelectionToDocuments = nextDocuments => {
-  if (!bulkSelectedIds.value.size) return;
-
-  const visibleDocumentIds = new Set(nextDocuments.map(doc => doc.id));
-  const selectedIds = new Set(
-    [...bulkSelectedIds.value].filter(id => visibleDocumentIds.has(id))
-  );
-
-  if (selectedIds.size !== bulkSelectedIds.value.size) {
-    bulkSelectedIds.value = selectedIds;
-  }
-};
 
 const fetchDocuments = async (page = 1, { showLoader = true } = {}) => {
   documentsRequestId += 1;
@@ -145,7 +148,6 @@ const fetchDocuments = async (page = 1, { showLoader = true } = {}) => {
 
     const { payload, meta } = response.data;
     store.dispatch('captainDocuments/setRecords', { records: payload, meta });
-    pruneSelectionToDocuments(payload);
     syncIntervalHours.value = Number(meta?.sync_interval_hours) || null;
     return payload;
   } catch (error) {
@@ -169,14 +171,11 @@ const refreshDocumentsPage = (
 };
 
 const onFiltersChanged = () => {
-  bulkSelectedIds.value = new Set();
+  selection.clear();
   fetchDocuments(1);
 };
 
-const debouncedSearch = debounce(() => {
-  bulkSelectedIds.value = new Set();
-  fetchDocuments(1);
-}, 300);
+const debouncedSearch = debounce(onFiltersChanged, 300);
 
 const syncPollStartedAt = ref(null);
 
@@ -280,12 +279,8 @@ const handleAction = ({ action, id }) => {
 };
 
 const onPageChange = page => {
-  const hadSelection = bulkSelectedIds.value.size > 0;
+  selection.clear();
   fetchDocuments(page);
-
-  if (hadSelection) {
-    bulkSelectedIds.value = new Set();
-  }
 };
 
 const onDeleteSuccess = () => {
@@ -296,33 +291,11 @@ const onDeleteSuccess = () => {
   }
 };
 
-const shouldShowSelectionControl = docId =>
-  canManageDocuments.value &&
-  (hoveredCard.value === docId || bulkSelectedIds.value.size > 0);
-
-const handleCardHover = (isHovered, id) => {
-  hoveredCard.value = isHovered ? id : null;
-};
-
-const handleCardSelect = id => {
-  if (!canManageDocuments.value) return;
-  const selected = new Set(bulkSelectedIds.value);
-  selected[selected.has(id) ? 'delete' : 'add'](id);
-  bulkSelectedIds.value = selected;
-};
-
-const fetchDocumentsAfterBulkAction = () => {
+const fetchDocumentsAfterBulkDelete = () => {
+  const currentPage = documentsMeta.value?.page || 1;
   const hasNoDocumentsLeft = documents.value?.length === 0;
-  const currentPage = documentsMeta.value?.page;
-
-  if (hasNoDocumentsLeft) {
-    const pageToFetch = currentPage > 1 ? currentPage - 1 : currentPage;
-    fetchDocuments(pageToFetch);
-  } else {
-    fetchDocuments(currentPage);
-  }
-
-  bulkSelectedIds.value = new Set();
+  fetchDocuments(hasNoDocumentsLeft && currentPage > 1 ? currentPage - 1 : 1);
+  documentSectionsPanel.value?.load();
 };
 
 const onCreateSuccess = () => {
@@ -330,22 +303,24 @@ const onCreateSuccess = () => {
   documentSectionsPanel.value?.load();
 };
 
+const isFileSource = computed(() =>
+  ['pdf', 'text'].includes(sourceFilter.value)
+);
+
 const clearFilters = () => {
   documentFilter.value?.reset();
   searchQuery.value = '';
-  sectionFilter.value = null;
-  websiteFilter.value = '*';
+  sourceFilter.value = 'all';
   onFiltersChanged();
 };
 
-watch([sectionFilter, websiteFilter], onFiltersChanged);
+watch(sourceFilter, onFiltersChanged);
 
 const hasActiveDocumentFilters = computed(
   () =>
     (documentFilter.value?.hasActiveFilters ?? false) ||
     Boolean(searchQuery.value.trim()) ||
-    Boolean(sectionFilter.value) ||
-    Boolean(websiteFilter.value)
+    sourceFilter.value !== 'all'
 );
 
 const shopifyHook = ref(null);
@@ -387,10 +362,8 @@ watch(
   async () => {
     documentFilter.value?.reset();
     searchQuery.value = '';
-    sectionFilter.value = null;
-    websiteFilter.value = null;
-    hasWebsiteSources.value = false;
-    bulkSelectedIds.value = new Set();
+    sourceFilter.value = 'all';
+    selection.clear();
     syncIntervalHours.value = null;
     stopSyncPolling();
     await fetchDocuments(1);
@@ -422,35 +395,6 @@ onUnmounted(() => {
     <template #headerActions>
       <TestAgentButton :assistant-id="selectedAssistantId" />
     </template>
-    <template #subHeader>
-      <Policy :permissions="['administrator']">
-        <DocumentBulkActions
-          v-model:selected-ids="bulkSelectedIds"
-          :documents="documents"
-          @bulk-sync-queued="scheduleSyncPoll({ extendWindow: true })"
-          @bulk-delete-succeeded="fetchDocumentsAfterBulkAction"
-          @bulk-updated="refreshDocumentsPage()"
-        />
-      </Policy>
-      <div
-        v-show="!bulkSelectedIds.size"
-        class="mb-3 flex flex-wrap items-center gap-3"
-      >
-        <Input
-          v-model="searchQuery"
-          :placeholder="$t('CAPTAIN.DOCUMENTS.FILTERS.SEARCH_PLACEHOLDER')"
-          class="max-w-64 min-w-0 w-full"
-          size="sm"
-          type="search"
-          @input="debouncedSearch"
-        />
-        <DocumentFilter
-          ref="documentFilter"
-          class="mb-2"
-          @change="onFiltersChanged"
-        />
-      </div>
-    </template>
     <template #knowMore>
       <FeatureSpotlightPopover
         :button-label="$t('CAPTAIN.HEADER_KNOW_MORE')"
@@ -475,31 +419,27 @@ onUnmounted(() => {
       <KnowledgeSourceBrowser
         v-if="selectedAssistantId > 0"
         ref="documentSectionsPanel"
-        v-model:website="websiteFilter"
-        v-model:section="sectionFilter"
+        v-model:source="sourceFilter"
         :assistant-id="selectedAssistantId"
         :can-manage="canManageDocuments"
-        @loaded="hasWebsiteSources = $event"
         @manage="websitePagesDialog.open($event)"
-      />
-      <div
-        class="mb-3 flex flex-wrap items-center justify-between gap-3 text-sm text-n-slate-11"
       >
-        <div class="flex items-center gap-3">
-          <span>{{
-            $t('PLATFORM_NAV.MATCHING_SOURCES', {
-              count: documentsMeta.totalCount || 0,
-            })
-          }}</span>
-          <Button
-            v-if="hasActiveDocumentFilters"
-            :label="$t('PLATFORM_NAV.CLEAR_FILTERS')"
-            size="sm"
-            variant="link"
-            @click="clearFilters"
+        <Input
+          v-model="searchQuery"
+          :placeholder="$t('CAPTAIN.DOCUMENTS.FILTERS.SEARCH_PLACEHOLDER')"
+          class="max-w-64 min-w-0 w-full"
+          size="sm"
+          type="search"
+          @input="debouncedSearch"
+        />
+        <template #filters>
+          <DocumentFilter
+            ref="documentFilter"
+            :show-status="!isFileSource"
+            @change="onFiltersChanged"
           />
-        </div>
-      </div>
+        </template>
+      </KnowledgeSourceBrowser>
     </template>
 
     <template #body>
@@ -515,38 +455,74 @@ onUnmounted(() => {
         <span class="max-w-md text-sm text-n-slate-11">
           {{ $t('CAPTAIN.DOCUMENTS.EMPTY_STATE.FILTERED_SUBTITLE') }}
         </span>
-      </div>
-
-      <div v-else class="flex flex-col gap-2">
-        <DocumentCard
-          v-for="doc in documents"
-          :id="doc.id"
-          :key="doc.id"
-          :name="doc.name || doc.external_link"
-          :external-link="doc.external_link"
-          :pdf-document="doc.pdf_document"
-          :markdown-document="doc.markdown_document"
-          :syncable="doc.syncable"
-          :assistant="doc.assistant"
-          :created-at="doc.created_at"
-          :status="doc.status"
-          :enabled="doc.enabled !== false"
-          :sync-status="doc.sync_status"
-          :last-synced-at="doc.last_synced_at"
-          :last-sync-error-code="doc.last_sync_error_code"
-          :sync-in-progress="doc.sync_in_progress"
-          :sync-stale-after-hours="syncIntervalHours"
-          :responses-count="doc.responses_count"
-          :knowledge-state="doc.knowledge_state"
-          :is-selected="canManageDocuments && bulkSelectedIds.has(doc.id)"
-          :show-selection-control="shouldShowSelectionControl(doc.id)"
-          :show-menu="!bulkSelectedIds.has(doc.id)"
-          @action="handleAction"
-          @select="handleCardSelect"
-          @toggle="handleToggleDocument"
-          @hover="isHovered => handleCardHover(isHovered, doc.id)"
+        <Button
+          :label="$t('PLATFORM_NAV.CLEAR_FILTERS')"
+          size="sm"
+          variant="link"
+          @click="clearFilters"
         />
       </div>
+
+      <template v-else>
+        <section
+          :aria-label="$t('PLATFORM_NAV.DATA_SOURCES')"
+          class="overflow-hidden border rounded-xl border-n-weak bg-n-solid-1"
+        >
+          <ListHeader
+            :selection="selection"
+            :selectable="canManageDocuments"
+            :total="documentsMeta.totalCount || 0"
+            :page-count="documents.length"
+            :label="
+              $t('PLATFORM_NAV.MATCHING_SOURCES', {
+                count: documentsMeta.totalCount || 0,
+              })
+            "
+          >
+            <Button
+              v-if="hasActiveDocumentFilters"
+              :label="$t('PLATFORM_NAV.CLEAR_FILTERS')"
+              size="xs"
+              variant="link"
+              @click="clearFilters"
+            />
+          </ListHeader>
+          <DocumentCard
+            v-for="doc in documents"
+            :id="doc.id"
+            :key="doc.id"
+            :name="doc.name || doc.external_link"
+            :external-link="doc.external_link"
+            :pdf-document="doc.pdf_document"
+            :markdown-document="doc.markdown_document"
+            :syncable="doc.syncable"
+            :assistant="doc.assistant"
+            :created-at="doc.created_at"
+            :status="doc.status"
+            :enabled="doc.enabled !== false"
+            :sync-status="doc.sync_status"
+            :last-synced-at="doc.last_synced_at"
+            :last-sync-error-code="doc.last_sync_error_code"
+            :sync-in-progress="doc.sync_in_progress"
+            :sync-stale-after-hours="syncIntervalHours"
+            :responses-count="doc.responses_count"
+            :knowledge-state="doc.knowledge_state"
+            :selectable="canManageDocuments"
+            :is-selected="selection.isSelected(doc.id)"
+            @action="handleAction"
+            @select="selection.toggle"
+            @toggle="handleToggleDocument"
+          />
+        </section>
+        <KnowledgeBulkActions
+          v-if="canManageDocuments"
+          type="AssistantDocument"
+          :selection="selection"
+          @updated="refreshDocumentsPage()"
+          @deleted="fetchDocumentsAfterBulkDelete"
+          @sync-queued="scheduleSyncPoll({ extendWindow: true })"
+        />
+      </template>
     </template>
 
     <DocumentDetails

@@ -56,34 +56,41 @@ const handleDeleteSuccess = () => {
       :save="updateAssistant"
       @delete-avatar="deleteAssistantAvatar"
     >
-      <KnowledgeBriefPanel
-        v-if="assistantId"
-        :key="`brief-${assistantId}`"
-        :assistant-id="assistantId"
-      />
-      <div
-        class="flex flex-wrap items-center justify-between gap-3 px-1 pt-2 text-xs text-n-slate-11"
+      <template
+        #default="{ description, descriptionMaxLength, setDescription }"
       >
-        <span class="min-w-0">
-          {{
-            t('CAPTAIN.ASSISTANTS.SETTINGS.IDENTITY.REMOVE_DESCRIPTION', {
-              name: assistant.name,
-            })
-          }}
-        </span>
-        <Button
-          :label="
-            t('CAPTAIN.ASSISTANTS.SETTINGS.IDENTITY.REMOVE_TITLE', {
-              name: assistant.name,
-            })
-          "
-          color="ruby"
-          variant="ghost"
-          size="xs"
-          icon="i-lucide-trash-2"
-          @click="handleDelete"
+        <KnowledgeBriefPanel
+          v-if="assistantId"
+          :key="`brief-${assistantId}`"
+          :assistant-id="assistantId"
+          :summary="description || ''"
+          :summary-max-length="descriptionMaxLength"
+          @use-overview="setDescription"
         />
-      </div>
+        <div
+          class="flex flex-wrap items-center justify-between gap-3 px-1 pt-2 text-xs text-n-slate-11"
+        >
+          <span class="min-w-0">
+            {{
+              t('CAPTAIN.ASSISTANTS.SETTINGS.IDENTITY.REMOVE_DESCRIPTION', {
+                name: assistant.name,
+              })
+            }}
+          </span>
+          <Button
+            :label="
+              t('CAPTAIN.ASSISTANTS.SETTINGS.IDENTITY.REMOVE_TITLE', {
+                name: assistant.name,
+              })
+            "
+            color="ruby"
+            variant="ghost"
+            size="xs"
+            icon="i-lucide-trash-2"
+            @click="handleDelete"
+          />
+        </div>
+      </template>
     </AssistantBasicSettingsForm>
     <DeleteDialog
       v-if="assistant"
