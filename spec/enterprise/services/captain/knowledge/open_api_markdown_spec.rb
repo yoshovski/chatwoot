@@ -19,7 +19,9 @@ RSpec.describe Captain::Knowledge::OpenApiMarkdown do
             'responses' => {
               '200' => { 'description' => 'OK', 'content' => { 'application/json' => { 'schema' => {
                 'allOf' => [{ 'properties' => { 'status' => { '$ref' => '#/components/schemas/Status' } } },
-                            { 'properties' => { 'items' => { 'type' => 'array', 'items' => { 'properties' => { 'sku' => { 'type' => 'string', 'example' => 'A1' } } } } } }]
+                            { 'properties' => { 'items' => { 'type' => 'array',
+                                                             'items' => { 'properties' => { 'sku' => { 'type' => 'string',
+                                                                                                       'example' => 'A1' } } } } } }]
               } } } }
             }
           }

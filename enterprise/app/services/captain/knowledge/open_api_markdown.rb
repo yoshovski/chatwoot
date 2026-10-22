@@ -45,12 +45,16 @@ class Captain::Knowledge::OpenApiMarkdown
     [
       "## #{method.upcase} #{path}#{": #{summary}" if summary}",
       overview(path, method, operation),
-      # Headings inside the description belong under this operation's heading.
-      operation['description'].to_s.strip.gsub(/^(\#{1,6})(?=[ \t])/) { '#' * [Regexp.last_match(1).length + 2, 6].min }.presence,
+      description(operation['description']),
       parameters_section(Array(shared_parameters) + Array(operation['parameters'])),
       request_section(resolve(operation['requestBody'])),
       *responses_section(operation['responses'])
     ].compact.join("\n\n")
+  end
+
+  # Headings inside the description belong under this operation's heading.
+  def description(text)
+    text.to_s.strip.gsub(/^(\#{1,6})(?=[ \t])/) { '#' * [Regexp.last_match(1).length + 2, 6].min }.presence
   end
 
   def overview(path, method, operation)
@@ -91,19 +95,21 @@ class Captain::Knowledge::OpenApiMarkdown
     return unless content
 
     schema = resolve(content['schema'])
-    rows = fields(schema).map { |name, field, required| [name, type(field), required ? 'yes' : 'no', details(field['description'], field)] }
+    rows = fields(items_of(schema)).map { |name, field, required| [name, type(field), required ? 'yes' : 'no', details(field['description'], field)] }
     [table("### Request body (#{media_type})", %w[Field Type Required Description], rows), example(content, schema)].compact.join("\n\n").presence
   end
 
   def responses_section(responses)
-    resolve(responses).map do |status, response|
-      response = resolve(response)
-      _, content = media(response['content'])
-      rows = fields(resolve(content&.dig('schema') || response['schema'])).map { |name, field| [name, type(field), details(field['description'], field)] }
-      description = response['description'].to_s.squish
-      heading = "### Response #{status}#{": #{description}" if description.present? && description != status.to_s}"
-      table(heading, %w[Field Type Description], rows) || heading
-    end
+    resolve(responses).map { |status, response| response_section(status.to_s, resolve(response)) }
+  end
+
+  def response_section(status, response)
+    _, content = media(response['content'])
+    schema = resolve(content ? content['schema'] : response['schema'])
+    rows = fields(items_of(schema)).map { |name, field| [name, type(field), details(field['description'], field)] }
+    description = response['description'].to_s.squish
+    heading = "### Response #{status}#{": #{description}" if description.present? && description != status}"
+    table(heading, %w[Field Type Description], rows) || heading
   end
 
   def media(content)
@@ -113,7 +119,7 @@ class Captain::Knowledge::OpenApiMarkdown
   end
 
   def example(content, schema)
-    value = content['example'] || resolve(content['examples']&.values&.first)&.dig('value') || schema['example']
+    value = content['example'] || resolve(Array(content['examples']&.values).first)['value'] || schema['example']
     return if value.nil?
 
     json = JSON.pretty_generate(value)
@@ -122,18 +128,19 @@ class Captain::Knowledge::OpenApiMarkdown
 
   # [dotted name, schema, required] for every property, nested objects and array items included.
   def fields(schema, prefix = '', depth = 0, rows = [])
-    schema = resolve(schema['items']) if schema['type'] == 'array' && prefix.empty?
     required = required_names(schema)
     properties(schema).each do |name, property|
       return rows if rows.size >= MAX_ROWS
 
       property = resolve(property)
       rows << ["#{prefix}#{name}", property, required.include?(name)]
-      nested = property['type'] == 'array' ? resolve(property['items']) : property
-      fields(nested, "#{prefix}#{name}#{'[]' if property['type'] == 'array'}.", depth + 1, rows) if depth < MAX_DEPTH
+      fields(items_of(property), "#{prefix}#{name}#{'[]' if property['type'] == 'array'}.", depth + 1, rows) if depth < MAX_DEPTH
     end
     rows
   end
+
+  # The fields of a list are its items' fields.
+  def items_of(schema) = schema['type'] == 'array' ? resolve(schema['items']) : schema
 
   # Composed schemas list their fields in their parts; variants of oneOf/anyOf are listed together.
   def properties(schema)

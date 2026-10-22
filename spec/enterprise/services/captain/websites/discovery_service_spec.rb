@@ -79,7 +79,7 @@ RSpec.describe Captain::Websites::DiscoveryService do
     described_class.new(source).perform
 
     expect(page('https://www.example.com/pricing')).to include('markdown_url' => 'https://www.example.com/pricing.md',
-                                                                'description' => 'Plans and billing')
+                                                               'description' => 'Plans and billing')
     expect(a_request(:get, %r{\Ahttps://api\.example\.com})).not_to have_been_made
   end
 

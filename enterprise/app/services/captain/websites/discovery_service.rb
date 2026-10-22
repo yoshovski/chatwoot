@@ -1,4 +1,4 @@
-class Captain::Websites::DiscoveryService
+class Captain::Websites::DiscoveryService # rubocop:disable Metrics/ClassLength
   MAX_PAGES = 2000
   MAX_HTML_FETCHES = 500
   MAX_SITEMAPS = 40
@@ -141,11 +141,8 @@ class Captain::Websites::DiscoveryService
   end
 
   def discover_llms_index(origin)
-    url = "#{origin}/llms.txt"
-    robots = @robots.for(url)
-    return unless robots&.allowed?(url)
-
-    text, = @fetcher.fetch(url, robots.delay)
+    robots = @robots.for(origin)
+    text, = @fetcher.fetch("#{origin}/llms.txt", robots.delay) if robots&.allowed?("#{origin}/llms.txt")
     Captain::Websites::LlmsIndex.pages(text, origin).each { |page| add_page(page.delete('url'), 'llms', attributes: page) }
   end
 

@@ -13,8 +13,7 @@ class Captain::Documents::SyncService
 
   def perform
     @document.update!(sync_step: 'fetching')
-    # A Firecrawl scrape costs a credit; without it, or for a markdown copy, the fetch is free, so only then ask the page first.
-    validators = Captain::Documents::PageValidators.new(@document) if Captain::Tools::FirecrawlService.configured? && source_page&.dig('markdown_url').nil?
+    validators = Captain::Documents::PageValidators.new(@document) if paid_scrape?
     if validators&.not_modified?
       mark_synced
       return :not_modified
@@ -61,7 +60,10 @@ class Captain::Documents::SyncService
     @source = (@document.assistant.website_sources.find(source_id) if source_id)
   end
 
-  def source_page = source&.pages&.find { |page| page['url'] == @document.external_link }
+  # A Firecrawl scrape costs a credit; without it, or for a markdown copy, the fetch is free, so only then ask the page first.
+  def paid_scrape?
+    Captain::Tools::FirecrawlService.configured? && source&.pages&.find { |page| page['url'] == @document.external_link }&.dig('markdown_url').nil?
+  end
 
   def compute_fingerprint(content)
     Digest::SHA256.hexdigest(content.gsub(/\s+/, ' ').strip)

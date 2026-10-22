@@ -8,11 +8,8 @@ class Captain::Websites::PageFetcher
     policy = robots_policy(origin)
     return failure('robots_disallowed') unless policy.allowed?(url)
 
-    page = @source.pages.find { |item| item['url'] == url }
-    article_id = page&.dig('help_center_article_id')
-    markdown_url = page&.dig('markdown_url')
-    (help_center_article(origin, article_id, policy) if article_id) || (markdown_page(markdown_url, policy) if markdown_url) ||
-      Captain::Documents::SinglePageFetcher.new(url).fetch
+    page = @source.pages.find { |item| item['url'] == url } || {}
+    listed_copy(origin, page, policy) || Captain::Documents::SinglePageFetcher.new(url).fetch
   rescue SafeFetch::Error
     failure('fetch_failed')
   end
@@ -29,6 +26,13 @@ class Captain::Websites::PageFetcher
     rescue SafeFetch::HttpError => e
       Captain::Websites::RobotsPolicy.new('', denied: e.message.to_i != 404)
     end
+  end
+
+  # Help-centre articles are read from their API and documentation pages from their llms.txt markdown copy.
+  def listed_copy(origin, page, policy)
+    return help_center_article(origin, page['help_center_article_id'], policy) if page['help_center_article_id']
+
+    markdown_page(page['markdown_url'], policy) if page['markdown_url']
   end
 
   # Help centres can restrict their API; the article page itself is the fallback.
