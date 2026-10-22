@@ -48,16 +48,28 @@ RSpec.describe 'Api::V1::Accounts::Captain::KnowledgeBriefs', type: :request do
       expect(Captain::Knowledge::GenerateExamplesJob).not_to have_been_enqueued
     end
 
+    it 'regenerates examples written by an older prompt at the settling pace' do
+      assistant.update!(created_at: 30.days.ago)
+      brief = Captain::KnowledgeBrief.create!(assistant: assistant,
+                                              published: { 'document_ids' => [ready.id], 'overview' => { 'text' => 'Old' }, 'topics' => [] })
+      brief.update!(examples: { 'fingerprint' => 'old', 'requested_at' => 2.hours.ago.iso8601 })
+
+      get examples_url, headers: admin.create_new_auth_token, as: :json
+
+      expect(Captain::Knowledge::GenerateExamplesJob).to have_been_enqueued.with(assistant.id)
+    end
+
     it 'waits a month between regenerations for a settled agent' do
       assistant.update!(created_at: 30.days.ago)
       brief = Captain::KnowledgeBrief.create!(assistant: assistant,
                                               published: { 'document_ids' => [ready.id], 'overview' => { 'text' => 'Old' }, 'topics' => [] })
-      brief.update!(examples: { 'fingerprint' => 'old', 'requested_at' => 2.days.ago.iso8601 })
+      version = Captain::KnowledgeBrief::EXAMPLES_VERSION
+      brief.update!(examples: { 'fingerprint' => 'old', 'version' => version, 'requested_at' => 2.days.ago.iso8601 })
 
       get examples_url, headers: admin.create_new_auth_token, as: :json
       expect(Captain::Knowledge::GenerateExamplesJob).not_to have_been_enqueued
 
-      brief.update!(examples: { 'fingerprint' => 'old', 'requested_at' => 31.days.ago.iso8601 })
+      brief.update!(examples: { 'fingerprint' => 'old', 'version' => version, 'requested_at' => 31.days.ago.iso8601 })
       get examples_url, headers: admin.create_new_auth_token, as: :json
       expect(Captain::Knowledge::GenerateExamplesJob).to have_been_enqueued.with(assistant.id)
     end
