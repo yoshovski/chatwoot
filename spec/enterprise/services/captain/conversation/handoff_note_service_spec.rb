@@ -23,6 +23,14 @@ RSpec.describe Captain::Conversation::HandoffNoteService do
     expect(service.generate_note_content).to eq("#{described_class::NOTE_HEADER}\nWants: 10 T100 batteries\nNext: send a quote")
   end
 
+  it 'drops lines the model left empty' do
+    stub_request(:post, %r{/chat/completions})
+      .to_return(status: 200, headers: { 'Content-Type' => 'application/json' },
+                 body: { choices: [{ message: { role: 'assistant', content: "Wants: help with streaming\nDetails: None\nNext: troubleshoot" } }] }.to_json)
+
+    expect(service.generate_note_content).to eq("#{described_class::NOTE_HEADER}\nWants: help with streaming\nNext: troubleshoot")
+  end
+
   it 'skips the LLM when the account has no Captain responses left' do
     allow(account).to receive(:usage_limits).and_return(captain: { responses: { current_available: 0 } })
     allow(conversation).to receive(:account).and_return(account)

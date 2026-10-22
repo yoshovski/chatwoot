@@ -174,11 +174,10 @@ RSpec.describe Captain::InboxPendingConversationsResolutionJob, type: :job do
       expect(resolvable_pending_conversation.reload.status).to eq('resolved')
     end
 
-    it 'creates a private note with the reason' do
+    it 'adds no private note' do
       described_class.perform_now(inbox)
 
-      private_note = resolvable_pending_conversation.messages.where(private: true).last
-      expect(private_note.content).to eq('Auto-resolved: Customer question was answered')
+      expect(resolvable_pending_conversation.messages.where(private: true)).to be_empty
     end
 
     it 'creates resolution message with configured content' do

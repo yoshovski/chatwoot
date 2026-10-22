@@ -225,7 +225,7 @@ RSpec.describe Captain::Assistant::SessionCaptureService do
       )
     end
 
-    it 'shows the sources found on both the answer and the handoff note' do
+    it 'shows the sources found on the answer but not on the handoff note' do
       note = create(:message, account: account, conversation: conversation, private: true)
       run_context[:state][:cw_metadata][:handoff_note_id] = note.id
       run_context[:state][Captain::Assistant::CITATION_SOURCES_STATE_KEY] = { 1 => 'faq:11', 2 => 'faq:12' }
@@ -233,7 +233,7 @@ RSpec.describe Captain::Assistant::SessionCaptureService do
       service.capture!
 
       expect(result_message.reload.additional_attributes['captain_sources_found']).to eq(2)
-      expect(note.reload.additional_attributes['captain_sources_found']).to eq(2)
+      expect(note.reload.additional_attributes).not_to have_key('captain_sources_found')
     end
 
     it 'marks a source as used when an uncited reply repeats its wording' do
