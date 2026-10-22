@@ -2268,10 +2268,8 @@
       "DISCOVER": "Discover pages",
       "INCLUDE_SUBDOMAINS": "Discover linked subdomains too",
       "DISCOVERY_HELP": "Explore sitemaps and linked pages first. You choose what becomes knowledge.",
-      "SELECTION_HELP": "Only selected pages are imported. Pages found later wait for your choice.",
-      "DISCOVERING": "Scanning… {count} found",
+      "SELECTION_HELP": "Your AI agent learns from the checked pages. Recommended pages start checked.",
       "DISCOVERED": "{count} pages found",
-      "LIMITED": "Partial list: discovery stopped at its {limits}.",
       "LOAD_ERROR": "Could not load website discovery. Please try again.",
       "SAVE_ERROR": "Could not save the page selection. Please try again.",
       "DISCOVERY_FAILED": "The scan could not finish. Try scanning again.",
@@ -2295,34 +2293,7 @@
         "synced": "Synced",
         "failed": "Failed"
       },
-      "CLASSIFYING": "{count} pages found · sorting…",
-      "CLASSIFICATION_FAILED": "Sorted by URL rules only. Check the Maybe tab before saving.",
-      "LIMITS": {
-        "time": "10-minute time limit",
-        "pages": "2,000-page limit",
-        "requests": "500-page check limit",
-        "sitemaps": "40-sitemap limit",
-        "origins": "40-site limit"
-      },
-      "PHASE": {
-        "SITEMAPS": "Reading sitemaps…",
-        "HELP_CENTER": "Reading help centre articles…",
-        "PAGES": "Checking page content ({count} of {max})…"
-      },
-      "BUCKETS": {
-        "RECOMMENDED": "Suggested",
-        "MAYBE": "Maybe",
-        "EXCLUDED": "Skipped",
-        "ALL": "All"
-      },
-      "BUCKET_HELP": {
-        "RECOMMENDED": "Likely to answer customer questions. Selected by default.",
-        "MAYBE": "Blog posts, release notes or other sites. Add only what customers ask about.",
-        "EXCLUDED": "Left out with a reason. You can still add most of them.",
-        "ALL": "Every discovered page."
-      },
       "HIDDEN_PAGES": "{count} page was left out because it was not found or has no text. | {count} pages were left out because they were not found or have no text.",
-      "SELECT_RECOMMENDED": "Select suggested",
       "CLEAR_SELECTION": "Clear",
       "HOME_SECTION": "Top-level pages",
       "SECTION_SUMMARY": "{label} · {reason}",
@@ -2361,10 +2332,19 @@
       "PREVIEW_THIN": "Too little text: the import will skip this page.",
       "SAVE_DURING_DISCOVERY": "You can save now. Pages found later wait for your selection.",
       "QUOTA_EXCEEDED": "This selection needs {count} new documents, but only {available} are available on your plan.",
-      "LIMITED_HELP": "To explore further, add a narrower website source, such as one section or subdomain.",
       "SELECTED_OF": "{selected} of {total} selected",
       "SELECTION_SUMMARY": "{selected} selected · {new} new",
-      "HIDDEN_COUNT": "{count} hidden"
+      "HIDDEN_COUNT": "{count} hidden",
+      "STILL_FINDING": "Still finding pages · {count} so far",
+      "TABS": {
+        "RECOMMENDED": "Recommended",
+        "OTHER": "Other pages"
+      },
+      "TAB_HELP": {
+        "RECOMMENDED": "Likely to answer customer questions. Checked by default.",
+        "OTHER": "Sign-in pages, lists of links, duplicates or other sites. You can still add them."
+      },
+      "PAGES_FROM": "Pages from {host}"
     },
     "KNOWLEDGE_BRIEF": {
       "TITLE": "Business profile",
