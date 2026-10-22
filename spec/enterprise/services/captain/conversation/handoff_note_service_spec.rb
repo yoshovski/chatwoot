@@ -24,9 +24,10 @@ RSpec.describe Captain::Conversation::HandoffNoteService do
   end
 
   it 'drops lines the model left empty' do
+    note = "Wants: help with streaming\nDetails: None\nNext: troubleshoot"
     stub_request(:post, %r{/chat/completions})
       .to_return(status: 200, headers: { 'Content-Type' => 'application/json' },
-                 body: { choices: [{ message: { role: 'assistant', content: "Wants: help with streaming\nDetails: None\nNext: troubleshoot" } }] }.to_json)
+                 body: { choices: [{ message: { role: 'assistant', content: note } }] }.to_json)
 
     expect(service.generate_note_content).to eq("#{described_class::NOTE_HEADER}\nWants: help with streaming\nNext: troubleshoot")
   end
