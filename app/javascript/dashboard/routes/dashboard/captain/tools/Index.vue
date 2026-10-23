@@ -13,8 +13,13 @@ import CreateCustomToolDialog from 'dashboard/components-next/captain/pageCompon
 import CustomToolCard from 'dashboard/components-next/captain/pageComponents/customTool/CustomToolCard.vue';
 import DeleteDialog from 'dashboard/components-next/captain/pageComponents/DeleteDialog.vue';
 import Dialog from 'dashboard/components-next/dialog/Dialog.vue';
-import McpServersSection from 'dashboard/components-next/captain/pageComponents/mcpServer/McpServersSection.vue';
+import McpServerCard from 'dashboard/components-next/captain/pageComponents/mcpServer/McpServerCard.vue';
+import ConnectMcpServerDialog from 'dashboard/components-next/captain/pageComponents/mcpServer/ConnectMcpServerDialog.vue';
+import { useMcpServers } from 'dashboard/components-next/captain/pageComponents/mcpServer/useMcpServers';
+import Button from 'dashboard/components-next/button/Button.vue';
+import Policy from 'dashboard/components/policy.vue';
 import { useAdmin } from 'dashboard/composables/useAdmin';
+import { parseAPIErrorResponse } from 'dashboard/store/utils/api';
 
 const store = useStore();
 const { t } = useI18n();
@@ -28,6 +33,73 @@ const uiFlags = useMapGetter('captainCustomTools/getUIFlags');
 const customTools = useMapGetter('captainCustomTools/getRecords');
 const isFetching = computed(() => uiFlags.value.fetchingList);
 const customToolsMeta = useMapGetter('captainCustomTools/getMeta');
+
+const mcp = useMcpServers();
+const mcpServers = mcp.servers;
+
+// MCP servers sit on the same page as custom tools: both are things the AI agent can call.
+const mcpDialogRef = ref(null);
+const mcpDialogServer = ref(undefined); // undefined: closed, null: new server
+const mcpBusyIds = ref(new Set());
+const mcpToDelete = ref(null);
+const mcpDeleteDialogRef = ref(null);
+
+const isPageFetching = computed(() => isFetching.value || mcp.isFetching.value);
+const isPageEmpty = computed(
+  () => !customTools.value.length && !mcpServers.value.length
+);
+
+const mcpError = error =>
+  useAlert(parseAPIErrorResponse(error) || t('CAPTAIN.MCP_SERVERS.ERROR'));
+
+const openMcpDialog = (server = null) => {
+  mcpDialogServer.value = server;
+  nextTick(() => mcpDialogRef.value.dialogRef.open());
+};
+
+const withMcpBusy = async (id, action) => {
+  mcpBusyIds.value = new Set([...mcpBusyIds.value, id]);
+  try {
+    await action();
+  } catch (error) {
+    mcpError(error);
+  } finally {
+    const next = new Set(mcpBusyIds.value);
+    next.delete(id);
+    mcpBusyIds.value = next;
+  }
+};
+
+const handleMcpAction = ({ action, server }) => {
+  if (action === 'edit') openMcpDialog(server);
+  if (action === 'delete') {
+    mcpToDelete.value = server;
+    nextTick(() => mcpDeleteDialogRef.value.open());
+  }
+  if (action === 'refresh') {
+    withMcpBusy(server.id, async () => {
+      const updated = await mcp.refreshTools(server.id);
+      if (updated.status === 'failed') useAlert(updated.last_error);
+    });
+  }
+};
+
+const toggleMcpTool = ({ server, tool, enabled }) =>
+  withMcpBusy(server.id, () =>
+    mcp.setEnabledTools(
+      server.id,
+      server.tools
+        .filter(item => (item.name === tool.name ? enabled : item.enabled))
+        .map(item => item.name)
+    )
+  );
+
+const deleteMcpServer = () =>
+  withMcpBusy(mcpToDelete.value.id, async () => {
+    await mcp.remove(mcpToDelete.value.id);
+    mcpDeleteDialogRef.value.close();
+    mcpToDelete.value = null;
+  });
 
 const showSoftLimitWarning = computed(
   () => !isV2.value && customToolsMeta.value.totalCount > SOFT_LIMIT
@@ -183,6 +255,7 @@ const onDeleteSuccess = () => {
 onMounted(() => {
   if (!shouldShowPaywall(FEATURE_FLAGS.CAPTAIN_CUSTOM_TOOLS)) {
     fetchCustomTools();
+    if (isAdmin.value) mcp.fetch().catch(mcpError);
   }
 });
 </script>
@@ -196,21 +269,34 @@ onMounted(() => {
     :total-count="customToolsMeta.totalCount"
     :current-page="customToolsMeta.page"
     :show-pagination-footer="!isFetching && !!customTools.length"
-    :is-fetching="isFetching"
-    :is-empty="!customTools.length"
+    :is-fetching="isPageFetching"
+    :is-empty="isPageEmpty"
     :show-know-more="false"
     @update:current-page="onPageChange"
     @click="openCreateDialog"
   >
+    <template #headerActions>
+      <Policy :permissions="['administrator']">
+        <Button
+          :label="$t('CAPTAIN.MCP_SERVERS.ADD')"
+          icon="i-lucide-plug"
+          size="sm"
+          variant="faded"
+          color="slate"
+          @click="openMcpDialog()"
+        />
+      </Policy>
+    </template>
+
     <template #paywall>
       <CaptainPaywall feature-prefix="CAPTAIN.CUSTOM_TOOLS" />
     </template>
 
     <template #emptyState>
-      <div class="flex flex-col gap-6">
-        <CustomToolsPageEmptyState @click="openCreateDialog" />
-        <McpServersSection v-if="isAdmin" />
-      </div>
+      <CustomToolsPageEmptyState
+        @click="openCreateDialog"
+        @connect-mcp="openMcpDialog()"
+      />
     </template>
 
     <template #body>
@@ -222,6 +308,12 @@ onMounted(() => {
           <span class="i-lucide-triangle-alert size-4 shrink-0" />
           {{ $t('CAPTAIN.CUSTOM_TOOLS.SOFT_LIMIT_WARNING') }}
         </div>
+        <h2
+          v-if="mcpServers.length && customTools.length"
+          class="mb-0 text-sm font-medium text-n-slate-11"
+        >
+          {{ $t('CAPTAIN.CUSTOM_TOOLS.SECTION_TITLE') }}
+        </h2>
         <CustomToolCard
           v-for="tool in customTools"
           :id="tool.id"
@@ -239,7 +331,22 @@ onMounted(() => {
           @action="handleAction"
           @toggle="toggleCustomTool"
         />
-        <McpServersSection v-if="isAdmin" />
+        <template v-if="mcpServers.length">
+          <h2
+            class="mt-4 mb-0 text-sm font-medium text-n-slate-11"
+            :class="{ 'mt-0': !customTools.length }"
+          >
+            {{ $t('CAPTAIN.MCP_SERVERS.TITLE') }}
+          </h2>
+          <McpServerCard
+            v-for="server in mcpServers"
+            :key="server.id"
+            :server="server"
+            :is-updating="mcpBusyIds.has(server.id)"
+            @action="handleMcpAction"
+            @toggle-tool="toggleMcpTool"
+          />
+        </template>
       </div>
     </template>
   </PageLayout>
@@ -250,6 +357,15 @@ onMounted(() => {
     :type="dialogType"
     :selected-tool="selectedTool"
     @close="handleDialogClose"
+  />
+
+  <ConnectMcpServerDialog
+    v-if="mcpDialogServer !== undefined"
+    ref="mcpDialogRef"
+    :server="mcpDialogServer"
+    :save="mcp.save"
+    :set-enabled-tools="mcp.setEnabledTools"
+    @close="mcpDialogServer = undefined"
   />
 
   <DeleteDialog
@@ -272,5 +388,18 @@ onMounted(() => {
     :is-loading="isDisableSaving"
     @confirm="handleDisableConfirm"
     @close="handleDisableDialogClose"
+  />
+
+  <Dialog
+    ref="mcpDeleteDialogRef"
+    type="alert"
+    :title="
+      t('CAPTAIN.MCP_SERVERS.DELETE_CONFIRM.TITLE', {
+        name: mcpToDelete?.name,
+      })
+    "
+    :description="t('CAPTAIN.MCP_SERVERS.DELETE_CONFIRM.DESCRIPTION')"
+    :confirm-button-label="t('CAPTAIN.MCP_SERVERS.DELETE')"
+    @confirm="deleteMcpServer"
   />
 </template>
