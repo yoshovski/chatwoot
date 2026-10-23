@@ -10,7 +10,7 @@ class Crm::Hubspot::ProcessorService < Crm::BaseProcessorService
       fingerprint = Digest::SHA256.hexdigest([@hook.id, contact.email, properties.sort].to_json)
       return if contact.additional_attributes['hubspot_sync_fingerprint'] == fingerprint
 
-      external_id = Crm::Hubspot::Client.new(@hook.access_token).upsert_contact(contact.email, properties)
+      external_id = Crm::Hubspot::Client.new(@hook).upsert_contact(contact.email, properties)
       store_sync_result(contact, external_id, fingerprint)
     end
   end

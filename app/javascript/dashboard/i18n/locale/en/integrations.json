@@ -443,6 +443,22 @@
         "BUTTON_TEXT": "Connect Linear workspace"
       }
     },
+    "HUBSPOT": {
+      "HEADER": "HubSpot",
+      "CONNECT": "Connect HubSpot",
+      "RECONNECT": "Reconnect HubSpot",
+      "DISCONNECT": "Disconnect",
+      "CONNECT_ERROR": "Could not connect HubSpot. Try again, and approve all requested permissions.",
+      "REAUTHORIZE": "HubSpot stopped accepting this connection, so syncing is paused. Reconnect HubSpot to resume.",
+      "PORTAL": {
+        "TITLE": "Connected HubSpot account",
+        "DETAILS": "{domain} · Portal ID {portalId}"
+      },
+      "DELETE": {
+        "TITLE": "Disconnect HubSpot?",
+        "MESSAGE": "Contacts and transcripts stop syncing. Data already in HubSpot stays there."
+      }
+    },
     "NOTION": {
       "HEADER": "Notion",
       "DELETE": {

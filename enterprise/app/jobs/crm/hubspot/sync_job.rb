@@ -1,6 +1,7 @@
 class Crm::Hubspot::SyncJob < ApplicationJob
   queue_as :medium
   retry_on Crm::Hubspot::Client::ApiError, wait: :polynomially_longer, attempts: 5
+  discard_on Crm::Hubspot::Client::ReauthorizationRequired
 
   def perform(hook_id, contact_id)
     hook = Integrations::Hook.find_by(id: hook_id, app_id: 'hubspot', status: :enabled)

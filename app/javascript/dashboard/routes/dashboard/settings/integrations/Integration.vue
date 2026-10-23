@@ -68,11 +68,17 @@ const confirmDeletion = () => {
       class="flex items-start lg:items-center justify-start flex-1 m-0 gap-6 flex-col lg:flex-row"
     >
       <div class="flex h-16 w-16 items-center justify-center flex-shrink-0">
+        <span
+          v-if="integrationId === 'hubspot'"
+          class="i-logos-hubspot w-full h-full"
+        />
         <img
+          v-else
           :src="`/dashboard/images/integrations/${integrationId}.png`"
           class="max-w-full rounded-md border border-n-weak shadow-sm block dark:hidden bg-n-alpha-3 dark:bg-n-alpha-2"
         />
         <img
+          v-if="integrationId !== 'hubspot'"
           :src="`/dashboard/images/integrations/${integrationId}-dark.png`"
           class="max-w-full rounded-md border border-n-weak shadow-sm hidden dark:block bg-n-alpha-3 dark:bg-n-alpha-2"
         />

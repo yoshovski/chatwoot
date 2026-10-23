@@ -447,6 +447,12 @@ Rails.application.routes.draw do
             resource :authorization, only: [:create]
           end
 
+          if ChatwootApp.enterprise?
+            namespace :hubspot do
+              resource :authorization, only: [:create]
+            end
+          end
+
           namespace :whatsapp do
             resource :authorization, only: [:create]
             resource :access_request, only: [:create] if ChatwootApp.enterprise?
@@ -501,6 +507,13 @@ Rails.application.routes.draw do
             resource :notion, controller: 'notion', only: [] do
               collection do
                 delete :destroy
+              end
+            end
+            if ChatwootApp.enterprise?
+              resource :hubspot, controller: 'hubspot', only: [] do
+                collection do
+                  delete :destroy
+                end
               end
             end
           end
@@ -779,6 +792,7 @@ Rails.application.routes.draw do
   get 'instagram/callback', to: 'instagram/callbacks#show'
   get 'tiktok/callback', to: 'tiktok/callbacks#show'
   get 'notion/callback', to: 'notion/callbacks#show'
+  get 'hubspot/callback', to: 'hubspot/callbacks#show' if ChatwootApp.enterprise?
   # ----------------------------------------------------------------------
   # Routes for external service verifications
   get '.well-known/assetlinks.json' => 'android_app#assetlinks'

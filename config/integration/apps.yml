@@ -343,7 +343,6 @@ hubspot:
   enterprise_only: true
   logo: hubspot.png
   i18n_key: hubspot
-  action: /hubspot
   hook_type: account
   allow_multiple_hooks: false
   settings_json_schema:
@@ -353,18 +352,30 @@ hubspot:
     properties:
       field_mapping:
         type: object
-        required: [email, firstname, lastname, lead_type, lead_summary, lead_source]
+        required: [email]
         propertyNames:
-          pattern: '^(email|firstname|lastname|lead_[a-z][a-z0-9_]{0,39})$'
+          pattern: '^(email|firstname|lastname|phone|lead_[a-z][a-z0-9_]{0,39})$'
         additionalProperties:
           type: string
           pattern: '^[a-z][a-z0-9_]*$'
-  settings_form_schema:
-    - type: password
-      name: private_app_token
-      validation: required
-    - type: textarea
-      name: field_mapping
-      validation: required|JSON
-      value: '{"email":"email","firstname":"firstname","lastname":"lastname","lead_type":"chatoctave_lead_type","lead_summary":"chatoctave_lead_summary","lead_source":"chatoctave_lead_source"}'
-  visible_properties: [field_mapping]
+      sync_contacts:
+        type: boolean
+      save_transcripts:
+        type: boolean
+      refresh_token:
+        type: string
+      expires_on:
+        type: string
+      portal_id:
+        type: integer
+      hub_domain:
+        type: string
+      user:
+        type: string
+      scopes:
+        type: array
+        items:
+          type: string
+      reauthorization_required:
+        type: boolean
+  visible_properties: [field_mapping, sync_contacts, save_transcripts, portal_id, hub_domain, user, reauthorization_required]
