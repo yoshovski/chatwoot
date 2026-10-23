@@ -143,7 +143,9 @@ defineExpose({ dialogRef });
         <span
           class="inline-flex items-center justify-center rounded-full size-5"
           :class="
-            index <= step ? 'bg-n-brand text-white' : 'bg-n-alpha-2 text-n-slate-11'
+            index <= step
+              ? 'bg-n-brand text-white'
+              : 'bg-n-alpha-2 text-n-slate-11'
           "
         >
           <i v-if="index < step" class="i-lucide-check size-3" />
