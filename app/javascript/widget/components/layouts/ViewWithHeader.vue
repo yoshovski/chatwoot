@@ -22,6 +22,7 @@ export default {
       ticking: true,
       disableBranding: window.chatwootWebChannel.disableBranding || false,
       requestID: null,
+      homeResizeObserver: null,
     };
   },
   computed: {
@@ -68,16 +69,42 @@ export default {
       return {};
     },
   },
+  watch: {
+    isOnHomeView() {
+      this.$nextTick(this.fitHomeHeight);
+    },
+  },
   mounted() {
     this.$el.addEventListener('scroll', this.updateScrollPosition);
+    this.fitHomeHeight();
   },
   unmounted() {
     this.$el.removeEventListener('scroll', this.updateScrollPosition);
     cancelAnimationFrame(this.requestID);
+    this.homeResizeObserver?.disconnect();
   },
   methods: {
     closeWindow() {
       IFrameHelper.sendMessage({ event: 'closeWindow' });
+    },
+    // The home screen asks the SDK to shrink the window to its content; other views use the full height.
+    fitHomeHeight() {
+      this.homeResizeObserver?.disconnect();
+      if (!this.isOnHomeView) {
+        IFrameHelper.sendMessage({ event: 'setContentHeight', height: null });
+        return;
+      }
+      const { content } = this.$refs;
+      this.homeResizeObserver = new ResizeObserver(() => {
+        const spacer = content.querySelector('[data-home-spacer]');
+        IFrameHelper.sendMessage({
+          event: 'setContentHeight',
+          height: content.offsetHeight - (spacer?.offsetHeight || 0),
+        });
+      });
+      [content, ...content.querySelectorAll('[data-fit-content]')].forEach(
+        element => this.homeResizeObserver.observe(element)
+      );
     },
     updateScrollPosition(event) {
       this.scrollPosition = event.target.scrollTop;
@@ -100,10 +127,12 @@ export default {
     @keydown.esc="closeWindow"
   >
     <div
+      ref="content"
       class="relative flex flex-col min-h-full"
       :class="{ 'h-full': !isOnHomeView }"
     >
       <div
+        data-fit-content
         :class="{
           expanded: !isHeaderCollapsed,
           collapsed: isHeaderCollapsed,

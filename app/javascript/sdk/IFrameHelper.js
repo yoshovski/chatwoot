@@ -264,6 +264,18 @@ export const IFrameHelper = {
         referrerHost,
       });
     },
+    setContentHeight: ({ height }) => {
+      if (height) {
+        widgetHolder.style.setProperty(
+          '--widget-content-height',
+          `${height}px`
+        );
+        addClasses(widgetHolder, 'woot-widget-holder--fit');
+      } else {
+        removeClasses(widgetHolder, 'woot-widget-holder--fit');
+      }
+    },
+
     updateIframeHeight: message => {
       const { extraHeight = 0, isFixedHeight } = message;
 
