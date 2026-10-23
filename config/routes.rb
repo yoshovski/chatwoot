@@ -160,6 +160,9 @@ Rails.application.routes.draw do
             resources :custom_tools do
               post :test, on: :collection
             end
+            resources :mcp_servers, only: [:index, :create, :update, :destroy] do
+              post :sync, on: :member
+            end
             resources :documents, only: [:index, :show, :create, :update, :destroy] do
               post :sync, on: :member
               post :generate_faqs, on: :member

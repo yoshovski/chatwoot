@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_10_23_120000) do
+ActiveRecord::Schema[7.2].define(version: 2026_10_24_120000) do
   # These extensions should be enabled to support this database
   enable_extension "pg_stat_statements"
   enable_extension "pg_trgm"
@@ -614,6 +614,22 @@ ActiveRecord::Schema[7.2].define(version: 2026_10_23_120000) do
     t.jsonb "examples", default: {}, null: false
     t.index ["account_id"], name: "index_captain_knowledge_briefs_on_account_id"
     t.index ["assistant_id"], name: "index_captain_knowledge_briefs_on_assistant_id", unique: true
+  end
+
+  create_table "captain_mcp_servers", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.string "name", null: false
+    t.text "endpoint_url", null: false
+    t.string "auth_type", default: "none", null: false
+    t.string "auth_header_name"
+    t.text "auth_token"
+    t.jsonb "tools", default: [], null: false
+    t.string "status", default: "pending", null: false
+    t.text "last_error"
+    t.datetime "synced_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id"], name: "index_captain_mcp_servers_on_account_id"
   end
 
   create_table "captain_message_reports", force: :cascade do |t|

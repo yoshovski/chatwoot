@@ -8,7 +8,12 @@ module SafeFetch
   DEFAULT_READ_TIMEOUT = 20
   DEFAULT_MAX_BYTES_FALLBACK_MB = 40
 
-  Result = Data.define(:tempfile, :filename, :content_type) do
+  Result = Data.define(:tempfile, :filename, :content_type, :headers) do
+    # headers: lowercase response headers, for callers that need more than the body (an MCP session id).
+    def initialize(tempfile:, filename:, content_type:, headers: {})
+      super
+    end
+
     def original_filename
       filename
     end
