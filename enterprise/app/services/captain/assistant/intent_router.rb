@@ -116,7 +116,8 @@ class Captain::Assistant::IntentRouter
       For how-to questions, search the topic by its full name, expanding common abbreviations ("config" to "configuration")
       instead of repeating the whole question. Preserve the integration, platform and provider.
       Mobile app-store purchases and subscriptions are different from wallet checkout (Apple Pay or Google Pay).
-      Do not turn payments for an Apple/iOS app into Apple Pay; search for Apple in-app purchase integration.
+      If the customer explicitly names Apple Pay or Google Pay, preserve that wallet name in the queries.
+      For Apple/iOS app payments without an explicit wallet name, search for Apple in-app purchase integration.
       Requests for documentation links, including follow-ups such as "give me link", use faq_kb with the topic from history.
       Preserve exact product names, model numbers, technical constraints and negations. Resolve references using recent history.
       Do not invent a missing product or interpretation. If a required reference is ambiguous, use action_agent for clarification.
