@@ -24,9 +24,12 @@ class HookJob < MutexApplicationJob
   private
 
   def process_hubspot_integration(hook, event_name, event_data)
-    return unless ['contact.created', 'contact.updated'].include?(event_name)
-
-    Crm::Hubspot::SyncJob.perform_later(hook.id, event_data.fetch(:contact).id)
+    case event_name
+    when 'contact.created', 'contact.updated'
+      Crm::Hubspot::SyncJob.perform_later(hook.id, event_data.fetch(:contact).id)
+    when 'conversation.resolved'
+      Crm::Hubspot::NoteJob.perform_later(hook.id, event_data.fetch(:conversation).id, Time.current.change(usec: 0))
+    end
   end
 
   def process_slack_integration(hook, event_name, event_data)

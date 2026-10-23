@@ -23,6 +23,14 @@ class Crm::Hubspot::Client
     result.fetch('id')
   end
 
+  # associationTypeId 202 is HubSpot's default note-to-contact association.
+  def create_note(contact_id, body:, timestamp:)
+    request(:post, '/crm/v3/objects/notes',
+            properties: { hs_timestamp: timestamp.utc.iso8601(3), hs_note_body: body },
+            associations: [{ to: { id: contact_id }, types: [{ associationCategory: 'HUBSPOT_DEFINED', associationTypeId: 202 }] }])
+      .fetch('id')
+  end
+
   private
 
   def request(method, path, body = nil)

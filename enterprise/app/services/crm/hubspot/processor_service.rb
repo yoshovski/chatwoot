@@ -21,6 +21,22 @@ class Crm::Hubspot::ProcessorService < Crm::BaseProcessorService
     end
   end
 
+  # Keyed by resolve time: a retried job finds its note, a later resolve gets a new one.
+  def handle_conversation_resolved(conversation, resolved_at)
+    contact = conversation.contact
+    return unless @hook.settings['save_transcripts'] && contact.email.present?
+
+    key = resolved_at.utc.iso8601
+    return if conversation.additional_attributes.dig('hubspot_note_ids', key)
+
+    note_id = Crm::Hubspot::Client.new(@hook).create_note(
+      upsert_contact(contact), body: Crm::Hubspot::Mappers::TranscriptNoteMapper.new(conversation).body, timestamp: resolved_at
+    )
+    attributes = conversation.additional_attributes.deep_dup
+    attributes['hubspot_note_ids'] = attributes.fetch('hubspot_note_ids', {}).merge(key => note_id)
+    conversation.update!(additional_attributes: attributes)
+  end
+
   private
 
   def store_sync_result(contact, external_id, fingerprint)

@@ -97,4 +97,55 @@ RSpec.describe Crm::Hubspot::ProcessorService do
       end
     end
   end
+
+  describe '#handle_conversation_resolved' do
+    let(:conversation) { create(:conversation, account: account, contact: contact) }
+    let(:resolved_at) { Time.zone.parse('2026-01-02 10:00:00 UTC') }
+    let(:notes_url) { 'https://api.hubapi.com/crm/v3/objects/notes' }
+
+    before do
+      create(:message, conversation: conversation, account: account, inbox: conversation.inbox, message_type: :incoming,
+                       content: 'Do you ship to Canada?')
+      stub_upsert('email' => 'jane@example.com', 'firstname' => 'Jane', 'lastname' => 'Doe', 'phone' => '+15550100')
+    end
+
+    it 'upserts the contact, posts the transcript note and stores its id by resolve time' do
+      note = stub_request(:post, notes_url)
+             .with { |request| JSON.parse(request.body).then { |body| note_request?(body) } }
+             .to_return(status: 201, body: { id: '555' }.to_json, headers: { 'Content-Type' => 'application/json' })
+
+      service.handle_conversation_resolved(conversation, resolved_at)
+
+      expect(note).to have_been_requested.once
+      expect(conversation.reload.additional_attributes['hubspot_note_ids']).to eq('2026-01-02T10:00:00Z' => '555')
+    end
+
+    it 'does not post twice for the same resolve, but posts again when resolved later' do
+      note = stub_request(:post, notes_url).to_return(status: 201, body: { id: '555' }.to_json,
+                                                      headers: { 'Content-Type' => 'application/json' })
+
+      2.times { service.handle_conversation_resolved(conversation.reload, resolved_at) }
+      service.handle_conversation_resolved(conversation.reload, resolved_at + 1.day)
+
+      expect(note).to have_been_requested.twice
+    end
+
+    it 'skips when transcripts are off or the contact has no email' do
+      hook.update!(settings: hook.settings.merge('save_transcripts' => false))
+      service.handle_conversation_resolved(conversation, resolved_at)
+
+      hook.update!(settings: hook.settings.merge('save_transcripts' => true))
+      contact.update!(email: nil)
+      service.handle_conversation_resolved(conversation.reload, resolved_at)
+
+      expect(a_request(:post, notes_url)).not_to have_been_made
+    end
+
+    def note_request?(body)
+      body['properties']['hs_timestamp'] == '2026-01-02T10:00:00.000Z' &&
+        body['properties']['hs_note_body'].include?('Do you ship to Canada?') &&
+        body['associations'] == [{ 'to' => { 'id' => '901' },
+                                   'types' => [{ 'associationCategory' => 'HUBSPOT_DEFINED', 'associationTypeId' => 202 }] }]
+    end
+  end
 end

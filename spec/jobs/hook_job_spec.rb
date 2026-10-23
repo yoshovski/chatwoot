@@ -228,5 +228,14 @@ RSpec.describe HookJob do
         described_class.perform_now(hook, 'contact.updated', contact: contact)
       end.to have_enqueued_job(Crm::Hubspot::SyncJob).with(hook.id, contact.id).exactly(:twice)
     end
+
+    it 'enqueues a transcript note with the resolve time for conversation.resolved' do
+      conversation = create(:conversation, account: account, contact: contact)
+
+      freeze_time do
+        expect { described_class.perform_now(hook, 'conversation.resolved', conversation: conversation) }
+          .to have_enqueued_job(Crm::Hubspot::NoteJob).with(hook.id, conversation.id, Time.current.change(usec: 0))
+      end
+    end
   end
 end

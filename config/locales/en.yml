@@ -725,6 +725,14 @@ en:
 
       Transcript:
       %{format_messages}
+    hubspot:
+      transcript_title: 'Conversation transcript from %{brand_name}'
+      transcript_inbox: 'Inbox: %{inbox}'
+      view_conversation: 'View conversation #%{display_id}'
+      transcript_truncated: 'Transcript shortened to fit HubSpot: the earliest messages are left out.'
+      contact: 'Contact'
+      ai_agent: 'AI agent'
+      system: 'System'
   agent_capacity_policy:
     inbox_already_assigned: 'Inbox has already been assigned to this policy'
   portals:
