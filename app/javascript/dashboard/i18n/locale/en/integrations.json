@@ -1038,6 +1038,21 @@
               "GENERAL": "Steps or short lists when they help, links to your pages, plain sentences otherwise. No business-specific rules are added."
             }
           },
+          "ANSWER_LENGTH": {
+            "TITLE": "Answer length",
+            "SHORT": {
+              "LABEL": "Short",
+              "DESC": "A sentence or two and up to 3 steps; links the page for the rest"
+            },
+            "BALANCED": {
+              "LABEL": "Balanced",
+              "DESC": "Steps, options and their links for how-to questions; short for simple facts"
+            },
+            "DETAILED": {
+              "LABEL": "Detailed",
+              "DESC": "Every step, prerequisite and option the sources give"
+            }
+          },
           "TONE": {
             "TITLE": "Tone",
             "FRIENDLY": {

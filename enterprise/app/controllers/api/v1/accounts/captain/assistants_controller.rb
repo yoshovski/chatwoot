@@ -138,7 +138,7 @@ class Api::V1::Accounts::Captain::AssistantsController < Api::V1::Accounts::Base
       :feature_contact_attributes, :welcome_message, :handoff_message,
       :resolution_message, :instructions, :temperature, :auto_resolve_mode,
       :response_window, :continue_while_waiting, :suggested_replies,
-      :max_suggested_replies, :product_cards, :tone, :off_limits_message, :business_type,
+      :max_suggested_replies, :product_cards, :tone, :off_limits_message, :business_type, :answer_length,
       :handoff_when_online, :handoff_when_offline, :offline_handoff_message, :no_handoff_message,
       { link_allowlist: [], image_allowlist: [], handoff_rules: [] }
     ]

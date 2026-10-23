@@ -358,7 +358,7 @@ RSpec.describe Captain::Assistant, type: :model do
       assistant.create_knowledge_brief!(account: account, draft: { 'business_type' => 'software' })
 
       expect(assistant.effective_business_type).to eq('software')
-      expect(assistant.agent_instructions).to include('up to 5 short numbered steps', '# Business Context', 'API keys')
+      expect(assistant.agent_instructions).to include('up to 8 short numbered steps', '# Business Context', 'API keys')
       expect(assistant.agent_instructions).not_to include('Do not use lists')
     end
 
@@ -372,8 +372,30 @@ RSpec.describe Captain::Assistant, type: :model do
 
     it 'gives a business of unknown type the step and list format' do
       expect(assistant.effective_business_type).to eq('general')
-      expect(assistant.agent_instructions).to include('up to 5 short numbered steps', 'name each main product, plan or option')
+      expect(assistant.agent_instructions).to include('up to 8 short numbered steps', 'name each main product, plan or option')
       expect(assistant.agent_instructions).not_to include('Do not use lists')
+    end
+
+    it 'sizes guide answers by the chosen answer length, balanced by default' do
+      expect(assistant.agent_instructions).to include('under about 250 words', 'at most five per reply')
+
+      assistant.update!(config: assistant.config.merge('answer_length' => 'short'))
+      expect(assistant.agent_instructions).to include('under about 80 words', 'up to 3 short numbered steps', 'at most two per reply')
+
+      assistant.update!(config: assistant.config.merge('answer_length' => 'detailed'))
+      expect(assistant.agent_instructions).to include('under about 400 words', 'every step the sources list', 'at most eight per reply')
+    end
+
+    it 'sizes compact shop replies by the chosen answer length' do
+      assistant.update!(config: assistant.config.merge('business_type' => 'commerce', 'answer_length' => 'detailed'))
+
+      expect(assistant.agent_instructions).to include('about 80 words', 'Do not use lists')
+    end
+
+    it 'rejects an unknown answer length' do
+      assistant.config['answer_length'] = 'endless'
+
+      expect(assistant).not_to be_valid
     end
 
     it 'rejects an unknown business type' do

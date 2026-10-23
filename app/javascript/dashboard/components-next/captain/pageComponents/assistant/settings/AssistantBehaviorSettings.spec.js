@@ -53,9 +53,28 @@ describe('AssistantBehaviorSettings', () => {
     expect(wrapper.emitted('update')[0][0]).toEqual({ business_type: '' });
   });
 
+  it('shows balanced answers until another length is chosen', () => {
+    const wrapper = mountSettings({});
+    const lengths = wrapper
+      .findAllComponents(ChoiceCard)
+      .filter(card => card.props('name') === 'assistant-answer-length');
+
+    expect(lengths.map(card => card.props('isActive'))).toEqual([
+      false,
+      true,
+      false,
+    ]);
+    lengths[2].vm.$emit('select', 'detailed');
+    expect(wrapper.emitted('update')[0][0]).toEqual({
+      answer_length: 'detailed',
+    });
+  });
+
   it('marks the saved tone and emits a new one', () => {
     const wrapper = mountSettings({ tone: 'professional' });
-    const tones = wrapper.findAllComponents(ChoiceCard);
+    const tones = wrapper
+      .findAllComponents(ChoiceCard)
+      .filter(card => card.props('name') === 'assistant-tone');
 
     expect(tones.map(tone => tone.props('isActive'))).toEqual([
       false,
