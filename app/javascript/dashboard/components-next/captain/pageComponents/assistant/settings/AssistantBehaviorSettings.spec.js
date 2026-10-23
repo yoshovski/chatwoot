@@ -1,7 +1,6 @@
 import { shallowMount } from '@vue/test-utils';
 import Button from 'dashboard/components-next/button/Button.vue';
 import AssistantBehaviorSettings from './AssistantBehaviorSettings.vue';
-import Select from 'dashboard/components-next/select/Select.vue';
 import ChoiceCard from './ChoiceCard.vue';
 import SettingsSwitchRow from './SettingsSwitchRow.vue';
 
@@ -26,20 +25,32 @@ describe('AssistantBehaviorSettings', () => {
     expect(wrapper.findAllComponents(SettingsSwitchRow)).toHaveLength(2);
   });
 
-  it('offers the detected business type as the automatic choice', () => {
+  it('selects the detected business type until one is chosen', () => {
     const wrapper = mountSettings({}, false, {
       detected_business_type: 'software',
     });
-    const select = wrapper.findComponent(Select);
-
-    expect(select.props('modelValue')).toBe('');
-    expect(select.props('options')[0].label).toBe(
-      'CAPTAIN.ASSISTANTS.SETTINGS.BEHAVIOR.BUSINESS_TYPE.AUTO:CAPTAIN.ASSISTANTS.SETTINGS.BEHAVIOR.BUSINESS_TYPE.OPTIONS.SOFTWARE'
+    const chips = wrapper.findAll('[role="radio"]');
+    const checked = chips.filter(
+      chip => chip.attributes('aria-checked') === 'true'
     );
-    select.vm.$emit('update:modelValue', 'subscription');
+
+    expect(checked).toHaveLength(1);
+    expect(checked[0].text()).toContain('OPTIONS.SOFTWARE');
+    expect(checked[0].text()).toContain('BUSINESS_TYPE.DETECTED');
+    chips[2].trigger('click');
     expect(wrapper.emitted('update')[0][0]).toEqual({
       business_type: 'subscription',
     });
+  });
+
+  it('resets a chosen business type to detection', () => {
+    const wrapper = mountSettings({ business_type: 'services' });
+    const reset = wrapper
+      .findAllComponents(Button)
+      .find(button => button.props('label').includes('USE_DETECTED'));
+
+    reset.vm.$emit('click');
+    expect(wrapper.emitted('update')[0][0]).toEqual({ business_type: '' });
   });
 
   it('marks the saved tone and emits a new one', () => {

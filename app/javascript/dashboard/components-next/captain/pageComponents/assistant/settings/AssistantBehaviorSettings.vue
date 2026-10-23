@@ -2,7 +2,6 @@
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import Button from 'dashboard/components-next/button/Button.vue';
-import Select from 'dashboard/components-next/select/Select.vue';
 import ChoiceCard from './ChoiceCard.vue';
 import SettingsCard from './SettingsCard.vue';
 import SettingsSwitchRow from './SettingsSwitchRow.vue';
@@ -63,33 +62,22 @@ const detectedBusinessType = computed(
     props.assistant.detected_business_type ||
     (props.showProductCards ? 'commerce' : 'general')
 );
-const businessTypeOptions = computed(() => [
-  {
-    value: '',
-    label: t('CAPTAIN.ASSISTANTS.SETTINGS.BEHAVIOR.BUSINESS_TYPE.AUTO', {
-      type: businessTypeLabel(detectedBusinessType.value),
-    }),
-  },
-  ...BUSINESS_TYPES.map(type => ({
+// An empty business_type means detected; the detected chip shows as selected.
+const shownBusinessType = computed(
+  () => config.value.business_type || detectedBusinessType.value
+);
+const businessTypeOptions = computed(() =>
+  BUSINESS_TYPES.map(type => ({
     value: type,
     label: businessTypeLabel(type),
-  })),
-]);
+    selected: type === shownBusinessType.value,
+  }))
+);
 
 const update = patch => emit('update', patch);
 
-const businessType = computed({
-  get: () => config.value.business_type || '',
-  set: value => update({ business_type: value }),
-});
-// One short line about what the chosen (or detected) type changes.
-const businessTypeHint = computed(() =>
-  t(
-    `CAPTAIN.ASSISTANTS.SETTINGS.BEHAVIOR.BUSINESS_TYPE.HINTS.${(
-      businessType.value || detectedBusinessType.value
-    ).toUpperCase()}`
-  )
-);
+const isBusinessTypeDetected = computed(() => !config.value.business_type);
+const businessTypeKey = computed(() => shownBusinessType.value.toUpperCase());
 
 const toggle = key =>
   computed({
@@ -116,14 +104,71 @@ const changeMaxButtons = delta => {
       <h3 class="text-base font-semibold text-n-slate-12">
         {{ t('CAPTAIN.ASSISTANTS.SETTINGS.BEHAVIOR.BUSINESS_TYPE.TITLE') }}
       </h3>
-      <Select
-        v-model="businessType"
-        :options="businessTypeOptions"
+      <div
+        class="flex flex-wrap gap-2"
+        role="radiogroup"
         :aria-label="
           t('CAPTAIN.ASSISTANTS.SETTINGS.BEHAVIOR.BUSINESS_TYPE.TITLE')
         "
-      />
-      <p class="m-0 text-xs text-n-slate-11">{{ businessTypeHint }}</p>
+      >
+        <button
+          v-for="option in businessTypeOptions"
+          :key="option.value"
+          type="button"
+          role="radio"
+          :aria-checked="option.selected"
+          class="flex items-center gap-1.5 h-9 px-3.5 text-sm font-medium rounded-lg outline transition-colors"
+          :class="
+            option.selected
+              ? 'outline-2 outline-n-blue-9 bg-n-blue-1 text-n-blue-11'
+              : 'outline-1 outline-n-weak bg-n-solid-1 text-n-slate-12 hover:outline-n-strong'
+          "
+          @click="update({ business_type: option.value })"
+        >
+          {{ option.label }}
+          <span
+            v-if="option.selected && isBusinessTypeDetected"
+            class="text-xs font-normal text-n-slate-11"
+          >
+            {{
+              t('CAPTAIN.ASSISTANTS.SETTINGS.BEHAVIOR.BUSINESS_TYPE.DETECTED')
+            }}
+          </span>
+        </button>
+      </div>
+      <p class="m-0 text-sm text-n-slate-11">
+        {{
+          t(
+            `CAPTAIN.ASSISTANTS.SETTINGS.BEHAVIOR.BUSINESS_TYPE.HINTS.${businessTypeKey}`
+          )
+        }}
+        <Button
+          v-if="!isBusinessTypeDetected"
+          :label="
+            t('CAPTAIN.ASSISTANTS.SETTINGS.BEHAVIOR.BUSINESS_TYPE.USE_DETECTED')
+          "
+          size="xs"
+          variant="link"
+          class="ms-1"
+          @click="update({ business_type: '' })"
+        />
+      </p>
+      <details class="text-sm group text-n-slate-11">
+        <summary
+          class="font-medium cursor-pointer text-n-slate-12 marker:text-n-slate-10"
+        >
+          {{
+            t('CAPTAIN.ASSISTANTS.SETTINGS.BEHAVIOR.BUSINESS_TYPE.WHAT_CHANGES')
+          }}
+        </summary>
+        <p class="mt-2 mb-0 leading-relaxed">
+          {{
+            t(
+              `CAPTAIN.ASSISTANTS.SETTINGS.BEHAVIOR.BUSINESS_TYPE.DETAILS.${businessTypeKey}`
+            )
+          }}
+        </p>
+      </details>
     </section>
 
     <section class="flex flex-col gap-3">

@@ -1,5 +1,6 @@
 import { shallowMount } from '@vue/test-utils';
 import DocumentCard from './DocumentCard.vue';
+import DropdownMenu from 'dashboard/components-next/dropdown-menu/DropdownMenu.vue';
 
 const { checkPermissions } = vi.hoisted(() => ({
   checkPermissions: vi.fn(() => true),
@@ -81,12 +82,12 @@ describe('DocumentCard', () => {
     checkPermissions.mockReturnValue(true);
   });
 
-  it('keeps the source URL flexible and the metadata row on one line', () => {
+  it('truncates the source URL and keeps the metadata row on one line', () => {
     const wrapper = mountCard();
     const sourceLink = wrapper.get('a[href^="https://example.com"]');
     const metadataRow = sourceLink.element.parentElement;
 
-    expect(sourceLink.classes()).toContain('flex-1');
+    expect(sourceLink.classes()).toContain('min-w-0');
     expect(sourceLink.classes()).toContain('truncate');
     expect(metadataRow.classList).not.toContain('flex-wrap');
   });
@@ -136,6 +137,27 @@ describe('DocumentCard', () => {
     expect(
       wrapper.get('document-sync-status-stub').attributes('showretry')
     ).toBe('true');
+  });
+
+  it('keeps row actions in a menu and emits the picked one', async () => {
+    const wrapper = mountCard();
+
+    expect(wrapper.find('dropdown-menu-stub').exists()).toBe(false);
+    await wrapper
+      .get('[aria-label="KNOWLEDGE_LIST.MORE_ACTIONS"]')
+      .trigger('click');
+    const menu = wrapper.getComponent(DropdownMenu);
+
+    expect(menu.props('menuItems').map(item => item.action)).toEqual([
+      'sync',
+      'generateFaqs',
+      'delete',
+    ]);
+    menu.vm.$emit('action', { action: 'delete' });
+    expect(wrapper.emitted('action')[0][0]).toEqual({
+      action: 'delete',
+      id: 42,
+    });
   });
 
   it('shows the paused state when enabled is false', () => {

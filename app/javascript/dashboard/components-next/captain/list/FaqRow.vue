@@ -10,6 +10,8 @@ import Icon from 'dashboard/components-next/icon/Icon.vue';
 import Button from 'dashboard/components-next/button/Button.vue';
 import Checkbox from 'dashboard/components-next/checkbox/Checkbox.vue';
 import Switch from 'dashboard/components-next/switch/Switch.vue';
+import DropdownMenu from 'dashboard/components-next/dropdown-menu/DropdownMenu.vue';
+import { LIST_COLUMNS } from './listColumns';
 
 const props = defineProps({
   id: { type: Number, required: true },
@@ -44,6 +46,45 @@ const enabledState = computed({
   get: () => props.enabled,
   set: enabled => emit('toggle', { id: props.id, enabled }),
 });
+
+const showMenu = ref(false);
+
+const menuItems = computed(() => {
+  const items = [
+    {
+      label: t('KNOWLEDGE_LIST.EDIT'),
+      action: 'edit',
+      value: 'edit',
+      icon: 'i-lucide-pencil-line',
+    },
+  ];
+  if (props.documentable?.type === 'User' && props.usedInConversationsCount) {
+    items.push({
+      label: t('CAPTAIN.DOCUMENTS.USED_IN_CONVERSATIONS', {
+        n: props.usedInConversationsCount,
+      }),
+      action: 'viewConversations',
+      value: 'viewConversations',
+      icon: 'i-lucide-messages-square',
+    });
+  }
+  items.push({
+    label: t('KNOWLEDGE_LIST.DELETE'),
+    action: 'delete',
+    value: 'delete',
+    icon: 'i-lucide-trash',
+  });
+  return items;
+});
+
+const handleMenuAction = ({ action }) => {
+  showMenu.value = false;
+  if (action === 'viewConversations') {
+    emit('viewConversations', props.id);
+  } else {
+    emit('action', { action, id: props.id });
+  }
+};
 
 const ORIGINS = {
   page: {
@@ -90,7 +131,7 @@ const origin = computed(() => {
 
 <template>
   <div
-    class="group flex items-start gap-3 px-4 py-3 border-b border-n-weak last:border-b-0 transition-colors hover:bg-n-alpha-1"
+    class="group flex items-start gap-3 px-4 py-3 border-b border-n-weak last:border-b-0 last:rounded-b-xl transition-colors hover:bg-n-alpha-1"
     :class="{ 'bg-n-brand/5': isSelected }"
   >
     <Checkbox
@@ -122,81 +163,66 @@ const origin = computed(() => {
         {{ getPlainText(answer) }}
       </span>
     </div>
-    <div class="flex items-center gap-2.5 shrink-0">
-      <div
-        v-if="canManage"
-        class="flex items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100"
-      >
-        <Button
-          :label="$t('KNOWLEDGE_LIST.EDIT')"
-          icon="i-lucide-pencil-line"
-          variant="ghost"
-          color="slate"
-          size="xs"
-          @click="emit('action', { action: 'edit', id })"
-        />
-        <Button
-          v-tooltip.top="$t('KNOWLEDGE_LIST.DELETE')"
-          :aria-label="$t('KNOWLEDGE_LIST.DELETE')"
-          icon="i-lucide-trash"
-          variant="ghost"
-          color="ruby"
-          size="xs"
-          @click="emit('action', { action: 'delete', id })"
-        />
-      </div>
+    <span
+      class="items-center gap-1.5 min-w-0 text-xs text-n-slate-11"
+      :class="LIST_COLUMNS.from"
+    >
       <span
-        class="hidden md:inline-flex items-center gap-1.5 max-w-56 min-w-0 text-xs text-n-slate-11"
+        class="inline-flex items-center justify-center rounded size-5 shrink-0"
+        :class="origin.tone"
       >
-        <span
-          class="inline-flex items-center justify-center rounded size-5 shrink-0"
-          :class="origin.tone"
-        >
-          <Icon :icon="origin.icon" class="size-3" />
-        </span>
-        <button
-          v-if="documentable?.type === 'Conversation'"
-          type="button"
-          class="truncate hover:underline"
-          @click="emit('navigate', documentable)"
-        >
-          {{ origin.name }}
-        </button>
-        <span v-else class="truncate" :title="origin.name">
-          {{ origin.name || $t(`KNOWLEDGE_LIST.ORIGIN.${origin.key}`) }}
-        </span>
+        <Icon :icon="origin.icon" class="size-3" />
       </span>
-      <Button
-        v-if="canManage && documentable?.type === 'User'"
-        v-tooltip.top="
-          $t('CAPTAIN.DOCUMENTS.USED_IN_CONVERSATIONS', {
-            n: usedInConversationsCount,
-          })
-        "
-        :label="String(usedInConversationsCount)"
-        :disabled="!usedInConversationsCount"
-        icon="i-lucide-messages-square"
-        size="xs"
-        slate
-        link
-        @click="emit('viewConversations', id)"
-      />
-      <span
-        v-tooltip.top="{
-          content: exactTimestamp(updatedAt),
-          delay: { show: 500, hide: 0 },
-        }"
-        class="hidden text-xs lg:inline text-n-slate-10"
+      <button
+        v-if="documentable?.type === 'Conversation'"
+        type="button"
+        class="truncate hover:underline"
+        @click="emit('navigate', documentable)"
       >
-        {{ dynamicTime(updatedAt) }}
+        {{ origin.name }}
+      </button>
+      <span v-else class="truncate" :title="origin.name">
+        {{ origin.name || $t(`KNOWLEDGE_LIST.ORIGIN.${origin.key}`) }}
       </span>
+    </span>
+    <span
+      v-tooltip.top="{
+        content: exactTimestamp(updatedAt),
+        delay: { show: 500, hide: 0 },
+      }"
+      class="text-xs truncate text-n-slate-10"
+      :class="LIST_COLUMNS.updated"
+    >
+      {{ dynamicTime(updatedAt) }}
+    </span>
+    <div :class="LIST_COLUMNS.inUse">
       <Switch
         v-if="canManage"
         v-model="enabledState"
-        size="sm"
         :aria-label="
           enabled ? t('CAPTAIN.RESPONSES.PAUSE') : t('CAPTAIN.RESPONSES.RESUME')
         "
+      />
+    </div>
+    <div
+      v-on-clickaway="() => (showMenu = false)"
+      class="relative"
+      :class="LIST_COLUMNS.actions"
+    >
+      <Button
+        v-if="canManage"
+        :aria-label="$t('KNOWLEDGE_LIST.MORE_ACTIONS')"
+        icon="i-lucide-ellipsis-vertical"
+        color="slate"
+        variant="ghost"
+        size="xs"
+        @click="showMenu = !showMenu"
+      />
+      <DropdownMenu
+        v-if="showMenu"
+        :menu-items="menuItems"
+        class="z-30 mt-1 top-full ltr:right-0 rtl:left-0 w-56"
+        @action="handleMenuAction"
       />
     </div>
   </div>

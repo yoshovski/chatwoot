@@ -461,18 +461,13 @@ onUnmounted(() => {
 
       <section
         :aria-label="$t('PLATFORM_NAV.FAQS')"
-        class="overflow-hidden border rounded-xl border-n-weak bg-n-solid-1"
+        class="border rounded-xl border-n-weak bg-n-solid-1"
       >
         <ListHeader
           :selection="selection"
           :selectable="canManage"
-          :total="responseMeta.totalCount || 0"
-          :page-count="responses.length"
-          :label="
-            $t('KNOWLEDGE_LIST.MATCHING_FAQS', {
-              count: responseMeta.totalCount || 0,
-            })
-          "
+          :label="$t('KNOWLEDGE_LIST.COLUMNS.QUESTION')"
+          :columns="['from', 'updated', 'inUse', 'actions']"
         >
           <Button
             v-if="hasActiveFilters"
@@ -505,6 +500,7 @@ onUnmounted(() => {
         v-if="canManage"
         type="AssistantResponse"
         :selection="selection"
+        :total="responseMeta.totalCount || 0"
         @updated="fetchResponses(responseMeta.page)"
         @deleted="fetchResponsesAfterBulkDelete"
       />

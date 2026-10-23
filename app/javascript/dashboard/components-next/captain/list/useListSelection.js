@@ -29,6 +29,17 @@ export function useListSelection({ items, total, filters }) {
       total.value > pageIds.value.length
   );
 
+  // 'on', 'off' or 'mixed' for the "Use in answers" switch. With every matching
+  // row selected only the loaded page is known, so it stands in for the rest.
+  const enabledState = computed(() => {
+    const rows = items.value.filter(
+      item => allMatching.value || selectedIds.value.has(item.id)
+    );
+    const onCount = rows.filter(item => item.enabled !== false).length;
+    if (onCount === rows.length) return 'on';
+    return onCount === 0 ? 'off' : 'mixed';
+  });
+
   const isSelected = id => allMatching.value || selectedIds.value.has(id);
 
   const clear = () => {
@@ -70,6 +81,7 @@ export function useListSelection({ items, total, filters }) {
     pageIndeterminate,
     count,
     canSelectMatching,
+    enabledState,
     isSelected,
     clear,
     toggle,
