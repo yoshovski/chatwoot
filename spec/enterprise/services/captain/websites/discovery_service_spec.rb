@@ -107,7 +107,7 @@ RSpec.describe Captain::Websites::DiscoveryService do
       expect(a_request(:get, 'https://www.example.com/pricing')).not_to have_been_made
     end
 
-    it 'reads only unopened pages in the next round and marks what it found as new' do
+    it 'reads only unopened pages in the next round and marks what it found or first opened as new' do
       stub_const("#{described_class}::MAX_HTML_FETCHES", 1)
       described_class.new(source).perform
       stub_const("#{described_class}::MAX_HTML_FETCHES", 500)
@@ -120,7 +120,9 @@ RSpec.describe Captain::Websites::DiscoveryService do
 
       expect(a_request(:get, 'https://www.example.com')).to have_been_made.once
       expect(a_request(:get, 'https://support.example.com/api/v2/help_center/locales.json')).to have_been_made.once
-      expect(source.reload.discovery_stats).to include('round' => 2, 'new_urls' => ['https://www.example.com/guides/setup'])
+      expect(source.reload.discovery_stats)
+        .to include('round' => 2, 'new_urls' => include('https://www.example.com/pricing', 'https://www.example.com/guides/setup'))
+      expect(source.discovery_stats['new_urls']).not_to include('https://www.example.com')
       expect(source.discovery_stats).not_to have_key('continue')
       expect(page('https://www.example.com/pricing')).to include('words' => be > 60)
     end

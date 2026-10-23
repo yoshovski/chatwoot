@@ -16,7 +16,7 @@ class Captain::Websites::DiscoveryService # rubocop:disable Metrics/ClassLength
 
     @source = source
     @mode = mode
-    @previous_urls = source.pages.to_set { |page| page['url'] }
+    @previous_pages = source.pages
     @policy = Captain::Websites::UrlPolicy.new(source)
     @pages = {}
     @queue = Captain::Websites::SectionQueue.new
@@ -114,8 +114,19 @@ class Captain::Websites::DiscoveryService # rubocop:disable Metrics/ClassLength
 
   def continue? = @stats['round'] < MAX_ROUNDS && @limits.intersect?(%w[requests time])
 
-  # Pages no earlier run listed; a first discovery has nothing to compare with.
-  def new_urls = @previous_urls.empty? ? [] : @pages.keys.reject { |url| @previous_urls.include?(url) }
+  # Pages no earlier run listed, or listed but first opened now; a first discovery has nothing to compare with.
+  def new_urls
+    return [] if @previous_pages.empty?
+
+    @pages.keys.select { |url| previous_urls.exclude?(url) || (previously_unread.include?(url) && @pages[url]['fetched']) }
+  end
+
+  def previous_urls = @previous_urls ||= @previous_pages.to_set { |page| page['url'] }
+
+  # Listed before but never opened, so nobody could tell yet whether they help.
+  def previously_unread
+    @previously_unread ||= @previous_pages.reject { |page| page['bucket'] == 'recommended' || !unread?(page) }.to_set { |page| page['url'] }
+  end
 
   def record_limits
     @limits << 'time' unless @fetcher.before_deadline?

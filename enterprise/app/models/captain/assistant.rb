@@ -49,6 +49,8 @@ class Captain::Assistant < ApplicationRecord
   # Customers of these businesses mostly ask how to do something, which reads best as short numbered steps.
   # Shops answer in one or two sentences and show details on product cards; everyone else gets steps, lists and links.
   COMPACT_BUSINESS_TYPES = %w[commerce].freeze
+  # How much a reply may say; balanced when unset.
+  ANSWER_LENGTHS = %w[short balanced detailed].freeze
 
   include Avatarable
   include Concerns::CaptainToolsHelpers
@@ -84,7 +86,8 @@ class Captain::Assistant < ApplicationRecord
                  :link_allowlist, :image_allowlist, :handoff_safety_net, :handoff_safety_net_keywords,
                  :reply_labels, :reply_label_keywords, :outcome_labels,
                  :handoff_fallback_agent_id, :handoff_fallback_team_id, :tone, :off_limits_message, :business_type,
-                 :handoff_when_online, :handoff_when_offline, :offline_handoff_message, :no_handoff_message, :handoff_rules
+                 :handoff_when_online, :handoff_when_offline, :offline_handoff_message, :no_handoff_message, :handoff_rules,
+                 :answer_length
 
   BOOLEAN_CONFIG_KEYS = %w[
     feature_faq
@@ -126,6 +129,7 @@ class Captain::Assistant < ApplicationRecord
             allow_nil: true
   validates :tone, inclusion: { in: TONE_INSTRUCTIONS.keys }, allow_blank: true
   validates :business_type, inclusion: { in: BUSINESS_TYPES }, allow_blank: true
+  validates :answer_length, inclusion: { in: ANSWER_LENGTHS }, allow_blank: true
   validates :off_limits_message, length: { maximum: OFF_LIMITS_MESSAGE_LENGTH_LIMIT }
   validates :handoff_when_online, :handoff_when_offline, inclusion: { in: Captain::Conversation::HandoffPolicy::ACTIONS }, allow_blank: true
   validates :offline_handoff_message, :no_handoff_message, length: { maximum: HANDOFF_MESSAGE_LENGTH_LIMIT }
@@ -344,7 +348,8 @@ class Captain::Assistant < ApplicationRecord
   # The business add-on and answer shape of the reply prompt.
   def business_prompt_context
     type = effective_business_type
-    { business_type: type, answer_format: COMPACT_BUSINESS_TYPES.include?(type) ? 'compact' : 'guide' }
+    { business_type: type, answer_format: COMPACT_BUSINESS_TYPES.include?(type) ? 'compact' : 'guide',
+      answer_length: answer_length.presence || 'balanced' }
   end
 
   # The type the user chose, else the one detected from their knowledge, else a connected store makes it commerce.

@@ -23,6 +23,12 @@ const TONES = [
   { id: 'professional', icon: 'i-lucide-briefcase' },
   { id: 'short', icon: 'i-lucide-zap' },
 ];
+// Mirrors Captain::Assistant::ANSWER_LENGTHS; unset means balanced.
+const ANSWER_LENGTHS = [
+  { id: 'short', icon: 'i-lucide-minus' },
+  { id: 'balanced', icon: 'i-lucide-align-left' },
+  { id: 'detailed', icon: 'i-lucide-list-ordered' },
+];
 // Mirrors Captain::Assistant::BUSINESS_TYPES; an empty value lets the server detect it.
 const BUSINESS_TYPES = [
   'commerce',
@@ -52,6 +58,20 @@ const toneOptions = computed(() =>
     ),
   }))
 );
+
+const answerLengthOptions = computed(() =>
+  ANSWER_LENGTHS.map(({ id, icon }) => ({
+    id,
+    icon,
+    label: t(
+      `CAPTAIN.ASSISTANTS.SETTINGS.BEHAVIOR.ANSWER_LENGTH.${id.toUpperCase()}.LABEL`
+    ),
+    description: t(
+      `CAPTAIN.ASSISTANTS.SETTINGS.BEHAVIOR.ANSWER_LENGTH.${id.toUpperCase()}.DESC`
+    ),
+  }))
+);
+const answerLength = computed(() => config.value.answer_length || 'balanced');
 
 const businessTypeLabel = type =>
   t(
@@ -169,6 +189,31 @@ const changeMaxButtons = delta => {
           }}
         </p>
       </details>
+    </section>
+
+    <section class="flex flex-col gap-3">
+      <h3 class="text-base font-semibold text-n-slate-12">
+        {{ t('CAPTAIN.ASSISTANTS.SETTINGS.BEHAVIOR.ANSWER_LENGTH.TITLE') }}
+      </h3>
+      <div
+        class="flex flex-col gap-2"
+        role="radiogroup"
+        :aria-label="
+          t('CAPTAIN.ASSISTANTS.SETTINGS.BEHAVIOR.ANSWER_LENGTH.TITLE')
+        "
+      >
+        <ChoiceCard
+          v-for="option in answerLengthOptions"
+          :key="option.id"
+          name="assistant-answer-length"
+          :value="option.id"
+          :icon="option.icon"
+          :label="option.label"
+          :description="option.description"
+          :is-active="answerLength === option.id"
+          @select="update({ answer_length: option.id })"
+        />
+      </div>
     </section>
 
     <section class="flex flex-col gap-3">
