@@ -73,6 +73,8 @@ class Captain::Knowledge::PageCleaner
     blocks.each_with_index.filter_map do |block, index|
       next clean_heading(block) if self.class.heading?(block)
       next block if block.match?(FENCE)
+      # A video stays next to the steps it shows instead of moving to the Links section.
+      next block if Captain::Knowledge::VideoLink.line?(block)
 
       text = clean_block(block)
       text if keep?(block, text, blocks[index + 1]) && seen.add?(self.class.normalize(text))

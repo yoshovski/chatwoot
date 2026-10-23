@@ -674,6 +674,7 @@
       }
     },
     "PLAYGROUND": {
+      "PLAY_VIDEO": "Play video",
       "USER": "You",
       "ASSISTANT": "AI agent",
       "MESSAGE_PLACEHOLDER": "Type your message...",

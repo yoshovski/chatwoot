@@ -29,6 +29,16 @@ RSpec.describe Captain::Knowledge::PageCleaner do
     )
   end
 
+  it 'keeps a video line next to the steps it shows' do
+    markdown = "You may refer to this video below:\n\n[Video](https://fast.wistia.net/embed/iframe/qnyqws7m7j)\n\n" \
+               'For easier steps, use these instructions for Google Chrome.'
+
+    expect(described_class.new(markdown, url: 'https://support.example.com/a').perform).to eq(
+      "You may refer to this video below:\n\n[Video](https://fast.wistia.net/embed/iframe/qnyqws7m7j)\n\n" \
+      'For easier steps, use these instructions for Google Chrome.'
+    )
+  end
+
   it 'keeps a few prose links as absolute URLs and descriptive image text' do
     markdown = 'Read the [shipping policy](/shipping#costs) first. ![Chart of refunds by month](/chart.png)'
 

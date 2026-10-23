@@ -37,6 +37,21 @@ namespace :captain do
       puts "Agent #{assistant.id} is on processing version 3; Dify reindexing queued"
     end
 
+    desc 'Re-read one agent\'s website pages that mention a video, so embedded videos are kept (DRY_RUN=1 only counts them)'
+    task reread_video_pages: :environment do
+      account = Account.find(Integer(ENV.fetch('ACCOUNT_ID')))
+      assistant = account.captain_assistants.find(Integer(ENV.fetch('ASSISTANT_ID')))
+      # Older reads dropped the embed but kept text such as "watch the video below".
+      documents = assistant.documents.enabled.where.not(external_link: nil).where('content ILIKE ?', '%video%')
+      if ENV['DRY_RUN'] == '1'
+        puts "#{documents.count} pages of agent #{assistant.id} mention a video"
+        next
+      end
+
+      queued = documents.find_each.count { |document| Captain::Documents::SyncRequest.new(document).perform == :queued }
+      puts "Queued #{queued} pages of agent #{assistant.id} to be read again; Dify reindexes only pages whose text changed"
+    end
+
     desc 'Delete unedited AI-generated FAQs of one agent whose answer repeats another FAQ (DRY_RUN=1 only lists them)'
     task dedupe_generated_faqs: :environment do
       account = Account.find(Integer(ENV.fetch('ACCOUNT_ID')))

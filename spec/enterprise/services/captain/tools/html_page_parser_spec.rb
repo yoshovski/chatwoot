@@ -14,6 +14,23 @@ RSpec.describe Captain::Tools::HtmlPageParser do
   end
 
   describe '#body_markdown' do
+    it 'keeps supported video embeds as links and drops other iframes' do
+      html = <<~HTML
+        <html><body><main>
+          <p>You may refer to this video below:</p>
+          <iframe src="https://fast.wistia.net/embed/iframe/qnyqws7m7j?videoFoam=true" title="Wistia video player"></iframe>
+          <iframe src="https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ" title="Clear cache in Chrome"></iframe>
+          <iframe src="https://maps.example.com/embed?q=office"></iframe>
+        </main></body></html>
+      HTML
+
+      markdown = described_class.new(html).body_markdown
+
+      expect(markdown).to include('[Video](https://fast.wistia.net/embed/iframe/qnyqws7m7j)')
+      expect(markdown).to include('[Video: Clear cache in Chrome](https://www.youtube.com/watch?v=dQw4w9WgXcQ)')
+      expect(markdown).not_to include('maps.example.com')
+    end
+
     it 'keeps only main content from a page with a header menu, announcement bar, main text, and footer' do
       html = <<~HTML
         <html>
