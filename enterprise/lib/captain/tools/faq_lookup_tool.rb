@@ -1,10 +1,10 @@
-class Captain::Tools::FaqLookupTool < Captain::Tools::BasePublicTool
+class Captain::Tools::FaqLookupTool < Captain::Tools::BasePublicTool # rubocop:disable Metrics/ClassLength
   include Captain::Tools::SourceIndexing
 
   # Results scoring this far below the search's best hit are noise; agents don't see them unless the reply used them.
   LOW_RELEVANCE_MARGIN = 0.2
-  DIRECT_PASSAGES = 3
-  DIRECT_CONTENT_CHARS = 8000
+  DIRECT_PASSAGES = 6
+  DIRECT_CONTENT_CHARS = 12_000
   MIN_PASSAGE_CHARS = 512
   NO_DIRECT_RESULTS = 'No relevant knowledge found.'.freeze
 
@@ -73,13 +73,22 @@ class Captain::Tools::FaqLookupTool < Captain::Tools::BasePublicTool
   end
 
   def format_direct_passages(tool_context, passages, query)
-    passages = passages.uniq { |passage| [passage.source_reference, passage.content] }.first(DIRECT_PASSAGES)
+    passages = source_first(passages.uniq { |passage| [passage.source_reference, passage.content] }).first(DIRECT_PASSAGES)
     passages = budget_passages(passages)
     Rails.logger.info "[Captain][KnowledgeContext] assistant_id=#{@assistant.id} passages=#{passages.size} " \
                       "content_chars=#{passages.sum { |passage| passage.content.length }}"
     record_knowledge_sources(tool_context, passages)
     record_source_details(tool_context, passages, query)
     passages.map { |passage| format_passage(tool_context, passage) }.join
+  end
+
+  # Each matching source's best passage comes before a second passage of any source, so a question several guides
+  # answer (one setting per platform) reaches every guide.
+  def source_first(passages)
+    firsts, seconds = passages.partition.with_index do |passage, index|
+      passages.index { |other| other.source_reference == passage.source_reference } == index
+    end
+    firsts + seconds
   end
 
   def budget_passages(passages)
