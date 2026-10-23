@@ -134,5 +134,26 @@ describe HookListener do
         listener.contact_updated(contact_event)
       end
     end
+
+    context 'with hubspot hook' do
+      let!(:hook) { create(:integrations_hook, :hubspot, account: account) }
+
+      it 'enqueues the job for contact.created and contact.updated' do
+        created_event = Events::Base.new('contact.created', Time.zone.now, contact: conversation.contact)
+        expect(HookJob).to receive(:perform_later).with(hook, 'contact.created', { contact: conversation.contact })
+        expect(HookJob).to receive(:perform_later).with(hook, 'contact.updated', { contact: conversation.contact })
+
+        listener.contact_created(created_event)
+        listener.contact_updated(contact_event)
+      end
+
+      it 'enqueues the job for conversation.resolved' do
+        conversation.update!(status: :resolved)
+        resolved_event = Events::Base.new('conversation.resolved', Time.zone.now, conversation: conversation)
+        expect(HookJob).to receive(:perform_later).with(hook, 'conversation.resolved', { conversation: conversation })
+
+        listener.conversation_resolved(resolved_event)
+      end
+    end
   end
 end

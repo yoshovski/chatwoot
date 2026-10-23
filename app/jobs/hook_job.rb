@@ -24,7 +24,7 @@ class HookJob < MutexApplicationJob
   private
 
   def process_hubspot_integration(hook, event_name, event_data)
-    return unless event_name == 'contact.updated'
+    return unless ['contact.created', 'contact.updated'].include?(event_name)
 
     Crm::Hubspot::SyncJob.perform_later(hook.id, event_data.fetch(:contact).id)
   end

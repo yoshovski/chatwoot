@@ -1307,7 +1307,7 @@
           "TITLE": "Business leads",
           "DESCRIPTION": "Capture business inquiries with structured details. This is off until you enable it for this agent.",
           "ENABLE": "Enable lead capture",
-          "VERIFICATION": "Email addresses are not verified. If HubSpot sync is enabled, captured leads are sent as provided. Connect HubSpot in Settings → Integrations first.",
+          "VERIFICATION": "Email addresses are not verified. When HubSpot is connected, captured leads are sent with their lead fields.",
           "MAX_QUESTIONS": "Maximum optional qualification questions",
           "FIELDS": "Lead fields",
           "FIELDS_HELP": "Use stable keys such as company, country, audience_size or use_case. Values are saved as contact attributes prefixed with lead_. Keys type, summary, source and status are reserved.",
@@ -1319,10 +1319,9 @@
           "TYPE_NAME": "Type name",
           "TYPE_RULE": "When this type applies",
           "ADD_TYPE": "Add type",
-          "SCENARIO_HELP": "Save your settings, then add the Capture a business lead scenario. The scenario controls when to ask; HubSpot sync runs automatically when enabled.",
+          "SCENARIO_HELP": "Save your settings, then add the Capture a business lead scenario. The scenario controls when to ask; when HubSpot is connected, captured leads sync automatically.",
           "SCENARIO": "Choose a lead scenario",
           "SAVE": "Save lead settings",
-          "HUBSPOT_SYNC": "Sync captured leads to HubSpot",
           "ENABLE_FIRST": "Enable Leads and configure your fields and types in the agent settings before adding this scenario."
         }
       },
