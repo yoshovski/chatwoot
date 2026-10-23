@@ -105,6 +105,8 @@ export function useBusinessExamples(assistantId) {
       t(`CAPTAIN.ASSISTANTS.SETTINGS.PREVIEW.HOW_TO.${key.toUpperCase()}`)
     );
   };
+  // The page each example question comes from; empty until examples are ready or when no page matches.
+  const sources = computed(() => examples.value?.sources || {});
   const quickReplies = computed(
     () =>
       examples.value?.quick_replies ||
@@ -148,6 +150,7 @@ export function useBusinessExamples(assistantId) {
     reply,
     howToQuestion,
     howToReply,
+    sources,
     quickReplies,
     offLimitsQuestion,
     guardrails,

@@ -1106,7 +1106,6 @@
             },
             "SOURCES": {
               "TITLE": "Show sources",
-              "PREVIEW_LINK": "Returns policy",
               "NOTE": "Adds links to up to 3 pages {name} used, under the reply."
             }
           },

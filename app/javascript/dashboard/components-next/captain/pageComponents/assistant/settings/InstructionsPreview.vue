@@ -52,12 +52,13 @@ const quickReplies = computed(() =>
       )
     : []
 );
-const previewSources = computed(() => [
-  {
-    title: t('CAPTAIN.ASSISTANTS.SETTINGS.BEHAVIOR.CARDS.SOURCES.PREVIEW_LINK'),
-    url: 'https://example.com/help',
-  },
-]);
+const previewSources = computed(() => {
+  const source =
+    examples.sources.value[
+      previewType.value === 'simple' ? 'question' : 'how_to'
+    ];
+  return source ? [source] : [];
+});
 const showProductCard = computed(
   () => props.showProductCards && config.value.product_cards
 );
@@ -96,7 +97,7 @@ const showProductCard = computed(
       <p class="preview-bubble preview-bubble--agent !max-w-full">
         {{ reply }}
         <MessageSources
-          v-if="config.feature_citation"
+          v-if="config.feature_citation && previewSources.length"
           :sources="previewSources"
           :label="t('CONVERSATION.CAPTAIN_SOURCES')"
         />
