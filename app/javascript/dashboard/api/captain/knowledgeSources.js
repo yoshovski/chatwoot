@@ -24,9 +24,12 @@ class KnowledgeSources extends ApiClient {
     return axios.get(`${this.sourcesUrl(assistantId)}/${sourceId}`, { signal });
   }
 
-  select(assistantId, sourceId, selectedUrls) {
+  select(assistantId, sourceId, selectedUrls, autoAddPages) {
     return axios.patch(`${this.sourcesUrl(assistantId)}/${sourceId}`, {
-      website_source: { selected_urls: selectedUrls },
+      website_source: {
+        selected_urls: selectedUrls,
+        auto_add_pages: autoAddPages,
+      },
     });
   }
 

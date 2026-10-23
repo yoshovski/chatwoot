@@ -28,7 +28,7 @@ const mountBrowser = props =>
         },
         DropdownMenu: {
           name: 'DropdownMenu',
-          props: ['menuSections'],
+          props: ['menuSections', 'menuItems'],
           template: '<div data-test="menu" />',
         },
       },
@@ -48,7 +48,14 @@ describe('KnowledgeSourceBrowser', () => {
       },
     });
     list.mockResolvedValue({
-      data: [{ id: 7, url: 'https://example.com', status: 'ready' }],
+      data: [
+        {
+          id: 7,
+          url: 'https://example.com',
+          status: 'ready',
+          selected_urls: ['https://example.com/a'],
+        },
+      ],
     });
   });
 
@@ -71,5 +78,44 @@ describe('KnowledgeSourceBrowser', () => {
       .find(button => button.text() === 'PLATFORM_NAV.MANAGE_PAGES');
     await manage.trigger('click');
     expect(wrapper.emitted('manage')[0][0].id).toBe(7);
+  });
+
+  it('opens the only website from Manage website pages, without a filter', async () => {
+    const wrapper = mountBrowser();
+    await flushPromises();
+    const manage = wrapper
+      .findAll('button')
+      .find(button => button.text() === 'PLATFORM_NAV.MANAGE_WEBSITES');
+    await manage.trigger('click');
+    expect(wrapper.emitted('manage')[0][0].id).toBe(7);
+  });
+
+  it('lets the administrator pick one of several websites', async () => {
+    list.mockResolvedValue({
+      data: [
+        {
+          id: 7,
+          url: 'https://example.com',
+          status: 'ready',
+          selected_urls: [],
+        },
+        {
+          id: 8,
+          url: 'https://docs.example.org',
+          status: 'discovering',
+          selected_urls: [],
+        },
+      ],
+    });
+    const wrapper = mountBrowser();
+    await flushPromises();
+    await wrapper
+      .findAll('button')
+      .find(button => button.text() === 'PLATFORM_NAV.MANAGE_WEBSITES')
+      .trigger('click');
+    const menu = wrapper.findComponent({ name: 'DropdownMenu' });
+    expect(menu.props('menuItems').map(item => item.value)).toEqual([7, 8]);
+    menu.vm.$emit('action', { value: 8 });
+    expect(wrapper.emitted('manage')[0][0].id).toBe(8);
   });
 });

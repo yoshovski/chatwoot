@@ -3,11 +3,20 @@ class Captain::Websites::DiscoveryService # rubocop:disable Metrics/ClassLength
   MAX_HTML_FETCHES = 500
   MAX_SITEMAPS = 40
   MAX_DURATION = 10.minutes
+  # A run that stops at its fetch or time limit continues in another round, up to this many in a row.
+  MAX_ROUNDS = 6
+  # fresh starts over; continue reads what earlier rounds listed but never opened; refresh keeps
+  # known pages and checks the site's sitemaps and start page again for new ones.
+  MODES = %w[fresh continue refresh].freeze
   # Technical hosts, utility paths and query URLs are listed but never worth a request.
   UNFETCHED_REASONS = %w[technical_host utility query].freeze
 
-  def initialize(source)
+  def initialize(source, mode: 'fresh')
+    raise ArgumentError, "unknown discovery mode #{mode}" unless MODES.include?(mode)
+
     @source = source
+    @mode = mode
+    @previous_urls = source.pages.to_set { |page| page['url'] }
     @policy = Captain::Websites::UrlPolicy.new(source)
     @pages = {}
     @queue = Captain::Websites::SectionQueue.new
@@ -21,16 +30,14 @@ class Captain::Websites::DiscoveryService # rubocop:disable Metrics/ClassLength
     @boilerplate = Captain::Websites::BoilerplateLearner.new
     @language = Captain::Websites::PageRules.locale(source.url)
     @stats = { 'fetched_pages' => 0, 'successful_pages' => 0, 'sitemaps' => 0, 'help_center_articles' => 0, 'errors' => 0,
-               'limited' => false, 'limits' => [], 'phase' => 'sitemaps', 'run' => SecureRandom.hex(6) }
+               'limited' => false, 'limits' => [], 'phase' => 'sitemaps', 'run' => SecureRandom.hex(6), 'round' => round }
   end
 
   def perform
     @fetcher = Captain::Websites::PoliteFetcher.new(Process.clock_gettime(Process::CLOCK_MONOTONIC) + MAX_DURATION)
     @robots = Captain::Websites::OriginRobots.new(@fetcher) { |sitemap| add_sitemap(sitemap) }
     @source.update!(status: 'discovering', error_code: nil, discovery_stats: @stats)
-    @robots.for(@source.url)
-    add_page(@source.url, 'start')
-    @source.selected_urls.each { |url| add_page(url, 'selected') }
+    queue_start_pages
     discover_map if Captain::Tools::FirecrawlService.configured?
     discover
     finish
@@ -43,18 +50,72 @@ class Captain::Websites::DiscoveryService # rubocop:disable Metrics/ClassLength
 
   private
 
+  def round = @mode == 'continue' ? @source.discovery_stats.to_h.fetch('round', 1) + 1 : 1
+
+  # Earlier rounds' pages stay. A continued round skips what was already listed through help centres
+  # and llms.txt; a refresh lists them again and re-reads the start page, where new pages show up first.
+  def queue_start_pages
+    seed_pages unless @mode == 'fresh'
+    @robots.for(@source.url)
+    add_page(@source.url, 'start')
+    @source.selected_urls.each { |url| add_page(url, 'selected') }
+  end
+
+  def seed_pages
+    @source.pages.each do |page|
+      @pages[page['url']] = page.except('bucket', 'reason')
+      @queue.push(page['url']) if unread?(page)
+    end
+    start = @pages[@source.url]
+    @language ||= start&.dig('lang')
+    @mode == 'continue' ? skip_listed_indexes : reread(start)
+  end
+
+  # The loop above already queued an unread page.
+  def reread(page)
+    @queue.push(page['url']) if page && !unread?(page)
+  end
+
+  def skip_listed_indexes
+    @pages.each_value do |page|
+      origin = URI.join(page['url'], '/').to_s.delete_suffix('/')
+      @seen_llms_indexes << origin
+      @seen_help_centers << origin if page['help_center_article_id']
+    end
+  end
+
+  def unread?(page)
+    !(page['fetched'] || page.key?('words') || page['checked'] || page['blocked_reason']) &&
+      !Captain::Websites::PageRules.reason(page['url']).in?(UNFETCHED_REASONS)
+  end
+
   def finish
     record_limits
     apply_robots
-    success = @stats.values_at('successful_pages', 'sitemaps', 'help_center_articles').any?(&:positive?)
-    @stats.merge!('phase' => 'done', 'classification' => ('pending' if success), 'verification' => ('pending' if success),
-                  'boilerplate' => @boilerplate.to_h, 'boilerplate_sections' => @boilerplate.sections).compact!
+    success = found_pages?
+    @stats.merge!(round_stats(success)).compact!
     persist(status: success ? 'ready' : 'failed', error_code: success ? nil : 'no_pages_found', discovered_at: Time.current)
     return unless success
 
     Captain::Websites::ClassifySectionsJob.perform_later(@source.id, @stats['run'])
     Captain::Websites::VerifyPagesJob.perform_later(@source.id, @stats['run'])
   end
+
+  # A later round may open nothing new and still keep the pages earlier rounds found.
+  def found_pages?
+    @stats.values_at('successful_pages', 'sitemaps', 'help_center_articles').any?(&:positive?) || (@mode != 'fresh' && @pages.any?)
+  end
+
+  def round_stats(success)
+    { 'phase' => 'done', 'classification' => ('pending' if success), 'verification' => ('pending' if success),
+      'continue' => (true if success && continue?), 'new_urls' => new_urls.presence,
+      'boilerplate' => @boilerplate.to_h, 'boilerplate_sections' => @boilerplate.sections }
+  end
+
+  def continue? = @stats['round'] < MAX_ROUNDS && @limits.intersect?(%w[requests time])
+
+  # Pages no earlier run listed; a first discovery has nothing to compare with.
+  def new_urls = @previous_urls.empty? ? [] : @pages.keys.reject { |url| @previous_urls.include?(url) }
 
   def record_limits
     @limits << 'time' unless @fetcher.before_deadline?
@@ -154,6 +215,7 @@ class Captain::Websites::DiscoveryService # rubocop:disable Metrics/ClassLength
     return @pages[url]['blocked_reason'] = 'robots_disallowed' unless robots.allowed?(url)
 
     @stats['fetched_pages'] += 1
+    @pages[url]['fetched'] = true
     html, content_type = @fetcher.fetch(url, robots.delay)
     return unless html
 

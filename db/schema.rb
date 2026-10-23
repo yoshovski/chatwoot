@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_10_21_120000) do
+ActiveRecord::Schema[7.2].define(version: 2026_10_23_120000) do
   # These extensions should be enabled to support this database
   enable_extension "pg_stat_statements"
   enable_extension "pg_trgm"
@@ -660,6 +660,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_10_21_120000) do
     t.datetime "discovered_at"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.boolean "auto_add_pages", default: true, null: false
     t.index "assistant_id, md5(url)", name: "index_captain_website_sources_on_assistant_url", unique: true
     t.index ["account_id"], name: "index_captain_website_sources_on_account_id"
     t.index ["assistant_id"], name: "index_captain_website_sources_on_assistant_id"

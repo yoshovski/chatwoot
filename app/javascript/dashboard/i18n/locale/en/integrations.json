@@ -2262,6 +2262,10 @@
       "DELETE_DESCRIPTION": "{count} documents and their FAQs will be deleted. Website pages are also removed from the website selection."
     },
     "WEBSITES": {
+      "AUTO_ADD": "Add new recommended pages automatically",
+      "AUTO_ADD_HINT": "When your website gets new pages that help customers, your AI agent learns from them without you opening this list. Pages you unchecked stay out.",
+      "AUTO_ADDED": "{count} new recommended page was added automatically. | {count} new recommended pages were added automatically.",
+      "NEW_PAGE": "New",
       "TITLE": "Website sources",
       "ENTIRE_WEBSITE": "Entire website",
       "DISCOVER": "Discover pages",

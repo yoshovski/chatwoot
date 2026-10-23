@@ -1,7 +1,7 @@
 class Captain::WebsiteSource < ApplicationRecord
   self.table_name = 'captain_website_sources'
   # Kept for classification and duplicate checks; the page picker does not need them.
-  SERVER_ONLY_PAGE_FIELDS = %w[description fingerprint minhash canonical schema help_center_article_id markdown_url updated_at].freeze
+  SERVER_ONLY_PAGE_FIELDS = %w[description fingerprint minhash canonical schema help_center_article_id markdown_url updated_at fetched].freeze
   # Pages that can never become knowledge. They stay stored, so rediscovery does not offer them again,
   # but the picker only shows how many were left out.
   HIDDEN_REASONS = %w[not_found thin not_html].freeze
@@ -21,7 +21,7 @@ class Captain::WebsiteSource < ApplicationRecord
 
   def client_payload
     hidden, visible = pages.partition { |page| HIDDEN_REASONS.include?(page['reason']) }
-    as_json(only: %i[id url include_subdomains status selected_urls error_code discovered_at]).merge(
+    as_json(only: %i[id url include_subdomains status selected_urls error_code discovered_at auto_add_pages]).merge(
       'discovery_stats' => client_stats,
       'recoverable' => status.in?(%w[pending discovering]) && updated_at < 2.hours.ago,
       'documents_available' => account.usage_limits[:captain][:documents][:current_available],
@@ -35,7 +35,7 @@ class Captain::WebsiteSource < ApplicationRecord
   def client_stats
     page_labels = discovery_stats['page_labels'] || {}
     labelled = pages.filter_map { |page| [page['section'], page_labels[page['url']]] if page_labels.key?(page['url']) }.to_h
-    discovery_stats.except('boilerplate', 'boilerplate_sections', 'page_labels')
+    discovery_stats.except('boilerplate', 'boilerplate_sections', 'page_labels', 'new_urls')
                    .merge('sections' => labelled.merge(discovery_stats['sections'] || {}))
   end
 
@@ -43,11 +43,12 @@ class Captain::WebsiteSource < ApplicationRecord
 
   def pages_payload(visible)
     documents = assistant.documents.where(external_link: visible.pluck('url')).index_by(&:external_link)
-    visible.map { |page| page_payload(page, documents[page['url']]) }
+    new_urls = discovery_stats['new_urls'].to_a.to_set
+    visible.map { |page| page_payload(page, documents[page['url']], new_urls.include?(page['url'])) }
   end
 
-  def page_payload(page, document)
-    page.except(*SERVER_ONLY_PAGE_FIELDS).merge('document_id' => document&.id, 'sync_status' => document&.sync_status,
+  def page_payload(page, document, is_new)
+    page.except(*SERVER_ONLY_PAGE_FIELDS).merge('new' => is_new, 'document_id' => document&.id, 'sync_status' => document&.sync_status,
                                                 'knowledge_state' => document&.knowledge_state, 'enabled' => document&.enabled?,
                                                 'error_code' => document&.last_sync_error_code)
   end

@@ -6,6 +6,7 @@ import { useAbortableRequest } from 'dashboard/composables/useAbortableRequest';
 import api from 'dashboard/api/captain/knowledgeSources';
 import Input from 'dashboard/components-next/input/Input.vue';
 import Button from 'dashboard/components-next/button/Button.vue';
+import Switch from 'dashboard/components-next/switch/Switch.vue';
 import WebsitePageTree from './WebsitePageTree.vue';
 import {
   TABS,
@@ -35,6 +36,7 @@ const search = ref('');
 const saving = ref(false);
 const error = ref('');
 const preview = ref(null);
+const autoAddPages = ref(true);
 
 const pages = computed(() => source.value?.pages || []);
 const stats = computed(() => source.value?.discovery_stats || {});
@@ -67,8 +69,14 @@ const classifying = computed(
 const settled = computed(
   () => source.value?.status === 'ready' && !classifying.value
 );
+// A round that stopped at a limit starts the next one after its checks finish.
+const continuing = computed(
+  () => source.value?.status === 'ready' && Boolean(stats.value.continue)
+);
 // Discovery limits are a server-side cost guard; the picker only says whether it is still working.
-const working = computed(() => discovering.value || classifying.value);
+const working = computed(
+  () => discovering.value || classifying.value || continuing.value
+);
 const statusText = computed(() => {
   const count = pages.value.length;
   return working.value
@@ -111,10 +119,11 @@ const load = async () => {
     source.value = response.data;
     if (!initialized.value) {
       selected.value = [...response.data.selected_urls];
+      autoAddPages.value = response.data.auto_add_pages;
       initialized.value = true;
     }
     precheckRecommended();
-    if (!discovering.value && !classifying.value) poll.pause();
+    if (!working.value) poll.pause();
   } catch {
     error.value = t('CAPTAIN.WEBSITES.LOAD_ERROR');
   }
@@ -139,7 +148,12 @@ const save = async () => {
   saving.value = true;
   error.value = '';
   try {
-    await api.select(props.assistantId, props.sourceId, selected.value);
+    await api.select(
+      props.assistantId,
+      props.sourceId,
+      selected.value,
+      autoAddPages.value
+    );
     emit('saved');
   } catch (exception) {
     error.value =
@@ -207,6 +221,9 @@ const showPreview = async page => {
       </div>
       <p class="m-0 text-xs text-n-slate-11">
         {{ $t('CAPTAIN.WEBSITES.SELECTION_HELP') }}
+      </p>
+      <p v-if="stats.auto_added" class="m-0 text-xs text-n-teal-11">
+        {{ $t('CAPTAIN.WEBSITES.AUTO_ADDED', { count: stats.auto_added }) }}
       </p>
       <p v-if="source?.status === 'failed'" class="m-0 text-xs text-n-ruby-11">
         {{ $t('CAPTAIN.WEBSITES.DISCOVERY_FAILED') }}
@@ -368,13 +385,23 @@ const showPreview = async page => {
       }}
     </p>
     <div
-      class="flex items-center justify-between gap-3 pt-3 border-t shrink-0 border-n-weak"
+      class="flex flex-wrap items-center justify-between gap-3 pt-3 border-t shrink-0 border-n-weak"
     >
+      <label
+        v-tooltip.top="$t('CAPTAIN.WEBSITES.AUTO_ADD_HINT')"
+        class="flex items-center gap-2 text-sm cursor-pointer text-n-slate-12"
+      >
+        <Switch
+          v-model="autoAddPages"
+          :aria-label="$t('CAPTAIN.WEBSITES.AUTO_ADD')"
+        />
+        {{ $t('CAPTAIN.WEBSITES.AUTO_ADD') }}
+      </label>
       <span
         v-tooltip.top="
           discovering ? $t('CAPTAIN.WEBSITES.SAVE_DURING_DISCOVERY') : ''
         "
-        class="text-sm text-n-slate-11"
+        class="ms-auto text-sm text-n-slate-11"
       >
         {{
           $t('CAPTAIN.WEBSITES.SELECTION_SUMMARY', {

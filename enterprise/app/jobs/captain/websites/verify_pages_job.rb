@@ -17,13 +17,15 @@ class Captain::Websites::VerifyPagesJob < ApplicationJob
     return unless current?(source, run)
 
     results = check(unchecked_urls(source))
-    source.with_lock do
+    finished = source.with_lock do
       next unless current?(source, run)
 
       source.discovery_stats = source.discovery_stats.merge('verification' => 'done', 'verified_pages' => results.size)
       pages = source.pages.map { |page| results.key?(page['url']) ? page.merge(results[page['url']]) : page }
       source.update!(pages: Captain::Websites::PageBuckets.new(source).perform(pages))
+      Captain::Websites::RoundFinisher.claim?(source)
     end
+    Captain::Websites::RoundFinisher.new(source).perform if finished
   end
 
   private
