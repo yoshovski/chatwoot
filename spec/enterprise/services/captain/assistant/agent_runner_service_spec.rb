@@ -496,8 +496,9 @@ RSpec.describe Captain::Assistant::AgentRunnerService do
 
       it 'reserves space for rendered citations and restores their original indexes' do
         original_response_parts = Captain::Assistant::ResponseParts.from_response(mock_result.output)
-        original_customer_message = original_response_parts.customer_message_content(citation_urls: channel_limit_rewrite[:citation_urls],
-                                                                                   sources_format: :plain)
+        original_customer_message = original_response_parts.customer_message_content(
+          citation_urls: channel_limit_rewrite[:citation_urls], sources_format: :plain
+        )
         citation_markup_length = original_customer_message.length - original_response_parts.plain_text.length
         response_text_limit = 140 - citation_markup_length
 

@@ -13,7 +13,9 @@ RSpec.describe Captain::Assistant::ResponseParts do
   end
 
   it 'writes sources as markdown links, plain title and url lines, or leaves them to the widget' do
-    content = ->(format) { response_parts.customer_message_content(citation_urls: citation_urls, citation_titles: citation_titles, sources_format: format) }
+    content = lambda do |format|
+      response_parts.customer_message_content(citation_urls: citation_urls, citation_titles: citation_titles, sources_format: format)
+    end
 
     expect(content.call(:markdown)).to eq(
       "Call the transfer endpoint.\n\n→ [Transfer purchase](https://docs.example.com/transfer)\n→ [Billing](https://docs.example.com/billing)"
