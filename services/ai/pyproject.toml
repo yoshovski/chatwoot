@@ -8,6 +8,7 @@ version = "0.1.0"
 description = "Canonical account-owned knowledge and durable Dify projections"
 requires-python = ">=3.12"
 dependencies = [
+  "certifi>=2026.10.19",
   "alembic>=1.16,<2",
   "cryptography>=45,<47",
   "fastapi>=0.116,<1",
@@ -39,3 +40,6 @@ ignore = ["B008"]
 
 [tool.ruff.lint.per-file-ignores]
 "alembic/versions/*.py" = ["E501"]
+
+[tool.uv]
+required-version = ">=0.13.4"
