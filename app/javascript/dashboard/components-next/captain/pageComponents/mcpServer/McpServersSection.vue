@@ -119,6 +119,7 @@ onMounted(fetchServers);
         icon="i-lucide-plug"
         size="sm"
         variant="faded"
+        class="shrink-0"
         @click="editingId = 'new'"
       />
     </div>
