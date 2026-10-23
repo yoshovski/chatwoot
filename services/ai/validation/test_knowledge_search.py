@@ -166,6 +166,38 @@ class KnowledgeSearchTest(unittest.TestCase):
         self.assertTrue(all(len(p.content) <= 8000 for p in result.passages))
         self.assertTrue(all(p.content.endswith(" ...") for p in result.passages))
 
+    def test_one_guide_cannot_take_every_slot_from_other_matching_guides(self):
+        dataset = self.datasets[1]
+        guides = {"apple": str(uuid4()), "vizio": str(uuid4()), "roku": str(uuid4())}
+        records = [
+            {
+                "score": score,
+                "segment": {
+                    "document_id": guides[guide],
+                    "enabled": True,
+                    "status": "completed",
+                    "content": f"{guide} production notification URL, part {n}.",
+                    "document": {"name": f"{guide}.md", "doc_metadata": {}},
+                },
+            }
+            for n, (guide, score) in enumerate(
+                [
+                    ("apple", 0.9),
+                    ("vizio", 0.89),
+                    ("vizio", 0.75),
+                    ("vizio", 0.66),
+                    ("apple", 0.65),
+                    ("roku", 0.55),
+                ]
+            )
+        ]
+        payload = self.payload.model_copy(update={"datasets": [dataset]})
+        with patch.object(Dify, "search", return_value=records):
+            result = search(self.config, payload, 0.3)
+        documents = [passage.document_id for passage in result.passages]
+        self.assertEqual(documents.count(guides["vizio"]), 2)
+        self.assertIn(guides["roku"], documents)
+
     def test_remote_failure_is_not_disguised_as_no_match(self):
         with patch.object(Dify, "search", side_effect=ProjectionError("dify_http_503")):
             with self.assertRaises(ProjectionError):

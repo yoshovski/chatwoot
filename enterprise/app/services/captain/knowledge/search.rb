@@ -1,7 +1,7 @@
 class Captain::Knowledge::Search
   prepend Captain::Knowledge::SearchTracing
   class Error < StandardError; end
-  DATASET_TOP_K = 10
+  DATASET_TOP_K = 20
   NAMED_DOCUMENT_LIMIT = 2
   PASSAGE_CHARS = 8000
   TOTAL_CHARS = 24_000

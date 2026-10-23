@@ -15,12 +15,15 @@ from cwai.dify import Dify, ProjectionError
 from cwai.workspace import connection
 
 router = APIRouter(prefix="/v1/knowledge")
-MAX_DATASET_RESULTS = 10
+# Enough chunks that a question several guides answer (one setting per platform) reaches each guide.
+MAX_DATASET_RESULTS = 20
 # The catalog is a parent-child dataset: Dify ranks child chunks and merges them into their
 # product, so 10 chunks can collapse into one or two products. A product-only search asks for
 # more chunks to reach several distinct products.
 CATALOG_ONLY_CHUNKS = 30
-MAX_PASSAGES = 5
+MAX_PASSAGES = 8
+# A guide with many matching chunks must not crowd out the other guides that answer the question.
+MAX_PASSAGES_PER_DOCUMENT = 2
 PER_PASSAGE_CHARS = 8000
 TOTAL_CHARS = 24000
 # The installed Dify retrieve API limits queries to 250 characters (below the workflow's 420 cap).
@@ -195,12 +198,16 @@ def search(config, payload, threshold):
     candidates.sort(key=lambda candidate: candidate[0].score, reverse=True)
     passages = []
     accepted = []
+    per_document = {}
     total = 0
     for item, original in candidates:
         if any(original in content or content in original for content in accepted):
             continue
         if total + len(item.content) > TOTAL_CHARS:
             continue
+        if per_document.get(item.document_id, 0) == MAX_PASSAGES_PER_DOCUMENT:
+            continue
+        per_document[item.document_id] = per_document.get(item.document_id, 0) + 1
         accepted.append(original)
         total += len(item.content)
         passages.append(item.model_copy(update={"id": len(passages) + 1}))

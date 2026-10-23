@@ -92,10 +92,10 @@ RSpec.describe Captain::Knowledge::Search do
 
       it 'includes catalog dataset in search request' do
         expected_datasets = [
-          { dataset_id: 'faq-ds', kind: 'faq', limit: 10 },
-          { dataset_id: 'docs-ds', kind: 'document', limit: 10 },
-          { dataset_id: 'extra-ds', kind: 'extra', limit: 10 },
-          { dataset_id: 'catalog-ds-123', kind: 'catalog', limit: 10 }
+          { dataset_id: 'faq-ds', kind: 'faq', limit: 20 },
+          { dataset_id: 'docs-ds', kind: 'document', limit: 20 },
+          { dataset_id: 'extra-ds', kind: 'extra', limit: 20 },
+          { dataset_id: 'catalog-ds-123', kind: 'catalog', limit: 20 }
         ]
 
         expect(knowledge_client).to receive(:request).with(
@@ -110,7 +110,7 @@ RSpec.describe Captain::Knowledge::Search do
 
       it 'filters catalog out when kinds excludes catalog and product' do
         expected_datasets = [
-          { dataset_id: 'docs-ds', kind: 'document', limit: 10 }
+          { dataset_id: 'docs-ds', kind: 'document', limit: 20 }
         ]
 
         expect(knowledge_client).to receive(:request).with(
@@ -125,7 +125,7 @@ RSpec.describe Captain::Knowledge::Search do
 
       it 'preserves catalog when kinds includes product' do
         expected_datasets = [
-          { dataset_id: 'catalog-ds-123', kind: 'catalog', limit: 10 }
+          { dataset_id: 'catalog-ds-123', kind: 'catalog', limit: 20 }
         ]
 
         expect(knowledge_client).to receive(:request).with(
@@ -190,9 +190,9 @@ RSpec.describe Captain::Knowledge::Search do
 
       it 'removes catalog dataset from search request' do
         expected_datasets = [
-          { dataset_id: 'faq-ds', kind: 'faq', limit: 10 },
-          { dataset_id: 'docs-ds', kind: 'document', limit: 10 },
-          { dataset_id: 'extra-ds', kind: 'extra', limit: 10 }
+          { dataset_id: 'faq-ds', kind: 'faq', limit: 20 },
+          { dataset_id: 'docs-ds', kind: 'document', limit: 20 },
+          { dataset_id: 'extra-ds', kind: 'extra', limit: 20 }
         ]
 
         expect(knowledge_client).to receive(:request).with(
@@ -222,9 +222,9 @@ RSpec.describe Captain::Knowledge::Search do
 
       it 'does not include catalog dataset in search request' do
         expected_datasets = [
-          { dataset_id: 'faq-ds', kind: 'faq', limit: 10 },
-          { dataset_id: 'docs-ds', kind: 'document', limit: 10 },
-          { dataset_id: 'extra-ds', kind: 'extra', limit: 10 }
+          { dataset_id: 'faq-ds', kind: 'faq', limit: 20 },
+          { dataset_id: 'docs-ds', kind: 'document', limit: 20 },
+          { dataset_id: 'extra-ds', kind: 'extra', limit: 20 }
         ]
 
         expect(knowledge_client).to receive(:request).with(
@@ -245,9 +245,9 @@ RSpec.describe Captain::Knowledge::Search do
 
       it 'does not include catalog dataset in search request' do
         expected_datasets = [
-          { dataset_id: 'faq-ds', kind: 'faq', limit: 10 },
-          { dataset_id: 'docs-ds', kind: 'document', limit: 10 },
-          { dataset_id: 'extra-ds', kind: 'extra', limit: 10 }
+          { dataset_id: 'faq-ds', kind: 'faq', limit: 20 },
+          { dataset_id: 'docs-ds', kind: 'document', limit: 20 },
+          { dataset_id: 'extra-ds', kind: 'extra', limit: 20 }
         ]
 
         expect(knowledge_client).to receive(:request).with(

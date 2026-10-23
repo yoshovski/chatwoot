@@ -210,6 +210,30 @@ RSpec.describe Captain::Tools::FaqLookupTool, type: :model do
     end
   end
 
+  describe '#perform_queries with connected knowledge' do
+    let(:apple) { create(:captain_document, assistant: assistant, name: 'Apple') }
+    let(:vizio) { create(:captain_document, assistant: assistant, name: 'Vizio') }
+    let(:search) { instance_double(Captain::Knowledge::Search) }
+
+    before do
+      allow(assistant.account).to receive(:dify_knowledge_enabled?).and_return(true)
+      allow(assistant).to receive(:ensure_dify_datasets!)
+      allow(Captain::Knowledge::Search).to receive(:new).with(assistant).and_return(search)
+      allow(search).to receive(:search_prepared).and_return(
+        [[apple, 'Apple part one', 0.9], [apple, 'Apple part two', 0.8], [vizio, 'Vizio part one', 0.7]].map do |record, content, score|
+          Captain::Knowledge::Search::Passage.new(kind: 'document', title: record.name, content: content, score: score, record: record,
+                                                  source_url: "https://example.com/#{record.name.downcase}")
+        end
+      )
+    end
+
+    it "gives every matching guide's best passage before a second passage of any guide" do
+      result = tool.perform_queries(tool_context, queries: ['production notification URL'])
+
+      expect(result.scan(/^(?:Apple|Vizio) part \w+$/)).to eq(['Apple part one', 'Vizio part one', 'Apple part two'])
+    end
+  end
+
   describe '#active?' do
     it 'returns true for public tools' do
       expect(tool.active?).to be true
