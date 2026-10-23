@@ -14,6 +14,13 @@ class HubspotAPI extends ApiClient {
     return axios.get(`${this.baseUrl()}/integrations/hubspot/properties`);
   }
 
+  getContact(contactId, { signal } = {}) {
+    return axios.get(`${this.baseUrl()}/integrations/hubspot/contact`, {
+      params: { contact_id: contactId },
+      signal,
+    });
+  }
+
   updateSettings(settings) {
     return axios.patch(`${this.baseUrl()}/integrations/hubspot`, { settings });
   }

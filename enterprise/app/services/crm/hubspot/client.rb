@@ -23,6 +23,24 @@ class Crm::Hubspot::Client
     result.fetch('id')
   end
 
+  def contact(id, properties)
+    request(:get, "/crm/v3/objects/contacts/#{ERB::Util.url_encode(id)}?#{{ properties: properties.join(',') }.to_query}")
+  end
+
+  def search_contact(email, properties)
+    request(:post, '/crm/v3/objects/contacts/search',
+            filterGroups: [{ filters: [{ propertyName: 'email', operator: 'EQ', value: email }] }],
+            properties: properties, limit: 1).fetch('results').first
+  end
+
+  def property(name)
+    request(:get, "/crm/v3/properties/contacts/#{ERB::Util.url_encode(name)}")
+  end
+
+  def owner(id)
+    request(:get, "/crm/v3/owners/#{ERB::Util.url_encode(id)}")
+  end
+
   # associationTypeId 202 is HubSpot's default note-to-contact association.
   def create_note(contact_id, body:, timestamp:)
     request(:post, '/crm/v3/objects/notes',

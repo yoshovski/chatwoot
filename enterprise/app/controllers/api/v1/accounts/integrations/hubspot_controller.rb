@@ -12,6 +12,18 @@ class Api::V1::Accounts::Integrations::HubspotController < Api::V1::Accounts::In
     render_could_not_create_error(I18n.t('integration_apps.hubspot.unreachable'))
   end
 
+  # Agents read this next to a conversation, so failures come back as states instead of errors.
+  def contact
+    contact = Current.account.contacts.find(params.require(:contact_id))
+    return render json: { error: 'reauthorize' } if @hook.disabled?
+
+    render json: Crm::Hubspot::ContactCardService.new(@hook).perform(contact)
+  rescue Crm::Hubspot::Client::ReauthorizationRequired, Crm::Hubspot::Client::AuthorizationError
+    render json: { error: 'reauthorize' }
+  rescue Crm::Hubspot::Client::ApiError
+    render json: { error: 'unavailable' }
+  end
+
   def update
     mapping = settings_params[:field_mapping].to_h
     unless mapping['email'] == 'email' && (mapping.keys - Crm::Hubspot::MappingSources.new(Current.account).keys).empty?

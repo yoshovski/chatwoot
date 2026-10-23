@@ -513,6 +513,7 @@ Rails.application.routes.draw do
               resource :hubspot, controller: 'hubspot', only: [] do
                 collection do
                   get :properties
+                  get :contact
                   patch :update
                   delete :destroy
                 end

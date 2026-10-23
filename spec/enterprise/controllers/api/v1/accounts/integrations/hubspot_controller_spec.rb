@@ -112,6 +112,87 @@ RSpec.describe 'HubSpot Integration API', type: :request do
     end
   end
 
+  describe 'GET /api/v1/accounts/{account.id}/integrations/hubspot/contact' do
+    let(:contact) { create(:contact, account: account, email: 'jane@example.com') }
+    let(:search_url) { 'https://api.hubapi.com/crm/v3/objects/contacts/search' }
+    let(:record) do
+      { id: '901', properties: { firstname: 'Jane', lastname: 'Doe', email: 'jane@example.com', phone: '+15550100',
+                                 lifecyclestage: 'marketingqualifiedlead', hs_lead_status: 'NEW', hubspot_owner_id: '77',
+                                 createdate: '2026-01-01T10:00:00Z', lastmodifieddate: '2026-01-02T10:00:00Z' } }
+    end
+    let(:json_headers) { { 'Content-Type' => 'application/json' } }
+
+    before do
+      stub_request(:get, 'https://api.hubapi.com/crm/v3/properties/contacts/lifecyclestage')
+        .to_return(status: 200, body: { options: [{ value: 'marketingqualifiedlead', label: 'Marketing Qualified Lead' }] }.to_json,
+                   headers: json_headers)
+      stub_request(:get, 'https://api.hubapi.com/crm/v3/properties/contacts/hs_lead_status')
+        .to_return(status: 200, body: { options: [{ value: 'NEW', label: 'New' }] }.to_json, headers: json_headers)
+    end
+
+    it 'finds the contact by email for agents and returns the card' do
+      stub_request(:post, search_url)
+        .with { |request| JSON.parse(request.body)['filterGroups'][0]['filters'][0]['value'] == 'jane@example.com' }
+        .to_return(status: 200, body: { results: [record] }.to_json, headers: json_headers)
+
+      get "#{base_url}/contact", headers: agent.create_new_auth_token, params: { contact_id: contact.id }
+
+      expect(response).to have_http_status(:ok)
+      expect(response.parsed_body).to eq(
+        'found' => true, 'id' => '901', 'url' => 'https://app.hubspot.com/contacts/12345/record/0-1/901',
+        'name' => 'Jane Doe', 'email' => 'jane@example.com', 'phone' => '+15550100',
+        'lifecyclestage' => 'Marketing Qualified Lead', 'hs_lead_status' => 'New', 'owner_name' => nil,
+        'createdate' => '2026-01-01T10:00:00Z', 'lastmodifieddate' => '2026-01-02T10:00:00Z'
+      )
+    end
+
+    it 'uses the stored HubSpot id, the owner when that scope was granted and the EU domain for EU portals' do
+      hook.update!(settings: hook.settings.merge('scopes' => hook.settings['scopes'] + ['crm.objects.owners.read'],
+                                                 'refresh_token' => 'eu1-refresh-token'))
+      contact.update!(additional_attributes: { 'external' => { 'hubspot_id' => '901' } })
+      stub_request(:get, %r{https://api.hubapi.com/crm/v3/objects/contacts/901\?properties=})
+        .to_return(status: 200, body: record.to_json, headers: json_headers)
+      stub_request(:get, 'https://api.hubapi.com/crm/v3/owners/77')
+        .to_return(status: 200, body: { firstName: 'Sam', lastName: 'Owner' }.to_json, headers: json_headers)
+
+      get "#{base_url}/contact", headers: agent.create_new_auth_token, params: { contact_id: contact.id }
+
+      expect(response.parsed_body).to include('owner_name' => 'Sam Owner', 'url' => 'https://app-eu1.hubspot.com/contacts/12345/record/0-1/901')
+      expect(a_request(:post, search_url)).not_to have_been_made
+    end
+
+    it 'returns found false when HubSpot has no matching contact' do
+      contact.update!(additional_attributes: { 'external' => { 'hubspot_id' => '404' } })
+      stub_request(:get, %r{https://api.hubapi.com/crm/v3/objects/contacts/404}).to_return(status: 404)
+      stub_request(:post, search_url).to_return(status: 200, body: { results: [] }.to_json, headers: json_headers)
+
+      get "#{base_url}/contact", headers: agent.create_new_auth_token, params: { contact_id: contact.id }
+
+      expect(response.parsed_body).to eq('found' => false)
+    end
+
+    it 'asks to reauthorize on token errors and when the hook is disabled' do
+      stub_request(:post, search_url).to_return(status: 403)
+
+      get "#{base_url}/contact", headers: agent.create_new_auth_token, params: { contact_id: contact.id }
+      expect(response).to have_http_status(:ok)
+      expect(response.parsed_body).to eq('error' => 'reauthorize')
+
+      hook.update!(status: :disabled)
+      get "#{base_url}/contact", headers: agent.create_new_auth_token, params: { contact_id: contact.id }
+      expect(response.parsed_body).to eq('error' => 'reauthorize')
+    end
+
+    it 'reports HubSpot outages without failing' do
+      stub_request(:post, search_url).to_return(status: 503)
+
+      get "#{base_url}/contact", headers: agent.create_new_auth_token, params: { contact_id: contact.id }
+
+      expect(response).to have_http_status(:ok)
+      expect(response.parsed_body).to eq('error' => 'unavailable')
+    end
+  end
+
   describe 'DELETE /api/v1/accounts/{account.id}/integrations/hubspot' do
     let(:revoke_url) { 'https://api.hubapi.com/oauth/2026-03/token/revoke' }
 
