@@ -49,7 +49,11 @@ module Captain::Assistant::RunnerStateHelper
   end
 
   def ownership_instruction
-    ownership_service.prompt_instruction if respond_to?(:ownership_service, true)
+    return unless respond_to?(:ownership_service, true)
+
+    # While a handoff already waits for a colleague, only the ownership state applies.
+    policy = handoff_policy.prompt_instruction unless ownership_service.waiting?
+    [ownership_service.prompt_instruction, policy].compact.join("\n").presence
   end
 
   def slice_attrs(record, keys)

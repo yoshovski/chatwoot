@@ -427,6 +427,20 @@ RSpec.describe Captain::Assistant, type: :model do
       expect(instructions).not_to include('# Human Handoff Protocol', scenario.title, "handoff_to_#{scenario.handoff_key}")
     end
 
+    it 'lists the business handoff rules under the handoff protocol' do
+      assistant.update!(config: assistant.config.merge('handoff_rules' => ['Escalate legal advice to a colleague.']))
+
+      expect(assistant.agent_instructions).to include("Handoff rules from the business; follow each one when it matches:\n" \
+                                                      '- Escalate legal advice to a colleague.')
+    end
+
+    it 'rejects handoff rules that are not short text' do
+      assistant.config['handoff_rules'] = ['x' * (described_class::HANDOFF_RULE_LENGTH_LIMIT + 1)]
+
+      expect(assistant).not_to be_valid
+      expect(assistant.errors[:handoff_rules]).to be_present
+    end
+
     it 'renders commerce rules when shopify tools are available' do
       allow(assistant).to receive(:shopify_catalog_tools_available?).and_return(true)
 

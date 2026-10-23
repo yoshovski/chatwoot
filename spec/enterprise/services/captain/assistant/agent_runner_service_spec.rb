@@ -136,6 +136,17 @@ RSpec.describe Captain::Assistant::AgentRunnerService do
       expect(configured_assistant.handoff_agents).to be_empty
     end
 
+    it 'drops the handoff tool when the assistant keeps conversations while the team is offline' do
+      faq_tool = Captain::Tools::FaqLookupTool.new(assistant)
+      handoff_tool = Captain::Tools::HandoffTool.new(assistant)
+      assistant.update!(config: assistant.config.merge('handoff_when_offline' => 'keep'))
+      service = described_class.new(assistant: assistant, conversation: conversation)
+
+      allow(assistant).to receive(:agent).and_return(Agents::Agent.new(name: 'assistant', tools: [faq_tool, handoff_tool]))
+
+      expect(service.send(:build_assistant_agent).tools).to contain_exactly(faq_tool)
+    end
+
     it 'uses the Copilot prompt without changing the Assistant prompt path' do
       assistant_agent = Agents::Agent.new(name: 'assistant')
       service = described_class.new(

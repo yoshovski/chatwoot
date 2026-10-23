@@ -139,7 +139,8 @@ class Api::V1::Accounts::Captain::AssistantsController < Api::V1::Accounts::Base
       :resolution_message, :instructions, :temperature, :auto_resolve_mode,
       :response_window, :continue_while_waiting, :suggested_replies,
       :max_suggested_replies, :product_cards, :tone, :off_limits_message, :business_type,
-      { link_allowlist: [], image_allowlist: [] }
+      :handoff_when_online, :handoff_when_offline, :offline_handoff_message, :no_handoff_message,
+      { link_allowlist: [], image_allowlist: [], handoff_rules: [] }
     ]
     if Current.account.feature_enabled?('captain_integration_v2')
       attributes += [

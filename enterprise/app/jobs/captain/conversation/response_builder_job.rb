@@ -109,7 +109,9 @@ class Captain::Conversation::ResponseBuilderJob < ApplicationJob # rubocop:disab
     # top-level handle_error path only sees exceptions raised outside the runner.
     record_v2_response_failure(@response['error_reason']) if v2_generation_errored?
 
-    if v2_handoff_tool_fired?
+    if handoff_kept?
+      process_kept_handoff
+    elsif v2_handoff_tool_fired?
       process_v2_handoff_response
     elsif v1_handoff_requested?
       delegate_ownership_service.waiting? ? process_v1_handoff_while_waiting : process_v1_handoff_request
@@ -122,6 +124,31 @@ class Captain::Conversation::ResponseBuilderJob < ApplicationJob # rubocop:disab
     elsif may_reply?
       process_standard_response
     end
+  end
+
+  # The assistant's settings say to keep the conversation instead of handing off right now, so a
+  # handoff signal from the answer, the safety net or an empty answer only gets a reply.
+  def handoff_kept?
+    return false unless conversation_pending? && handoff_policy.keep?
+
+    v1_handoff_requested? || v2_handoff_declared? || v2_handoff_safety_net_triggered? || v2_empty_response_handoff?
+  end
+
+  def process_kept_handoff
+    return process_standard_response if kept_answer_deliverable?
+
+    message = create_outgoing_message(handoff_policy.keep_message)
+    capture_assistant_session(result_message: message, credits_consumed: 0.0)
+  end
+
+  def kept_answer_deliverable?
+    return false if @response['error'] || legacy_v1_handoff_token?
+
+    Captain::Assistant::ResponseParts.from_response(@response).plain_text.present?
+  end
+
+  def handoff_policy
+    @handoff_policy ||= Captain::Conversation::HandoffPolicy.new(assistant: @assistant, conversation: @conversation)
   end
 
   def process_v1_handoff_while_waiting
@@ -345,10 +372,7 @@ class Captain::Conversation::ResponseBuilderJob < ApplicationJob # rubocop:disab
   end
 
   def create_handoff_message(preserve_waiting_since: false)
-    @handoff_message = create_outgoing_message(
-      @assistant.config['handoff_message'].presence || I18n.t('conversations.captain.handoff'),
-      preserve_waiting_since: preserve_waiting_since
-    )
+    @handoff_message = create_outgoing_message(handoff_policy.handoff_message, preserve_waiting_since: preserve_waiting_since)
   end
 
   # Capture runs outside the delivery transaction and never raises (the service

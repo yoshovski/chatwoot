@@ -15,6 +15,7 @@ import SettingsSwitchRow from './SettingsSwitchRow.vue';
 import SettingsSaveBar from './SettingsSaveBar.vue';
 import SettingsSplit from './SettingsSplit.vue';
 import HandoffFlow from './HandoffFlow.vue';
+import HandoffRules from './HandoffRules.vue';
 
 const props = defineProps({
   assistant: {
@@ -47,7 +48,15 @@ onMounted(() => {
   }
 });
 
+// Mirrors Captain::Conversation::HandoffPolicy::ACTIONS.
+const HANDOFF_ACTIONS = ['transfer', 'keep'];
+
 const state = reactive({
+  handoffWhenOnline: 'transfer',
+  handoffWhenOffline: 'transfer',
+  offlineHandoffMessage: '',
+  noHandoffMessage: '',
+  handoffRules: [],
   handoffMessage: '',
   handoffFallbackAgentId: '',
   handoffFallbackTeamId: '',
@@ -79,6 +88,22 @@ const formErrors = computed(() => ({
   instructions: getErrorMessage('instructions'),
 }));
 
+const actionOptions = computed(() =>
+  HANDOFF_ACTIONS.map(action => ({
+    value: action,
+    label: t(
+      `CAPTAIN.ASSISTANTS.SETTINGS.HANDOVER.WHEN.${action.toUpperCase()}`,
+      { name: name.value }
+    ),
+  }))
+);
+const transfersOffline = computed(
+  () => state.handoffWhenOffline === 'transfer'
+);
+const keepsSometimes = computed(() =>
+  [state.handoffWhenOnline, state.handoffWhenOffline].includes('keep')
+);
+
 const noneOption = computed(() => ({
   value: '',
   label: t('CAPTAIN.ASSISTANTS.FORM.FALLBACK_ASSIGNMENTS.NONE'),
@@ -102,6 +127,11 @@ const agentOptions = computed(() => [
 
 const updateStateFromAssistant = assistant => {
   const { config = {} } = assistant;
+  state.handoffWhenOnline = config.handoff_when_online || 'transfer';
+  state.handoffWhenOffline = config.handoff_when_offline || 'transfer';
+  state.offlineHandoffMessage = config.offline_handoff_message || '';
+  state.noHandoffMessage = config.no_handoff_message || '';
+  state.handoffRules = [...(config.handoff_rules || [])];
   state.handoffMessage = config.handoff_message;
   state.handoffFallbackAgentId = config.handoff_fallback_agent_id ?? '';
   state.handoffFallbackTeamId = config.handoff_fallback_team_id ?? '';
@@ -143,6 +173,11 @@ const handleSubmit = async () => {
     config: {
       ...props.assistant.config,
       handoff_message: state.handoffMessage,
+      handoff_when_online: state.handoffWhenOnline,
+      handoff_when_offline: state.handoffWhenOffline,
+      offline_handoff_message: state.offlineHandoffMessage,
+      no_handoff_message: state.noHandoffMessage,
+      handoff_rules: state.handoffRules,
       continue_while_waiting: state.continueWhileWaiting,
       handoff_safety_net: state.handoffSafetyNet,
     },
@@ -182,6 +217,38 @@ watch(
 <template>
   <SettingsSplit>
     <SettingsCard
+      :title="t('CAPTAIN.ASSISTANTS.SETTINGS.HANDOVER.WHEN.TITLE')"
+      :description="
+        t('CAPTAIN.ASSISTANTS.SETTINGS.HANDOVER.WHEN.DESC', { name })
+      "
+    >
+      <div class="grid gap-3 pt-3 pb-1 sm:grid-cols-2">
+        <div class="flex flex-col gap-1.5">
+          <span class="text-xs font-medium text-n-slate-11">
+            {{ t('CAPTAIN.ASSISTANTS.SETTINGS.HANDOVER.WHEN.ONLINE') }}
+          </span>
+          <Select
+            v-model="state.handoffWhenOnline"
+            :options="actionOptions"
+            :aria-label="t('CAPTAIN.ASSISTANTS.SETTINGS.HANDOVER.WHEN.ONLINE')"
+            class="w-full [&>select]:w-full"
+          />
+        </div>
+        <div class="flex flex-col gap-1.5">
+          <span class="text-xs font-medium text-n-slate-11">
+            {{ t('CAPTAIN.ASSISTANTS.SETTINGS.HANDOVER.WHEN.OFFLINE') }}
+          </span>
+          <Select
+            v-model="state.handoffWhenOffline"
+            :options="actionOptions"
+            :aria-label="t('CAPTAIN.ASSISTANTS.SETTINGS.HANDOVER.WHEN.OFFLINE')"
+            class="w-full [&>select]:w-full"
+          />
+        </div>
+      </div>
+    </SettingsCard>
+
+    <SettingsCard
       :title="t('CAPTAIN.ASSISTANTS.SETTINGS.HANDOVER.MESSAGE_TITLE', { name })"
     >
       <Editor
@@ -191,6 +258,37 @@ watch(
         :message-type="formErrors.handoffMessage ? 'error' : 'info'"
         class="z-0 pt-2"
       />
+      <Editor
+        v-if="transfersOffline"
+        v-model="state.offlineHandoffMessage"
+        :label="t('CAPTAIN.ASSISTANTS.SETTINGS.HANDOVER.OFFLINE_MESSAGE.LABEL')"
+        :placeholder="
+          t('CAPTAIN.ASSISTANTS.SETTINGS.HANDOVER.OFFLINE_MESSAGE.PLACEHOLDER')
+        "
+        :max-length="500"
+        class="z-0 pt-4"
+      />
+      <Editor
+        v-if="keepsSometimes"
+        v-model="state.noHandoffMessage"
+        :label="
+          t('CAPTAIN.ASSISTANTS.SETTINGS.HANDOVER.KEEP_MESSAGE.LABEL', { name })
+        "
+        :placeholder="
+          t('CAPTAIN.ASSISTANTS.SETTINGS.HANDOVER.KEEP_MESSAGE.PLACEHOLDER')
+        "
+        :max-length="500"
+        class="z-0 pt-4"
+      />
+    </SettingsCard>
+
+    <SettingsCard
+      :title="t('CAPTAIN.ASSISTANTS.SETTINGS.HANDOVER.RULES.TITLE')"
+      :description="
+        t('CAPTAIN.ASSISTANTS.SETTINGS.HANDOVER.RULES.DESC', { name })
+      "
+    >
+      <HandoffRules v-model="state.handoffRules" />
     </SettingsCard>
 
     <SettingsCard
@@ -289,6 +387,8 @@ watch(
         "
         :keep-helping="state.continueWhileWaiting"
         :safety-net="state.handoffSafetyNet"
+        :when-online="state.handoffWhenOnline"
+        :when-offline="state.handoffWhenOffline"
       />
     </template>
   </SettingsSplit>

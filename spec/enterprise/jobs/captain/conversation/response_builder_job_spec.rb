@@ -1133,6 +1133,27 @@ RSpec.describe Captain::Conversation::ResponseBuilderJob, type: :job do
         expect(account.reload.usage_limits[:captain][:responses][:consumed]).to eq(0)
       end
 
+      it 'only answers while the team is offline and the assistant keeps conversations then' do
+        assistant.update!(config: assistant.config.merge('handoff_when_offline' => 'keep'))
+
+        described_class.perform_now(conversation, assistant)
+
+        conversation.reload
+        expect(conversation.status).to eq('pending')
+        expect(conversation.label_list).not_to include('needs-human')
+        expect(conversation.messages.outgoing.where(private: false).pluck(:content)).to eq([handoff_answer])
+      end
+
+      it 'sends the no-handoff message when the kept answer is empty' do
+        assistant.update!(config: assistant.config.merge('handoff_when_offline' => 'keep', 'no_handoff_message' => 'Leave your email.'))
+        allow(mock_agent_runner_service).to receive(:generate_response).and_return({ 'response' => '', 'response_parts' => [] })
+
+        described_class.perform_now(conversation, assistant, responding_to_message.id)
+
+        expect(conversation.reload.status).to eq('pending')
+        expect(conversation.messages.outgoing.where(private: false).last.content).to eq('Leave your email.')
+      end
+
       it 'only answers when a handoff is already waiting for a human' do
         assistant.update!(config: assistant.config.merge('continue_while_waiting' => true))
         conversation.update!(status: :open)
