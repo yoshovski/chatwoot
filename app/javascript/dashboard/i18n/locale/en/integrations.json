@@ -2028,11 +2028,11 @@
     },
     "MCP_SERVERS": {
       "TITLE": "MCP servers",
-      "DESCRIPTION": "Connect a remote MCP server over HTTPS, then turn on the tools your AI agent may use. Enabled tools can be picked in scenarios.",
-      "ADD": "Connect server",
-      "EMPTY": "No MCP servers connected yet.",
+      "ADD": "Connect MCP server",
+      "ACTIONS": "Server actions",
+      "TOOLS_ON": "{enabled} of {total} tools on",
       "NO_TOOLS": "This server has no tools.",
-      "SCENARIO_HINT": "Add enabled tools to a scenario's instructions so the AI agent knows when to use them.",
+      "SCENARIO_HINT": "Tools you turn on can be picked in a scenario's instructions, so the AI agent knows when to use them.",
       "REFRESH": "Refresh tools",
       "EDIT": "Edit connection",
       "DELETE": "Remove server",
@@ -2046,11 +2046,27 @@
         "TITLE": "Remove {name}?",
         "DESCRIPTION": "Scenarios using its tools will stop calling them."
       },
+      "CONNECT": {
+        "TITLE": "Connect an MCP server",
+        "EDIT_TITLE": "Edit MCP server",
+        "DESCRIPTION": "Connect a remote MCP server over HTTPS. Next, you choose which of its tools your AI agent may use.",
+        "TOOLS_DESCRIPTION": "{name} is connected. Turn on the tools your AI agent may use; all others stay off.",
+        "CONNECT_BUTTON": "Connect",
+        "SAVE_BUTTON": "Save tools",
+        "LATER": "Choose later",
+        "SUCCESS": "MCP server saved",
+        "FAILED": "Could not connect:",
+        "STEPS": {
+          "CONNECT": "Connect",
+          "TOOLS": "Choose tools"
+        }
+      },
       "FORM": {
         "NAME": "Name",
         "NAME_PLACEHOLDER": "Billing system",
         "URL": "Server URL",
         "URL_PLACEHOLDER": "https://mcp.example.com/mcp",
+        "URL_HINT": "A public HTTPS address of a server that supports MCP over HTTP.",
         "AUTH": "Authentication",
         "AUTH_TYPES": {
           "NONE": "None",
@@ -2062,17 +2078,17 @@
         "TOKEN": "Token",
         "TOKEN_PLACEHOLDER": "Paste the token",
         "TOKEN_KEEP": "Leave blank to keep the saved token",
-        "CANCEL": "Cancel",
-        "CONNECT": "Connect and list tools"
+        "CANCEL": "Cancel"
       }
     },
     "CUSTOM_TOOLS": {
-      "HEADER": "Tools",
-      "ADD_NEW": "Create a new tool",
+      "HEADER": "Tools & MCP",
+      "SECTION_TITLE": "Custom tools",
+      "ADD_NEW": "Add tool",
       "SOFT_LIMIT_WARNING": "Having more than 10 tools may reduce the AI agent's reliability in selecting the right tool. Consider removing unused tools for better results.",
       "EMPTY_STATE": {
-        "TITLE": "No custom tools available",
-        "SUBTITLE": "Create custom tools to connect your AI agent with external APIs and services, enabling it to fetch data and perform actions on your behalf.",
+        "TITLE": "No tools or MCP servers yet",
+        "SUBTITLE": "Add a custom tool for a single API call, or connect an MCP server to use its tools. Your AI agent can then fetch data and take actions in scenarios.",
         "FEATURE_SPOTLIGHT": {
           "TITLE": "Custom Tools",
           "NOTE": "Custom tools allow your AI agent to interact with external APIs and services. Create tools to fetch data, perform actions, or integrate with your existing systems to enhance your AI agent's capabilities."
