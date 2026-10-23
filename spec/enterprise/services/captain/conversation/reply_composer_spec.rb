@@ -52,6 +52,10 @@ RSpec.describe Captain::Conversation::ReplyComposer do
   end
 
   context 'with cited sources' do
+    let(:assistant) do
+      create(:captain_assistant, account: account,
+                                 config: { 'suggested_replies' => true, 'max_suggested_replies' => 3, 'feature_citation' => true })
+    end
     let(:response) do
       {
         'response_parts' => [{ 'text' => 'We ship within two days.', 'citation_indexes' => [1] }],
@@ -78,6 +82,48 @@ RSpec.describe Captain::Conversation::ReplyComposer do
       inbox.update!(channel: create(:channel_sms, account: account))
 
       expect(composer.messages.first[:content]).to eq("We ship within two days.\n\n→ Shipping policy: https://example-store.com/shipping")
+    end
+  end
+
+  context 'with cited sources and Show sources off' do
+    let(:response) do
+      {
+        'response_parts' => [{ 'text' => 'We ship within two days.', 'citation_indexes' => [1] }],
+        'suggested_replies' => ['Track order']
+      }
+    end
+
+    before do
+      allow(assistant).to receive_messages(trusted_citation_urls: { 1 => 'https://example-store.com/shipping' },
+                                           citation_titles: { 1 => 'Shipping policy' })
+    end
+
+    it 'links the sources in the widget text and keeps the buttons' do
+      message = composer.messages.first
+
+      expect(message[:content]).to eq("We ship within two days.\n\n→ [Shipping policy](https://example-store.com/shipping)")
+      expect(message[:content_type]).to eq('input_select')
+      expect(message[:content_attributes]).not_to have_key('captain_sources')
+    end
+  end
+
+  context 'when the model cites nothing for an answer taken from one page' do
+    let(:answer) do
+      'To register an in-app purchase, call the purchase registration endpoint with the Apple StoreKit 2 transaction ' \
+        'after the purchase completes in the app.'
+    end
+    let(:response) { { 'response_parts' => [{ 'text' => answer, 'citation_indexes' => [] }] } }
+
+    before do
+      allow(assistant).to receive_messages(
+        product_name: 'Cleeng',
+        trusted_citation_urls: { 1 => 'https://example.com/docs/storekit-2', 2 => 'https://example.com/pricing' },
+        citation_titles: { 1 => 'Apple in-app purchase (StoreKit 2) | Cleeng', 2 => 'Pricing | Cleeng' }
+      )
+    end
+
+    it 'links the page whose title matches the answer' do
+      expect(composer.messages.first[:content]).to eq("#{answer}\n\n→ [Apple in-app purchase (StoreKit 2) | Cleeng](https://example.com/docs/storekit-2)")
     end
   end
 

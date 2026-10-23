@@ -137,13 +137,18 @@ export default {
     </div>
     <div v-if="isOptions">
       <ChatOptions
-        :title="message"
+        :title="videoContent.text"
         :options="messageContentAttributes.items"
         :hide-fields="hideOptions"
         :agent-name="agentName"
         :show-agent-name="showAgentName"
         @option-select="onOptionSelect"
       >
+        <MessageVideo
+          v-if="videoContent.video"
+          :video="videoContent.video"
+          :play-label="$t('MESSAGE_VIDEO.PLAY')"
+        />
         <MessageSources
           :sources="sources"
           :label="$t('MESSAGE_SOURCES.LABEL')"

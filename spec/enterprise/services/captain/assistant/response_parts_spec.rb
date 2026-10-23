@@ -33,5 +33,37 @@ RSpec.describe Captain::Assistant::ResponseParts do
 
     expect([nil, widget, email, sms].map { |conversation| described_class.sources_format(conversation) })
       .to eq(%i[structured structured markdown plain])
+    expect([nil, widget, email, sms].map { |conversation| described_class.sources_format(conversation, sources_card: false) })
+      .to eq(%i[markdown markdown markdown plain])
+  end
+
+  describe '#with_fallback_citation' do
+    let(:answer) do
+      'Clear the cache and cookies of your browser: open the settings, choose privacy, then clear browsing data ' \
+        'and reload the page to watch again.'
+    end
+    let(:titles) { { 1 => 'Why and how to clear cache and cookies', 2 => 'Requesting a refund' } }
+
+    def fallback(text, citation_indexes: [], citation_titles: titles)
+      described_class.new([{ 'text' => text, 'citation_indexes' => citation_indexes }])
+                     .with_fallback_citation(citation_titles: citation_titles).to_a.first['citation_indexes']
+    end
+
+    it 'cites the page whose title shares the most words with an uncited answer' do
+      expect(fallback(answer)).to eq([1])
+    end
+
+    it 'leaves answers alone that already cite, are short, or match no title' do
+      expect(fallback(answer, citation_indexes: [2])).to eq([2])
+      expect(fallback('Clear the cache and cookies.')).to eq([])
+      expect(fallback(answer, citation_titles: { 2 => 'Requesting a refund' })).to eq([])
+    end
+
+    it 'ignores words every title shares, such as the product name' do
+      parts = described_class.new([{ 'text' => "#{answer} Cleeng support", 'citation_indexes' => [] }])
+      cited = parts.with_fallback_citation(citation_titles: { 3 => 'Cleeng support | Cleeng' }, ignored_words: %w[Cleeng support])
+
+      expect(cited.to_a.first['citation_indexes']).to eq([])
+    end
   end
 end

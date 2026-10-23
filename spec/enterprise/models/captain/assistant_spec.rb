@@ -434,12 +434,13 @@ RSpec.describe Captain::Assistant, type: :model do
       expect(assistant.agent_instructions).to include("# Tone\nKeep replies short and direct. Skip pleasantries.")
     end
 
-    it 'tells the AI agent how to decline only when an off-limits message is set' do
-      expect(assistant.agent_instructions).not_to include('# Declining')
+    it 'lets the knowledge decide scope and adds the off-limits message only when one is set' do
+      expect(assistant.agent_instructions).to include('# Declining', 'The knowledge defines what you help with.')
+      expect(assistant.agent_instructions).not_to include('When you decline, say this')
 
       assistant.update!(config: assistant.config.merge('off_limits_message' => 'I can only help with Acme orders.'))
 
-      expect(assistant.agent_instructions).to include('# Declining', '"I can only help with Acme orders."')
+      expect(assistant.agent_instructions).to include('When you decline, say this', '"I can only help with Acme orders."')
     end
 
     it 'limits the off-limits message length' do

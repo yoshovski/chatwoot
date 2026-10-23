@@ -18,6 +18,23 @@ RSpec.describe Captain::Conversation::ReplySanitizer do
       expect(sanitizer.sanitize_prose('Read [the guide](https://evil.example.net/guide).')).to eq('Read the guide.')
     end
 
+    it 'keeps an endpoint written as code when the sources show it the same way' do
+      knowledge = '* `POST https://inapp.api.sandbox.example.com/storekit2/purchases` in sandbox'
+      evidence = knowledge.scan(described_class::BARE_URL_REGEX)
+      reply = 'Send `POST https://inapp.api.sandbox.example.com/storekit2/purchases` in sandbox.'
+
+      expect(evidence).to eq(['https://inapp.api.sandbox.example.com/storekit2/purchases'])
+      expect(described_class.new(assistant: create(:captain_assistant, config: {}), evidence_urls: evidence).sanitize_prose(reply))
+        .to eq(reply)
+    end
+
+    it 'keeps only the text of a link too long to be a page, such as a sign-in redirect' do
+      login = "https://identity.example.com/Account/Login?ReturnUrl=#{'a' * 400}"
+
+      expect(described_class.new(assistant: create(:captain_assistant, config: {})).sanitize_prose("Log in to the [portal](#{login})."))
+        .to eq('Log in to the portal.')
+    end
+
     context 'when link_allowlist is not configured (default wildcard)' do
       let(:assistant) { create(:captain_assistant, config: {}) }
 

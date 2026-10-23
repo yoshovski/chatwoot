@@ -1,6 +1,10 @@
 class Captain::Assistant::ResponseParts
   MESSAGE_ATTRIBUTE_KEY = 'captain_v2_response_parts'.freeze
   MAX_SOURCE_LINKS = 3
+  FALLBACK_MIN_SHARED_WORDS = 2
+  FALLBACK_MIN_ANSWER_LENGTH = 120
+  FALLBACK_STOP_WORDS = %w[about also been does from have here into just like more most only page some such than that
+                           their them then there they this what when where which will with your].freeze
   # Sources are page-title links, never numbers after each part: customers cannot tell what "[1]" means.
   # The chat widget draws them under the bubble from this content attribute; other channels get them as text lines.
   SOURCES_ATTRIBUTE_KEY = 'captain_sources'.freeze
@@ -24,15 +28,25 @@ class Captain::Assistant::ResponseParts
     parts.pluck('text').join("\n\n")
   end
 
-  def without_citations
-    self.class.new(parts.map { |part| part.merge('citation_indexes' => []) })
+  # The model sometimes cites nothing for an answer it clearly took from one page. Cite the page whose title shares
+  # the most distinctive words with the answer (at least FALLBACK_MIN_SHARED_WORDS), so its link is not lost.
+  def with_fallback_citation(citation_titles:, ignored_words: [])
+    return self if citation_titles.blank? || parts.any? { |part| part['citation_indexes'].present? }
+
+    index = fallback_citation_index(citation_titles, ignored_words)
+    return self unless index
+
+    cited = parts.map(&:dup)
+    cited.last['citation_indexes'] = [index]
+    self.class.new(cited)
   end
 
-  # :structured leaves sources out of the text (the widget and playground show captain_sources); email keeps markdown
-  # links; channels whose renderers drop link titles (WhatsApp, SMS, Instagram…) get "title: url".
-  def self.sources_format(conversation)
+  # :structured leaves sources out of the text (the widget and playground show captain_sources); email, and the widget
+  # when Show sources is off, keep markdown links; channels whose renderers drop link titles (WhatsApp, SMS,
+  # Instagram…) get "title: url".
+  def self.sources_format(conversation, sources_card: true)
     case conversation&.inbox&.channel_type
-    when nil, 'Channel::WebWidget' then :structured
+    when nil, 'Channel::WebWidget' then sources_card ? :structured : :markdown
     when 'Channel::Email' then :markdown
     else :plain
     end
@@ -71,6 +85,23 @@ class Captain::Assistant::ResponseParts
 
       links[url] = citation_titles[index].presence || title_from_url(url)
     end
+  end
+
+  def fallback_citation_index(citation_titles, ignored_words)
+    text = plain_text
+    return if text.length < FALLBACK_MIN_ANSWER_LENGTH
+
+    answer_words = distinctive_words(text, ignored_words)
+    best_index, best_count = citation_titles.filter_map do |index, title|
+      [index, (distinctive_words(title.to_s.split(/\s[|·–-]\s/).first, ignored_words) & answer_words).size]
+    end.max_by(&:last)
+    best_index if best_count.to_i >= FALLBACK_MIN_SHARED_WORDS
+  end
+
+  # Words of four or more letters, singular, so "purchases" in the answer matches "purchase" in a title.
+  def distinctive_words(text, ignored_words)
+    words = text.to_s.downcase.scan(/[[:alnum:]]{4,}/).map { |word| word.delete_suffix('s') }
+    words.uniq - FALLBACK_STOP_WORDS - ignored_words.map { |word| word.to_s.downcase.delete_suffix('s') }
   end
 
   def title_from_url(url)

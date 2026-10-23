@@ -106,13 +106,12 @@ RSpec.describe Captain::PromptRenderer do
       expect(result).not_to include('[[faq:')
     end
 
-    it 'still asks for source indexes, hidden from customers, when feature_citation is false' do
-      allow(File).to receive(:read).with(template_path).and_return("{% render 'citations', feature_citation: feature_citation %}")
+    it 'tells the model that every cited page reaches the customer as a link' do
+      allow(File).to receive(:read).with(template_path).and_return("{% render 'citations' %}")
 
-      result = described_class.render(template_name, { 'feature_citation' => false })
+      result = described_class.render(template_name, {})
 
-      expect(result).to include('citation_indexes', 'Customers never see these citations')
-      expect(result).to include('Do not include any citations, source references, footnotes, or bracketed numbers')
+      expect(result).to include('Each page you cite is shown to the customer as a link with your reply')
     end
 
     it 'renders the commerce rules snippet' do

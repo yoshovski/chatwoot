@@ -17,7 +17,7 @@ class Captain::Conversation::ReplyComposer
   # suppress_suggestions: the caller knows the run ends in a handoff (or the conversation already waits for a human).
   def messages(suppress_suggestions: false)
     content, response_parts = answer_content
-    buttons = suggestion_buttons(content, suppress_suggestions)
+    buttons = suggestion_buttons(suppress_suggestions)
     return composed_messages(answer_message(content, response_parts, buttons)) unless contains_cards?
 
     # With cards, buttons only answer a closing question, shown below the cards: intro, cards, then the question.
@@ -43,7 +43,7 @@ class Captain::Conversation::ReplyComposer
 
   def answer_content
     content = formatted_prose
-    return [content, Captain::Assistant::ResponseParts.from_response(response)] if content.present?
+    return [content, response_parts] if content.present?
 
     content = empty_reply_fallback_text
     [content, Captain::Assistant::ResponseParts.new([{ 'text' => content, 'citation_indexes' => [] }])]
@@ -58,7 +58,18 @@ class Captain::Conversation::ReplyComposer
   end
 
   def sources_format
-    @sources_format ||= Captain::Assistant::ResponseParts.sources_format(conversation)
+    @sources_format ||= Captain::Assistant::ResponseParts.sources_format(conversation, sources_card: assistant.citations_enabled?)
+  end
+
+  def citation_titles
+    @citation_titles ||= assistant.citation_titles(run_result)
+  end
+
+  # The run's parts, citing the matching page when the model cited none; the product name is in every title.
+  def response_parts
+    @response_parts ||= Captain::Assistant::ResponseParts.from_response(response).with_fallback_citation(
+      citation_titles: citation_titles.slice(*citation_urls.keys), ignored_words: assistant.product_name.to_s.split
+    )
   end
 
   def citation_urls
@@ -69,9 +80,7 @@ class Captain::Conversation::ReplyComposer
   def structured_sources
     return [] unless sources_format == :structured
 
-    @structured_sources ||= Captain::Assistant::ResponseParts.from_response(response).sources(
-      citation_urls: citation_urls, citation_titles: assistant.citation_titles(run_result)
-    )
+    @structured_sources ||= response_parts.sources(citation_urls: citation_urls, citation_titles: citation_titles)
   end
 
   def question_message(question, buttons)
@@ -94,9 +103,7 @@ class Captain::Conversation::ReplyComposer
 
   def formatted_prose
     @formatted_prose ||= cards_builder.clean_prose_content(
-      Captain::Assistant::ResponseParts.from_response(response).customer_message_content(
-        citation_urls: citation_urls, citation_titles: assistant.citation_titles(run_result), sources_format: sources_format
-      )
+      response_parts.customer_message_content(citation_urls: citation_urls, citation_titles: citation_titles, sources_format: sources_format)
     )
   end
 
@@ -106,9 +113,9 @@ class Captain::Conversation::ReplyComposer
     )
   end
 
-  def suggestion_buttons(content, suppress_suggestions)
+  def suggestion_buttons(suppress_suggestions)
     suggestions = suggested_replies
-    return {} if suggestions.blank? || suppress_suggestions || contains_links?(content)
+    return {} if suggestions.blank? || suppress_suggestions
 
     # submit_value: a click sends the item's value (the full question), while the button shows its short title.
     {
@@ -130,10 +137,6 @@ class Captain::Conversation::ReplyComposer
 
     message = message.to_s.strip.first(Captain::ResponseSchema::SUGGESTION_MESSAGE_MAX_LENGTH).presence || label
     { 'title' => label, 'value' => message }
-  end
-
-  def contains_links?(content)
-    content.to_s.match?(%r{https?://|\[.*?\]\(.*?\)}i)
   end
 
   def contains_cards?
