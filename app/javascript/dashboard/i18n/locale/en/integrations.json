@@ -1013,7 +1013,9 @@
           "DESCRIPTION": "Tone, and what customers see in {name}'s messages.",
           "BUSINESS_TYPE": {
             "TITLE": "Business type",
-            "AUTO": "Detect automatically ({type})",
+            "DETECTED": "· detected",
+            "USE_DETECTED": "Detect automatically",
+            "WHAT_CHANGES": "What this changes",
             "OPTIONS": {
               "COMMERCE": "Online store",
               "SOFTWARE": "Software and SaaS",
@@ -1027,6 +1029,13 @@
               "SUBSCRIPTION": "Clear answers about plans, billing and access.",
               "SERVICES": "Explains what you offer and how to book.",
               "GENERAL": "Balanced answers from your knowledge."
+            },
+            "DETAILS": {
+              "COMMERCE": "Replies stay to one or two sentences and product details appear on cards. Damaged, missing or late orders and refunds go to a person.",
+              "SOFTWARE": "How-to questions get numbered steps with the exact names of screens, settings and API fields, plus links to the pages they come from. Billing disputes, account access and data deletion go to a person.",
+              "SUBSCRIPTION": "Answers cover access, devices, plans and billing step by step, and ask where the customer subscribed when that changes the steps. App store billing is sent to that store; payment disputes go to a person.",
+              "SERVICES": "Answers explain what you offer and the next step. Bookings, time slots and quotes are never confirmed without a tool; changes to a booking go to a person.",
+              "GENERAL": "Steps or short lists when they help, links to your pages, plain sentences otherwise. No business-specific rules are added."
             }
           },
           "TONE": {

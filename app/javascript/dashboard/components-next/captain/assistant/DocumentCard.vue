@@ -1,5 +1,5 @@
 <script setup>
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import { useRoute } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { dynamicTime } from 'shared/helpers/timeHelper';
@@ -15,6 +15,8 @@ import Icon from 'dashboard/components-next/icon/Icon.vue';
 import Button from 'dashboard/components-next/button/Button.vue';
 import Checkbox from 'dashboard/components-next/checkbox/Checkbox.vue';
 import Switch from 'dashboard/components-next/switch/Switch.vue';
+import DropdownMenu from 'dashboard/components-next/dropdown-menu/DropdownMenu.vue';
+import { LIST_COLUMNS } from 'dashboard/components-next/captain/list/listColumns';
 import Policy from 'dashboard/components/policy.vue';
 import DocumentSyncStatus from 'dashboard/components-next/captain/assistant/DocumentSyncStatus.vue';
 
@@ -241,7 +243,10 @@ const displayLink = computed(() => {
 
   return getDocumentDisplayPath(props.externalLink);
 });
-const handleAction = action => {
+const showMenu = ref(false);
+
+const handleAction = ({ action }) => {
+  showMenu.value = false;
   emit('action', { action, id: props.id });
 };
 
@@ -256,11 +261,11 @@ const handleRetry = () => {
 
 <template>
   <div
-    class="group relative flex items-center justify-between gap-3 px-4 py-2.5 border-b border-n-weak last:border-b-0 transition-colors hover:bg-n-alpha-1"
+    class="group flex items-center gap-3 px-4 py-2.5 border-b border-n-weak last:border-b-0 last:rounded-b-xl transition-colors hover:bg-n-alpha-1"
     :class="{ 'bg-n-brand/5': isSelected }"
   >
-    <div class="flex items-center gap-3 min-w-0 flex-1">
-      <Checkbox v-if="selectable" v-model="modelValue" :aria-label="name" />
+    <Checkbox v-if="selectable" v-model="modelValue" :aria-label="name" />
+    <div class="flex items-center flex-1 min-w-0 gap-3">
       <div
         class="flex items-center justify-center size-6 rounded shrink-0"
         :class="[typeIconClasses, { 'opacity-60': !enabled }]"
@@ -281,30 +286,22 @@ const handleRetry = () => {
         :title="externalLink"
         target="_blank"
         rel="noopener noreferrer"
-        class="hidden sm:inline-flex flex-1 min-w-0 items-center gap-1 text-xs text-n-slate-10 hover:text-n-slate-12 truncate"
+        class="hidden sm:inline-flex min-w-0 shrink-[4] items-center gap-1 text-xs text-n-slate-10 hover:text-n-slate-12 truncate"
         @click.stop
       >
         <span class="truncate">{{ displayLink }}</span>
         <Icon icon="i-lucide-external-link size-3 shrink-0 opacity-70" />
       </a>
-    </div>
-    <div class="flex items-center gap-2.5 shrink-0">
-      <div
-        v-if="menuItems.length"
-        class="flex items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100"
+      <router-link
+        v-if="showFaqPill"
+        :to="faqsFilteredRoute"
+        class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-n-alpha-2 hover:bg-n-alpha-3 text-n-slate-11 shrink-0"
+        @click.stop
       >
-        <Button
-          v-for="item in menuItems"
-          :key="item.action"
-          v-tooltip.top="item.label"
-          :aria-label="item.label"
-          :icon="item.icon"
-          :color="item.action === 'delete' ? 'ruby' : 'slate'"
-          variant="ghost"
-          size="xs"
-          @click="handleAction(item.action)"
-        />
-      </div>
+        {{ responsesCountLabel }}
+      </router-link>
+    </div>
+    <div class="flex items-center" :class="LIST_COLUMNS.status">
       <DocumentSyncStatus
         v-if="showSyncStatus"
         class="!text-xs"
@@ -318,7 +315,7 @@ const handleRetry = () => {
       />
       <span
         v-else-if="!enabled"
-        class="inline-flex items-center px-1.5 py-0.5 text-xs font-medium rounded-full bg-n-slate-3 text-n-slate-11 shrink-0"
+        class="inline-flex items-center px-1.5 py-0.5 text-xs font-medium rounded-full bg-n-slate-3 text-n-slate-11"
       >
         {{ $t('KNOWLEDGE_LIST.OFF') }}
       </span>
@@ -328,7 +325,7 @@ const handleRetry = () => {
           content: t('CAPTAIN.DOCUMENTS.KNOWLEDGE_STATE.TOOLTIP'),
           delay: { show: 500, hide: 0 },
         }"
-        class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-xs font-medium shrink-0"
+        class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-xs font-medium"
         :class="knowledgeChip.chip"
       >
         <span
@@ -337,29 +334,23 @@ const handleRetry = () => {
           :class="knowledgeChip.icon"
           aria-hidden="true"
         />
-        <span class="hidden md:inline">{{ t(knowledgeChip.label) }}</span>
+        <span>{{ t(knowledgeChip.label) }}</span>
       </span>
-      <router-link
-        v-if="showFaqPill"
-        :to="faqsFilteredRoute"
-        class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-n-alpha-2 hover:bg-n-alpha-3 text-n-slate-11 shrink-0"
-        @click.stop
-      >
-        {{ responsesCountLabel }}
-      </router-link>
-      <span
-        v-tooltip.top="{
-          content: exactTimestamp(timestamp),
-          delay: { show: 500, hide: 0 },
-        }"
-        class="text-xs text-n-slate-10 shrink-0 hidden lg:inline"
-      >
-        {{ dynamicTime(timestamp) }}
-      </span>
+    </div>
+    <span
+      v-tooltip.top="{
+        content: exactTimestamp(timestamp),
+        delay: { show: 500, hide: 0 },
+      }"
+      class="text-xs truncate text-n-slate-10"
+      :class="LIST_COLUMNS.updated"
+    >
+      {{ dynamicTime(timestamp) }}
+    </span>
+    <div :class="LIST_COLUMNS.inUse">
       <Policy v-if="canManage" :permissions="['administrator']">
         <Switch
           v-model="enabledState"
-          size="sm"
           :aria-label="
             enabled
               ? t('CAPTAIN.DOCUMENTS.PAUSE')
@@ -367,6 +358,27 @@ const handleRetry = () => {
           "
         />
       </Policy>
+    </div>
+    <div
+      v-on-clickaway="() => (showMenu = false)"
+      class="relative"
+      :class="LIST_COLUMNS.actions"
+    >
+      <Button
+        v-if="menuItems.length"
+        :aria-label="$t('KNOWLEDGE_LIST.MORE_ACTIONS')"
+        icon="i-lucide-ellipsis-vertical"
+        color="slate"
+        variant="ghost"
+        size="xs"
+        @click="showMenu = !showMenu"
+      />
+      <DropdownMenu
+        v-if="showMenu"
+        :menu-items="menuItems"
+        class="z-30 mt-1 top-full ltr:right-0 rtl:left-0 w-52"
+        @action="handleAction"
+      />
     </div>
   </div>
 </template>

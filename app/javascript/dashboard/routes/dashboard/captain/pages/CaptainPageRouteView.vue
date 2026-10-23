@@ -22,8 +22,11 @@ watch(
 </script>
 
 <template>
-  <div class="flex w-full h-full min-h-0">
-    <section class="flex flex-1 h-full px-0 overflow-hidden bg-n-surface-1">
+  <!-- min-w-0 lets wide lists shrink so the Copilot panel beside them stays on screen. -->
+  <div class="flex w-full h-full min-w-0 min-h-0">
+    <section
+      class="flex flex-1 h-full min-w-0 px-0 overflow-hidden bg-n-surface-1"
+    >
       <router-view />
     </section>
   </div>

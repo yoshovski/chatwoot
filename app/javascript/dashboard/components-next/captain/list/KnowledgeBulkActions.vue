@@ -13,6 +13,8 @@ const props = defineProps({
   type: { type: String, required: true },
   // The object returned by useListSelection.
   selection: { type: Object, required: true },
+  // Every row matching the list's filters, for "Select all N".
+  total: { type: Number, required: true },
 });
 const emit = defineEmits(['updated', 'deleted', 'syncQueued']);
 
@@ -70,12 +72,12 @@ const onDeleted = () => {
 
 <template>
   <ListSelectionBar
-    :count="selection.count.value"
+    :selection="selection"
+    :total="total"
     :busy="busy"
     @enable="setEnabled(true)"
     @disable="setEnabled(false)"
     @delete="deleteDialog.dialogRef.open()"
-    @clear="selection.clear()"
   >
     <Button
       v-if="type === 'AssistantDocument'"
@@ -84,7 +86,6 @@ const onDeleted = () => {
       size="sm"
       variant="ghost"
       color="slate"
-      class="!text-n-slate-1 hover:!bg-n-slate-1/15"
       :disabled="busy"
       @click="sync"
     />

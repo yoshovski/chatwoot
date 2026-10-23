@@ -466,18 +466,13 @@ onUnmounted(() => {
       <template v-else>
         <section
           :aria-label="$t('PLATFORM_NAV.DATA_SOURCES')"
-          class="overflow-hidden border rounded-xl border-n-weak bg-n-solid-1"
+          class="border rounded-xl border-n-weak bg-n-solid-1"
         >
           <ListHeader
             :selection="selection"
             :selectable="canManageDocuments"
-            :total="documentsMeta.totalCount || 0"
-            :page-count="documents.length"
-            :label="
-              $t('PLATFORM_NAV.MATCHING_SOURCES', {
-                count: documentsMeta.totalCount || 0,
-              })
-            "
+            :label="$t('KNOWLEDGE_LIST.COLUMNS.NAME')"
+            :columns="['status', 'updated', 'inUse', 'actions']"
           >
             <Button
               v-if="hasActiveDocumentFilters"
@@ -518,6 +513,7 @@ onUnmounted(() => {
           v-if="canManageDocuments"
           type="AssistantDocument"
           :selection="selection"
+          :total="documentsMeta.totalCount || 0"
           @updated="refreshDocumentsPage()"
           @deleted="fetchDocumentsAfterBulkDelete"
           @sync-queued="scheduleSyncPoll({ extendWindow: true })"

@@ -1,11 +1,27 @@
 <script setup>
+import { computed } from 'vue';
 import Button from 'dashboard/components-next/button/Button.vue';
+import Switch from 'dashboard/components-next/switch/Switch.vue';
 
-defineProps({
-  count: { type: Number, required: true },
+const props = defineProps({
+  // The object returned by useListSelection.
+  selection: { type: Object, required: true },
+  total: { type: Number, required: true },
   busy: { type: Boolean, default: false },
 });
-const emit = defineEmits(['enable', 'disable', 'delete', 'clear']);
+const emit = defineEmits(['enable', 'disable', 'delete']);
+
+const count = computed(() => props.selection.count.value);
+const enabledState = computed(() => props.selection.enabledState.value);
+
+// On only when every selected item is used; flipping sets them all the same way.
+const useInAnswers = computed({
+  get: () => enabledState.value === 'on',
+  set: enabled => {
+    if (enabled) emit('enable');
+    else emit('disable');
+  },
+});
 </script>
 
 <!-- Floats at the bottom of the list while rows are selected, close to where the user clicked. -->
@@ -23,38 +39,38 @@ const emit = defineEmits(['enable', 'disable', 'delete', 'clear']);
       <div
         role="toolbar"
         :aria-label="$t('KNOWLEDGE_LIST.BULK_ACTIONS')"
-        class="flex flex-wrap items-center gap-1 py-1.5 ps-4 pe-1.5 rounded-xl shadow-lg pointer-events-auto bg-n-slate-12 text-n-slate-1"
+        class="flex flex-wrap items-center gap-1 py-1.5 ps-4 pe-1.5 border rounded-xl shadow-lg pointer-events-auto bg-n-solid-1 border-n-weak text-n-slate-12 dark:bg-n-solid-3 dark:border-n-strong"
       >
-        <span class="me-2 text-sm font-medium tabular-nums">
-          {{ $t('KNOWLEDGE_LIST.SELECTED', { count }) }}
+        <span class="text-sm font-medium tabular-nums">
+          {{
+            selection.allMatching.value
+              ? $t('KNOWLEDGE_LIST.ALL_SELECTED', { count })
+              : $t('KNOWLEDGE_LIST.SELECTED', { count })
+          }}
         </span>
-        <div
-          role="group"
-          :aria-label="$t('KNOWLEDGE_LIST.USE_IN_ANSWERS')"
-          class="flex items-center p-0.5 rounded-lg bg-n-slate-11/40"
+        <Button
+          v-if="selection.canSelectMatching.value"
+          :label="$t('KNOWLEDGE_LIST.SELECT_MATCHING', { count: total })"
+          size="sm"
+          variant="link"
+          class="ms-1"
+          @click="selection.selectMatching()"
+        />
+        <div class="w-px h-4 mx-2 bg-n-weak" />
+        <label
+          v-tooltip.top="$t('KNOWLEDGE_LIST.USE_IN_ANSWERS_HINT')"
+          class="flex items-center gap-2 px-2 py-1 text-sm rounded-lg cursor-pointer hover:bg-n-alpha-2"
+          :class="{ 'opacity-50 pointer-events-none': busy }"
         >
-          <button
-            type="button"
-            class="flex items-center gap-1.5 px-2.5 py-1 text-sm font-medium rounded-md hover:bg-n-slate-1/15 disabled:opacity-50"
-            :disabled="busy"
-            @click="emit('enable')"
-          >
-            <span class="rounded-full size-2 bg-n-teal-9" aria-hidden="true" />
-            {{ $t('KNOWLEDGE_LIST.TURN_ON') }}
-          </button>
-          <button
-            type="button"
-            class="flex items-center gap-1.5 px-2.5 py-1 text-sm font-medium rounded-md hover:bg-n-slate-1/15 disabled:opacity-50"
-            :disabled="busy"
-            @click="emit('disable')"
-          >
-            <span
-              class="border rounded-full size-2 border-n-slate-6"
-              aria-hidden="true"
-            />
-            {{ $t('KNOWLEDGE_LIST.TURN_OFF') }}
-          </button>
-        </div>
+          <Switch
+            v-model="useInAnswers"
+            :aria-label="$t('KNOWLEDGE_LIST.USE_IN_ANSWERS')"
+          />
+          <span>{{ $t('KNOWLEDGE_LIST.USE_IN_ANSWERS') }}</span>
+          <span v-if="enabledState === 'mixed'" class="text-xs text-n-slate-11">
+            {{ $t('KNOWLEDGE_LIST.SOME_OFF') }}
+          </span>
+        </label>
         <slot />
         <Button
           :label="$t('KNOWLEDGE_LIST.DELETE')"
@@ -62,11 +78,10 @@ const emit = defineEmits(['enable', 'disable', 'delete', 'clear']);
           size="sm"
           variant="ghost"
           color="ruby"
-          class="!text-n-ruby-6 hover:!bg-n-ruby-9/30"
           :disabled="busy"
           @click="emit('delete')"
         />
-        <div class="w-px h-4 mx-1 bg-n-slate-10" />
+        <div class="w-px h-4 mx-1 bg-n-weak" />
         <Button
           v-tooltip.top="$t('KNOWLEDGE_LIST.CLEAR')"
           :aria-label="$t('KNOWLEDGE_LIST.CLEAR')"
@@ -74,8 +89,7 @@ const emit = defineEmits(['enable', 'disable', 'delete', 'clear']);
           size="sm"
           variant="ghost"
           color="slate"
-          class="!text-n-slate-1 hover:!bg-n-slate-1/15"
-          @click="emit('clear')"
+          @click="selection.clear()"
         />
       </div>
     </div>
