@@ -1057,6 +1057,8 @@
             "LABEL": "Custom",
             "DESC": "Write your own instruction",
             "SHOW": "Instruction",
+            "VIEW": "View instruction",
+            "HIDE": "Hide instruction",
             "EDIT": "Customize",
             "EDITOR": "Your instruction",
             "HINT": "Write it as an instruction to the AI agent, for example: Use simple words and keep a calm, reassuring tone.",
