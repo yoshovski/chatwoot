@@ -461,11 +461,33 @@ en:
       name: 'Shopify'
       short_description: 'Access order details and customer data from your Shopify store.'
       description: 'Connect your Shopify store to access order details, customer information, and product data directly within your conversations and helps your support team provide faster, more contextual assistance to your customers.'
+    hubspot:
+      name: 'HubSpot'
+      invalid_configuration: 'Could not connect to HubSpot. Check the private app token, contacts read/write and contact properties read scopes, and that all mapped properties exist and are writable.'
+      short_description: 'Sync captured business leads to HubSpot.'
+      description: 'Connect a private app with contacts read/write and contact properties read scopes. Only captured leads from agents with Leads and HubSpot sync enabled are synced. Email addresses are not verified. Create the mapped properties in HubSpot first. Contact upserts do not submit your website form; enroll leads in workflows using the mapped source property.'
+      fields:
+        private_app_token:
+          label: 'Private app token'
+          help: 'Stored securely and never returned by the integration API.'
+        field_mapping:
+          label: 'Contact field mapping (JSON)'
+          help: 'Map email, firstname, lastname, lead_type, lead_summary and lead_source to writable HubSpot properties. Add lead_company, lead_country or other configured lead fields. The source value is always chatbot.'
     leadsquared:
       name: 'LeadSquared'
       short_description: 'Sync your contacts and conversations with LeadSquared CRM.'
       description: 'Sync your contacts and conversations with LeadSquared CRM. This integration automatically creates leads in LeadSquared when new contacts are added, and logs conversation activity to provide your sales team with complete context.'
   captain:
+    leads:
+      tool:
+        title: 'Save business lead'
+        description: 'Saves structured business lead details for follow-up'
+      invalid_settings: 'Choose up to 10 unique lead fields and types, and between 0 and 5 optional questions. At least one type is required when Leads is enabled.'
+      attributes:
+        type: 'Lead type'
+        summary: 'Lead summary'
+        source: 'Lead source'
+        status: 'Lead status'
     websites:
       already_added: 'This website is already listed. Open its page selection to discover it again.'
       invalid_selection: 'Select only discovered pages that are available for import.'

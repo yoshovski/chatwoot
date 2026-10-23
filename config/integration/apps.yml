@@ -337,3 +337,34 @@ leadsquared:
       'conversation_activity_score',
       'transcript_activity_score',
     ]
+
+hubspot:
+  id: hubspot
+  enterprise_only: true
+  logo: hubspot.png
+  i18n_key: hubspot
+  action: /hubspot
+  hook_type: account
+  allow_multiple_hooks: false
+  settings_json_schema:
+    type: object
+    required: [field_mapping]
+    additionalProperties: false
+    properties:
+      field_mapping:
+        type: object
+        required: [email, firstname, lastname, lead_type, lead_summary, lead_source]
+        propertyNames:
+          pattern: '^(email|firstname|lastname|lead_[a-z][a-z0-9_]{0,39})$'
+        additionalProperties:
+          type: string
+          pattern: '^[a-z][a-z0-9_]*$'
+  settings_form_schema:
+    - type: password
+      name: private_app_token
+      validation: required
+    - type: textarea
+      name: field_mapping
+      validation: required|JSON
+      value: '{"email":"email","firstname":"firstname","lastname":"lastname","lead_type":"chatoctave_lead_type","lead_summary":"chatoctave_lead_summary","lead_source":"chatoctave_lead_source"}'
+  visible_properties: [field_mapping]

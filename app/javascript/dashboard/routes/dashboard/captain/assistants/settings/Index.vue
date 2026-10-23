@@ -7,6 +7,7 @@ import { useAssistantSettings } from './useAssistantSettings';
 import Button from 'dashboard/components-next/button/Button.vue';
 import SettingsPageLayout from 'dashboard/components-next/captain/pageComponents/assistant/settings/SettingsPageLayout.vue';
 import AssistantBasicSettingsForm from 'dashboard/components-next/captain/pageComponents/assistant/settings/AssistantBasicSettingsForm.vue';
+import AssistantLeadsForm from 'dashboard/components-next/captain/pageComponents/assistant/settings/AssistantLeadsForm.vue';
 import DeleteDialog from 'dashboard/components-next/captain/pageComponents/DeleteDialog.vue';
 import KnowledgeBriefPanel from 'dashboard/components-next/captain/knowledge/KnowledgeBriefPanel.vue';
 
@@ -92,6 +93,11 @@ const handleDeleteSuccess = () => {
         </div>
       </template>
     </AssistantBasicSettingsForm>
+    <AssistantLeadsForm
+      v-if="assistant"
+      :assistant="assistant"
+      :save="updateAssistant"
+    />
     <DeleteDialog
       v-if="assistant"
       ref="deleteAssistantDialog"

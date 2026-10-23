@@ -47,10 +47,19 @@ const isSaving = ref(false);
 const customEntry = ref('');
 
 const answers = reactive(defaultAnswers(props.template));
-const previewData = reactive({ title: '', description: '', instruction: '' });
+const previewData = reactive(
+  props.template.questions.length
+    ? { title: '', description: '', instruction: '' }
+    : buildFromTemplate(props.template, {}, props.tools)
+);
 
 const templateKey = `CAPTAIN.ASSISTANTS.SCENARIOS.TEMPLATES.${props.template.id.toUpperCase()}`;
 const questions = props.template.questions;
+const needsLeadSettings = computed(
+  () =>
+    props.template.id === 'capture_business_lead' &&
+    props.assistant.config?.leads_enabled !== true
+);
 const totalSteps = questions.length + 1;
 
 const isPreviewStep = computed(() => currentStep.value === questions.length);
@@ -227,7 +236,7 @@ const finishSave = async ({ allowLink }) => {
 };
 
 const saveScenario = () => {
-  if (!previewFormRef.value.validate()) return;
+  if (needsLeadSettings.value || !previewFormRef.value.validate()) return;
   if (needsAllowlistEntry()) {
     showAllowlistConfirm.value = true;
     return;
@@ -249,6 +258,23 @@ defineExpose({
 
 <template>
   <div class="flex flex-col gap-5">
+    <div
+      v-if="needsLeadSettings"
+      class="flex flex-col gap-2 rounded-xl border border-n-weak p-4"
+    >
+      <p class="text-sm text-n-slate-11 m-0">
+        {{ t('CAPTAIN.ASSISTANTS.SETTINGS.LEADS.ENABLE_FIRST') }}
+      </p>
+      <router-link
+        :to="{
+          name: 'captain_assistants_settings_index',
+          params: { assistantId: assistant.id },
+        }"
+        class="text-sm text-n-blue-11"
+      >
+        {{ t('CAPTAIN.ASSISTANTS.SETTINGS.LEADS.TITLE') }}
+      </router-link>
+    </div>
     <div v-if="!showAllowlistConfirm" class="flex flex-col gap-2">
       <span class="text-xs text-n-slate-11">
         {{
@@ -542,6 +568,7 @@ defineExpose({
         <Button
           v-else-if="isPreviewStep"
           type="button"
+          :disabled="needsLeadSettings"
           :is-loading="isSaving"
           :label="
             t('CAPTAIN.ASSISTANTS.SCENARIOS.TEMPLATES.STEPPER.ADD_SCENARIO')

@@ -63,6 +63,7 @@ class Captain::Scenario < ApplicationRecord
 
   def prompt_context
     {
+      **assistant.lead_prompt_context,
       title: title,
       instructions: resolved_instructions,
       tools: resolved_tools,

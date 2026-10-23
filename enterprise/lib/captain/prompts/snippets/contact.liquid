@@ -12,6 +12,8 @@
 {% endif -%}
 {% if contact.additional_attributes -%}
   {% for attribute in contact.additional_attributes -%}
+  {% unless attribute[0] == 'lead_capture_receipt' -%}
 - {{ attribute[0] }}: {{ attribute[1] }}
+  {% endunless -%}
   {% endfor -%}
 {% endif -%}

@@ -8,6 +8,7 @@ class HookJob < MutexApplicationJob
     'dialogflow' => :process_dialogflow_integration,
     'google_translate' => :google_translate_integration,
     'leadsquared' => :process_leadsquared_integration_with_lock,
+    'hubspot' => :process_hubspot_integration,
     'linear' => :process_linear_integration
   }.freeze
 
@@ -21,6 +22,12 @@ class HookJob < MutexApplicationJob
   end
 
   private
+
+  def process_hubspot_integration(hook, event_name, event_data)
+    return unless event_name == 'contact.updated'
+
+    Crm::Hubspot::SyncJob.perform_later(hook.id, event_data.fetch(:contact).id)
+  end
 
   def process_slack_integration(hook, event_name, event_data)
     message = event_data[:message]

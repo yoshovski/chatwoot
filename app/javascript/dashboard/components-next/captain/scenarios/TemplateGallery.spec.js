@@ -27,7 +27,7 @@ describe('TemplateGallery', () => {
   it('shows only the templates this account can use, plus the describe tile', () => {
     const wrapper = mountGallery();
 
-    expect(wrapper.findAll('[data-test^="template-"]')).toHaveLength(5);
+    expect(wrapper.findAll('[data-test^="template-"]')).toHaveLength(6);
     expect(wrapper.find('[data-test="template-product_finder"]').exists()).toBe(
       false
     );

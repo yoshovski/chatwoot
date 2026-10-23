@@ -1286,6 +1286,28 @@
             "BALANCED": "You can change it in your account.\n1. Sign in and open Account.\n2. Go to Addresses.\n3. Edit the delivery address and save.",
             "DETAILED": "You can change it in your account before the order ships.\nYou need: your sign-in details.\n1. Sign in and open Account.\n2. Go to Addresses.\n3. Choose the address to change, or add a new one.\n4. Edit the details and save.\n5. Set it as default to use it for new orders."
           }
+        },
+        "LEADS": {
+          "TITLE": "Business leads",
+          "DESCRIPTION": "Capture business inquiries with structured details. This is off until you enable it for this agent.",
+          "ENABLE": "Enable lead capture",
+          "VERIFICATION": "Email addresses are not verified. If HubSpot sync is enabled, captured leads are sent as provided. Connect HubSpot in Settings → Integrations first.",
+          "MAX_QUESTIONS": "Maximum optional qualification questions",
+          "FIELDS": "Lead fields",
+          "FIELDS_HELP": "Use stable keys such as company, country, audience_size or use_case. Values are saved as contact attributes prefixed with lead_. Keys type, summary, source and status are reserved.",
+          "FIELD_KEY": "Field key",
+          "FIELD_LABEL": "What to collect",
+          "REMOVE": "Remove",
+          "ADD_FIELD": "Add field",
+          "TYPES": "Lead types",
+          "TYPE_NAME": "Type name",
+          "TYPE_RULE": "When this type applies",
+          "ADD_TYPE": "Add type",
+          "SCENARIO_HELP": "Save your settings, then add the Capture a business lead scenario. The scenario controls when to ask; HubSpot sync runs automatically when enabled.",
+          "SCENARIO": "Choose a lead scenario",
+          "SAVE": "Save lead settings",
+          "HUBSPOT_SYNC": "Sync captured leads to HubSpot",
+          "ENABLE_FIRST": "Enable Leads and configure your fields and types in the agent settings before adding this scenario."
         }
       },
       "OPTIONS": {
@@ -1650,6 +1672,10 @@
             "1": "1",
             "2": "2",
             "3": "3"
+          },
+          "CAPTURE_BUSINESS_LEAD": {
+            "TITLE": "Capture a business lead",
+            "TAGLINE": "Answer first, collect optional business details, then save a lead for email follow-up."
           }
         },
         "BULK_ACTION": {

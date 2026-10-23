@@ -188,6 +188,8 @@ class Integrations::Hook < ApplicationRecord # rubocop:disable Metrics/ClassLeng
   end
 
   def feature_allowed?
+    return false if app_id == 'hubspot' && !ChatwootApp.enterprise?
+
     return true if app.blank?
 
     flag = app.params[:feature_flag]
@@ -321,3 +323,5 @@ class Integrations::Hook < ApplicationRecord # rubocop:disable Metrics/ClassLeng
     %w[leadsquared].include?(app_id)
   end
 end
+
+Integrations::Hook.prepend_mod_with('Integrations::Hook')
