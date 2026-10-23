@@ -75,7 +75,7 @@ class Captain::Knowledge::BriefGenerator
     chat = Captain::Assistant::TieredLlmClient.chat(
       account_id: @assistant.account_id, model: model,
       timeout: 60
-    ).with_params(response_format: { type: 'json_object' }, max_tokens: 4000).with_instructions(instructions)
+    ).with_params(max_tokens: 4000).with_schema(Captain::Knowledge::BriefSchema.for(ids)).with_instructions(instructions)
     response = Captain::Assistant::TieredLlmClient.generate('knowledge_summary', @assistant, chat, input.to_json)
     output = response.content.is_a?(Hash) ? response.content : JSON.parse(response.content)
     raise TypeError, 'Invalid knowledge brief' unless self.class.valid_output?(output, ids)

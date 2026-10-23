@@ -8,8 +8,9 @@ class Captain::Conversation::ReplySanitizer
 
   attr_reader :assistant
 
-  def initialize(assistant:)
+  def initialize(assistant:, evidence_urls: nil)
     @assistant = assistant
+    @evidence_urls = evidence_urls&.to_set { |url| clean_url(url).split('#').first }
   end
 
   def sanitize_prose(content)
@@ -33,6 +34,8 @@ class Captain::Conversation::ReplySanitizer
   end
 
   def allowed_link_url?(url)
+    return false if @evidence_urls&.exclude?(clean_url(url).split('#').first)
+
     return true if link_allowlist.blank? || link_allowlist.include?('*')
 
     allowed_url?(url, link_allowlist)

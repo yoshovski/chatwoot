@@ -46,7 +46,9 @@ const { t } = useI18n();
           </span>
         </div>
       </div>
-      <div class="flex flex-col gap-2.5 p-4 bg-n-slate-2 min-h-40">
+      <div
+        class="flex flex-col gap-2.5 p-4 bg-n-slate-2 min-h-40 max-h-96 overflow-y-auto overscroll-contain"
+      >
         <slot>
           <p class="preview-bubble preview-bubble--agent">
             {{

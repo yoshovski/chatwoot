@@ -113,6 +113,14 @@ class Captain::Assistant::IntentRouter
       faq_kb: descriptive facts, specifications, compatibility, setup, FAQs, documents and published store policies about a specific
       named product or a general topic, not finding or choosing a product.
       Return one or at most two focused search queries, each at most 250 characters. Remove greetings and filler.
+      For how-to questions, search the topic by its full name, expanding common abbreviations ("config" to "configuration")
+      instead of repeating the whole question. Preserve the integration, platform and provider.
+      Mobile app-store purchases and subscriptions are different from wallet checkout (Apple Pay or Google Pay).
+      If the customer explicitly names Apple Pay or Google Pay, preserve that wallet name in the queries.
+      For Apple/iOS app payments without an explicit wallet name, search for Apple in-app purchase integration.
+      Requests for documentation links, including follow-ups such as "give me link", use faq_kb with the topic from history.
+      A factual question about the business's own product or service lineup or count is not a product recommendation.
+      Unless an approved business_overview fully answers it, use faq_kb with a query such as "products overview" or "services overview".
       Preserve exact product names, model numbers, technical constraints and negations. Resolve references using recent history.
       Do not invent a missing product or interpretation. If a required reference is ambiguous, use action_agent for clarification.
       action_agent: live prices, stock, availability, product links/images/cards, order status, mutations, quotes, bulk orders,

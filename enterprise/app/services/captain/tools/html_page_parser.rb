@@ -21,6 +21,16 @@ class Captain::Tools::HtmlPageParser
     @faqs ||= faq_extractor.extract
   end
 
+  # Hidden sign-in dialogs and API playground credential inputs do not make an article private.
+  def login_form?
+    node = main_content_node
+    return false unless node
+
+    node.css('form input[type="password"]').any? do |input|
+      input.ancestors.select(&:element?).none? { |ancestor| ancestor.matches?(HIDDEN_SELECTOR) || noise_element?(ancestor) }
+    end
+  end
+
   def body_markdown
     node = main_content_node
     return '' unless node

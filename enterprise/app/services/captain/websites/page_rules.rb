@@ -10,6 +10,7 @@ class Captain::Websites::PageRules
                      account|accounts|my-account|profile|cart|basket|checkout|search|feed|rss|atom|wp-json|wp-admin|wp-login\.php|cdn-cgi|
                      admin|print|share|requests|unsubscribe)\z/xi
   LISTING_SEGMENT = /\A(?:tags?|categor(?:y|ies)|collections?|sections|authors?|archives?|page)\z/i
+  DOCUMENTATION_SEGMENT = /\A(?:docs?|documentation|guides?|reference|reference-link|api-reference)\z/i
   LANGUAGES = %w[ar bg cs da de el en es et fi fr he hi hr hu id it ja ko lt lv ms nb nl no pl pt ro ru sk sl sr sv th tr uk vi zh].freeze
   LOCALE = /\A(#{LANGUAGES.join('|')})(?:[-_][a-z]{2,4})?\z/i
 
@@ -48,10 +49,15 @@ class Captain::Websites::PageRules
     return 'query' if uri.query.present?
 
     parts = segments(url).map(&:downcase)
-    return 'utility' if parts.any? { |part| part.match?(UTILITY_SEGMENT) }
+    return 'utility' if utility_page?(parts)
 
     'listing' if listing?(parts)
   end
+
+  def self.utility_page?(parts)
+    parts.none? { |part| part.match?(DOCUMENTATION_SEGMENT) } && parts.any? { |part| part.match?(UTILITY_SEGMENT) }
+  end
+  private_class_method :utility_page?
 
   # Tag, category and pagination pages, and date archives such as /2019 or /2019/04.
   def self.listing?(parts)

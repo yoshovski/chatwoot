@@ -43,6 +43,8 @@ const draftIsPublished = computed(
 );
 const statusKey = computed(() => {
   if (generating.value) return 'GENERATING';
+  if (brief.value?.enabled && !brief.value?.published_usable)
+    return 'UNAVAILABLE';
   if (brief.value?.status === 'failed') return 'FAILED';
   if (active.value && brief.value?.sources_changed) return 'SOURCES_CHANGED';
   if (active.value) return 'ENABLED';

@@ -95,13 +95,16 @@ class Captain::Websites::SectionClassifier
       Return JSON {"sections":[{"id":0,"label":"support","recommended":true,"reason":"..."}]} with one item per input id.
       label is one of: #{LABELS.join(', ')}.
       support = help articles, FAQs, how-tos, troubleshooting. product = what the business offers and its features.
-      docs = technical or developer documentation guides. pricing = plans and prices. legal = terms, privacy, refund and other policies.
+      docs = developer guides AND API endpoint references, including authentication, registration and payment endpoints.
+      pricing = plans and prices. legal = terms, privacy, refund and other policies.
       company = about, contact, team basics. news = blog posts, press releases, announcements.
       events = conferences, trade shows, meetups, webinars and pages about a past or upcoming event. careers = jobs, open positions, hiring.
-      marketing = campaign or landing pages, case studies, ebooks, whitepapers. technical = API endpoint references (one endpoint per page),
-      status pages, sandboxes, apps behind a login. not_useful = empty listings, navigation-only, outdated copies or unrelated pages.
+      marketing = campaign or landing pages, case studies, ebooks, whitepapers. technical = live API servers, status pages,
+      sandboxes and apps behind a login; public API documentation is docs, never technical.
+      not_useful = empty listings, navigation-only, deprecated or obsolete documentation, outdated copies or unrelated pages.
       recommended=true when the item helps answer questions this agent's customers ask: usually support, product, pricing,
-      company, and docs when the agent serves developers or the business sells a technical product. For legal, recommend terms of
+      company, and docs (both guides and API references) when the agent serves developers or the business sells a technical product.
+      Judge the agent's audience from its description, not just the site's marketing homepage. For legal, recommend terms of
       service, privacy, refund and cancellation policies; data processing agreements, sub-processor lists, cookie policies and
       contract schedules are recommended=false. news, events, careers, marketing, technical and not_useful are recommended=false.
       When unsure, choose recommended=false; the administrator can still select it.

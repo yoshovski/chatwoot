@@ -2,9 +2,11 @@ class Captain::Knowledge::Search
   prepend Captain::Knowledge::SearchTracing
   class Error < StandardError; end
   DATASET_TOP_K = 10
+  NAMED_DOCUMENT_LIMIT = 2
   PASSAGE_CHARS = 8000
   TOTAL_CHARS = 24_000
   QUERY_FILLER = %w[a an the what are is your our you do does can could please tell me about].freeze
+  DOCUMENT_TASK_TERMS = %w[how to set up setup configure configuration integrate integration guide documentation instruction step].freeze
 
   Passage = Struct.new(:kind, :title, :content, :score, :record, :document_id, :dataset_id, :source_url, :handle, keyword_init: true) do
     def source_document
@@ -60,7 +62,7 @@ class Captain::Knowledge::Search
     raise Error, "Captain knowledge search failed (HTTP #{response.code})" unless response.code == 200
 
     passages = response.parsed_response.fetch('passages').filter_map { |passage| canonical_passage(passage, datasets) }
-    self.class.within_budget(focus_named_documents(passages, query))
+    self.class.within_budget(focus_named_documents(passages, query, datasets))
   end
 
   def self.within_budget(passages)
@@ -70,23 +72,57 @@ class Captain::Knowledge::Search
 
   private
 
-  # A short, explicitly named public document is better evidence than a title-only
-  # hit or catalog copy that happens to mention the same topic. Keep all datasets searched.
-  def focus_named_documents(passages, query)
+  # Named guides need their overall procedure as well as the matching chunk.
+  # Keep all datasets searched, including evidence for other parts of the question.
+  def focus_named_documents(passages, query, datasets)
     terms = title_terms(query) - QUERY_FILLER
-    return passages if terms.empty?
-
     named, other = passages.partition { |passage| named_document?(passage, terms) }
+    named += find_named_documents(terms, passages, datasets)
     return passages if named.empty?
 
-    named = named.map { |passage| expand_named_document(passage) }.uniq { |passage| [passage.source_reference, passage.content] }
+    named = named.sort_by { |passage| title_rank(passage.title, terms) }.uniq(&:source_reference).map { |passage| expand_named_document(passage) }
     other.reject! { |passage| unrelated_catalog?(passage, terms) }
     named + other
   end
 
   def named_document?(passage, terms)
-    title = title_terms(passage.title)
-    passage.record.is_a?(Captain::Document) && (terms.size > 1 || terms.first == title.first) && (terms - title).empty?
+    passage.record.is_a?(Captain::Document) && title_matches?(passage.title, terms)
+  end
+
+  def title_matches?(name, terms)
+    title = title_terms(name)
+    return true if (terms.size > 1 || terms.first == title.first) && (terms - title).empty?
+
+    (terms & title).size >= 2 && (terms - title - DOCUMENT_TASK_TERMS).empty?
+  end
+
+  def title_rank(name, terms)
+    title = title_terms(name)
+    [(title - terms).size, -(title & terms).size]
+  end
+
+  # Semantic retrieval can miss even a guide named verbatim. Supplement it only
+  # with indexed, enabled documents belonging to this assistant and audience.
+  def find_named_documents(terms, passages, datasets)
+    dataset = datasets.find { |item| item[:kind] == 'document' }
+    topic = terms - DOCUMENT_TASK_TERMS
+    return [] unless dataset && terms.size >= 2 && topic.any?
+
+    score = passages.map(&:score).max.to_f
+    named_document_scope(terms).order(:id).limit(NAMED_DOCUMENT_LIMIT).map do |record|
+      build_passage({ 'content' => '', 'score' => score, 'dataset_id' => dataset[:dataset_id] },
+                    'document', record.metadata.fetch('dify_document_id'), record)
+    end
+  end
+
+  def named_document_scope(terms)
+    scope = Captain::Document.for_assistant(@assistant.id).for_account(@account.id).enabled.available
+                             .where("metadata->>'dify_document_id' IS NOT NULL")
+    scope = scope.where(agents_only: false) unless @for_agents
+    (terms - DOCUMENT_TASK_TERMS).each { |term| scope = scope.where('name ILIKE ?', "%#{Captain::Document.sanitize_sql_like(term)}%") }
+    matches = scope.pluck(:id, :name).select { |_, name| title_matches?(name, terms) }
+    ids = matches.sort_by { |_, name| title_rank(name, terms) }.first(NAMED_DOCUMENT_LIMIT).map(&:first)
+    scope.where(id: ids)
   end
 
   def unrelated_catalog?(passage, terms)
@@ -95,9 +131,15 @@ class Captain::Knowledge::Search
 
   def expand_named_document(passage)
     text = passage.record.content.to_s
-    return passage unless text.present? && text.length <= PASSAGE_CHARS
+    return passage if text.blank?
 
-    passage.dup.tap { |copy| copy.content = text }
+    passage.dup.tap do |copy|
+      copy.content = if text.length <= PASSAGE_CHARS
+                       text
+                     else
+                       Captain::Knowledge::DocumentExcerpt.new(passage, limit: PASSAGE_CHARS).perform
+                     end
+    end
   end
 
   def title_terms(text)

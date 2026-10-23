@@ -29,7 +29,7 @@ class Captain::Websites::RoundFinisher
     added = new_recommended_urls.first(@source.account.usage_limits[:captain][:documents][:current_available])
     return if added.empty?
 
-    Captain::Websites::SelectionService.new(@source).perform(@source.selected_urls + added)
+    Captain::Websites::SelectionService.new(@source, resume_existing: false).perform(@source.selected_urls + added)
     @source.update!(discovery_stats: @source.discovery_stats.merge('auto_added' => added.size))
   end
 

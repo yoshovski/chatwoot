@@ -1,5 +1,5 @@
 <script setup>
-import { computed } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useBusinessExamples } from 'dashboard/components-next/captain/assistant/useBusinessExamples';
 import MessageSources from 'shared/components/MessageSources.vue';
@@ -20,9 +20,29 @@ const { t } = useI18n();
 const examples = useBusinessExamples(computed(() => props.assistant.id));
 
 const config = computed(() => props.assistant.config || {});
-const reply = computed(() => examples.reply(config.value.tone));
-const howToReply = computed(() =>
-  examples.howToReply(config.value.answer_length || 'balanced')
+const previewType = ref('howTo');
+const previewTypes = ['simple', 'howTo'];
+const question = computed(() =>
+  previewType.value === 'simple'
+    ? examples.question.value
+    : examples.howToQuestion.value
+);
+const reply = computed(() =>
+  previewType.value === 'simple'
+    ? examples.reply(config.value.tone)
+    : examples.howToReply(config.value.answer_length || 'balanced')
+);
+watch(
+  () => config.value.tone,
+  () => {
+    previewType.value = 'simple';
+  }
+);
+watch(
+  () => config.value.answer_length,
+  () => {
+    previewType.value = 'howTo';
+  }
 );
 const quickReplies = computed(() =>
   config.value.suggested_replies
@@ -44,12 +64,33 @@ const showProductCard = computed(
 </script>
 
 <template>
+  <div
+    class="flex gap-1 p-1 rounded-lg bg-n-alpha-1"
+    role="group"
+    :aria-label="t('CAPTAIN.ASSISTANTS.SETTINGS.PREVIEW.EXAMPLE_TYPE')"
+  >
+    <button
+      v-for="type in previewTypes"
+      :key="type"
+      type="button"
+      :aria-pressed="previewType === type"
+      class="flex-1 rounded-md px-3 py-1.5 text-xs font-medium transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-n-brand"
+      :class="
+        previewType === type
+          ? 'bg-n-solid-1 text-n-slate-12 shadow-sm'
+          : 'text-n-slate-11 hover:text-n-slate-12'
+      "
+      @click="previewType = type"
+    >
+      {{ t(`CAPTAIN.ASSISTANTS.SETTINGS.PREVIEW.EXAMPLE_TYPES.${type}`) }}
+    </button>
+  </div>
   <AssistantChatPreview
     :name="assistant.name"
     :avatar-url="assistant.avatar_url"
   >
     <p class="preview-bubble preview-bubble--customer">
-      {{ examples.question.value }}
+      {{ question }}
     </p>
     <div class="flex flex-col self-start gap-2 max-w-[88%]">
       <p class="preview-bubble preview-bubble--agent !max-w-full">
@@ -96,11 +137,5 @@ const showProductCard = computed(
         </span>
       </div>
     </div>
-    <p class="preview-bubble preview-bubble--customer">
-      {{ examples.howToQuestion.value }}
-    </p>
-    <p class="preview-bubble preview-bubble--agent whitespace-pre-line">
-      {{ howToReply }}
-    </p>
   </AssistantChatPreview>
 </template>
