@@ -10,12 +10,31 @@ const props = defineProps({
   fallbackAgent: { type: String, default: '' },
   keepHelping: { type: Boolean, default: false },
   safetyNet: { type: Boolean, default: false },
+  // 'transfer' or 'keep' while the team is online and offline.
+  whenOnline: { type: String, default: 'transfer' },
+  whenOffline: { type: String, default: 'transfer' },
 });
 
 const { t } = useI18n();
 
 const fallbackLabel = computed(() =>
   [props.fallbackTeam, props.fallbackAgent].filter(Boolean).join(' / ')
+);
+
+// 'ONLINE', 'OFFLINE' or 'ALWAYS' when the assistant keeps the conversation instead of handing over.
+const keptWhen = computed(() => {
+  const online = props.whenOnline === 'keep';
+  const offline = props.whenOffline === 'keep';
+  if (online && offline) return 'ALWAYS';
+  if (online) return 'ONLINE';
+  return offline ? 'OFFLINE' : null;
+});
+const assignDetail = computed(() =>
+  fallbackLabel.value
+    ? t('CAPTAIN.ASSISTANTS.SETTINGS.HANDOVER.FLOW.FALLBACK', {
+        assignee: fallbackLabel.value,
+      })
+    : t('CAPTAIN.ASSISTANTS.SETTINGS.HANDOVER.FLOW.NO_FALLBACK')
 );
 
 const steps = computed(() => [
@@ -49,11 +68,11 @@ const steps = computed(() => [
     icon: 'i-lucide-users',
     tone: 'teal',
     title: t('CAPTAIN.ASSISTANTS.SETTINGS.HANDOVER.FLOW.ASSIGN'),
-    detail: fallbackLabel.value
-      ? t('CAPTAIN.ASSISTANTS.SETTINGS.HANDOVER.FLOW.FALLBACK', {
-          assignee: fallbackLabel.value,
+    detail: keptWhen.value
+      ? t(`CAPTAIN.ASSISTANTS.SETTINGS.HANDOVER.FLOW.KEPT_${keptWhen.value}`, {
+          name: props.name,
         })
-      : t('CAPTAIN.ASSISTANTS.SETTINGS.HANDOVER.FLOW.NO_FALLBACK'),
+      : assignDetail.value,
   },
   {
     key: 'waiting',

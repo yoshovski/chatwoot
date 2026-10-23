@@ -20,6 +20,9 @@
 class Captain::Assistant < ApplicationRecord
   DESCRIPTION_LENGTH_LIMIT = 500
   OFF_LIMITS_MESSAGE_LENGTH_LIMIT = 500
+  HANDOFF_MESSAGE_LENGTH_LIMIT = 500
+  MAX_HANDOFF_RULES = 10
+  HANDOFF_RULE_LENGTH_LIMIT = 300
   CITATION_SOURCES_STATE_KEY = :captain_v2_citation_sources
   CITATION_DETAILS_STATE_KEY = :captain_v2_citation_details
   PRODUCT_HANDLES_STATE_KEY = :captain_v2_product_handles
@@ -80,7 +83,8 @@ class Captain::Assistant < ApplicationRecord
                  :continue_while_waiting, :suggested_replies, :max_suggested_replies, :product_cards,
                  :link_allowlist, :image_allowlist, :handoff_safety_net, :handoff_safety_net_keywords,
                  :reply_labels, :reply_label_keywords, :outcome_labels,
-                 :handoff_fallback_agent_id, :handoff_fallback_team_id, :tone, :off_limits_message, :business_type
+                 :handoff_fallback_agent_id, :handoff_fallback_team_id, :tone, :off_limits_message, :business_type,
+                 :handoff_when_online, :handoff_when_offline, :offline_handoff_message, :no_handoff_message, :handoff_rules
 
   BOOLEAN_CONFIG_KEYS = %w[
     feature_faq
@@ -123,6 +127,9 @@ class Captain::Assistant < ApplicationRecord
   validates :tone, inclusion: { in: TONE_INSTRUCTIONS.keys }, allow_blank: true
   validates :business_type, inclusion: { in: BUSINESS_TYPES }, allow_blank: true
   validates :off_limits_message, length: { maximum: OFF_LIMITS_MESSAGE_LENGTH_LIMIT }
+  validates :handoff_when_online, :handoff_when_offline, inclusion: { in: Captain::Conversation::HandoffPolicy::ACTIONS }, allow_blank: true
+  validates :offline_handoff_message, :no_handoff_message, length: { maximum: HANDOFF_MESSAGE_LENGTH_LIMIT }
+  validate :validate_handoff_rules
   validates :max_suggested_replies,
             numericality: {
               only_integer: true,
@@ -329,7 +336,7 @@ class Captain::Assistant < ApplicationRecord
       tone_instruction: TONE_INSTRUCTIONS[tone],
       off_limits_message: off_limits_message.presence,
       response_guidelines: response_guidelines || [],
-      guardrails: guardrails || []
+      guardrails: guardrails || [], handoff_rules: handoff_rules || []
     }
     context.merge(business_prompt_context, Captain::Knowledge::BriefPrompt.new(self).context)
   end
@@ -539,6 +546,15 @@ class Captain::Assistant < ApplicationRecord
       end
     end
   end
+
+  def validate_handoff_rules
+    return if handoff_rules.nil?
+    return if handoff_rules.is_a?(Array) && handoff_rules.size <= MAX_HANDOFF_RULES && handoff_rules.all? { |rule| valid_handoff_rule?(rule) }
+
+    errors.add(:handoff_rules, "must be at most #{MAX_HANDOFF_RULES} rules of up to #{HANDOFF_RULE_LENGTH_LIMIT} characters")
+  end
+
+  def valid_handoff_rule?(rule) = rule.is_a?(String) && rule.strip.present? && rule.length <= HANDOFF_RULE_LENGTH_LIMIT
 
   def validate_handoff_fallback_assignments
     validate_handoff_fallback_agent

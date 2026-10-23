@@ -154,7 +154,7 @@ class Captain::Assistant::AgentRunnerService # rubocop:disable Metrics/ClassLeng
       runtime_agent_name: runtime_agent_name,
       response_schema: response_schema_for_runner
     )
-    return agent unless waiting_for_human?
+    return agent unless waiting_for_human? || handoff_kept?
 
     agent.clone(
       tools: agent.tools.reject { |tool| tool.is_a?(Captain::Tools::HandoffTool) }
@@ -166,7 +166,7 @@ class Captain::Assistant::AgentRunnerService # rubocop:disable Metrics/ClassLeng
       runtime_configuration: runtime_configuration,
       response_schema: response_schema_for_runner
     )
-    return agent unless waiting_for_human?
+    return agent unless waiting_for_human? || handoff_kept?
 
     agent.clone(
       tools: agent.tools.reject { |tool| tool.is_a?(Captain::Tools::HandoffTool) }
@@ -198,6 +198,15 @@ class Captain::Assistant::AgentRunnerService # rubocop:disable Metrics/ClassLeng
     return false unless @conversation
 
     ownership_service.waiting?
+  end
+
+  # The assistant keeps the conversation instead of handing off while the team is online or offline.
+  def handoff_kept?
+    @conversation.present? && handoff_policy.keep?
+  end
+
+  def handoff_policy
+    @handoff_policy ||= Captain::Conversation::HandoffPolicy.new(assistant: @assistant, conversation: @conversation)
   end
 
   def ownership_service

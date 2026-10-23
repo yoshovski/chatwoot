@@ -201,6 +201,24 @@ RSpec.describe 'Api::V1::Accounts::Captain::Assistants', type: :request do
         expect(json_response[:guardrails]).to eq(['Updated guardrail'])
       end
 
+      it 'saves what happens when a person is needed' do
+        handoff = { handoff_when_online: 'transfer', handoff_when_offline: 'keep', no_handoff_message: 'Leave your email.',
+                    offline_handoff_message: 'We reply tomorrow.', handoff_rules: ['Escalate legal advice.'] }
+
+        patch "/api/v1/accounts/#{account.id}/captain/assistants/#{assistant.id}",
+              params: { assistant: { config: handoff } }, headers: admin.create_new_auth_token, as: :json
+
+        expect(response).to have_http_status(:success)
+        expect(assistant.reload.config).to include(handoff.stringify_keys)
+      end
+
+      it 'rejects an unknown handoff choice' do
+        patch "/api/v1/accounts/#{account.id}/captain/assistants/#{assistant.id}",
+              params: { assistant: { config: { handoff_when_offline: 'ignore' } } }, headers: admin.create_new_auth_token, as: :json
+
+        expect(response).to have_http_status(:unprocessable_entity)
+      end
+
       it 'attaches an avatar when uploaded' do
         file = fixture_file_upload(Rails.root.join('spec/assets/avatar.png'), 'image/png')
 

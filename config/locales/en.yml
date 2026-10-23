@@ -321,6 +321,7 @@ en:
   conversations:
     captain:
       handoff: 'Transferring to another agent for further assistance.'
+      no_handoff: "Our team can't join this chat right now, but I'll keep helping you here. You can also leave your email and we'll get back to you."
       empty_response_catalog_empty: "I couldn't find a matching product in our current catalog."
       empty_response_attachments: 'Please send a short message explaining what to check.'
       empty_response_unusable: 'Sorry, I did not catch that. Could you rephrase?'
