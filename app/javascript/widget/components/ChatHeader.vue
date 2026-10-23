@@ -17,7 +17,7 @@ const props = defineProps({
 const availableAgents = toRef(props, 'availableAgents');
 
 const router = useRouter();
-const { isOnline } = useAvailability(availableAgents);
+const { isOnline, hasAiAgent } = useAvailability(availableAgents);
 
 const onBackButtonClick = () => {
   router.replace({ name: 'home' });
@@ -50,8 +50,8 @@ const onBackButtonClick = () => {
         >
           <span v-dompurify-html="title" class="ltr:mr-1 rtl:ml-1" />
           <div
-            :class="`h-2 w-2 rounded-full
-              ${isOnline ? 'bg-n-teal-10' : 'hidden'}`"
+            v-if="!hasAiAgent && isOnline"
+            class="h-2 w-2 rounded-full bg-n-teal-10"
           />
         </div>
         <AvailabilityContainer
