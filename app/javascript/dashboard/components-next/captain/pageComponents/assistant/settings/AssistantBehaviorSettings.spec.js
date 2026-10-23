@@ -1,7 +1,7 @@
 import { shallowMount } from '@vue/test-utils';
 import Button from 'dashboard/components-next/button/Button.vue';
 import AssistantBehaviorSettings from './AssistantBehaviorSettings.vue';
-import ChoiceCard from './ChoiceCard.vue';
+import PresetPromptEditor from './PresetPromptEditor.vue';
 import SettingsSwitchRow from './SettingsSwitchRow.vue';
 
 vi.mock('vue-i18n', () => ({
@@ -22,7 +22,19 @@ const mountSettings = (config, showProductCards = true, assistant = {}) =>
 describe('AssistantBehaviorSettings', () => {
   it('hides commerce settings when Shopify is unavailable', () => {
     const wrapper = mountSettings({}, false);
-    expect(wrapper.findAllComponents(SettingsSwitchRow)).toHaveLength(2);
+    // Quick replies, sources and follow-up questions; no product cards.
+    expect(wrapper.findAllComponents(SettingsSwitchRow)).toHaveLength(3);
+  });
+
+  it('turns follow-up questions off for non-shops only', () => {
+    const wrapper = mountSettings({}, false);
+    const followUp = wrapper.findAllComponents(SettingsSwitchRow)[2];
+
+    expect(followUp.props('modelValue')).toBe(true);
+    followUp.vm.$emit('update:modelValue', false);
+    expect(wrapper.emitted('update')[0][0]).toEqual({
+      follow_up_questions: false,
+    });
   });
 
   it('selects the detected business type until one is chosen', () => {
@@ -53,35 +65,25 @@ describe('AssistantBehaviorSettings', () => {
     expect(wrapper.emitted('update')[0][0]).toEqual({ business_type: '' });
   });
 
-  it('shows balanced answers until another length is chosen', () => {
-    const wrapper = mountSettings({});
-    const lengths = wrapper
-      .findAllComponents(ChoiceCard)
-      .filter(card => card.props('name') === 'assistant-answer-length');
-
-    expect(lengths.map(card => card.props('isActive'))).toEqual([
-      false,
+  it('passes balanced length, saved tone and their prompts to the editors', () => {
+    const wrapper = mountSettings(
+      { tone: 'custom', tone_prompt: 'Calm and warm.' },
       true,
-      false,
-    ]);
-    lengths[2].vm.$emit('select', 'detailed');
-    expect(wrapper.emitted('update')[0][0]).toEqual({
-      answer_length: 'detailed',
+      { prompt_presets: { tone: { friendly: 'Warm.' }, answer_length: {} } }
+    );
+    const [length, tone] = wrapper.findAllComponents(PresetPromptEditor);
+
+    expect(length.props()).toMatchObject({
+      selected: 'balanced',
+      field: 'answer_length',
+      promptField: 'answer_length_prompt',
     });
-  });
-
-  it('marks the saved tone and emits a new one', () => {
-    const wrapper = mountSettings({ tone: 'professional' });
-    const tones = wrapper
-      .findAllComponents(ChoiceCard)
-      .filter(card => card.props('name') === 'assistant-tone');
-
-    expect(tones.map(tone => tone.props('isActive'))).toEqual([
-      false,
-      true,
-      false,
-    ]);
-    tones[2].vm.$emit('select', 'short');
+    expect(tone.props()).toMatchObject({
+      selected: 'custom',
+      customText: 'Calm and warm.',
+      presetTexts: { friendly: 'Warm.' },
+    });
+    tone.vm.$emit('update', { tone: 'short' });
     expect(wrapper.emitted('update')[0][0]).toEqual({ tone: 'short' });
   });
 

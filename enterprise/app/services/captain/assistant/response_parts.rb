@@ -1,6 +1,9 @@
 class Captain::Assistant::ResponseParts
   MESSAGE_ATTRIBUTE_KEY = 'captain_v2_response_parts'.freeze
   MAX_SOURCE_LINKS = 3
+  # Sources are page-title links, never numbers after each part: customers cannot tell what "[1]" means.
+  # The chat widget draws them under the bubble from this content attribute; other channels get them as text lines.
+  SOURCES_ATTRIBUTE_KEY = 'captain_sources'.freeze
 
   attr_reader :parts
 
@@ -25,15 +28,27 @@ class Captain::Assistant::ResponseParts
     self.class.new(parts.map { |part| part.merge('citation_indexes' => []) })
   end
 
-  # Sources go on one closing line of page-title links instead of numbers after each part: customers
-  # cannot tell what "[1]" means. The arrow keeps the line readable in every reply language and channel.
-  def customer_message_content(citation_urls: {}, citation_titles: {})
-    body = plain_text
-    links = cited_links(body, citation_urls, citation_titles)
-    return body if links.empty?
+  # :structured leaves sources out of the text (the widget and playground show captain_sources); email keeps markdown
+  # links; channels whose renderers drop link titles (WhatsApp, SMS, Instagram…) get "title: url".
+  def self.sources_format(conversation)
+    case conversation&.inbox&.channel_type
+    when nil, 'Channel::WebWidget' then :structured
+    when 'Channel::Email' then :markdown
+    else :plain
+    end
+  end
 
-    line = links.first(MAX_SOURCE_LINKS).map { |url, title| "[#{title.tr('[]', '()')}](#{url.gsub('(', '%28').gsub(')', '%29')})" }
-    "#{body}\n\n→ #{line.join(' · ')}"
+  def customer_message_content(citation_urls: {}, citation_titles: {}, sources_format: :markdown)
+    body = plain_text
+    links = sources(citation_urls: citation_urls, citation_titles: citation_titles)
+    return body if links.empty? || sources_format == :structured
+
+    "#{body}\n\n#{links.map { |link| source_line(link, sources_format) }.join("\n")}"
+  end
+
+  # [{ 'title', 'url' }] in the order the reply first cites them; links the reply already shows inline are left out.
+  def sources(citation_urls: {}, citation_titles: {})
+    cited_links(plain_text, citation_urls, citation_titles).first(MAX_SOURCE_LINKS).map { |url, title| { 'title' => title, 'url' => url } }
   end
 
   def to_a
@@ -42,7 +57,13 @@ class Captain::Assistant::ResponseParts
 
   private
 
-  # url => title, in the order the reply first cites them; links the reply already shows inline are left out.
+  # The arrow keeps the lines readable in every reply language.
+  def source_line(link, sources_format)
+    return "→ #{link['title']}: #{link['url']}" if sources_format == :plain
+
+    "→ [#{link['title'].tr('[]', '()')}](#{link['url'].gsub('(', '%28').gsub(')', '%29')})"
+  end
+
   def cited_links(body, citation_urls, citation_titles)
     parts.flat_map { |part| part['citation_indexes'] }.each_with_object({}) do |index, links|
       url = citation_urls[index]

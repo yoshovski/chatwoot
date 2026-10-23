@@ -7,6 +7,8 @@ class Captain::Knowledge::ExamplesGenerator
   TEXT_LIMITS = { 'question' => 200, 'off_limits_question' => 200, 'handoff_question' => 200 }.freeze
   LIST_LIMITS = { 'quick_replies' => 40, 'guardrails' => 200, 'guidelines' => 200, 'starter_questions' => 120 }.freeze
   REPLY_LENGTH = 400
+  # A how-to answered at each answer length, so the preview shows what the setting changes.
+  HOW_TO_LIMITS = { 'question' => 200, 'short' => 300, 'balanced' => 600, 'detailed' => 900 }.freeze
 
   def initialize(brief)
     @brief = brief
@@ -27,10 +29,12 @@ class Captain::Knowledge::ExamplesGenerator
     return false unless output.is_a?(Hash)
 
     TEXT_LIMITS.all? { |key, limit| valid_text?(output[key], limit) } && valid_replies?(output['replies']) &&
-      LIST_SIZES.all? { |key, sizes| valid_list?(output[key], sizes, LIST_LIMITS[key]) }
+      valid_how_to?(output['how_to']) && LIST_SIZES.all? { |key, sizes| valid_list?(output[key], sizes, LIST_LIMITS[key]) }
   end
 
   def self.valid_replies?(replies) = replies.is_a?(Hash) && TONES.all? { |tone| valid_text?(replies[tone], REPLY_LENGTH) }
+
+  def self.valid_how_to?(how_to) = how_to.is_a?(Hash) && HOW_TO_LIMITS.all? { |key, limit| valid_text?(how_to[key], limit) }
 
   def self.valid_text?(text, limit) = text.is_a?(String) && text.strip.present? && text.length <= limit
 
@@ -44,13 +48,13 @@ class Captain::Knowledge::ExamplesGenerator
 
   def generate(input)
     chat = Captain::Assistant::TieredLlmClient.chat(account_id: @assistant.account_id, model: model, timeout: 30)
-                                              .with_params(response_format: { type: 'json_object' }, max_tokens: 1200)
+                                              .with_params(response_format: { type: 'json_object' }, max_tokens: 2000)
                                               .with_instructions(instructions)
     response = Captain::Assistant::TieredLlmClient.generate('knowledge_examples', @assistant, chat, input.to_json)
     output = response.content.is_a?(Hash) ? response.content : JSON.parse(response.content)
     raise TypeError, 'Invalid knowledge examples' unless self.class.valid_output?(output)
 
-    output.slice('question', 'replies', 'off_limits_question', 'handoff_question', *LIST_SIZES.keys)
+    output.slice('question', 'replies', 'how_to', 'off_limits_question', 'handoff_question', *LIST_SIZES.keys)
   end
 
   def instructions
@@ -63,13 +67,18 @@ class Captain::Knowledge::ExamplesGenerator
       Return JSON with exactly these keys:
       {"question":"a typical customer question (max 200 chars)",
        "replies":{"friendly":"...","professional":"...","short":"..."},
+       "how_to":{"question":"a how-to or setup question the sources answer (max 200 chars)",
+                 "short":"one or two sentences (max 300 chars)",
+                 "balanced":"a one-sentence answer, then up to 4 numbered steps on their own lines (max 600 chars)",
+                 "detailed":"a one-sentence answer, prerequisites, then every step numbered on its own lines (max 900 chars)"},
        "quick_replies":["exactly #{QUICK_REPLIES} follow-up buttons for the question, most useful first, max 40 chars each"],
        "off_limits_question":"a question this business should not answer (max 200 chars)",
        "guardrails":["3 rules about what the agent must refuse or avoid, max 200 chars each"],
        "guidelines":["3 rules about how the agent should write replies, max 200 chars each"],
        "handoff_question":"a request that needs a human teammate (max 200 chars)",
        "starter_questions":["3 varied questions a tester could ask, max 120 chars each"]}
-      Each reply answers "question" in that tone (max 400 chars) without inventing specific facts. Write in the language of the input.
+      Each reply answers "question" in that tone (max 400 chars) without inventing specific facts.
+      The three how_to answers use the same neutral tone and differ only in length; steps use only names the sources give. Write in the language of the input.
     PROMPT
   end
 end

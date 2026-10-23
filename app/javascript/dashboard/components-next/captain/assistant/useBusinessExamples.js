@@ -3,6 +3,7 @@ import { useI18n } from 'vue-i18n';
 import api from 'dashboard/api/captain/knowledgeSources';
 
 const TONES = ['friendly', 'professional', 'short'];
+const ANSWER_LENGTHS = ['short', 'balanced', 'detailed'];
 const EXAMPLE_KEYS = ['EXAMPLE_1', 'EXAMPLE_2', 'EXAMPLE_3'];
 const QUICK_REPLY_KEYS = [
   'BUTTON_1',
@@ -91,6 +92,19 @@ export function useBusinessExamples(assistantId) {
       t(`CAPTAIN.ASSISTANTS.SETTINGS.PREVIEW.REPLY.${key.toUpperCase()}`)
     );
   };
+  // A custom length previews as balanced; the exact wording is for the Playground.
+  const howToQuestion = computed(
+    () =>
+      examples.value?.how_to?.question ||
+      t('CAPTAIN.ASSISTANTS.SETTINGS.PREVIEW.HOW_TO.QUESTION')
+  );
+  const howToReply = length => {
+    const key = ANSWER_LENGTHS.includes(length) ? length : 'balanced';
+    return (
+      examples.value?.how_to?.[key] ||
+      t(`CAPTAIN.ASSISTANTS.SETTINGS.PREVIEW.HOW_TO.${key.toUpperCase()}`)
+    );
+  };
   const quickReplies = computed(
     () =>
       examples.value?.quick_replies ||
@@ -132,6 +146,8 @@ export function useBusinessExamples(assistantId) {
   return {
     question,
     reply,
+    howToQuestion,
+    howToReply,
     quickReplies,
     offLimitsQuestion,
     guardrails,

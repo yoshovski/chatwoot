@@ -310,7 +310,11 @@ export default {
       </div>
     </div>
 
-    <UserMessage v-if="hasRecordedResponse" :message="responseMessage" />
+    <UserMessage
+      v-if="hasRecordedResponse"
+      class="mt-3"
+      :message="responseMessage"
+    />
     <div v-if="isASubmittedForm">
       <UserMessage
         v-for="submittedValue in submittedFormValues"

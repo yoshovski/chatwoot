@@ -720,9 +720,9 @@ RSpec.describe Captain::Conversation::ResponseBuilderJob, type: :job do
 
           described_class.perform_now(conversation, assistant)
 
-          expect(conversation.messages.outgoing.last.content).to eq(
-            "Hey, welcome to Captain V2\n\n→ [Password](https://help.example.com/password)"
-          )
+          message = conversation.messages.outgoing.last
+          expect(message.content).to eq('Hey, welcome to Captain V2')
+          expect(message.content_attributes['captain_sources']).to eq([{ 'title' => 'Password', 'url' => 'https://help.example.com/password' }])
           cited_document_id = mock_agent_runner_service.last_run_result.context[:state][Captain::Assistant::CITATION_SOURCES_STATE_KEY][1]
           expect(Captain::AgentSession.last.cited_document_ids).to eq([cited_document_id])
         end
@@ -736,6 +736,8 @@ RSpec.describe Captain::Conversation::ResponseBuilderJob, type: :job do
           citation_sources = mock_agent_runner_service.last_run_result.context[:state][Captain::Assistant::CITATION_SOURCES_STATE_KEY]
           citation_sources[3] = document.id
           v2_response_parts.first['citation_indexes'] = [3]
+          # Email keeps the sources as markdown links in the text.
+          inbox.update!(channel: create(:channel_email, account: account))
 
           described_class.perform_now(conversation, assistant)
 
@@ -753,13 +755,14 @@ RSpec.describe Captain::Conversation::ResponseBuilderJob, type: :job do
               { 'text' => 'Continue with the next step.', 'citation_indexes' => [2] }
             ]
           )
+          inbox.update!(channel: create(:channel_email, account: account))
 
           described_class.perform_now(conversation, assistant)
 
           content = conversation.messages.outgoing.last.content
           expect(content).to eq(
             "```ruby\nputs 'hello'\n```\n\nContinue with the next step.\n\n" \
-            '→ [Password](https://help.example.com/password) · [Email](https://help.example.com/email)'
+            "→ [Password](https://help.example.com/password)\n→ [Email](https://help.example.com/email)"
           )
 
           rendered_content = ChatwootMarkdownRenderer.new(content).render_message.to_s
@@ -777,10 +780,9 @@ RSpec.describe Captain::Conversation::ResponseBuilderJob, type: :job do
 
           described_class.perform_now(conversation, assistant)
 
-          expect(conversation.messages.outgoing.last.content).to eq(
-            "Email changes are in settings.\n\nPassword resets use the reset link.\n\n" \
-            '→ [Email](https://help.example.com/email) · [Password](https://help.example.com/password)'
-          )
+          message = conversation.messages.outgoing.last
+          expect(message.content).to eq("Email changes are in settings.\n\nPassword resets use the reset link.")
+          expect(message.content_attributes['captain_sources'].pluck('title')).to eq(%w[Email Password])
         end
 
         it 'names a source by the title its search recorded' do
@@ -791,7 +793,7 @@ RSpec.describe Captain::Conversation::ResponseBuilderJob, type: :job do
 
           described_class.perform_now(conversation, assistant)
 
-          expect(conversation.messages.outgoing.last.content).to end_with('→ [Reset your password](https://help.example.com/password)')
+          expect(conversation.messages.outgoing.last.content_attributes['captain_sources'].first['title']).to eq('Reset your password')
         end
 
         it 'lists a source once when a response cites it more than once' do
@@ -804,9 +806,7 @@ RSpec.describe Captain::Conversation::ResponseBuilderJob, type: :job do
 
           described_class.perform_now(conversation, assistant)
 
-          expect(conversation.messages.outgoing.last.content).to eq(
-            "Use the reset link.\n\nThe same page has the next steps.\n\n→ [Password](https://help.example.com/password)"
-          )
+          expect(conversation.messages.outgoing.last.content_attributes['captain_sources'].size).to eq(1)
         end
 
         it 'ignores unknown indexes and non-numeric citation values' do
@@ -822,9 +822,9 @@ RSpec.describe Captain::Conversation::ResponseBuilderJob, type: :job do
 
           described_class.perform_now(conversation, assistant)
 
-          content = conversation.messages.outgoing.last.content
-          expect(content).to eq("Hey, welcome to Captain V2\n\n→ [Email](https://help.example.com/email)")
-          expect(content).not_to include('model.example')
+          message = conversation.messages.outgoing.last
+          expect(message.content_attributes['captain_sources']).to eq([{ 'title' => 'Email', 'url' => 'https://help.example.com/email' }])
+          expect(message.content).not_to include('model.example')
         end
 
         it 'does not render mapped PDF or non-public sources' do

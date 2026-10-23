@@ -51,6 +51,36 @@ RSpec.describe Captain::Conversation::ReplyComposer do
     expect(composer.messages.first[:content_attributes][:submit_value]).to be(true)
   end
 
+  context 'with cited sources' do
+    let(:response) do
+      {
+        'response_parts' => [{ 'text' => 'We ship within two days.', 'citation_indexes' => [1] }],
+        'suggested_replies' => ['Track order']
+      }
+    end
+
+    before do
+      allow(assistant).to receive_messages(trusted_citation_urls: { 1 => 'https://example-store.com/shipping' },
+                                           citation_titles: { 1 => 'Shipping policy' })
+    end
+
+    it 'gives widget messages the sources as an attribute, next to the buttons' do
+      message = composer.messages.first
+
+      expect(message[:content]).to eq('We ship within two days.')
+      expect(message[:content_attributes]).to include(
+        'captain_sources' => [{ 'title' => 'Shipping policy', 'url' => 'https://example-store.com/shipping' }],
+        :items => [{ 'title' => 'Track order', 'value' => 'Track order' }]
+      )
+    end
+
+    it 'writes the sources into the text on channels without the widget' do
+      inbox.update!(channel: create(:channel_sms, account: account))
+
+      expect(composer.messages.first[:content]).to eq("We ship within two days.\n\n→ Shipping policy: https://example-store.com/shipping")
+    end
+  end
+
   context 'with labelled suggestions' do
     let(:response) do
       {

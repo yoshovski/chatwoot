@@ -80,7 +80,9 @@ class Captain::Copilot::ReplySuggestionService
     response_parts = Captain::Assistant::ResponseParts.from_response(response)
     content = response_parts.customer_message_content(
       citation_urls: @assistant.trusted_citation_urls(runner.last_run_result),
-      citation_titles: @assistant.citation_titles(runner.last_run_result)
+      citation_titles: @assistant.citation_titles(runner.last_run_result),
+      # The agent sends the draft as plain text, so even widget conversations get the sources as links.
+      sources_format: Captain::Assistant::ResponseParts.sources_format(conversation) == :plain ? :plain : :markdown
     )
 
     @copilot_thread.with_lock do

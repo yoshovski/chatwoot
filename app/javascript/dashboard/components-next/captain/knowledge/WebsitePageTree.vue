@@ -97,6 +97,11 @@ const toggle = value =>
       </span>
       <span
         v-else-if="pageReason"
+        v-tooltip.top="
+          pageReason === 'unchecked'
+            ? $t('CAPTAIN.WEBSITES.UNCHECKED_HINT')
+            : undefined
+        "
         class="shrink-0 rounded bg-n-alpha-2 px-1.5 py-0.5 text-xs text-n-slate-11"
       >
         {{ $t(`CAPTAIN.WEBSITES.REASONS.${pageReason}`) }}

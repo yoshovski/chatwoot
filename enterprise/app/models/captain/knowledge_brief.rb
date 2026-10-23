@@ -1,7 +1,7 @@
 class Captain::KnowledgeBrief < ApplicationRecord
   self.table_name = 'captain_knowledge_briefs'
   EXAMPLE_DOCUMENTS = 30
-  EXAMPLES_VERSION = 2
+  EXAMPLES_VERSION = 3
   # New agents and unpublished briefs change quickly; settled agents refresh their examples at most monthly.
   EXAMPLES_SETTLING_AGE = 14.days
   EXAMPLES_SETTLING_INTERVAL = 1.hour
