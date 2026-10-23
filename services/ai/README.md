@@ -120,7 +120,7 @@ remains necessary. Queries are normalized and capped at the installed Dify API's
 The response is `{status, query, passages}`. Each passage has a citation index,
 kind, dataset/document IDs, title, content, URL, product handle and score. Native
 Q&A pairs include both their question and answer. Results are ranked, deduplicated,
-and limited to five passages, 8,000 characters each and 24,000 characters total.
+and limited to eight passages, 8,000 characters each and 24,000 characters total.
 Below-threshold matches return `no_match`; remote failures return an error rather
 than a false no-match result. No source download or complete-document fetch occurs.
 Captain chat integration remains CWAI-24; the existing native library retrieval
