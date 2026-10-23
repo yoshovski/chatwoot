@@ -463,7 +463,18 @@ en:
       description: 'Connect your Shopify store to access order details, customer information, and product data directly within your conversations and helps your support team provide faster, more contextual assistance to your customers.'
     hubspot:
       name: 'HubSpot'
-      invalid_configuration: 'Could not save the HubSpot mapping. Every mapped property must exist in HubSpot and be writable.'
+      invalid_mapping: 'These HubSpot properties do not exist or are read-only: %{properties}'
+      duplicate_mapping: 'Each HubSpot property can only be mapped once.'
+      unreachable: 'Could not reach HubSpot to check the mapping. Try again in a moment.'
+      invalid_mapping_source: 'Email must map to the HubSpot email property, and only known contact fields can be mapped.'
+      sources:
+        email: 'Email'
+        firstname: 'First name'
+        lastname: 'Last name'
+        phone: 'Phone'
+        lead_type: 'Lead type'
+        lead_summary: 'Lead summary'
+        lead_source: 'Lead source'
       short_description: 'Sync contacts and conversation transcripts to HubSpot.'
       description: 'Connect HubSpot to create or update a HubSpot contact for every contact with an email, save conversation transcripts as notes, and see the HubSpot contact next to each conversation. Existing contacts are not backfilled; they sync the next time they change.'
     leadsquared:

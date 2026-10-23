@@ -454,6 +454,27 @@
         "TITLE": "Connected HubSpot account",
         "DETAILS": "{domain} · Portal ID {portalId}"
       },
+      "SAVE": "Save HubSpot settings",
+      "SAVE_SUCCESS": "HubSpot settings saved",
+      "SAVE_ERROR": "Could not save the HubSpot settings. Try again.",
+      "SYNC_CONTACTS": {
+        "TITLE": "Sync contacts",
+        "DESCRIPTION": "Create or update a HubSpot contact whenever a contact with an email is added or changed. Blank fields never overwrite HubSpot. Existing contacts are not backfilled; they sync the next time they change."
+      },
+      "SAVE_TRANSCRIPTS": {
+        "TITLE": "Save conversation transcripts as notes",
+        "DESCRIPTION": "When a conversation is resolved, add its transcript as a note on the HubSpot contact. Private notes are left out."
+      },
+      "MAPPING": {
+        "TITLE": "Field mapping",
+        "DESCRIPTION": "Choose the HubSpot property for each field. Unmapped fields are not sent. Lead fields are only sent for leads captured by an AI agent; the lead source is always chatbot.",
+        "NOT_MAPPED": "Not mapped",
+        "SEARCH": "Search HubSpot properties",
+        "ADD": "Add mapping",
+        "REMOVE": "Remove mapping",
+        "DUPLICATE": "This HubSpot property is already mapped to another field.",
+        "LOAD_ERROR": "Could not load HubSpot properties. Try again in a moment."
+      },
       "DELETE": {
         "TITLE": "Disconnect HubSpot?",
         "MESSAGE": "Contacts and transcripts stop syncing. Data already in HubSpot stays there."

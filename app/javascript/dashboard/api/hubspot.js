@@ -9,6 +9,14 @@ class HubspotAPI extends ApiClient {
   generateAuthorization() {
     return axios.post(`${this.url}/authorization`);
   }
+
+  getProperties() {
+    return axios.get(`${this.baseUrl()}/integrations/hubspot/properties`);
+  }
+
+  updateSettings(settings) {
+    return axios.patch(`${this.baseUrl()}/integrations/hubspot`, { settings });
+  }
 }
 
 export default new HubspotAPI();

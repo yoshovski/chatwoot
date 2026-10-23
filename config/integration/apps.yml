@@ -353,8 +353,10 @@ hubspot:
       field_mapping:
         type: object
         required: [email]
+        # Keys are email, firstname, lastname, phone or a contact attribute key (lead fields are lead_<key> attributes).
         propertyNames:
-          pattern: '^(email|firstname|lastname|phone|lead_[a-z][a-z0-9_]{0,39})$'
+          minLength: 1
+          maxLength: 100
         additionalProperties:
           type: string
           pattern: '^[a-z][a-z0-9_]*$'

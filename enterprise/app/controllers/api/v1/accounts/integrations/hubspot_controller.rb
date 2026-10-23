@@ -1,6 +1,26 @@
 class Api::V1::Accounts::Integrations::HubspotController < Api::V1::Accounts::Integrations::BaseController
   before_action :fetch_hook
+  before_action -> { authorize(:hook, :update?) }, only: [:properties, :update]
   before_action -> { authorize(:hook, :destroy?) }, only: [:destroy]
+
+  def properties
+    render json: { properties: Crm::Hubspot::SetupService.new(@hook).writable_properties,
+                   sources: Crm::Hubspot::MappingSources.new(Current.account).all }
+  rescue Crm::Hubspot::Client::ReauthorizationRequired, Crm::Hubspot::Client::AuthorizationError
+    render json: { error: 'reauthorize' }, status: :unprocessable_entity
+  rescue Crm::Hubspot::Client::ApiError
+    render_could_not_create_error(I18n.t('integration_apps.hubspot.unreachable'))
+  end
+
+  def update
+    mapping = settings_params[:field_mapping].to_h
+    unless mapping['email'] == 'email' && (mapping.keys - Crm::Hubspot::MappingSources.new(Current.account).keys).empty?
+      return render_could_not_create_error(I18n.t('integration_apps.hubspot.invalid_mapping_source'))
+    end
+
+    @hook.update!(settings: @hook.settings.merge(settings_params.to_h))
+    render partial: 'api/v1/models/hook', formats: [:json], locals: { resource: @hook }
+  end
 
   def destroy
     revoke_refresh_token
@@ -12,6 +32,10 @@ class Api::V1::Accounts::Integrations::HubspotController < Api::V1::Accounts::In
 
   def fetch_hook
     @hook = Current.account.hooks.find_by!(app_id: 'hubspot')
+  end
+
+  def settings_params
+    params.require(:settings).permit(:sync_contacts, :save_transcripts, field_mapping: {})
   end
 
   def revoke_refresh_token

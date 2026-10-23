@@ -7,12 +7,14 @@ import {
 } from 'dashboard/composables/store';
 import { useI18n } from 'vue-i18n';
 import { useAlert } from 'dashboard/composables';
+import { parseAPIErrorResponse } from 'dashboard/store/utils/api';
 
 import Button from 'dashboard/components-next/button/Button.vue';
 import Banner from 'dashboard/components-next/banner/Banner.vue';
 import HubspotAPI from 'dashboard/api/hubspot';
 
 import Integration from './Integration.vue';
+import HubspotSettingsForm from './hubspot/HubspotSettingsForm.vue';
 import SettingsLayout from '../SettingsLayout.vue';
 import BaseSettingsHeader from '../components/BaseSettingsHeader.vue';
 
@@ -34,6 +36,40 @@ const needsReconnect = computed(
   () => !!settings.value.reauthorization_required
 );
 
+const mappingData = ref(null);
+const mappingError = ref('');
+const isSaving = ref(false);
+
+const loadMappingData = async () => {
+  mappingError.value = '';
+  try {
+    const { data } = await HubspotAPI.getProperties();
+    mappingData.value = data;
+  } catch (error) {
+    mappingError.value =
+      error.response?.data?.error === 'reauthorize'
+        ? t('INTEGRATION_SETTINGS.HUBSPOT.REAUTHORIZE')
+        : parseAPIErrorResponse(error) ||
+          t('INTEGRATION_SETTINGS.HUBSPOT.MAPPING.LOAD_ERROR');
+  }
+};
+
+const saveSettings = async payload => {
+  isSaving.value = true;
+  try {
+    await HubspotAPI.updateSettings(payload);
+    await store.dispatch('integrations/get');
+    useAlert(t('INTEGRATION_SETTINGS.HUBSPOT.SAVE_SUCCESS'));
+  } catch (error) {
+    useAlert(
+      parseAPIErrorResponse(error) ||
+        t('INTEGRATION_SETTINGS.HUBSPOT.SAVE_ERROR')
+    );
+  } finally {
+    isSaving.value = false;
+  }
+};
+
 const authorize = async () => {
   isAuthorizing.value = true;
   try {
@@ -48,6 +84,7 @@ const authorize = async () => {
 onMounted(async () => {
   await store.dispatch('integrations/get', 'hubspot');
   integrationLoaded.value = true;
+  if (hook.value && !needsReconnect.value) loadMappingData();
 });
 </script>
 
@@ -120,6 +157,17 @@ onMounted(async () => {
             @click="authorize"
           />
         </div>
+        <Banner v-if="mappingError" color="ruby">
+          {{ mappingError }}
+        </Banner>
+        <HubspotSettingsForm
+          v-if="hook && mappingData"
+          :settings="settings"
+          :properties="mappingData.properties"
+          :sources="mappingData.sources"
+          :is-saving="isSaving"
+          @save="saveSettings"
+        />
       </div>
     </template>
   </SettingsLayout>

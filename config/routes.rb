@@ -512,6 +512,8 @@ Rails.application.routes.draw do
             if ChatwootApp.enterprise?
               resource :hubspot, controller: 'hubspot', only: [] do
                 collection do
+                  get :properties
+                  patch :update
                   delete :destroy
                 end
               end

@@ -17,8 +17,13 @@ module Enterprise::Integrations::Hook
   def validate_hubspot_field_mapping
     return if errors.any?
 
+    destinations = settings['field_mapping'].values
+    return errors.add(:base, I18n.t('integration_apps.hubspot.duplicate_mapping')) if destinations.uniq.size != destinations.size
+
     Crm::Hubspot::SetupService.new(self).setup
+  rescue Crm::Hubspot::SetupService::InvalidMappingError => e
+    errors.add(:base, I18n.t('integration_apps.hubspot.invalid_mapping', properties: e.message))
   rescue Crm::Hubspot::Client::ApiError, Crm::Hubspot::Client::ReauthorizationRequired
-    errors.add(:base, I18n.t('integration_apps.hubspot.invalid_configuration'))
+    errors.add(:base, I18n.t('integration_apps.hubspot.unreachable'))
   end
 end
