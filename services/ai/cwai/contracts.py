@@ -6,6 +6,7 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 MAX_TEXT = 100_000
 MAX_ORIGINAL = 10 * 1024 * 1024
+MAX_PASSAGES = 8
 
 
 class Contract(BaseModel):
@@ -128,7 +129,7 @@ class KnowledgePassage(Contract):
 class KnowledgeSearchResult(Contract):
     status: Literal["ok", "no_match"]
     query: str
-    passages: list[KnowledgePassage] = Field(max_length=5)
+    passages: list[KnowledgePassage] = Field(max_length=MAX_PASSAGES)
 
 
 class Citations(Contract):

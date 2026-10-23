@@ -9,7 +9,7 @@ from sqlalchemy import select
 from cwai import schema as s
 from cwai.auth import Scope, read_scope
 from cwai.config import settings
-from cwai.contracts import KnowledgePassage, KnowledgeSearch, KnowledgeSearchResult
+from cwai.contracts import MAX_PASSAGES, KnowledgePassage, KnowledgeSearch, KnowledgeSearchResult
 from cwai.db import engine
 from cwai.dify import Dify, ProjectionError
 from cwai.workspace import connection
@@ -21,7 +21,6 @@ MAX_DATASET_RESULTS = 20
 # product, so 10 chunks can collapse into one or two products. A product-only search asks for
 # more chunks to reach several distinct products.
 CATALOG_ONLY_CHUNKS = 30
-MAX_PASSAGES = 8
 # A guide with many matching chunks must not crowd out the other guides that answer the question.
 MAX_PASSAGES_PER_DOCUMENT = 2
 PER_PASSAGE_CHARS = 8000

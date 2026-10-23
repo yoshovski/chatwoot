@@ -8,7 +8,7 @@ import httpx
 from pydantic import SecretStr, ValidationError
 
 from cwai.config import DifyConnection
-from cwai.contracts import KnowledgeSearch, SearchDataset
+from cwai.contracts import MAX_PASSAGES, KnowledgeSearch, KnowledgeSearchResult, SearchDataset
 from cwai.dify import Dify, ProjectionError
 from cwai.knowledge_search import normalize_query, search
 
@@ -197,6 +197,30 @@ class KnowledgeSearchTest(unittest.TestCase):
         documents = [passage.document_id for passage in result.passages]
         self.assertEqual(documents.count(guides["vizio"]), 2)
         self.assertIn(guides["roku"], documents)
+
+    def test_result_contract_accepts_every_passage_slot(self):
+        # rc87 returned 8 passages while the result contract still allowed 5, so the
+        # endpoint failed with 500 whenever more than 5 guides matched.
+        dataset = self.datasets[1]
+        records = [
+            {
+                "score": 0.9 - n / 100,
+                "segment": {
+                    "document_id": str(uuid4()),
+                    "enabled": True,
+                    "status": "completed",
+                    "content": f"Platform {n} production notification URL.",
+                    "document": {"name": f"platform-{n}.md", "doc_metadata": {}},
+                },
+            }
+            for n in range(MAX_PASSAGES + 2)
+        ]
+        payload = self.payload.model_copy(update={"datasets": [dataset]})
+        with patch.object(Dify, "search", return_value=records):
+            result = search(self.config, payload, 0.3)
+        self.assertEqual(len(result.passages), MAX_PASSAGES)
+        response = KnowledgeSearchResult.model_validate_json(result.model_dump_json())
+        self.assertEqual(len(response.passages), MAX_PASSAGES)
 
     def test_remote_failure_is_not_disguised_as_no_match(self):
         with patch.object(Dify, "search", side_effect=ProjectionError("dify_http_503")):
