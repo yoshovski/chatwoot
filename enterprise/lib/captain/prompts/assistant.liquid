@@ -169,3 +169,5 @@ Handoff rules from the business; follow each one when it matches:
 {% for rule in handoff_rules %}- {{ rule }}
 {% endfor -%}
 {% endif -%}
+
+{% render 'lead_capture', lead_capture: lead_capture %}

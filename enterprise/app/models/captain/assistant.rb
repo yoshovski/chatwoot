@@ -18,6 +18,8 @@
 #
 # rubocop:disable Metrics/ClassLength
 class Captain::Assistant < ApplicationRecord
+  include Captain::LeadSettings
+
   DESCRIPTION_LENGTH_LIMIT = 500
   OFF_LIMITS_MESSAGE_LENGTH_LIMIT = 500
   HANDOFF_MESSAGE_LENGTH_LIMIT = 500
@@ -371,7 +373,7 @@ class Captain::Assistant < ApplicationRecord
       response_guidelines: response_guidelines || [],
       guardrails: guardrails || [], handoff_rules: handoff_rules || []
     }
-    context.merge(business_prompt_context, Captain::Knowledge::BriefPrompt.new(self).context)
+    context.merge(business_prompt_context, Captain::Knowledge::BriefPrompt.new(self).context, lead_prompt_context)
   end
 
   def tone_instruction

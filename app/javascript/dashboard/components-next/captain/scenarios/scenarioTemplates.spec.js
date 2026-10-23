@@ -8,6 +8,7 @@ import {
 } from './scenarioTemplates';
 
 const sampleTools = [
+  { id: 'save_lead_details', title: 'Save business lead' },
   { id: 'faq_lookup', title: 'Search knowledge' },
   { id: 'catalog_product_search', title: 'Find products' },
   { id: 'track_order', title: 'Track an order' },

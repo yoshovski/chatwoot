@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref, onMounted } from 'vue';
+import { computed, ref, onMounted, nextTick } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRoute } from 'vue-router';
 import { picoSearch } from '@chatwoot/pico-search';
@@ -11,6 +11,7 @@ import Button from 'dashboard/components-next/button/Button.vue';
 import PageLayout from 'dashboard/components-next/captain/PageLayout.vue';
 import TestAgentButton from 'dashboard/components-next/captain/TestAgentButton.vue';
 import { getToolIdsFromInstruction } from 'dashboard/components-next/captain/scenarios/scenarioTools';
+import { getTemplateById } from 'dashboard/components-next/captain/scenarios/scenarioTemplates';
 import TemplateGallery from 'dashboard/components-next/captain/scenarios/TemplateGallery.vue';
 import ScenariosCard from 'dashboard/components-next/captain/assistant/ScenariosCard.vue';
 import BulkSelectBar from 'dashboard/components-next/captain/assistant/BulkSelectBar.vue';
@@ -183,12 +184,16 @@ const filteredScenarios = computed(() => {
   return picoSearch(source, query, ['title', 'description', 'instruction']);
 });
 
-onMounted(() => {
-  store.dispatch('captainScenarios/get', {
-    assistantId: assistantId.value,
-  });
-  store.dispatch('captainTools/getTools');
-  store.dispatch('captainAssistants/show', { id: assistantId.value });
+onMounted(async () => {
+  await Promise.all([
+    store.dispatch('captainScenarios/get', { assistantId: assistantId.value }),
+    store.dispatch('captainTools/getTools'),
+    store.dispatch('captainAssistants/show', { id: assistantId.value }),
+  ]);
+  if (route.query.template === 'capture_business_lead') {
+    await nextTick();
+    onUseTemplate(getTemplateById('capture_business_lead'));
+  }
 });
 </script>
 

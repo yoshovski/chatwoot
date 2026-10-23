@@ -57,6 +57,10 @@ class Integrations::App
   end
 
   def active?(account)
+    edition_available? && active_for_account?(account)
+  end
+
+  def active_for_account?(account)
     case params[:id]
     when 'slack'
       GlobalConfigService.load('SLACK_CLIENT_SECRET', nil).present?
@@ -128,6 +132,10 @@ class Integrations::App
   end
 
   private
+
+  def edition_available?
+    !params[:enterprise_only] || ChatwootApp.enterprise?
+  end
 
   def notion_enabled?(account)
     account.feature_enabled?('notion_integration') && GlobalConfigService.load('NOTION_CLIENT_ID', nil).present?

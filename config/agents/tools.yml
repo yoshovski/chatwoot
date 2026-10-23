@@ -65,3 +65,8 @@
   description: 'Checks order status with the order number and email'
   icon: 'checkmark'
   emoji: '📦'
+
+- id: save_lead_details
+  i18n_key: captain.leads.tool
+  icon: 'user-add'
+  emoji: '📋'

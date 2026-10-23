@@ -22,7 +22,7 @@ module Concerns::CaptainToolsHelpers
     # @param tool_id [String] The snake_case tool identifier
     # @return [Class, nil] The tool class if found, nil if not resolvable
     def resolve_tool_class(tool_id)
-      class_name = "Captain::Tools::#{tool_id.classify}Tool"
+      class_name = "Captain::Tools::#{tool_id.camelize}Tool"
       class_name.safe_constantize
     end
 
@@ -50,8 +50,8 @@ module Concerns::CaptainToolsHelpers
         if tool_class
           {
             id: tool_config['id'],
-            title: tool_config['title'],
-            description: tool_config['description'],
+            title: tool_config['i18n_key'] ? I18n.t("#{tool_config['i18n_key']}.title") : tool_config['title'],
+            description: tool_config['i18n_key'] ? I18n.t("#{tool_config['i18n_key']}.description") : tool_config['description'],
             icon: tool_config['icon'],
             emoji: tool_config['emoji']
           }

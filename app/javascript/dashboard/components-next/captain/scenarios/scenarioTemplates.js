@@ -130,6 +130,35 @@ const replyTimeQuestion = {
 
 export const SCENARIO_TEMPLATES = [
   {
+    id: 'capture_business_lead',
+    icon: 'i-lucide-contact',
+    color: 'iris',
+    requiredTools: [],
+    questions: [],
+    build(answers, tools) {
+      const saveLead = resolveToolLink(
+        'save_lead_details',
+        'Save business lead',
+        tools
+      );
+      return {
+        title: 'Capture a business lead',
+        description:
+          'Use when a customer expresses business interest in pricing, a demo, integration or partnership. Never for viewer or end-user support.',
+        instruction: buildInstruction(
+          'Only use this scenario when Leads is enabled for this agent. If disabled, answer normally without collecting lead details.',
+          [
+            'Answer the business question first using the knowledge sources.',
+            'Use the configured lead fields and lead type rules. Ask at most the configured number of optional qualification questions across the conversation, one at a time. Skip details already provided and respect refusals.',
+            'Then ask for name and email in a separate message, only if the customer wants follow-up. Never collect contact details from viewers or end-user support requests.',
+            `Save only customer-provided values, a matching configured type and a 1–3 sentence summary with ${saveLead}. Do not choose a sales owner or mark an email verified yourself.`,
+            'Continue answering. Do not hand off or promise a live agent, CRM sync or sales alert. If the save fails, explain that follow-up has not been confirmed.',
+          ]
+        ),
+      };
+    },
+  },
+  {
     id: 'request_a_quote',
     icon: 'i-lucide-receipt-text',
     color: 'amber',
