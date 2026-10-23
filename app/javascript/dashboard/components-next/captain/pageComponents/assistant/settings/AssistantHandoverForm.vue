@@ -9,6 +9,8 @@ import { useAdmin } from 'dashboard/composables/useAdmin';
 import { useStore, useMapGetter } from 'dashboard/composables/store';
 
 import Editor from 'dashboard/components-next/Editor/Editor.vue';
+import Input from 'dashboard/components-next/input/Input.vue';
+import Button from 'dashboard/components-next/button/Button.vue';
 import Select from 'dashboard/components-next/select/Select.vue';
 import SettingsCard from './SettingsCard.vue';
 import SettingsSwitchRow from './SettingsSwitchRow.vue';
@@ -103,6 +105,20 @@ const transfersOffline = computed(
 const keepsSometimes = computed(() =>
   [state.handoffWhenOnline, state.handoffWhenOffline].includes('keep')
 );
+
+// For teams that never answer in the inbox: the AI agent keeps every conversation and points to email.
+const supportEmail = ref('');
+const isValidSupportEmail = computed(() =>
+  /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(supportEmail.value.trim())
+);
+const sendToEmail = () => {
+  state.handoffWhenOnline = 'keep';
+  state.handoffWhenOffline = 'keep';
+  state.noHandoffMessage = t(
+    'CAPTAIN.ASSISTANTS.SETTINGS.HANDOVER.EMAIL_ONLY.MESSAGE',
+    { email: supportEmail.value.trim() }
+  );
+};
 
 const noneOption = computed(() => ({
   value: '',
@@ -216,6 +232,36 @@ watch(
 
 <template>
   <SettingsSplit>
+    <SettingsCard
+      :title="t('CAPTAIN.ASSISTANTS.SETTINGS.HANDOVER.EMAIL_ONLY.TITLE')"
+      :description="
+        t('CAPTAIN.ASSISTANTS.SETTINGS.HANDOVER.EMAIL_ONLY.DESC', { name })
+      "
+    >
+      <form
+        class="flex flex-col gap-2 pt-3 pb-1 sm:flex-row sm:items-start"
+        @submit.prevent="sendToEmail"
+      >
+        <Input
+          v-model="supportEmail"
+          type="email"
+          :placeholder="
+            t('CAPTAIN.ASSISTANTS.SETTINGS.HANDOVER.EMAIL_ONLY.PLACEHOLDER')
+          "
+          :aria-label="
+            t('CAPTAIN.ASSISTANTS.SETTINGS.HANDOVER.EMAIL_ONLY.PLACEHOLDER')
+          "
+          class="flex-1"
+        />
+        <Button
+          type="submit"
+          :label="t('CAPTAIN.ASSISTANTS.SETTINGS.HANDOVER.EMAIL_ONLY.APPLY')"
+          icon="i-lucide-mail"
+          :disabled="!isValidSupportEmail"
+        />
+      </form>
+    </SettingsCard>
+
     <SettingsCard
       :title="t('CAPTAIN.ASSISTANTS.SETTINGS.HANDOVER.WHEN.TITLE')"
       :description="

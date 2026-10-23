@@ -1159,6 +1159,13 @@
             "TRANSFER": "Transfer the conversation to your team",
             "KEEP": "Keep the conversation with {name}"
           },
+          "EMAIL_ONLY": {
+            "TITLE": "No live team? Send customers to email",
+            "DESC": "If nobody answers chats in your inbox, {name} keeps every conversation and tells customers to email you when they need a person. Review the message below, then save.",
+            "PLACEHOLDER": "support{'@'}yourbusiness.com",
+            "APPLY": "Use email instead",
+            "MESSAGE": "Our team doesn't answer live chat. For anything I can't help with, please email {email} and we'll get back to you."
+          },
           "OFFLINE_MESSAGE": {
             "LABEL": "What it says when handing over while your team is offline",
             "PLACEHOLDER": "Our team is offline right now. We'll reply here as soon as we're back."
