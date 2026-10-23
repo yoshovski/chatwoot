@@ -1,6 +1,7 @@
 <script setup>
 import { computed } from 'vue';
 import { useMessageFormatter } from 'shared/composables/useMessageFormatter';
+import MessageSources from 'shared/components/MessageSources.vue';
 import PlaygroundCards from './PlaygroundCards.vue';
 import PlaygroundForm from './PlaygroundForm.vue';
 import PlaygroundRunDetails from './PlaygroundRunDetails.vue';
@@ -59,6 +60,10 @@ const isSelected = option => props.message.selectedOption === option.title;
           :data-test="`playground-${part.content_type}`"
         >
           <div v-dompurify-html="formatMessage(part.content)" />
+          <MessageSources
+            :sources="part.content_attributes?.captain_sources || []"
+            :label="$t('CONVERSATION.CAPTAIN_SOURCES')"
+          />
         </div>
         <ul
           v-if="part.content_type === 'input_select'"

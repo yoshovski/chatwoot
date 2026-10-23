@@ -1042,16 +1042,26 @@
             "TITLE": "Answer length",
             "SHORT": {
               "LABEL": "Short",
-              "DESC": "A sentence or two and up to 3 steps; links the page for the rest"
+              "DESC": "One or two sentences"
             },
             "BALANCED": {
               "LABEL": "Balanced",
-              "DESC": "Steps, options and their links for how-to questions; short for simple facts"
+              "DESC": "Short for simple questions, a few steps for how-tos"
             },
             "DETAILED": {
               "LABEL": "Detailed",
-              "DESC": "Every step, prerequisite and option the sources give"
+              "DESC": "Every step and option, for complex products"
             }
+          },
+          "CUSTOM_PROMPT": {
+            "LABEL": "Custom",
+            "DESC": "Write your own instruction",
+            "SHOW": "See what the AI agent is told",
+            "EDIT": "Edit as custom",
+            "EDITOR": "Your instruction",
+            "HINT": "Write it as an instruction to the AI agent, for example: Use simple words and keep a calm, reassuring tone.",
+            "SAVE": "Save",
+            "CANCEL": "Cancel"
           },
           "TONE": {
             "TITLE": "Tone",
@@ -1064,12 +1074,16 @@
               "DESC": "Clear and businesslike"
             },
             "SHORT": {
-              "LABEL": "Short and direct",
-              "DESC": "Straight to the point"
+              "LABEL": "Direct",
+              "DESC": "Straight to the point, no pleasantries"
             }
           },
           "CARDS": {
             "TITLE": "Reply format",
+            "FOLLOW_UP": {
+              "TITLE": "Ask follow-up questions",
+              "NOTE": "Ends with one specific question when the answer depends on the customer's setup, like their platform or plan."
+            },
             "QUICK_REPLIES": {
               "TITLE": "Quick replies",
               "BUTTON_1": "Compare products",
@@ -1090,7 +1104,7 @@
             },
             "SOURCES": {
               "TITLE": "Show sources",
-              "PREVIEW_LINK": "→ Returns policy",
+              "PREVIEW_LINK": "Returns policy",
               "NOTE": "Adds links to up to 3 pages {name} used, under the reply."
             }
           },
@@ -1251,7 +1265,13 @@
             "PROFESSIONAL": "Yes, we ship to Germany. Delivery takes 3–5 business days.",
             "SHORT": "Yes, in 3–5 days."
           },
-          "HANDOFF_QUESTION": "I'd like to talk to a person, please."
+          "HANDOFF_QUESTION": "I'd like to talk to a person, please.",
+          "HOW_TO": {
+            "QUESTION": "How do I change my delivery address?",
+            "SHORT": "Open your account, go to Addresses and edit the delivery address.",
+            "BALANCED": "You can change it in your account.\n1. Sign in and open Account.\n2. Go to Addresses.\n3. Edit the delivery address and save.",
+            "DETAILED": "You can change it in your account before the order ships.\nYou need: your sign-in details.\n1. Sign in and open Account.\n2. Go to Addresses.\n3. Choose the address to change, or add a new one.\n4. Edit the details and save.\n5. Set it as default to use it for new orders."
+          }
         }
       },
       "OPTIONS": {
@@ -2392,8 +2412,9 @@
         "robots_disallowed": "Blocked by robots.txt",
         "managed_catalog": "Managed by product catalog",
         "not_found": "Page not found",
-        "unchecked": "Not checked"
+        "unchecked": "Not read yet"
       },
+      "UNCHECKED_HINT": "Listed on the site but not opened yet. Discovery reads it in a later round.",
       "PREVIEW_WORDS": "{count} words of knowledge after cleaning",
       "PREVIEW_THIN": "Too little text: the import will skip this page.",
       "SAVE_DURING_DISCOVERY": "You can save now. Pages found later wait for your selection.",

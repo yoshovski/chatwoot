@@ -2,6 +2,7 @@
 import { computed } from 'vue';
 import BaseBubble from './Base.vue';
 import FormattedContent from './Text/FormattedContent.vue';
+import MessageSources from 'shared/components/MessageSources.vue';
 import { useI18n } from 'vue-i18n';
 import { CONTENT_TYPES } from '../constants.js';
 import { useMessageContext } from '../provider.js';
@@ -36,6 +37,11 @@ const formValues = computed(() => {
 <template>
   <BaseBubble class="px-4 py-3" data-bubble-name="csat">
     <FormattedContent :content="content" />
+    <MessageSources
+      v-if="contentAttributes?.captainSources?.length"
+      :sources="contentAttributes.captainSources"
+      :label="$t('CONVERSATION.CAPTAIN_SOURCES')"
+    />
     <dl v-if="formValues.length" class="mt-4">
       <template v-for="item in formValues" :key="item.title">
         <dt class="text-n-slate-11 italic mt-2">

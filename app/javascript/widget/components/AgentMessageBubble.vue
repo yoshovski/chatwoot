@@ -7,6 +7,7 @@ import ChatArticle from './template/Article.vue';
 import EmailInput from './template/EmailInput.vue';
 import CustomerSatisfaction from 'shared/components/CustomerSatisfaction.vue';
 import IntegrationCard from './template/IntegrationCard.vue';
+import MessageSources from 'shared/components/MessageSources.vue';
 
 export default {
   name: 'AgentMessageBubble',
@@ -18,6 +19,7 @@ export default {
     EmailInput,
     CustomerSatisfaction,
     IntegrationCard,
+    MessageSources,
   },
   props: {
     message: { type: String, default: null },
@@ -64,6 +66,10 @@ export default {
     isCSAT() {
       return this.contentType === 'input_csat';
     },
+    // Pages an AI agent answer relied on, shown at the foot of its bubble.
+    sources() {
+      return this.messageContentAttributes?.captain_sources || [];
+    },
     isIntegrations() {
       return this.contentType === 'integrations';
     },
@@ -104,6 +110,7 @@ export default {
         v-dompurify-html="formatMessage(message, false)"
         class="message-content text-n-slate-12 [&>ul:not(:last-child)]:mb-4 [&>ol:not(:last-child)]:mb-4"
       />
+      <MessageSources :sources="sources" :label="$t('MESSAGE_SOURCES.LABEL')" />
       <EmailInput
         v-if="isTemplateEmail"
         :message-id="messageId"
@@ -124,7 +131,12 @@ export default {
         :agent-name="agentName"
         :show-agent-name="showAgentName"
         @option-select="onOptionSelect"
-      />
+      >
+        <MessageSources
+          :sources="sources"
+          :label="$t('MESSAGE_SOURCES.LABEL')"
+        />
+      </ChatOptions>
     </div>
     <ChatForm
       v-if="isForm && !messageContentAttributes.submitted_values"

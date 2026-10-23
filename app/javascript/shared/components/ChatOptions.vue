@@ -59,6 +59,7 @@ export default {
         v-dompurify-html="formatMessage(title, false)"
         class="message-content text-n-slate-12"
       />
+      <slot />
     </h4>
     <div v-if="showAgentName" class="agent-name !my-0 px-0.5 text-n-slate-11">
       {{ agentName }}

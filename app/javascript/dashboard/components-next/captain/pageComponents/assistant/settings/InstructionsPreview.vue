@@ -2,6 +2,7 @@
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useBusinessExamples } from 'dashboard/components-next/captain/assistant/useBusinessExamples';
+import MessageSources from 'shared/components/MessageSources.vue';
 import AssistantChatPreview from './AssistantChatPreview.vue';
 
 const props = defineProps({
@@ -20,6 +21,9 @@ const examples = useBusinessExamples(computed(() => props.assistant.id));
 
 const config = computed(() => props.assistant.config || {});
 const reply = computed(() => examples.reply(config.value.tone));
+const howToReply = computed(() =>
+  examples.howToReply(config.value.answer_length || 'balanced')
+);
 const quickReplies = computed(() =>
   config.value.suggested_replies
     ? examples.quickReplies.value.slice(
@@ -28,6 +32,12 @@ const quickReplies = computed(() =>
       )
     : []
 );
+const previewSources = computed(() => [
+  {
+    title: t('CAPTAIN.ASSISTANTS.SETTINGS.BEHAVIOR.CARDS.SOURCES.PREVIEW_LINK'),
+    url: 'https://example.com/help',
+  },
+]);
 const showProductCard = computed(
   () => props.showProductCards && config.value.product_cards
 );
@@ -44,14 +54,11 @@ const showProductCard = computed(
     <div class="flex flex-col self-start gap-2 max-w-[88%]">
       <p class="preview-bubble preview-bubble--agent !max-w-full">
         {{ reply }}
-        <span
+        <MessageSources
           v-if="config.feature_citation"
-          class="block mt-1.5 text-xs text-n-blue-11"
-        >
-          {{
-            t('CAPTAIN.ASSISTANTS.SETTINGS.BEHAVIOR.CARDS.SOURCES.PREVIEW_LINK')
-          }}
-        </span>
+          :sources="previewSources"
+          :label="t('CONVERSATION.CAPTAIN_SOURCES')"
+        />
       </p>
       <div
         v-if="showProductCard"
@@ -89,5 +96,11 @@ const showProductCard = computed(
         </span>
       </div>
     </div>
+    <p class="preview-bubble preview-bubble--customer">
+      {{ examples.howToQuestion.value }}
+    </p>
+    <p class="preview-bubble preview-bubble--agent whitespace-pre-line">
+      {{ howToReply }}
+    </p>
   </AssistantChatPreview>
 </template>

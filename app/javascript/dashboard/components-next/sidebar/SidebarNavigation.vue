@@ -88,7 +88,7 @@ watch(
     class="flex w-[3.75rem] shrink-0 flex-col items-center gap-3 border-e border-n-weak bg-n-background py-3"
   >
     <slot name="brand" />
-    <div class="flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto px-2">
+    <div class="flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto px-2 pt-1">
       <button
         v-for="item in mainModules"
         :key="item.name"
@@ -108,7 +108,7 @@ watch(
         <SidebarUnreadBadge
           v-if="item.badgeCount"
           :count="item.badgeCount"
-          class="absolute -end-1 -top-1"
+          class="absolute -end-0.5 -top-0.5 ring-2 ring-n-background"
         />
       </button>
     </div>

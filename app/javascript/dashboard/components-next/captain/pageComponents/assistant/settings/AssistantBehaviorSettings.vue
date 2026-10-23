@@ -2,7 +2,7 @@
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import Button from 'dashboard/components-next/button/Button.vue';
-import ChoiceCard from './ChoiceCard.vue';
+import PresetPromptEditor from './PresetPromptEditor.vue';
 import SettingsCard from './SettingsCard.vue';
 import SettingsSwitchRow from './SettingsSwitchRow.vue';
 
@@ -72,6 +72,7 @@ const answerLengthOptions = computed(() =>
   }))
 );
 const answerLength = computed(() => config.value.answer_length || 'balanced');
+const presets = computed(() => props.assistant.prompt_presets || {});
 
 const businessTypeLabel = type =>
   t(
@@ -108,6 +109,14 @@ const toggle = key =>
 const suggestedReplies = toggle('suggested_replies');
 const productCards = toggle('product_cards');
 const citations = toggle('feature_citation');
+// On unless turned off; only guide answers (not shops) end with a follow-up question.
+const followUpQuestions = computed({
+  get: () => config.value.follow_up_questions !== false,
+  set: value => update({ follow_up_questions: value }),
+});
+const showFollowUpQuestions = computed(
+  () => shownBusinessType.value !== 'commerce'
+);
 
 const changeMaxButtons = delta => {
   const next = Math.min(
@@ -191,53 +200,29 @@ const changeMaxButtons = delta => {
       </details>
     </section>
 
-    <section class="flex flex-col gap-3">
-      <h3 class="text-base font-semibold text-n-slate-12">
-        {{ t('CAPTAIN.ASSISTANTS.SETTINGS.BEHAVIOR.ANSWER_LENGTH.TITLE') }}
-      </h3>
-      <div
-        class="flex flex-col gap-2"
-        role="radiogroup"
-        :aria-label="
-          t('CAPTAIN.ASSISTANTS.SETTINGS.BEHAVIOR.ANSWER_LENGTH.TITLE')
-        "
-      >
-        <ChoiceCard
-          v-for="option in answerLengthOptions"
-          :key="option.id"
-          name="assistant-answer-length"
-          :value="option.id"
-          :icon="option.icon"
-          :label="option.label"
-          :description="option.description"
-          :is-active="answerLength === option.id"
-          @select="update({ answer_length: option.id })"
-        />
-      </div>
-    </section>
+    <PresetPromptEditor
+      name="assistant-answer-length"
+      :title="t('CAPTAIN.ASSISTANTS.SETTINGS.BEHAVIOR.ANSWER_LENGTH.TITLE')"
+      :options="answerLengthOptions"
+      :selected="answerLength"
+      :preset-texts="presets.answer_length"
+      :custom-text="config.answer_length_prompt || ''"
+      field="answer_length"
+      prompt-field="answer_length_prompt"
+      @update="update"
+    />
 
-    <section class="flex flex-col gap-3">
-      <h3 class="text-base font-semibold text-n-slate-12">
-        {{ t('CAPTAIN.ASSISTANTS.SETTINGS.BEHAVIOR.TONE.TITLE') }}
-      </h3>
-      <div
-        class="flex flex-col gap-2"
-        role="radiogroup"
-        :aria-label="t('CAPTAIN.ASSISTANTS.SETTINGS.BEHAVIOR.TONE.TITLE')"
-      >
-        <ChoiceCard
-          v-for="option in toneOptions"
-          :key="option.id"
-          name="assistant-tone"
-          :value="option.id"
-          :icon="option.icon"
-          :label="option.label"
-          :description="option.description"
-          :is-active="config.tone === option.id"
-          @select="update({ tone: option.id })"
-        />
-      </div>
-    </section>
+    <PresetPromptEditor
+      name="assistant-tone"
+      :title="t('CAPTAIN.ASSISTANTS.SETTINGS.BEHAVIOR.TONE.TITLE')"
+      :options="toneOptions"
+      :selected="config.tone || ''"
+      :preset-texts="presets.tone"
+      :custom-text="config.tone_prompt || ''"
+      field="tone"
+      prompt-field="tone_prompt"
+      @update="update"
+    />
 
     <section class="flex flex-col gap-3">
       <h3 class="text-base font-semibold text-n-slate-12">
@@ -304,6 +289,16 @@ const changeMaxButtons = delta => {
             t('CAPTAIN.ASSISTANTS.SETTINGS.BEHAVIOR.CARDS.SOURCES.NOTE', {
               name: assistant.name,
             })
+          "
+        />
+        <SettingsSwitchRow
+          v-if="showFollowUpQuestions"
+          v-model="followUpQuestions"
+          :title="
+            t('CAPTAIN.ASSISTANTS.SETTINGS.BEHAVIOR.CARDS.FOLLOW_UP.TITLE')
+          "
+          :description="
+            t('CAPTAIN.ASSISTANTS.SETTINGS.BEHAVIOR.CARDS.FOLLOW_UP.NOTE')
           "
         />
         <SettingsSwitchRow

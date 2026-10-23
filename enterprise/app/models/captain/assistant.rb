@@ -49,8 +49,30 @@ class Captain::Assistant < ApplicationRecord
   # Customers of these businesses mostly ask how to do something, which reads best as short numbered steps.
   # Shops answer in one or two sentences and show details on product cards; everyone else gets steps, lists and links.
   COMPACT_BUSINESS_TYPES = %w[commerce].freeze
-  # How much a reply may say; balanced when unset.
-  ANSWER_LENGTHS = %w[short balanced detailed].freeze
+  # How much a reply may say; balanced when unset. Custom uses the user's own answer_length_prompt.
+  ANSWER_LENGTHS = %w[short balanced detailed custom].freeze
+  # The length rule of the reply prompt, per answer format. Shown in settings so users can start a custom one from it.
+  ANSWER_LENGTH_INSTRUCTIONS = {
+    'guide' => {
+      'short' => 'Open with the answer in one or two sentences and keep replies under about 80 words; ' \
+                 'add detail only when it changes what the customer does.',
+      'balanced' => 'Open with a one-sentence answer. Simple facts stay one or two sentences. For how-to, setup and overview ' \
+                    'questions, give a short intro, then the steps or options with their links, then one closing line for ' \
+                    'what to do next if the sources say it. Keep replies under about 250 words.',
+      'detailed' => 'Open with a one-sentence answer. Simple facts stay one or two sentences. For how-to, setup and overview ' \
+                    'questions, give everything the sources say the customer needs: prerequisites, each step, the options ' \
+                    'and their limits. Keep replies under about 400 words.'
+    },
+    'compact' => {
+      'short' => 'Keep replies to one short sentence (about 25 words) unless the customer asks for details or steps. ' \
+                 'Product details belong in product cards, not in the text.',
+      'balanced' => 'Keep replies to one or two short sentences (about 40 words) unless the customer asks for details or steps. ' \
+                    'Product details belong in product cards, not in the text.',
+      'detailed' => 'Keep replies to two to four short sentences (about 80 words) unless the customer asks for more. ' \
+                    'Product details belong in product cards, not in the text.'
+    }
+  }.freeze
+  CUSTOM_PROMPT_LENGTH_LIMIT = 1000
 
   include Avatarable
   include Concerns::CaptainToolsHelpers
@@ -87,7 +109,7 @@ class Captain::Assistant < ApplicationRecord
                  :reply_labels, :reply_label_keywords, :outcome_labels,
                  :handoff_fallback_agent_id, :handoff_fallback_team_id, :tone, :off_limits_message, :business_type,
                  :handoff_when_online, :handoff_when_offline, :offline_handoff_message, :no_handoff_message, :handoff_rules,
-                 :answer_length
+                 :answer_length, :tone_prompt, :answer_length_prompt, :follow_up_questions
 
   BOOLEAN_CONFIG_KEYS = %w[
     feature_faq
@@ -101,6 +123,7 @@ class Captain::Assistant < ApplicationRecord
     handoff_safety_net
     reply_labels
     outcome_labels
+    follow_up_questions
   ].freeze
 
   before_validation :set_default_auto_resolve_mode, on: :create
@@ -127,7 +150,10 @@ class Captain::Assistant < ApplicationRecord
               less_than_or_equal_to: MAXIMUM_INACTIVITY_THRESHOLD_MINUTES
             },
             allow_nil: true
-  validates :tone, inclusion: { in: TONE_INSTRUCTIONS.keys }, allow_blank: true
+  validates :tone, inclusion: { in: [*TONE_INSTRUCTIONS.keys, 'custom'] }, allow_blank: true
+  validates :tone_prompt, presence: true, if: -> { tone == 'custom' }
+  validates :answer_length_prompt, presence: true, if: -> { answer_length == 'custom' }
+  validates :tone_prompt, :answer_length_prompt, length: { maximum: CUSTOM_PROMPT_LENGTH_LIMIT }
   validates :business_type, inclusion: { in: BUSINESS_TYPES }, allow_blank: true
   validates :answer_length, inclusion: { in: ANSWER_LENGTHS }, allow_blank: true
   validates :off_limits_message, length: { maximum: OFF_LIMITS_MESSAGE_LENGTH_LIMIT }
@@ -337,7 +363,7 @@ class Captain::Assistant < ApplicationRecord
           description: scenario.description
         }
       end,
-      tone_instruction: TONE_INSTRUCTIONS[tone],
+      tone_instruction: tone_instruction,
       off_limits_message: off_limits_message.presence,
       response_guidelines: response_guidelines || [],
       guardrails: guardrails || [], handoff_rules: handoff_rules || []
@@ -345,11 +371,22 @@ class Captain::Assistant < ApplicationRecord
     context.merge(business_prompt_context, Captain::Knowledge::BriefPrompt.new(self).context)
   end
 
+  def tone_instruction
+    tone == 'custom' ? tone_prompt : TONE_INSTRUCTIONS[tone]
+  end
+
   # The business add-on and answer shape of the reply prompt.
   def business_prompt_context
     type = effective_business_type
-    { business_type: type, answer_format: COMPACT_BUSINESS_TYPES.include?(type) ? 'compact' : 'guide',
-      answer_length: answer_length.presence || 'balanced' }
+    format = answer_format
+    length = answer_length.presence || 'balanced'
+    { business_type: type, answer_format: format, answer_length: length,
+      answer_length_instruction: length == 'custom' ? answer_length_prompt : ANSWER_LENGTH_INSTRUCTIONS[format][length],
+      follow_up_questions: follow_up_questions? }
+  end
+
+  def answer_format
+    COMPACT_BUSINESS_TYPES.include?(effective_business_type) ? 'compact' : 'guide'
   end
 
   # The type the user chose, else the one detected from their knowledge, else a connected store makes it commerce.
@@ -375,6 +412,11 @@ class Captain::Assistant < ApplicationRecord
     return false if config.blank?
 
     ActiveModel::Type::Boolean.new.cast(config['continue_while_waiting']) == true
+  end
+
+  # On unless turned off: a targeted question about the customer's setup or next step.
+  def follow_up_questions?
+    config['follow_up_questions'] != false
   end
 
   def suggested_replies?

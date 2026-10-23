@@ -8,6 +8,8 @@ RSpec.describe Captain::Knowledge::ExamplesGenerator do
     {
       'question' => 'Do you repair e-bikes?',
       'replies' => { 'friendly' => 'Happy to help!', 'professional' => 'Certainly.', 'short' => 'Yes.' },
+      'how_to' => { 'question' => 'How do I book a repair?', 'short' => 'Book it online.',
+                    'balanced' => "Book it online.\n1. Pick a time.\n2. Confirm.", 'detailed' => "Book it online.\n1. Pick a shop.\n2. Pick a time.\n3. Confirm." },
       'quick_replies' => ['Book a repair', 'Opening hours', 'Talk to someone', 'Service prices', 'E-bike batteries'],
       'off_limits_question' => 'Which stock should I buy?',
       'guardrails' => ['No medical advice.', 'No payment details.', 'No competitor comparisons.'],
@@ -36,6 +38,12 @@ RSpec.describe Captain::Knowledge::ExamplesGenerator do
     described_class.new(brief).perform
 
     expect(Captain::Assistant::TieredLlmClient).not_to have_received(:generate)
+  end
+
+  it 'rejects a how-to example missing an answer length' do
+    output['how_to'].delete('detailed')
+
+    expect(described_class.valid_output?(output)).to be(false)
   end
 
   it 'rejects fewer quick replies than the preview can show' do

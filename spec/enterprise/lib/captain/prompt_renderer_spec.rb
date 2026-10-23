@@ -102,7 +102,7 @@ RSpec.describe Captain::PromptRenderer do
       result = described_class.render(template_name, {})
 
       expect(result).to include('citation_indexes', 'numeric source index')
-      expect(result).to include('Never include a source URL, citation index, or bracketed numbers like `[1]` in response text')
+      expect(result).to include('Never write a bare source URL, a citation index, or bracketed numbers like `[1]` in response text')
       expect(result).not_to include('[[faq:')
     end
 

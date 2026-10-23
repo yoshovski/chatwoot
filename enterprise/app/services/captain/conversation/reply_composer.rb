@@ -50,11 +50,28 @@ class Captain::Conversation::ReplyComposer
   end
 
   def answer_message(content, response_parts, buttons)
-    {
-      content: content,
-      content_type: 'text',
-      additional_attributes: answer_attributes(response_parts)
-    }.merge(buttons)
+    message = { content: content, content_type: 'text', additional_attributes: answer_attributes(response_parts) }.merge(buttons)
+    return message if structured_sources.empty?
+
+    message.merge(content_attributes: message.fetch(:content_attributes, {})
+                                             .merge(Captain::Assistant::ResponseParts::SOURCES_ATTRIBUTE_KEY => structured_sources))
+  end
+
+  def sources_format
+    @sources_format ||= Captain::Assistant::ResponseParts.sources_format(conversation)
+  end
+
+  def citation_urls
+    @citation_urls ||= cards_builder.filter_citation_urls(assistant.trusted_citation_urls(run_result))
+  end
+
+  # Shown under the bubble by the widget and playground; text channels already carry them in the content.
+  def structured_sources
+    return [] unless sources_format == :structured
+
+    @structured_sources ||= Captain::Assistant::ResponseParts.from_response(response).sources(
+      citation_urls: citation_urls, citation_titles: assistant.citation_titles(run_result)
+    )
   end
 
   def question_message(question, buttons)
@@ -76,14 +93,11 @@ class Captain::Conversation::ReplyComposer
   end
 
   def formatted_prose
-    @formatted_prose ||= begin
-      citation_urls = cards_builder.filter_citation_urls(assistant.trusted_citation_urls(run_result))
-      cards_builder.clean_prose_content(
-        Captain::Assistant::ResponseParts.from_response(response).customer_message_content(
-          citation_urls: citation_urls, citation_titles: assistant.citation_titles(run_result)
-        )
+    @formatted_prose ||= cards_builder.clean_prose_content(
+      Captain::Assistant::ResponseParts.from_response(response).customer_message_content(
+        citation_urls: citation_urls, citation_titles: assistant.citation_titles(run_result), sources_format: sources_format
       )
-    end
+    )
   end
 
   def cards_builder

@@ -489,12 +489,15 @@ RSpec.describe Captain::Assistant::AgentRunnerService do
         allow(assistant).to receive(:config).and_return('feature_citation' => true)
         allow(assistant).to receive(:customer_visible_citation_urls).and_return(channel_limit_rewrite[:citation_urls])
         allow(Captain::MessageLengthLimit).to receive(:for).with(conversation).and_return(140)
+        # Text channels (SMS, WhatsApp) carry the sources in the message, so they count toward the limit.
+        allow(Captain::Assistant::ResponseParts).to receive(:sources_format).and_return(:plain)
         allow(mock_runner).to receive(:run).and_return(mock_result, channel_limit_rewrite[:rewrite_run_result])
       end
 
       it 'reserves space for rendered citations and restores their original indexes' do
         original_response_parts = Captain::Assistant::ResponseParts.from_response(mock_result.output)
-        original_customer_message = original_response_parts.customer_message_content(citation_urls: channel_limit_rewrite[:citation_urls])
+        original_customer_message = original_response_parts.customer_message_content(citation_urls: channel_limit_rewrite[:citation_urls],
+                                                                                   sources_format: :plain)
         citation_markup_length = original_customer_message.length - original_response_parts.plain_text.length
         response_text_limit = 140 - citation_markup_length
 
@@ -512,7 +515,7 @@ RSpec.describe Captain::Assistant::AgentRunnerService do
         expect(channel_limit_rewrite[:runner_context][:conversation_history].last[:content]['response_parts']).to eq(result['response_parts'])
         expect(
           Captain::Assistant::ResponseParts.from_response(result).customer_message_content(
-            citation_urls: channel_limit_rewrite[:citation_urls]
+            citation_urls: channel_limit_rewrite[:citation_urls], sources_format: :plain
           ).length
         ).to be <= 140
         expect(mock_runner).to have_received(:run).with(
