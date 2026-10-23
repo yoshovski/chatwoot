@@ -2066,7 +2066,7 @@
         "NAME_PLACEHOLDER": "Billing system",
         "URL": "Server URL",
         "URL_PLACEHOLDER": "https://mcp.example.com/mcp",
-        "URL_HINT": "A public HTTPS address of a server that supports MCP over HTTP.",
+        "URL_HINT": "Public HTTPS, MCP over HTTP",
         "AUTH": "Authentication",
         "AUTH_TYPES": {
           "NONE": "None",
