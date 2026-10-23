@@ -123,7 +123,7 @@ RSpec.describe Captain::Tools::FaqLookupTool, type: :model do
         end
       end
 
-      it 'keeps stable source indexes across lookups and records customer-visible links' do
+      it 'keeps stable source indexes across lookups and supplies exact customer-visible links' do
         document.update!(external_link: 'https://help.example.com/password')
 
         result = tool.perform(tool_context, query: 'password')
@@ -131,7 +131,7 @@ RSpec.describe Captain::Tools::FaqLookupTool, type: :model do
 
         expect(result).to include('Source index: 1', 'Source index: 2')
         expect(repeated_result).to include('Source index: 1')
-        expect(result).not_to include('https://help.example.com/password')
+        expect(result).to include('Source URL: https://help.example.com/password')
         expect(tool_context.state[Captain::Assistant::CITATION_SOURCES_STATE_KEY]).to eq(1 => "faq:#{response1.id}", 2 => "faq:#{response2.id}")
         expect(tool_context.state[Captain::Assistant::CITATION_DETAILS_STATE_KEY]["faq:#{response1.id}"][:url]).to eq('https://help.example.com/password')
       end

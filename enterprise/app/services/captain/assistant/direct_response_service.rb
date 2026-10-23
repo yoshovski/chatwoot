@@ -45,7 +45,7 @@ class Captain::Assistant::DirectResponseService
   def generate(message, context, knowledge)
     chat = generation_chat(context, knowledge)
     response = Captain::Assistant::TieredLlmClient.generate('knowledge_answer', @assistant, chat, message)
-    [parse_output(response.content, context), response]
+    [parse_output(response.content, context, knowledge), response]
   end
 
   def generation_chat(context, knowledge)
@@ -58,12 +58,19 @@ class Captain::Assistant::DirectResponseService
     chat
   end
 
-  def parse_output(content, context)
+  def parse_output(content, context, knowledge)
     output = content.is_a?(Hash) ? content : JSON.parse(content)
     raise TypeError, 'Captain direct response returned invalid structured output' unless output.is_a?(Hash)
 
     indexes = context.dig(:state, Captain::Assistant::CITATION_SOURCES_STATE_KEY).to_h.keys
-    output.fetch('response_parts').each { |part| part['citation_indexes'] = Array(part['citation_indexes']) & indexes }
+    links = knowledge.scan(Captain::Conversation::ReplySanitizer::MARKDOWN_LINK_REGEX).map(&:last)
+    sanitizer = Captain::Conversation::ReplySanitizer.new(
+      assistant: @assistant, evidence_urls: links + knowledge.scan(Captain::Conversation::ReplySanitizer::BARE_URL_REGEX)
+    )
+    output.fetch('response_parts').each do |part|
+      part['citation_indexes'] = Array(part['citation_indexes']) & indexes
+      part['text'] = sanitizer.sanitize_prose(part['text'])
+    end
     output
   end
 

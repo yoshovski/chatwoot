@@ -4,6 +4,9 @@ class Captain::Websites::PageBuckets
   THIN_WORDS = 60
   # Page flags from discovery and verification, and the exclusion reason each one gives.
   FLAGS = { 'missing' => 'not_found', 'not_html' => 'not_html', 'noindex' => 'noindex', 'login' => 'login', 'listing' => 'listing' }.freeze
+  # Explicit status labels, rather than a migration guide mentioning an older, deprecated API.
+  DEPRECATED_TITLE = /\[(?:deprecated|obsolete|retired)\]|\((?:deprecated|obsolete|retired)\)|
+                     \A(?:deprecated|obsolete|retired)\b|\bno\ longer\ supported\z/xi
 
   def initialize(source)
     @source = source
@@ -35,7 +38,8 @@ class Captain::Websites::PageBuckets
   def label_for(page) = @page_labels[page['url']] || @labels[page['section']]
 
   def content_reason(page)
-    page['import_issue'] || FLAGS.find { |key, _| page[key] }&.last || measured_reason(page)
+    page['import_issue'] || ('deprecated' if page['title'].to_s.match?(DEPRECATED_TITLE)) ||
+      FLAGS.find { |key, _| page[key] }&.last || measured_reason(page)
   end
 
   def measured_reason(page)

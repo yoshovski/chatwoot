@@ -38,7 +38,7 @@ class Captain::Websites::PageSignals
     link_words = markdown.scan(LINK).sum { |(label)| label.split.size }
     {
       'words' => words,
-      'login' => @doc.at_css('input[type="password"]').present? && words < 300,
+      'login' => @parser.login_form? && words < 300,
       # Index pages are mostly links: category, section and archive listings.
       'listing' => words.between?(1, 600) && link_words.fdiv(words) > 0.6,
       'fingerprint' => (Digest::SHA256.hexdigest(text.gsub(/\s+/, ' ').strip).first(16) if words.positive?),

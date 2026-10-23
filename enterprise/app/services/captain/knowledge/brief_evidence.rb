@@ -33,6 +33,7 @@ class Captain::Knowledge::BriefEvidence
       document = documents.fetch(id)
       source_index_for(tool_context, "doc:#{id}", { kind: 'document', title: document.name, document_id: id, excerpt: source_excerpt(text) })
     end
-    "\nApproved summary:\nTitle: #{summary.fetch('title')}\nSource indexes: #{indexes.join(', ')}\n#{text}\n"
+    urls = summary.fetch('document_ids').filter_map { |id| documents.fetch(id).customer_visible_source_url }
+    "\nApproved summary:\nTitle: #{summary.fetch('title')}\nSource indexes: #{indexes.join(', ')}\nSource URLs: #{urls.join(', ')}\n#{text}\n"
   end
 end

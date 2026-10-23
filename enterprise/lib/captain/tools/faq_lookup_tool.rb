@@ -159,7 +159,7 @@ class Captain::Tools::FaqLookupTool < Captain::Tools::BasePublicTool
 
   def format_passage(tool_context, passage)
     index = source_index_for(tool_context, passage.source_reference, {})
-    "\nKnowledge result:\nSource index: #{index}\nTitle: #{passage.title}\n#{passage.content}\n"
+    "\nKnowledge result:\nSource index: #{index}\nTitle: #{passage.title}\nSource URL: #{passage.source_url}\n#{passage.content}\n"
   end
 
   def passage_source_detail(passage, query)
@@ -217,6 +217,7 @@ class Captain::Tools::FaqLookupTool < Captain::Tools::BasePublicTool
     "
         Knowledge result:
         Source index: #{index}
+        Source URL: #{response.customer_visible_source_url}
         Question: #{response.question}
         Answer: #{response.answer}
         "

@@ -75,7 +75,11 @@ const select = id => {
 <template>
   <section class="flex flex-col gap-3">
     <h3 class="text-base font-semibold text-n-slate-12">{{ title }}</h3>
-    <div class="flex flex-col gap-2" role="radiogroup" :aria-label="title">
+    <div
+      class="grid gap-2 sm:grid-cols-2"
+      role="radiogroup"
+      :aria-label="title"
+    >
       <ChoiceCard
         v-for="option in [...options, customOption]"
         :key="option.id"
@@ -85,7 +89,9 @@ const select = id => {
         :label="option.label"
         :description="option.description"
         :is-active="
-          option.id === CUSTOM ? isCustom || editing : selected === option.id
+          option.id === CUSTOM
+            ? isCustom || editing
+            : !editing && selected === option.id
         "
         @select="select(option.id)"
       />
@@ -124,21 +130,26 @@ const select = id => {
         />
       </div>
     </div>
-    <details v-else-if="shownText" class="text-sm text-n-slate-11">
-      <summary
-        class="font-medium cursor-pointer text-n-slate-12 marker:text-n-slate-10"
-      >
-        {{ t('CAPTAIN.ASSISTANTS.SETTINGS.BEHAVIOR.CUSTOM_PROMPT.SHOW') }}
-      </summary>
-      <p class="mt-2 mb-1 leading-relaxed whitespace-pre-line">
+    <div
+      v-else-if="shownText"
+      class="flex flex-col gap-2 p-3 rounded-xl bg-n-alpha-1 text-sm text-n-slate-11"
+    >
+      <div class="flex items-center justify-between gap-3">
+        <span class="text-xs font-medium text-n-slate-12">
+          {{ t('CAPTAIN.ASSISTANTS.SETTINGS.BEHAVIOR.CUSTOM_PROMPT.SHOW') }}
+        </span>
+        <Button
+          :label="t('CAPTAIN.ASSISTANTS.SETTINGS.BEHAVIOR.CUSTOM_PROMPT.EDIT')"
+          icon="i-lucide-pencil-line"
+          size="xs"
+          variant="ghost"
+          color="slate"
+          @click="startEditing"
+        />
+      </div>
+      <p class="m-0 leading-relaxed whitespace-pre-line">
         {{ shownText }}
       </p>
-      <Button
-        :label="t('CAPTAIN.ASSISTANTS.SETTINGS.BEHAVIOR.CUSTOM_PROMPT.EDIT')"
-        size="xs"
-        variant="link"
-        @click="startEditing"
-      />
-    </details>
+    </div>
   </section>
 </template>

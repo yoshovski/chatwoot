@@ -16,7 +16,7 @@ class Captain::ResponseSchema < RubyLLM::Schema
         description: 'Ordered parts of the message to send to the user. Keep all customer-visible text within each part text field.',
         min_items: 1 do
     object do
-      string :text, description: 'Customer-visible response text without citation markers or source URLs.', min_length: 1
+      string :text, description: 'Customer-visible text without citation markers. Inline links must copy exact URLs from tool results.', min_length: 1
       array :citation_indexes,
             description: 'Source indexes of the tool results this text relies on. Use an empty array when none apply.' do
         integer minimum: 1
@@ -45,7 +45,8 @@ class Captain::ResponseSchema < RubyLLM::Schema
             description: 'Ordered parts of the message to send to the user. Keep all customer-visible text within each part text field.',
             min_items: 1 do
         object do
-          string :text, description: 'Customer-visible response text without citation markers or source URLs.', min_length: 1
+          string :text, min_length: 1,
+                        description: 'Customer-visible text without citation markers. Inline links must copy exact URLs from tool results.'
           array :citation_indexes,
                 description: 'Source indexes of the tool results this text relies on. Use an empty array when none apply.' do
             integer minimum: 1

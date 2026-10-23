@@ -1,9 +1,10 @@
 class Captain::Websites::SelectionService
   class InvalidSelection < StandardError; end
 
-  def initialize(source)
+  def initialize(source, resume_existing: true)
     @source = source
     @assistant = source.assistant
+    @resume_existing = resume_existing
   end
 
   def perform(urls)
@@ -40,6 +41,7 @@ class Captain::Websites::SelectionService
       return
     end
     return if document.metadata.to_h['website_source_id'].blank?
+    return if !@resume_existing && !document.enabled?
 
     document.update!(enabled: true) unless document.enabled?
     Captain::Websites::ImportPageJob.set(wait: wait).perform_later(document.id) if document.content.blank?

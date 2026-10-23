@@ -1056,8 +1056,8 @@
           "CUSTOM_PROMPT": {
             "LABEL": "Custom",
             "DESC": "Write your own instruction",
-            "SHOW": "See what the AI agent is told",
-            "EDIT": "Edit as custom",
+            "SHOW": "Instruction",
+            "EDIT": "Customize",
             "EDITOR": "Your instruction",
             "HINT": "Write it as an instruction to the AI agent, for example: Use simple words and keep a calm, reassuring tone.",
             "SAVE": "Save",
@@ -1257,6 +1257,11 @@
         "PREVIEW": {
           "LABEL": "Customer preview · example",
           "AI_AGENT": "AI agent",
+          "EXAMPLE_TYPE": "Preview example",
+          "EXAMPLE_TYPES": {
+            "simple": "Simple question",
+            "howTo": "How-to"
+          },
           "COMPOSER": "Type a message…",
           "QUESTION": "Do you ship to Germany?",
           "OFF_TOPIC_QUESTION": "Can you help me with my tax return?",
@@ -2399,6 +2404,7 @@
       },
       "REASONS": {
         "technical_host": "Technical site",
+        "deprecated": "Deprecated documentation",
         "query": "Filtered URL",
         "utility": "Account or utility page",
         "listing": "List of links",
@@ -2443,10 +2449,10 @@
         "ENABLED": "On. The AI agent uses this profile.",
         "SOURCES_CHANGED": "On. Some sources changed since you published; review the updated draft below and publish it.",
         "UNAVAILABLE": "Paused: a source was deleted, disabled or made private. Generate and publish a new draft.",
-        "FAILED": "The last update could not be written. Nothing you saved has changed; try again later."
+        "FAILED": "Topics could not be refreshed. Your saved text is unchanged. Choose Refresh topics to try again."
       },
       "GENERATE": "Generate from knowledge",
-      "REGENERATE": "Generate again",
+      "REGENERATE": "Refresh topics",
       "CHOOSE_SOURCES": "Pick sources by hand",
       "SOURCES_HELP": "{count} of up to {max} sources selected. Pick pages that explain what the business does, its products, pricing and policies. Pages still being indexed are skipped.",
       "GENERATE_SELECTED": "Generate from selected sources",
