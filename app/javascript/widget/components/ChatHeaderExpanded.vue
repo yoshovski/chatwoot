@@ -2,6 +2,7 @@
 import HeaderActions from './HeaderActions.vue';
 import { computed } from 'vue';
 import { useMessageFormatter } from 'shared/composables/useMessageFormatter';
+import { useMapGetter } from 'dashboard/composables/store.js';
 
 const props = defineProps({
   avatarUrl: {
@@ -23,6 +24,8 @@ const props = defineProps({
 });
 
 const { formatMessage } = useMessageFormatter();
+const widgetColor = useMapGetter('appConfig/getWidgetColor');
+const widgetTextColor = useMapGetter('appConfig/getWidgetTextColor');
 
 const containerClasses = computed(() => [
   props.avatarUrl ? 'justify-between' : 'justify-end',
@@ -30,13 +33,15 @@ const containerClasses = computed(() => [
 </script>
 
 <template>
+  <!-- Brand-coloured welcome area; the home card overlaps its lower edge. -->
   <header
-    class="header-expanded pt-6 pb-4 px-5 relative box-border w-full bg-transparent"
+    class="header-expanded relative box-border w-full px-5 pt-6 pb-16 [&_.actions_svg]:!text-current"
+    :style="{ backgroundColor: widgetColor, color: widgetTextColor }"
   >
     <div class="flex items-start" :class="containerClasses">
       <img
         v-if="avatarUrl"
-        class="h-12 rounded-full"
+        class="object-cover size-12 rounded-xl bg-white"
         :src="avatarUrl"
         alt="Avatar"
       />
@@ -47,11 +52,11 @@ const containerClasses = computed(() => [
     </div>
     <h2
       v-dompurify-html="introHeading"
-      class="mt-4 text-2xl mb-1.5 font-medium text-n-slate-12 line-clamp-4"
+      class="mt-12 mb-2 text-3xl font-semibold leading-tight line-clamp-4"
     />
     <p
       v-dompurify-html="formatMessage(introBody)"
-      class="text-lg leading-normal text-n-slate-11 [&_a]:underline line-clamp-6"
+      class="text-lg leading-normal opacity-90 [&_a]:underline line-clamp-6"
     />
   </header>
 </template>

@@ -145,6 +145,11 @@
 
     .chat-bubble {
       @apply border border-solid border-n-slate-5 dark:border-n-slate-11/50 text-n-black;
+
+      // Agent replies sit on a white chat area as a soft grey bubble, without an outline.
+      &.agent {
+        @apply border-transparent dark:border-transparent;
+      }
     }
 
     + .chat-bubble-wrap {

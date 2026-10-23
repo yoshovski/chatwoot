@@ -25,6 +25,12 @@ export default {
       conversationSize: 'conversation/getConversationSize',
       unreadMessageCount: 'conversation/getUnreadMessageCount',
     }),
+    // Matches ViewWithHeader: the branded welcome header shows only with intro text.
+    hasWelcomeHeader() {
+      return !!(
+        this.channelConfig.welcomeTitle || this.channelConfig.welcomeTagline
+      );
+    },
     conversationStarters() {
       return window.chatwootWebChannel.conversationStarters || [];
     },
@@ -58,16 +64,17 @@ export default {
 </script>
 
 <template>
-  <div class="z-50 flex flex-col justify-end flex-1 w-full p-4 gap-4">
-    <ConversationStarters
-      :starters="conversationStarters"
-      @select="startConversation"
-    />
+  <div class="z-50 flex flex-col flex-1 w-full gap-4 p-4">
     <TeamAvailability
+      :class="{ '-mt-14': hasWelcomeHeader }"
       :available-agents="availableAgents"
       :has-conversation="!!conversationSize"
       :unread-count="unreadMessageCount"
       @start-conversation="startConversation"
+    />
+    <ConversationStarters
+      :starters="conversationStarters"
+      @select="startConversation"
     />
 
     <ArticleContainer />

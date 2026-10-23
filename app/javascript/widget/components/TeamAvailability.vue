@@ -27,24 +27,31 @@ const startConversation = () => {
 </script>
 
 <template>
-  <div
-    class="flex flex-col gap-3 w-full shadow outline-1 outline outline-n-container rounded-xl bg-n-background dark:bg-n-solid-2 px-5 py-4"
+  <button
+    type="button"
+    class="relative flex items-center justify-between w-full gap-4 px-5 py-4 transition-shadow shadow-sm text-start rounded-xl bg-n-solid-1 dark:bg-n-solid-2 outline outline-1 outline-n-weak hover:shadow-md focus-visible:outline-2 focus-visible:outline-n-slate-8"
+    @click="startConversation"
   >
-    <AvailabilityContainer :agents="availableAgents" show-header show-avatars />
-
-    <button
-      class="inline-flex self-start items-center gap-1 px-3 py-2 font-medium rounded-lg shadow-sm outline outline-1 outline-n-container transition-[filter,box-shadow] hover:brightness-95 hover:shadow focus-visible:outline-2 focus-visible:outline-n-slate-8"
-      :style="{ backgroundColor: widgetColor, color: widgetTextColor }"
-      @click="startConversation"
-    >
-      <span>
+    <div class="flex flex-col min-w-0 gap-1">
+      <span class="text-base font-medium text-n-slate-12">
         {{
           hasConversation
             ? $t('CONTINUE_CONVERSATION')
             : $t('START_CONVERSATION')
         }}
       </span>
-      <i class="i-lucide-chevron-right size-5 mt-px rtl:rotate-180" />
-    </button>
-  </div>
+      <AvailabilityContainer
+        :agents="availableAgents"
+        :show-header="false"
+        :show-avatars="false"
+        text-classes="text-sm"
+      />
+    </div>
+    <span
+      class="flex items-center justify-center rounded-full shrink-0 size-10"
+      :style="{ backgroundColor: widgetColor, color: widgetTextColor }"
+    >
+      <i class="i-lucide-send-horizontal size-5 rtl:rotate-180" />
+    </span>
+  </button>
 </template>
