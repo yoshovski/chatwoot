@@ -3,8 +3,11 @@
 class Captain::Conversation::ReplySanitizer
   MARKDOWN_LINK_REGEX = /\[([^\]]+)\]\(([^\)\s]+)(?:\s+["'][^"']*["'])?\)/
   AUTOLINK_REGEX = %r{<(https?://[^>]+)>}i
-  # A URL written out in the text, not the target of a markdown link or an autolink.
-  BARE_URL_REGEX = %r{(?<!\]\()(?<!<)https?://[^\s<>()\[\]"']+}i
+  # A URL written out in the text, not the target of a markdown link or an autolink. A backtick ends it, so an endpoint
+  # written as code (`POST https://…`) matches the same URL in the sources.
+  BARE_URL_REGEX = %r{(?<!\]\()(?<!<)https?://[^\s<>()\[\]"'`]+}i
+  # Longer links are sign-in redirects or tracking URLs copied from a page, not something to send a customer.
+  MAX_LINK_LENGTH = 300
 
   attr_reader :assistant
 
@@ -34,6 +37,7 @@ class Captain::Conversation::ReplySanitizer
   end
 
   def allowed_link_url?(url)
+    return false if url.to_s.length > MAX_LINK_LENGTH
     return false if @evidence_urls&.exclude?(clean_url(url).split('#').first)
 
     return true if link_allowlist.blank? || link_allowlist.include?('*')

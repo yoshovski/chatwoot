@@ -22,7 +22,7 @@ RSpec.describe Captain::Copilot::ReplySuggestionService do
       last_run_result: run_result
     )
   end
-  let(:run_result) { instance_double(Agents::RunResult) }
+  let(:run_result) { instance_double(Agents::RunResult, context: nil) }
   let(:run_options) do
     Captain::Assistant::AgentRunnerService::RunOptions.new(
       source: Captain::Assistant::AgentRunnerService::REPLY_SUGGESTION_SOURCE
@@ -133,7 +133,7 @@ RSpec.describe Captain::Copilot::ReplySuggestionService do
     )
   end
 
-  it 'preserves raw links without adding citations when citations are disabled' do
+  it 'preserves raw links without adding citations when the run recorded no sources' do
     assistant.update!(config: assistant.config.merge('feature_citation' => false))
     allow(assistant).to receive(:trusted_citation_urls).and_call_original
     allow(runner).to receive(:generate_response).and_return(

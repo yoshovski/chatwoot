@@ -11,7 +11,6 @@ module Captain::Assistant::AgentRunResponse
     model_output = run_result.output
     structured_response = model_output.with_indifferent_access
     response_parts = Captain::Assistant::ResponseParts.from_response(structured_response)
-    response_parts = response_parts.without_citations unless @assistant.citations_enabled?
     structured_response['response_parts'] = response_parts.to_a
     structured_response['response'] = response_parts.plain_text
     structured_response['agent_name'] = run_result.context&.dig(:current_agent)
@@ -56,7 +55,9 @@ module Captain::Assistant::AgentRunResponse
     response_parts = Captain::Assistant::ResponseParts.from_response(run_result.output)
     response_parts.customer_message_content(citation_urls: @assistant.trusted_citation_urls(run_result),
                                             citation_titles: @assistant.citation_titles(run_result),
-                                            sources_format: Captain::Assistant::ResponseParts.sources_format(@conversation))
+                                            sources_format: Captain::Assistant::ResponseParts.sources_format(
+                                              @conversation, sources_card: @assistant.citations_enabled?
+                                            ))
   end
 
   def message_length_limit

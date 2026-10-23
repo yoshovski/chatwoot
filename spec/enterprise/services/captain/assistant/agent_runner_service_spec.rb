@@ -441,11 +441,11 @@ RSpec.describe Captain::Assistant::AgentRunnerService do
         )
       end
 
-      it 'discards model-provided citation indexes' do
+      it 'keeps model-provided citation indexes, so the reply can still link its sources' do
         result = service.generate_response(message_history: message_history)
 
         expect(result['response_parts']).to eq(
-          [{ 'text' => 'FAQ-backed response', 'citation_indexes' => [] }]
+          [{ 'text' => 'FAQ-backed response', 'citation_indexes' => [1] }]
         )
       end
     end

@@ -600,7 +600,7 @@ RSpec.describe Captain::Conversation::ResponseBuilderJob, type: :job do
                                                                  ])
         end
 
-        it 'falls back to text message when response contains markdown links' do
+        it 'keeps suggestion buttons when the response contains markdown links' do
           assistant.update!(config: assistant.config.merge('link_allowlist' => ['https://example.com']))
           link_parts = [{ 'text' => 'Check our [guide](https://example.com)', 'citation_indexes' => [] }]
           allow(mock_agent_runner_service).to receive(:generate_response).and_return({
@@ -612,7 +612,8 @@ RSpec.describe Captain::Conversation::ResponseBuilderJob, type: :job do
           described_class.perform_now(conversation, assistant)
 
           last_message = conversation.messages.last
-          expect(last_message.content_type).to eq('text')
+          expect(last_message.content).to eq('Check our [guide](https://example.com)')
+          expect(last_message.content_type).to eq('input_select')
         end
 
         it 'falls back to text message when response contains cards' do
@@ -706,13 +707,15 @@ RSpec.describe Captain::Conversation::ResponseBuilderJob, type: :job do
           assistant.update!(config: assistant.config.merge('feature_citation' => true, 'link_allowlist' => ['https://help.example.com']))
         end
 
-        it 'does not render links when citations are disabled' do
+        it 'links the cited document in the text when Show sources is off' do
           assistant.update!(config: assistant.config.merge('feature_citation' => false))
           v2_response_parts.first['citation_indexes'] = [1]
 
           described_class.perform_now(conversation, assistant)
 
-          expect(conversation.messages.outgoing.last.content).to eq('Hey, welcome to Captain V2')
+          message = conversation.messages.outgoing.last
+          expect(message.content).to eq("Hey, welcome to Captain V2\n\n→ [Password](https://help.example.com/password)")
+          expect(message.content_attributes).not_to have_key('captain_sources')
         end
 
         it 'renders one cited document from the trusted run mapping' do

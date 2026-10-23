@@ -300,6 +300,8 @@ class Captain::Assistant < ApplicationRecord
     )
   end
 
+  # Show sources only picks how cited pages appear in the chat widget: a Sources card when on, links in the reply text
+  # when off. Citations are kept either way.
   def citations_enabled?
     ActiveModel::Type::Boolean.new.cast(config['feature_citation']) == true
   end
@@ -317,8 +319,6 @@ class Captain::Assistant < ApplicationRecord
   end
 
   def trusted_citation_urls(run_result)
-    return {} unless citations_enabled?
-
     citation_document_ids = run_result&.context&.dig(:state, CITATION_SOURCES_STATE_KEY) || {}
     details = run_result&.context&.dig(:state, CITATION_DETAILS_STATE_KEY) || {}
     product_handles = run_result_product_handles(run_result)
@@ -327,8 +327,6 @@ class Captain::Assistant < ApplicationRecord
 
   # Index => page or document title, for the source links under a reply.
   def citation_titles(run_result)
-    return {} unless citations_enabled?
-
     state = run_result&.context&.dig(:state) || {}
     details = state.fetch(CITATION_DETAILS_STATE_KEY, {})
     state.fetch(CITATION_SOURCES_STATE_KEY, {}).to_h { |index, reference| [index.to_i, details.dig(reference, :title)] }.compact

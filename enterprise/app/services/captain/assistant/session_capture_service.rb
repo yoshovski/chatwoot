@@ -76,8 +76,6 @@ class Captain::Assistant::SessionCaptureService
   end
 
   def cited_document_ids
-    return [] unless @assistant.config['feature_citation']
-
     sources = Captain::Knowledge::CitationSources.new(@assistant)
     visible_cited_sources.filter_map { |reference| sources.source_document(reference)&.id }.uniq
   end

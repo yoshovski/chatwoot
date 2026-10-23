@@ -1,6 +1,11 @@
 require 'agents'
 
 class Captain::Assistant::DirectResponseService
+  # Share of the off-limits message's words a reply must repeat to count as declining.
+  DECLINE_WORD_SHARE = 0.8
+  DECLINE_RETRY_INSTRUCTION = 'Your draft declined, but the reference material above covers this question, so it is in scope. ' \
+                              'Answer it from the material. Decline only if a guardrail forbids this specific request.'.freeze
+
   def initialize(assistant:, response_schema:)
     @assistant = assistant
     @response_schema = response_schema
@@ -20,6 +25,7 @@ class Captain::Assistant::DirectResponseService
     return if knowledge == Captain::Tools::FaqLookupTool::NO_DIRECT_RESULTS
 
     output, response = generate(message, context, knowledge)
+    output, response = retry_declined_answer(message, context, knowledge) || [output, response] if declined?(output, knowledge)
     finish_result(message, context, output, response)
   end
 
@@ -42,8 +48,31 @@ class Captain::Assistant::DirectResponseService
     end
   end
 
-  def generate(message, context, knowledge)
+  # The knowledge decides what is in scope: a decline despite matching passages usually comes from a broad guardrail.
+  def declined?(output, knowledge)
+    off_limits_words = decline_words(@assistant.off_limits_message)
+    return false if knowledge.blank? || off_limits_words.empty?
+
+    reply_words = decline_words(Array(output['response_parts']).pluck('text').join(' '))
+    return false if reply_words.size > off_limits_words.size + 8
+
+    (reply_words & off_limits_words).size >= (off_limits_words.size * DECLINE_WORD_SHARE)
+  end
+
+  def decline_words(text)
+    text.to_s.downcase.scan(/[[:alnum:]]+/).uniq
+  end
+
+  def retry_declined_answer(message, context, knowledge)
+    Rails.logger.info "[Captain][DirectResponse] declined_with_knowledge assistant_id=#{@assistant.id}"
+    context[:state][:declined_with_knowledge] = true
+    output, response = generate(message, context, knowledge, retry_instruction: DECLINE_RETRY_INSTRUCTION)
+    declined?(output, knowledge) ? nil : [output, response]
+  end
+
+  def generate(message, context, knowledge, retry_instruction: nil)
     chat = generation_chat(context, knowledge)
+    chat.with_instructions(retry_instruction, append: true) if retry_instruction
     response = Captain::Assistant::TieredLlmClient.generate('knowledge_answer', @assistant, chat, message)
     [parse_output(response.content, context, knowledge), response]
   end
