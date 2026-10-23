@@ -33,6 +33,7 @@ const unavailableMessage = useMapGetter('appConfig/getUnavailableMessage');
 // Pass toRef(props, 'agents') instead of props.agents to maintain reactivity
 // when the parent component's agents prop updates (e.g., after API response)
 const {
+  hasAiAgent,
   currentTime,
   hasOnlineAgents,
   isOnline,
@@ -66,8 +67,9 @@ const headerText = computed(() =>
 );
 </script>
 
+<!-- eslint-disable-next-line vue/no-root-v-if -->
 <template>
-  <div class="flex items-center justify-between gap-2">
+  <div v-if="!hasAiAgent" class="flex items-center justify-between gap-2">
     <div class="flex flex-col gap-1">
       <div v-if="showHeader" class="font-medium text-n-slate-12">
         {{ headerText }}

@@ -25,12 +25,6 @@ export default {
       conversationSize: 'conversation/getConversationSize',
       unreadMessageCount: 'conversation/getUnreadMessageCount',
     }),
-    // Matches ViewWithHeader: the branded welcome header shows only with intro text.
-    hasWelcomeHeader() {
-      return !!(
-        this.channelConfig.welcomeTitle || this.channelConfig.welcomeTagline
-      );
-    },
     conversationStarters() {
       return window.chatwootWebChannel.conversationStarters || [];
     },
@@ -38,7 +32,7 @@ export default {
   methods: {
     ...mapActions('conversation', ['sendMessage']),
     async startConversation(starter = '') {
-      if (starter && !this.conversationSize) {
+      if (!this.conversationSize) {
         IFrameHelper.sendMessage({
           event: 'onEvent',
           eventIdentifier: CHATWOOT_ON_START_CONVERSATION,
@@ -64,9 +58,8 @@ export default {
 </script>
 
 <template>
-  <div class="z-50 flex flex-col flex-1 w-full gap-4 p-4">
+  <div class="relative z-10 -mt-6 flex w-full flex-1 flex-col gap-4 px-4 pb-2">
     <TeamAvailability
-      :class="{ '-mt-14': hasWelcomeHeader }"
       :available-agents="availableAgents"
       :has-conversation="!!conversationSize"
       :unread-count="unreadMessageCount"
@@ -78,5 +71,26 @@ export default {
     />
 
     <ArticleContainer />
+
+    <nav
+      :aria-label="$t('WELCOME.NAVIGATION')"
+      class="mt-auto grid grid-cols-2 gap-2 border-t border-n-weak pt-3"
+    >
+      <span
+        aria-current="page"
+        class="flex flex-col items-center gap-1 rounded-xl px-4 py-2 bg-n-alpha-2 text-xs font-semibold text-n-slate-12"
+      >
+        <i class="i-lucide-house size-5" aria-hidden="true" />
+        {{ $t('WELCOME.HOME') }}
+      </span>
+      <button
+        type="button"
+        class="flex flex-col items-center gap-1 rounded-xl px-4 py-2 text-xs font-medium text-n-slate-11 transition-colors hover:bg-n-alpha-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-n-slate-8"
+        @click="startConversation()"
+      >
+        <i class="i-lucide-message-circle size-5" aria-hidden="true" />
+        {{ $t('WELCOME.CHAT') }}
+      </button>
+    </nav>
   </div>
 </template>

@@ -33,15 +33,7 @@ export default {
       return window.chatwootWebChannel.portal;
     },
     isHeaderCollapsed() {
-      if (!this.hasIntroText) {
-        return true;
-      }
       return !this.isOnHomeView;
-    },
-    hasIntroText() {
-      return (
-        this.channelConfig.welcomeTitle || this.channelConfig.welcomeTagline
-      );
     },
     showBackButton() {
       return ['article-viewer', 'messages', 'prechat-form'].includes(
@@ -103,11 +95,14 @@ export default {
 
 <template>
   <div
-    class="w-full h-full bg-n-solid-1"
+    class="w-full h-full bg-n-solid-1 [&_.chat-bubble]:!shadow-none"
     :class="{ 'overflow-auto': isOnHomeView }"
     @keydown.esc="closeWindow"
   >
-    <div class="relative flex flex-col h-full">
+    <div
+      class="relative flex flex-col min-h-full"
+      :class="{ 'h-full': !isOnHomeView }"
+    >
       <div
         :class="{
           expanded: !isHeaderCollapsed,
@@ -119,11 +114,18 @@ export default {
       >
         <ChatHeaderExpanded
           v-if="!isHeaderCollapsed"
-          :intro-heading="appConfig.welcomeTitle || channelConfig.welcomeTitle"
+          :intro-heading="
+            appConfig.welcomeTitle ||
+            channelConfig.welcomeTitle ||
+            $t('WELCOME.TITLE')
+          "
           :intro-body="
-            appConfig.welcomeDescription || channelConfig.welcomeTagline
+            appConfig.welcomeDescription ||
+            channelConfig.welcomeTagline ||
+            $t('WELCOME.DESCRIPTION')
           "
           :avatar-url="channelConfig.avatarUrl"
+          :website-name="channelConfig.websiteName"
           :show-popout-button="appConfig.showPopoutButton"
         />
         <ChatHeader

@@ -47,6 +47,14 @@
     "FRIDAY": "Friday",
     "SATURDAY": "Saturday"
   },
+  "WELCOME": {
+    "TITLE": "Hi there 👋",
+    "DESCRIPTION": "How can we help you today?",
+    "CHAT_DESCRIPTION": "Ask a question. We’re here to help.",
+    "NAVIGATION": "Support navigation",
+    "HOME": "Home",
+    "CHAT": "Chat"
+  },
   "START_CONVERSATION": "Start Conversation",
   "END_CONVERSATION": "End Conversation",
   "CONTINUE_CONVERSATION": "Continue conversation",

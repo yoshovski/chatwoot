@@ -22,6 +22,8 @@ export function useAvailability(agents = []) {
 
   const channelConfig = computed(() => window.chatwootWebChannel || {});
 
+  const hasAiAgent = computed(() => !!channelConfig.value.hasAiAgent);
+
   const inboxConfig = computed(() => ({
     workingHours: channelConfig.value.workingHours?.map(useCamelCase) || [],
     workingHoursEnabled: channelConfig.value.workingHoursEnabled || false,
@@ -62,6 +64,7 @@ export function useAvailability(agents = []) {
 
   return {
     channelConfig,
+    hasAiAgent,
     inboxConfig,
 
     currentTime,

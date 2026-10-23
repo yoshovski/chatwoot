@@ -256,7 +256,7 @@ export default {
             />
             <div
               v-if="hasAttachments"
-              class="space-y-2 chat-bubble has-attachment agent bg-n-background dark:bg-n-solid-3"
+              class="space-y-2 chat-bubble has-attachment agent bg-n-slate-3 dark:bg-n-solid-3"
               :class="wrapClass"
             >
               <div
