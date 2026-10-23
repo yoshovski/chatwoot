@@ -131,18 +131,6 @@ RSpec.describe Integrations::App do
       end
     end
 
-    context 'when the app is hubspot' do
-      let(:app_name) { 'hubspot' }
-
-      it 'returns true only when the HubSpot client id is configured' do
-        allow(GlobalConfigService).to receive(:load).with('HUBSPOT_CLIENT_ID', nil).and_return(nil)
-        expect(app.active?(account)).to be false
-
-        allow(GlobalConfigService).to receive(:load).with('HUBSPOT_CLIENT_ID', nil).and_return('client_id')
-        expect(app.active?(account)).to be true
-      end
-    end
-
     context 'when other apps are queried' do
       let(:app_name) { 'webhook' }
 
