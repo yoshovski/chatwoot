@@ -82,12 +82,28 @@ class Captain::Tools::HtmlPageParser
   end
 
   def clean_node(node)
+    keep_videos(node)
     node.css(BASE_REMOVE_SELECTOR).remove
     clean_hidden_elements(node)
     node.css('[id], [class]').each do |element|
       element.remove if noise_element?(element)
     end
     node
+  end
+
+  # Supported video embeds become a link line, so the video is indexed with the steps around it.
+  def keep_videos(node)
+    node.css('iframe[src], video').each do |element|
+      url = Captain::Knowledge::VideoLink.from_embed(element['src'] || element.at_css('source[src]')&.[]('src'))
+      next unless url
+
+      anchor = Nokogiri::XML::Node.new('a', node.document)
+      anchor['href'] = url
+      anchor.content = Captain::Knowledge::VideoLink.label(element['title'])
+      paragraph = Nokogiri::XML::Node.new('p', node.document)
+      paragraph.add_child(anchor)
+      element.replace(paragraph)
+    end
   end
 
   def clean_hidden_elements(node)

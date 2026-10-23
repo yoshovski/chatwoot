@@ -8,6 +8,8 @@ import EmailInput from './template/EmailInput.vue';
 import CustomerSatisfaction from 'shared/components/CustomerSatisfaction.vue';
 import IntegrationCard from './template/IntegrationCard.vue';
 import MessageSources from 'shared/components/MessageSources.vue';
+import MessageVideo from 'shared/components/MessageVideo.vue';
+import { extractVideo } from 'shared/helpers/videoLinks';
 
 export default {
   name: 'AgentMessageBubble',
@@ -20,6 +22,7 @@ export default {
     CustomerSatisfaction,
     IntegrationCard,
     MessageSources,
+    MessageVideo,
   },
   props: {
     message: { type: String, default: null },
@@ -70,6 +73,10 @@ export default {
     sources() {
       return this.messageContentAttributes?.captain_sources || [];
     },
+    // A video link on its own line plays as a card under the text instead.
+    videoContent() {
+      return extractVideo(this.message);
+    },
     isIntegrations() {
       return this.contentType === 'integrations';
     },
@@ -107,8 +114,13 @@ export default {
       class="chat-bubble agent bg-n-slate-3 dark:bg-n-solid-3 text-n-slate-12"
     >
       <div
-        v-dompurify-html="formatMessage(message, false)"
+        v-dompurify-html="formatMessage(videoContent.text, false)"
         class="message-content text-n-slate-12 [&>ul:not(:last-child)]:mb-4 [&>ol:not(:last-child)]:mb-4"
+      />
+      <MessageVideo
+        v-if="videoContent.video"
+        :video="videoContent.video"
+        :play-label="$t('MESSAGE_VIDEO.PLAY')"
       />
       <MessageSources :sources="sources" :label="$t('MESSAGE_SOURCES.LABEL')" />
       <EmailInput

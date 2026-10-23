@@ -1,7 +1,10 @@
 <script setup>
 import { computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useMessageFormatter } from 'shared/composables/useMessageFormatter';
 import MessageSources from 'shared/components/MessageSources.vue';
+import MessageVideo from 'shared/components/MessageVideo.vue';
+import { extractVideo } from 'shared/helpers/videoLinks';
 import PlaygroundCards from './PlaygroundCards.vue';
 import PlaygroundForm from './PlaygroundForm.vue';
 import PlaygroundRunDetails from './PlaygroundRunDetails.vue';
@@ -17,15 +20,17 @@ const props = defineProps({
 
 const emit = defineEmits(['selectOption']);
 
+const { t } = useI18n();
 const { formatMessage } = useMessageFormatter();
 
 const BUBBLE = 'rounded-2xl bg-n-slate-3 px-4 py-3 text-sm text-n-slate-12';
 
 // Results from before the customer view existed only carry the answer text.
 const parts = computed(() =>
-  props.message.messages?.length
+  (props.message.messages?.length
     ? props.message.messages
     : [{ content: props.message.content, content_type: 'text' }]
+  ).map(part => ({ ...part, videoContent: extractVideo(part.content) }))
 );
 
 const options = part => part.content_attributes?.items ?? [];
@@ -59,7 +64,12 @@ const isSelected = option => props.message.selectedOption === option.title;
           :class="[BUBBLE]"
           :data-test="`playground-${part.content_type}`"
         >
-          <div v-dompurify-html="formatMessage(part.content)" />
+          <div v-dompurify-html="formatMessage(part.videoContent.text)" />
+          <MessageVideo
+            v-if="part.videoContent.video"
+            :video="part.videoContent.video"
+            :play-label="t('CAPTAIN.PLAYGROUND.PLAY_VIDEO')"
+          />
           <MessageSources
             :sources="part.content_attributes?.captain_sources || []"
             :label="$t('CONVERSATION.CAPTAIN_SOURCES')"
