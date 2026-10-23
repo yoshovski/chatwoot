@@ -168,14 +168,14 @@ describe('AddNewScenariosDialog', () => {
     await wrapper.vm.$nextTick();
 
     const templateCards = wrapper.findAll('.template-card-stub');
-    expect(templateCards).toHaveLength(5);
+    expect(templateCards).toHaveLength(6);
 
     await templateCards[0].trigger('click');
     expect(wrapper.find('.stepper-stub').exists()).toBe(true);
     expect(wrapper.find('.template-card-stub').exists()).toBe(false);
 
     await wrapper.find('.stepper-back').trigger('click');
-    expect(wrapper.findAll('.template-card-stub')).toHaveLength(5);
+    expect(wrapper.findAll('.template-card-stub')).toHaveLength(6);
   });
 
   it('opens straight into a template picked on the page', async () => {
