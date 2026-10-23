@@ -24,6 +24,7 @@ const sections = ref([]);
 const websiteSources = ref([]);
 const error = ref(false);
 const menuOpen = ref(false);
+const websitesOpen = ref(false);
 
 const FILE_SOURCES = [
   {
@@ -111,6 +112,35 @@ const siteSummary = computed(() => {
     : t('PLATFORM_NAV.WEBSITE_NOT_ADDED');
 });
 
+// Manage pages for any website from "All sources", not only after filtering to one.
+const websiteItems = computed(() =>
+  websiteSources.value.map(item => ({
+    label: ['pending', 'discovering'].includes(item.status)
+      ? t('PLATFORM_NAV.WEBSITE_FINDING', { host: hostOf(item.url) })
+      : t('PLATFORM_NAV.WEBSITE_PAGES_USED', {
+          host: hostOf(item.url),
+          count: item.selected_urls.length,
+        }),
+    value: item.id,
+    action: 'manage',
+    icon: 'i-lucide-globe',
+  }))
+);
+const openWebsites = () => {
+  if (websiteSources.value.length === 1) {
+    emit('manage', websiteSources.value[0]);
+    return;
+  }
+  websitesOpen.value = !websitesOpen.value;
+};
+const manageWebsite = ({ value }) => {
+  websitesOpen.value = false;
+  emit(
+    'manage',
+    websiteSources.value.find(item => item.id === value)
+  );
+};
+
 const pick = ({ value }) => {
   menuOpen.value = false;
   source.value = value;
@@ -176,6 +206,26 @@ defineExpose({ load });
         />
       </div>
       <slot name="filters" />
+      <div
+        v-if="canManage && websiteSources.length"
+        v-on-click-outside="() => (websitesOpen = false)"
+        class="relative ms-auto"
+      >
+        <Button
+          icon="i-lucide-list-checks"
+          :label="t('PLATFORM_NAV.MANAGE_WEBSITES')"
+          variant="outline"
+          color="slate"
+          size="sm"
+          @click="openWebsites"
+        />
+        <DropdownMenu
+          v-if="websitesOpen"
+          :menu-items="websiteItems"
+          class="z-30 mt-2 top-full min-w-72 max-h-96 overflow-y-auto ltr:right-0 rtl:left-0"
+          @action="manageWebsite"
+        />
+      </div>
     </div>
     <p
       v-if="error"

@@ -27,7 +27,13 @@ class Api::V1::Accounts::Captain::WebsiteSourcesController < Api::V1::Accounts::
   end
 
   def update
-    Captain::Websites::SelectionService.new(@source).perform(params.require(:website_source)[:selected_urls])
+    permitted = params.require(:website_source)
+    if permitted.key?(:auto_add_pages) && [true, false].exclude?(permitted[:auto_add_pages])
+      return render json: { error: I18n.t('captain.websites.invalid_auto_add_option') }, status: :unprocessable_entity
+    end
+
+    @source.update!(auto_add_pages: permitted[:auto_add_pages]) if permitted.key?(:auto_add_pages)
+    Captain::Websites::SelectionService.new(@source).perform(permitted[:selected_urls])
     render json: @source.client_payload
   rescue Captain::Websites::SelectionService::InvalidSelection, Captain::Document::LimitExceededError => e
     render json: { error: e.message }, status: :unprocessable_entity

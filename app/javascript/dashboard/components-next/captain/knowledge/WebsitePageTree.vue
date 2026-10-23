@@ -82,6 +82,12 @@ const toggle = value =>
           }}
         </span>
       </button>
+      <span
+        v-if="page?.new"
+        class="shrink-0 rounded bg-n-teal-3 px-1.5 py-0.5 text-xs font-medium text-n-teal-11"
+      >
+        {{ $t('CAPTAIN.WEBSITES.NEW_PAGE') }}
+      </span>
       <span v-if="page?.document_id" class="shrink-0 text-xs text-n-slate-11">
         {{
           $t(

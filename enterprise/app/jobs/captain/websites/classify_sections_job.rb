@@ -15,12 +15,14 @@ class Captain::Websites::ClassifySectionsJob < ApplicationJob
       Rails.logger.warn "[Captain][WebsiteClassification] source_id=#{source.id} error=#{e.class.name}"
       { 'classification' => 'failed' }
     end
-    source.with_lock do
+    finished = source.with_lock do
       next unless current?(source, run)
 
       source.discovery_stats = source.discovery_stats.merge(stats)
       source.update!(pages: Captain::Websites::PageBuckets.new(source).perform(source.pages))
+      Captain::Websites::RoundFinisher.claim?(source)
     end
+    Captain::Websites::RoundFinisher.new(source).perform if finished
   end
 
   private

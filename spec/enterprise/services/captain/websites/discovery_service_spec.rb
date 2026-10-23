@@ -97,4 +97,50 @@ RSpec.describe Captain::Websites::DiscoveryService do
     expect(source.reload.discovery_stats['limits']).to include('origins')
     expect(page('https://support.example.com/hc/en-us/articles/7-Old')).not_to have_key('blocked_reason')
   end
+
+  describe 'rounds' do
+    it 'asks for another round when the request budget ran out with pages left' do
+      stub_const("#{described_class}::MAX_HTML_FETCHES", 1)
+      described_class.new(source).perform
+
+      expect(source.reload.discovery_stats).to include('round' => 1, 'continue' => true, 'limits' => include('requests'))
+      expect(a_request(:get, 'https://www.example.com/pricing')).not_to have_been_made
+    end
+
+    it 'reads only unopened pages in the next round and marks what it found as new' do
+      stub_const("#{described_class}::MAX_HTML_FETCHES", 1)
+      described_class.new(source).perform
+      stub_const("#{described_class}::MAX_HTML_FETCHES", 500)
+      stub_request(:get, 'https://www.example.com/pricing')
+        .to_return(body: html.call('Pricing', links: %w[/guides/setup]), headers: { 'Content-Type' => 'text/html' })
+      stub_request(:get, 'https://www.example.com/guides/setup')
+        .to_return(body: html.call('Setup'), headers: { 'Content-Type' => 'text/html' })
+
+      described_class.new(source.reload, mode: 'continue').perform
+
+      expect(a_request(:get, 'https://www.example.com')).to have_been_made.once
+      expect(a_request(:get, 'https://support.example.com/api/v2/help_center/locales.json')).to have_been_made.once
+      expect(source.reload.discovery_stats).to include('round' => 2, 'new_urls' => ['https://www.example.com/guides/setup'])
+      expect(source.discovery_stats).not_to have_key('continue')
+      expect(page('https://www.example.com/pricing')).to include('words' => be > 60)
+    end
+
+    it 'stops continuing after the last round' do
+      stub_const("#{described_class}::MAX_HTML_FETCHES", 1)
+      source.update!(discovery_stats: { 'round' => described_class::MAX_ROUNDS - 1 })
+
+      described_class.new(source, mode: 'continue').perform
+
+      expect(source.reload.discovery_stats).to include('round' => described_class::MAX_ROUNDS)
+      expect(source.discovery_stats).not_to have_key('continue')
+    end
+
+    it 're-reads the start page on a refresh' do
+      described_class.new(source).perform
+      described_class.new(source.reload, mode: 'refresh').perform
+
+      expect(a_request(:get, 'https://www.example.com')).to have_been_made.twice
+      expect(source.reload.discovery_stats).to include('round' => 1)
+    end
+  end
 end

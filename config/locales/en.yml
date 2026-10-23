@@ -469,6 +469,7 @@ en:
       already_added: 'This website is already listed. Open its page selection to discover it again.'
       invalid_selection: 'Select only discovered pages that are available for import.'
       invalid_subdomain_option: 'Choose whether linked subdomains should be discovered.'
+      invalid_auto_add_option: 'Choose whether new recommended pages should be added automatically.'
     knowledge_briefs:
       invalid_sources: 'Choose 1 to 60 ready, public documents belonging to this agent.'
       invalid_draft: 'Check the overview, topic lengths and source references before publishing.'

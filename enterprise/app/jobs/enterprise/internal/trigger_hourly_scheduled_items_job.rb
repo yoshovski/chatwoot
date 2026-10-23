@@ -3,6 +3,7 @@ module Enterprise::Internal::TriggerHourlyScheduledItemsJob
     super
 
     Captain::Knowledge::RefreshBriefsJob.perform_later
+    Captain::Websites::RefreshSourcesJob.perform_later
 
     return unless Shopify::FeatureGate.globally_enabled?
 
