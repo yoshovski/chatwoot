@@ -12,7 +12,8 @@
   position: fixed !important;
   transition:
     opacity 0.2s linear,
-    transform 0.25s linear;
+    transform 0.25s linear,
+    height 0.2s ease;
   z-index: 2147483000 !important;
 }
 
@@ -350,6 +351,15 @@
     max-height: 900px !important;
     min-height: 250px !important;
     width: 400px !important;
+  }
+
+  /* The home screen reports its own height so short content does not leave blank space. */
+  .woot-widget-holder.woot-widget-holder--fit {
+    height: min(
+      var(--widget-content-height),
+      var(--widget-height, 640px),
+      calc(100vh - 124px)
+    );
   }
 }
 
