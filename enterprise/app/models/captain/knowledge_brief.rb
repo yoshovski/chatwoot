@@ -1,7 +1,7 @@
 class Captain::KnowledgeBrief < ApplicationRecord
   self.table_name = 'captain_knowledge_briefs'
   EXAMPLE_DOCUMENTS = 30
-  EXAMPLES_VERSION = 3
+  EXAMPLES_VERSION = 4
   # New agents and unpublished briefs change quickly; settled agents refresh their examples at most monthly.
   EXAMPLES_SETTLING_AGE = 14.days
   EXAMPLES_SETTLING_INTERVAL = 1.hour
@@ -58,7 +58,7 @@ class Captain::KnowledgeBrief < ApplicationRecord
       name: assistant.name, product_name: assistant.config['product_name'], description: assistant.description,
       business_type: assistant.effective_business_type,
       overview: snapshot.dig('overview', 'text'), topics: Array(snapshot['topics']).pluck('title'),
-      documents: source_scope.order(updated_at: :desc).limit(EXAMPLE_DOCUMENTS).pluck(:name)
+      documents: source_scope.order(updated_at: :desc).limit(EXAMPLE_DOCUMENTS).pluck(:id, :name).map { |id, name| { id: id, title: name } }
     }
   end
 

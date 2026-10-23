@@ -6,6 +6,7 @@ import SettingsSaveBar from './SettingsSaveBar.vue';
 import HandoffFlow from './HandoffFlow.vue';
 import Select from 'dashboard/components-next/select/Select.vue';
 import Editor from 'dashboard/components-next/Editor/Editor.vue';
+import Input from 'dashboard/components-next/input/Input.vue';
 
 vi.mock('vue-i18n', () => ({
   useI18n: () => ({ t: key => key }),
@@ -68,6 +69,27 @@ describe('AssistantHandoverForm', () => {
         handoff_fallback_agent_id: null,
         handoff_fallback_team_id: 4,
       },
+    });
+  });
+
+  it('keeps every conversation and points to email when there is no live team', async () => {
+    const wrapper = mountForm();
+
+    wrapper
+      .findComponent(Input)
+      .vm.$emit('update:modelValue', 'help@acme.test');
+    await nextTick();
+    await wrapper.find('form').trigger('submit');
+    wrapper.findComponent(SettingsSaveBar).vm.$emit('save');
+    await flushPromises();
+
+    expect(wrapper.props('save')).toHaveBeenCalledWith({
+      config: expect.objectContaining({
+        handoff_when_online: 'keep',
+        handoff_when_offline: 'keep',
+        no_handoff_message:
+          'CAPTAIN.ASSISTANTS.SETTINGS.HANDOVER.EMAIL_ONLY.MESSAGE',
+      }),
     });
   });
 

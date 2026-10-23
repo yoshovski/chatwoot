@@ -29,9 +29,23 @@ RSpec.describe Captain::Knowledge::ExamplesGenerator do
   it 'stores the examples with the fingerprint of the business details they were made from' do
     described_class.new(brief).perform
 
-    expect(brief.reload.examples['data']).to eq(output)
+    expect(brief.reload.examples['data']).to eq(output.merge('sources' => {}))
     expect(brief.examples['fingerprint']).to eq(brief.examples_fingerprint)
     expect(brief.examples_due?).to be(false)
+  end
+
+  it 'attaches the page each example question comes from' do
+    document = create(:captain_document, assistant: assistant, account: assistant.account, status: :available,
+                                         name: 'Booking a repair', external_link: 'https://bikes.example/repairs')
+    output['how_to']['source_document_id'] = document.id
+    output['source_document_id'] = 999_999
+    allow(SsrfFilter::DEFAULT_RESOLVER).to receive(:call).with('bikes.example').and_return([IPAddr.new('93.184.216.34')])
+
+    described_class.new(brief).perform
+
+    expect(brief.reload.examples.dig('data', 'sources')).to eq(
+      'how_to' => { 'title' => 'Booking a repair', 'url' => 'https://bikes.example/repairs' }
+    )
   end
 
   it 'skips the model when the business details have not changed' do

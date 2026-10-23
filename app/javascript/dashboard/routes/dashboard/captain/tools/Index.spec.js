@@ -44,6 +44,10 @@ vi.mock('dashboard/composables/store', async () => {
 
 vi.mock('dashboard/composables', () => ({ useAlert: mocks.alerts }));
 
+vi.mock('dashboard/composables/useAdmin', () => ({
+  useAdmin: () => ({ isAdmin: { value: false } }),
+}));
+
 vi.mock('dashboard/composables/usePolicy', () => ({
   usePolicy: () => ({
     isFeatureFlagEnabled: () => true,

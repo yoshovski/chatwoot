@@ -1057,6 +1057,8 @@
             "LABEL": "Custom",
             "DESC": "Write your own instruction",
             "SHOW": "Instruction",
+            "VIEW": "View instruction",
+            "HIDE": "Hide instruction",
             "EDIT": "Customize",
             "EDITOR": "Your instruction",
             "HINT": "Write it as an instruction to the AI agent, for example: Use simple words and keep a calm, reassuring tone.",
@@ -1104,7 +1106,6 @@
             },
             "SOURCES": {
               "TITLE": "Show sources",
-              "PREVIEW_LINK": "Returns policy",
               "NOTE": "Adds links to up to 3 pages {name} used, under the reply."
             }
           },
@@ -1158,6 +1159,13 @@
             "OFFLINE": "When your team is offline",
             "TRANSFER": "Transfer the conversation to your team",
             "KEEP": "Keep the conversation with {name}"
+          },
+          "EMAIL_ONLY": {
+            "TITLE": "No live team? Send customers to email",
+            "DESC": "If nobody answers chats in your inbox, {name} keeps every conversation and tells customers to email you when they need a person. Review the message below, then save.",
+            "PLACEHOLDER": "support{'@'}yourbusiness.com",
+            "APPLY": "Use email instead",
+            "MESSAGE": "Our team doesn't answer live chat. For anything I can't help with, please email {email} and we'll get back to you."
           },
           "OFFLINE_MESSAGE": {
             "LABEL": "What it says when handing over while your team is offline",
@@ -2016,6 +2024,46 @@
           "TITLE": "Captain Document",
           "NOTE": "A document in Captain serves as a knowledge resource for the AI agent. By connecting your help center or guides, Captain can analyze the content and provide accurate responses for customer inquiries."
         }
+      }
+    },
+    "MCP_SERVERS": {
+      "TITLE": "MCP servers",
+      "DESCRIPTION": "Connect a remote MCP server over HTTPS, then turn on the tools your AI agent may use. Enabled tools can be picked in scenarios.",
+      "ADD": "Connect server",
+      "EMPTY": "No MCP servers connected yet.",
+      "NO_TOOLS": "This server has no tools.",
+      "SCENARIO_HINT": "Add enabled tools to a scenario's instructions so the AI agent knows when to use them.",
+      "REFRESH": "Refresh tools",
+      "EDIT": "Edit connection",
+      "DELETE": "Remove server",
+      "ERROR": "Could not reach the MCP server. Check the URL and credentials.",
+      "STATUS": {
+        "PENDING": "Not checked",
+        "CONNECTED": "Connected",
+        "FAILED": "Failed"
+      },
+      "DELETE_CONFIRM": {
+        "TITLE": "Remove {name}?",
+        "DESCRIPTION": "Scenarios using its tools will stop calling them."
+      },
+      "FORM": {
+        "NAME": "Name",
+        "NAME_PLACEHOLDER": "Billing system",
+        "URL": "Server URL",
+        "URL_PLACEHOLDER": "https://mcp.example.com/mcp",
+        "AUTH": "Authentication",
+        "AUTH_TYPES": {
+          "NONE": "None",
+          "BEARER": "Bearer token",
+          "HEADER": "Custom header"
+        },
+        "HEADER_NAME": "Header name",
+        "HEADER_NAME_PLACEHOLDER": "X-API-Key",
+        "TOKEN": "Token",
+        "TOKEN_PLACEHOLDER": "Paste the token",
+        "TOKEN_KEEP": "Leave blank to keep the saved token",
+        "CANCEL": "Cancel",
+        "CONNECT": "Connect and list tools"
       }
     },
     "CUSTOM_TOOLS": {

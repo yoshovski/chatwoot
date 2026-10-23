@@ -129,6 +129,8 @@ class Captain::Scenario < ApplicationRecord
     if tool_metadata[:custom]
       custom_tool = Captain::CustomTool.find_by(slug: tool_id, account_id: account_id, enabled: true)
       custom_tool&.tool(assistant)
+    elsif tool_metadata[:mcp]
+      assistant.account.captain_mcp_servers.lazy.filter_map { |server| server.agent_tool(tool_id, assistant) }.first
     else
       tool_class = self.class.resolve_tool_class(tool_id)
       tool_class&.new(assistant)

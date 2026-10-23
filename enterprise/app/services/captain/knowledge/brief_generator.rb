@@ -4,6 +4,7 @@ class Captain::Knowledge::BriefGenerator
   MAX_TOPICS = 5
   OVERVIEW_LENGTH = 1000
   TOPIC_LENGTH = 400
+  CITATION_MARKER = /\s*\[\d+(?:\s*,\s*\d+)*\]/
   BATCH_SIZE = 8
   DOCUMENT_CHARS = 12_000
 
@@ -50,6 +51,29 @@ class Captain::Knowledge::BriefGenerator
     topic.is_a?(Hash) && valid_text?(topic['title'], 100) && valid_text?(topic['summary'], TOPIC_LENGTH) && valid_ids?(topic['document_ids'], ids)
   end
 
+  # Models treat schema length limits as hints and often echo document IDs inline. Clean the text and keep
+  # the valid topics instead of discarding a whole draft over one long summary.
+  def self.normalize(output, ids)
+    return output unless output.is_a?(Hash) && output['overview'].is_a?(Hash) && output['topics'].is_a?(Array)
+
+    overview = output['overview'].merge('text' => clean_text(output['overview']['text'], OVERVIEW_LENGTH))
+    topics = output['topics'].grep(Hash).map do |topic|
+      topic.merge('title' => clean_text(topic['title'], 100), 'summary' => clean_text(topic['summary'], TOPIC_LENGTH))
+    end
+    output.merge('overview' => overview, 'topics' => topics.select { |topic| valid_topic?(topic, ids) }.first(MAX_TOPICS))
+  end
+
+  def self.clean_text(text, limit)
+    return text unless text.is_a?(String)
+
+    text = text.gsub(CITATION_MARKER, '').squeeze(' ').strip
+    return text if text.length <= limit
+
+    cut = text.first(limit)
+    sentence_end = cut.rindex(/[.!?](?=\s|\z)/)
+    sentence_end ? cut[0..sentence_end] : cut.truncate(limit, separator: ' ')
+  end
+
   def self.valid_text?(text, limit) = text.is_a?(String) && text.strip.present? && text.length <= limit
   def self.valid_ids?(references, ids) = references.is_a?(Array) && references.any? && (references - ids).empty?
 
@@ -77,7 +101,7 @@ class Captain::Knowledge::BriefGenerator
       timeout: 60
     ).with_params(max_tokens: 4000).with_schema(Captain::Knowledge::BriefSchema.for(ids)).with_instructions(instructions)
     response = Captain::Assistant::TieredLlmClient.generate('knowledge_summary', @assistant, chat, input.to_json)
-    output = response.content.is_a?(Hash) ? response.content : JSON.parse(response.content)
+    output = self.class.normalize(response.content.is_a?(Hash) ? response.content : JSON.parse(response.content), ids)
     raise TypeError, 'Invalid knowledge brief' unless self.class.valid_output?(output, ids)
 
     output.slice('overview', 'topics', 'business_type')

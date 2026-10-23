@@ -18,7 +18,8 @@ class SafeFetch::Fetcher
       yield SafeFetch::Result.new(
         tempfile: tempfile,
         filename: options.filename,
-        content_type: normalized_content_type(response['content-type'])
+        content_type: normalized_content_type(response['content-type']),
+        headers: response.each_header.to_h
       )
     end
   end

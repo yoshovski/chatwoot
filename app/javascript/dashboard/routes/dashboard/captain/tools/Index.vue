@@ -13,10 +13,13 @@ import CreateCustomToolDialog from 'dashboard/components-next/captain/pageCompon
 import CustomToolCard from 'dashboard/components-next/captain/pageComponents/customTool/CustomToolCard.vue';
 import DeleteDialog from 'dashboard/components-next/captain/pageComponents/DeleteDialog.vue';
 import Dialog from 'dashboard/components-next/dialog/Dialog.vue';
+import McpServersSection from 'dashboard/components-next/captain/pageComponents/mcpServer/McpServersSection.vue';
+import { useAdmin } from 'dashboard/composables/useAdmin';
 
 const store = useStore();
 const { t } = useI18n();
 const { isFeatureFlagEnabled, shouldShowPaywall } = usePolicy();
+const { isAdmin } = useAdmin();
 
 const SOFT_LIMIT = 10;
 const isV2 = computed(() => isFeatureFlagEnabled(FEATURE_FLAGS.CAPTAIN_V2));
@@ -204,7 +207,10 @@ onMounted(() => {
     </template>
 
     <template #emptyState>
-      <CustomToolsPageEmptyState @click="openCreateDialog" />
+      <div class="flex flex-col gap-6">
+        <CustomToolsPageEmptyState @click="openCreateDialog" />
+        <McpServersSection v-if="isAdmin" />
+      </div>
     </template>
 
     <template #body>
@@ -233,6 +239,7 @@ onMounted(() => {
           @action="handleAction"
           @toggle="toggleCustomTool"
         />
+        <McpServersSection v-if="isAdmin" />
       </div>
     </template>
   </PageLayout>

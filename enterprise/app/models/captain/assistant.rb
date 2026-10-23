@@ -243,6 +243,8 @@ class Captain::Assistant < ApplicationRecord
 
     custom_tools = account.captain_custom_tools.enabled.map(&:to_tool_metadata)
     tools.concat(custom_tools)
+    # MCP tools are for scenarios only: the instruction names when the AI agent may call them.
+    tools.concat(account.captain_mcp_servers.flat_map(&:tool_metadata))
 
     tools
   end
@@ -250,7 +252,8 @@ class Captain::Assistant < ApplicationRecord
   def available_tool_ids = available_agent_tools.pluck(:id)
 
   def known_tool_ids
-    self.class.built_in_tool_ids + account.captain_custom_tools.pluck(:slug)
+    self.class.built_in_tool_ids + account.captain_custom_tools.pluck(:slug) +
+      account.captain_mcp_servers.flat_map { |server| server.tools.pluck('id') }
   end
 
   def agent_name

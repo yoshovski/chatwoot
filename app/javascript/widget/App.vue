@@ -411,7 +411,7 @@ export default {
       'is-widget-right': isRightAligned,
       'is-bubble-hidden': hideMessageBubble,
       'is-flat-design': isWidgetStyleFlat,
-      'bg-n-slate-2 dark:bg-n-solid-1': !isUnreadOrCampaignView,
+      'bg-n-solid-1': !isUnreadOrCampaignView,
       dark: prefersDarkMode,
     }"
   >
