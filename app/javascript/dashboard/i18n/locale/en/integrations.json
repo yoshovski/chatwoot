@@ -467,10 +467,10 @@
       },
       "MAPPING": {
         "TITLE": "Field mapping",
-        "DESCRIPTION": "Choose the HubSpot property for each field. Unmapped fields are not sent. Lead fields are only sent for leads captured by an AI agent; the lead source is always chatbot.",
+        "DESCRIPTION": "All configured lead fields appear here automatically. Choose a HubSpot contact property for each field; unmapped fields are not sent. Lead details are sent only for leads captured by an AI agent.",
         "NOT_MAPPED": "Not mapped",
         "SEARCH": "Search HubSpot properties",
-        "ADD": "Add mapping",
+        "ADD": "Add another contact field",
         "REMOVE": "Remove mapping",
         "DUPLICATE": "This HubSpot property is already mapped to another field.",
         "LOAD_ERROR": "Could not load HubSpot properties. Try again in a moment."

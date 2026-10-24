@@ -14,6 +14,7 @@ const properties = [
   { name: 'phone', label: 'Phone Number' },
   { name: 'chatoctave_lead_type', label: 'Lead type' },
   { name: 'company', label: 'Company name' },
+  { name: 'jobtitle', label: 'Job title' },
 ];
 
 const sources = [
@@ -24,7 +25,11 @@ const sources = [
   { key: 'lead_type', label: 'Lead type' },
   { key: 'lead_summary', label: 'Lead summary' },
   { key: 'lead_source', label: 'Lead source' },
-  { key: 'lead_company', label: 'Company' },
+  { key: 'lead_company', label: 'Company', kind: 'lead' },
+  { key: 'lead_country', label: 'Country', kind: 'lead' },
+  { key: 'lead_audience_size', label: 'Audience size', kind: 'lead' },
+  { key: 'lead_use_case', label: 'Use case', kind: 'lead' },
+  { key: 'job_title', label: 'Job title', kind: 'attribute' },
 ];
 
 const settings = {
@@ -47,7 +52,7 @@ const rowComboBox = (wrapper, key) =>
   wrapper.find(`[data-test="mapping-row-${key}"]`).findComponent(ComboBox);
 
 describe('HubspotSettingsForm', () => {
-  it('shows the fixed rows, keeps email read-only and suggests existing lead properties', () => {
+  it('shows configured lead fields automatically and preserves draft mappings as sources load', async () => {
     const wrapper = mountForm();
 
     [
@@ -58,6 +63,10 @@ describe('HubspotSettingsForm', () => {
       'lead_type',
       'lead_summary',
       'lead_source',
+      'lead_company',
+      'lead_country',
+      'lead_audience_size',
+      'lead_use_case',
     ].forEach(key => {
       expect(wrapper.find(`[data-test="mapping-row-${key}"]`).exists()).toBe(
         true
@@ -68,6 +77,21 @@ describe('HubspotSettingsForm', () => {
       'chatoctave_lead_type'
     );
     expect(rowComboBox(wrapper, 'lead_summary').props('modelValue')).toBe('');
+
+    rowComboBox(wrapper, 'lead_company').vm.$emit(
+      'update:modelValue',
+      'company'
+    );
+    await wrapper.setProps({
+      sources: [
+        ...sources,
+        { key: 'lead_budget', label: 'Budget', kind: 'lead' },
+      ],
+    });
+    expect(rowComboBox(wrapper, 'lead_budget').exists()).toBe(true);
+    expect(rowComboBox(wrapper, 'lead_company').props('modelValue')).toBe(
+      'company'
+    );
   });
 
   it('emits only mapped rows with the toggles', async () => {
@@ -89,22 +113,19 @@ describe('HubspotSettingsForm', () => {
     });
   });
 
-  it('adds a lead field row from the picker', async () => {
+  it('keeps additional contact fields available in the picker', async () => {
     const wrapper = mountForm();
 
     wrapper
       .find('[data-test="add-mapping"]')
       .findComponent(ComboBox)
-      .vm.$emit('update:modelValue', 'lead_company');
+      .vm.$emit('update:modelValue', 'job_title');
     await wrapper.vm.$nextTick();
-    rowComboBox(wrapper, 'lead_company').vm.$emit(
-      'update:modelValue',
-      'company'
-    );
+    rowComboBox(wrapper, 'job_title').vm.$emit('update:modelValue', 'jobtitle');
     await wrapper.find('form').trigger('submit');
 
-    expect(wrapper.emitted('save')[0][0].field_mapping.lead_company).toBe(
-      'company'
+    expect(wrapper.emitted('save')[0][0].field_mapping.job_title).toBe(
+      'jobtitle'
     );
   });
 
