@@ -9,7 +9,6 @@ module Captain::LeadSettings
   end
 
   def leads_enabled? = config['leads_enabled'] == true
-  def hubspot_sync_enabled? = config['lead_hubspot_sync_enabled'] == true
   def lead_fields = config.fetch('lead_fields', [])
   def lead_types = config.fetch('lead_types', [])
   def lead_max_questions = config.fetch('lead_max_questions', 2)
@@ -23,7 +22,8 @@ module Captain::LeadSettings
   private
 
   def validate_lead_settings
-    valid = %w[leads_enabled lead_hubspot_sync_enabled].all? { |key| BOOLEAN_VALUES.include?(config[key]) }
+    # Agents saved before HubSpot synced every contact may still carry lead_hubspot_sync_enabled; it is ignored.
+    valid = BOOLEAN_VALUES.include?(config['leads_enabled'])
     valid &&= valid_lead_questions?
     valid &&= valid_lead_collections?
     valid &&= !leads_enabled? || lead_types.present?

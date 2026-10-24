@@ -63,7 +63,7 @@ class HookListener < BaseListener
       'dialogflow' => ['message.created', 'message.updated'],
       'google_translate' => ['message.created'],
       'leadsquared' => ['contact.updated', 'conversation.created', 'conversation.resolved'],
-      'hubspot' => ['contact.updated'],
+      'hubspot' => ['contact.created', 'contact.updated', 'conversation.resolved'],
       'linear' => ['message.created']
     }
 

@@ -38,6 +38,24 @@ FactoryBot.define do
       reference_id { 'test-store.myshopify.com' }
     end
 
+    trait :hubspot do
+      app_id { 'hubspot' }
+      access_token { 'hubspot-access-token' }
+      settings do
+        {
+          'field_mapping' => { 'email' => 'email', 'firstname' => 'firstname', 'lastname' => 'lastname', 'phone' => 'phone' },
+          'sync_contacts' => true,
+          'save_transcripts' => true,
+          'refresh_token' => 'na1-refresh-token',
+          'expires_on' => 1.hour.from_now.utc.iso8601,
+          'portal_id' => 12_345,
+          'hub_domain' => 'example-portal.hubspot.com',
+          'user' => 'admin@example.com',
+          'scopes' => %w[oauth crm.objects.contacts.read crm.objects.contacts.write crm.schemas.contacts.read]
+        }
+      end
+    end
+
     trait :leadsquared do
       app_id { 'leadsquared' }
       settings do

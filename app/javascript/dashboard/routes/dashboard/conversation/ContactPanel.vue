@@ -21,6 +21,7 @@ import SharedFiles from './SharedFiles.vue';
 import Draggable from 'vuedraggable';
 import MacrosList from './Macros/List.vue';
 import ShopifyOrdersList from 'dashboard/components/widgets/conversation/ShopifyOrdersList.vue';
+import HubspotContactCard from 'dashboard/components/widgets/conversation/HubspotContactCard.vue';
 import SidebarActionsHeader from 'dashboard/components-next/SidebarActionsHeader.vue';
 import LinearIssuesList from 'dashboard/components/widgets/conversation/linear/IssuesList.vue';
 import LinearSetupCTA from 'dashboard/components/widgets/conversation/linear/LinearSetupCTA.vue';
@@ -58,6 +59,15 @@ const isShopifyFeatureEnabled = computed(() => {
   if (hook?.sat_managed) return false;
   return true;
 });
+
+const hubspotIntegration = useFunctionGetter(
+  'integrations/getIntegration',
+  'hubspot'
+);
+
+const isHubspotConnected = computed(
+  () => !!hubspotIntegration.value?.hooks?.length
+);
 
 const { isCloudFeatureEnabled } = useAccount();
 
@@ -300,6 +310,24 @@ onMounted(() => {
               "
             >
               <ShopifyOrdersList :contact-id="contactId" />
+            </AccordionItem>
+          </div>
+          <div
+            v-else-if="
+              element.name === 'hubspot_contact' &&
+              isHubspotConnected &&
+              contactId
+            "
+          >
+            <AccordionItem
+              :title="$t('CONVERSATION_SIDEBAR.ACCORDION.HUBSPOT_CONTACT')"
+              :is-open="isContactSidebarItemOpen('is_hubspot_contact_open')"
+              compact
+              @toggle="
+                value => toggleSidebarUIState('is_hubspot_contact_open', value)
+              "
+            >
+              <HubspotContactCard :contact-id="contactId" />
             </AccordionItem>
           </div>
           <div v-else-if="element.name === 'contact_notes'">

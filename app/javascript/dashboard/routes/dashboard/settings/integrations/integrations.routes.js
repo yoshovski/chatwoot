@@ -9,6 +9,7 @@ import Slack from './Slack.vue';
 import Linear from './Linear.vue';
 import Notion from './Notion.vue';
 import Shopify from './Shopify.vue';
+import Hubspot from './Hubspot.vue';
 
 export default {
   routes: [
@@ -77,6 +78,16 @@ export default {
             permissions: ['administrator'],
           },
           props: route => ({ code: route.query.code }),
+        },
+        {
+          path: 'hubspot',
+          name: 'settings_integrations_hubspot',
+          component: Hubspot,
+          meta: {
+            featureFlag: FEATURE_FLAGS.INTEGRATIONS,
+            permissions: ['administrator'],
+          },
+          props: route => ({ error: route.query.error }),
         },
         {
           path: 'shopify',

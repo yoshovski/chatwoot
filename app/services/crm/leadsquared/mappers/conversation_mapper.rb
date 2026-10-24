@@ -1,5 +1,5 @@
 class Crm::Leadsquared::Mappers::ConversationMapper
-  include ::Rails.application.routes.url_helpers
+  include Crm::TranscriptFormatting
 
   # https://help.leadsquared.com/what-is-the-maximum-character-length-supported-for-lead-and-activity-fields/
   # the rest of the body of the note is around 200 chars
@@ -48,10 +48,6 @@ class Crm::Leadsquared::Mappers::ConversationMapper
     conversation.created_at.in_time_zone(@timezone).strftime('%Y-%m-%d %H:%M:%S')
   end
 
-  def transcript_messages
-    @transcript_messages ||= conversation.messages.chat.select(&:conversation_transcriptable?)
-  end
-
   def format_messages
     selected_messages = []
     separator = "\n\n"
@@ -77,32 +73,9 @@ class Crm::Leadsquared::Mappers::ConversationMapper
     MESSAGE
   end
 
-  def message_time(message)
-    message.created_at.in_time_zone(@timezone).strftime('%Y-%m-%d %H:%M')
-  end
-
   def sender_name(message)
     return 'System' if message.sender.nil?
 
     message.sender.name.presence || "#{message.sender_type} #{message.sender_id}"
-  end
-
-  def message_content(message)
-    message.content.presence || I18n.t('crm.no_content')
-  end
-
-  def attachment_info(message)
-    return '' unless message.attachments.any?
-
-    attachments = message.attachments.map { |a| I18n.t('crm.attachment', type: a.file_type) }.join(', ')
-    "\n#{attachments}"
-  end
-
-  def conversation_url
-    app_account_conversation_url(account_id: conversation.account.id, id: conversation.display_id)
-  end
-
-  def brand_name
-    ::GlobalConfig.get('BRAND_NAME')['BRAND_NAME'] || 'Chatwoot'
   end
 end

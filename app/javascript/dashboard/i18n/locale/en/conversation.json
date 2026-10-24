@@ -504,6 +504,7 @@
       "MACROS": "Macros",
       "LINEAR_ISSUES": "Linked Linear Issues",
       "SHOPIFY_ORDERS": "Shopify Orders",
+      "HUBSPOT_CONTACT": "HubSpot",
       "SHARED_FILES": "Attachments"
     },
     "SHARED_FILES": {
@@ -517,6 +518,20 @@
       "MORE_COUNT": "+{count}",
       "UNTITLED_FILE": "Untitled file",
       "JUMP_TO_MESSAGE": "Jump to message"
+    },
+    "HUBSPOT": {
+      "NOT_FOUND": "Not in HubSpot yet",
+      "REAUTHORIZE": "HubSpot needs to be reconnected.",
+      "OPEN_SETTINGS": "Open HubSpot settings",
+      "ERROR": "Could not load the HubSpot contact. Try again later.",
+      "OPEN": "Open in HubSpot",
+      "FIELDS": {
+        "EMAIL": "Email",
+        "PHONE": "Phone",
+        "LIFECYCLE_STAGE": "Lifecycle stage",
+        "LEAD_STATUS": "Lead status",
+        "OWNER": "Owner"
+      }
     },
     "SHOPIFY": {
       "ORDER_ID": "Order #{id}",

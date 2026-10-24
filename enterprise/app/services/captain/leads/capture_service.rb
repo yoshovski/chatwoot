@@ -23,7 +23,7 @@ class Captain::Leads::CaptureService
       )
       @contact.save!
     end
-    'Lead details saved. Email is unverified. If enabled, HubSpot sync runs in the background; delivery is not confirmed.'
+    'Lead details saved. Email is unverified. If HubSpot is connected, sync runs in the background; delivery is not confirmed.'
   end
 
   private

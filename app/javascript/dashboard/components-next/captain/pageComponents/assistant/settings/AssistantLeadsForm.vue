@@ -18,7 +18,6 @@ watch(
   config => {
     settings.value = {
       leads_enabled: config?.leads_enabled === true,
-      lead_hubspot_sync_enabled: config?.lead_hubspot_sync_enabled === true,
       lead_max_questions: config?.lead_max_questions ?? 2,
       lead_fields: (config?.lead_fields || []).map(field => ({ ...field })),
       lead_types: (config?.lead_types || []).map(type => ({ ...type })),
@@ -58,10 +57,6 @@ const openScenarios = () =>
       {{ t('CAPTAIN.ASSISTANTS.SETTINGS.LEADS.ENABLE') }}
     </label>
     <template v-if="settings.leads_enabled">
-      <label class="flex items-center gap-2 text-sm text-n-slate-12">
-        <input v-model="settings.lead_hubspot_sync_enabled" type="checkbox" />
-        {{ t('CAPTAIN.ASSISTANTS.SETTINGS.LEADS.HUBSPOT_SYNC') }}
-      </label>
       <p class="text-sm text-n-slate-11 m-0">
         {{ t('CAPTAIN.ASSISTANTS.SETTINGS.LEADS.VERIFICATION') }}
       </p>

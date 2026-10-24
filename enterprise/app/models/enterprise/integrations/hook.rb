@@ -2,29 +2,28 @@ module Enterprise::Integrations::Hook
   extend ActiveSupport::Concern
 
   prepended do
-    before_validation :extract_hubspot_token, if: -> { app_id == 'hubspot' }
     validates :access_token, presence: true, if: -> { app_id == 'hubspot' }
-    validate :validate_hubspot_configuration, if: :hubspot_configuration_changed?
+    validate :validate_hubspot_field_mapping, if: :hubspot_field_mapping_changed?
   end
 
   private
 
-  def extract_hubspot_token
-    self.settings ||= {}
-    token = settings.delete('private_app_token')
-    self.access_token = token if token.present?
+  # Token refreshes also rewrite settings; only a changed mapping needs a round trip to HubSpot.
+  def hubspot_field_mapping_changed?
+    app_id == 'hubspot' && enabled? && persisted? &&
+      settings.to_h['field_mapping'] != settings_in_database.to_h['field_mapping']
   end
 
-  def hubspot_configuration_changed?
-    app_id == 'hubspot' && enabled? &&
-      (new_record? || will_save_change_to_access_token? || will_save_change_to_settings? || will_save_change_to_status?)
-  end
-
-  def validate_hubspot_configuration
+  def validate_hubspot_field_mapping
     return if errors.any?
 
+    destinations = settings['field_mapping'].values
+    return errors.add(:base, I18n.t('integration_apps.hubspot.duplicate_mapping')) if destinations.uniq.size != destinations.size
+
     Crm::Hubspot::SetupService.new(self).setup
-  rescue Crm::Hubspot::Client::ApiError
-    errors.add(:base, I18n.t('integration_apps.hubspot.invalid_configuration'))
+  rescue Crm::Hubspot::SetupService::InvalidMappingError => e
+    errors.add(:base, I18n.t('integration_apps.hubspot.invalid_mapping', properties: e.message))
+  rescue Crm::Hubspot::Client::ApiError, Crm::Hubspot::Client::ReauthorizationRequired
+    errors.add(:base, I18n.t('integration_apps.hubspot.unreachable'))
   end
 end

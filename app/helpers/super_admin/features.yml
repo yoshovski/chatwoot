@@ -132,6 +132,13 @@ notion:
   enabled: true
   icon: 'icon-notion'
   config_key: 'notion'
+hubspot:
+  name: 'HubSpot'
+  description: 'Configuration for setting up the HubSpot integration'
+  enabled: <%= ChatwootApp.enterprise? %>
+  icon: 'icon-hubspot'
+  config_key: 'hubspot'
+  enterprise: true
 slack:
   name: 'Slack'
   description: 'Configuration for setting up Slack Integration'

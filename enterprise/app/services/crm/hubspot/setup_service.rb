@@ -1,12 +1,22 @@
 class Crm::Hubspot::SetupService
+  class InvalidMappingError < StandardError; end
+
+  PROPERTIES_CACHE_TTL = 5.minutes
+
   def initialize(hook)
     @hook = hook
   end
 
   def setup
-    properties = Crm::Hubspot::Client.new(@hook.access_token).properties
-    writable = properties.reject { |property| property.dig('modificationMetadata', 'readOnlyValue') }.pluck('name')
-    missing = @hook.settings.fetch('field_mapping').values - writable
-    raise Crm::Hubspot::Client::ApiError, 'Mapped HubSpot properties must exist and be writable' if missing.any?
+    invalid = @hook.settings.fetch('field_mapping').values - writable_properties.pluck('name')
+    raise InvalidMappingError, invalid.join(', ') if invalid.any?
+  end
+
+  def writable_properties
+    Rails.cache.fetch("hubspot/#{@hook.id}/writable_properties", expires_in: PROPERTIES_CACHE_TTL) do
+      Crm::Hubspot::Client.new(@hook).properties
+                          .reject { |property| property.dig('modificationMetadata', 'readOnlyValue') }
+                          .map { |property| property.slice('name', 'label', 'type', 'fieldType', 'groupName') }
+    end
   end
 end

@@ -426,6 +426,20 @@
   description: 'Notion version'
 ## ------ End of Configs added for Notion ------ ##
 
+## ------ Configs added for HubSpot ------ ##
+- name: HUBSPOT_CLIENT_ID
+  display_title: 'HubSpot Client ID'
+  value:
+  locked: false
+  description: 'Client ID of the HubSpot app used to connect accounts with OAuth'
+- name: HUBSPOT_CLIENT_SECRET
+  display_title: 'HubSpot Client Secret'
+  value:
+  locked: false
+  description: 'Client secret of the HubSpot app used to connect accounts with OAuth'
+  type: secret
+## ------ End of Configs added for HubSpot ------ ##
+
 ## ------ Configs added for Slack ------ ##
 - name: SLACK_CLIENT_ID
   display_title: 'Slack Client ID'

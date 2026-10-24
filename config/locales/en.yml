@@ -463,16 +463,20 @@ en:
       description: 'Connect your Shopify store to access order details, customer information, and product data directly within your conversations and helps your support team provide faster, more contextual assistance to your customers.'
     hubspot:
       name: 'HubSpot'
-      invalid_configuration: 'Could not connect to HubSpot. Check the private app token, contacts read/write and contact properties read scopes, and that all mapped properties exist and are writable.'
-      short_description: 'Sync captured business leads to HubSpot.'
-      description: 'Connect a private app with contacts read/write and contact properties read scopes. Only captured leads from agents with Leads and HubSpot sync enabled are synced. Email addresses are not verified. Create the mapped properties in HubSpot first. Contact upserts do not submit your website form; enroll leads in workflows using the mapped source property.'
-      fields:
-        private_app_token:
-          label: 'Private app token'
-          help: 'Stored securely and never returned by the integration API.'
-        field_mapping:
-          label: 'Contact field mapping (JSON)'
-          help: 'Map email, firstname, lastname, lead_type, lead_summary and lead_source to writable HubSpot properties. Add lead_company, lead_country or other configured lead fields. The source value is always chatbot.'
+      invalid_mapping: 'These HubSpot properties do not exist or are read-only: %{properties}'
+      duplicate_mapping: 'Each HubSpot property can only be mapped once.'
+      unreachable: 'Could not reach HubSpot to check the mapping. Try again in a moment.'
+      invalid_mapping_source: 'Email must map to the HubSpot email property, and only known contact fields can be mapped.'
+      sources:
+        email: 'Email'
+        firstname: 'First name'
+        lastname: 'Last name'
+        phone: 'Phone'
+        lead_type: 'Lead type'
+        lead_summary: 'Lead summary'
+        lead_source: 'Lead source'
+      short_description: 'Sync contacts and conversation transcripts to HubSpot.'
+      description: 'Connect HubSpot to create or update a HubSpot contact for every contact with an email, save conversation transcripts as notes, and see the HubSpot contact next to each conversation. Existing contacts are not backfilled; they sync the next time they change.'
     leadsquared:
       name: 'LeadSquared'
       short_description: 'Sync your contacts and conversations with LeadSquared CRM.'
@@ -721,6 +725,14 @@ en:
 
       Transcript:
       %{format_messages}
+    hubspot:
+      transcript_title: 'Conversation transcript from %{brand_name}'
+      transcript_inbox: 'Inbox: %{inbox}'
+      view_conversation: 'View conversation #%{display_id}'
+      transcript_truncated: 'Transcript shortened to fit HubSpot: the earliest messages are left out.'
+      contact: 'Contact'
+      ai_agent: 'AI agent'
+      system: 'System'
   agent_capacity_policy:
     inbox_already_assigned: 'Inbox has already been assigned to this policy'
   portals:
