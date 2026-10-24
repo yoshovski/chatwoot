@@ -13,10 +13,26 @@ class Captain::Tools::SaveLeadDetailsTool < Captain::Tools::BasePublicTool
     contact = find_contact(tool_context.state)
     return failure_result('Contact not found', tool_context.state) unless contact
 
-    Captain::Leads::CaptureService.new(@assistant, contact).perform(
+    result = Captain::Leads::CaptureService.new(@assistant, contact).perform(
       **details.slice(:name, :email, :lead_type, :summary), fields: JSON.parse(fields_json)
     )
+    deliver_lead(find_conversation(tool_context.state))
+    result
   rescue JSON::ParserError, ArgumentError, ActiveRecord::RecordInvalid => e
     failure_result(e.message, tool_context.state)
+  end
+
+  private
+
+  def deliver_lead(conversation)
+    return unless conversation
+
+    conversation.with_lock do
+      attributes = conversation.additional_attributes.except('business_handoff').merge('business_lead_captured' => true)
+      conversation.update!(additional_attributes: attributes)
+    end
+    return unless @assistant.config['lead_notification_team_id']
+
+    Captain::Leads::NotifyTeamJob.perform_later(@assistant.id, conversation.id)
   end
 end

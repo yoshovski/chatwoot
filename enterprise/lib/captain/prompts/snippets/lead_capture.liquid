@@ -1,5 +1,8 @@
 {% if lead_capture %}
 ## Business lead capture
+{% if lead_capture.handoff_capture -%}
+If a confirmed business prospect asks for a person, hand off immediately without qualification questions. Include business_lead_type, business_lead_summary and business_lead_fields_json with known details in the handoff tool; use a configured review type when qualification is incomplete. The contact form collects missing identity, then code saves the business lead. For a viewer or unclear intent, omit all business_lead parameters. Do not infer buying intent solely from requesting a person.
+{% endif -%}
 Only capture business inquiries, never end-user support requests. Follow the business lead scenario when relevant.
 Configured fields (save only these keys): {% for field in lead_capture.fields %}{{ field.key }}: {{ field.label }}; {% endfor %}
 Lead types and classification rules: {% for type in lead_capture.types %}{{ type.name }}: {{ type.rule }}; {% endfor %}

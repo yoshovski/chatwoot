@@ -31,6 +31,7 @@ const LEAD_PROPERTY_PREFIX = 'chatoctave_';
 
 const syncContacts = ref(true);
 const saveTranscripts = ref(true);
+const contactSyncScope = ref('all_contacts');
 const rowKeys = ref([]);
 const mapping = ref({});
 const addPickerKey = ref(0);
@@ -73,6 +74,7 @@ const reset = () => {
   );
   syncContacts.value = props.settings.sync_contacts !== false;
   saveTranscripts.value = props.settings.save_transcripts !== false;
+  contactSyncScope.value = props.settings.contact_sync_scope || 'all_contacts';
   rowKeys.value = [
     ...new Set([
       ...FIXED_KEYS,
@@ -127,6 +129,7 @@ const save = () => {
     ),
     sync_contacts: syncContacts.value,
     save_transcripts: saveTranscripts.value,
+    contact_sync_scope: contactSyncScope.value,
   });
 };
 </script>
@@ -146,6 +149,26 @@ const save = () => {
           </span>
         </span>
         <Switch v-model="syncContacts" data-test="sync-contacts" />
+      </label>
+      <label class="flex flex-col gap-2">
+        <span class="text-heading-3 text-n-slate-12">{{
+          t('INTEGRATION_SETTINGS.HUBSPOT.SCOPE.TITLE')
+        }}</span>
+        <select
+          v-model="contactSyncScope"
+          class="m-0 rounded-lg border border-n-weak bg-n-card px-3 py-2 text-sm text-n-slate-12"
+          data-test="contact-sync-scope"
+        >
+          <option value="all_contacts">
+            {{ t('INTEGRATION_SETTINGS.HUBSPOT.SCOPE.ALL') }}
+          </option>
+          <option value="business_leads">
+            {{ t('INTEGRATION_SETTINGS.HUBSPOT.SCOPE.LEADS') }}
+          </option>
+        </select>
+        <span class="text-body-main text-n-slate-11">{{
+          t('INTEGRATION_SETTINGS.HUBSPOT.SCOPE.DESCRIPTION')
+        }}</span>
       </label>
       <label class="flex items-start justify-between gap-4">
         <span class="flex flex-col gap-1">

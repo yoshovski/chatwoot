@@ -39,11 +39,13 @@ const needsReconnect = computed(
 const mappingData = ref(null);
 const mappingError = ref('');
 const isSaving = ref(false);
+const refreshingProperties = ref(false);
 
-const loadMappingData = async () => {
+const loadMappingData = async (refresh = false) => {
+  refreshingProperties.value = true;
   mappingError.value = '';
   try {
-    const { data } = await HubspotAPI.getProperties();
+    const { data } = await HubspotAPI.getProperties({ refresh });
     mappingData.value = data;
   } catch (error) {
     mappingError.value =
@@ -51,6 +53,8 @@ const loadMappingData = async () => {
         ? t('INTEGRATION_SETTINGS.HUBSPOT.REAUTHORIZE')
         : parseAPIErrorResponse(error) ||
           t('INTEGRATION_SETTINGS.HUBSPOT.MAPPING.LOAD_ERROR');
+  } finally {
+    refreshingProperties.value = false;
   }
 };
 
@@ -160,6 +164,23 @@ onMounted(async () => {
         <Banner v-if="mappingError" color="ruby">
           {{ mappingError }}
         </Banner>
+        <div
+          v-if="hook && !needsReconnect"
+          class="flex flex-wrap items-center justify-between gap-3"
+        >
+          <p class="m-0 text-sm text-n-slate-11">
+            {{ t('INTEGRATION_SETTINGS.HUBSPOT.ACCOUNT_SCOPE') }}
+          </p>
+          <Button
+            variant="faded"
+            color="slate"
+            size="sm"
+            icon="i-lucide-refresh-cw"
+            :is-loading="refreshingProperties"
+            :label="t('INTEGRATION_SETTINGS.HUBSPOT.REFRESH_PROPERTIES')"
+            @click="loadMappingData(true)"
+          />
+        </div>
         <HubspotSettingsForm
           v-if="hook && mappingData"
           :settings="settings"

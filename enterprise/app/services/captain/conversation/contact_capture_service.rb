@@ -133,6 +133,7 @@ class Captain::Conversation::ContactCaptureService # rubocop:disable Metrics/Cla
     return false if contact.blank?
 
     save_submitted_contact_details(contact, submitted)
+    complete_business_handoff_later(message)
     post_acknowledgement_reply!(message)
 
     true
@@ -167,6 +168,12 @@ class Captain::Conversation::ContactCaptureService # rubocop:disable Metrics/Cla
   end
 
   private
+
+  def complete_business_handoff_later(message)
+    return unless assistant&.config&.dig('lead_handoff_capture_enabled') == true
+
+    Captain::Leads::CompleteHandoffJob.perform_later(assistant.id, message.conversation_id)
+  end
 
   def missing_contact_fields(contact, triggering_message)
     missing = []

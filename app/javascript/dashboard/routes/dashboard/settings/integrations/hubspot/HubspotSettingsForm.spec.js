@@ -110,6 +110,7 @@ describe('HubspotSettingsForm', () => {
       },
       sync_contacts: false,
       save_transcripts: false,
+      contact_sync_scope: 'all_contacts',
     });
   });
 

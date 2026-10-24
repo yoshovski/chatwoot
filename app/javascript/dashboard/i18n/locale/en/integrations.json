@@ -459,7 +459,7 @@
       "SAVE_ERROR": "Could not save the HubSpot settings. Try again.",
       "SYNC_CONTACTS": {
         "TITLE": "Sync contacts",
-        "DESCRIPTION": "Create or update a HubSpot contact whenever a contact with an email is added or changed. Blank fields never overwrite HubSpot. Existing contacts are not backfilled; they sync the next time they change."
+        "DESCRIPTION": "Create or update eligible contacts when their details change. The scope below controls which contacts qualify. Blank fields never overwrite HubSpot. Existing contacts sync the next time they change."
       },
       "SAVE_TRANSCRIPTS": {
         "TITLE": "Save conversation transcripts as notes",
@@ -478,7 +478,15 @@
       "DELETE": {
         "TITLE": "Disconnect HubSpot?",
         "MESSAGE": "Contacts and transcripts stop syncing. Data already in HubSpot stays there."
-      }
+      },
+      "SCOPE": {
+        "TITLE": "Which contacts can reach HubSpot?",
+        "ALL": "All contacts with an email",
+        "LEADS": "Captured business leads only",
+        "DESCRIPTION": "Applies to both contact sync and transcript notes. Business-lead mode excludes viewer support and ordinary handoff contacts unless a business lead was captured. Existing HubSpot records are kept."
+      },
+      "REFRESH_PROPERTIES": "Refresh HubSpot properties",
+      "ACCOUNT_SCOPE": "These settings apply to all agents in this account."
     },
     "NOTION": {
       "HEADER": "Notion",
@@ -1342,7 +1350,7 @@
           "TITLE": "Business leads",
           "DESCRIPTION": "Turn business interest into contact details and a useful summary for follow-up.",
           "ENABLE": "Capture business leads",
-          "VERIFICATION": "Email addresses are not verified. CRM delivery and sales notifications are separate from saving a lead.",
+          "VERIFICATION": "Email format is checked, but mailbox ownership is not verified. Saving, CRM delivery and sales notification are separate steps.",
           "MAX_QUESTIONS": "Optional qualification questions",
           "FIELDS": "Choose what to collect",
           "FIELDS_HELP": "Name, email and a short chat summary are included. Add optional details that help your team follow up.",
@@ -1371,7 +1379,7 @@
           "DEFAULT_TYPE_RULE": "A business wants follow-up about products, pricing, a demo or an integration. Excludes viewers seeking help with their own subscription or account.",
           "CONVERSATION": "Set up the conversation",
           "CONVERSATION_HELP": "Answer first, ask only what is missing, then offer to collect contact details. Visitors can decline.",
-          "QUESTIONS_HELP": "Across the whole chat, before name and email. Set to 0 to skip qualification.",
+          "QUESTIONS_HELP": "AI instruction across the chat, before name and email; not a form counter. Set to 0 to skip optional qualification.",
           "FEWER_QUESTIONS": "Ask fewer optional questions",
           "MORE_QUESTIONS": "Ask more optional questions",
           "SCENARIO_TITLE": "Lead capture scenario",
@@ -1382,7 +1390,7 @@
           "ADD_SCENARIO": "Add lead capture scenario",
           "SAVE_ADD_SCENARIO": "Save and add scenario",
           "FOLLOW_UP": "Decide what happens next",
-          "FOLLOW_UP_HELP": "Saved leads appear on the contact in your inbox. Connect HubSpot to sync them, and configure automations separately for sales alerts or routing.",
+          "FOLLOW_UP_HELP": "Choose the destination and team below. Lead types describe the inquiry; assigning regional owners requires your routing policy.",
           "HUBSPOT_TITLE": "HubSpot sync",
           "HUBSPOT_ACTION": "Manage HubSpot",
           "REFRESH": "Refresh setup status",
@@ -1409,7 +1417,7 @@
             "RECONNECT": "Reconnect HubSpot to resume syncing",
             "SYNC_OFF": "Connected · contact sync is off",
             "MAPPING_NEEDED": "Contact sync is on · map lead type, summary and source",
-            "MAPPED": "Lead type, summary and source mapped · delivery is not confirmed here"
+            "MAPPED": "All configured lead fields mapped · delivery is not confirmed here"
           },
           "ERRORS": {
             "KEY": "Use a unique key of 1–40 characters. Start with a lowercase letter; use letters, numbers and underscores. Type, summary, source and status are reserved.",
@@ -1441,7 +1449,7 @@
             "SUMMARY": "Chat summary",
             "SUMMARY_EXAMPLE": "Interested in your business offering and wants email follow-up.",
             "RECORD_HELP": "The actual type and summary come from the conversation. Unknown fields are left empty.",
-            "BOUNDARY": "Viewer support is excluded. Lead capture does not verify an email address, send an alert or bring a live agent into the chat."
+            "BOUNDARY": "Viewer support is excluded. Email ownership is unverified. CRM, team alerts and live handoff follow their separate settings."
           },
           "SCENARIO_PAUSED": "Paused: {name}. Review your scenarios and enable it to capture leads.",
           "TRANSCRIPT_TITLE": "Conversation transcript → HubSpot note",
@@ -1453,7 +1461,36 @@
             "UNAVAILABLE": "Transcript setting unavailable. Ask an administrator to check HubSpot.",
             "NOT_CONNECTED": "Connect HubSpot to save transcript notes",
             "RECONNECT": "Reconnect HubSpot to resume transcript notes"
-          }
+          },
+          "FLOW_TITLE": "How business inquiries move through this agent",
+          "FLOW_HELP": "Knowledge answers questions. Scenarios decide when to collect a lead or transfer to your team.",
+          "FLOW_ANSWER": "Answer from the business overview, FAQs and approved webpages, using the conversation so far.",
+          "FLOW_CAPTURE": "For business interest, offer follow-up and collect only missing details. Respect a refusal.",
+          "FLOW_DELIVER": "Save the lead, sync mapped fields to HubSpot, and notify the selected team. Save the transcript after resolution.",
+          "FLOW_SCENARIOS": "You do not need a scenario for every topic or pricing question. Use scenarios for distinct actions or support destinations.",
+          "KNOWLEDGE": {
+            "TITLE": "Website refresh",
+            "NOT_SCHEDULED": "Automatic refresh is not scheduled. Imported pages can become outdated.",
+            "SCHEDULED": "Automatic refresh interval: {hours} hours. Pages are processed in batches.",
+            "HELP": "Refresh timing is managed for this account. A successful import does not mean the webpage will update automatically.",
+            "ACTION": "Manage knowledge"
+          },
+          "HANDOFF_TITLE": "Capture business inquiries through handoff",
+          "HANDOFF_HELP": "When a confirmed prospect requests a person, pass known business details to the handoff tool. After the form supplies missing name and email, save the lead. Viewer support stays excluded. This does not change live handoff settings.",
+          "PRICING_TITLE": "Allow approved published service pricing",
+          "PRICING_HELP": "Let knowledge answers explain consistent published service prices. Conflicting sources and negotiated quotes still require sales follow-up. Live product prices still require tools.",
+          "NOTIFICATION_TITLE": "Email new business inquiries to",
+          "NOTIFICATION_OFF": "Do not send a built-in sales alert",
+          "NOTIFICATION_HELP": "Send a summary, known qualification details and a conversation link once per conversation, with the visitor as the reply-to address. SMTP and at least one team member are required. Disable any overlapping sales-alert automation.",
+          "NOTIFICATION_ERROR": "Could not load teams. Your saved selection is kept; reload this page to change it.",
+          "TEST_TITLE": "Check the complete flow before going live",
+          "TEST_HELP": "An active scenario means capture is configured; it does not prove CRM or email delivery.",
+          "TEST_BUSINESS": "Ask a business question, agree to follow-up and confirm the contact has the expected lead fields.",
+          "TEST_HANDOFF": "Ask for a person during a business inquiry. Submit the handoff form and check that the lead is saved without repeating questions.",
+          "TEST_VIEWER": "Ask about a personal subscription and request a person. Confirm transfer works without creating a business lead.",
+          "TEST_DELIVERY": "Check one sales alert and the HubSpot contact. Resolve the conversation, then check its transcript note.",
+          "TEST_REFUSAL": "Decline contact collection and confirm the agent keeps helping without saving a lead.",
+          "TRANSCRIPT_LEADS_HELP": "Only conversations where a business lead was captured are included. Public messages, timestamps and a conversation link are added after resolution. Viewer chats are excluded even if that contact was previously a business lead."
         }
       },
       "OPTIONS": {

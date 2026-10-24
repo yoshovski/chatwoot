@@ -26,12 +26,17 @@ class Captain::Leads::CaptureService
     'Lead details saved. Email is unverified. If HubSpot is connected, sync runs in the background; delivery is not confirmed.'
   end
 
+  def validate_qualification!(lead_type, summary, fields)
+    valid = valid_text?(summary, 2000) && @assistant.lead_types.pluck('name').include?(lead_type) && valid_fields?(fields)
+    raise ArgumentError, 'Provide a summary, configured lead type and configured fields only' unless valid
+  end
+
   private
 
   def validate_details!(name, email, lead_type, summary, fields)
     valid = [name, email, summary].all? { |value| valid_text?(value, 2000) }
     valid &&= email.strip.match?(URI::MailTo::EMAIL_REGEXP)
-    valid &&= @assistant.lead_types.pluck('name').include?(lead_type) && valid_fields?(fields)
+    validate_qualification!(lead_type, summary, fields)
     raise ArgumentError, 'Provide a name, email, summary, configured lead type and configured fields only' unless valid
   end
 

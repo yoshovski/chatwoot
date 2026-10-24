@@ -12,7 +12,8 @@ class Crm::Hubspot::SetupService
     raise InvalidMappingError, invalid.join(', ') if invalid.any?
   end
 
-  def writable_properties
+  def writable_properties(refresh: false)
+    Rails.cache.delete("hubspot/#{@hook.id}/writable_properties") if refresh
     Rails.cache.fetch("hubspot/#{@hook.id}/writable_properties", expires_in: PROPERTIES_CACHE_TTL) do
       Crm::Hubspot::Client.new(@hook).properties
                           .reject { |property| property.dig('modificationMetadata', 'readOnlyValue') }

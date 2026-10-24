@@ -54,6 +54,8 @@ module Enterprise::Account
   end
 
   def captain_document_sync_interval(sync_intervals = Enterprise::Account.captain_document_sync_intervals)
+    return captain_document_sync_override if captain_document_sync_override
+
     plan = custom_attributes['plan_name']
     plan = 'enterprise' if plan.blank? && ChatwootApp.self_hosted_paid?
     return nil if plan.blank?
@@ -62,6 +64,11 @@ module Enterprise::Account
     return nil unless interval_hours.is_a?(Integer) && interval_hours.positive?
 
     interval_hours.hours
+  end
+
+  def captain_document_sync_override
+    hours = custom_attributes['captain_document_sync_interval_hours']
+    hours.hours if hours.is_a?(Integer) && hours.between?(24, 744)
   end
 
   def saml_enabled?

@@ -388,7 +388,7 @@ class Captain::Assistant < ApplicationRecord
     length = answer_length.presence || 'balanced'
     { business_type: type, answer_format: format, answer_length: length,
       answer_length_instruction: length == 'custom' ? answer_length_prompt : ANSWER_LENGTH_INSTRUCTIONS[format][length],
-      follow_up_questions: follow_up_questions? }
+      follow_up_questions: follow_up_questions?, published_pricing_enabled: config['published_pricing_enabled'] == true }
   end
 
   def answer_format

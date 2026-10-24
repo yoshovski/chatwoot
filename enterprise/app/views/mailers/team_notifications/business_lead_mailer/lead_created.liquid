@@ -1,0 +1,9 @@
+<p>A visitor requested business follow-up.</p>
+<p><strong>{{ lead_name | escape }}</strong><br>{{ lead_email | escape }} (unverified)</p>
+<dl>
+  {% for detail in lead_details %}
+    <dt><strong>{{ detail[0] | escape }}</strong></dt>
+    <dd>{{ detail[1] | escape }}</dd>
+  {% endfor %}
+</dl>
+<p><a href="{{ action_url }}">Open the conversation and reply</a></p>
