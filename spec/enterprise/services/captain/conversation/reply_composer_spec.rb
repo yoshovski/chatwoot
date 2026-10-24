@@ -86,9 +86,16 @@ RSpec.describe Captain::Conversation::ReplyComposer do
   end
 
   context 'with cited sources and Show sources off' do
+    let(:screenshot) { '[Screenshot: Shipping settings screen](https://docs.example.com/shipping.png)' }
+    let(:video) { '[Video](https://www.youtube.com/watch?v=abc123xyz)' }
+    let(:tool_state) do
+      { knowledge_screenshots: ['https://docs.example.com/shipping.png'],
+        knowledge_media: { 1 => [video, screenshot], 2 => ['[Video](https://www.youtube.com/watch?v=unrelated123)'] } }
+    end
+    let(:answer) { "We ship within two days.\n\n1. Read the [shipping settings](https://example-store.com/shipping)." }
     let(:response) do
       {
-        'response_parts' => [{ 'text' => 'We ship within two days.', 'citation_indexes' => [1] }],
+        'response_parts' => [{ 'text' => answer, 'citation_indexes' => [1] }],
         'suggested_replies' => ['Track order']
       }
     end
@@ -98,10 +105,10 @@ RSpec.describe Captain::Conversation::ReplyComposer do
                                            citation_titles: { 1 => 'Shipping policy' })
     end
 
-    it 'links the sources in the widget text and keeps the buttons' do
+    it 'omits the source footer while retaining inline links, cited media and buttons' do
       message = composer.messages.first
 
-      expect(message[:content]).to eq("We ship within two days.\n\n→ [Shipping policy](https://example-store.com/shipping)")
+      expect(message[:content]).to eq("#{answer}\n\n#{video}\n\n#{screenshot}")
       expect(message[:content_type]).to eq('input_select')
       expect(message[:content_attributes]).not_to have_key('captain_sources')
     end
@@ -122,8 +129,8 @@ RSpec.describe Captain::Conversation::ReplyComposer do
       )
     end
 
-    it 'links the page whose title matches the answer' do
-      expect(composer.messages.first[:content]).to eq("#{answer}\n\n→ [Apple in-app purchase (StoreKit 2) | Cleeng](https://example.com/docs/storekit-2)")
+    it 'keeps inferred sources hidden when Sources is off' do
+      expect(composer.messages.first[:content]).to eq(answer)
     end
   end
 
@@ -140,9 +147,10 @@ RSpec.describe Captain::Conversation::ReplyComposer do
       }
     end
 
-    it 'shows the short label and sends the full message, dropping labels that are too long' do
+    it 'shortens long labels and keeps the full question instead of dropping the button' do
       expect(composer.messages.first[:content_attributes][:items]).to eq(
-        [{ 'title' => 'Shipping time', 'value' => 'When will order 1001 ship?' }, { 'title' => 'Order items', 'value' => 'Order items' }]
+        [{ 'title' => 'Shipping time', 'value' => 'When will order 1001 ship?' },
+         { 'title' => 'A label that is far t...', 'value' => 'Dropped' }, { 'title' => 'Order items', 'value' => 'Order items' }]
       )
     end
   end

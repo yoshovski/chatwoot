@@ -34,7 +34,7 @@ RSpec.describe Captain::Assistant::ResponseParts do
     expect([nil, widget, email, sms].map { |conversation| described_class.sources_format(conversation) })
       .to eq(%i[structured structured markdown plain])
     expect([nil, widget, email, sms].map { |conversation| described_class.sources_format(conversation, sources_card: false) })
-      .to eq(%i[markdown markdown markdown plain])
+      .to eq(%i[none none none none])
   end
 
   describe '#with_fallback_citation' do

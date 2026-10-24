@@ -11,9 +11,12 @@ RSpec.describe Captain::Documents::PageKnowledgeProcessor do
 
   def document_for(url) = assistant.documents.new(external_link: url, metadata: { 'website_source_id' => source.id })
 
-  it 'cleans version 3 pages and drops blocks repeated across the site' do
-    expect(described_class.new(document_for('https://www.example.com/warranty')).preview(raw))
-      .to eq("Warranty covers two years from the date of delivery for every device.\n\n## Links\n\n- Get started: https://www.example.com/signup")
+  it 'cleans version 3 pages, keeping instructional screenshots and dropping site boilerplate' do
+    image = '<Image src="https://cdn.example.com/settings.png" caption="Warranty settings in the dashboard" />'
+    expect(described_class.new(document_for('https://www.example.com/warranty')).preview("#{raw}\n\n#{image}"))
+      .to eq("Warranty covers two years from the date of delivery for every device.\n\n" \
+             "[Screenshot: Warranty settings in the dashboard](https://cdn.example.com/settings.png)\n\n" \
+             "## Links\n\n- Get started: https://www.example.com/signup")
   end
 
   it 'keeps site-wide blocks on the start page so they are indexed once' do

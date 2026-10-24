@@ -106,12 +106,12 @@ RSpec.describe Captain::PromptRenderer do
       expect(result).not_to include('[[faq:')
     end
 
-    it 'tells the model that every cited page reaches the customer as a link' do
+    it 'leaves source footer visibility to the interface and keeps inline links independent' do
       allow(File).to receive(:read).with(template_path).and_return("{% render 'citations' %}")
 
       result = described_class.render(template_name, {})
 
-      expect(result).to include('Each page you cite is shown to the customer as a link with your reply')
+      expect(result).to include('The interface shows a source footer only when Sources is enabled')
     end
 
     it 'renders the commerce rules snippet' do

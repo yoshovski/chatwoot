@@ -5,6 +5,8 @@ import { useMessageFormatter } from 'shared/composables/useMessageFormatter';
 import MessageSources from 'shared/components/MessageSources.vue';
 import MessageVideo from 'shared/components/MessageVideo.vue';
 import { extractVideo } from 'shared/helpers/videoLinks';
+import { extractScreenshots } from 'shared/helpers/screenshotLinks';
+import MessageScreenshots from 'shared/components/MessageScreenshots.vue';
 import PlaygroundCards from './PlaygroundCards.vue';
 import PlaygroundForm from './PlaygroundForm.vue';
 import PlaygroundRunDetails from './PlaygroundRunDetails.vue';
@@ -30,7 +32,14 @@ const parts = computed(() =>
   (props.message.messages?.length
     ? props.message.messages
     : [{ content: props.message.content, content_type: 'text' }]
-  ).map(part => ({ ...part, videoContent: extractVideo(part.content) }))
+  ).map(part => {
+    const screenshotContent = extractScreenshots(part.content);
+    return {
+      ...part,
+      screenshotContent,
+      videoContent: extractVideo(screenshotContent.text),
+    };
+  })
 );
 
 const options = part => part.content_attributes?.items ?? [];
@@ -69,6 +78,9 @@ const isSelected = option => props.message.selectedOption === option.title;
             v-if="part.videoContent.video"
             :video="part.videoContent.video"
             :play-label="t('CAPTAIN.PLAYGROUND.PLAY_VIDEO')"
+          />
+          <MessageScreenshots
+            :screenshots="part.screenshotContent.screenshots"
           />
           <MessageSources
             :sources="part.content_attributes?.captain_sources || []"

@@ -58,14 +58,8 @@ export default {
 </script>
 
 <template>
-  <div class="relative z-10 -mt-6 flex w-full flex-1 flex-col px-4 pb-2">
+  <div class="relative z-10 flex w-full flex-1 flex-col px-4 pt-4 pb-2">
     <div data-fit-content class="flex flex-col gap-4">
-      <TeamAvailability
-        :available-agents="availableAgents"
-        :has-conversation="!!conversationSize"
-        :unread-count="unreadMessageCount"
-        @start-conversation="startConversation"
-      />
       <ConversationStarters
         :starters="conversationStarters"
         @select="startConversation"
@@ -73,6 +67,15 @@ export default {
       <ArticleContainer />
     </div>
     <div data-home-spacer class="flex-1" />
+
+    <div data-fit-content>
+      <TeamAvailability
+        :available-agents="availableAgents"
+        :has-conversation="!!conversationSize"
+        :unread-count="unreadMessageCount"
+        @start-conversation="startConversation"
+      />
+    </div>
 
     <nav
       :aria-label="$t('WELCOME.NAVIGATION')"

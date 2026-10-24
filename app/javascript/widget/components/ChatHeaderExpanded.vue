@@ -28,7 +28,7 @@ const { formatMessage } = useMessageFormatter();
 <template>
   <!-- A welcome state is useful even before an inbox has custom intro copy. -->
   <header
-    class="header-expanded relative isolate box-border w-full shrink-0 overflow-hidden bg-[var(--widget-color)] px-6 pt-6 pb-14 text-[var(--widget-text-color)] [&_.actions_svg]:!text-current"
+    class="header-expanded relative isolate box-border w-full shrink-0 overflow-hidden bg-[var(--widget-color)] px-6 pt-6 pb-8 text-[var(--widget-text-color)] [&_.actions_svg]:!text-current"
   >
     <div
       aria-hidden="true"

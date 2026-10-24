@@ -168,7 +168,18 @@ class Captain::Tools::FaqLookupTool < Captain::Tools::BasePublicTool # rubocop:d
 
   def format_passage(tool_context, passage)
     index = source_index_for(tool_context, passage.source_reference, {})
-    "\nKnowledge result:\nSource index: #{index}\nTitle: #{passage.title}\nSource URL: #{passage.source_url}\n#{passage.content}\n"
+    content = Captain::Knowledge::ScreenshotLink.normalize(passage.content, page_url: passage.source_url)
+    register_passage_media(tool_context, index, content)
+    "\nKnowledge result:\nSource index: #{index}\nTitle: #{passage.title}\nSource URL: #{passage.source_url}\n#{content}\n"
+  end
+
+  def register_passage_media(tool_context, index, content)
+    images = tool_context.state[:knowledge_screenshots] ||= []
+    images.concat(content.scan(Captain::Knowledge::ScreenshotLink::LINE).map(&:last)).uniq!
+    media = tool_context.state[:knowledge_media] ||= {}
+    links = content.lines.map(&:strip).select { |line| Captain::Knowledge::VideoLink.line?(line) }
+    content.scan(Captain::Knowledge::ScreenshotLink::LINE) { links << Regexp.last_match(0) }
+    media[index] = Array(media[index]) | links
   end
 
   def passage_source_detail(passage, query)
