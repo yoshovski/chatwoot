@@ -1443,7 +1443,17 @@
             "RECORD_HELP": "The actual type and summary come from the conversation. Unknown fields are left empty.",
             "BOUNDARY": "Viewer support is excluded. Lead capture does not verify an email address, send an alert or bring a live agent into the chat."
           },
-          "SCENARIO_PAUSED": "Paused: {name}. Review your scenarios and enable it to capture leads."
+          "SCENARIO_PAUSED": "Paused: {name}. Review your scenarios and enable it to capture leads.",
+          "TRANSCRIPT_TITLE": "Conversation transcript → HubSpot note",
+          "TRANSCRIPT_HELP": "Separate from the short lead summary: public messages, timestamps and a conversation link. Added when the chat is resolved and the contact has an email address. This account-wide setting also applies to live handoffs.",
+          "TRANSCRIPT": {
+            "ON": "Enabled · saved as a note when the chat is resolved",
+            "OFF": "Off · enable transcript notes in HubSpot settings",
+            "LOADING": "Checking transcript setting…",
+            "UNAVAILABLE": "Transcript setting unavailable. Ask an administrator to check HubSpot.",
+            "NOT_CONNECTED": "Connect HubSpot to save transcript notes",
+            "RECONNECT": "Reconnect HubSpot to resume transcript notes"
+          }
         }
       },
       "OPTIONS": {

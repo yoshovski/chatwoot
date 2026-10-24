@@ -51,7 +51,7 @@ export function useLeadSetup(assistantId) {
   const existingScenario = computed(
     () => captureScenario.value || leadScenarios.value[0]
   );
-  const hubspotState = computed(() => {
+  const hubspotConnectionState = computed(() => {
     if (loading.value) return 'loading';
     if (integrationError.value) return 'unavailable';
     if (!hubspot.value) return 'not_connected';
@@ -61,17 +61,28 @@ export function useLeadSetup(assistantId) {
     )
       return 'reconnect';
     if (!hubspot.value.settings) return 'unavailable';
+    return 'connected';
+  });
+  const hubspotState = computed(() => {
+    if (hubspotConnectionState.value !== 'connected')
+      return hubspotConnectionState.value;
     if (!hubspot.value.settings.sync_contacts) return 'sync_off';
     const mapping = hubspot.value.settings?.field_mapping || {};
     return mapping.lead_type && mapping.lead_summary && mapping.lead_source
       ? 'mapped'
       : 'mapping_needed';
   });
+  const transcriptState = computed(() => {
+    if (hubspotConnectionState.value !== 'connected')
+      return hubspotConnectionState.value;
+    return hubspot.value.settings.save_transcripts ? 'on' : 'off';
+  });
 
   return {
     captureScenario,
     existingScenario,
     hubspotState,
+    transcriptState,
     loading,
     scenarioError,
     refresh: () => {

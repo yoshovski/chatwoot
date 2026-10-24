@@ -35,6 +35,7 @@ const {
   captureScenario,
   existingScenario,
   hubspotState,
+  transcriptState,
   loading,
   scenarioError,
 } = setup;
@@ -158,6 +159,9 @@ const openScenarios = async () => {
 };
 const hubspotLabel = computed(() =>
   label(`HUBSPOT.${hubspotState.value.toUpperCase()}`)
+);
+const transcriptLabel = computed(() =>
+  label(`TRANSCRIPT.${transcriptState.value.toUpperCase()}`)
 );
 const statusLabel = computed(() => {
   if (isDirty.value) return label('STATUS.UNSAVED');
@@ -538,6 +542,17 @@ const statusLabel = computed(() => {
                 :label="label('HUBSPOT_ACTION')"
                 @click="router.push({ name: 'settings_integrations_hubspot' })"
               />
+            </div>
+            <div class="flex flex-col gap-1 rounded-lg bg-n-slate-2 p-3">
+              <span class="text-sm font-medium text-n-slate-12">{{
+                label('TRANSCRIPT_TITLE')
+              }}</span>
+              <span class="text-xs text-n-slate-11" role="status">{{
+                transcriptLabel
+              }}</span>
+              <p class="mb-0 mt-1 text-xs text-n-slate-11">
+                {{ label('TRANSCRIPT_HELP') }}
+              </p>
             </div>
             <p class="m-0 text-xs text-n-slate-11">
               {{ label('VERIFICATION') }}
