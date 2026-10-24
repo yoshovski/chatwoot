@@ -31,7 +31,13 @@ const saving = ref(false);
 const attempted = ref(false);
 const form = ref(null);
 const setup = useLeadSetup(computed(() => props.assistant.id));
-const { captureScenario, hubspotState, loading, scenarioError } = setup;
+const {
+  captureScenario,
+  existingScenario,
+  hubspotState,
+  loading,
+  scenarioError,
+} = setup;
 const snapshot = () => JSON.stringify(settings.value);
 const isDirty = computed(() => snapshot() !== savedSnapshot.value);
 let lockedFields = new WeakSet();
@@ -147,7 +153,7 @@ const openScenarios = async () => {
   router.push({
     name: 'captain_assistants_scenarios_index',
     params: { assistantId: props.assistant.id },
-    query: captureScenario.value ? {} : { template: 'capture_business_lead' },
+    query: existingScenario.value ? {} : { template: 'capture_business_lead' },
   });
 };
 const hubspotLabel = computed(() =>
@@ -158,9 +164,9 @@ const statusLabel = computed(() => {
   if (!settings.value.leads_enabled) return label('STATUS.OFF');
   if (loading.value) return label('STATUS.CHECKING');
   if (scenarioError.value) return label('STATUS.UNKNOWN');
-  return label(
-    captureScenario.value ? 'STATUS.READY' : 'STATUS.NEEDS_SCENARIO'
-  );
+  if (captureScenario.value) return label('STATUS.READY');
+  if (existingScenario.value) return label('STATUS.PAUSED_SCENARIO');
+  return label('STATUS.NEEDS_SCENARIO');
 });
 </script>
 
@@ -469,7 +475,11 @@ const statusLabel = computed(() => {
                     ? label('SCENARIO_ERROR')
                     : captureScenario
                       ? label('SCENARIO_FOUND', { name: captureScenario.title })
-                      : label('SCENARIO_MISSING')
+                      : existingScenario
+                        ? label('SCENARIO_PAUSED', {
+                            name: existingScenario.title,
+                          })
+                        : label('SCENARIO_MISSING')
               }}
             </p>
             <Button
@@ -482,7 +492,7 @@ const statusLabel = computed(() => {
               :is-loading="saving"
               :label="
                 label(
-                  captureScenario
+                  existingScenario
                     ? 'MANAGE_SCENARIO'
                     : isDirty
                       ? 'SAVE_ADD_SCENARIO'

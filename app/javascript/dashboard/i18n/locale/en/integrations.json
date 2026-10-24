@@ -1393,7 +1393,8 @@
             "CHECKING": "Checking saved setup…",
             "UNKNOWN": "Scenario status unavailable",
             "READY": "On · capture scenario active",
-            "NEEDS_SCENARIO": "On · add a capture scenario to finish setup"
+            "NEEDS_SCENARIO": "On · add a capture scenario to finish setup",
+            "PAUSED_SCENARIO": "On · enable the paused capture scenario"
           },
           "COMMON_FIELDS": {
             "company": "Company",
@@ -1441,7 +1442,8 @@
             "SUMMARY_EXAMPLE": "Interested in your business offering and wants email follow-up.",
             "RECORD_HELP": "The actual type and summary come from the conversation. Unknown fields are left empty.",
             "BOUNDARY": "Viewer support is excluded. Lead capture does not verify an email address, send an alert or bring a live agent into the chat."
-          }
+          },
+          "SCENARIO_PAUSED": "Paused: {name}. Review your scenarios and enable it to capture leads."
         }
       },
       "OPTIONS": {

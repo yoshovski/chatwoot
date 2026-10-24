@@ -40,11 +40,16 @@ export function useLeadSetup(assistantId) {
     { immediate: true }
   );
 
-  const captureScenario = computed(() =>
-    scenarios.value.find(
-      scenario =>
-        scenario.enabled && scenario.tools?.includes('save_lead_details')
+  const leadScenarios = computed(() =>
+    scenarios.value.filter(scenario =>
+      scenario.tools?.includes('save_lead_details')
     )
+  );
+  const captureScenario = computed(() =>
+    leadScenarios.value.find(scenario => scenario.enabled)
+  );
+  const existingScenario = computed(
+    () => captureScenario.value || leadScenarios.value[0]
   );
   const hubspotState = computed(() => {
     if (loading.value) return 'loading';
@@ -65,6 +70,7 @@ export function useLeadSetup(assistantId) {
 
   return {
     captureScenario,
+    existingScenario,
     hubspotState,
     loading,
     scenarioError,
