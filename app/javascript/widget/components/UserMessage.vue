@@ -12,6 +12,7 @@ import DragWrapper from 'widget/components/DragWrapper.vue';
 import { BUS_EVENTS } from 'shared/constants/busEvents';
 import { emitter } from 'shared/helpers/mitt';
 import { mapGetters } from 'vuex';
+import { isWidgetColorLighter } from 'shared/helpers/colorHelper';
 
 export default {
   name: 'UserMessage',
@@ -48,6 +49,12 @@ export default {
       widgetTextColor: 'appConfig/getWidgetTextColor',
     }),
 
+    bubbleClass() {
+      return {
+        'outline outline-1 -outline-offset-1 outline-n-slate-7':
+          isWidgetColorLighter(this.widgetColor),
+      };
+    },
     isInProgress() {
       const { status = '' } = this.message;
       return status === 'in_progress';
@@ -124,6 +131,7 @@ export default {
           <DragWrapper direction="left" @dragged="toggleReply">
             <UserMessageBubble
               v-if="showTextBubble"
+              :class="bubbleClass"
               :message="message.content"
               :status="message.status"
               :widget-color="widgetColor"
@@ -132,6 +140,7 @@ export default {
             <div
               v-if="hasAttachments"
               class="chat-bubble has-attachment user"
+              :class="bubbleClass"
               :style="{ backgroundColor: widgetColor }"
             >
               <div
