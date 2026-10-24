@@ -6,6 +6,10 @@ defineProps({
     type: String,
     required: true,
   },
+  disabled: {
+    type: Boolean,
+    default: false,
+  },
   description: {
     type: String,
     default: '',
@@ -24,6 +28,11 @@ const modelValue = defineModel({ type: Boolean, default: false });
       </span>
       <slot />
     </div>
-    <Switch v-model="modelValue" :aria-label="title" class="mt-0.5" />
+    <Switch
+      v-model="modelValue"
+      :aria-label="title"
+      :disabled="disabled"
+      class="mt-0.5 disabled:cursor-not-allowed disabled:opacity-60"
+    />
   </div>
 </template>

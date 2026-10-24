@@ -203,7 +203,8 @@ RSpec.describe 'Api::V1::Accounts::Captain::Assistants', type: :request do
 
       it 'saves what happens when a person is needed' do
         handoff = { handoff_when_online: 'transfer', handoff_when_offline: 'keep', no_handoff_message: 'Leave your email.',
-                    offline_handoff_message: 'We reply tomorrow.', handoff_rules: ['Escalate legal advice.'] }
+                    offline_handoff_message: 'We reply tomorrow.', handoff_rules: ['Escalate legal advice.'],
+                    handoff_form_message: 'Leave your details.', handoff_collect_name: false, handoff_collect_phone: true }
 
         patch "/api/v1/accounts/#{account.id}/captain/assistants/#{assistant.id}",
               params: { assistant: { config: handoff } }, headers: admin.create_new_auth_token, as: :json

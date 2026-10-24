@@ -146,6 +146,7 @@ export default {
       <ChatOptions
         :title="videoContent.text"
         :options="messageContentAttributes.items"
+        :hide-fields="hideOptions"
         :disabled="hideOptions"
         :agent-name="agentName"
         :show-agent-name="showAgentName"

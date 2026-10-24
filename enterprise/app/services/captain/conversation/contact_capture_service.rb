@@ -15,6 +15,11 @@ class Captain::Conversation::ContactCaptureService # rubocop:disable Metrics/Cla
     'name' => 'email', 'label' => 'Email', 'type' => 'email', 'placeholder' => 'Please enter your email', 'required' => true
   }.freeze
 
+  PHONE_FORM_ITEM = {
+    'name' => 'phone_number', 'label' => 'Phone number', 'type' => 'tel', 'placeholder' => '+34612345678',
+    'required' => true, 'pattern' => '\\+[1-9][0-9]{1,14}', 'title' => 'Include the country code, for example +34612345678'
+  }.freeze
+
   attr_reader :conversation, :assistant
 
   def initialize(conversation:, assistant: nil)
@@ -23,16 +28,26 @@ class Captain::Conversation::ContactCaptureService # rubocop:disable Metrics/Cla
   end
 
   # The form a customer sees when a handoff needs their details; the playground shows it without a conversation.
-  def self.form_payload(missing_fields)
+  def self.form_payload(missing_fields, assistant: nil)
     items = []
     items << NAME_FORM_ITEM if missing_fields.include?('name')
     items << EMAIL_FORM_ITEM if missing_fields.include?('email')
+    items << PHONE_FORM_ITEM if missing_fields.include?('phone_number')
 
     {
-      content: FORM_TEXT,
+      content: assistant&.config&.dig('handoff_form_message').presence || FORM_TEXT,
       content_type: 'form',
       content_attributes: { 'type' => 'contact_capture', 'items' => items, 'button_label' => 'Submit' }
     }
+  end
+
+  def self.requested_fields(assistant)
+    config = assistant&.config || {}
+    fields = []
+    fields << 'name' unless config['handoff_collect_name'] == false
+    fields << 'email'
+    fields << 'phone_number' if config['handoff_collect_phone']
+    fields
   end
 
   def self.extract_email(text)
@@ -98,9 +113,7 @@ class Captain::Conversation::ContactCaptureService # rubocop:disable Metrics/Cla
     contact = conversation.contact
     return nil if contact.blank?
 
-    missing_fields = []
-    missing_fields << 'name' if self.class.missing_name?(contact)
-    missing_fields << 'email' if self.class.missing_email?(contact, triggering_message: triggering_message)
+    missing_fields = missing_contact_fields(contact, triggering_message)
 
     return nil if missing_fields.empty?
     return nil unless guard_form_posting!(missing_fields)
@@ -147,10 +160,21 @@ class Captain::Conversation::ContactCaptureService # rubocop:disable Metrics/Cla
   # The guard only stops one handoff from posting the form twice. Clearing it when
   # the handoff ends lets the next handoff ask again if details are still missing.
   def reset_form_guard!
-    [%w[name], %w[email], %w[name email]].each { |fields| Redis::Alfred.delete(guard_key(fields)) }
+    fields = %w[name email phone_number]
+    (1..fields.length).each do |size|
+      fields.combination(size).each { |combination| Redis::Alfred.delete(guard_key(combination)) }
+    end
   end
 
   private
+
+  def missing_contact_fields(contact, triggering_message)
+    missing = []
+    missing << 'name' if self.class.missing_name?(contact)
+    missing << 'email' if self.class.missing_email?(contact, triggering_message: triggering_message)
+    missing << 'phone_number' if contact.phone_number.blank?
+    missing & self.class.requested_fields(assistant)
+  end
 
   def guard_key(missing_fields)
     "captain:contact_form:#{conversation.id}:#{missing_fields.sort.join('_')}"
@@ -172,7 +196,7 @@ class Captain::Conversation::ContactCaptureService # rubocop:disable Metrics/Cla
     additional_attrs = sender ? { 'agent_name' => sender.agent_name } : {}
 
     conversation.messages.create!(
-      self.class.form_payload(missing_fields).merge(
+      self.class.form_payload(missing_fields, assistant: assistant).merge(
         message_type: :outgoing,
         account_id: conversation.account_id,
         inbox_id: conversation.inbox_id,
@@ -197,9 +221,11 @@ class Captain::Conversation::ContactCaptureService # rubocop:disable Metrics/Cla
   def save_submitted_contact_details(contact, submitted)
     name_val = extract_submitted_value(submitted, 'name')
     email_val = extract_submitted_value(submitted, 'email')
+    phone_val = submitted_phone(contact, submitted)
 
     updates = {}
     updates[:name] = name_val.strip if name_val.present?
+    updates[:phone_number] = phone_val if phone_val.present?
 
     if email_val.present?
       clean_email = email_val.strip.downcase
@@ -208,6 +234,14 @@ class Captain::Conversation::ContactCaptureService # rubocop:disable Metrics/Cla
     end
 
     contact.update(updates) if updates.present?
+  end
+
+  def submitted_phone(contact, submitted)
+    phone = extract_submitted_value(submitted, 'phone_number').to_s.strip
+    return unless phone.match?(/\A\+[1-9]\d{1,14}\z/)
+    return if contact.account.contacts.where.not(id: contact.id).exists?(phone_number: phone)
+
+    phone
   end
 
   def extract_submitted_value(submitted, field_name)

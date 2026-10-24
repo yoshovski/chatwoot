@@ -101,6 +101,31 @@ RSpec.describe Captain::Conversation::ContactCaptureService, type: :service do
   end
 
   describe '#post_form_if_needed!' do
+    context 'with configured contact fields' do
+      before do
+        assistant.update!(config: {
+                            handoff_form_message: 'Where can our team reach you?',
+                            handoff_collect_name: false,
+                            handoff_collect_phone: true
+                          })
+        contact.update!(phone_number: nil)
+      end
+
+      it 'uses the custom message, keeps email required and asks for phone instead of name' do
+        message = service.post_form_if_needed!
+        expect(message.content).to eq('Where can our team reach you?')
+        items = message.content_attributes['items']
+        expect(items.pluck('name')).to eq(%w[email phone_number])
+        expect(items).to all(include('required' => true))
+        expect(items.last['type']).to eq('tel')
+      end
+
+      it 'does not ask for saved details or a disabled name' do
+        contact.update!(email: 'saved@example.com', phone_number: '+34612345678')
+        expect(service.post_form_if_needed!).to be_nil
+      end
+    end
+
     context 'when both name and email are missing' do
       it 'posts a form with both Name and Email fields' do
         expect(Redis::Alfred).to receive(:set)
@@ -182,7 +207,7 @@ RSpec.describe Captain::Conversation::ContactCaptureService, type: :service do
 
       service.reset_form_guard!
 
-      %w[name email email_name].each do |fields|
+      %w[name email email_name phone_number name_phone_number email_phone_number email_name_phone_number].each do |fields|
         expect(Redis::Alfred).to have_received(:delete).with("captain:contact_form:#{conversation.id}:#{fields}")
       end
     end
@@ -202,11 +227,13 @@ RSpec.describe Captain::Conversation::ContactCaptureService, type: :service do
           'type' => 'contact_capture',
           'items' => [
             { 'name' => 'name', 'label' => 'Name', 'type' => 'text' },
-            { 'name' => 'email', 'label' => 'Email', 'type' => 'email' }
+            { 'name' => 'email', 'label' => 'Email', 'type' => 'email' },
+            { 'name' => 'phone_number', 'label' => 'Phone number', 'type' => 'tel' }
           ],
           'submitted_values' => [
             { 'name' => 'name', 'value' => 'Stefan Yoshovski' },
-            { 'name' => 'email', 'value' => 'stefan@example.com' }
+            { 'name' => 'email', 'value' => 'stefan@example.com' },
+            { 'name' => 'phone_number', 'value' => '+34612345678' }
           ]
         }
       )
@@ -222,6 +249,7 @@ RSpec.describe Captain::Conversation::ContactCaptureService, type: :service do
       contact.reload
       expect(contact.name).to eq('Stefan Yoshovski')
       expect(contact.email).to eq('stefan@example.com')
+      expect(contact.phone_number).to eq('+34612345678')
 
       acknowledgement = conversation.messages.outgoing.last
       expect(acknowledgement.content).to eq(described_class::ACKNOWLEDGEMENT_TEXT)
