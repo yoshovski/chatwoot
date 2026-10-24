@@ -12,6 +12,7 @@ export default {
       type: Boolean,
       default: false,
     },
+    disabled: { type: Boolean, default: false },
   },
   emits: ['optionSelect'],
   computed: {
@@ -34,7 +35,11 @@ export default {
     :class="{ 'is-selected': isSelected }"
     :style="isSelected ? { backgroundColor: widgetColor } : undefined"
   >
-    <button class="option-button" @click="onClick">
+    <button
+      class="option-button disabled:cursor-not-allowed disabled:opacity-50"
+      :disabled="disabled"
+      @click="onClick"
+    >
       <span
         class="text-n-slate-12"
         :style="isSelected ? { color: widgetTextColor } : undefined"

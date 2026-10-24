@@ -102,9 +102,48 @@ class Captain::Conversation::ReplyComposer
   end
 
   def formatted_prose
-    @formatted_prose ||= cards_builder.clean_prose_content(
-      response_parts.customer_message_content(citation_urls: citation_urls, citation_titles: citation_titles, sources_format: sources_format)
-    )
+    @formatted_prose ||= begin
+      content = response_parts.customer_message_content(citation_urls: citation_urls, citation_titles: citation_titles,
+                                                        sources_format: sources_format)
+      cards_builder.clean_prose_content(grounded_screenshots(with_knowledge_media(content)))
+    end
+  end
+
+  # A cited passage's instructional media must not disappear just because generation omitted its link.
+  # Use only media in the retrieved excerpt of a source the answer actually uses, with bounded counts.
+  def with_knowledge_media(content)
+    return content if response['handoff_requested'] == true
+
+    knowledge_media_links.reduce(content) do |body, link|
+      url = link[Captain::Conversation::ReplySanitizer::MARKDOWN_LINK_REGEX, 2]
+      text = body.gsub(Captain::Conversation::ReplySanitizer::MARKDOWN_LINK_REGEX) do |existing|
+        Regexp.last_match(2) == url ? '' : existing
+      end
+      "#{text.strip}\n\n#{link}"
+    end
+  end
+
+  def knowledge_media_links
+    media = run_result&.context&.dig(:state, :knowledge_media).to_h
+    indexes = response_parts.to_a.flat_map { |part| part['citation_indexes'] }.uniq
+    links = indexes.flat_map { |index| Array(media[index]) }.uniq
+    videos, screenshots = links.partition { |link| Captain::Knowledge::VideoLink.line?(link) }
+    # Screenshots are useful alongside actual steps, not a platform-selection or general factual answer.
+    screenshots = [] unless response_parts.plain_text.match?(/^\s*\d+[.)]\s/)
+    videos.first(1) + screenshots.first(2)
+  end
+
+  # A stored Shopify-only default must not hide documentation screenshots. Custom image rules still
+  # apply, and every screenshot must have occurred in this turn's retrieved evidence.
+  def grounded_screenshots(content)
+    urls = Array(run_result&.context&.dig(:state, :knowledge_screenshots))
+    sanitizer = Captain::Conversation::ReplySanitizer.new(assistant: assistant)
+    default_images = assistant.image_allowlist == assistant.default_image_allowlist
+    content.gsub(Captain::Knowledge::ScreenshotLink::LINE) do |link|
+      url = Regexp.last_match(2)
+      allowed = default_images || sanitizer.allowed_image_url?(url)
+      urls.include?(url) && allowed ? link : ''
+    end
   end
 
   def cards_builder
@@ -133,9 +172,10 @@ class Captain::Conversation::ReplyComposer
   def clean_suggestion_item(item)
     label, message = item.is_a?(Hash) ? item.values_at('label', 'message') : [item, nil]
     label = label.to_s.strip
-    return if label.blank? || label.length > Captain::ResponseSchema::SUGGESTION_LABEL_MAX_LENGTH
+    return if label.blank?
 
-    message = message.to_s.strip.first(Captain::ResponseSchema::SUGGESTION_MESSAGE_MAX_LENGTH).presence || label
+    message = (message.to_s.strip.presence || label).first(Captain::ResponseSchema::SUGGESTION_MESSAGE_MAX_LENGTH)
+    label = label.truncate(Captain::ResponseSchema::SUGGESTION_LABEL_MAX_LENGTH)
     { 'title' => label, 'value' => message }
   end
 

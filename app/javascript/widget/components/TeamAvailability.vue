@@ -26,7 +26,7 @@ const startConversation = () => {
 <template>
   <button
     type="button"
-    class="group relative flex w-full items-center justify-between gap-4 rounded-2xl bg-n-solid-1 px-5 py-5 text-start shadow-sm outline outline-1 outline-n-weak transition-shadow hover:shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-n-slate-8 dark:bg-n-solid-2"
+    class="group relative flex w-full items-center justify-between gap-4 rounded-2xl bg-n-solid-1 p-4 text-start outline outline-1 outline-n-weak transition-colors hover:bg-n-alpha-1 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-n-slate-8 dark:bg-n-solid-2"
     @click="startConversation"
   >
     <div class="flex flex-col min-w-0 gap-1">
@@ -48,7 +48,7 @@ const startConversation = () => {
       </span>
       <span
         v-if="preview"
-        class="line-clamp-2 break-words text-sm leading-relaxed text-n-slate-11"
+        class="line-clamp-1 break-words text-sm leading-relaxed text-n-slate-11"
       >
         {{ preview }}
       </span>

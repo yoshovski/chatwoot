@@ -5,6 +5,9 @@ class Captain::Assistant::DirectResponseService
   DECLINE_WORD_SHARE = 0.8
   DECLINE_RETRY_INSTRUCTION = 'Your draft declined, but the reference material above covers this question, so it is in scope. ' \
                               'Answer it from the material. Decline only if a guardrail forbids this specific request.'.freeze
+  URL_RETRY_INSTRUCTION = 'Your draft used an endpoint URL absent from the reference material, which would leave an empty code span. ' \
+                          'Use the exact endpoint supplied for the selected platform. If it is missing, ask which platform applies ' \
+                          'or explain that the endpoint is not supplied. Never invent a URL or leave an empty placeholder.'.freeze
 
   def initialize(assistant:, response_schema:)
     @assistant = assistant
@@ -24,12 +27,25 @@ class Captain::Assistant::DirectResponseService
     # The routed queries found nothing: the action agent searches again in its own words before saying it doesn't know.
     return if knowledge == Captain::Tools::FaqLookupTool::NO_DIRECT_RESULTS
 
-    output, response = generate(message, context, knowledge)
+    answer = generate_supported_answer(message, context, knowledge)
+    return unless answer
+
+    output, response = answer
     output, response = retry_declined_answer(message, context, knowledge) || [output, response] if declined?(output, knowledge)
+    return if context[:state].delete(:unsupported_answer_endpoint)
+
     finish_result(message, context, output, response)
   end
 
   private
+
+  def generate_supported_answer(message, context, knowledge)
+    answer = generate(message, context, knowledge)
+    return answer unless context[:state].delete(:unsupported_answer_endpoint)
+
+    answer = generate(message, context, knowledge, retry_instruction: URL_RETRY_INSTRUCTION)
+    answer unless context[:state].delete(:unsupported_answer_endpoint)
+  end
 
   def retrieve(context, route)
     if route['intent'] == 'business_overview'
@@ -92,15 +108,30 @@ class Captain::Assistant::DirectResponseService
     raise TypeError, 'Captain direct response returned invalid structured output' unless output.is_a?(Hash)
 
     indexes = context.dig(:state, Captain::Assistant::CITATION_SOURCES_STATE_KEY).to_h.keys
-    links = knowledge.scan(Captain::Conversation::ReplySanitizer::MARKDOWN_LINK_REGEX).map(&:last)
-    sanitizer = Captain::Conversation::ReplySanitizer.new(
-      assistant: @assistant, evidence_urls: links + knowledge.scan(Captain::Conversation::ReplySanitizer::BARE_URL_REGEX)
-    )
+    sanitizer = reply_sanitizer(knowledge)
     output.fetch('response_parts').each do |part|
       part['citation_indexes'] = Array(part['citation_indexes']) & indexes
+      context[:state][:unsupported_answer_endpoint] = true if unsupported_endpoint?(part['text'], sanitizer)
       part['text'] = sanitizer.sanitize_prose(part['text'])
     end
     output
+  end
+
+  def reply_sanitizer(knowledge)
+    links = knowledge.scan(Captain::Conversation::ReplySanitizer::MARKDOWN_LINK_REGEX).map(&:last)
+    Captain::Conversation::ReplySanitizer.new(
+      assistant: @assistant, evidence_urls: links + knowledge.scan(Captain::Conversation::ReplySanitizer::BARE_URL_REGEX)
+    )
+  end
+
+  def unsupported_endpoint?(text, sanitizer)
+    blocks = text.scan(/```.*?```/m)
+    spans = text.gsub(/```.*?```/m, '').scan(/`([^`]*)`/).flatten
+    return true if spans.any?(&:blank?)
+
+    (blocks + spans).any? do |code|
+      code.scan(Captain::Conversation::ReplySanitizer::BARE_URL_REGEX).any? { |url| !sanitizer.allowed_link_url?(url) }
+    end
   end
 
   def prompt_context(context)

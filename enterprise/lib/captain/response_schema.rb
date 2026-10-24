@@ -65,7 +65,9 @@ class Captain::ResponseSchema < RubyLLM::Schema
 
   def self.define_suggested_replies(builder, limit)
     builder.array :suggested_replies,
-                  description: "0 to #{limit} next steps for the customer as buttons. Empty array if none apply.",
+                  description: "Up to #{limit} relevant next steps or answers to your closing question, rendered as buttons. " \
+                               'Include them with linked or illustrated answers too. Empty only for human handoff, frustration, ' \
+                               'quote detail collection, required free-text input, or no supported next step.',
                   max_items: limit do
       object do
         string :label, description: 'Button text: 2 to 4 words.', max_length: SUGGESTION_LABEL_MAX_LENGTH

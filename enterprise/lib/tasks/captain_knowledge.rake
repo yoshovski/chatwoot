@@ -37,6 +37,35 @@ namespace :captain do
       puts "Agent #{assistant.id} is on processing version 3; Dify reindexing queued"
     end
 
+    desc 'Restore screenshot links from one agent\'s cached website pages (DRY_RUN=1 only counts them)'
+    task restore_screenshots: :environment do
+      account = Account.find(Integer(ENV.fetch('ACCOUNT_ID')))
+      raise 'Dify knowledge is not configured for this account' unless account.dify_knowledge_enabled?
+
+      assistant = account.captain_assistants.find(Integer(ENV.fetch('ASSISTANT_ID')))
+      raise 'Screenshot restoration requires processing version 2 or newer' if assistant.knowledge_processing_version < 2
+
+      documents = assistant.documents.enabled.available.where.not(external_link: nil)
+                           .where("metadata->>'raw_crawl_content' ~ ?", '<Image|!\\[')
+      if ENV['DRY_RUN'] == '1'
+        puts "#{documents.count} cached pages of agent #{assistant.id} contain images"
+        next
+      end
+
+      updated = 0
+      documents.find_each do |document|
+        next if document.pdf_document?
+
+        content = Captain::Documents::PageKnowledgeProcessor.new(document).perform(document.metadata.fetch('raw_crawl_content'))
+        next if content == document.content
+
+        document.update!(content: content)
+        Captain::Dify::SyncDocumentJob.perform_later(document.id)
+        updated += 1
+      end
+      puts "Restored screenshot links and queued indexing for #{updated} pages of agent #{assistant.id}"
+    end
+
     desc 'Re-read one agent\'s website pages that mention a video, so embedded videos are kept (DRY_RUN=1 only counts them)'
     task reread_video_pages: :environment do
       account = Account.find(Integer(ENV.fetch('ACCOUNT_ID')))

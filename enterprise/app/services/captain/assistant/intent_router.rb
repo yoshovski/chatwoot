@@ -95,7 +95,7 @@ class Captain::Assistant::IntentRouter
     return unless text
 
     route = { 'intent' => 'smalltalk', 'queries' => [], 'reason' => 'greeting' }
-    route['canned_response'] = text if @assistant.guardrails.blank? && @assistant.response_guidelines.blank?
+    route['canned_response'] = text if @assistant.guardrails.blank? && @assistant.response_guidelines.blank? && !@assistant.suggested_replies?
     route
   end
 
@@ -119,6 +119,9 @@ class Captain::Assistant::IntentRouter
       If the customer explicitly names Apple Pay or Google Pay, preserve that wallet name in the queries.
       For Apple/iOS app payments without an explicit wallet name, search for Apple in-app purchase integration.
       Requests for documentation links, including follow-ups such as "give me link", use faq_kb with the topic from history.
+      "Show me how", "show the video" and "show screenshots" use faq_kb for the preceding task and its established platform.
+      Do not turn "show me how" into a request for other devices or another topic. When a new task has several meanings
+      (for example browser cache versus app cache), preserve the ambiguity for the answer to clarify rather than choosing one.
       A factual question about the business's own product or service lineup or count is not a product recommendation.
       Unless an approved business_overview fully answers it, use faq_kb with a query such as "products overview" or "services overview".
       Preserve exact product names, model numbers, technical constraints and negations. Resolve references using recent history.

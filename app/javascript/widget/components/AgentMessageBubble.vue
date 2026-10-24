@@ -10,6 +10,8 @@ import IntegrationCard from './template/IntegrationCard.vue';
 import MessageSources from 'shared/components/MessageSources.vue';
 import MessageVideo from 'shared/components/MessageVideo.vue';
 import { extractVideo } from 'shared/helpers/videoLinks';
+import { extractScreenshots } from 'shared/helpers/screenshotLinks';
+import MessageScreenshots from 'shared/components/MessageScreenshots.vue';
 
 export default {
   name: 'AgentMessageBubble',
@@ -23,6 +25,7 @@ export default {
     IntegrationCard,
     MessageSources,
     MessageVideo,
+    MessageScreenshots,
   },
   props: {
     message: { type: String, default: null },
@@ -75,7 +78,10 @@ export default {
     },
     // A video link on its own line plays as a card under the text instead.
     videoContent() {
-      return extractVideo(this.message);
+      return extractVideo(this.screenshotContent.text);
+    },
+    screenshotContent() {
+      return extractScreenshots(this.message);
     },
     isIntegrations() {
       return this.contentType === 'integrations';
@@ -122,6 +128,7 @@ export default {
         :video="videoContent.video"
         :play-label="$t('MESSAGE_VIDEO.PLAY')"
       />
+      <MessageScreenshots :screenshots="screenshotContent.screenshots" />
       <MessageSources :sources="sources" :label="$t('MESSAGE_SOURCES.LABEL')" />
       <EmailInput
         v-if="isTemplateEmail"
@@ -139,7 +146,7 @@ export default {
       <ChatOptions
         :title="videoContent.text"
         :options="messageContentAttributes.items"
-        :hide-fields="hideOptions"
+        :disabled="hideOptions"
         :agent-name="agentName"
         :show-agent-name="showAgentName"
         @option-select="onOptionSelect"
@@ -149,6 +156,7 @@ export default {
           :video="videoContent.video"
           :play-label="$t('MESSAGE_VIDEO.PLAY')"
         />
+        <MessageScreenshots :screenshots="screenshotContent.screenshots" />
         <MessageSources
           :sources="sources"
           :label="$t('MESSAGE_SOURCES.LABEL')"

@@ -23,6 +23,7 @@ export default {
       type: Boolean,
       default: false,
     },
+    disabled: { type: Boolean, default: false },
     agentName: {
       type: String,
       default: '',
@@ -70,8 +71,9 @@ export default {
     >
       <ChatOption
         v-for="option in options"
-        :key="option.id"
+        :key="option.value || option.id"
         :action="option"
+        :disabled="disabled"
         :is-selected="isSelected(option)"
         class="list-none p-0"
         @option-select="onClick"

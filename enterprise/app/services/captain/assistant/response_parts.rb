@@ -41,12 +41,12 @@ class Captain::Assistant::ResponseParts
     self.class.new(cited)
   end
 
-  # :structured leaves sources out of the text (the widget and playground show captain_sources); email, and the widget
-  # when Show sources is off, keep markdown links; channels whose renderers drop link titles (WhatsApp, SMS,
-  # Instagram…) get "title: url".
+  # Source visibility controls only the source footer, independently of useful links in the answer.
   def self.sources_format(conversation, sources_card: true)
+    return :none unless sources_card
+
     case conversation&.inbox&.channel_type
-    when nil, 'Channel::WebWidget' then sources_card ? :structured : :markdown
+    when nil, 'Channel::WebWidget' then :structured
     when 'Channel::Email' then :markdown
     else :plain
     end
@@ -55,7 +55,7 @@ class Captain::Assistant::ResponseParts
   def customer_message_content(citation_urls: {}, citation_titles: {}, sources_format: :markdown)
     body = plain_text
     links = sources(citation_urls: citation_urls, citation_titles: citation_titles)
-    return body if links.empty? || sources_format == :structured
+    return body if links.empty? || sources_format.in?(%i[structured none])
 
     "#{body}\n\n#{links.map { |link| source_line(link, sources_format) }.join("\n")}"
   end
