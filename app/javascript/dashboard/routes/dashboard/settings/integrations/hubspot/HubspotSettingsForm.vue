@@ -34,6 +34,14 @@ const saveTranscripts = ref(true);
 const rowKeys = ref([]);
 const mapping = ref({});
 const addPickerKey = ref(0);
+const configuredLeadKeys = computed(() =>
+  props.sources
+    .filter(source => source.kind === 'lead')
+    .map(source => source.key)
+);
+const automaticKeys = computed(
+  () => new Set([...FIXED_KEYS, ...configuredLeadKeys.value])
+);
 
 const propertyNames = computed(
   () => new Set(props.properties.map(property => property.name))
@@ -66,8 +74,11 @@ const reset = () => {
   syncContacts.value = props.settings.sync_contacts !== false;
   saveTranscripts.value = props.settings.save_transcripts !== false;
   rowKeys.value = [
-    ...FIXED_KEYS,
-    ...Object.keys(saved).filter(key => !FIXED_KEYS.includes(key)),
+    ...new Set([
+      ...FIXED_KEYS,
+      ...configuredLeadKeys.value,
+      ...Object.keys(saved).filter(key => !FIXED_KEYS.includes(key)),
+    ]),
   ];
   mapping.value = Object.fromEntries(
     rowKeys.value.map(key => [
@@ -78,7 +89,17 @@ const reset = () => {
   mapping.value.email = 'email';
 };
 
-watch(() => [props.settings, props.properties], reset, { immediate: true });
+watch(() => props.settings, reset, { immediate: true });
+// Source fields may arrive after settings. Add new lead rows without replacing
+// destinations the administrator has already selected in this draft.
+watch(configuredLeadKeys, keys => {
+  keys.forEach(key => {
+    if (rowKeys.value.includes(key)) return;
+    rowKeys.value.push(key);
+    mapping.value[key] =
+      props.settings.field_mapping?.[key] || suggestedProperty(key);
+  });
+});
 
 const duplicateProperties = computed(() => {
   const used = Object.values(mapping.value).filter(Boolean);
@@ -173,7 +194,7 @@ const save = () => {
           "
         />
         <Button
-          v-if="!FIXED_KEYS.includes(key)"
+          v-if="!automaticKeys.has(key)"
           type="button"
           icon="i-lucide-trash-2"
           color="slate"

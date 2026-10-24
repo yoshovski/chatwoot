@@ -14,6 +14,7 @@ const properties = [
   { name: 'phone', label: 'Phone Number' },
   { name: 'chatoctave_lead_type', label: 'Lead type' },
   { name: 'company', label: 'Company name' },
+  { name: 'jobtitle', label: 'Job title' },
 ];
 
 const sources = [
@@ -24,7 +25,11 @@ const sources = [
   { key: 'lead_type', label: 'Lead type' },
   { key: 'lead_summary', label: 'Lead summary' },
   { key: 'lead_source', label: 'Lead source' },
-  { key: 'lead_company', label: 'Company' },
+  { key: 'lead_company', label: 'Company', kind: 'lead' },
+  { key: 'lead_country', label: 'Country', kind: 'lead' },
+  { key: 'lead_audience_size', label: 'Audience size', kind: 'lead' },
+  { key: 'lead_use_case', label: 'Use case', kind: 'lead' },
+  { key: 'job_title', label: 'Job title', kind: 'attribute' },
 ];
 
 const settings = {
@@ -58,6 +63,10 @@ describe('HubspotSettingsForm', () => {
       'lead_type',
       'lead_summary',
       'lead_source',
+      'lead_company',
+      'lead_country',
+      'lead_audience_size',
+      'lead_use_case',
     ].forEach(key => {
       expect(wrapper.find(`[data-test="mapping-row-${key}"]`).exists()).toBe(
         true
@@ -89,22 +98,19 @@ describe('HubspotSettingsForm', () => {
     });
   });
 
-  it('adds a lead field row from the picker', async () => {
+  it('keeps additional contact fields available in the picker', async () => {
     const wrapper = mountForm();
 
     wrapper
       .find('[data-test="add-mapping"]')
       .findComponent(ComboBox)
-      .vm.$emit('update:modelValue', 'lead_company');
+      .vm.$emit('update:modelValue', 'job_title');
     await wrapper.vm.$nextTick();
-    rowComboBox(wrapper, 'lead_company').vm.$emit(
-      'update:modelValue',
-      'company'
-    );
+    rowComboBox(wrapper, 'job_title').vm.$emit('update:modelValue', 'jobtitle');
     await wrapper.find('form').trigger('submit');
 
-    expect(wrapper.emitted('save')[0][0].field_mapping.lead_company).toBe(
-      'company'
+    expect(wrapper.emitted('save')[0][0].field_mapping.job_title).toBe(
+      'jobtitle'
     );
   });
 
