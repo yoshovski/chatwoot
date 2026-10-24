@@ -561,6 +561,15 @@ const menuItems = computed(() => {
           icon: 'i-lucide-workflow',
           children: [
             {
+              name: 'captain_assistants_settings_leads_index',
+              label: t('CAPTAIN.ASSISTANTS.SETTINGS.LEADS.TITLE'),
+              icon: 'i-lucide-contact-round',
+              to: captainAssistantRoute(
+                'captain_assistants_settings_leads_index'
+              ),
+              activeOn: ['captain_assistants_settings_leads_index'],
+            },
+            {
               name: 'captain_assistants_scenarios_index',
               label: t('SIDEBAR.CAPTAIN_SCENARIOS'),
               icon: 'i-lucide-git-branch',

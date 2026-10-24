@@ -25,8 +25,10 @@ export function useAssistantSettings() {
       useAlert(t('CAPTAIN.ASSISTANTS.EDIT.SUCCESS_MESSAGE'));
       // Previews and suggestions follow the saved name, description and business type.
       refreshBusinessExamples(assistantId.value);
+      return true;
     } catch (error) {
       useAlert(error?.message || t('CAPTAIN.ASSISTANTS.EDIT.ERROR_MESSAGE'));
+      return false;
     }
   };
 

@@ -152,7 +152,7 @@ export const SCENARIO_TEMPLATES = [
             'Use the configured lead fields and lead type rules. Ask at most the configured number of optional qualification questions across the conversation, one at a time. Skip details already provided and respect refusals.',
             'Then ask for name and email in a separate message, only if the customer wants follow-up. Never collect contact details from viewers or end-user support requests.',
             `Save only customer-provided values, a matching configured type and a 1–3 sentence summary with ${saveLead}. Do not choose a sales owner or mark an email verified yourself.`,
-            'Continue answering. Do not hand off or promise a live agent, CRM sync or sales alert. If the save fails, explain that follow-up has not been confirmed.',
+            'Continue answering. Saving a lead does not hand off the conversation. Handle a separate request for a person through the configured handoff flow. Do not promise CRM sync or a sales alert. If the save fails, explain that follow-up has not been confirmed.',
           ]
         ),
       };

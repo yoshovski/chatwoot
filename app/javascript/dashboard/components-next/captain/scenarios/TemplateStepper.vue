@@ -267,7 +267,7 @@ defineExpose({
       </p>
       <router-link
         :to="{
-          name: 'captain_assistants_settings_index',
+          name: 'captain_assistants_settings_leads_index',
           params: { assistantId: assistant.id },
         }"
         class="text-sm text-n-blue-11"

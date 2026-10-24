@@ -12,6 +12,7 @@ import AssistantEmptyStateIndex from './assistants/Index.vue';
 
 import AssistantOverviewIndex from './assistants/overview/Index.vue';
 import AssistantSettingsIndex from './assistants/settings/Index.vue';
+import AssistantLeadsIndex from './assistants/settings/Leads.vue';
 import AssistantSystemSettingsIndex from './assistants/settings/System.vue';
 import AssistantAudienceSettingsIndex from './assistants/settings/Audience.vue';
 import AssistantScheduleSettingsIndex from './assistants/settings/Schedule.vue';
@@ -122,6 +123,14 @@ const assistantRoutes = [
     meta,
   },
   // Settings sub-pages
+  {
+    path: frontendURL(
+      'accounts/:accountId/captain/:assistantId/settings/leads'
+    ),
+    component: AssistantLeadsIndex,
+    name: 'captain_assistants_settings_leads_index',
+    meta,
+  },
   {
     path: frontendURL(
       'accounts/:accountId/captain/:assistantId/settings/system'
