@@ -1180,6 +1180,20 @@
           "TITLE": "Handing over to your team",
           "DESCRIPTION": "Customers can always ask for a person. Here's how {name} passes the conversation on.",
           "MESSAGE_TITLE": "What {name} says when handing over",
+          "CONTACT_FORM": {
+            "TITLE": "Contact details at handoff",
+            "DESC": "Choose which details the form asks for when transferring to your team. It only asks for details missing from the contact.",
+            "MESSAGE_LABEL": "Form message",
+            "DEFAULT_MESSAGE": "Please share your contact details so our team can follow up if you leave the chat.",
+            "EMAIL_REQUIRED": "Email is always required when missing, so your team can follow up.",
+            "NAME": "Name",
+            "EMAIL": "Email",
+            "PHONE": "Phone number",
+            "FIELD_DESC": "Require a name when it is missing.",
+            "PHONE_DESC": "Require a phone number when it is missing, including the country code.",
+            "PREVIEW": "Contact form preview",
+            "SUBMIT": "Submit"
+          },
           "FALLBACK_PREFIX": "Who gets the conversation if no teammate is available.",
           "KEEP_HELPING": {
             "TITLE": "Keep helping until a teammate replies",

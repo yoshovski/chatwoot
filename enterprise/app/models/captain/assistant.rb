@@ -111,7 +111,8 @@ class Captain::Assistant < ApplicationRecord
                  :reply_labels, :reply_label_keywords, :outcome_labels,
                  :handoff_fallback_agent_id, :handoff_fallback_team_id, :tone, :off_limits_message, :business_type,
                  :handoff_when_online, :handoff_when_offline, :offline_handoff_message, :no_handoff_message, :handoff_rules,
-                 :answer_length, :tone_prompt, :answer_length_prompt, :follow_up_questions
+                 :answer_length, :tone_prompt, :answer_length_prompt, :follow_up_questions,
+                 :handoff_form_message, :handoff_collect_name, :handoff_collect_phone
 
   BOOLEAN_CONFIG_KEYS = %w[
     feature_faq
@@ -126,6 +127,8 @@ class Captain::Assistant < ApplicationRecord
     reply_labels
     outcome_labels
     follow_up_questions
+    handoff_collect_name
+    handoff_collect_phone
   ].freeze
 
   before_validation :set_default_auto_resolve_mode, on: :create
@@ -160,7 +163,7 @@ class Captain::Assistant < ApplicationRecord
   validates :answer_length, inclusion: { in: ANSWER_LENGTHS }, allow_blank: true
   validates :off_limits_message, length: { maximum: OFF_LIMITS_MESSAGE_LENGTH_LIMIT }
   validates :handoff_when_online, :handoff_when_offline, inclusion: { in: Captain::Conversation::HandoffPolicy::ACTIONS }, allow_blank: true
-  validates :offline_handoff_message, :no_handoff_message, length: { maximum: HANDOFF_MESSAGE_LENGTH_LIMIT }
+  validates :offline_handoff_message, :no_handoff_message, :handoff_form_message, length: { maximum: HANDOFF_MESSAGE_LENGTH_LIMIT }
   validate :validate_handoff_rules
   validates :max_suggested_replies,
             numericality: {

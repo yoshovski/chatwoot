@@ -1,8 +1,6 @@
 # What the customer would see for one playground run: the same message payloads the chat job would post, built
 # without a conversation, plus the handoff the run asked for. Nothing is written.
 class Captain::Playground::CustomerView
-  FORM_FIELDS = %w[name email].freeze
-
   def initialize(assistant:, response:, run_result:, message_history:, handoff_reason: nil)
     @assistant = assistant
     @response = response
@@ -21,7 +19,8 @@ class Captain::Playground::CustomerView
     messages = composer.messages(suppress_suggestions: source.present?)
     return { messages: messages, handoff: nil } unless source
 
-    messages << Captain::Conversation::ContactCaptureService.form_payload(FORM_FIELDS)
+    capture = Captain::Conversation::ContactCaptureService
+    messages << capture.form_payload(capture.requested_fields(@assistant), assistant: @assistant)
     { messages: messages, handoff: { source: source, reason: @handoff_reason } }
   end
 end

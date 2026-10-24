@@ -23,7 +23,7 @@ const mountBubble = message =>
   });
 
 describe('AgentMessageBubble with suggestion buttons', () => {
-  it('shows links in the reply and keeps older buttons visible but disabled', async () => {
+  it('shows links in the reply and hides expired suggestion buttons', async () => {
     const wrapper = mountBubble(
       'Read the [shipping guide](https://example.com/shipping).'
     );
@@ -33,8 +33,11 @@ describe('AgentMessageBubble with suggestion buttons', () => {
     expect(link.text()).toBe('shipping guide');
     expect(wrapper.text()).toContain('Track order');
     await wrapper.setProps({ hideOptions: true });
-    expect(wrapper.text()).toContain('Track order');
-    expect(wrapper.find('.option-button').attributes('disabled')).toBeDefined();
+    expect(wrapper.text()).not.toContain('Track order');
+    expect(wrapper.find('.option-button').exists()).toBe(false);
+    expect(
+      wrapper.find('a[href="https://example.com/shipping"]').exists()
+    ).toBe(true);
   });
 
   it('renders knowledge videos and screenshots alongside the answer', () => {

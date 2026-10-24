@@ -47,8 +47,15 @@ describe('AssistantHandoverForm', () => {
   it('saves only the handover settings and keeps the rest of the config', async () => {
     const wrapper = mountForm();
 
+    const emailOption = wrapper
+      .findAllComponents(SettingsSwitchRow)
+      .find(row => row.props('title').endsWith('CONTACT_FORM.EMAIL'));
+    expect(emailOption.props('modelValue')).toBe(true);
+    expect(emailOption.props('disabled')).toBe(true);
+
     wrapper
-      .findAllComponents(SettingsSwitchRow)[0]
+      .findAllComponents(SettingsSwitchRow)
+      .find(row => row.props('title').endsWith('KEEP_HELPING.TITLE'))
       .vm.$emit('update:modelValue', true);
     await nextTick();
     expect(wrapper.findComponent(SettingsSaveBar).props('isDirty')).toBe(true);
@@ -66,10 +73,43 @@ describe('AssistantHandoverForm', () => {
         offline_handoff_message: '',
         no_handoff_message: '',
         handoff_rules: [],
+        handoff_form_message: '',
+        handoff_collect_name: true,
+        handoff_collect_phone: false,
         handoff_fallback_agent_id: null,
         handoff_fallback_team_id: 4,
       },
     });
+  });
+
+  it('saves the form message and selected fields and restores them on discard', async () => {
+    const wrapper = mountForm();
+    await wrapper
+      .find('textarea')
+      .setValue('  Leave your details for our team.  ');
+    const rows = wrapper.findAllComponents(SettingsSwitchRow);
+    rows
+      .find(row => row.props('title').endsWith('CONTACT_FORM.NAME'))
+      .vm.$emit('update:modelValue', false);
+    rows
+      .find(row => row.props('title').endsWith('CONTACT_FORM.PHONE'))
+      .vm.$emit('update:modelValue', true);
+    await nextTick();
+
+    wrapper.findComponent(SettingsSaveBar).vm.$emit('save');
+    await flushPromises();
+    expect(wrapper.props('save')).toHaveBeenCalledWith({
+      config: expect.objectContaining({
+        handoff_form_message: 'Leave your details for our team.',
+        handoff_collect_name: false,
+        handoff_collect_phone: true,
+      }),
+    });
+
+    wrapper.findComponent(SettingsSaveBar).vm.$emit('discard');
+    await nextTick();
+    expect(wrapper.find('textarea').element.value).toBe('');
+    expect(wrapper.findComponent(SettingsSaveBar).props('isDirty')).toBe(false);
   });
 
   it('keeps every conversation and points to email when there is no live team', async () => {

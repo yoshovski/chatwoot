@@ -89,9 +89,7 @@ export default {
 </script>
 
 <template>
-  <div
-    class="form chat-bubble agent w-full p-4 bg-n-background dark:bg-n-solid-3"
-  >
+  <div class="form chat-bubble agent w-full p-4 bg-n-slate-3 dark:bg-n-solid-3">
     <!-- A form's content says what it is for. Without it the visitor gets bare fields, since
          nothing else in the bubble explains them. -->
     <p v-if="title" class="mb-3 mt-0 text-n-slate-12">
@@ -121,7 +119,7 @@ export default {
           :disabled="!!submittedValues.length"
         />
         <input
-          v-else-if="item.type === 'text'"
+          v-else-if="['text', 'tel'].includes(item.type)"
           v-model="formValues[item.name]"
           :required="item.required && 'required'"
           :pattern="item.pattern"

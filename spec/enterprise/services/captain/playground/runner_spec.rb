@@ -71,10 +71,13 @@ RSpec.describe Captain::Playground::Runner do
       end
     end
 
-    it 'reports the handoff with its reason and ends with the contact form, without suggestion buttons' do
+    it 'reports the handoff with its reason and ends with the configured contact form, without suggestion buttons' do
+      assistant.update!(config: assistant.config.merge(handoff_form_message: 'How can we reach you?',
+                                                       handoff_collect_name: false, handoff_collect_phone: true))
       expect(result[:handoff]).to include(source: Captain::ConversationEvents::Sources::TOOL, reason: 'Wants a refund')
       expect(result[:messages].pluck(:content_type)).to eq(%w[text form])
-      expect(result[:messages].last[:content_attributes]['items'].pluck('name')).to eq(%w[name email])
+      expect(result[:messages].last[:content]).to eq('How can we reach you?')
+      expect(result[:messages].last[:content_attributes]['items'].pluck('name')).to eq(%w[email phone_number])
     end
   end
 

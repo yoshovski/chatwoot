@@ -60,6 +60,9 @@ const state = reactive({
   noHandoffMessage: '',
   handoffRules: [],
   handoffMessage: '',
+  handoffFormMessage: '',
+  handoffCollectName: true,
+  handoffCollectPhone: false,
   handoffFallbackAgentId: '',
   handoffFallbackTeamId: '',
   continueWhileWaiting: false,
@@ -120,6 +123,16 @@ const sendToEmail = () => {
   );
 };
 
+const contactFields = computed(() => [
+  ...(state.handoffCollectName
+    ? [t('CAPTAIN.ASSISTANTS.SETTINGS.HANDOVER.CONTACT_FORM.NAME')]
+    : []),
+  t('CAPTAIN.ASSISTANTS.SETTINGS.HANDOVER.CONTACT_FORM.EMAIL'),
+  ...(state.handoffCollectPhone
+    ? [t('CAPTAIN.ASSISTANTS.SETTINGS.HANDOVER.CONTACT_FORM.PHONE')]
+    : []),
+]);
+
 const noneOption = computed(() => ({
   value: '',
   label: t('CAPTAIN.ASSISTANTS.FORM.FALLBACK_ASSIGNMENTS.NONE'),
@@ -149,6 +162,9 @@ const updateStateFromAssistant = assistant => {
   state.noHandoffMessage = config.no_handoff_message || '';
   state.handoffRules = [...(config.handoff_rules || [])];
   state.handoffMessage = config.handoff_message;
+  state.handoffFormMessage = config.handoff_form_message || '';
+  state.handoffCollectName = config.handoff_collect_name ?? true;
+  state.handoffCollectPhone = config.handoff_collect_phone ?? false;
   state.handoffFallbackAgentId = config.handoff_fallback_agent_id ?? '';
   state.handoffFallbackTeamId = config.handoff_fallback_team_id ?? '';
   state.continueWhileWaiting = config.continue_while_waiting || false;
@@ -189,6 +205,9 @@ const handleSubmit = async () => {
     config: {
       ...props.assistant.config,
       handoff_message: state.handoffMessage,
+      handoff_form_message: state.handoffFormMessage.trim(),
+      handoff_collect_name: state.handoffCollectName,
+      handoff_collect_phone: state.handoffCollectPhone,
       handoff_when_online: state.handoffWhenOnline,
       handoff_when_offline: state.handoffWhenOffline,
       offline_handoff_message: state.offlineHandoffMessage,
@@ -329,6 +348,50 @@ watch(
     </SettingsCard>
 
     <SettingsCard
+      :title="t('CAPTAIN.ASSISTANTS.SETTINGS.HANDOVER.CONTACT_FORM.TITLE')"
+      :description="t('CAPTAIN.ASSISTANTS.SETTINGS.HANDOVER.CONTACT_FORM.DESC')"
+    >
+      <label class="flex flex-col gap-2 pt-3 text-sm text-n-slate-12">
+        {{
+          t('CAPTAIN.ASSISTANTS.SETTINGS.HANDOVER.CONTACT_FORM.MESSAGE_LABEL')
+        }}
+        <textarea
+          v-model="state.handoffFormMessage"
+          :placeholder="
+            t(
+              'CAPTAIN.ASSISTANTS.SETTINGS.HANDOVER.CONTACT_FORM.DEFAULT_MESSAGE'
+            )
+          "
+          maxlength="500"
+          rows="3"
+          class="w-full rounded-lg border border-n-weak bg-n-alpha-1 p-3 text-sm text-n-slate-12 focus:border-n-brand focus:outline-none"
+        />
+      </label>
+      <SettingsSwitchRow
+        v-model="state.handoffCollectName"
+        :title="t('CAPTAIN.ASSISTANTS.SETTINGS.HANDOVER.CONTACT_FORM.NAME')"
+        :description="
+          t('CAPTAIN.ASSISTANTS.SETTINGS.HANDOVER.CONTACT_FORM.FIELD_DESC')
+        "
+      />
+      <SettingsSwitchRow
+        model-value
+        disabled
+        :title="t('CAPTAIN.ASSISTANTS.SETTINGS.HANDOVER.CONTACT_FORM.EMAIL')"
+        :description="
+          t('CAPTAIN.ASSISTANTS.SETTINGS.HANDOVER.CONTACT_FORM.EMAIL_REQUIRED')
+        "
+      />
+      <SettingsSwitchRow
+        v-model="state.handoffCollectPhone"
+        :title="t('CAPTAIN.ASSISTANTS.SETTINGS.HANDOVER.CONTACT_FORM.PHONE')"
+        :description="
+          t('CAPTAIN.ASSISTANTS.SETTINGS.HANDOVER.CONTACT_FORM.PHONE_DESC')
+        "
+      />
+    </SettingsCard>
+
+    <SettingsCard
       :title="t('CAPTAIN.ASSISTANTS.SETTINGS.HANDOVER.RULES.TITLE')"
       :description="
         t('CAPTAIN.ASSISTANTS.SETTINGS.HANDOVER.RULES.DESC', { name })
@@ -436,6 +499,34 @@ watch(
         :when-online="state.handoffWhenOnline"
         :when-offline="state.handoffWhenOffline"
       />
+      <SettingsCard
+        :title="t('CAPTAIN.ASSISTANTS.SETTINGS.HANDOVER.CONTACT_FORM.PREVIEW')"
+      >
+        <div class="mt-3 rounded-2xl bg-n-slate-3 p-4 text-sm text-n-slate-12">
+          <p class="mb-3 mt-0 whitespace-pre-wrap break-words">
+            {{
+              state.handoffFormMessage.trim() ||
+              t(
+                'CAPTAIN.ASSISTANTS.SETTINGS.HANDOVER.CONTACT_FORM.DEFAULT_MESSAGE'
+              )
+            }}
+          </p>
+          <Input
+            v-for="field in contactFields"
+            :key="field"
+            :label="field"
+            disabled
+            class="mb-3"
+          />
+          <Button
+            :label="
+              t('CAPTAIN.ASSISTANTS.SETTINGS.HANDOVER.CONTACT_FORM.SUBMIT')
+            "
+            disabled
+            class="w-full"
+          />
+        </div>
+      </SettingsCard>
     </template>
   </SettingsSplit>
 </template>
