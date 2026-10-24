@@ -360,6 +360,9 @@ hubspot:
         additionalProperties:
           type: string
           pattern: '^[a-z][a-z0-9_]*$'
+      contact_sync_scope:
+        type: string
+        enum: [all_contacts, business_leads]
       sync_contacts:
         type: boolean
       save_transcripts:
@@ -380,4 +383,4 @@ hubspot:
           type: string
       reauthorization_required:
         type: boolean
-  visible_properties: [field_mapping, sync_contacts, save_transcripts, portal_id, hub_domain, user, reauthorization_required]
+  visible_properties: [field_mapping, sync_contacts, save_transcripts, contact_sync_scope, portal_id, hub_domain, user, reauthorization_required]

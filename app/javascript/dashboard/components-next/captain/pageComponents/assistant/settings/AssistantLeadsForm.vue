@@ -1,5 +1,7 @@
 <script setup>
 import { computed, nextTick, ref, toRaw, watch } from 'vue';
+import TeamsAPI from 'dashboard/api/teams';
+import { onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
 import Button from 'dashboard/components-next/button/Button.vue';
@@ -30,12 +32,32 @@ const savedSnapshot = ref('');
 const saving = ref(false);
 const attempted = ref(false);
 const form = ref(null);
-const setup = useLeadSetup(computed(() => props.assistant.id));
+const setup = useLeadSetup(
+  computed(() => props.assistant.id),
+  computed(() => settings.value.lead_fields)
+);
+const teams = ref([]);
+const teamsError = ref(false);
+onMounted(async () => {
+  try {
+    const { data } = await TeamsAPI.get();
+    teams.value = data;
+  } catch {
+    teamsError.value = true;
+  }
+});
+const sync = computed(() => props.assistant.knowledge_sync || {});
+const syncLabel = computed(() => {
+  if (!sync.value.enabled || !sync.value.interval_hours)
+    return label('KNOWLEDGE.NOT_SCHEDULED');
+  return label('KNOWLEDGE.SCHEDULED', { hours: sync.value.interval_hours });
+});
 const {
   captureScenario,
   existingScenario,
   hubspotState,
   transcriptState,
+  businessLeadsOnly,
   loading,
   scenarioError,
 } = setup;
@@ -49,6 +71,9 @@ const reset = () => {
   settings.value = {
     leads_enabled: config.leads_enabled === true,
     lead_max_questions: config.lead_max_questions ?? 2,
+    lead_handoff_capture_enabled: config.lead_handoff_capture_enabled === true,
+    lead_notification_team_id: config.lead_notification_team_id ?? null,
+    published_pricing_enabled: config.published_pricing_enabled === true,
     lead_fields: (config.lead_fields || []).map(field => ({ ...field })),
     lead_types: (config.lead_types || []).map(type => ({ ...type })),
   };
@@ -207,6 +232,54 @@ const statusLabel = computed(() => {
         </SettingsSwitchRow>
       </section>
 
+      <section
+        class="flex flex-col gap-3 rounded-xl bg-n-solid-1 p-5 outline outline-1 outline-n-weak"
+      >
+        <h3 class="m-0 text-base font-semibold text-n-slate-12">
+          {{ label('FLOW_TITLE') }}
+        </h3>
+        <p class="m-0 text-sm text-n-slate-11">{{ label('FLOW_HELP') }}</p>
+        <ol
+          class="m-0 flex list-decimal flex-col gap-2 ps-5 text-sm text-n-slate-12"
+        >
+          <li>{{ label('FLOW_ANSWER') }}</li>
+          <li>{{ label('FLOW_CAPTURE') }}</li>
+          <li>{{ label('FLOW_DELIVER') }}</li>
+        </ol>
+        <p class="m-0 text-xs text-n-slate-11">{{ label('FLOW_SCENARIOS') }}</p>
+        <div class="border-t border-n-weak pt-3">
+          <span class="text-sm font-medium text-n-slate-12">{{
+            label('KNOWLEDGE.TITLE')
+          }}</span>
+          <p
+            class="mb-0 mt-1 text-sm"
+            :class="
+              sync.enabled && sync.interval_hours
+                ? 'text-n-slate-11'
+                : 'text-n-amber-11'
+            "
+            role="status"
+          >
+            {{ syncLabel }}
+          </p>
+          <p class="mb-0 mt-1 text-xs text-n-slate-11">
+            {{ label('KNOWLEDGE.HELP') }}
+          </p>
+          <Button
+            type="button"
+            class="mt-2"
+            variant="link"
+            size="sm"
+            :label="label('KNOWLEDGE.ACTION')"
+            @click="
+              router.push({
+                name: 'captain_assistants_documents_index',
+                params: { assistantId: assistant.id },
+              })
+            "
+          />
+        </div>
+      </section>
       <SettingsSplit>
         <div class="flex flex-col gap-6">
           <section
@@ -471,6 +544,20 @@ const statusLabel = computed(() => {
                 />
               </div>
             </div>
+            <SettingsSwitchRow
+              :model-value="settings.lead_handoff_capture_enabled"
+              :title="label('HANDOFF_TITLE')"
+              :description="label('HANDOFF_HELP')"
+              @update:model-value="
+                settings.lead_handoff_capture_enabled = $event
+              "
+            />
+            <SettingsSwitchRow
+              :model-value="settings.published_pricing_enabled"
+              :title="label('PRICING_TITLE')"
+              :description="label('PRICING_HELP')"
+              @update:model-value="settings.published_pricing_enabled = $event"
+            />
             <div class="flex flex-col gap-2 border-t border-n-weak pt-4">
               <span class="text-sm font-medium text-n-slate-12">{{
                 label('SCENARIO_TITLE')
@@ -551,9 +638,31 @@ const statusLabel = computed(() => {
                 transcriptLabel
               }}</span>
               <p class="mb-0 mt-1 text-xs text-n-slate-11">
-                {{ label('TRANSCRIPT_HELP') }}
+                {{
+                  label(
+                    businessLeadsOnly
+                      ? 'TRANSCRIPT_LEADS_HELP'
+                      : 'TRANSCRIPT_HELP'
+                  )
+                }}
               </p>
             </div>
+            <label class="flex flex-col gap-2 text-sm text-n-slate-12">
+              <span class="font-medium">{{ label('NOTIFICATION_TITLE') }}</span>
+              <select
+                v-model="settings.lead_notification_team_id"
+                :disabled="teamsError"
+                class="m-0 rounded-lg border border-n-weak bg-n-card px-3 py-2 text-sm text-n-slate-12"
+              >
+                <option :value="null">{{ label('NOTIFICATION_OFF') }}</option>
+                <option v-for="team in teams" :key="team.id" :value="team.id">
+                  {{ team.name }}
+                </option>
+              </select>
+              <span class="text-xs text-n-slate-11">{{
+                label(teamsError ? 'NOTIFICATION_ERROR' : 'NOTIFICATION_HELP')
+              }}</span>
+            </label>
             <p class="m-0 text-xs text-n-slate-11">
               {{ label('VERIFICATION') }}
             </p>
@@ -579,6 +688,32 @@ const statusLabel = computed(() => {
           />
         </template>
       </SettingsSplit>
+      <details
+        class="rounded-xl bg-n-solid-1 p-5 outline outline-1 outline-n-weak"
+      >
+        <summary class="cursor-pointer text-base font-semibold text-n-slate-12">
+          {{ label('TEST_TITLE') }}
+        </summary>
+        <p class="mb-3 mt-3 text-sm text-n-slate-11">
+          {{ label('TEST_HELP') }}
+        </p>
+        <ol
+          class="m-0 flex list-decimal flex-col gap-2 ps-5 text-sm text-n-slate-12"
+        >
+          <li
+            v-for="step in [
+              'BUSINESS',
+              'HANDOFF',
+              'VIEWER',
+              'REFUSAL',
+              'DELIVERY',
+            ]"
+            :key="step"
+          >
+            {{ label(`TEST_${step}`) }}
+          </li>
+        </ol>
+      </details>
     </fieldset>
     <p
       v-if="attempted && hasErrors"

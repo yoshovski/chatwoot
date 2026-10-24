@@ -32,7 +32,8 @@ RSpec.describe Captain::Tools::HandoffTool, type: :model do
     it 'survives Agents::ToolWrapper reading the class params at wrap time' do
       described_class.params
 
-      expect(described_class.new(assistant).params_schema['properties'].keys).to contain_exactly('reason', 'reason_category')
+      expect(described_class.new(assistant).params_schema['properties'].keys).to contain_exactly('reason', 'reason_category', 'business_lead_type',
+                                                                                                 'business_lead_summary', 'business_lead_fields_json')
     end
   end
 

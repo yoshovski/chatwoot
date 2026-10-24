@@ -16,18 +16,29 @@ module Captain::LeadSettings
   def lead_prompt_context
     return {} unless leads_enabled?
 
-    { lead_capture: { fields: lead_fields, types: lead_types, max_questions: lead_max_questions } }
+    { lead_capture: { fields: lead_fields, types: lead_types, max_questions: lead_max_questions,
+                      handoff_capture: config['lead_handoff_capture_enabled'] == true } }
   end
 
   private
 
   def validate_lead_settings
     # Agents saved before HubSpot synced every contact may still carry lead_hubspot_sync_enabled; it is ignored.
-    valid = BOOLEAN_VALUES.include?(config['leads_enabled'])
+    valid = valid_lead_switches?
+    valid &&= valid_lead_notification_team?
     valid &&= valid_lead_questions?
     valid &&= valid_lead_collections?
     valid &&= !leads_enabled? || lead_types.present?
     errors.add(:config, I18n.t('captain.leads.invalid_settings')) unless valid
+  end
+
+  def valid_lead_switches?
+    %w[leads_enabled lead_handoff_capture_enabled published_pricing_enabled].all? { |key| BOOLEAN_VALUES.include?(config[key]) }
+  end
+
+  def valid_lead_notification_team?
+    team_id = config['lead_notification_team_id']
+    team_id.nil? || (team_id.is_a?(Integer) && account.teams.exists?(id: team_id))
   end
 
   def valid_lead_collections?

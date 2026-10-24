@@ -3,7 +3,7 @@ import ScenariosAPI from 'dashboard/api/captain/scenarios';
 import IntegrationsAPI from 'dashboard/api/integrations';
 
 // Read saved setup, independently of the draft being edited on this page.
-export function useLeadSetup(assistantId) {
+export function useLeadSetup(assistantId, leadFields) {
   const scenarios = ref([]);
   const hubspot = ref(null);
   const loading = ref(true);
@@ -68,9 +68,14 @@ export function useLeadSetup(assistantId) {
       return hubspotConnectionState.value;
     if (!hubspot.value.settings.sync_contacts) return 'sync_off';
     const mapping = hubspot.value.settings?.field_mapping || {};
-    return mapping.lead_type && mapping.lead_summary && mapping.lead_source
-      ? 'mapped'
-      : 'mapping_needed';
+    const keys = [
+      'email',
+      'lead_type',
+      'lead_summary',
+      'lead_source',
+      ...(leadFields?.value || []).map(field => `lead_${field.key}`),
+    ];
+    return keys.every(key => mapping[key]) ? 'mapped' : 'mapping_needed';
   });
   const transcriptState = computed(() => {
     if (hubspotConnectionState.value !== 'connected')
@@ -83,6 +88,9 @@ export function useLeadSetup(assistantId) {
     existingScenario,
     hubspotState,
     transcriptState,
+    businessLeadsOnly: computed(
+      () => hubspot.value?.settings?.contact_sync_scope === 'business_leads'
+    ),
     loading,
     scenarioError,
     refresh: () => {

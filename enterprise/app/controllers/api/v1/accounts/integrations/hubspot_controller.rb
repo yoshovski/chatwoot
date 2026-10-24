@@ -4,7 +4,7 @@ class Api::V1::Accounts::Integrations::HubspotController < Api::V1::Accounts::In
   before_action -> { authorize(:hook, :destroy?) }, only: [:destroy]
 
   def properties
-    render json: { properties: Crm::Hubspot::SetupService.new(@hook).writable_properties,
+    render json: { properties: Crm::Hubspot::SetupService.new(@hook).writable_properties(refresh: params[:refresh] == 'true'),
                    sources: Crm::Hubspot::MappingSources.new(Current.account).all }
   rescue Crm::Hubspot::Client::ReauthorizationRequired, Crm::Hubspot::Client::AuthorizationError
     render json: { error: 'reauthorize' }, status: :unprocessable_entity
@@ -25,6 +25,11 @@ class Api::V1::Accounts::Integrations::HubspotController < Api::V1::Accounts::In
   end
 
   def update
+    scope = settings_params[:contact_sync_scope]
+    if settings_params.key?(:contact_sync_scope) && %w[all_contacts business_leads].exclude?(scope)
+      return render_could_not_create_error(I18n.t('integration_apps.hubspot.invalid_sync_scope'))
+    end
+
     mapping = settings_params[:field_mapping].to_h
     unless mapping['email'] == 'email' && (mapping.keys - Crm::Hubspot::MappingSources.new(Current.account).keys).empty?
       return render_could_not_create_error(I18n.t('integration_apps.hubspot.invalid_mapping_source'))
@@ -47,7 +52,7 @@ class Api::V1::Accounts::Integrations::HubspotController < Api::V1::Accounts::In
   end
 
   def settings_params
-    params.require(:settings).permit(:sync_contacts, :save_transcripts, field_mapping: {})
+    params.require(:settings).permit(:sync_contacts, :save_transcripts, :contact_sync_scope, field_mapping: {})
   end
 
   def revoke_refresh_token

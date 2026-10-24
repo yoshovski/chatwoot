@@ -38,7 +38,9 @@ class Captain::Documents::ScheduleSyncsJob < ApplicationJob
   private
 
   def enqueue_due_documents(account, interval)
-    per_account_limit = [@per_account_batch_limit, @remaining_global_capacity].min
+    override = account.custom_attributes['captain_document_sync_batch_limit']
+    account_limit = override.is_a?(Integer) && override.between?(1, DEFAULT_GLOBAL_BATCH_LIMIT) ? override : @per_account_batch_limit
+    per_account_limit = [account_limit, @remaining_global_capacity].min
     result = { enqueued: 0 }
 
     due_documents(account, interval).limit(per_account_limit).to_a.each do |document|
@@ -86,6 +88,8 @@ class Captain::Documents::ScheduleSyncsJob < ApplicationJob
   end
 
   def account_sync_plan(account)
+    return 'enterprise' if account.captain_document_sync_override
+
     plan = account.custom_attributes['plan_name']
     plan = 'enterprise' if plan.blank? && ChatwootApp.self_hosted_paid?
     plan.to_s.downcase.presence

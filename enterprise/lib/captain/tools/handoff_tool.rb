@@ -6,6 +6,9 @@ class Captain::Tools::HandoffTool < Captain::Tools::BasePublicTool
   description 'Hand off the conversation when a human colleague is needed. Always give a reason that helps the colleague.'
   params do
     string :reason, description: 'The reason why handoff is needed to help the colleague (optional)', required: false
+    string :business_lead_type, description: 'For a confirmed business inquiry only: configured lead type; omit for viewer support', required: false
+    string :business_lead_summary, description: 'Known business context for follow-up; do not invent qualification', required: false
+    string :business_lead_fields_json, description: 'JSON object of known configured lead fields; omit unknown values', required: false
     string :reason_category, enum: REASON_CATEGORIES, description: 'Reporting category for why the handoff is needed'
   end
 
@@ -18,7 +21,7 @@ class Captain::Tools::HandoffTool < Captain::Tools::BasePublicTool
     super
   end
 
-  def perform(tool_context, reason: nil, reason_category: nil)
+  def perform(tool_context, reason: nil, reason_category: nil, **business_details)
     conversation = find_conversation(tool_context.state)
     return failure_result('Conversation not found', tool_context.state) unless conversation
 
@@ -33,6 +36,7 @@ class Captain::Tools::HandoffTool < Captain::Tools::BasePublicTool
     failure_message = handoff_failure_message(handoff_result)
     return failure_result(failure_message, tool_context.state) if failure_message
 
+    capture_business_handoff(conversation, tool_context, **business_details)
     "Conversation handed off to human support team#{" (Reason: #{reason})" if reason}"
   rescue StandardError => e
     ChatwootExceptionTracker.new(e).capture_exception
@@ -40,6 +44,17 @@ class Captain::Tools::HandoffTool < Captain::Tools::BasePublicTool
   end
 
   private
+
+  def capture_business_handoff(conversation, tool_context, business_lead_type: nil, business_lead_summary: nil, business_lead_fields_json: nil)
+    return if tool_context.state&.dig(:source) == 'playground' || business_lead_type.blank? || business_lead_summary.blank?
+
+    Captain::Leads::HandoffCaptureService.new(conversation, @assistant).stage!(
+      lead_type: business_lead_type, summary: business_lead_summary, fields: JSON.parse(business_lead_fields_json.presence || '{}')
+    )
+  rescue StandardError => e
+    # Capturing a lead must never block or misreport a completed live handoff.
+    ChatwootExceptionTracker.new(e).capture_exception
+  end
 
   def handoff_failure_message(result)
     case result

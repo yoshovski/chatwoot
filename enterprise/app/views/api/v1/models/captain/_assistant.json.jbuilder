@@ -23,3 +23,8 @@ json.prompt_presets do
   json.tone Captain::Assistant::TONE_INSTRUCTIONS
   json.answer_length Captain::Assistant::ANSWER_LENGTH_INSTRUCTIONS[resource.answer_format]
 end
+
+json.knowledge_sync do
+  json.enabled resource.account.feature_enabled?('captain_document_auto_sync')
+  json.interval_hours resource.account.captain_document_sync_interval&.in_hours
+end
