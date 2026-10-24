@@ -33,14 +33,18 @@ class Crm::Hubspot::ProcessorService < Crm::BaseProcessorService
     note_id = Crm::Hubspot::Client.new(@hook).create_note(
       upsert_contact(contact), body: Crm::Hubspot::Mappers::TranscriptNoteMapper.new(conversation).body, timestamp: resolved_at
     )
-    conversation.with_lock do
+    store_note_result(conversation, key, note_id)
+  end
+
+  private
+
+  def store_note_result(conversation, key, note_id)
+    conversation.reload.with_lock do
       attributes = conversation.additional_attributes.deep_dup
       attributes['hubspot_note_ids'] = attributes.fetch('hubspot_note_ids', {}).merge(key => note_id)
       conversation.update!(additional_attributes: attributes)
     end
   end
-
-  private
 
   def eligible_contact?(contact)
     contact.email.present? && (@hook.settings['contact_sync_scope'] != 'business_leads' || verified_lead?(contact))
