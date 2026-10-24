@@ -172,390 +172,399 @@ const statusLabel = computed(() => {
 
 <template>
   <form ref="form" class="flex flex-col gap-6" @submit.prevent="save">
-    <section
-      class="rounded-xl bg-n-solid-1 px-5 py-1 outline outline-1 outline-n-weak"
+    <fieldset
+      :disabled="saving"
+      class="m-0 flex min-w-0 flex-col gap-6 border-0 p-0"
     >
-      <SettingsSwitchRow
-        :model-value="settings.leads_enabled"
-        :title="label('ENABLE')"
-        :description="label('ENABLE_DESCRIPTION')"
-        @update:model-value="enableCapture"
+      <section
+        class="rounded-xl bg-n-solid-1 px-5 py-1 outline outline-1 outline-n-weak"
       >
-        <span
-          class="mt-2 flex items-center gap-1.5 text-xs text-n-slate-11"
-          role="status"
+        <SettingsSwitchRow
+          :model-value="settings.leads_enabled"
+          :title="label('ENABLE')"
+          :description="label('ENABLE_DESCRIPTION')"
+          @update:model-value="enableCapture"
         >
           <span
-            class="size-1.5 rounded-full"
-            :class="
-              !isDirty && settings.leads_enabled && captureScenario
-                ? 'bg-n-teal-9'
-                : 'bg-n-slate-8'
-            "
-            aria-hidden="true"
-          />
-          {{ statusLabel }}
-        </span>
-      </SettingsSwitchRow>
-    </section>
-
-    <SettingsSplit>
-      <div class="flex flex-col gap-6">
-        <section
-          class="flex flex-col gap-4 rounded-xl bg-n-solid-1 p-5 outline outline-1 outline-n-weak"
-        >
-          <div class="flex items-start gap-3">
+            class="mt-2 flex items-center gap-1.5 text-xs text-n-slate-11"
+            role="status"
+          >
             <span
-              class="flex size-7 shrink-0 items-center justify-center rounded-full bg-n-blue-3 text-sm font-medium text-n-blue-11"
+              class="size-1.5 rounded-full"
+              :class="
+                !isDirty && settings.leads_enabled && captureScenario
+                  ? 'bg-n-teal-9'
+                  : 'bg-n-slate-8'
+              "
               aria-hidden="true"
-              >{{ n(1) }}</span
-            >
-            <div>
-              <h3 class="m-0 text-base font-semibold text-n-slate-12">
-                {{ label('FIELDS') }}
-              </h3>
-              <p class="mb-0 mt-1 text-sm text-n-slate-11">
-                {{ label('FIELDS_HELP') }}
-              </p>
-            </div>
-          </div>
-          <div
-            class="rounded-lg bg-n-slate-2 px-3 py-2.5 text-sm text-n-slate-11"
-          >
-            {{ label('INCLUDED') }}
-          </div>
-          <div
-            v-for="(field, index) in settings.lead_fields"
-            :key="index"
-            class="flex flex-col gap-2 rounded-lg outline outline-1 outline-n-weak p-3"
-          >
-            <div class="flex items-start gap-2">
-              <Input
-                v-model="field.label"
-                class="min-w-0 flex-1"
-                :label="label('FIELD_LABEL')"
-                :maxlength="MAX_TEXT_LENGTH"
-                :placeholder="label('FIELD_PLACEHOLDER')"
-                :aria-invalid="attempted && !!fieldError(field)"
-                @blur="suggestKey(field)"
-              />
-              <Button
-                type="button"
-                variant="ghost"
-                color="slate"
-                icon="i-lucide-trash-2"
-                class="mt-6"
-                :aria-label="
-                  label('REMOVE_FIELD', {
-                    name: field.label || label('FIELD_LABEL'),
-                  })
-                "
-                @click="settings.lead_fields.splice(index, 1)"
-              />
-            </div>
-            <details
-              :open="attempted && !!fieldError(field)"
-              class="text-xs text-n-slate-11"
-            >
-              <summary class="cursor-pointer">
-                {{ label('FIELD_KEY') }}
-                <code v-if="field.key" class="ms-1">{{ field.key }}</code>
-              </summary>
-              <Input
-                v-model="field.key"
-                class="mt-2"
-                :label="label('FIELD_KEY')"
-                :disabled="fieldKeyLocked(field)"
-                :maxlength="40"
-                :placeholder="label('KEY_PLACEHOLDER')"
-                :aria-invalid="attempted && !!fieldError(field)"
-              />
-              <p class="mb-0 mt-2">
-                {{ label(fieldKeyLocked(field) ? 'KEY_LOCKED' : 'KEY_HELP') }}
-              </p>
-            </details>
-            <p
-              v-if="attempted && fieldError(field)"
-              class="m-0 text-xs text-n-ruby-11"
-              role="alert"
-            >
-              {{ fieldError(field) }}
-            </p>
-          </div>
-          <p
-            v-if="!settings.lead_fields.length"
-            class="m-0 text-sm text-n-slate-11"
-          >
-            {{ label('NO_FIELDS') }}
-          </p>
-          <div
-            v-if="settings.lead_fields.length < MAX_ENTRIES"
-            class="flex flex-wrap gap-2"
-          >
-            <Button
-              v-for="key in availableFields"
-              :key="key"
-              type="button"
-              size="sm"
-              variant="faded"
-              color="slate"
-              icon="i-lucide-plus"
-              :label="label(`COMMON_FIELDS.${key}`)"
-              @click="addField(key)"
             />
-            <Button
-              type="button"
-              size="sm"
-              variant="ghost"
-              icon="i-lucide-plus"
-              :label="label('ADD_FIELD')"
-              @click="addField()"
-            />
-          </div>
-          <p v-else class="m-0 text-xs text-n-slate-11">
-            {{ label('LIMIT', { count: MAX_ENTRIES }) }}
-          </p>
-        </section>
+            {{ statusLabel }}
+          </span>
+        </SettingsSwitchRow>
+      </section>
 
-        <section
-          class="flex flex-col gap-4 rounded-xl bg-n-solid-1 p-5 outline outline-1 outline-n-weak"
-        >
-          <div class="flex items-start gap-3">
-            <span
-              class="flex size-7 shrink-0 items-center justify-center rounded-full bg-n-blue-3 text-sm font-medium text-n-blue-11"
-              aria-hidden="true"
-              >{{ n(2) }}</span
-            >
-            <div>
-              <h3 class="m-0 text-base font-semibold text-n-slate-12">
-                {{ label('TYPES') }}
-              </h3>
-              <p class="mb-0 mt-1 text-sm text-n-slate-11">
-                {{ label('TYPES_HELP') }}
-              </p>
-            </div>
-          </div>
-          <div
-            v-for="(type, index) in settings.lead_types"
-            :key="index"
-            class="flex flex-col gap-3 rounded-lg outline outline-1 outline-n-weak p-3"
+      <SettingsSplit>
+        <div class="flex flex-col gap-6">
+          <section
+            class="flex flex-col gap-4 rounded-xl bg-n-solid-1 p-5 outline outline-1 outline-n-weak"
           >
-            <div class="flex items-start gap-2">
-              <Input
-                v-model="type.name"
-                class="min-w-0 flex-1"
-                :label="label('TYPE_NAME')"
-                :maxlength="MAX_TEXT_LENGTH"
-                :placeholder="label('TYPE_PLACEHOLDER')"
-                :aria-invalid="attempted && !!typeError(type)"
-              />
-              <Button
-                type="button"
-                variant="ghost"
-                color="slate"
-                icon="i-lucide-trash-2"
-                class="mt-6"
-                :aria-label="
-                  label('REMOVE_TYPE', {
-                    name: type.name || label('TYPE_NAME'),
-                  })
-                "
-                @click="settings.lead_types.splice(index, 1)"
-              />
-            </div>
-            <label
-              class="m-0 flex flex-col gap-1.5 text-sm font-medium text-n-slate-12"
-            >
-              {{ label('TYPE_RULE') }}
-              <textarea
-                v-model="type.rule"
-                rows="3"
-                :maxlength="MAX_TEXT_LENGTH"
-                :placeholder="label('RULE_PLACEHOLDER')"
-                :aria-invalid="attempted && !!typeError(type)"
-                class="m-0 w-full resize-y rounded-lg border border-n-weak bg-n-alpha-black2 px-3 py-2 text-sm font-normal text-n-slate-12 placeholder:text-n-slate-10 focus:border-n-brand focus:outline-none"
-              />
-            </label>
-            <p
-              v-if="attempted && typeError(type)"
-              class="m-0 text-xs text-n-ruby-11"
-              role="alert"
-            >
-              {{ typeError(type) }}
-            </p>
-          </div>
-          <p
-            v-if="!settings.lead_types.length"
-            class="m-0 text-sm"
-            :class="
-              attempted && settings.leads_enabled
-                ? 'text-n-ruby-11'
-                : 'text-n-slate-11'
-            "
-          >
-            {{ label('NO_TYPES') }}
-          </p>
-          <Button
-            v-if="settings.lead_types.length < MAX_ENTRIES"
-            type="button"
-            class="self-start"
-            variant="faded"
-            size="sm"
-            icon="i-lucide-plus"
-            :label="label('ADD_TYPE')"
-            @click="settings.lead_types.push({ name: '', rule: '' })"
-          />
-          <p class="m-0 text-xs text-n-slate-11">
-            {{ label('FALLBACK_HELP') }}
-          </p>
-        </section>
-
-        <section
-          class="flex flex-col gap-4 rounded-xl bg-n-solid-1 p-5 outline outline-1 outline-n-weak"
-        >
-          <div class="flex items-start gap-3">
-            <span
-              class="flex size-7 shrink-0 items-center justify-center rounded-full bg-n-blue-3 text-sm font-medium text-n-blue-11"
-              aria-hidden="true"
-              >{{ n(3) }}</span
-            >
-            <div>
-              <h3 class="m-0 text-base font-semibold text-n-slate-12">
-                {{ label('CONVERSATION') }}
-              </h3>
-              <p class="mb-0 mt-1 text-sm text-n-slate-11">
-                {{ label('CONVERSATION_HELP') }}
-              </p>
-            </div>
-          </div>
-          <div class="flex items-center justify-between gap-3">
-            <div class="text-sm text-n-slate-12">
-              {{ label('MAX_QUESTIONS') }}
-              <p class="mb-0 mt-1 text-xs text-n-slate-11">
-                {{ label('QUESTIONS_HELP') }}
-              </p>
-            </div>
-            <div class="flex shrink-0 items-center gap-2">
-              <Button
-                type="button"
-                size="sm"
-                variant="faded"
-                color="slate"
-                icon="i-lucide-minus"
-                :disabled="settings.lead_max_questions === 0"
-                :aria-label="label('FEWER_QUESTIONS')"
-                @click="changeQuestions(-1)"
-              />
-              <output
-                class="w-5 text-center text-sm font-medium text-n-slate-12"
-                aria-live="polite"
-                >{{ settings.lead_max_questions }}</output
+            <div class="flex items-start gap-3">
+              <span
+                class="flex size-7 shrink-0 items-center justify-center rounded-full bg-n-blue-3 text-sm font-medium text-n-blue-11"
+                aria-hidden="true"
+                >{{ n(1) }}</span
               >
+              <div>
+                <h3 class="m-0 text-base font-semibold text-n-slate-12">
+                  {{ label('FIELDS') }}
+                </h3>
+                <p class="mb-0 mt-1 text-sm text-n-slate-11">
+                  {{ label('FIELDS_HELP') }}
+                </p>
+              </div>
+            </div>
+            <div
+              class="rounded-lg bg-n-slate-2 px-3 py-2.5 text-sm text-n-slate-11"
+            >
+              {{ label('INCLUDED') }}
+            </div>
+            <div
+              v-for="(field, index) in settings.lead_fields"
+              :key="index"
+              class="flex flex-col gap-2 rounded-lg outline outline-1 outline-n-weak p-3"
+            >
+              <div class="flex items-start gap-2">
+                <Input
+                  v-model="field.label"
+                  class="min-w-0 flex-1"
+                  :label="label('FIELD_LABEL')"
+                  :maxlength="MAX_TEXT_LENGTH"
+                  :placeholder="label('FIELD_PLACEHOLDER')"
+                  :aria-invalid="attempted && !!fieldError(field)"
+                  @blur="suggestKey(field)"
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  color="slate"
+                  icon="i-lucide-trash-2"
+                  class="mt-6"
+                  :aria-label="
+                    label('REMOVE_FIELD', {
+                      name: field.label || label('FIELD_LABEL'),
+                    })
+                  "
+                  @click="settings.lead_fields.splice(index, 1)"
+                />
+              </div>
+              <details
+                :open="attempted && !!fieldError(field)"
+                class="text-xs text-n-slate-11"
+              >
+                <summary class="cursor-pointer">
+                  {{ label('FIELD_KEY') }}
+                  <code v-if="field.key" class="ms-1">{{ field.key }}</code>
+                </summary>
+                <Input
+                  v-model="field.key"
+                  class="mt-2"
+                  :label="label('FIELD_KEY')"
+                  :disabled="fieldKeyLocked(field)"
+                  :maxlength="40"
+                  :placeholder="label('KEY_PLACEHOLDER')"
+                  :aria-invalid="attempted && !!fieldError(field)"
+                />
+                <p class="mb-0 mt-2">
+                  {{ label(fieldKeyLocked(field) ? 'KEY_LOCKED' : 'KEY_HELP') }}
+                </p>
+              </details>
+              <p
+                v-if="attempted && fieldError(field)"
+                class="m-0 text-xs text-n-ruby-11"
+                role="alert"
+              >
+                {{ fieldError(field) }}
+              </p>
+            </div>
+            <p
+              v-if="!settings.lead_fields.length"
+              class="m-0 text-sm text-n-slate-11"
+            >
+              {{ label('NO_FIELDS') }}
+            </p>
+            <div
+              v-if="settings.lead_fields.length < MAX_ENTRIES"
+              class="flex flex-wrap gap-2"
+            >
               <Button
+                v-for="key in availableFields"
+                :key="key"
                 type="button"
                 size="sm"
                 variant="faded"
                 color="slate"
                 icon="i-lucide-plus"
-                :disabled="settings.lead_max_questions === MAX_QUESTIONS"
-                :aria-label="label('MORE_QUESTIONS')"
-                @click="changeQuestions(1)"
+                :label="label(`COMMON_FIELDS.${key}`)"
+                @click="addField(key)"
+              />
+              <Button
+                type="button"
+                size="sm"
+                variant="ghost"
+                icon="i-lucide-plus"
+                :label="label('ADD_FIELD')"
+                @click="addField()"
               />
             </div>
-          </div>
-          <div class="flex flex-col gap-2 border-t border-n-weak pt-4">
-            <span class="text-sm font-medium text-n-slate-12">{{
-              label('SCENARIO_TITLE')
-            }}</span>
-            <p class="m-0 text-sm text-n-slate-11">
-              {{
-                loading
-                  ? label('STATUS.CHECKING')
-                  : scenarioError
-                    ? label('SCENARIO_ERROR')
-                    : captureScenario
-                      ? label('SCENARIO_FOUND', { name: captureScenario.title })
-                      : existingScenario
-                        ? label('SCENARIO_PAUSED', {
-                            name: existingScenario.title,
+            <p v-else class="m-0 text-xs text-n-slate-11">
+              {{ label('LIMIT', { count: MAX_ENTRIES }) }}
+            </p>
+          </section>
+
+          <section
+            class="flex flex-col gap-4 rounded-xl bg-n-solid-1 p-5 outline outline-1 outline-n-weak"
+          >
+            <div class="flex items-start gap-3">
+              <span
+                class="flex size-7 shrink-0 items-center justify-center rounded-full bg-n-blue-3 text-sm font-medium text-n-blue-11"
+                aria-hidden="true"
+                >{{ n(2) }}</span
+              >
+              <div>
+                <h3 class="m-0 text-base font-semibold text-n-slate-12">
+                  {{ label('TYPES') }}
+                </h3>
+                <p class="mb-0 mt-1 text-sm text-n-slate-11">
+                  {{ label('TYPES_HELP') }}
+                </p>
+              </div>
+            </div>
+            <div
+              v-for="(type, index) in settings.lead_types"
+              :key="index"
+              class="flex flex-col gap-3 rounded-lg outline outline-1 outline-n-weak p-3"
+            >
+              <div class="flex items-start gap-2">
+                <Input
+                  v-model="type.name"
+                  class="min-w-0 flex-1"
+                  :label="label('TYPE_NAME')"
+                  :maxlength="MAX_TEXT_LENGTH"
+                  :placeholder="label('TYPE_PLACEHOLDER')"
+                  :aria-invalid="attempted && !!typeError(type)"
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  color="slate"
+                  icon="i-lucide-trash-2"
+                  class="mt-6"
+                  :aria-label="
+                    label('REMOVE_TYPE', {
+                      name: type.name || label('TYPE_NAME'),
+                    })
+                  "
+                  @click="settings.lead_types.splice(index, 1)"
+                />
+              </div>
+              <label
+                class="m-0 flex flex-col gap-1.5 text-sm font-medium text-n-slate-12"
+              >
+                {{ label('TYPE_RULE') }}
+                <textarea
+                  v-model="type.rule"
+                  rows="3"
+                  :maxlength="MAX_TEXT_LENGTH"
+                  :placeholder="label('RULE_PLACEHOLDER')"
+                  :aria-invalid="attempted && !!typeError(type)"
+                  class="m-0 w-full resize-y rounded-lg border border-n-weak bg-n-alpha-black2 px-3 py-2 text-sm font-normal text-n-slate-12 placeholder:text-n-slate-10 focus:border-n-brand focus:outline-none"
+                />
+              </label>
+              <p
+                v-if="attempted && typeError(type)"
+                class="m-0 text-xs text-n-ruby-11"
+                role="alert"
+              >
+                {{ typeError(type) }}
+              </p>
+            </div>
+            <p
+              v-if="!settings.lead_types.length"
+              class="m-0 text-sm"
+              :class="
+                attempted && settings.leads_enabled
+                  ? 'text-n-ruby-11'
+                  : 'text-n-slate-11'
+              "
+            >
+              {{ label('NO_TYPES') }}
+            </p>
+            <Button
+              v-if="settings.lead_types.length < MAX_ENTRIES"
+              type="button"
+              class="self-start"
+              variant="faded"
+              size="sm"
+              icon="i-lucide-plus"
+              :label="label('ADD_TYPE')"
+              @click="settings.lead_types.push({ name: '', rule: '' })"
+            />
+            <p class="m-0 text-xs text-n-slate-11">
+              {{ label('FALLBACK_HELP') }}
+            </p>
+          </section>
+
+          <section
+            class="flex flex-col gap-4 rounded-xl bg-n-solid-1 p-5 outline outline-1 outline-n-weak"
+          >
+            <div class="flex items-start gap-3">
+              <span
+                class="flex size-7 shrink-0 items-center justify-center rounded-full bg-n-blue-3 text-sm font-medium text-n-blue-11"
+                aria-hidden="true"
+                >{{ n(3) }}</span
+              >
+              <div>
+                <h3 class="m-0 text-base font-semibold text-n-slate-12">
+                  {{ label('CONVERSATION') }}
+                </h3>
+                <p class="mb-0 mt-1 text-sm text-n-slate-11">
+                  {{ label('CONVERSATION_HELP') }}
+                </p>
+              </div>
+            </div>
+            <div class="flex items-center justify-between gap-3">
+              <div class="text-sm text-n-slate-12">
+                {{ label('MAX_QUESTIONS') }}
+                <p class="mb-0 mt-1 text-xs text-n-slate-11">
+                  {{ label('QUESTIONS_HELP') }}
+                </p>
+              </div>
+              <div class="flex shrink-0 items-center gap-2">
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="faded"
+                  color="slate"
+                  icon="i-lucide-minus"
+                  :disabled="settings.lead_max_questions === 0"
+                  :aria-label="label('FEWER_QUESTIONS')"
+                  @click="changeQuestions(-1)"
+                />
+                <output
+                  class="w-5 text-center text-sm font-medium text-n-slate-12"
+                  aria-live="polite"
+                  >{{ settings.lead_max_questions }}</output
+                >
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="faded"
+                  color="slate"
+                  icon="i-lucide-plus"
+                  :disabled="settings.lead_max_questions === MAX_QUESTIONS"
+                  :aria-label="label('MORE_QUESTIONS')"
+                  @click="changeQuestions(1)"
+                />
+              </div>
+            </div>
+            <div class="flex flex-col gap-2 border-t border-n-weak pt-4">
+              <span class="text-sm font-medium text-n-slate-12">{{
+                label('SCENARIO_TITLE')
+              }}</span>
+              <p class="m-0 text-sm text-n-slate-11">
+                {{
+                  loading
+                    ? label('STATUS.CHECKING')
+                    : scenarioError
+                      ? label('SCENARIO_ERROR')
+                      : captureScenario
+                        ? label('SCENARIO_FOUND', {
+                            name: captureScenario.title,
                           })
-                        : label('SCENARIO_MISSING')
-              }}
+                        : existingScenario
+                          ? label('SCENARIO_PAUSED', {
+                              name: existingScenario.title,
+                            })
+                          : label('SCENARIO_MISSING')
+                }}
+              </p>
+              <Button
+                type="button"
+                class="self-start"
+                size="sm"
+                variant="faded"
+                icon="i-lucide-git-branch"
+                :disabled="!settings.leads_enabled || loading || scenarioError"
+                :is-loading="saving"
+                :label="
+                  label(
+                    existingScenario
+                      ? 'MANAGE_SCENARIO'
+                      : isDirty
+                        ? 'SAVE_ADD_SCENARIO'
+                        : 'ADD_SCENARIO'
+                  )
+                "
+                @click="openScenarios"
+              />
+            </div>
+          </section>
+
+          <section
+            class="flex flex-col gap-3 rounded-xl bg-n-solid-1 p-5 outline outline-1 outline-n-weak"
+          >
+            <h3 class="m-0 text-base font-semibold text-n-slate-12">
+              {{ label('FOLLOW_UP') }}
+            </h3>
+            <p class="m-0 text-sm text-n-slate-11">
+              {{ label('FOLLOW_UP_HELP') }}
+            </p>
+            <div
+              class="flex flex-wrap items-center justify-between gap-3 rounded-lg bg-n-slate-2 p-3"
+            >
+              <div class="flex flex-col gap-1">
+                <span class="text-sm font-medium text-n-slate-12">{{
+                  label('HUBSPOT_TITLE')
+                }}</span>
+                <span class="text-xs text-n-slate-11" role="status">{{
+                  hubspotLabel
+                }}</span>
+              </div>
+              <Button
+                v-if="canManageIntegrations"
+                type="button"
+                variant="link"
+                size="sm"
+                :label="label('HUBSPOT_ACTION')"
+                @click="router.push({ name: 'settings_integrations_hubspot' })"
+              />
+            </div>
+            <p class="m-0 text-xs text-n-slate-11">
+              {{ label('VERIFICATION') }}
             </p>
             <Button
               type="button"
               class="self-start"
+              variant="ghost"
+              color="slate"
               size="sm"
-              variant="faded"
-              icon="i-lucide-git-branch"
-              :disabled="!settings.leads_enabled || loading || scenarioError"
-              :is-loading="saving"
-              :label="
-                label(
-                  existingScenario
-                    ? 'MANAGE_SCENARIO'
-                    : isDirty
-                      ? 'SAVE_ADD_SCENARIO'
-                      : 'ADD_SCENARIO'
-                )
-              "
-              @click="openScenarios"
+              icon="i-lucide-refresh-cw"
+              :label="label('REFRESH')"
+              :is-loading="loading"
+              @click="setup.refresh"
             />
-          </div>
-        </section>
-
-        <section
-          class="flex flex-col gap-3 rounded-xl bg-n-solid-1 p-5 outline outline-1 outline-n-weak"
-        >
-          <h3 class="m-0 text-base font-semibold text-n-slate-12">
-            {{ label('FOLLOW_UP') }}
-          </h3>
-          <p class="m-0 text-sm text-n-slate-11">
-            {{ label('FOLLOW_UP_HELP') }}
-          </p>
-          <div
-            class="flex flex-wrap items-center justify-between gap-3 rounded-lg bg-n-slate-2 p-3"
-          >
-            <div class="flex flex-col gap-1">
-              <span class="text-sm font-medium text-n-slate-12">{{
-                label('HUBSPOT_TITLE')
-              }}</span>
-              <span class="text-xs text-n-slate-11" role="status">{{
-                hubspotLabel
-              }}</span>
-            </div>
-            <Button
-              v-if="canManageIntegrations"
-              type="button"
-              variant="link"
-              size="sm"
-              :label="label('HUBSPOT_ACTION')"
-              @click="router.push({ name: 'settings_integrations_hubspot' })"
-            />
-          </div>
-          <p class="m-0 text-xs text-n-slate-11">{{ label('VERIFICATION') }}</p>
-          <Button
-            type="button"
-            class="self-start"
-            variant="ghost"
-            color="slate"
-            size="sm"
-            icon="i-lucide-refresh-cw"
-            :label="label('REFRESH')"
-            :is-loading="loading"
-            @click="setup.refresh"
+          </section>
+        </div>
+        <template #preview>
+          <LeadCapturePreview
+            :enabled="settings.leads_enabled"
+            :fields="settings.lead_fields"
+            :types="settings.lead_types"
+            :max-questions="settings.lead_max_questions"
           />
-        </section>
-      </div>
-      <template #preview>
-        <LeadCapturePreview
-          :enabled="settings.leads_enabled"
-          :fields="settings.lead_fields"
-          :types="settings.lead_types"
-          :max-questions="settings.lead_max_questions"
-        />
-      </template>
-    </SettingsSplit>
+        </template>
+      </SettingsSplit>
+    </fieldset>
     <p
       v-if="attempted && hasErrors"
       class="m-0 text-sm text-n-ruby-11"
