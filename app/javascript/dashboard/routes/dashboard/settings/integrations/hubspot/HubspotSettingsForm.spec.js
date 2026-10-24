@@ -52,7 +52,7 @@ const rowComboBox = (wrapper, key) =>
   wrapper.find(`[data-test="mapping-row-${key}"]`).findComponent(ComboBox);
 
 describe('HubspotSettingsForm', () => {
-  it('shows the fixed rows, keeps email read-only and suggests existing lead properties', () => {
+  it('shows configured lead fields automatically and preserves draft mappings as sources load', async () => {
     const wrapper = mountForm();
 
     [
@@ -77,6 +77,21 @@ describe('HubspotSettingsForm', () => {
       'chatoctave_lead_type'
     );
     expect(rowComboBox(wrapper, 'lead_summary').props('modelValue')).toBe('');
+
+    rowComboBox(wrapper, 'lead_company').vm.$emit(
+      'update:modelValue',
+      'company'
+    );
+    await wrapper.setProps({
+      sources: [
+        ...sources,
+        { key: 'lead_budget', label: 'Budget', kind: 'lead' },
+      ],
+    });
+    expect(rowComboBox(wrapper, 'lead_budget').exists()).toBe(true);
+    expect(rowComboBox(wrapper, 'lead_company').props('modelValue')).toBe(
+      'company'
+    );
   });
 
   it('emits only mapped rows with the toggles', async () => {
