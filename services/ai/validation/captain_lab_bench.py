@@ -77,9 +77,7 @@ def validate_cost_report(report: dict) -> dict:
         summary[field] = value
     cost_usd = report.get("cost_usd")
     invalid_cost = (
-        isinstance(cost_usd, bool)
-        or not isinstance(cost_usd, (int, float))
-        or cost_usd < 0
+        isinstance(cost_usd, bool) or not isinstance(cost_usd, (int, float)) or cost_usd < 0
     )
     if cost_usd is not None and invalid_cost:
         raise InvalidBaseline("Cost report cost_usd must be a non-negative number or null")
