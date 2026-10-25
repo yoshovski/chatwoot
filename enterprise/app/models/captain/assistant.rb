@@ -88,6 +88,8 @@ class Captain::Assistant < ApplicationRecord
   has_many :documents, class_name: 'Captain::Document', dependent: :destroy_async
   has_many :website_sources, class_name: 'Captain::WebsiteSource', dependent: :destroy_async
   has_one :knowledge_brief, class_name: 'Captain::KnowledgeBrief', dependent: :destroy
+  has_many :knowledge_analysis_runs, class_name: 'Captain::KnowledgeAnalysisRun', dependent: :destroy_async
+  has_many :document_analyses, class_name: 'Captain::DocumentAnalysis', dependent: :destroy_async
   has_many :responses, class_name: 'Captain::AssistantResponse', dependent: :destroy_async
   has_many :faq_suggestions, class_name: 'Captain::FaqSuggestion', dependent: :destroy_async
   has_many :captain_inboxes,

@@ -30,6 +30,7 @@ export const getters = {
       .filter(
         message =>
           message.message_type !== MESSAGE_TYPE.ACTIVITY &&
+          message.content_type !== 'cards' &&
           !message.private &&
           !message.content_attributes?.deleted
       )

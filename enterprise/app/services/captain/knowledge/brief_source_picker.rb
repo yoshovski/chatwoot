@@ -4,37 +4,56 @@
 class Captain::Knowledge::BriefSourcePicker
   MAX_CANDIDATES = 300
   MAX_PICKS = 20
+  BATCH_SIZE = 500
   REASON_LENGTH = 80
 
-  CORE_BUSINESS_PATTERNS = %r{
+  OVERVIEW_PATTERNS = %r{
     /(?:about|about-us|company|who-we-are|mission)\b|
     /(?:pricing|plans|packages|rates)\b|
-    /(?:products?|solutions?|features?|offerings?|services?)\b|
+    /(?:products?|solutions?|features?|offerings?|services?|platform|capabilities)\b
+  }xi
+
+  SUPPORT_POLICY_PATTERNS = %r{
     /(?:faq|faqs|help|support|knowledge-?base)\b|
     /(?:terms|privacy|refund|returns|shipping|billing)\b
   }xi
 
+  CORE_BUSINESS_PATTERNS = Regexp.union(OVERVIEW_PATTERNS, SUPPORT_POLICY_PATTERNS)
+
+  # Help-center `/articles/` paths are never low-value by URL shape alone; many products and
+  # services are documented solely inside help-center articles.
   LOW_VALUE_PATTERNS = %r{
-    /(?:blog|news|press|events?|webinars?|podcasts?|articles?|tags?|category|careers?|jobs?|changelog|release-notes?)/\b|
+    /(?:blog|news|press|events?|webinars?|podcasts?|tags?|category|careers?|jobs?|changelog|release-notes?)/\b|
     /\d{4}/\d{2}/
   }xi
 
-  def self.relevance_rank(name, url)
+  OVERVIEW_TITLE_PATTERNS = /\b(?:about|pricing|plans|features|solutions|products?|services?|offerings?|overview|platform)\b/i
+  SUPPORT_TITLE_PATTERNS = /\b(?:faq|support|policies|terms|refund|billing|shipping)\b/i
+  LOW_VALUE_TITLE_PATTERNS = /\b(?:podcast|episode|webinar|release note|changelog|career|job)\b/i
+
+  def self.relevance_rank(name, url, analysis: nil)
     link = url.to_s
     title = name.to_s.downcase
+    return [0, 0, 0, link] if url.nil?
+    return [1, 0, 0, link] if link.match?(%r{\Ahttps?://[^/]+/?\z})
+    return [2, 0, -analysis[:overview_score].to_i, link] if analysis_offering_bearing?(analysis)
 
-    return [0, 0, link] if url.nil?
-    return [1, 0, link] if link.match?(%r{\Ahttps?://[^/]+/?\z})
+    pattern_rank(title, link)
+  end
 
-    if link.match?(CORE_BUSINESS_PATTERNS) || title.match?(/\b(?:about|pricing|plans|features|solutions|overview|faq|support|policies|terms)\b/)
-      return [2, link.length, link]
-    end
+  def self.pattern_rank(title, link)
+    return [2, 1, link.length, link] if link.match?(OVERVIEW_PATTERNS) || title.match?(OVERVIEW_TITLE_PATTERNS)
+    return [2, 2, link.length, link] if link.match?(SUPPORT_POLICY_PATTERNS) || title.match?(SUPPORT_TITLE_PATTERNS)
+    return [4, 0, link.length, link] if link.match?(LOW_VALUE_PATTERNS) || title.match?(LOW_VALUE_TITLE_PATTERNS)
 
-    if link.match?(LOW_VALUE_PATTERNS) || title.match?(/\b(?:podcast|episode|webinar|release note|changelog|career|job)\b/)
-      return [4, link.length, link]
-    end
+    [3, 0, link.length, link]
+  end
 
-    [3, link.length, link]
+  def self.analysis_offering_bearing?(analysis)
+    return false unless analysis.is_a?(Hash)
+
+    analysis[:offerings_count].to_i.positive? ||
+      %w[product service pricing company].include?(analysis[:page_role].to_s)
   end
 
   # Why each picked document was chosen ({ id => short reason }); empty when the model did not pick.
@@ -61,9 +80,29 @@ class Captain::Knowledge::BriefSourcePicker
   private
 
   def fetch_candidates
-    records = @brief.source_scope.order(Arel.sql('length(external_link) NULLS LAST'), :id).limit(MAX_CANDIDATES * 2)
-                    .pluck(:id, :name, :external_link)
-    records.sort_by { |_id, name, link| self.class.relevance_rank(name, link) }.first(MAX_CANDIDATES)
+    analysis_map = load_analysis_metadata
+    records = []
+    @brief.source_scope.in_batches(of: BATCH_SIZE) do |relation|
+      relation.pluck(:id, :name, :external_link).each do |id, name, link|
+        records << [id, name, link, analysis_map[id]]
+      end
+    end
+    records.sort_by { |id, name, link, analysis| [self.class.relevance_rank(name, link, analysis: analysis), id] }
+           .first(MAX_CANDIDATES)
+           .map { |id, name, link, _analysis| [id, name, link] }
+  end
+
+  def load_analysis_metadata
+    return {} unless @assistant.respond_to?(:document_analyses)
+
+    @assistant.document_analyses.where(status: %w[analyzed partial]).each_with_object({}) do |row, acc|
+      acc[row.document_id] = {
+        page_role: row.page_role,
+        overview_score: row.overview_score,
+        support_score: row.support_score,
+        offerings_count: Array(row.extracted_offerings).size
+      }
+    end
   end
 
   # { id => reason } in the model's order. The top-level pages are a reasonable overview set when

@@ -32,7 +32,10 @@ export default {
 <template>
   <li
     class="option"
-    :class="{ 'is-selected': isSelected }"
+    :class="{
+      'is-selected': isSelected,
+      'border-dashed opacity-90': action.kind === 'follow_up',
+    }"
     :style="isSelected ? { backgroundColor: widgetColor } : undefined"
   >
     <button

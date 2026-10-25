@@ -69,6 +69,7 @@ const isSelected = option => props.message.selectedOption === option.title;
       />
       <template v-else>
         <div
+          v-if="part.content"
           class="[overflow-wrap:break-word]"
           :class="[BUBBLE]"
           :data-test="`playground-${part.content_type}`"
@@ -95,11 +96,12 @@ const isSelected = option => props.message.selectedOption === option.title;
             <button
               type="button"
               class="rounded-full border border-solid border-n-strong px-3.5 py-1.5 text-start text-sm disabled:cursor-not-allowed"
-              :class="
+              :class="[
                 isSelected(option)
                   ? ''
-                  : 'bg-n-background text-n-slate-12 disabled:opacity-50'
-              "
+                  : 'bg-n-background text-n-slate-12 disabled:opacity-50',
+                option.kind === 'follow_up' ? 'border-dashed opacity-90' : '',
+              ]"
               v-bind="
                 isSelected(option)
                   ? accentAttrs(widgetColor, widgetTextColor)

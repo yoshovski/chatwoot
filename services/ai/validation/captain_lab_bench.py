@@ -10,6 +10,18 @@ class InvalidBaseline(ValueError):
     """The records cannot be compared against the frozen evaluation."""
 
 
+FAILURE_STAGES = (
+    "discovery",
+    "cleaning",
+    "source_selection",
+    "extraction",
+    "retrieval",
+    "generation",
+    "composition",
+    "widget_visibility",
+)
+
+
 def fixture_hash(fixture: dict) -> str:
     canonical = json.dumps(fixture, sort_keys=True, separators=(",", ":"), ensure_ascii=False)
     return hashlib.sha256(canonical.encode()).hexdigest()
@@ -28,6 +40,8 @@ def validate_fixture(fixture: dict) -> set[str]:
         identifier = case.get("id")
         if not isinstance(identifier, str) or not identifier or identifier in identifiers:
             raise InvalidBaseline("Case identifiers must be nonempty and unique")
+        if "holdout" in case and not isinstance(case["holdout"], bool):
+            raise InvalidBaseline("Case holdout flag must be a boolean")
         steps = case.get("steps")
         if (
             not isinstance(steps, list)
@@ -44,8 +58,36 @@ def validate_fixture(fixture: dict) -> set[str]:
     return identifiers
 
 
+def validate_cost_report(report: dict) -> dict:
+    if not isinstance(report, dict):
+        raise InvalidBaseline("Cost report must be an object")
+    int_fields = (
+        "input_tokens",
+        "output_tokens",
+        "cached_tokens",
+        "calls",
+        "retries",
+        "elapsed_ms",
+    )
+    summary = {}
+    for field in int_fields:
+        value = report.get(field, 0)
+        if type(value) is not int or value < 0:
+            raise InvalidBaseline(f"Cost report {field} must be a non-negative integer")
+        summary[field] = value
+    cost_usd = report.get("cost_usd")
+    invalid_cost = (
+        isinstance(cost_usd, bool) or not isinstance(cost_usd, (int, float)) or cost_usd < 0
+    )
+    if cost_usd is not None and invalid_cost:
+        raise InvalidBaseline("Cost report cost_usd must be a non-negative number or null")
+    summary["cost_usd"] = round(float(cost_usd), 6) if cost_usd is not None else None
+    return summary
+
+
 def summarize_run(fixture: dict, run: dict, engine: str) -> dict:
     identifiers = validate_fixture(fixture)
+    holdout_ids = {case["id"] for case in fixture["cases"] if case.get("holdout") is True}
     if run.get("engine") != engine:
         raise InvalidBaseline("Unexpected baseline engine")
     if run.get("fixture_sha256") != fixture_hash(fixture):
@@ -57,6 +99,8 @@ def summarize_run(fixture: dict, run: dict, engine: str) -> dict:
         raise InvalidBaseline("Baseline results must be a list")
     observed = set()
     counts = {"completed": 0, "blocked": 0, "pass": 0, "fail": 0, "unscored": 0}
+    holdout_counts = {"holdout_cases": len(holdout_ids), "holdout_pass": 0, "holdout_fail": 0}
+    failure_stages: dict[str, int] = {}
     for result in results:
         if not isinstance(result, dict):
             raise InvalidBaseline("Each result must be an object")
@@ -86,12 +130,26 @@ def summarize_run(fixture: dict, run: dict, engine: str) -> dict:
         if verdict not in ("pass", "fail", "unscored"):
             raise InvalidBaseline("Completed results need a comparison verdict")
         counts[verdict] += 1
-    return {
+        if identifier in holdout_ids and verdict in ("pass", "fail"):
+            holdout_counts[f"holdout_{verdict}"] += 1
+        stage = result.get("failure_stage")
+        if stage is not None:
+            if stage not in FAILURE_STAGES:
+                raise InvalidBaseline("Unknown failure_stage classification")
+            failure_stages[stage] = failure_stages.get(stage, 0) + 1
+    summary = {
         "engine": engine,
         "cases": len(identifiers),
         "missing": len(identifiers - observed),
         **counts,
     }
+    if holdout_ids:
+        summary.update(holdout_counts)
+    if failure_stages:
+        summary["failure_stages"] = failure_stages
+    if "cost_report" in run:
+        summary["cost_report"] = validate_cost_report(run["cost_report"])
+    return summary
 
 
 def main() -> int:

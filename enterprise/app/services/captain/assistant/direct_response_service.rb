@@ -15,13 +15,9 @@ class Captain::Assistant::DirectResponseService
   end
 
   def run(message:, context:, route:)
-    context = context.deep_dup
-    history = Captain::Assistant::IntentRouter.recent_history(context)
-    context[:conversation_history] = history
-    context[:current_agent] = @assistant.agent_name
-    context[:state][:intent_route] = route.fetch('intent')
-    context[:state][:generation_model] = ENV.fetch('CAPTAIN_KNOWLEDGE_ANSWER_MODEL', 'knowledge-answer')
-    return canned_result(message, context, route['canned_response']) if route['canned_response']
+    context = prepare_context(context, route)
+    shortcut = shortcut_result(message, context, route)
+    return shortcut if shortcut
 
     knowledge = retrieve(context, route)
     # The routed queries found nothing: the action agent searches again in its own words before saying it doesn't know.
@@ -30,14 +26,47 @@ class Captain::Assistant::DirectResponseService
     answer = generate_supported_answer(message, context, knowledge)
     return unless answer
 
-    output, response = answer
-    output, response = retry_declined_answer(message, context, knowledge) || [output, response] if declined?(output, knowledge)
+    output, response = resolve_final_answer(message, context, knowledge, answer)
     return if context[:state].delete(:unsupported_answer_endpoint)
 
     finish_result(message, context, output, response)
   end
 
   private
+
+  def shortcut_result(message, context, route)
+    return canned_result(message, context, route['canned_response']) if route['canned_response']
+
+    enumerated_offerings_result(message, context, route)
+  end
+
+  def resolve_final_answer(message, context, knowledge, answer)
+    output, response = answer
+    return [output, response] unless declined?(output, knowledge)
+
+    retry_declined_answer(message, context, knowledge) || [output, response]
+  end
+
+  def prepare_context(raw_context, route)
+    context = raw_context.deep_dup
+    context[:conversation_history] = Captain::Assistant::IntentRouter.recent_history(context)
+    context[:current_agent] = @assistant.agent_name
+    context[:state][:intent_route] = route.fetch('intent')
+    context[:state][:generation_model] = ENV.fetch('CAPTAIN_KNOWLEDGE_ANSWER_MODEL', 'knowledge-answer')
+    context
+  end
+
+  def enumerated_offerings_result(message, context, route)
+    return unless route['intent'] == 'business_overview'
+    return unless Captain::Knowledge::OfferingEnumerator.enumeration_request?(message, route, context[:state])
+
+    tool_context = Agents::ToolContext.new(run_context: Agents::RunContext.new(context))
+    output = Captain::Knowledge::OfferingEnumerator.new(@assistant).perform(tool_context, message: message, route: route)
+    return unless output
+
+    context[:state][:generation_model] = nil
+    finish_result(message, context, output, nil)
+  end
 
   def generate_supported_answer(message, context, knowledge)
     answer = generate(message, context, knowledge)

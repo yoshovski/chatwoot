@@ -55,8 +55,33 @@ describe('KnowledgeBriefPanel source picker', () => {
         draft: {
           overview: { text: 'Overview', document_ids: [1] },
           topics: [],
+          offerings: [
+            {
+              id: 'core',
+              name: 'Cleeng Core',
+              kind: 'product',
+              purpose: 'Subscriber entitlement management.',
+              status: 'auto',
+              evidence: [
+                {
+                  document_id: 1,
+                  passage_id: 'p0',
+                  quote: 'Cleeng Core manages entitlements.',
+                },
+              ],
+            },
+          ],
           document_ids: [1],
           source_reasons: { 1: 'Company overview' },
+        },
+        coverage: {
+          eligible: 3,
+          processed: 2,
+          partial: 0,
+          pending: 1,
+          failed: 0,
+          discovered_pages: 10,
+          budget_stopped: true,
         },
         published: {},
       },
@@ -76,5 +101,18 @@ describe('KnowledgeBriefPanel source picker', () => {
     ).toBeLessThan(text.indexOf('help.example.com/articles'));
     expect(text).toContain('Company overview');
     expect(text.indexOf('About us')).toBeLessThan(text.indexOf('Refunds'));
+  });
+
+  it('renders coverage metrics and allows reviewing or rejecting extracted offerings', async () => {
+    const wrapper = mountPanel();
+    await flushPromises();
+
+    expect(wrapper.find('[data-test="brief-coverage"]').exists()).toBe(true);
+    expect(wrapper.text()).toContain(
+      'CAPTAIN.KNOWLEDGE_BRIEF.COVERAGE_BUDGET_STOPPED'
+    );
+    expect(wrapper.find('[data-test="offering-core"]').text()).toContain(
+      'Cleeng Core'
+    );
   });
 });

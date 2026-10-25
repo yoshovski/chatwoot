@@ -160,11 +160,12 @@ RSpec.describe Captain::Conversation::ReplyComposer do
       { Captain::Assistant::ORDER_STATE_KEY => { 'order_number' => '#1001', 'financial_status' => 'PAID', 'items' => [] } }
     end
 
-    it 'adds the order card after the answer and keeps the suggestion buttons' do
-      answer, order_card = composer.messages
+    it 'adds the order card after the answer and places suggestion buttons after the card' do
+      answer, order_card, suggestions = composer.messages
 
-      expect(answer[:content_type]).to eq('input_select')
+      expect(answer[:content_type]).to eq('text')
       expect(order_card).to include(content_type: 'cards', content: '1001')
+      expect(suggestions).to include(content_type: 'input_select')
     end
   end
 
@@ -184,13 +185,14 @@ RSpec.describe Captain::Conversation::ReplyComposer do
     end
     let(:response) { super().merge('product_handles' => %w[agras-t40]) }
 
-    it 'adds the cards message after the answer and drops the suggestion buttons' do
-      answer, cards = composer.messages
+    it 'adds the cards message after the answer and places suggestion buttons after the cards' do
+      answer, cards, suggestions = composer.messages
 
       expect(answer).to include(content_type: 'text')
       expect(cards).to include(content_type: 'cards', content: 'Spraying Drone')
       expect(cards[:content_attributes][:items].first).to include('title' => 'Spraying Drone', 'media_url' => 'https://cdn.shopify.com/t40.jpg')
       expect(cards[:additional_attributes]).to include(agent_name: 'Store Bot', product_handles: %w[agras-t40])
+      expect(suggestions).to include(content: nil, content_type: 'input_select')
     end
 
     context 'when the answer ends with a question' do
@@ -235,7 +237,7 @@ RSpec.describe Captain::Conversation::ReplyComposer do
 
       expect(composer.messages.map { |message| message[:content_type] }).to eq(%w[input_select])
       standalone = described_class.new(assistant: assistant, response: response, run_result: run_result)
-      expect(standalone.messages.map { |message| message[:content_type] }).to eq(%w[text cards])
+      expect(standalone.messages.map { |message| message[:content_type] }).to eq(%w[text cards input_select])
     end
   end
 
