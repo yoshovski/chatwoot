@@ -28,6 +28,11 @@ RSpec.describe 'Reports API', type: :request do
     end
 
     context 'when it is an authenticated user' do
+      # A numeric UTC offset can resolve to a named zone with a different midnight on a DST-change day.
+      around do |example|
+        travel_to(Time.utc(2026, 1, 15, 12)) { example.run }
+      end
+
       let(:params) do
         super().merge(
           metric: 'conversations_count',
