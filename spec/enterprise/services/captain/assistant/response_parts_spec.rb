@@ -5,6 +5,20 @@ RSpec.describe Captain::Assistant::ResponseParts do
   let(:citation_urls) { { 1 => 'https://docs.example.com/transfer', 2 => 'https://docs.example.com/billing' } }
   let(:citation_titles) { { 1 => 'Transfer purchase', 2 => '' } }
 
+  it 'removes bare source indexes from text while preserving structured citations and markdown links' do
+    parts = described_class.from_response(
+      'response_parts' => [
+        {
+          'text' => 'A Merchant of Record handles taxes [11, 21]. Read the [guide](https://docs.example.com/merchant).',
+          'citation_indexes' => [11, 21]
+        }
+      ]
+    )
+
+    expect(parts.plain_text).to eq('A Merchant of Record handles taxes. Read the [guide](https://docs.example.com/merchant).')
+    expect(parts.to_a.first['citation_indexes']).to eq([11, 21])
+  end
+
   it 'lists cited pages by title, naming untitled ones after their path' do
     expect(response_parts.sources(citation_urls: citation_urls, citation_titles: citation_titles)).to eq(
       [{ 'title' => 'Transfer purchase', 'url' => 'https://docs.example.com/transfer' },

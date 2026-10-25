@@ -122,7 +122,7 @@ class Captain::Assistant::ResponseParts
     part = part.with_indifferent_access
     return unless part[:text].is_a?(String)
 
-    text = part[:text].gsub(BARE_CITATION_INDEX_PATTERN, '').gsub(/[ \t]+([[:punct:]])/, '\\1').strip
+    text = part[:text].gsub(BARE_CITATION_INDEX_PATTERN, '').gsub(/[ \t]+([.,!?;:])/, '\\1').strip
     return if text.blank?
 
     {
