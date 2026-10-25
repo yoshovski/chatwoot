@@ -59,6 +59,11 @@ const previewSources = computed(() => {
     ];
   return source ? [source] : [];
 });
+const helpfulLink = computed(() =>
+  config.value.helpful_links_mode === 'on_request'
+    ? null
+    : previewSources.value[0]
+);
 const showProductCard = computed(
   () => props.showProductCards && config.value.product_cards
 );
@@ -96,6 +101,19 @@ const showProductCard = computed(
     <div class="flex flex-col self-start gap-2 max-w-[88%]">
       <p class="preview-bubble preview-bubble--agent !max-w-full">
         {{ reply }}
+        <a
+          v-if="helpfulLink"
+          :href="helpfulLink.url"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="mt-2 block text-n-blue-11 underline underline-offset-2"
+        >
+          {{
+            t('CAPTAIN.ASSISTANTS.SETTINGS.PREVIEW.READ_MORE', {
+              title: helpfulLink.title,
+            })
+          }}
+        </a>
         <MessageSources
           v-if="config.feature_citation && previewSources.length"
           :sources="previewSources"

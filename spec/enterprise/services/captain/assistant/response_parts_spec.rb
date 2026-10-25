@@ -10,6 +10,12 @@ RSpec.describe Captain::Assistant::ResponseParts do
       [{ 'title' => 'Transfer purchase', 'url' => 'https://docs.example.com/transfer' },
        { 'title' => 'Billing', 'url' => 'https://docs.example.com/billing' }]
     )
+
+    linked_answer = described_class.new([{ 'text' => 'Use the [transfer guide](https://docs.example.com/transfer).', 'citation_indexes' => [1] }])
+    expect(linked_answer.sources(citation_urls: citation_urls, citation_titles: citation_titles)).to eq(
+      [{ 'title' => 'Transfer purchase', 'url' => 'https://docs.example.com/transfer' }]
+    )
+    expect(linked_answer.customer_message_content(citation_urls: citation_urls, sources_format: :markdown)).to eq(linked_answer.plain_text)
   end
 
   it 'writes sources as markdown links, plain title and url lines, or leaves them to the widget' do
@@ -34,7 +40,7 @@ RSpec.describe Captain::Assistant::ResponseParts do
     expect([nil, widget, email, sms].map { |conversation| described_class.sources_format(conversation) })
       .to eq(%i[structured structured markdown plain])
     expect([nil, widget, email, sms].map { |conversation| described_class.sources_format(conversation, sources_card: false) })
-      .to eq(%i[markdown markdown markdown plain])
+      .to eq(%i[none none none none])
   end
 
   describe '#with_fallback_citation' do
