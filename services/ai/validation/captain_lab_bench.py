@@ -61,7 +61,14 @@ def validate_fixture(fixture: dict) -> set[str]:
 def validate_cost_report(report: dict) -> dict:
     if not isinstance(report, dict):
         raise InvalidBaseline("Cost report must be an object")
-    int_fields = ("input_tokens", "output_tokens", "cached_tokens", "calls", "retries", "elapsed_ms")
+    int_fields = (
+        "input_tokens",
+        "output_tokens",
+        "cached_tokens",
+        "calls",
+        "retries",
+        "elapsed_ms",
+    )
     summary = {}
     for field in int_fields:
         value = report.get(field, 0)
@@ -69,7 +76,12 @@ def validate_cost_report(report: dict) -> dict:
             raise InvalidBaseline(f"Cost report {field} must be a non-negative integer")
         summary[field] = value
     cost_usd = report.get("cost_usd")
-    if cost_usd is not None and (isinstance(cost_usd, bool) or not isinstance(cost_usd, (int, float)) or cost_usd < 0):
+    invalid_cost = (
+        isinstance(cost_usd, bool)
+        or not isinstance(cost_usd, (int, float))
+        or cost_usd < 0
+    )
+    if cost_usd is not None and invalid_cost:
         raise InvalidBaseline("Cost report cost_usd must be a non-negative number or null")
     summary["cost_usd"] = round(float(cost_usd), 6) if cost_usd is not None else None
     return summary

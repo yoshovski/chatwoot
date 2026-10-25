@@ -616,7 +616,7 @@ RSpec.describe Captain::Conversation::ResponseBuilderJob, type: :job do
           expect(last_message.content_type).to eq('input_select')
         end
 
-        it 'falls back to text message when response contains cards' do
+        it 'preserves suggestion buttons when response contains cards' do
           allow(mock_agent_runner_service).to receive(:generate_response).and_return({
                                                                                        'response_parts' => v2_response_parts,
                                                                                        'response' => 'Hey, welcome to Captain V2',
@@ -627,7 +627,10 @@ RSpec.describe Captain::Conversation::ResponseBuilderJob, type: :job do
           described_class.perform_now(conversation, assistant)
 
           last_message = conversation.messages.last
-          expect(last_message.content_type).to eq('text')
+          expect(last_message.content_type).to eq('input_select')
+          expect(last_message.content_attributes['items']).to include(
+            hash_including('title' => 'Track order', 'value' => 'Track order')
+          )
         end
 
         it 'falls back to text message when the answer promises a handoff' do
