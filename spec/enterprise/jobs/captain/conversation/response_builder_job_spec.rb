@@ -707,14 +707,15 @@ RSpec.describe Captain::Conversation::ResponseBuilderJob, type: :job do
           assistant.update!(config: assistant.config.merge('feature_citation' => true, 'link_allowlist' => ['https://help.example.com']))
         end
 
-        it 'renders cited page links in the reply when source cards are off' do
+        it 'keeps useful inline links without a reference footer when source cards are off' do
           assistant.update!(config: assistant.config.merge('feature_citation' => false))
           v2_response_parts.first['citation_indexes'] = [1]
+          v2_response_parts.first['text'] = 'Read the [password guide](https://help.example.com/password).'
 
           described_class.perform_now(conversation, assistant)
 
           message = conversation.messages.outgoing.last
-          expect(message.content).to eq("Hey, welcome to Captain V2\n\n→ [Password](https://help.example.com/password)")
+          expect(message.content).to eq('Read the [password guide](https://help.example.com/password).')
           expect(message.content_attributes).not_to have_key('captain_sources')
         end
 

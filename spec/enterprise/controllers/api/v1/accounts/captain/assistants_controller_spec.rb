@@ -163,7 +163,8 @@ RSpec.describe 'Api::V1::Accounts::Captain::Assistants', type: :request do
           response_guidelines: ['Updated guideline'],
           guardrails: ['Updated guardrail'],
           config: {
-            feature_citation: false
+            feature_citation: false,
+            helpful_links_mode: 'on_request'
           }
         }
       }
@@ -199,6 +200,7 @@ RSpec.describe 'Api::V1::Accounts::Captain::Assistants', type: :request do
         expect(json_response[:name]).to eq('Updated Assistant')
         expect(json_response[:response_guidelines]).to eq(['Updated guideline'])
         expect(json_response[:guardrails]).to eq(['Updated guardrail'])
+        expect(json_response[:config]).to include(feature_citation: false, helpful_links_mode: 'on_request')
       end
 
       it 'saves what happens when a person is needed' do

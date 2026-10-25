@@ -2,6 +2,7 @@
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import Button from 'dashboard/components-next/button/Button.vue';
+import Select from 'dashboard/components-next/select/Select.vue';
 import PresetPromptEditor from './PresetPromptEditor.vue';
 import SettingsCard from './SettingsCard.vue';
 import SettingsSwitchRow from './SettingsSwitchRow.vue';
@@ -109,6 +110,24 @@ const toggle = key =>
 const suggestedReplies = toggle('suggested_replies');
 const productCards = toggle('product_cards');
 const citations = toggle('feature_citation');
+const helpfulLinksMode = computed({
+  get: () => config.value.helpful_links_mode || 'automatic',
+  set: value => update({ helpful_links_mode: value }),
+});
+const helpfulLinksOptions = computed(() => [
+  {
+    value: 'automatic',
+    label: t(
+      'CAPTAIN.ASSISTANTS.SETTINGS.BEHAVIOR.CARDS.HELPFUL_LINKS.AUTOMATIC'
+    ),
+  },
+  {
+    value: 'on_request',
+    label: t(
+      'CAPTAIN.ASSISTANTS.SETTINGS.BEHAVIOR.CARDS.HELPFUL_LINKS.ON_REQUEST'
+    ),
+  },
+]);
 // On unless turned off; only guide answers (not shops) end with a follow-up question.
 const followUpQuestions = computed({
   get: () => config.value.follow_up_questions !== false,
@@ -281,6 +300,34 @@ const changeMaxButtons = delta => {
               @click="changeMaxButtons(1)"
             />
           </div>
+        </div>
+        <div class="flex flex-col gap-3 py-3.5 sm:flex-row sm:justify-between">
+          <div class="flex min-w-0 flex-col gap-0.5">
+            <span class="text-sm font-medium text-n-slate-12">
+              {{
+                t(
+                  'CAPTAIN.ASSISTANTS.SETTINGS.BEHAVIOR.CARDS.HELPFUL_LINKS.TITLE'
+                )
+              }}
+            </span>
+            <span class="text-sm text-n-slate-11">
+              {{
+                t(
+                  'CAPTAIN.ASSISTANTS.SETTINGS.BEHAVIOR.CARDS.HELPFUL_LINKS.NOTE'
+                )
+              }}
+            </span>
+          </div>
+          <Select
+            v-model="helpfulLinksMode"
+            :options="helpfulLinksOptions"
+            :aria-label="
+              t(
+                'CAPTAIN.ASSISTANTS.SETTINGS.BEHAVIOR.CARDS.HELPFUL_LINKS.TITLE'
+              )
+            "
+            class="shrink-0 self-start"
+          />
         </div>
         <SettingsSwitchRow
           v-model="citations"

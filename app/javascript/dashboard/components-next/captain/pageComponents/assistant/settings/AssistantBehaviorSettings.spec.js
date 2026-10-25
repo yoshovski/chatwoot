@@ -1,5 +1,6 @@
 import { shallowMount } from '@vue/test-utils';
 import Button from 'dashboard/components-next/button/Button.vue';
+import Select from 'dashboard/components-next/select/Select.vue';
 import AssistantBehaviorSettings from './AssistantBehaviorSettings.vue';
 import PresetPromptEditor from './PresetPromptEditor.vue';
 import SettingsSwitchRow from './SettingsSwitchRow.vue';
@@ -90,12 +91,21 @@ describe('AssistantBehaviorSettings', () => {
   it('emits each reply format switch as its own config key', () => {
     const wrapper = mountSettings({ suggested_replies: true });
     const rows = wrapper.findAllComponents(SettingsSwitchRow);
+    const links = wrapper.findComponent(Select);
 
     expect(rows[0].props('modelValue')).toBe(true);
+    expect(rows[1].props('modelValue')).toBe(false);
+    expect(links.props('modelValue')).toBe('automatic');
+    expect(links.props('options').map(option => option.value)).toEqual([
+      'automatic',
+      'on_request',
+    ]);
+    links.vm.$emit('update:modelValue', 'on_request');
     rows[1].vm.$emit('update:modelValue', true);
     rows[2].vm.$emit('update:modelValue', true);
 
     expect(wrapper.emitted('update')).toEqual([
+      [{ helpful_links_mode: 'on_request' }],
       [{ feature_citation: true }],
       [{ product_cards: true }],
     ]);

@@ -41,10 +41,12 @@ class Captain::Assistant::ResponseParts
     self.class.new(cited)
   end
 
-  # Turning off cards keeps the references available as ordinary links.
+  # Reference visibility never adds or removes useful links from the answer itself.
   def self.sources_format(conversation, sources_card: true)
+    return :none unless sources_card
+
     case conversation&.inbox&.channel_type
-    when nil, 'Channel::WebWidget' then sources_card ? :structured : :markdown
+    when nil, 'Channel::WebWidget' then :structured
     when 'Channel::Email' then :markdown
     else :plain
     end
@@ -52,15 +54,17 @@ class Captain::Assistant::ResponseParts
 
   def customer_message_content(citation_urls: {}, citation_titles: {}, sources_format: :markdown)
     body = plain_text
-    links = sources(citation_urls: citation_urls, citation_titles: citation_titles)
-    return body if links.empty? || sources_format.in?(%i[structured none])
+    return body if sources_format.in?(%i[structured none])
+
+    links = sources(citation_urls: citation_urls, citation_titles: citation_titles).reject { |link| body.include?(link['url']) }
+    return body if links.empty?
 
     "#{body}\n\n#{links.map { |link| source_line(link, sources_format) }.join("\n")}"
   end
 
-  # [{ 'title', 'url' }] in the order the reply first cites them; links the reply already shows inline are left out.
+  # Evidence includes pages linked in the answer, so enabling both controls still shows the reference card.
   def sources(citation_urls: {}, citation_titles: {})
-    cited_links(plain_text, citation_urls, citation_titles).first(MAX_SOURCE_LINKS).map { |url, title| { 'title' => title, 'url' => url } }
+    cited_links(citation_urls, citation_titles).first(MAX_SOURCE_LINKS).map { |url, title| { 'title' => title, 'url' => url } }
   end
 
   def to_a
@@ -76,10 +80,10 @@ class Captain::Assistant::ResponseParts
     "→ [#{link['title'].tr('[]', '()')}](#{link['url'].gsub('(', '%28').gsub(')', '%29')})"
   end
 
-  def cited_links(body, citation_urls, citation_titles)
+  def cited_links(citation_urls, citation_titles)
     parts.flat_map { |part| part['citation_indexes'] }.each_with_object({}) do |index, links|
       url = citation_urls[index]
-      next if url.blank? || links.key?(url) || body.include?(url)
+      next if url.blank? || links.key?(url)
 
       links[url] = citation_titles[index].presence || title_from_url(url)
     end

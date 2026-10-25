@@ -1150,9 +1150,15 @@
               "PREVIEW_PRICE": "€49.00 · In stock",
               "NOTE": "Price and stock come live from Shopify."
             },
+            "HELPFUL_LINKS": {
+              "TITLE": "Helpful links",
+              "NOTE": "Choose when to add product, guide and reading links. Requested links and essential support routes are always allowed.",
+              "AUTOMATIC": "Automatic",
+              "ON_REQUEST": "On request"
+            },
             "SOURCES": {
-              "TITLE": "Show source cards",
-              "NOTE": "Shows up to 3 references as expandable cards. When off, page links appear in the reply instead."
+              "TITLE": "Show references",
+              "NOTE": "Shows the evidence used in an expandable card. This does not change helpful links in the answer."
             }
           },
           "RULES": {
@@ -1323,6 +1329,7 @@
           "LEAVE": "You have unsaved changes. Leave without saving?"
         },
         "PREVIEW": {
+          "READ_MORE": "Read more: {title}",
           "LABEL": "Customer preview · example",
           "AI_AGENT": "AI agent",
           "EXAMPLE_TYPE": "Preview example",

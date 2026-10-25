@@ -53,6 +53,8 @@ class Captain::Assistant < ApplicationRecord
   COMPACT_BUSINESS_TYPES = %w[commerce].freeze
   # How much a reply may say; balanced when unset. Custom uses the user's own answer_length_prompt.
   ANSWER_LENGTHS = %w[short balanced detailed custom].freeze
+  HELPFUL_LINKS_MODES = %w[automatic on_request].freeze
+  DEFAULT_HELPFUL_LINKS_MODE = 'automatic'.freeze
   # The length rule of the reply prompt, per answer format. Shown in settings so users can start a custom one from it.
   ANSWER_LENGTH_INSTRUCTIONS = {
     'guide' => {
@@ -111,7 +113,7 @@ class Captain::Assistant < ApplicationRecord
                  :reply_labels, :reply_label_keywords, :outcome_labels,
                  :handoff_fallback_agent_id, :handoff_fallback_team_id, :tone, :off_limits_message, :business_type,
                  :handoff_when_online, :handoff_when_offline, :offline_handoff_message, :no_handoff_message, :handoff_rules,
-                 :answer_length, :tone_prompt, :answer_length_prompt, :follow_up_questions,
+                 :answer_length, :tone_prompt, :answer_length_prompt, :follow_up_questions, :helpful_links_mode,
                  :handoff_form_message, :handoff_collect_name, :handoff_collect_phone
 
   BOOLEAN_CONFIG_KEYS = %w[
@@ -161,6 +163,7 @@ class Captain::Assistant < ApplicationRecord
   validates :tone_prompt, :answer_length_prompt, length: { maximum: CUSTOM_PROMPT_LENGTH_LIMIT }
   validates :business_type, inclusion: { in: BUSINESS_TYPES }, allow_blank: true
   validates :answer_length, inclusion: { in: ANSWER_LENGTHS }, allow_blank: true
+  validates :helpful_links_mode, inclusion: { in: HELPFUL_LINKS_MODES }, allow_nil: true
   validates :off_limits_message, length: { maximum: OFF_LIMITS_MESSAGE_LENGTH_LIMIT }
   validates :handoff_when_online, :handoff_when_offline, inclusion: { in: Captain::Conversation::HandoffPolicy::ACTIONS }, allow_blank: true
   validates :offline_handoff_message, :no_handoff_message, :handoff_form_message, length: { maximum: HANDOFF_MESSAGE_LENGTH_LIMIT }
@@ -388,7 +391,8 @@ class Captain::Assistant < ApplicationRecord
     length = answer_length.presence || 'balanced'
     { business_type: type, answer_format: format, answer_length: length,
       answer_length_instruction: length == 'custom' ? answer_length_prompt : ANSWER_LENGTH_INSTRUCTIONS[format][length],
-      follow_up_questions: follow_up_questions?, published_pricing_enabled: config['published_pricing_enabled'] == true }
+      follow_up_questions: follow_up_questions?, helpful_links_mode: helpful_links_mode || DEFAULT_HELPFUL_LINKS_MODE,
+      published_pricing_enabled: config['published_pricing_enabled'] == true }
   end
 
   def answer_format
