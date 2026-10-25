@@ -2,8 +2,8 @@
 
 # Numbers every knowledge and product result a tool returns, so each reply part can
 # name the results it relied on (citation_indexes). Agents see those sources in the
-# message's generation details; customers only get links for sources with a trusted
-# URL: a Sources card in the widget when Show sources is on, links in the reply otherwise.
+# message's generation details; customers see trusted source URLs in reference cards
+# or channel footers only when references are enabled. Helpful answer links are independent.
 module Captain::Tools::SourceIndexing
   EXCERPT_LENGTH = 280
   MATCHED_EXCERPT_LENGTH = 400

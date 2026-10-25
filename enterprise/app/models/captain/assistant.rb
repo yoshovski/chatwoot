@@ -306,8 +306,8 @@ class Captain::Assistant < ApplicationRecord
     )
   end
 
-  # Show sources only picks how cited pages appear in the chat widget: a Sources card when on, links in the reply text
-  # when off. Citations are kept either way.
+  # Reference visibility controls the source card/footer, independently of helpful links in the answer.
+  # Citations are kept either way.
   def citations_enabled?
     ActiveModel::Type::Boolean.new.cast(config['feature_citation']) == true
   end
