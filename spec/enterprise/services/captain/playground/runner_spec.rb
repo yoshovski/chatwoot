@@ -55,9 +55,10 @@ RSpec.describe Captain::Playground::Runner do
     let(:tool_state) { { Captain::Assistant::PRODUCT_HANDLES_STATE_KEY => %w[agras-t40], Captain::Assistant::PRODUCT_CACHE_STATE_KEY => cache } }
     let(:agent_response) { super().merge('product_handles' => %w[agras-t40], 'suggested_replies' => ['Track order']) }
 
-    it 'returns the cards after the answer and no suggestion buttons' do
-      expect(result[:messages].pluck(:content_type)).to eq(%w[text cards])
-      expect(result[:messages].last[:content_attributes][:items].first).to include('title' => 'Spraying Drone')
+    it 'returns the cards after the answer followed by suggestion buttons' do
+      expect(result[:messages].pluck(:content_type)).to eq(%w[text cards input_select])
+      expect(result[:messages][1][:content_attributes][:items].first).to include('title' => 'Spraying Drone')
+      expect(result[:messages].last[:content_attributes][:items].pluck('title')).to eq(['Track order'])
     end
   end
 

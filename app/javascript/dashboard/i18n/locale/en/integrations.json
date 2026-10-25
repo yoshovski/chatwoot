@@ -2769,7 +2769,14 @@
       "SUGGESTED_SUMMARY": "Suggested “About your business”",
       "SUGGESTED_SUMMARY_HELP": "From your knowledge · your text stays until you save",
       "USE_SUMMARY": "Use this text",
-      "DISMISS": "Dismiss"
+      "DISMISS": "Dismiss",
+      "OFFERINGS_TITLE": "Products & services",
+      "OFFERING_NAME": "Offering name",
+      "OFFERING_PURPOSE": "Offering description",
+      "REJECT_OFFERING": "Remove offering",
+      "COVERAGE_SUMMARY": "{processed} of {eligible} eligible sources analyzed ({pending} pending, {partial} partial, {failed} failed)",
+      "COVERAGE_DISCOVERED": "{discovered} pages discovered",
+      "COVERAGE_BUDGET_STOPPED": "Paused at analysis budget limit"
     },
     "BULK_SELECT": {
       "CLEAR": "Clear selection"

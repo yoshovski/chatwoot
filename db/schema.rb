@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_10_24_130000) do
+ActiveRecord::Schema[7.2].define(version: 2026_10_25_120000) do
   # These extensions should be enabled to support this database
   enable_extension "pg_stat_statements"
   enable_extension "pg_trgm"
@@ -534,6 +534,29 @@ ActiveRecord::Schema[7.2].define(version: 2026_10_24_130000) do
     t.index ["account_id"], name: "index_captain_custom_tools_on_account_id"
   end
 
+  create_table "captain_document_analyses", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.bigint "assistant_id", null: false
+    t.bigint "document_id", null: false
+    t.string "content_fingerprint", null: false
+    t.integer "analysis_version", default: 1, null: false
+    t.string "status", default: "pending", null: false
+    t.string "reason"
+    t.jsonb "page_roles", default: [], null: false
+    t.integer "overview_score", default: 0, null: false
+    t.integer "support_score", default: 0, null: false
+    t.integer "inspected_sections", default: 0, null: false
+    t.integer "total_sections", default: 0, null: false
+    t.jsonb "offerings", default: [], null: false
+    t.jsonb "usage", default: {}, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id"], name: "index_captain_document_analyses_on_account_id"
+    t.index ["assistant_id", "document_id", "analysis_version"], name: "idx_captain_doc_analyses_on_assistant_doc_version", unique: true
+    t.index ["assistant_id"], name: "index_captain_document_analyses_on_assistant_id"
+    t.index ["document_id"], name: "index_captain_document_analyses_on_document_id"
+  end
+
   create_table "captain_documents", force: :cascade do |t|
     t.string "name"
     t.text "external_link", null: false
@@ -599,6 +622,31 @@ ActiveRecord::Schema[7.2].define(version: 2026_10_24_130000) do
     t.index ["captain_assistant_id", "inbox_id"], name: "index_captain_inboxes_on_captain_assistant_id_and_inbox_id", unique: true
     t.index ["captain_assistant_id"], name: "index_captain_inboxes_on_captain_assistant_id"
     t.index ["inbox_id"], name: "index_captain_inboxes_on_inbox_id"
+  end
+
+  create_table "captain_knowledge_analysis_runs", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.bigint "assistant_id", null: false
+    t.string "corpus_fingerprint", null: false
+    t.integer "analysis_version", default: 1, null: false
+    t.string "llm_model"
+    t.string "status", default: "pending", null: false
+    t.bigint "cursor", default: 0, null: false
+    t.integer "token_budget"
+    t.integer "reserved_tokens", default: 0, null: false
+    t.integer "input_tokens", default: 0, null: false
+    t.integer "output_tokens", default: 0, null: false
+    t.integer "cached_tokens", default: 0, null: false
+    t.integer "calls_count", default: 0, null: false
+    t.integer "retries_count", default: 0, null: false
+    t.jsonb "stats", default: {}, null: false
+    t.datetime "started_at"
+    t.datetime "completed_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id"], name: "index_captain_knowledge_analysis_runs_on_account_id"
+    t.index ["assistant_id", "created_at"], name: "idx_captain_analysis_runs_on_assistant_created"
+    t.index ["assistant_id"], name: "index_captain_knowledge_analysis_runs_on_assistant_id"
   end
 
   create_table "captain_knowledge_briefs", force: :cascade do |t|
@@ -1780,6 +1828,11 @@ ActiveRecord::Schema[7.2].define(version: 2026_10_24_130000) do
   add_foreign_key "captain_conversation_memories", "accounts", on_delete: :cascade
   add_foreign_key "captain_conversation_memories", "captain_assistants", column: "assistant_id", on_delete: :cascade
   add_foreign_key "captain_conversation_memories", "conversations", on_delete: :cascade
+  add_foreign_key "captain_document_analyses", "accounts", on_delete: :cascade
+  add_foreign_key "captain_document_analyses", "captain_assistants", column: "assistant_id", on_delete: :cascade
+  add_foreign_key "captain_document_analyses", "captain_documents", column: "document_id", on_delete: :cascade
+  add_foreign_key "captain_knowledge_analysis_runs", "accounts", on_delete: :cascade
+  add_foreign_key "captain_knowledge_analysis_runs", "captain_assistants", column: "assistant_id", on_delete: :cascade
   add_foreign_key "captain_knowledge_briefs", "accounts", on_delete: :cascade
   add_foreign_key "captain_knowledge_briefs", "captain_assistants", column: "assistant_id", on_delete: :cascade
   add_foreign_key "captain_website_sources", "accounts", on_delete: :cascade

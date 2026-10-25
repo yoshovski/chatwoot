@@ -1,6 +1,6 @@
 # Decides what the customer sees for one Captain V2 run: the answer (prose, citations, suggestion buttons or the
-# empty-answer fallback), the order card and the product cards. With product cards, a closing question and its buttons
-# move below the cards. Returns message payloads and writes nothing, so a chat persists them and the playground only shows them.
+# empty-answer fallback), the order card and the product cards. With cards, one suggestion group (with any closing
+# question) appears after all cards. Returns message payloads and writes nothing.
 class Captain::Conversation::ReplyComposer
   # The last sentence of the prose when it is a question that follows at least one other sentence.
   TRAILING_QUESTION = /(?<=[.!?])\s+([^\n.!?]+\?)\s*\z/
@@ -16,17 +16,17 @@ class Captain::Conversation::ReplyComposer
 
   # suppress_suggestions: the caller knows the run ends in a handoff (or the conversation already waits for a human).
   def messages(suppress_suggestions: false)
-    content, response_parts = answer_content
-    buttons = suggestion_buttons(suppress_suggestions)
-    return composed_messages(answer_message(content, response_parts, buttons)) unless contains_cards?
+    content, parts = answer_content
+    closing_question = content[TRAILING_QUESTION, 1]
+    buttons = suggestion_buttons(suppress_suggestions, has_closing_question: closing_question.present? || content.strip.end_with?('?'))
+    return composed_messages(answer_message(content, parts, buttons)) unless contains_cards?
+    return composed_messages(answer_message(content, parts, {})) if buttons.blank?
 
-    # With cards, buttons only answer a closing question, shown below the cards: intro, cards, then the question.
-    question = content[TRAILING_QUESTION, 1] if buttons.present?
-    return composed_messages(answer_message(content, response_parts, {})) unless question
-
-    content = content.delete_suffix(content[TRAILING_QUESTION]).strip
-    response_parts = without_trailing_question(response_parts, question)
-    composed_messages(answer_message(content, response_parts, {})) << question_message(question, buttons)
+    if closing_question
+      content = content.delete_suffix(content[TRAILING_QUESTION]).strip
+      parts = without_trailing_question(parts, closing_question)
+    end
+    composed_messages(answer_message(content, parts, {})) << question_message(closing_question, buttons)
   end
 
   def empty_response?
@@ -36,9 +36,15 @@ class Captain::Conversation::ReplyComposer
   private
 
   def composed_messages(answer)
-    [answer] +
-      Captain::Conversation::OrderCardBuilder.new(assistant: assistant, run_result: run_result).build_messages +
-      cards_builder.build_messages(agent_name: response['agent_name'])
+    [answer] + order_card_messages + product_card_messages
+  end
+
+  def order_card_messages
+    @order_card_messages ||= Captain::Conversation::OrderCardBuilder.new(assistant: assistant, run_result: run_result).build_messages
+  end
+
+  def product_card_messages
+    @product_card_messages ||= cards_builder.build_messages(agent_name: response.is_a?(Hash) ? response['agent_name'] : nil)
   end
 
   def answer_content
@@ -49,8 +55,8 @@ class Captain::Conversation::ReplyComposer
     [content, Captain::Assistant::ResponseParts.new([{ 'text' => content, 'citation_indexes' => [] }])]
   end
 
-  def answer_message(content, response_parts, buttons)
-    message = { content: content, content_type: 'text', additional_attributes: answer_attributes(response_parts) }.merge(buttons)
+  def answer_message(content, parts, buttons)
+    message = { content: content, content_type: 'text', additional_attributes: answer_attributes(parts) }.merge(buttons)
     return message if structured_sources.empty?
 
     message.merge(content_attributes: message.fetch(:content_attributes, {})
@@ -84,20 +90,22 @@ class Captain::Conversation::ReplyComposer
   end
 
   def question_message(question, buttons)
-    attributes = response['agent_name'].present? ? { agent_name: response['agent_name'] } : {}
+    agent_name = response.is_a?(Hash) ? response['agent_name'] : nil
+    attributes = agent_name.present? ? { agent_name: agent_name } : {}
     { content: question, additional_attributes: attributes }.merge(buttons)
   end
 
-  def without_trailing_question(response_parts, question)
-    parts = response_parts.to_a.map(&:dup)
-    parts.last['text'] = parts.last['text'].delete_suffix(question).strip
-    Captain::Assistant::ResponseParts.new(parts)
+  def without_trailing_question(parts, question)
+    cloned = parts.to_a.map(&:dup)
+    cloned.last['text'] = cloned.last['text'].delete_suffix(question).strip
+    Captain::Assistant::ResponseParts.new(cloned)
   end
 
-  def answer_attributes(response_parts)
+  def answer_attributes(parts)
     attributes = {}
-    attributes[:agent_name] = response['agent_name'] if response['agent_name'].present?
-    attributes[Captain::Assistant::ResponseParts::MESSAGE_ATTRIBUTE_KEY] = response_parts.to_a
+    agent_name = response.is_a?(Hash) ? response['agent_name'] : nil
+    attributes[:agent_name] = agent_name if agent_name.present?
+    attributes[Captain::Assistant::ResponseParts::MESSAGE_ATTRIBUTE_KEY] = parts.to_a
     attributes
   end
 
@@ -112,7 +120,7 @@ class Captain::Conversation::ReplyComposer
   # A cited passage's instructional media must not disappear just because generation omitted its link.
   # Use only media in the retrieved excerpt of a source the answer actually uses, with bounded counts.
   def with_knowledge_media(content)
-    return content if response['handoff_requested'] == true
+    return content if response.is_a?(Hash) && response['handoff_requested'] == true
 
     knowledge_media_links.reduce(content) do |body, link|
       url = link[Captain::Conversation::ReplySanitizer::MARKDOWN_LINK_REGEX, 2]
@@ -152,9 +160,16 @@ class Captain::Conversation::ReplyComposer
     )
   end
 
-  def suggestion_buttons(suppress_suggestions)
-    suggestions = suggested_replies
-    return {} if suggestions.blank? || suppress_suggestions
+  def suggestion_buttons(suppress_suggestions, has_closing_question: false)
+    suggestions = Captain::Conversation::SuggestionFinalizer.new(
+      assistant: assistant,
+      response: response,
+      run_result: run_result,
+      customer_message: customer_message,
+      suppress_suggestions: suppress_suggestions,
+      has_closing_question: has_closing_question
+    ).perform
+    return {} if suggestions.blank?
 
     # submit_value: a click sends the item's value (the full question), while the button shows its short title.
     {
@@ -163,24 +178,8 @@ class Captain::Conversation::ReplyComposer
     }
   end
 
-  def suggested_replies
-    raw = response.is_a?(Hash) ? response['suggested_replies'] : nil
-    Array(raw).filter_map { |item| clean_suggestion_item(item) }.take(assistant.max_suggested_replies)
-  end
-
-  # Model output is { label, message }; older runs and scenario output may still be a plain string.
-  def clean_suggestion_item(item)
-    label, message = item.is_a?(Hash) ? item.values_at('label', 'message') : [item, nil]
-    label = label.to_s.strip
-    return if label.blank?
-
-    message = (message.to_s.strip.presence || label).first(Captain::ResponseSchema::SUGGESTION_MESSAGE_MAX_LENGTH)
-    label = label.truncate(Captain::ResponseSchema::SUGGESTION_LABEL_MAX_LENGTH)
-    { 'title' => label, 'value' => message }
-  end
-
   def contains_cards?
-    return true if cards_builder.has_products?
+    return true if order_card_messages.any? || cards_builder.has_products?
 
     response.is_a?(Hash) && (response['cards'].present? || response['content_type'] == 'cards')
   end

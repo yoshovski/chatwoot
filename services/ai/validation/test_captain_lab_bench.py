@@ -119,6 +119,48 @@ class CaptainLabBenchTest(unittest.TestCase):
         self.assertNotIn("Example answer", result.stdout)
         self.assertNotIn("synthetic FAQ", result.stdout)
 
+    def test_tracks_holdout_failure_stages_and_cost_report(self):
+        self.fixture["cases"][1]["holdout"] = True
+        self.run["fixture_sha256"] = fixture_hash(self.fixture)
+        self.run["results"][0]["verdict"] = "fail"
+        self.run["results"][0]["failure_stage"] = "widget_visibility"
+        self.run["results"].append(
+            {
+                "id": "E02",
+                "status": "completed",
+                "verdict": "pass",
+                "actual": {
+                    "messages": ["Card"],
+                    "sources": [],
+                    "buttons": ["More"],
+                    "product_handles": ["p1"],
+                    "labels": [],
+                    "events": [],
+                    "handoff": False,
+                },
+            }
+        )
+        self.run["cost_report"] = {
+            "input_tokens": 1200,
+            "output_tokens": 300,
+            "cached_tokens": 400,
+            "calls": 2,
+            "retries": 0,
+            "elapsed_ms": 850,
+            "cost_usd": 0.0021,
+        }
+        summary = summarize_run(self.fixture, self.run, "captain")
+        self.assertEqual(summary["holdout_cases"], 1)
+        self.assertEqual(summary["holdout_pass"], 1)
+        self.assertEqual(summary["failure_stages"], {"widget_visibility": 1})
+        self.assertEqual(summary["cost_report"]["input_tokens"], 1200)
+        self.assertEqual(summary["cost_report"]["cost_usd"], 0.0021)
+
+    def test_rejects_unknown_failure_stage(self):
+        self.run["results"][0]["failure_stage"] = "invented_stage"
+        with self.assertRaises(InvalidBaseline):
+            summarize_run(self.fixture, self.run, "captain")
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -44,11 +44,12 @@ class Api::V1::Accounts::Captain::KnowledgeBriefsController < Api::V1::Accounts:
     brief = @assistant.knowledge_brief
     return head :unprocessable_entity unless brief&.usable?(brief.draft)
 
-    output = draft_params
     @assistant.with_lock do
       brief.lock!
       return head :conflict unless brief.usable?(brief.draft) && params[:brief][:revision] == brief.draft['revision']
-      unless Captain::Knowledge::BriefGenerator.valid_output?(output, brief.draft.fetch('document_ids'))
+
+      output = prepared_publish_output(brief)
+      unless output && Captain::Knowledge::BriefGenerator.valid_output?(output, allowed_publish_ids(brief))
         return render json: { error: I18n.t('captain.knowledge_briefs.invalid_draft') }, status: :unprocessable_entity
       end
 
@@ -70,13 +71,53 @@ class Api::V1::Accounts::Captain::KnowledgeBriefsController < Api::V1::Accounts:
     render json: { error: I18n.t('captain.knowledge_briefs.invalid_sources') }, status: :unprocessable_entity
   end
 
+  def allowed_publish_ids(brief)
+    draft_ids = Array(brief.draft['document_ids']).map(&:to_i)
+    offering_ids = Array(brief.draft['offerings']).flat_map { |o| Array(o['evidence']).map { |ev| ev['document_id'].to_i } }
+    (draft_ids | offering_ids).uniq
+  end
+
+  def prepared_publish_output(brief)
+    raw = draft_params
+    return unless raw['overview'].is_a?(Hash) && raw['topics'].is_a?(Array)
+    return raw unless raw.key?('offerings')
+
+    reconcile_submitted_offerings(brief, raw)
+  end
+
+  def reconcile_submitted_offerings(brief, raw)
+    allowed_ids = allowed_publish_ids(brief)
+    submitted_offerings = Array(raw['offerings'])
+    submitted_doc_ids = submitted_offerings.flat_map { |item| Array(item['evidence']).map { |ev| ev['document_id'].to_i } }.uniq
+    return if (submitted_doc_ids - allowed_ids).any?
+
+    docs = brief.permitted_documents(allowed_ids).to_a
+    reconciled = Captain::Knowledge::OfferingReconciler.new(documents: docs).reconcile(submitted_offerings)
+    return if reconciled.size != submitted_offerings.size
+
+    raw.merge(
+      'offerings' => reconciled,
+      'suggestion_candidates' => Captain::Knowledge::OfferingReconciler.build_suggestion_candidates(
+        reconciled, raw['topics'], Array(brief.draft['document_ids'])
+      )
+    )
+  end
+
   def publish_brief(brief, output)
     brief.update!(published: brief.draft.merge(output))
     @assistant.update!(config: @assistant.config.merge('knowledge_brief_enabled' => true))
   end
 
   def draft_params
-    params.require(:brief).permit(overview: [:text, { document_ids: [] }], topics: [:title, :summary, { document_ids: [] }]).to_h
+    params.require(:brief).permit(
+      overview: [:text, { document_ids: [] }],
+      topics: [:title, :summary, { document_ids: [] }],
+      offerings: [
+        :id, :name, :kind, :purpose, :status, :edited,
+        { aliases: [], category_ids: [], audiences: [],
+          evidence: [:document_id, :content_fingerprint, :passage_id, :quote, { supports: [] }] }
+      ]
+    ).to_h
   end
 
   def set_assistant

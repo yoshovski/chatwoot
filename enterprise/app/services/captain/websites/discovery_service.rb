@@ -177,7 +177,10 @@ class Captain::Websites::DiscoveryService # rubocop:disable Metrics/ClassLength
 
     links = response.parsed_response.fetch('links', [])
     @limits << 'pages' if links.size >= MAX_PAGES
-    links.each { |link| add_page(link.fetch('url'), 'map') }
+    links.each do |link|
+      attributes = link.is_a?(Hash) ? link.slice('title', 'description').compact_blank : {}
+      add_page(link.fetch('url'), 'map', attributes: attributes)
+    end
   rescue Net::ReadTimeout, Net::OpenTimeout, SocketError, HTTParty::Error
     @stats['map_failed'] = true
   end
@@ -185,7 +188,7 @@ class Captain::Websites::DiscoveryService # rubocop:disable Metrics/ClassLength
   def add_page(value, from, base: nil, attributes: {})
     url = Captain::Websites::UrlPolicy.normalize(value, base: base)
     return unless url && @policy.within_scope?(url) && @policy.page?(url)
-    return @pages[url].merge!(attributes) if @pages.key?(url)
+    return @pages[url].merge!(attributes.compact_blank) if @pages.key?(url)
     return @limits << 'pages' if @pages.size >= MAX_PAGES
 
     @pages[url] = { 'url' => url, 'title' => nil, 'discovered_from' => from, 'blocked_reason' => @policy.blocked_reason(url) }.merge(attributes)

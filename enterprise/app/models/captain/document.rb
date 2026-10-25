@@ -27,13 +27,14 @@
 #  index_captain_documents_on_assistant_id                      (assistant_id)
 #  index_captain_documents_on_status                            (status)
 #
-class Captain::Document < ApplicationRecord
+class Captain::Document < ApplicationRecord # rubocop:disable Metrics/ClassLength
   class LimitExceededError < StandardError; end
   SYNC_STALE_TIMEOUT = 2.hours
   self.table_name = 'captain_documents'
 
   belongs_to :assistant, class_name: 'Captain::Assistant'
   has_many :responses, class_name: 'Captain::AssistantResponse', dependent: :destroy, as: :documentable
+  has_many :document_analyses, class_name: 'Captain::DocumentAnalysis', dependent: :destroy
   belongs_to :account
   has_one_attached :pdf_file
   store_accessor :metadata, :content_fingerprint, :last_sync_error_code, :sync_step, :openai_file_id, :include_linked_pages
@@ -147,10 +148,34 @@ class Captain::Document < ApplicationRecord
   def refresh_knowledge_brief
     changes = previous_changes.keys & %w[content enabled agents_only status]
     return if !destroyed? && changes.empty?
+
+    invalidate_stale_analyses unless destroyed?
+    enqueue_brief_refresh(changes)
+  end
+
+  def enqueue_brief_refresh(changes)
     return unless assistant&.config.to_h['knowledge_brief_enabled'] == true
-    return unless assistant.knowledge_brief&.published.to_h.fetch('document_ids', []).include?(id)
+
+    brief = assistant.knowledge_brief
+    return unless brief && (brief.references_document?(brief.published, id) || newly_eligible_for_brief?(changes))
 
     Captain::Knowledge::GenerateBriefJob.perform_later(assistant_id)
+  end
+
+  def invalidate_stale_analyses
+    return unless document_analyses.exists?
+
+    if !enabled? || agents_only? || !available? || content.blank?
+      document_analyses.where.not(status: 'stale').update_all(status: 'stale', reason: 'source_ineligible') # rubocop:disable Rails/SkipsModelValidations
+    else
+      digest = Digest::SHA256.hexdigest(content.to_s)
+      document_analyses.where.not(content_fingerprint: digest).where.not(status: 'stale')
+                       .update_all(status: 'stale', reason: 'content_changed') # rubocop:disable Rails/SkipsModelValidations
+    end
+  end
+
+  def newly_eligible_for_brief?(changes)
+    !destroyed? && enabled? && !agents_only? && available? && content.present? && changes.intersect?(%w[status enabled agents_only])
   end
 
   def customer_visible_source?

@@ -5,6 +5,7 @@ class Captain::Websites::SectionClassifier
   LABELS = %w[support product docs pricing legal company news events careers marketing technical not_useful].freeze
   MAX_SECTIONS = 120
   MAX_PAGES = 100
+  BATCH_SIZE = MAX_SECTIONS + MAX_PAGES
   SAMPLES = 5
   REASON_LENGTH = 160
 
@@ -14,21 +15,33 @@ class Captain::Websites::SectionClassifier
   end
 
   # Returns { 'sections' => { section => label }, 'pages' => { url => label } }, each label
-  # { 'label', 'recommended', 'reason' }.
+  # { 'label', 'recommended', 'reason' }. Processes all candidate sections and single pages
+  # in resumable batches instead of silently truncating past MAX_SECTIONS / MAX_PAGES.
   def perform
-    items = candidate_items
-    labels = { 'sections' => {}, 'pages' => {} }
-    return labels if items.empty?
+    existing_sections = (@source.discovery_stats.to_h['sections'] || {}).deep_dup
+    existing_pages = (@source.discovery_stats.to_h['page_labels'] || {}).deep_dup
+    labels = { 'sections' => existing_sections, 'pages' => existing_pages }
 
-    output = generate(items.each_with_index.map { |(kind, key, pages), id| summary(id, kind, key, pages) })
-    output.fetch('sections').select { |item| valid?(item, items.size) }.each do |item|
-      kind, key = items[item['id']]
-      labels[kind][key] = label(item)
+    unclassified = candidate_items.reject do |kind, key, _pages|
+      labels[kind].key?(key)
+    end
+    return labels if unclassified.empty?
+
+    unclassified.each_slice(BATCH_SIZE) do |batch|
+      classify_batch(batch, labels)
     end
     labels
   end
 
   private
+
+  def classify_batch(batch, labels)
+    output = generate(batch.each_with_index.map { |(kind, key, pages), id| summary(id, kind, key, pages) })
+    output.fetch('sections').select { |item| valid?(item, batch.size) }.each do |item|
+      kind, key = batch[item['id']]
+      labels[kind][key] = label(item)
+    end
+  end
 
   def candidate_items
     candidate_sections.map { |key, pages| ['sections', key, pages] } + single_pages.map { |page| ['pages', page['url'], [page]] }
@@ -39,14 +52,14 @@ class Captain::Websites::SectionClassifier
   end
 
   def candidate_sections
-    groups.reject { |_, pages| pages.one? }.sort_by { |_, pages| -pages.size }.first(MAX_SECTIONS)
+    groups.reject { |_, pages| pages.one? }.sort_by { |_, pages| -pages.size }
   end
 
   # Pages that are a section of their own, start host first, then the longest.
   def single_pages
     start_host = host(@source.url)
     groups.values.select(&:one?).map(&:first)
-          .sort_by { |page| [host(page['url']) == start_host ? 0 : 1, -page['words'].to_i] }.first(MAX_PAGES)
+          .sort_by { |page| [host(page['url']) == start_host ? 0 : 1, -page['words'].to_i] }
   end
 
   def host(url) = URI.parse(url).host.delete_prefix('www.')

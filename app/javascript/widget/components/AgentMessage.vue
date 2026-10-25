@@ -54,6 +54,13 @@ export default {
       ) {
         return false;
       }
+      if (
+        this.contentType === 'input_select' &&
+        this.messageContentAttributes.items?.length &&
+        !this.hideOptions
+      ) {
+        return true;
+      }
       return this.message.content;
     },
     readableTime() {

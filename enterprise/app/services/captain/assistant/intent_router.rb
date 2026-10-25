@@ -140,7 +140,9 @@ class Captain::Assistant::IntentRouter
   end
 
   def routing_policy
-    policy = @assistant.prompt_context.slice(:description, :scenarios, :response_guidelines, :guardrails, :business_overview, :knowledge_topics)
+    policy = @assistant.prompt_context.slice(
+      :description, :scenarios, :response_guidelines, :guardrails, :business_overview, :knowledge_topics, :knowledge_offerings
+    )
     policy[:custom_capabilities] = @assistant.account.captain_custom_tools.enabled.pluck(:title, :description).map do |title, description|
       { title: title, description: description.to_s.truncate(300) }
     end
@@ -148,14 +150,22 @@ class Captain::Assistant::IntentRouter
   end
 
   def normalize(parsed)
-    return ACTION.merge('reason' => 'invalid_classifier_output') unless valid_shape?(parsed)
-    if parsed['intent'] == 'business_overview' && @assistant.published_knowledge_context.empty?
-      return ACTION.merge('reason' => 'invalid_classifier_output')
-    end
-    return ACTION.merge('reason' => 'invalid_classifier_output') unless valid_queries?(parsed.fetch('queries'))
-    return ACTION.merge('reason' => 'invalid_classifier_output') unless (parsed['intent'] == 'faq_kb') == parsed['queries'].any?
+    return ACTION.merge('reason' => 'invalid_classifier_output') unless valid_classified_route?(parsed)
 
-    parsed.slice('intent', 'queries').merge('queries' => parsed['queries'].map(&:strip).uniq, 'reason' => 'classified')
+    result = parsed.slice('intent', 'queries').merge('queries' => parsed['queries'].map(&:strip).uniq, 'reason' => 'classified')
+    result['mode'] = parsed['mode'] if valid_overview_mode?(parsed)
+    result
+  end
+
+  def valid_classified_route?(parsed)
+    return false unless valid_shape?(parsed) && valid_queries?(parsed.fetch('queries'))
+    return false if parsed['intent'] == 'business_overview' && @assistant.published_knowledge_context.empty?
+
+    (parsed['intent'] == 'faq_kb') == parsed['queries'].any?
+  end
+
+  def valid_overview_mode?(parsed)
+    parsed['intent'] == 'business_overview' && %w[overview enumeration].include?(parsed['mode'])
   end
 
   def valid_shape?(parsed)
@@ -166,7 +176,9 @@ class Captain::Assistant::IntentRouter
     return if @assistant.config['knowledge_brief_enabled'] != true
 
     'An additional intent, business_overview, is available ONLY when the supplied policy contains business_overview. ' \
-      'Use it for broad company, capability and use-case questions fully answered by that approved context or its knowledge topics. ' \
+      'Use it for broad company, capability and use-case questions fully answered by that approved context, its knowledge topics ' \
+      'or its knowledge_offerings. Include "mode": "enumeration" when the customer asks for a complete list of products, services, ' \
+      'offerings, plans or features, and "mode": "overview" for general overview questions. ' \
       'Queries must be empty. Prefer it over smalltalk for company identity. Detailed factual questions still use faq_kb; ' \
       'live data, customer-specific requests and workflows still use action_agent.'
   end

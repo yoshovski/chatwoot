@@ -19,6 +19,7 @@ const emit = defineEmits(['useOverview']);
 const POLL_INTERVAL = 2500;
 const MAX_SOURCES = 60;
 const TOPIC_LENGTH = 400;
+const OFFERING_PURPOSE_LENGTH = 300;
 
 const { t } = useI18n();
 const request = useAbortableRequest();
@@ -156,6 +157,36 @@ const suggestedOverview = computed(() => {
   return text === dismissedOverview.value ? '' : text;
 });
 const editingTopic = ref(null);
+const editingOffering = ref(null);
+
+const coverage = computed(
+  () => brief.value?.coverage || draft.value?.coverage || null
+);
+const visibleOfferings = computed(() =>
+  (draft.value?.offerings || []).filter(item => item.status !== 'rejected')
+);
+const offeringDocumentIds = offering => [
+  ...new Set(
+    (offering.evidence || []).map(ev => ev.document_id).filter(Boolean)
+  ),
+];
+const offeringEvidenceTooltip = offering =>
+  (offering.evidence || [])
+    .map(ev => {
+      const sourceName =
+        brief.value?.sources.find(source => source.id === ev.document_id)
+          ?.name || `#${ev.document_id}`;
+      return `${sourceName}: "${ev.quote}"`;
+    })
+    .join(' · ');
+const finishEditingOffering = offering => {
+  offering.status = 'owner_edited';
+  editingOffering.value = null;
+};
+const rejectOffering = offering => {
+  offering.status = 'rejected';
+  editingOffering.value = null;
+};
 
 const toggleSource = (id, include) => {
   const ids = new Set(selectedIds.value);
@@ -267,6 +298,39 @@ const disable = async () => {
     >
       {{ $t(`CAPTAIN.KNOWLEDGE_BRIEF.STATUS.${statusKey}`) }}
     </p>
+
+    <div
+      v-if="coverage && coverage.eligible > 0"
+      class="flex flex-wrap items-center justify-between gap-2 px-3 py-2 text-xs rounded-lg bg-n-alpha-1 text-n-slate-11"
+      data-test="brief-coverage"
+    >
+      <span>
+        {{
+          $t('CAPTAIN.KNOWLEDGE_BRIEF.COVERAGE_SUMMARY', {
+            processed: coverage.processed || 0,
+            eligible: coverage.eligible || 0,
+            pending: coverage.pending || 0,
+            partial: coverage.partial || 0,
+            failed: coverage.failed || 0,
+          })
+        }}
+      </span>
+      <div class="flex items-center gap-2">
+        <span v-if="coverage.discovered_pages">
+          {{
+            $t('CAPTAIN.KNOWLEDGE_BRIEF.COVERAGE_DISCOVERED', {
+              discovered: coverage.discovered_pages,
+            })
+          }}
+        </span>
+        <span
+          v-if="coverage.budget_stopped"
+          class="px-2 py-0.5 font-medium rounded-full bg-n-amber-3 text-n-amber-11"
+        >
+          {{ $t('CAPTAIN.KNOWLEDGE_BRIEF.COVERAGE_BUDGET_STOPPED') }}
+        </span>
+      </div>
+    </div>
 
     <div
       v-if="choosingSources"
@@ -390,6 +454,99 @@ const disable = async () => {
             @click="dismissedOverview = suggestedOverview"
           />
         </div>
+      </div>
+
+      <div v-if="visibleOfferings.length" class="flex flex-col gap-1">
+        <h4 class="m-0 text-xs font-medium uppercase text-n-slate-10">
+          {{ $t('CAPTAIN.KNOWLEDGE_BRIEF.OFFERINGS_TITLE') }}
+        </h4>
+        <ul class="flex flex-col m-0 divide-y list-none divide-n-weak">
+          <li
+            v-for="offering in visibleOfferings"
+            :key="offering.id"
+            class="flex flex-col gap-2 py-2.5"
+            :data-test="`offering-${offering.id}`"
+          >
+            <template v-if="editingOffering === offering.id">
+              <Input
+                v-model="offering.name"
+                :placeholder="$t('CAPTAIN.KNOWLEDGE_BRIEF.OFFERING_NAME')"
+              />
+              <textarea
+                v-model="offering.purpose"
+                :maxlength="OFFERING_PURPOSE_LENGTH"
+                rows="2"
+                :aria-label="$t('CAPTAIN.KNOWLEDGE_BRIEF.OFFERING_PURPOSE')"
+                class="w-full p-3 mb-0 text-sm rounded-lg border border-n-weak bg-n-background text-n-slate-12 focus:border-n-brand focus:outline-none"
+              />
+              <div class="flex items-center justify-between gap-2">
+                <span class="text-xs text-n-slate-10">
+                  {{
+                    $t('CAPTAIN.KNOWLEDGE_BRIEF.LENGTH', {
+                      count: (offering.purpose || '').length,
+                      max: OFFERING_PURPOSE_LENGTH,
+                    })
+                  }}
+                </span>
+                <Button
+                  size="xs"
+                  variant="faded"
+                  color="slate"
+                  :label="$t('CAPTAIN.KNOWLEDGE_BRIEF.DONE')"
+                  @click="finishEditingOffering(offering)"
+                />
+              </div>
+            </template>
+            <div v-else class="flex items-start gap-3 group">
+              <div class="flex flex-col flex-1 min-w-0 gap-0.5">
+                <div class="flex items-center gap-2">
+                  <span class="text-sm font-medium text-n-slate-12">
+                    {{ offering.name }}
+                  </span>
+                  <span
+                    class="px-1.5 py-0.5 text-xs rounded-md bg-n-alpha-2 text-n-slate-11"
+                  >
+                    {{ offering.kind }}
+                  </span>
+                </div>
+                <span class="text-sm text-n-slate-11 line-clamp-2">
+                  {{ offering.purpose }}
+                </span>
+              </div>
+              <span
+                v-if="offeringDocumentIds(offering).length"
+                v-tooltip.top="offeringEvidenceTooltip(offering)"
+                class="shrink-0 px-1.5 py-0.5 text-xs rounded-md bg-n-alpha-2 text-n-slate-11"
+              >
+                {{
+                  $t('CAPTAIN.KNOWLEDGE_BRIEF.SOURCE_COUNT', {
+                    count: offeringDocumentIds(offering).length,
+                  })
+                }}
+              </span>
+              <div
+                class="flex items-center opacity-0 shrink-0 group-hover:opacity-100 focus-within:opacity-100"
+              >
+                <Button
+                  size="xs"
+                  variant="ghost"
+                  color="slate"
+                  icon="i-lucide-pencil"
+                  :aria-label="$t('CAPTAIN.KNOWLEDGE_BRIEF.EDIT')"
+                  @click="editingOffering = offering.id"
+                />
+                <Button
+                  size="xs"
+                  variant="ghost"
+                  color="slate"
+                  icon="i-lucide-trash-2"
+                  :aria-label="$t('CAPTAIN.KNOWLEDGE_BRIEF.REJECT_OFFERING')"
+                  @click="rejectOffering(offering)"
+                />
+              </div>
+            </div>
+          </li>
+        </ul>
       </div>
 
       <div class="flex flex-col gap-1">
