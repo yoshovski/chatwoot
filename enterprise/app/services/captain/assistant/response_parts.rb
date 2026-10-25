@@ -3,6 +3,8 @@ class Captain::Assistant::ResponseParts
   MAX_SOURCE_LINKS = 3
   FALLBACK_MIN_SHARED_WORDS = 2
   FALLBACK_MIN_ANSWER_LENGTH = 120
+  # Models may still echo source indexes in prose; citations belong in structured metadata.
+  BARE_CITATION_INDEX_PATTERN = %r{(?<![\w\[])\[\s*\d+(?:\s*,\s*\d+)*\s*\](?![\w(])}
   FALLBACK_STOP_WORDS = %w[about also been does from have here into just like more most only page some such than that
                            their them then there they this what when where which will with your].freeze
   # Sources are page-title links, never numbers after each part: customers cannot tell what "[1]" means.
@@ -120,7 +122,7 @@ class Captain::Assistant::ResponseParts
     part = part.with_indifferent_access
     return unless part[:text].is_a?(String)
 
-    text = part[:text].strip
+    text = part[:text].gsub(BARE_CITATION_INDEX_PATTERN, '').gsub(/[ \t]+([[:punct:]])/, '\\1').strip
     return if text.blank?
 
     {
