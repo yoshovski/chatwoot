@@ -1151,8 +1151,8 @@
               "NOTE": "Price and stock come live from Shopify."
             },
             "SOURCES": {
-              "TITLE": "Show sources",
-              "NOTE": "Adds links to up to 3 pages {name} used, under the reply."
+              "TITLE": "Show source cards",
+              "NOTE": "Shows up to 3 references as expandable cards. When off, page links appear in the reply instead."
             }
           },
           "RULES": {

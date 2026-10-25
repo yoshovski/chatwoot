@@ -41,12 +41,10 @@ class Captain::Assistant::ResponseParts
     self.class.new(cited)
   end
 
-  # Source visibility controls only the source footer, independently of useful links in the answer.
+  # Turning off cards keeps the references available as ordinary links.
   def self.sources_format(conversation, sources_card: true)
-    return :none unless sources_card
-
     case conversation&.inbox&.channel_type
-    when nil, 'Channel::WebWidget' then :structured
+    when nil, 'Channel::WebWidget' then sources_card ? :structured : :markdown
     when 'Channel::Email' then :markdown
     else :plain
     end

@@ -129,8 +129,10 @@ RSpec.describe Captain::Conversation::ReplyComposer do
       )
     end
 
-    it 'keeps inferred sources hidden when Sources is off' do
-      expect(composer.messages.first[:content]).to eq(answer)
+    it 'shows inferred source links in the text when source cards are off' do
+      expect(composer.messages.first[:content]).to eq(
+        "#{answer}\n\n→ [Apple in-app purchase (StoreKit 2) | Cleeng](https://example.com/docs/storekit-2)"
+      )
     end
   end
 

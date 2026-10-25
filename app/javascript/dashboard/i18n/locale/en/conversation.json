@@ -106,7 +106,6 @@
       "USED_SOURCES": "Answer based on {count} source | Answer based on {count} sources",
       "NO_SOURCES": "No source matched this reply",
       "NO_SOURCES_HINT": "The reply doesn't repeat any FAQ, document or product that was searched. It may come from the agent's instructions or general knowledge.",
-      "OTHER_SOURCES": "Also searched ({count})",
       "INFERRED": "Matched",
       "INFERRED_HINT": "The reply didn't cite this source, but repeats its wording.",
       "KINDS": {
@@ -119,7 +118,8 @@
       "VIEW_PRODUCT": "View product",
       "OPEN_SOURCE": "Open source",
       "TIMELINE": "Steps",
-      "STEP_HANDOFF": "Handed off to {name}",
+      "STEP_SCENARIO": "Started scenario: {name}",
+      "STEP_AGENT": "Continued with AI agent: {name}",
       "RESULTS": "No results | {count} result | {count} results",
       "TOOLS": {
         "FAQ_LOOKUP": "Searched the knowledge base",

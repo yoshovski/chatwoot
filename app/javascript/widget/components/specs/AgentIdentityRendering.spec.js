@@ -42,7 +42,7 @@ describe('agent identity rendering', () => {
       // choices are still live.
       global: {
         mocks: {
-          $store: { getters: { 'conversation/getLastMessage': {} } },
+          $store: { getters: { 'conversation/getLastReplyMessage': {} } },
         },
       },
     });
@@ -101,7 +101,7 @@ describe('agent identity rendering', () => {
       },
       global: {
         mocks: {
-          $store: { getters: { 'conversation/getLastMessage': {} } },
+          $store: { getters: { 'conversation/getLastReplyMessage': {} } },
           $t: text => text,
         },
       },
@@ -133,7 +133,7 @@ describe('agent identity rendering', () => {
       },
       global: {
         mocks: {
-          $store: { getters: { 'conversation/getLastMessage': {} } },
+          $store: { getters: { 'conversation/getLastReplyMessage': {} } },
           $t: text => text,
         },
       },
@@ -221,7 +221,9 @@ describe('AI agent messages', () => {
         },
       },
       global: {
-        mocks: { $store: { getters: { 'conversation/getLastMessage': {} } } },
+        mocks: {
+          $store: { getters: { 'conversation/getLastReplyMessage': {} } },
+        },
         stubs: { Avatar: true },
         directives: { dompurifyHtml: () => {} },
       },
