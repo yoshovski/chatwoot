@@ -22,7 +22,6 @@ const store = useStore();
 const { isCloudFeatureEnabled } = useAccount();
 
 const isOpen = ref(false);
-const showOtherSources = ref(false);
 
 const showSparkle = computed(() =>
   isCloudFeatureEnabled(FEATURE_FLAGS.CAPTAIN_V2)
@@ -85,7 +84,6 @@ const sources = computed(() => {
   }));
 });
 const usedSources = computed(() => sources.value.filter(s => s.used));
-const otherSources = computed(() => sources.value.filter(s => !s.used));
 
 const expanded = ref({});
 const toggleExpanded = key => {
@@ -314,12 +312,17 @@ const steps = computed(() => {
 
     const agentName = entry.agentName;
     if (agentName && agentName !== currentAgent) {
-      if (currentAgent !== null) {
+      const isScenario = /^scenario_\d+_/.test(agentName);
+      if (currentAgent !== null || isScenario) {
         result.push({
-          icon: 'i-ph-user-switch',
-          label: t('CONVERSATION.CAPTAIN_GENERATION.STEP_HANDOFF', {
-            name: handoffLabel(agentName),
-          }),
+          icon: isScenario ? 'i-ph-flow-arrow' : 'i-ph-robot',
+          label: isScenario
+            ? t('CONVERSATION.CAPTAIN_GENERATION.STEP_SCENARIO', {
+                name: handoffLabel(agentName),
+              })
+            : t('CONVERSATION.CAPTAIN_GENERATION.STEP_AGENT', {
+                name: handoffLabel(agentName),
+              }),
         });
       }
       currentAgent = agentName;
@@ -499,47 +502,6 @@ const onPopoverHide = () => {
                   </p>
                 </div>
               </div>
-            </div>
-            <div v-if="otherSources.length" class="flex flex-col gap-2">
-              <button
-                type="button"
-                class="inline-flex items-center gap-1 p-0 text-xs font-medium bg-transparent border-0 cursor-pointer text-n-slate-11 hover:text-n-slate-12"
-                @click="showOtherSources = !showOtherSources"
-              >
-                <Icon
-                  :icon="
-                    showOtherSources ? 'i-ph-caret-down' : 'i-ph-caret-right'
-                  "
-                  class="size-3"
-                />
-                {{
-                  t('CONVERSATION.CAPTAIN_GENERATION.OTHER_SOURCES', {
-                    count: otherSources.length,
-                  })
-                }}
-              </button>
-              <ul v-if="showOtherSources" class="flex flex-col gap-1.5 m-0 p-0">
-                <li
-                  v-for="source in otherSources"
-                  :key="`${source.kind}-${source.reference || source.id}`"
-                  class="flex items-start gap-1.5 text-xs list-none text-n-slate-12"
-                >
-                  <Icon
-                    :icon="source.icon"
-                    class="flex-shrink-0 mt-0.5 size-3.5 text-n-slate-11"
-                  />
-                  <a
-                    v-if="sourceLink(source)"
-                    :href="sourceLink(source).href"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    class="break-words hover:underline"
-                  >
-                    {{ source.title }}
-                  </a>
-                  <span v-else class="break-words">{{ source.title }}</span>
-                </li>
-              </ul>
             </div>
             <div v-if="steps.length" class="flex flex-col gap-2">
               <span class="text-xs font-medium text-n-slate-11">

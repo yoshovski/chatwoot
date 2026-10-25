@@ -23,6 +23,27 @@ export const getters = {
     }
     return {};
   },
+  // Activity events do not answer a question. Compare timestamps instead of object-key order:
+  // local messages have UUID keys, which are enumerated after every persisted numeric key.
+  getLastReplyMessage: _state =>
+    Object.values(_state.conversations)
+      .filter(
+        message =>
+          message.message_type !== MESSAGE_TYPE.ACTIVITY &&
+          !message.private &&
+          !message.content_attributes?.deleted
+      )
+      .reduce((latest, message) => {
+        const timeDifference = message.created_at - latest.created_at;
+        if (
+          !latest.id ||
+          timeDifference > 0 ||
+          (timeDifference === 0 && Number(message.id) > Number(latest.id))
+        ) {
+          return message;
+        }
+        return latest;
+      }, {}),
   getGroupedConversation: _state => {
     const conversationGroupedByDate = groupBy(
       Object.values(_state.conversations),

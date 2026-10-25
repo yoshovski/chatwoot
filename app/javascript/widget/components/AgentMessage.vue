@@ -68,15 +68,15 @@ export default {
       const { content_type: type = '' } = this.message;
       return type;
     },
-    ...mapGetters({ lastMessage: 'conversation/getLastMessage' }),
+    ...mapGetters({ lastMessage: 'conversation/getLastReplyMessage' }),
     isLatestMessage() {
       return this.lastMessage?.id === this.message.id;
     },
-    // Choices answer the newest question, so they go once anything has been said since. A message
+    // Choices answer the newest question, so they go once someone has replied. A message
     // whose choices are gone is an ordinary message and gets the reply control like any other.
     hideOptions() {
       return (
-        !!this.messageContentAttributes?.submitted_values ||
+        !!this.messageContentAttributes?.submitted_values?.length ||
         !this.isLatestMessage
       );
     },
@@ -135,7 +135,7 @@ export default {
     hasRecordedResponse() {
       return (
         this.messageContentAttributes.submitted_email ||
-        (this.messageContentAttributes.submitted_values &&
+        (this.messageContentAttributes.submitted_values?.length &&
           !['form', 'input_csat'].includes(this.contentType))
       );
     },
