@@ -68,12 +68,13 @@ RSpec.describe Captain::Conversation::SuggestionFinalizer do
     end
   end
 
-  it 'deduplicates post-truncation label collisions and filters proactive cancellation/refund prompts' do
+  it 'preserves natural multi-word labels, deduplicates post-truncation collisions, and filters proactive cancellation/refund prompts' do
     response = {
       'response_parts' => [{ 'text' => 'Your subscription is active.', 'citation_indexes' => [] }],
       'suggested_replies' => [
-        { 'label' => 'Subscription billing and invoices overview', 'message' => 'How do invoices work?' },
-        { 'label' => 'Subscription billing and payment methods', 'message' => 'How do payment methods work?' },
+        { 'label' => 'Configure email notifications', 'message' => 'How do I configure email notifications?' },
+        { 'label' => 'Enterprise subscription billing and invoicing guide for teams', 'message' => 'How do invoices work?' },
+        { 'label' => 'Enterprise subscription billing and invoicing guide for admins', 'message' => 'How do payment methods work?' },
         { 'label' => 'Cancel subscription', 'message' => 'How do I cancel my subscription and get a refund?' },
         { 'label' => 'Learn more', 'message' => '' }
       ]
@@ -83,6 +84,7 @@ RSpec.describe Captain::Conversation::SuggestionFinalizer do
 
     expect(items.size).to eq(3)
     expect(items.pluck('title').uniq.size).to eq(3)
+    expect(items.pluck('title')).to include('Configure email notifications')
     expect(items.pluck('title')).not_to include('Cancel subscription', 'Learn more')
   end
 

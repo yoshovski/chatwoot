@@ -141,7 +141,7 @@ RSpec.describe Captain::Conversation::ReplyComposer do
         'response_parts' => [{ 'text' => 'Your order is paid.', 'citation_indexes' => [] }],
         'suggested_replies' => [
           { 'label' => 'Shipping time', 'message' => 'When will order 1001 ship?' },
-          { 'label' => 'A label that is far too long for a button', 'message' => 'Dropped' },
+          { 'label' => 'A label that is far too long for a button exceeding fifty characters', 'message' => 'Dropped' },
           { 'label' => 'Order items', 'message' => '' }
         ]
       }
@@ -150,7 +150,7 @@ RSpec.describe Captain::Conversation::ReplyComposer do
     it 'shortens long labels and keeps the full question instead of dropping the button' do
       expect(composer.messages.first[:content_attributes][:items]).to eq(
         [{ 'title' => 'Shipping time', 'value' => 'When will order 1001 ship?' },
-         { 'title' => 'A label that is far t...', 'value' => 'Dropped' }, { 'title' => 'Order items', 'value' => 'Order items' }]
+         { 'title' => 'A label that is far too long for a button...', 'value' => 'Dropped' }, { 'title' => 'Order items', 'value' => 'Order items' }]
       )
     end
   end

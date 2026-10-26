@@ -52,8 +52,7 @@ export default {
     showStatusIndicator() {
       const { status } = this.conversationAttributes;
       const isConversationInPendingStatus = status === 'pending';
-      const isLastMessageIncoming =
-        this.lastMessage.message_type === MESSAGE_TYPE.INCOMING;
+      const isLastMessageIncoming = this.isCustomerTurn(this.lastMessage);
       return (
         this.isAgentTyping ||
         (isConversationInPendingStatus && isLastMessageIncoming)
@@ -112,14 +111,21 @@ export default {
         ? container.scrollHeight
         : replyTop - REPLY_TOP_OFFSET;
     },
+    isCustomerTurn(message) {
+      return (
+        message?.message_type === MESSAGE_TYPE.INCOMING ||
+        Boolean(message?.content_attributes?.submitted_values?.length) ||
+        Boolean(message?.content_attributes?.submitted_email)
+      );
+    },
     latestReplyStart() {
       const messages = this.groupedMessages.flatMap(group => group.messages);
-      const reversedIncomingIndex = [...messages]
+      const reversedCustomerIndex = [...messages]
         .reverse()
-        .findIndex(message => message.message_type === MESSAGE_TYPE.INCOMING);
-      if (reversedIncomingIndex <= 0) return null;
+        .findIndex(message => this.isCustomerTurn(message));
+      if (reversedCustomerIndex <= 0) return null;
 
-      const replyStart = messages[messages.length - reversedIncomingIndex];
+      const replyStart = messages[messages.length - reversedCustomerIndex];
       return this.$el.querySelector(`#cwmsg-${replyStart.id}`);
     },
     handleScroll() {

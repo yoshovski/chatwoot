@@ -23,7 +23,7 @@ const onSelect = starter => {
 <template>
   <div
     v-show="activeStarters.length"
-    class="flex flex-col overflow-hidden rounded-2xl bg-n-background shadow-sm outline outline-1 outline-n-container dark:bg-n-solid-2"
+    class="mb-3 flex flex-col overflow-hidden rounded-2xl bg-n-background shadow-sm outline outline-1 outline-n-container dark:bg-n-solid-2"
   >
     <button
       v-for="starter in activeStarters"
