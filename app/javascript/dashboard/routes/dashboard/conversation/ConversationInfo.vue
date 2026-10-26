@@ -3,6 +3,7 @@ import { computed } from 'vue';
 import { getUnixTime } from 'date-fns';
 import { getLanguageName } from 'dashboard/components/widgets/conversation/advancedFilterItems/languages';
 import { useExactTimestamp } from 'shared/composables/useExactTimestamp';
+import countries from 'shared/constants/countries';
 import ContactDetailsItem from './ContactDetailsItem.vue';
 import CustomAttributes from './customAttributes/CustomAttributes.vue';
 
@@ -54,7 +55,26 @@ const platformName = computed(() => {
   return `${name} ${version}`;
 });
 
-const createdAtIp = computed(() => props.contactAttributes.created_at_ip);
+const createdAtIp = computed(
+  () =>
+    props.contactAttributes.updated_at_ip ||
+    props.contactAttributes.created_at_ip
+);
+
+const location = computed(() => {
+  const {
+    city = '',
+    country = '',
+    country_code: countryCode = '',
+  } = props.contactAttributes;
+  const resolvedCountry =
+    countries.find(
+      item =>
+        item.id === countryCode.toUpperCase() ||
+        item.id === country.toUpperCase()
+    )?.name || country;
+  return [city, resolvedCountry].filter(Boolean).join(', ');
+});
 
 const staticElements = computed(() =>
   [
@@ -86,6 +106,12 @@ const staticElements = computed(() =>
       content: platformName,
       title: 'CONTACT_PANEL.OS',
       key: 'static-platform',
+      type: 'static_attribute',
+    },
+    {
+      content: location,
+      title: 'CONTACT_PANEL.LOCATION',
+      key: 'static-location',
       type: 'static_attribute',
     },
     {

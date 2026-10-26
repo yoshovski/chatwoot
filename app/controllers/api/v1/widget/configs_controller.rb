@@ -26,7 +26,10 @@ class Api::V1::Widget::ConfigsController < Api::V1::Widget::BaseController
   end
 
   def build_contact
-    return if @contact.present?
+    if @contact.present?
+      ClientIpResolver.refresh_contact_ip!(@contact, request)
+      return
+    end
 
     @contact_inbox = @web_widget.create_contact_inbox(additional_attributes)
     @contact = @contact_inbox.contact
@@ -39,7 +42,7 @@ class Api::V1::Widget::ConfigsController < Api::V1::Widget::BaseController
 
   def additional_attributes
     if @web_widget.inbox.account.feature_enabled?('ip_lookup')
-      { created_at_ip: request.remote_ip }
+      ClientIpResolver.contact_attributes_from(request)
     else
       {}
     end

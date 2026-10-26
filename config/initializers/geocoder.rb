@@ -23,8 +23,13 @@ module GeocoderConfiguration
   LOOK_UP_DB = Rails.root.join('vendor/db/GeoLiteCity.mmdb')
 end
 
-Geocoder.configure(ip_lookup: :geoip2, geoip2: { file: GeocoderConfiguration::LOOK_UP_DB }) if ENV['IP_LOOKUP_API_KEY'].present?
+if ENV['IP_LOOKUP_API_KEY'].present? && File.exist?(GeocoderConfiguration::LOOK_UP_DB)
+  Geocoder.configure(ip_lookup: :geoip2, geoip2: { file: GeocoderConfiguration::LOOK_UP_DB })
+end
 
 Rails.application.config.after_initialize do
   Geocoder::SetupService.new.perform
+  if ENV['IP_LOOKUP_API_KEY'].present? && File.exist?(GeocoderConfiguration::LOOK_UP_DB)
+    Geocoder.configure(ip_lookup: :geoip2, geoip2: { file: GeocoderConfiguration::LOOK_UP_DB })
+  end
 end

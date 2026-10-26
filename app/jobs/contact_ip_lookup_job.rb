@@ -14,9 +14,11 @@ class ContactIpLookupJob < ApplicationJob
     return unless geocoder_result
 
     contact.additional_attributes ||= {}
-    contact.additional_attributes['city'] = geocoder_result.city
-    contact.additional_attributes['country'] = geocoder_result.country
-    contact.additional_attributes['country_code'] = geocoder_result.country_code
+    country_code = geocoder_result.country_code.presence || contact.additional_attributes['country_code']
+    country_name = ClientIpResolver.country_name_for(country_code) || geocoder_result.country.presence
+    contact.additional_attributes['city'] = geocoder_result.city if geocoder_result.city.present?
+    contact.additional_attributes['country'] = country_name if country_name.present?
+    contact.additional_attributes['country_code'] = country_code if country_code.present?
     contact.save!
   end
 
