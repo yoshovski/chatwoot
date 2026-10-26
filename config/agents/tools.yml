@@ -70,3 +70,8 @@
   i18n_key: captain.leads.tool
   icon: 'user-add'
   emoji: '📋'
+
+- id: request_lead_followup
+  i18n_key: captain.leads.followup_tool
+  icon: 'user-add'
+  emoji: '📋'

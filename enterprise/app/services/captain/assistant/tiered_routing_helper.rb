@@ -101,7 +101,8 @@ module Captain::Assistant::TieredRoutingHelper
     schema = Captain::ResponseSchema.for(
       suggested_replies: suggested_replies_enabled?,
       max_suggested_replies: @assistant.max_suggested_replies,
-      product_cards: (respond_to?(:product_cards_enabled?, true) ? product_cards_enabled? : @assistant.product_cards?)
+      product_cards: (respond_to?(:product_cards_enabled?, true) ? product_cards_enabled? : @assistant.product_cards?),
+      lead_capture: @assistant.leads_enabled?
     )
     service = Captain::Assistant::DirectResponseService.new(assistant: @assistant, response_schema: schema)
     result = service.run(message: message, context: context, route: route)

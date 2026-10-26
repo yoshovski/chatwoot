@@ -440,6 +440,8 @@ class Captain::Conversation::ResponseBuilderJob < ApplicationJob # rubocop:disab
   end
 
   def trigger_handoff_contact_form
+    return if @run_result&.context&.dig(:state, :lead_intake_needs_review)
+
     Captain::Conversation::HandoffService.new(
       conversation: @conversation,
       assistant: @assistant

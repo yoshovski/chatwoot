@@ -13,55 +13,29 @@ class Captain::Tools::SaveLeadDetailsTool < Captain::Tools::BasePublicTool
     contact = find_contact(tool_context.state)
     return failure_result('Contact not found', tool_context.state) unless contact
 
-    result = Captain::Leads::CaptureService.new(@assistant, contact).perform(
-      **details.slice(:name, :email, :lead_type, :summary), fields: JSON.parse(fields_json)
-    )
-    deliver_lead(find_conversation(tool_context.state), lead_type: details[:lead_type], summary: details[:summary])
-    tool_context.state[:lead_summary_saved_this_run] = true
-    result
+    save_and_deliver(tool_context, contact, details, fields_json)
   rescue JSON::ParserError, ArgumentError, ActiveRecord::RecordInvalid => e
-    failure_result(e.message, tool_context.state)
+    recover_failed_save(tool_context, details, fields_json, e)
   end
 
   private
 
-  def deliver_lead(conversation, lead_type: nil, summary: nil)
-    return unless conversation
-
-    conversation.with_lock do
-      create_private_summary_note(conversation, summary)
-      apply_lead_labels(conversation, lead_type)
-      attributes = conversation.additional_attributes.except('business_handoff').merge('business_lead_captured' => true)
-      conversation.update!(additional_attributes: attributes)
-    end
-    return unless @assistant.config['lead_notification_team_id']
-
-    Captain::Leads::NotifyTeamJob.perform_later(@assistant.id, conversation.id)
-  end
-
-  def create_private_summary_note(conversation, summary)
-    content = summary.to_s.strip
-    return if content.blank?
-
-    notes = conversation.messages.where(private: true)
-    note = notes.find_by(id: conversation.additional_attributes['business_lead_summary_note_id']) || notes.find_by(content: content)
-    note ||= conversation.messages.build(
-      account: @assistant.account,
-      inbox: conversation.inbox,
-      sender: @assistant,
-      message_type: :outgoing,
-      private: true
+  def save_and_deliver(tool_context, contact, details, fields_json)
+    result = Captain::Leads::CaptureService.new(@assistant, contact).perform(
+      **details.slice(:name, :email, :lead_type, :summary), fields: JSON.parse(fields_json)
     )
-    note.update!(content: content)
-    conversation.additional_attributes['business_lead_summary_note_id'] = note.id
+    conversation = find_conversation(tool_context.state)
+    Captain::Leads::DeliveryService.new(@assistant, conversation).perform(lead_type: details[:lead_type], summary: details[:summary]) if conversation
+    tool_context.state[:lead_summary_saved_this_run] = true
+    result
   end
 
-  def apply_lead_labels(conversation, lead_type)
-    return if lead_type.blank?
+  def recover_failed_save(tool_context, details, fields_json, error)
+    conversation = find_conversation(tool_context.state)
+    return failure_result(error.message, tool_context.state) unless conversation
 
-    type_key = lead_type.to_s.tr('_', '-')
-    labels = ['prospect', type_key, type_key.downcase].uniq
-    matching_labels = @assistant.account.labels.where(title: labels).pluck(:title)
-    conversation.add_labels(matching_labels) if matching_labels.present?
+    Captain::Leads::FailureHandoffService.new(@assistant, conversation).perform(
+      tool_context, details: details.slice(:name, :email, :lead_type, :summary).merge(fields: fields_json, error: error.class.name)
+    )
   end
 end

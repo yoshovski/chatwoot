@@ -6,7 +6,7 @@ class Captain::Assistant::ResponseRewriter
 
   AGENT_NAME = 'captain_response_rewriter'.freeze
   INSTRUCTIONS = 'Shorten customer support responses without changing their meaning or adding information.'.freeze
-  AGENT_DECISION_KEYS = %w[suggested_replies product_handles handoff_requested].freeze
+  AGENT_DECISION_KEYS = %w[suggested_replies product_handles handoff_requested lead_qualification_question].freeze
 
   def initialize(assistant:, attribute_provider:)
     @assistant = assistant
