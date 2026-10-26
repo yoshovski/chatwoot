@@ -25,7 +25,7 @@ class Captain::Leads::FollowupConsent
 
     response = Captain::Assistant::TieredLlmClient.generate('lead_followup_consent', @assistant, chat, history.to_json)
     output = response.content.is_a?(Hash) ? response.content : JSON.parse(response.content)
-    output['consented'] == true
+    output.is_a?(Hash) && output['consented'] == true
   rescue JSON::ParserError, Faraday::Error, RubyLLM::Error => e
     Rails.logger.warn "[Captain][LeadConsent] form_not_authorized error=#{e.class.name}"
     false
