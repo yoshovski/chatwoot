@@ -326,6 +326,25 @@ RSpec.describe Captain::Assistant, type: :model do
         an_instance_of(Captain::Tools::HandoffTool)
       )
     end
+
+    it 'includes SaveLeadDetailsTool when leads are enabled' do
+      assistant.config = assistant.config.merge(
+        'leads_enabled' => true,
+        'lead_types' => [{ 'name' => 'Quote', 'rule' => 'Pricing inquiry' }]
+      )
+
+      tools = assistant.send(:agent_tools)
+
+      expect(tools).to include(an_instance_of(Captain::Tools::SaveLeadDetailsTool))
+    end
+
+    it 'excludes SaveLeadDetailsTool when leads are disabled' do
+      assistant.config = assistant.config.merge('leads_enabled' => false)
+
+      tools = assistant.send(:agent_tools)
+
+      expect(tools.none?(Captain::Tools::SaveLeadDetailsTool)).to be(true)
+    end
   end
 
   describe '#available_tool_ids' do

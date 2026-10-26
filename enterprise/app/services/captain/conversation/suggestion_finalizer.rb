@@ -6,8 +6,11 @@ class Captain::Conversation::SuggestionFinalizer
   BARE_LABELS = /\A(?:yes|no|ok|okay|sure|learn\s+more|continue|more|next)\z/i
   PROACTIVE_EXCLUSION_PATTERN = /\b(?:cancel(?:lation|ling)?|refunds?|money\s+back|close\s+(?:my\s+)?account|
                                     delete\s+(?:my\s+)?account|terminate\s+(?:my\s+)?account)\b/xi
-  BLOCKING_INPUT_PATTERN = /\b(?:please\s+(?:share|provide|enter|send|type|give\s+me)|what\s+is\s+your)\s+
-                            (?:order\s+number|email(?:\s+address)?|phone\s+number|tracking\s+number|account\s+id)\b/xi
+  BLOCKING_INPUT_PATTERN = /\b(?:please\s+(?:share|provide|enter|send|type|give\s+me|tell\s+me)|what\s+is\s+your|
+                                could\s+you\s+(?:share|provide|tell\s+me))\s+(?:(?:your|the|an?)\s+)?
+                            (?:order\s+number|email(?:\s+address)?|phone\s+number|tracking\s+number|account\s+id|
+                               company(?:\s+name)?|country|audience(?:\s+size)?|subscriber(?:s|\s+count)?|
+                               (?:full\s+)?name(?:\s+and\s+email)?|quote\s+details)\b/xi
 
   def initialize(assistant:, response:, run_result: nil, **options)
     @assistant = assistant
@@ -49,8 +52,19 @@ class Captain::Conversation::SuggestionFinalizer
   def suppression_reason(raw)
     return { mode: 'disabled', reason: 'setting_disabled' } if explicitly_disabled?
     return { mode: 'suppressed', reason: 'handoff_or_waiting' } if @suppress_suggestions
-    return { mode: 'suppressed', reason: 'handoff_requested' } if @response.is_a?(Hash) && @response['handoff_requested'] == true
-    return { mode: 'blocking_input', reason: 'free_text_input_required' } if raw.empty? && blocking_input_prompt?
+    return { mode: 'suppressed', reason: 'handoff_requested' } if handoff_requested?
+
+    blocking_input_suppression(raw)
+  end
+
+  def handoff_requested?
+    @response.is_a?(Hash) && @response['handoff_requested'] == true
+  end
+
+  def blocking_input_suppression(raw)
+    return unless raw.empty?
+    return { mode: 'blocking_input', reason: 'open_question_without_model_choices' } if @has_closing_question
+    return { mode: 'blocking_input', reason: 'free_text_input_required' } if blocking_input_prompt?
 
     nil
   end

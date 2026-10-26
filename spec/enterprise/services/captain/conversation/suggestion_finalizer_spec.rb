@@ -135,4 +135,50 @@ RSpec.describe Captain::Conversation::SuggestionFinalizer do
     expect(items.pluck('title')).to eq(['Cleeng Core'])
     expect(tool_state[:suggestion_metrics]).to include(delivered: 1, reason: 'insufficient_fallback_pool')
   end
+
+  describe 'open-ended questions and qualification blocking' do
+    it 'returns empty suggestions when the reply ends with a question and model suggestions are empty' do
+      response = {
+        'response_parts' => [{
+          'text' => 'What does your company offer, and what would you like the platform to help you manage?',
+          'citation_indexes' => []
+        }],
+        'suggested_replies' => []
+      }
+
+      items = described_class.new(
+        assistant: assistant, response: response, run_result: run_result, has_closing_question: true
+      ).perform
+
+      expect(items).to be_empty
+      expect(tool_state[:suggestion_metrics]).to include(
+        mode: 'blocking_input',
+        reason: 'open_question_without_model_choices',
+        delivered: 0
+      )
+    end
+
+    it 'suppresses fallback suggestions when asking for company name, country, audience size, name, or email even as an imperative' do
+      [
+        'Please share your company name, country, and approximate audience size.',
+        'Please share your name and email so our team can follow up.',
+        'What is your company name?'
+      ].each do |prompt_text|
+        response = {
+          'response_parts' => [{ 'text' => prompt_text, 'citation_indexes' => [] }],
+          'suggested_replies' => []
+        }
+
+        items = described_class.new(
+          assistant: assistant, response: response, run_result: run_result, has_closing_question: false
+        ).perform
+
+        expect(items).to be_empty
+        expect(tool_state[:suggestion_metrics]).to include(
+          mode: 'blocking_input',
+          delivered: 0
+        )
+      end
+    end
+  end
 end

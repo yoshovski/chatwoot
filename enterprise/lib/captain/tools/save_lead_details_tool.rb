@@ -16,7 +16,7 @@ class Captain::Tools::SaveLeadDetailsTool < Captain::Tools::BasePublicTool
     result = Captain::Leads::CaptureService.new(@assistant, contact).perform(
       **details.slice(:name, :email, :lead_type, :summary), fields: JSON.parse(fields_json)
     )
-    deliver_lead(find_conversation(tool_context.state))
+    deliver_lead(find_conversation(tool_context.state), lead_type: details[:lead_type], summary: details[:summary])
     result
   rescue JSON::ParserError, ArgumentError, ActiveRecord::RecordInvalid => e
     failure_result(e.message, tool_context.state)
@@ -24,15 +24,41 @@ class Captain::Tools::SaveLeadDetailsTool < Captain::Tools::BasePublicTool
 
   private
 
-  def deliver_lead(conversation)
+  def deliver_lead(conversation, lead_type: nil, summary: nil)
     return unless conversation
 
     conversation.with_lock do
+      create_private_summary_note(conversation, summary)
+      apply_lead_labels(conversation, lead_type)
       attributes = conversation.additional_attributes.except('business_handoff').merge('business_lead_captured' => true)
       conversation.update!(additional_attributes: attributes)
     end
     return unless @assistant.config['lead_notification_team_id']
 
     Captain::Leads::NotifyTeamJob.perform_later(@assistant.id, conversation.id)
+  end
+
+  def create_private_summary_note(conversation, summary)
+    content = summary.to_s.strip
+    return if content.blank?
+    return if conversation.messages.exists?(private: true, content: content)
+
+    conversation.messages.create!(
+      account: @assistant.account,
+      inbox: conversation.inbox,
+      sender: @assistant,
+      message_type: :outgoing,
+      private: true,
+      content: content
+    )
+  end
+
+  def apply_lead_labels(conversation, lead_type)
+    return if lead_type.blank?
+
+    type_key = lead_type.to_s.tr('_', '-')
+    labels = ['prospect', type_key, type_key.downcase].uniq
+    matching_labels = @assistant.account.labels.where(title: labels).pluck(:title)
+    conversation.add_labels(matching_labels) if matching_labels.present?
   end
 end

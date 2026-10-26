@@ -148,9 +148,9 @@ export const SCENARIO_TEMPLATES = [
         instruction: buildInstruction(
           'Only use this scenario when Leads is enabled for this agent. If disabled, answer normally without collecting lead details.',
           [
-            'Answer the business question first using the knowledge sources.',
-            'Use the configured lead fields and lead type rules. Ask at most the configured number of optional qualification questions across the conversation, one at a time. Skip details already provided and respect refusals.',
-            'Then ask for name and email in a separate message, only if the customer wants follow-up. Never collect contact details from viewers or end-user support requests.',
+            'Answer the business question first using the knowledge sources. If the customer asks side questions about products, services, or pricing mid-flow, answer them directly using faq_lookup without leaving this scenario, then resume the next step.',
+            'Use the configured lead fields and lead type rules. Ask strictly one question per message (one missing detail at a time), up to the configured maximum number of optional qualification questions across the conversation. Never bundle multiple fields into a single message. Skip details already provided and respect refusals.',
+            'Once qualification is complete, ask if they would like follow-up from the team. If they agree, ask for their name and email in a separate message. Always collect both name and email before calling the tool. Never collect contact details from viewers or end-user support requests.',
             `Save only customer-provided values, a matching configured type and a 1–3 sentence summary with ${saveLead}. Do not choose a sales owner or mark an email verified yourself.`,
             'Continue answering. Saving a lead does not hand off the conversation. Handle a separate request for a person through the configured handoff flow. Do not promise CRM sync or a sales alert. If the save fails, explain that follow-up has not been confirmed.',
           ]

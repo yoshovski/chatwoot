@@ -1,6 +1,8 @@
 class Captain::OpenAiMessageBuilderService
-  ATTACHMENT_PROMPT = 'Respond to the attachment in this message. Do not repeat an answer to an earlier text message. ' \
-                      'If you cannot read it, briefly ask the customer to describe it or send its contents as text.'.freeze
+  ATTACHMENT_PROMPT = 'Respond to the attachment in this message. ' \
+                      'Do not repeat an answer to an earlier text message and do not transfer to a human agent. ' \
+                      'Acknowledge what is in the attachment and ask the customer what they need assistance with ' \
+                      'or how you can help with it.'.freeze
 
   pattr_initialize [:message!]
 

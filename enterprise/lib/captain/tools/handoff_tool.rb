@@ -21,9 +21,13 @@ class Captain::Tools::HandoffTool < Captain::Tools::BasePublicTool
     super
   end
 
+  ATTACHMENT_HANDOFF_ERROR = 'Cannot hand off for an attachment without a customer question. ' \
+                             'Please ask the customer what they need help with regarding this attachment first.'.freeze
+
   def perform(tool_context, reason: nil, reason_category: nil, **business_details)
     conversation = find_conversation(tool_context.state)
     return failure_result('Conversation not found', tool_context.state) unless conversation
+    return failure_result(ATTACHMENT_HANDOFF_ERROR, tool_context.state) if attachment_only_request?(tool_context, conversation)
 
     # Log the handoff with reason
     log_tool_usage('tool_handoff', {
@@ -99,6 +103,13 @@ class Captain::Tools::HandoffTool < Captain::Tools::BasePublicTool
     return conversation.messages.find_by(id: message_id) if message_id.present?
 
     conversation.messages.incoming.last
+  end
+
+  def attachment_only_request?(tool_context, conversation)
+    message = find_triggering_message(tool_context.state, conversation)
+    return false if message.blank?
+
+    message.incoming? && message.content.to_s.strip.blank? && message.attachments.exists?
   end
 
   def trigger_legacy_handoff(tool_context, conversation, reason_category, reason)
