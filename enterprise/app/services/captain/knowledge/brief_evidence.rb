@@ -86,7 +86,7 @@ class Captain::Knowledge::BriefEvidence
       doc_id = ev['document_id'].to_i
       document = documents.fetch(doc_id)
       quote = ev['quote'].to_s.presence || offering['purpose'].to_s
-      source_index_for(tool_context, "doc:#{doc.id}", { kind: 'document', title: document.name, document_id: doc_id, excerpt: source_excerpt(quote) })
+      source_index_for(tool_context, "doc:#{doc_id}", { kind: 'document', title: document.name, document_id: doc_id, excerpt: source_excerpt(quote) })
     end.uniq
   end
 end
