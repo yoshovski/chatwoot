@@ -55,6 +55,13 @@
     "BOT_HANDOFF_SUCCESS": "Conversation has been handed over to you",
     "BOT_HANDOFF_ERROR": "Failed to take over the conversation. Please try again.",
     "CAPTAIN_WAITING_MESSAGE": "{assistantName} keeps answering until someone takes over.",
+    "CAPTAIN_GATE": {
+      "MESSAGE": "{assistantName} is handling this conversation.",
+      "ADD_NOTE": "Add private note",
+      "OR_PRESS": "or press",
+      "ENTER_KEY": "↵ Enter",
+      "TO_TAKE_OVER": "to take over and start typing"
+    },
     "TWILIO_WHATSAPP_CAN_REPLY": "You can only reply to this conversation using a template message due to",
     "TWILIO_WHATSAPP_24_HOURS_WINDOW": "24 hour message window restriction",
     "OLD_INSTAGRAM_INBOX_REPLY_BANNER": "This Instagram account was migrated to the new Instagram channel inbox. All new messages will show up there. You won’t be able to send messages from this conversation anymore.",
