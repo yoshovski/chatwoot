@@ -129,6 +129,9 @@ class Captain::Assistant::IntentRouter
       action_agent: live prices, stock, availability, product links/images/cards, order status, mutations, quotes, bulk orders,
       complaints, refunds, returns, human requests, frustration, safety-critical verification, customer-specific records,
       external API lookups, or a matching configured scenario/custom capability.
+      When lead_capture is present in the routing policy and recent history shows an ongoing business evaluation, pricing/quote inquiry,
+      or lead qualification dialogue, route follow-up messages (including side product/pricing questions from that prospect) to
+      action_agent rather than faq_kb or business_overview so the agent retains its lead-capture tools and scenario state.
       action_agent also covers product discovery: the customer names a need, use case or product category without a specific product
       ("interested in", "do you have", "looking for", "what options", "which X for Y", "recommend"), or compares or chooses products.
       Mixed knowledge/live-data requests, ongoing workflows, and uncertain routing use action_agent. Queries must be empty.
@@ -141,7 +144,8 @@ class Captain::Assistant::IntentRouter
 
   def routing_policy
     policy = @assistant.prompt_context.slice(
-      :description, :scenarios, :response_guidelines, :guardrails, :business_overview, :knowledge_topics, :knowledge_offerings
+      :description, :scenarios, :response_guidelines, :guardrails, :business_overview, :knowledge_topics, :knowledge_offerings,
+      :lead_capture
     )
     policy[:custom_capabilities] = @assistant.account.captain_custom_tools.enabled.pluck(:title, :description).map do |title, description|
       { title: title, description: description.to_s.truncate(300) }
