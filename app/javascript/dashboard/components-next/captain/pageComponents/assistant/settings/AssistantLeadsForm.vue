@@ -382,7 +382,10 @@ const openScenarios = async () => {
   router.push({
     name: 'captain_assistants_scenarios_index',
     params: { assistantId: props.assistant.id },
-    query: existingScenario.value ? {} : { template: 'capture_business_lead' },
+    query:
+      existingScenario.value || guidedSetup.value
+        ? {}
+        : { template: 'capture_business_lead' },
   });
 };
 
@@ -413,6 +416,26 @@ const selectedTeamName = computed(
       team => team.id === settings.value.lead_notification_team_id
     )?.name || ''
 );
+
+const notificationStatus = computed(() => {
+  if (teamsError.value) return 'unavailable';
+  if (!settings.value.lead_notification_team_id) return 'off';
+  if (
+    settings.value.lead_notification_team_id !==
+    props.assistant.config?.lead_notification_team_id
+  )
+    return 'save_to_check';
+  return props.assistant.lead_notification_status || 'save_to_check';
+});
+
+const manageNotificationTeam = async () => {
+  if (isDirty.value && !(await save())) return;
+  const teamId = settings.value.lead_notification_team_id;
+  router.push({
+    name: teamId ? 'settings_teams_edit_members' : 'settings_teams_new',
+    ...(teamId ? { params: { teamId } } : {}),
+  });
+};
 
 const isHubspotConnected = computed(
   () => !['not_connected', 'loading'].includes(hubspotState.value)
@@ -498,6 +521,28 @@ const isHubspotConnected = computed(
               <p class="m-0 text-xs text-n-slate-11">
                 {{ label('GUIDED.HELP') }}
               </p>
+              <div
+                class="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-n-alpha-1 px-3 py-2.5"
+                role="status"
+              >
+                <span class="text-xs text-n-slate-12">
+                  {{
+                    label(
+                      captureScenario && !isDirty
+                        ? 'GUIDED.CONVERSATION_READY'
+                        : 'GUIDED.CONVERSATION_ON_SAVE'
+                    )
+                  }}
+                </span>
+                <Button
+                  v-if="captureScenario"
+                  type="button"
+                  size="xs"
+                  variant="ghost"
+                  :label="label('GUIDED.VIEW_CONVERSATION')"
+                  @click="openScenarios"
+                />
+              </div>
             </template>
             <template v-else>
               <p class="m-0 text-xs text-n-slate-11">
@@ -786,11 +831,8 @@ const isHubspotConnected = computed(
               </p>
             </header>
 
-            <!-- Row 1: Team Email Notification -->
-            <div
-              class="flex flex-col gap-2.5 py-3.5 sm:flex-row sm:items-center sm:justify-between"
-            >
-              <div class="flex min-w-0 flex-col gap-0.5">
+            <div class="grid gap-3 py-3.5 sm:grid-cols-[minmax(0,1fr)_11rem]">
+              <div class="flex min-w-0 flex-col gap-1">
                 <label
                   for="lead-notification-team"
                   class="text-sm font-medium text-n-slate-12"
@@ -798,24 +840,65 @@ const isHubspotConnected = computed(
                   {{ label('NOTIFICATION_TITLE') }}
                 </label>
                 <span class="text-xs text-n-slate-11">
+                  {{ label('NOTIFICATION_HELP') }}
+                </span>
+              </div>
+              <div class="relative min-w-0 self-start">
+                <select
+                  id="lead-notification-team"
+                  v-model="settings.lead_notification_team_id"
+                  :disabled="teamsError"
+                  class="m-0 w-full appearance-none bg-none rounded-xl border border-n-weak bg-n-alpha-1 py-2 ps-3 pe-8 text-xs font-medium text-n-slate-12"
+                >
+                  <option :value="null">{{ label('NOTIFICATION_OFF') }}</option>
+                  <option v-for="team in teams" :key="team.id" :value="team.id">
+                    {{ team.name }}
+                  </option>
+                </select>
+                <span
+                  class="i-lucide-chevron-down pointer-events-none absolute end-2.5 top-2.5 size-3.5 text-n-slate-11"
+                  aria-hidden="true"
+                />
+              </div>
+              <div
+                class="flex flex-wrap items-center gap-2 sm:col-span-2"
+                role="status"
+              >
+                <span
+                  class="text-xs"
+                  :class="
+                    notificationStatus === 'ready'
+                      ? 'text-n-teal-11'
+                      : ['off', 'save_to_check'].includes(notificationStatus)
+                        ? 'text-n-slate-11'
+                        : 'text-n-amber-11'
+                  "
+                >
                   {{
                     label(
-                      teamsError ? 'NOTIFICATION_ERROR' : 'NOTIFICATION_HELP'
+                      `NOTIFICATION_STATUS.${notificationStatus.toUpperCase()}`
                     )
                   }}
                 </span>
+                <Button
+                  v-if="
+                    canManageIntegrations &&
+                    (notificationStatus === 'empty_team' ||
+                      (!teamsError && !teams.length))
+                  "
+                  type="button"
+                  variant="ghost"
+                  size="xs"
+                  :label="
+                    label(
+                      notificationStatus === 'empty_team'
+                        ? 'MANAGE_TEAM'
+                        : 'CREATE_TEAM'
+                    )
+                  "
+                  @click="manageNotificationTeam"
+                />
               </div>
-              <select
-                id="lead-notification-team"
-                v-model="settings.lead_notification_team_id"
-                :disabled="teamsError"
-                class="m-0 w-full shrink-0 rounded-xl border border-n-weak bg-n-alpha-1 px-3 py-2 text-xs font-medium text-n-slate-12 sm:w-44"
-              >
-                <option :value="null">{{ label('NOTIFICATION_OFF') }}</option>
-                <option v-for="team in teams" :key="team.id" :value="team.id">
-                  {{ team.name }}
-                </option>
-              </select>
             </div>
 
             <!-- Row 2: Optional HubSpot CRM Row (Action Row -> Modal) -->
@@ -1046,7 +1129,7 @@ const isHubspotConnected = computed(
       </div>
     </Dialog>
 
-    <!-- PROGRESSIVE DISCLOSURE DIALOG 3: SCENARIO & PRE-FLIGHT CHECKLIST -->
+    <!-- Advanced access to the automatically generated or custom scenario. -->
     <Dialog
       ref="scenarioDialogRef"
       width="lg"
@@ -1105,30 +1188,9 @@ const isHubspotConnected = computed(
           </div>
         </div>
 
-        <div class="flex flex-col gap-2">
-          <span class="text-xs font-semibold text-n-slate-12">
-            {{ label('TEST_TITLE') }}
-          </span>
-          <p class="m-0 text-xs text-n-slate-11">
-            {{ label('TEST_HELP') }}
-          </p>
-          <ol
-            class="m-0 flex list-decimal flex-col gap-1.5 ps-5 text-xs text-n-slate-12"
-          >
-            <li
-              v-for="step in [
-                'BUSINESS',
-                'HANDOFF',
-                'VIEWER',
-                'REFUSAL',
-                'DELIVERY',
-              ]"
-              :key="step"
-            >
-              {{ label(`TEST_${step}`) }}
-            </li>
-          </ol>
-        </div>
+        <p class="m-0 text-xs text-n-slate-11">
+          {{ label('GUIDED.SETUP_EXPLANATION') }}
+        </p>
       </div>
     </Dialog>
 

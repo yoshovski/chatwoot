@@ -1526,16 +1526,9 @@
           "PRICING_TITLE": "Share published service pricing",
           "PRICING_HELP": "Quote consistent published service rates from Knowledge before offering sales follow-up.",
           "NOTIFICATION_TITLE": "Email alert to team",
-          "NOTIFICATION_OFF": "Off",
-          "NOTIFICATION_HELP": "Instant summary with the visitor as Reply-To (requires SMTP).",
+          "NOTIFICATION_OFF": "No email alert",
+          "NOTIFICATION_HELP": "Choose who receives a summary when a lead is captured. Replies go directly to the visitor.",
           "NOTIFICATION_ERROR": "Could not load teams. Reload this page to change it.",
-          "TEST_TITLE": "Pre-flight verification checklist",
-          "TEST_HELP": "Verify these 5 scenarios before going live:",
-          "TEST_BUSINESS": "Ask a business question, agree to follow-up and confirm the contact has the expected lead fields.",
-          "TEST_HANDOFF": "Ask for a person during a business inquiry. Submit the handoff form and check that the lead is saved without repeating questions.",
-          "TEST_VIEWER": "Ask about a personal subscription and request a person. Confirm transfer works without creating a business lead.",
-          "TEST_DELIVERY": "Check one sales alert and the HubSpot contact. Resolve the conversation, then check its transcript note.",
-          "TEST_REFUSAL": "Decline contact collection and confirm the agent keeps helping without saving a lead.",
           "TRANSCRIPT_LEADS_HELP": "Only conversations where a business lead was captured are included. Public messages, timestamps and a conversation link are added after resolution. Viewer chats are excluded even if that contact was previously a business lead.",
           "GUIDED": {
             "TITLE": "When should this run?",
@@ -1543,7 +1536,7 @@
             "DEFAULT_TRIGGER": "Businesses interested in buying, pricing, a demo, an integration or a partnership. Exclude personal end-user support.",
             "NOTES": "Anything specific to your business? (optional)",
             "NOTES_PLACEHOLDER": "For partnerships, ask what they want to integrate.",
-            "HELP": "Your agent handles questions, consent, contact details and saving automatically. No instructions to write.",
+            "HELP": "Save to create a prefilled follow-up conversation. Your agent handles questions, consent, contact details and saving automatically.",
             "CUSTOM_HELP": "You have a custom lead scenario. Keep it, or switch to the guided setup below.",
             "SWITCH": "Use guided setup",
             "SWITCH_HELP": "When you save, your current lead scenarios will be paused and kept in Scenarios. The guided flow will use the details selected here. Copy any business-specific preferences you want to keep into the optional notes.",
@@ -1551,7 +1544,23 @@
             "LOCATION_HELP": "Detected city and country are included automatically. Select Business country only if you also need to know where the company is based.",
             "PACING": "Adjust conversation length",
             "CATEGORIES": "Lead categories (optional)",
-            "ATTRIBUTE_SETTINGS": "Advanced field settings"
+            "ATTRIBUTE_SETTINGS": "Advanced field settings",
+            "CONVERSATION_ON_SAVE": "Your follow-up conversation is created or updated when you save.",
+            "CONVERSATION_READY": "Your follow-up conversation is ready.",
+            "VIEW_CONVERSATION": "View scenario",
+            "SETUP_EXPLANATION": "The guided setup creates and maintains the lead scenario and enables saving automatically. Leads are stored in Contacts. Team email alerts and HubSpot are optional; their status is shown under follow-up destinations."
+          },
+          "CREATE_TEAM": "Create a team",
+          "MANAGE_TEAM": "Add team members",
+          "NOTIFICATION_STATUS": {
+            "OFF": "Email alerts are optional. Leads are still saved to Contacts.",
+            "SAVE_TO_CHECK": "Save to check email delivery for this team.",
+            "READY": "Email alerts are ready for this team.",
+            "EMAIL_UNAVAILABLE": "Email delivery is not set up. Ask your workspace administrator to enable it.",
+            "EMPTY_TEAM": "This team has no members. Add someone to receive lead alerts.",
+            "RATE_LIMITED": "The workspace email limit has been reached. Leads will still be saved to Contacts.",
+            "MISSING_TEAM": "This team is no longer available. Choose another team.",
+            "UNAVAILABLE": "Teams could not be loaded. Reload the page to try again."
           }
         }
       },
