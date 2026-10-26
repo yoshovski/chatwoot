@@ -3,6 +3,8 @@ class Captain::Tools::AddPrivateNoteTool < Captain::Tools::BasePublicTool
   param :note, type: 'string', desc: 'The private note content'
 
   def perform(tool_context, note:)
+    return 'The lead summary was already saved by Save business lead. Do not add another summary.' if tool_context.state[:lead_summary_saved_this_run]
+
     conversation = find_conversation(tool_context.state)
     return failure_result('Conversation not found', tool_context.state) unless conversation
 

@@ -22,12 +22,16 @@ const configuredFields = computed(() =>
   props.fields.filter(item => item.label && item.key)
 );
 const askedFields = computed(() =>
-  configuredFields.value.slice(0, props.maxQuestions)
+  [...configuredFields.value]
+    .sort((a, b) => {
+      const priority = ['use_case', 'audience_size', 'company', 'country'];
+      const rank = key =>
+        priority.includes(key) ? priority.indexOf(key) : priority.length;
+      return rank(a.key) - rank(b.key);
+    })
+    .slice(0, props.maxQuestions)
 );
 const primaryType = computed(() => props.types[0]?.name || label('NO_TYPE'));
-const askedSummary = computed(() =>
-  askedFields.value.map(field => field.label.toLowerCase()).join(', ')
-);
 </script>
 
 <template>
@@ -78,20 +82,29 @@ const askedSummary = computed(() =>
           >
             {{ label('CHAT.VISITOR_QUESTION') }}
           </div>
+          <template v-for="field in askedFields" :key="field.key">
+            <div
+              class="self-start max-w-[88%] rounded-2xl rounded-tl-xs bg-n-solid-1 px-3 py-2 text-n-slate-12 outline outline-1 outline-n-weak"
+            >
+              {{
+                label('CHAT.BOT_QUALIFY', { field: field.label.toLowerCase() })
+              }}
+            </div>
+            <div
+              class="self-end max-w-[85%] rounded-2xl rounded-tr-xs bg-n-brand px-3 py-2 text-white"
+            >
+              {{ label('CHAT.VISITOR_FIELD') }}
+            </div>
+          </template>
           <div
             class="self-start max-w-[88%] rounded-2xl rounded-tl-xs bg-n-solid-1 px-3 py-2 text-n-slate-12 outline outline-1 outline-n-weak"
           >
-            {{
-              askedFields.length
-                ? label('CHAT.BOT_QUALIFY', { fields: askedSummary })
-                : label('CHAT.BOT_ANSWER')
-            }}
+            {{ label('CHAT.BOT_FOLLOW_UP') }}
           </div>
           <div
-            v-if="askedFields.length"
             class="self-end max-w-[85%] rounded-2xl rounded-tr-xs bg-n-brand px-3 py-2 text-white"
           >
-            {{ label('CHAT.VISITOR_DETAILS') }}
+            {{ label('CHAT.VISITOR_CONSENT') }}
           </div>
           <div
             class="self-start max-w-[88%] rounded-2xl rounded-tl-xs bg-n-solid-1 px-3 py-2 text-n-slate-12 outline outline-1 outline-n-weak"
@@ -102,6 +115,11 @@ const askedSummary = computed(() =>
             class="self-end max-w-[85%] rounded-2xl rounded-tr-xs bg-n-brand px-3 py-2 text-white"
           >
             {{ label('CONTACT_EXAMPLE') }}
+          </div>
+          <div
+            class="self-start max-w-[88%] rounded-2xl rounded-tl-xs bg-n-solid-1 px-3 py-2 text-n-slate-12 outline outline-1 outline-n-weak"
+          >
+            {{ label('CHAT.BOT_SAVED') }}
           </div>
         </template>
 
@@ -131,7 +149,7 @@ const askedSummary = computed(() =>
                 )
               }}
             </span>
-            <code v-if="handoffCapture" class="font-mono text-xs">
+            <code v-if="handoffCapture" class="text-xs">
               {{ primaryType }}
             </code>
           </div>
@@ -191,9 +209,9 @@ const askedSummary = computed(() =>
           {{ label('NO_LEAD_SAVED') }}
         </p>
 
-        <div v-else class="grid grid-cols-2 gap-1.5 pt-1">
+        <div v-else class="grid grid-cols-1 gap-1.5 pt-1">
           <div
-            class="col-span-2 flex items-center justify-between rounded-xl bg-n-solid-1 px-2.5 py-1.5 outline outline-1 outline-n-weak"
+            class="flex items-center justify-between rounded-xl bg-n-solid-1 px-2.5 py-1.5 outline outline-1 outline-n-weak"
           >
             <span class="text-xs text-n-slate-11">{{
               label('NAME_EMAIL')
@@ -203,10 +221,11 @@ const askedSummary = computed(() =>
             </span>
           </div>
           <div
+            v-if="types.length > 1"
             class="flex flex-col rounded-xl bg-n-solid-1 px-2.5 py-1.5 outline outline-1 outline-n-weak"
           >
-            <span class="font-mono text-xs text-n-slate-11">
-              {{ 'lead_type' }}
+            <span class="text-xs text-n-slate-11">
+              {{ label('TYPE') }}
             </span>
             <span class="truncate text-xs font-semibold text-n-slate-12">
               {{ primaryType }}
@@ -217,12 +236,17 @@ const askedSummary = computed(() =>
             :key="field.key"
             class="flex flex-col rounded-xl bg-n-solid-1 px-2.5 py-1.5 outline outline-1 outline-n-weak"
           >
-            <span class="truncate font-mono text-xs text-n-slate-11">
-              {{ `lead_${field.key}` }}
-            </span>
-            <span class="truncate text-xs font-medium text-n-slate-12">
+            <span class="truncate text-xs text-n-slate-11">
               {{ field.label }}
             </span>
+            <span class="truncate text-xs font-medium text-n-slate-12">
+              {{ label('CUSTOMER_VALUE') }}
+            </span>
+          </div>
+          <div
+            class="rounded-xl bg-n-solid-1 px-2.5 py-1.5 text-xs text-n-slate-11 outline outline-1 outline-n-weak"
+          >
+            {{ label('CHAT.DETECTED_LOCATION') }}
           </div>
           <div
             v-if="teamName"

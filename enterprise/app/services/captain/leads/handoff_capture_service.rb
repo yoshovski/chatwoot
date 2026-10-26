@@ -51,11 +51,13 @@ class Captain::Leads::HandoffCaptureService
     Captain::Leads::CaptureService.new(@assistant, contact).perform(
       name: contact.name, email: contact.email, lead_type: payload['lead_type'], summary: payload['summary'], fields: payload['fields']
     )
-    @conversation.messages.create!(account: @assistant.account, inbox: @conversation.inbox, sender: @assistant,
-                                   message_type: :outgoing, private: true, content: payload['summary'])
+    note = @conversation.messages.create!(account: @assistant.account, inbox: @conversation.inbox, sender: @assistant,
+                                          message_type: :outgoing, private: true, content: payload['summary'])
     labels = ['prospect', payload['lead_type'].tr('_', '-')]
     @conversation.add_labels(@assistant.account.labels.where(title: labels).pluck(:title))
-    attributes = @conversation.additional_attributes.except('business_handoff').merge('business_lead_captured' => true)
+    attributes = @conversation.additional_attributes.except('business_handoff').merge(
+      'business_lead_captured' => true, 'business_lead_summary_note_id' => note.id
+    )
     @conversation.update!(additional_attributes: attributes)
   end
 

@@ -44,6 +44,7 @@ onBeforeRouteLeave(() => {
       </span>
       <div class="flex items-center gap-2">
         <Button
+          type="button"
           :label="t('CAPTAIN.ASSISTANTS.SETTINGS.SAVE_BAR.DISCARD')"
           variant="ghost"
           color="slate"
@@ -52,6 +53,7 @@ onBeforeRouteLeave(() => {
           @click="emit('discard')"
         />
         <Button
+          type="button"
           :label="t('CAPTAIN.ASSISTANTS.SETTINGS.SAVE')"
           size="sm"
           :is-loading="isSaving"

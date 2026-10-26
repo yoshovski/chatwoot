@@ -8,6 +8,9 @@ class Crm::Hubspot::MappingSources
 
   def all
     sources = STANDARD_KEYS.map { |key| { 'key' => key, 'label' => I18n.t("integration_apps.hubspot.sources.#{key}"), 'kind' => 'standard' } }
+    sources += %w[visitor_city visitor_country visitor_country_code].map do |key|
+      { 'key' => "lead_#{key}", 'label' => I18n.t("captain.leads.attributes.#{key}"), 'kind' => 'lead' }
+    end
     sources += lead_fields.map { |field| { 'key' => "lead_#{field['key']}", 'label' => field['label'], 'kind' => 'lead' } }
     sources += @account.custom_attribute_definitions.where(attribute_model: 'contact_attribute').map do |definition|
       { 'key' => definition.attribute_key, 'label' => definition.attribute_display_name, 'kind' => 'attribute' }

@@ -12,8 +12,9 @@ class Captain::Leads::CaptureService
     validate_details!(name, email, lead_type, summary, fields)
     email = email.strip.downcase
     attributes = fields.transform_keys { |key| "lead_#{key}" }.merge(
-      'lead_type' => lead_type, 'lead_summary' => summary.strip, 'lead_source' => 'chatbot',
-      'lead_status' => 'captured'
+      'lead_type' => lead_type, 'lead_summary' => summary_with_location(summary), 'lead_source' => 'chatbot',
+      'lead_status' => 'captured',
+      **visitor_location
     )
     @contact.with_lock do
       @contact.assign_attributes(name: name.strip, email: email, custom_attributes: @contact.custom_attributes.merge(attributes))
@@ -32,6 +33,23 @@ class Captain::Leads::CaptureService
   end
 
   private
+
+  def summary_with_location(summary)
+    location = @contact.additional_attributes.values_at('city', 'country').compact_blank.join(', ')
+    return summary.strip if location.blank?
+
+    location_summary = I18n.t('captain.leads.visitor_location_summary', location: location)
+    return summary.strip if summary.strip.end_with?(location_summary)
+
+    [summary.strip, location_summary].join("\n")
+  end
+
+  # Visitor geography is detected context, never the company's registered country.
+  def visitor_location
+    @contact.additional_attributes.slice('city', 'country', 'country_code').each_with_object({}) do |(key, value), location|
+      location["lead_visitor_#{key}"] = value if value.present?
+    end
+  end
 
   def validate_details!(name, email, lead_type, summary, fields)
     valid = [name, email, summary].all? { |value| valid_text?(value, 2000) }

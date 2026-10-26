@@ -17,6 +17,7 @@ class Captain::Tools::SaveLeadDetailsTool < Captain::Tools::BasePublicTool
       **details.slice(:name, :email, :lead_type, :summary), fields: JSON.parse(fields_json)
     )
     deliver_lead(find_conversation(tool_context.state), lead_type: details[:lead_type], summary: details[:summary])
+    tool_context.state[:lead_summary_saved_this_run] = true
     result
   rescue JSON::ParserError, ArgumentError, ActiveRecord::RecordInvalid => e
     failure_result(e.message, tool_context.state)
@@ -41,16 +42,18 @@ class Captain::Tools::SaveLeadDetailsTool < Captain::Tools::BasePublicTool
   def create_private_summary_note(conversation, summary)
     content = summary.to_s.strip
     return if content.blank?
-    return if conversation.messages.exists?(private: true, content: content)
 
-    conversation.messages.create!(
+    notes = conversation.messages.where(private: true)
+    note = notes.find_by(id: conversation.additional_attributes['business_lead_summary_note_id']) || notes.find_by(content: content)
+    note ||= conversation.messages.build(
       account: @assistant.account,
       inbox: conversation.inbox,
       sender: @assistant,
       message_type: :outgoing,
-      private: true,
-      content: content
+      private: true
     )
+    note.update!(content: content)
+    conversation.additional_attributes['business_lead_summary_note_id'] = note.id
   end
 
   def apply_lead_labels(conversation, lead_type)

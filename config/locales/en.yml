@@ -484,6 +484,8 @@ en:
       description: 'Sync your contacts and conversations with LeadSquared CRM. This integration automatically creates leads in LeadSquared when new contacts are added, and logs conversation activity to provide your sales team with complete context.'
   captain:
     leads:
+      scenario_title: 'Business lead follow-up'
+      visitor_location_summary: 'Visitor location (detected): %{location}'
       tool:
         title: 'Save business lead'
         description: 'Saves structured business lead details for follow-up'
@@ -493,6 +495,9 @@ en:
         summary: 'Lead summary'
         source: 'Lead source'
         status: 'Lead status'
+        visitor_city: 'Visitor city (detected)'
+        visitor_country: 'Visitor country (detected)'
+        visitor_country_code: 'Visitor country code (detected)'
     websites:
       already_added: 'This website is already listed. Open its page selection to discover it again.'
       invalid_selection: 'Select only discovered pages that are available for import.'

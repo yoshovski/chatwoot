@@ -4,12 +4,15 @@ The conversation may be in any language. Apply these criteria based on the inten
 
 You will receive:
 - Conversation status
+- Whether business lead intake has been saved
 - Conversation transcript where messages are labeled as Customer, Captain, Bot, or Assistant
 
 This evaluator runs for inactive pending conversations. Focus on the latest pending exchange or latest unresolved customer request. Older messages may be present only for context.
 If the conversation status is "pending", the conversation is still with Captain. Do not assume a handoff happened because Captain mentioned one.
 
-A conversation is INCOMPLETE (keep open) if ANY of these apply:
+A saved business lead completes the email follow-up intake task. If the visitor agreed to email follow-up, provided the requested details and the assistant confirmed receipt, the external sales follow-up alone is not an unresolved chat request. Do not invent missing qualification requirements or require a reply to the acknowledgement. Still mark INCOMPLETE for unanswered customer questions, missing requested identity, a failed save or a separate live human transfer.
+
+A conversation is INCOMPLETE (keep open) if ANY of these apply (except the completed email intake described above):
 - The assistant asked a question or requested information that the customer hasn't provided
 - The customer asked a question that wasn't fully answered
 - The customer asked for something the assistant couldn't do — even if the assistant explained why, the customer's need is unmet

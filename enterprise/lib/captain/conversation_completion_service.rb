@@ -41,6 +41,7 @@ class Captain::ConversationCompletionService < Captain::BaseTaskService
 
     [
       "Conversation status: #{conversation.status}",
+      "Business lead intake saved: #{conversation.additional_attributes['business_lead_captured'] == true}",
       format_messages_as_string(messages)
     ].join("\n\n")
   end
