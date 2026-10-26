@@ -13,13 +13,14 @@ class ContactIpLookupJob < ApplicationJob
     geocoder_result = IpLookupService.new.perform(get_contact_ip(contact))
     return unless geocoder_result
 
-    contact.additional_attributes ||= {}
-    country_code = geocoder_result.country_code.presence || contact.additional_attributes['country_code']
-    country_name = ClientIpResolver.country_name_for(country_code) || geocoder_result.country.presence
-    contact.additional_attributes['city'] = geocoder_result.city if geocoder_result.city.present?
-    contact.additional_attributes['country'] = country_name if country_name.present?
-    contact.additional_attributes['country_code'] = country_code if country_code.present?
+    contact.additional_attributes = (contact.additional_attributes || {}).merge(location_attributes(geocoder_result))
     contact.save!
+  end
+
+  def location_attributes(geocoder_result)
+    code = geocoder_result.country_code.presence
+    country = ClientIpResolver.country_name_for(code) || geocoder_result.country.presence
+    { 'city' => geocoder_result.city.presence, 'country' => country, 'country_code' => code }.compact
   end
 
   def get_contact_ip(contact)

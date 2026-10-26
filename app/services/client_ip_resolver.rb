@@ -41,14 +41,11 @@ class ClientIpResolver
 
     country_code = extract_country_code(request)
     city = extract_city(request)
-    location = {}
-    if country_code.present?
-      location['country_code'] = country_code
-      country_name = country_name_for(country_code)
-      location['country'] = country_name if country_name.present?
-    end
-    location['city'] = city if city.present?
-    location
+    {
+      'country_code' => country_code,
+      'country' => country_name_for(country_code),
+      'city' => city.presence
+    }.compact
   end
 
   def self.contact_attributes_from(request)
@@ -58,18 +55,15 @@ class ClientIpResolver
   end
 
   def self.refresh_contact_ip!(contact, request)
-    return unless contact.present? && contact.account&.feature_enabled?('ip_lookup')
+    return unless refreshable_contact?(contact)
 
     current_ip = ip_from(request)
-    attrs = (contact.additional_attributes || {}).deep_dup
-    previous_ip = attrs['updated_at_ip'].presence || attrs['created_at_ip'].presence
-    ip_changed = apply_updated_ip!(attrs, current_ip, previous_ip)
-    apply_header_location!(attrs, request)
-
-    return if attrs == (contact.additional_attributes || {})
+    current_attrs = contact.additional_attributes || {}
+    attrs = updated_contact_attributes(current_attrs, current_ip, request)
+    return if attrs == current_attrs
 
     contact.update!(additional_attributes: attrs)
-    ContactIpLookupJob.perform_later(contact) if public_ip?(current_ip) && (ip_changed || attrs['city'].blank?)
+    enqueue_lookup_if_needed(contact, current_ip, current_attrs, attrs)
   end
 
   def self.country_name_for(country_code)
@@ -81,6 +75,27 @@ class ClientIpResolver
     nil
   end
 
+  def self.refreshable_contact?(contact)
+    contact.present? && contact.account&.feature_enabled?('ip_lookup')
+  end
+  private_class_method :refreshable_contact?
+
+  def self.updated_contact_attributes(current_attrs, current_ip, request)
+    attrs = current_attrs.deep_dup
+    previous_ip = attrs['updated_at_ip'].presence || attrs['created_at_ip'].presence
+    apply_updated_ip!(attrs, current_ip, previous_ip)
+    attrs.merge!(header_location(request))
+  end
+  private_class_method :updated_contact_attributes
+
+  def self.enqueue_lookup_if_needed(contact, current_ip, old_attrs, new_attrs)
+    return unless public_ip?(current_ip)
+
+    old_ip = old_attrs['updated_at_ip'].presence || old_attrs['created_at_ip'].presence
+    ContactIpLookupJob.perform_later(contact) if current_ip != old_ip || new_attrs['city'].blank?
+  end
+  private_class_method :enqueue_lookup_if_needed
+
   def self.apply_updated_ip!(attrs, current_ip, previous_ip)
     return false unless public_ip?(current_ip)
 
@@ -90,13 +105,6 @@ class ClientIpResolver
     changed
   end
   private_class_method :apply_updated_ip!
-
-  def self.apply_header_location!(attrs, request)
-    header_location(request).each do |key, value|
-      attrs[key] = value if value.present?
-    end
-  end
-  private_class_method :apply_header_location!
 
   def self.header_ip_candidates(request)
     env = request.respond_to?(:env) ? request.env : {}
