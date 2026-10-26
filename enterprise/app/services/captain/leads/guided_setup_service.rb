@@ -29,9 +29,10 @@ class Captain::Leads::GuidedSetupService
 
   def instructions
     <<~TEXT.strip
-      Help interested businesses understand the offering and offer email follow-up when useful.
+      Help interested businesses understand the offering, then proactively start email follow-up when useful.
       Follow the shared business lead capture rules and configured fields and categories.
-      Save agreed follow-up with [@Save business lead](tool://save_lead_details).
+      Offer [@Request business follow-up](tool://request_lead_followup) once the need is clear. Known contact details are reused automatically; otherwise a form saves on submission. Do not ask a separate permission question.
+      Use [@Save business lead](tool://save_lead_details) only for later captured-lead updates or agreed typed capture on channels without forms.
       Business-specific preferences:
       #{@assistant.config['lead_instructions'].presence || 'No additional preferences.'}
     TEXT

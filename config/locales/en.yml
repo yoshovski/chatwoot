@@ -487,10 +487,11 @@ en:
       scenario_title: 'Business lead follow-up'
       followup_tool:
         title: 'Request business follow-up'
-        description: 'Collects contact details for agreed email follow-up without a live transfer'
+        description: 'Starts business email follow-up using known contact details or a contact form, without a live transfer'
       followup_form: 'Where should our team send your follow-up?'
+      followup_submit: 'Request email follow-up'
       followup_saved: 'Thanks, %{name}. We have your request for email follow-up.'
-      followup_offer: 'Would you like our team to follow up by email?'
+      question_limit_reply: 'We can keep exploring the right setup for your business here.'
       intake_review: "Business follow-up needs review. Customer-provided details (unverified):\n%{details}"
       visitor_location_summary: 'Visitor location (detected): %{location}'
       tool:

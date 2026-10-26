@@ -11,8 +11,17 @@ class Captain::Leads::FollowupFormService
     missing << 'email' if contact&.email.blank?
     form = Captain::Conversation::ContactCaptureService.form_payload(missing, assistant: @assistant)
     form.merge(content: I18n.t('captain.leads.followup_form'),
-               content_attributes: form[:content_attributes].merge('purpose' => 'business_followup'),
+               content_attributes: form[:content_attributes].merge('purpose' => 'business_followup',
+                                                                   'button_label' => I18n.t('captain.leads.followup_submit')),
                additional_attributes: { agent_name: @assistant.agent_name })
+  end
+
+  def pending?
+    return false unless @conversation
+
+    capture = Captain::Conversation::ContactCaptureService.new(conversation: @conversation, assistant: @assistant)
+    @conversation.messages.where(content_type: :form, created_at: Captain::Conversation::ContactCaptureService::GUARD_TTL.seconds.ago..)
+                 .any? { |message| message.content_attributes['purpose'] == 'business_followup' && capture.form_active?(message) }
   end
 
   def perform(message, submitted)

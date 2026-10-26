@@ -26,6 +26,10 @@ class Captain::Tools::SaveLeadDetailsTool < Captain::Tools::BasePublicTool
   def save_and_deliver(tool_context, contact, details, fields_json)
     conversation = find_conversation(tool_context.state)
     captured = Captain::Leads::CaptureState.new(@assistant, conversation).captured?
+    if conversation&.inbox&.channel_type == 'Channel::WebWidget' && !captured
+      return 'No lead saved. Initial web follow-up must go through request_lead_followup, which checks business interest and ' \
+             'uses known contact details or collects missing details with a form. Do not bypass that flow with a direct save.'
+    end
     identity = stored_identity(contact, details, captured)
     result = Captain::Leads::CaptureService.new(@assistant, contact).perform(
       **details.slice(:lead_type, :summary), **identity, fields: JSON.parse(fields_json)
