@@ -47,6 +47,7 @@ export default {
     return {
       userInput: '',
       showEmojiPicker: false,
+      attachedFile: null,
     };
   },
 
@@ -56,7 +57,14 @@ export default {
       shouldShowEmojiPicker: 'appConfig/getShouldShowEmojiPicker',
     }),
     hasInput() {
-      return this.userInput.trim().length > 0;
+      return this.userInput.trim().length > 0 || Boolean(this.attachedFile);
+    },
+    attachedFileName() {
+      return (
+        this.attachedFile?.fileName ||
+        this.attachedFile?.file?.name ||
+        this.$t('ATTACHMENTS.file.CONTENT')
+      );
     },
   },
   watch: {
@@ -77,8 +85,22 @@ export default {
   },
 
   methods: {
+    onAttachFile(attachment) {
+      this.attachedFile = attachment;
+      this.focusInput();
+    },
+    removeAttachedFile() {
+      this.attachedFile = null;
+      this.focusInput();
+    },
     handleButtonClick() {
-      if (this.userInput && this.userInput.trim()) {
+      if (this.attachedFile) {
+        this.onSendAttachment({
+          attachment: this.attachedFile,
+          content: this.userInput.trim() || undefined,
+        });
+        this.attachedFile = null;
+      } else if (this.userInput && this.userInput.trim()) {
         this.onSendMessage(this.userInput);
       }
       this.userInput = '';
@@ -123,6 +145,29 @@ export default {
 
 <template>
   <div class="flex flex-col pt-3" @keydown.esc="hideEmojiPicker">
+    <div
+      v-if="attachedFile"
+      class="mb-2 rounded-[7px] bg-n-slate-3 px-2 py-1.5 text-sm text-n-slate-11 flex items-center gap-2"
+    >
+      <img
+        v-if="attachedFile.fileType === 'image'"
+        :src="attachedFile.thumbUrl"
+        class="h-6 w-6 rounded object-cover"
+        alt="Attachment preview"
+      />
+      <FluentIcon v-else icon="document" size="16" class="flex-shrink-0" />
+      <div class="items-center flex-grow truncate text-xs">
+        {{ attachedFileName }}
+      </div>
+      <button
+        type="button"
+        class="items-end flex-shrink-0 p-1 rounded-md hover:bg-n-slate-5 text-n-slate-11"
+        :aria-label="$t('ATTACHMENTS.REMOVE')"
+        @click="removeAttachedFile"
+      >
+        <FluentIcon icon="dismiss" size="12" />
+      </button>
+    </div>
     <ResizableTextArea
       id="chat-input"
       ref="chatInput"
@@ -138,7 +183,7 @@ export default {
       <ChatAttachmentButton
         v-if="canHandleAttachments"
         class="-ms-1.5 rounded-lg text-n-slate-10 transition-colors hover:bg-n-alpha-2 hover:text-n-slate-12"
-        :on-attach="onSendAttachment"
+        :on-attach="onAttachFile"
       />
       <button
         v-if="shouldShowEmojiPicker && hasEmojiPickerEnabled"

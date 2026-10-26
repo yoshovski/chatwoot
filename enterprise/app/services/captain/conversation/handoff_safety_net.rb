@@ -28,6 +28,8 @@ class Captain::Conversation::HandoffSafetyNet
   end
 
   def triggered?
+    return false if attachment_only_customer_message?
+
     customer_message_matches? || dead_end_answer?
   end
 
@@ -72,5 +74,11 @@ class Captain::Conversation::HandoffSafetyNet
     else
       customer_message.to_s
     end
+  end
+
+  def attachment_only_customer_message?
+    return false unless customer_message.is_a?(Message)
+
+    customer_message.content.to_s.strip.blank? && customer_message.attachments.exists?
   end
 end

@@ -99,6 +99,7 @@ export default {
             } else {
               this.onAttach({
                 file: blob.signed_id,
+                fileName: file.name,
                 ...this.getLocalFileAttributes(file),
               });
             }
@@ -124,6 +125,7 @@ export default {
         if (checkFileSizeLimit(file, this.fileUploadSizeLimit)) {
           await this.onAttach({
             file: file.file,
+            fileName: file.name,
             ...this.getLocalFileAttributes(file),
           });
         } else {

@@ -76,12 +76,20 @@ export default {
         this.getAttributes();
       }
     },
-    async handleSendAttachment(attachment) {
+    async handleSendAttachment(payload) {
+      const isObjectPayload =
+        payload && typeof payload === 'object' && 'attachment' in payload;
+      const attachment = isObjectPayload ? payload.attachment : payload;
+      const content = isObjectPayload ? payload.content : null;
       await this.sendAttachment({
         attachment,
+        content,
         replyTo: this.inReplyTo ? this.inReplyTo.id : null,
       });
       this.inReplyTo = null;
+      if (this.conversationSize === 0) {
+        this.getAttributes();
+      }
     },
     startNewConversation() {
       this.router.replace({ name: 'prechat-form' });

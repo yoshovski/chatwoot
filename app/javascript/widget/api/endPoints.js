@@ -44,7 +44,7 @@ const sendMessage = (content, replyTo, { customAttributes, labels } = {}) => {
 };
 
 const sendAttachment = (
-  { attachment, replyTo = null },
+  { attachment, replyTo = null, content = null },
   { customAttributes, labels } = {}
 ) => {
   const { referrerURL = '' } = window;
@@ -56,6 +56,10 @@ const sendAttachment = (
     formData.append('message[attachments][]', file);
   } else {
     formData.append('message[attachments][]', file, file.name);
+  }
+
+  if (content) {
+    formData.append('message[content]', content);
   }
 
   formData.append('message[referer_url]', referrerURL);

@@ -16,6 +16,7 @@ import ArticleSearchPopover from 'dashboard/routes/dashboard/helpcenter/componen
 import CopilotEditorSection from './CopilotEditorSection.vue';
 import MessageSignatureMissingAlert from './MessageSignatureMissingAlert.vue';
 import ReplyBoxBanner from './ReplyBoxBanner.vue';
+import CaptainTakeoverGate from './CaptainTakeoverGate.vue';
 import QuotedEmailPreview from './QuotedEmailPreview.vue';
 import { REPLY_EDITOR_MODES } from 'dashboard/components/widgets/WootWriter/constants';
 import WootMessageEditor from 'dashboard/components/widgets/WootWriter/Editor.vue';
@@ -72,6 +73,7 @@ export default {
     AttachmentPreview,
     AudioRecorder,
     ReplyBoxBanner,
+    CaptainTakeoverGate,
     EmojiIconPicker,
     MessageSignatureMissingAlert,
     ReplyBottomPanel,
@@ -275,6 +277,22 @@ export default {
         getEffectiveChannelType(this.channelType, this.inbox?.medium || '')
       );
       return !!stripped.trim();
+    },
+    // Name of the Captain assistant currently answering, either as the owner of
+    // a pending conversation or while it keeps answering after a handoff.
+    captainHandlingAssistantName() {
+      const { meta = {}, status } = this.currentChat || {};
+      if (meta.captain_waiting) return meta.captain_waiting.name;
+      if (
+        status === wootConstants.STATUS_TYPE.PENDING &&
+        meta.assignee_type === 'Captain::Assistant'
+      ) {
+        return meta.assignee?.name;
+      }
+      return null;
+    },
+    showCaptainTakeoverGate() {
+      return !!this.captainHandlingAssistantName && !this.isOnPrivateNote;
     },
     isBotOwnedPendingConversation() {
       return (
@@ -1014,6 +1032,14 @@ export default {
       });
       this.hideContentTemplatesModal();
     },
+    onCaptainGateAddNote() {
+      this.setReplyMode(REPLY_EDITOR_MODES.NOTE);
+      this.$nextTick(() => this.messageEditor?.focusEditorInputField());
+    },
+    onCaptainTakenOver() {
+      this.setReplyMode(REPLY_EDITOR_MODES.REPLY);
+      this.$nextTick(() => this.messageEditor?.focusEditorInputField());
+    },
     setReplyMode(mode = REPLY_EDITOR_MODES.REPLY) {
       // Clear attachments when switching between private note and reply modes
       // This is to prevent from breaking the upload rules
@@ -1336,6 +1362,13 @@ export default {
 <template>
   <ReplyBoxBanner :message="message" :is-on-private-note="isOnPrivateNote" />
   <div class="reply-box" :class="replyBoxClass">
+    <CaptainTakeoverGate
+      v-if="showCaptainTakeoverGate"
+      :conversation-id="conversationId"
+      :assistant-name="captainHandlingAssistantName"
+      @taken-over="onCaptainTakenOver"
+      @add-note="onCaptainGateAddNote"
+    />
     <ReplyTopPanel
       :mode="replyType"
       :conversation-id="conversationId"

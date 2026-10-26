@@ -69,21 +69,32 @@ const isCaptainOwned = computed(
   () => currentChat.value?.meta?.assignee_type === 'Captain::Assistant'
 );
 
-const showBotHandoffBanner = computed(() => {
-  return (
-    isPendingConversation.value &&
-    (isAgentBotOwned.value || isCaptainOwned.value)
-  );
-});
-
 // After a handoff, Captain can keep answering an open conversation (even one
 // assigned to an agent) until someone takes over.
 const captainWaitingAssistant = computed(
   () => currentChat.value?.meta?.captain_waiting
 );
 
+// While Captain handles the conversation, the reply box is gated by
+// CaptainTakeoverGate. These banners only keep "Take over" reachable once the
+// agent chose to write a private note instead.
+const isCaptainHandling = computed(
+  () =>
+    (isPendingConversation.value && isCaptainOwned.value) ||
+    Boolean(captainWaitingAssistant.value)
+);
+
+const showBotHandoffBanner = computed(() => {
+  if (!isPendingConversation.value) return false;
+  if (isAgentBotOwned.value) return true;
+  return isCaptainOwned.value && props.isOnPrivateNote;
+});
+
 const showCaptainWaitingBanner = computed(
-  () => !showBotHandoffBanner.value && Boolean(captainWaitingAssistant.value)
+  () =>
+    !showBotHandoffBanner.value &&
+    Boolean(captainWaitingAssistant.value) &&
+    props.isOnPrivateNote
 );
 
 const botAssigneeName = computed(() => {
@@ -159,9 +170,7 @@ const onClickBotHandoff = async () => {
 
 <template>
   <Banner
-    v-if="
-      showSelfAssignBanner && !showBotHandoffBanner && !showCaptainWaitingBanner
-    "
+    v-if="showSelfAssignBanner && !showBotHandoffBanner && !isCaptainHandling"
     action-button-variant="ghost"
     color-scheme="secondary"
     class="mx-2 mb-2 rounded-lg !py-2"

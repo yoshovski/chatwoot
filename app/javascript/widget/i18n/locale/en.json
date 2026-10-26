@@ -170,7 +170,8 @@
     },
     "fallback": {
       "CONTENT": "has shared a url"
-    }
+    },
+    "REMOVE": "Remove attachment"
   },
   "FOOTER_REPLY_TO": {
     "REPLY_TO": "Replying to:"
