@@ -9,7 +9,7 @@ class Captain::ResponseSchema < RubyLLM::Schema
                                   'continue in this chat. False when no handoff is needed, or when you only ask whether the customer ' \
                                   'wants a human.'.freeze
 
-  SUGGESTION_LABEL_MAX_LENGTH = 24
+  SUGGESTION_LABEL_MAX_LENGTH = 50
   SUGGESTION_MESSAGE_MAX_LENGTH = 120
 
   array :response_parts,

@@ -100,7 +100,7 @@ class Captain::Conversation::SuggestionFinalizer
     return if label.match?(BARE_LABELS) && (raw_msg.blank? || raw_msg.match?(BARE_LABELS))
 
     final_message = (raw_msg.presence || label).first(Captain::ResponseSchema::SUGGESTION_MESSAGE_MAX_LENGTH)
-    final_label = label.truncate(Captain::ResponseSchema::SUGGESTION_LABEL_MAX_LENGTH)
+    final_label = label.truncate(Captain::ResponseSchema::SUGGESTION_LABEL_MAX_LENGTH, separator: ' ')
     { 'title' => final_label, 'value' => final_message }
   end
 

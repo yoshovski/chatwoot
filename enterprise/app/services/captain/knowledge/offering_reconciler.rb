@@ -109,7 +109,7 @@ class Captain::Knowledge::OfferingReconciler # rubocop:disable Metrics/ClassLeng
 
       build_candidate(
         id: "offering-#{offering['id']}",
-        title: offering['name'].to_s.strip.truncate(Captain::ResponseSchema::SUGGESTION_LABEL_MAX_LENGTH),
+        title: offering['name'].to_s.strip.truncate(Captain::ResponseSchema::SUGGESTION_LABEL_MAX_LENGTH, separator: ' '),
         message: "Tell me about #{offering['name']}.".truncate(Captain::ResponseSchema::SUGGESTION_MESSAGE_MAX_LENGTH),
         target_kind: 'offering', target_id: offering['id'], document_ids: doc_ids
       )
@@ -132,7 +132,7 @@ class Captain::Knowledge::OfferingReconciler # rubocop:disable Metrics/ClassLeng
     slug = title.parameterize.presence || Digest::SHA256.hexdigest(title).first(8)
     build_candidate(
       id: "topic-#{slug}",
-      title: title.truncate(Captain::ResponseSchema::SUGGESTION_LABEL_MAX_LENGTH),
+      title: title.truncate(Captain::ResponseSchema::SUGGESTION_LABEL_MAX_LENGTH, separator: ' '),
       message: "How does #{title} work?".truncate(Captain::ResponseSchema::SUGGESTION_MESSAGE_MAX_LENGTH),
       target_kind: 'topic', target_id: slug, document_ids: doc_ids
     )

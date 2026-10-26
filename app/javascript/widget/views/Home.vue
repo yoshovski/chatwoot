@@ -59,7 +59,7 @@ export default {
 
 <template>
   <div class="relative z-10 flex w-full flex-1 flex-col px-4 pt-4 pb-2">
-    <div data-fit-content class="flex flex-col gap-4">
+    <div data-fit-content class="flex flex-col">
       <ConversationStarters
         :starters="conversationStarters"
         @select="startConversation"
