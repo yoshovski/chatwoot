@@ -205,7 +205,9 @@ const askedSummary = computed(() =>
           <div
             class="flex flex-col rounded-xl bg-n-solid-1 px-2.5 py-1.5 outline outline-1 outline-n-weak"
           >
-            <span class="font-mono text-xs text-n-slate-11">lead_type</span>
+            <span class="font-mono text-xs text-n-slate-11">
+              {{ 'lead_type' }}
+            </span>
             <span class="truncate text-xs font-semibold text-n-slate-12">
               {{ primaryType }}
             </span>
@@ -216,7 +218,7 @@ const askedSummary = computed(() =>
             class="flex flex-col rounded-xl bg-n-solid-1 px-2.5 py-1.5 outline outline-1 outline-n-weak"
           >
             <span class="truncate font-mono text-xs text-n-slate-11">
-              lead_{{ field.key }}
+              {{ `lead_${field.key}` }}
             </span>
             <span class="truncate text-xs font-medium text-n-slate-12">
               {{ field.label }}

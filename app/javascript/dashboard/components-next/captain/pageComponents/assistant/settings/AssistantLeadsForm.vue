@@ -153,9 +153,7 @@ const existingAttributeSuggestions = computed(() => {
 });
 
 const customFieldChips = computed(() =>
-  settings.value.lead_fields.filter(
-    field => !COMMON_FIELDS.includes(field.key)
-  )
+  settings.value.lead_fields.filter(field => !COMMON_FIELDS.includes(field.key))
 );
 
 // Custom Field Dialog
@@ -365,8 +363,9 @@ const statusLabel = computed(() => {
 
 const selectedTeamName = computed(
   () =>
-    teams.value.find(team => team.id === settings.value.lead_notification_team_id)
-      ?.name || ''
+    teams.value.find(
+      team => team.id === settings.value.lead_notification_team_id
+    )?.name || ''
 );
 
 const isHubspotConnected = computed(
@@ -501,14 +500,12 @@ const isHubspotConnected = computed(
                     ? 'bg-n-ruby-2 text-n-ruby-11 outline outline-2 outline-n-ruby-9'
                     : 'bg-n-blue-1 text-n-blue-11 outline outline-2 outline-n-blue-9'
                 "
-                @click="
-                  openFieldDialog(settings.lead_fields.indexOf(field))
-                "
+                @click="openFieldDialog(settings.lead_fields.indexOf(field))"
               >
                 <span class="i-lucide-sliders-horizontal size-3" />
                 <span>{{ field.label || field.key }}</span>
                 <code class="font-mono text-xs opacity-75">
-                  lead_{{ field.key }}
+                  {{ `lead_${field.key}` }}
                 </code>
               </button>
 
@@ -709,9 +706,7 @@ const isHubspotConnected = computed(
             </div>
 
             <!-- Row 2: Optional HubSpot CRM Row (Action Row -> Modal) -->
-            <div
-              class="flex items-center justify-between gap-3 py-3.5"
-            >
+            <div class="flex items-center justify-between gap-3 py-3.5">
               <div class="flex min-w-0 flex-col gap-0.5">
                 <div class="flex items-center gap-2">
                   <span class="text-sm font-medium text-n-slate-12">
