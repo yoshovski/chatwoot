@@ -1137,10 +1137,10 @@
               "BUTTON_1": "Compare products",
               "BUTTON_2": "Track my order",
               "BUTTON_3": "Talk to a person",
-              "MAX": "Buttons per message",
+              "MAX": "Maximum buttons per message",
               "FEWER": "Fewer buttons",
               "MORE": "More buttons",
-              "DESC": "Tappable suggestions under each reply.",
+              "DESC": "Relevant suggested replies when helpful.",
               "BUTTON_4": "Shipping times",
               "BUTTON_5": "Return an item"
             },

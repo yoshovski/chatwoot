@@ -4,7 +4,7 @@ class Captain::Leads::DeliveryService
     @conversation = conversation
   end
 
-  def perform(lead_type:, summary:)
+  def perform(lead_type:, summary:, notify: true)
     @conversation.with_lock do
       notes = @conversation.messages.where(private: true)
       note = notes.find_by(id: @conversation.additional_attributes['business_lead_summary_note_id']) || notes.find_by(content: summary)
@@ -17,7 +17,7 @@ class Captain::Leads::DeliveryService
       )
       @conversation.update!(additional_attributes: attributes)
     end
-    Captain::Leads::NotifyTeamJob.perform_later(@assistant.id, @conversation.id) if @assistant.config['lead_notification_team_id']
+    Captain::Leads::NotifyTeamJob.perform_later(@assistant.id, @conversation.id) if notify && @assistant.config['lead_notification_team_id']
   end
 
   private

@@ -1,7 +1,7 @@
 # Deterministic finalizer for Captain suggested reply buttons at the composition boundary.
 # Normalizes, deduplicates (including post-truncation label collisions), filters proactive
-# cancellation/refund prompts unless contextually relevant, and fills up to max_suggested_replies
-# from the assistant's source-backed published brief pool without extra model or network calls.
+# cancellation/refund prompts unless contextually relevant, and caps the current turn's
+# model suggestions without filling empty slots with unrelated catalogue entries.
 class Captain::Conversation::SuggestionFinalizer
   BARE_LABELS = /\A(?:yes|no|ok|okay|sure|learn\s+more|continue|more|next)\z/i
   PROACTIVE_EXCLUSION_PATTERN = /\b(?:cancel(?:lation|ling)?|refunds?|money\s+back|close\s+(?:my\s+)?account|
@@ -31,14 +31,10 @@ class Captain::Conversation::SuggestionFinalizer
       return []
     end
 
-    cleaned = deduplicate_and_filter(raw) { |item| clean_item(item) }.take(target)
-    fallback_items = fill_from_fallback(cleaned, target - cleaned.size)
-    final = merge_with_kinds(cleaned, fallback_items)
-    reason = final.size < target ? 'insufficient_fallback_pool' : nil
-    mode = fallback_items.any? ? 'filled' : 'model'
-    record_metrics(requested: target, proposed: raw.size, cleaned: cleaned.size, fallback: fallback_items.size,
-                   delivered: final.size, mode: mode, reason: reason)
-    final
+    cleaned = deduplicate_and_filter(raw).take(target)
+    record_metrics(requested: target, proposed: raw.size, cleaned: cleaned.size, fallback: 0,
+                   delivered: cleaned.size, mode: 'model', reason: cleaned.empty? ? 'no_relevant_suggestions' : nil)
+    cleaned
   end
 
   private
@@ -80,13 +76,13 @@ class Captain::Conversation::SuggestionFinalizer
     prose_text.match?(BLOCKING_INPUT_PATTERN)
   end
 
-  def deduplicate_and_filter(items, existing: [])
-    seen_titles = existing.to_set { |item| canonical_key(item['title']) }
-    seen_values = existing.to_set { |item| canonical_key(item['value']) }
+  def deduplicate_and_filter(items)
+    seen_titles = Set.new
+    seen_values = Set.new
     customer_norm = canonical_key(customer_text)
 
     items.filter_map do |item|
-      cleaned = yield(item)
+      cleaned = clean_item(item)
       cleaned if valid_unique_suggestion?(cleaned, seen_titles, seen_values, customer_norm)
     end
   end
@@ -116,59 +112,6 @@ class Captain::Conversation::SuggestionFinalizer
     final_message = (raw_msg.presence || label).first(Captain::ResponseSchema::SUGGESTION_MESSAGE_MAX_LENGTH)
     final_label = label.truncate(Captain::ResponseSchema::SUGGESTION_LABEL_MAX_LENGTH, separator: ' ')
     { 'title' => final_label, 'value' => final_message }
-  end
-
-  def fill_from_fallback(existing, needed)
-    return [] if needed <= 0
-
-    pool = authorized_fallback_candidates
-    return [] if pool.empty?
-
-    deduplicate_and_filter(ranked_fallback_pool(pool), existing: existing) do |candidate|
-      clean_item('label' => candidate['title'], 'message' => candidate['message'])
-    end.take(needed)
-  end
-
-  def merge_with_kinds(model_items, fallback_items)
-    return model_items if fallback_items.empty?
-    return fallback_items if model_items.empty?
-    return model_items + fallback_items unless @has_closing_question
-
-    model_items.map { |item| item.merge('kind' => 'choice') } +
-      fallback_items.map { |item| item.merge('kind' => 'follow_up') }
-  end
-
-  def authorized_fallback_candidates
-    brief = @assistant.knowledge_brief
-    return [] unless @assistant.config['knowledge_brief_enabled'] == true && brief&.usable?(brief.published)
-
-    brief.usable_suggestion_candidates(brief.published)
-  end
-
-  KIND_RANK = { 'offering' => 0, 'category' => 1 }.freeze
-
-  def ranked_fallback_pool(candidates)
-    cited_doc_ids = turn_document_ids
-    reply_norm = canonical_key(prose_text)
-    candidates.sort_by.with_index do |candidate, idx|
-      [candidate_cited_rank(candidate, cited_doc_ids), candidate_mentioned_rank(candidate, reply_norm),
-       KIND_RANK.fetch(candidate['target_kind'], 2), idx]
-    end
-  end
-
-  def candidate_cited_rank(candidate, cited_doc_ids)
-    cited_doc_ids.any? && Array(candidate['document_ids']).map(&:to_i).intersect?(cited_doc_ids) ? 0 : 1
-  end
-
-  def candidate_mentioned_rank(candidate, reply_norm)
-    reply_norm.present? && reply_norm.include?(canonical_key(candidate['title'])) ? 1 : 0
-  end
-
-  def turn_document_ids
-    state = @run_result&.context&.dig(:state) || {}
-    cw_docs = Array(state.dig(:cw_metadata, :document_ids)).map(&:to_i)
-    citation_docs = state.fetch(Captain::Assistant::CITATION_DETAILS_STATE_KEY, {}).values.filter_map { |d| d[:document_id]&.to_i }
-    (cw_docs | citation_docs).uniq
   end
 
   def unrequested_cancellation?(title, value)

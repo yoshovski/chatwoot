@@ -25,7 +25,7 @@ class Captain::Leads::FollowupFormService
 
       message.update!(content_attributes: message.content_attributes.merge('contact_details_saved' => true))
     end
-    post_reply(I18n.t('captain.leads.followup_saved'))
+    post_reply(I18n.t('captain.leads.followup_saved', name: @conversation.contact.name))
     true
   rescue ActiveRecord::RecordInvalid, ArgumentError => e
     recover(message, submitted, e)
