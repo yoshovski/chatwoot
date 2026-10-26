@@ -1,5 +1,5 @@
 class Captain::Tools::RequestLeadFollowupTool < Captain::Tools::BasePublicTool
-  description 'After a business agrees to email follow-up, show a contact form without handing off the live chat.'
+  description 'Start business email follow-up once the need is clear: reuse known contact details or offer a form. No live handoff.'
   param :lead_type, type: 'string', desc: 'Exact configured lead type name'
   param :summary, type: 'string', desc: 'One to three sentences summarizing the business inquiry'
   param :fields_json, type: 'string', desc: 'Known configured field keys and customer-provided values as a JSON object'
@@ -28,36 +28,49 @@ class Captain::Tools::RequestLeadFollowupTool < Captain::Tools::BasePublicTool
     if Captain::Leads::CaptureState.new(@assistant, conversation).captured?
       return 'Email follow-up is already captured. Do not show another form or restart intake. Continue helping with the current question.'
     end
-    return consent_required_instruction unless Captain::Leads::FollowupConsent.new(@assistant, tool_context).granted?
+    if Captain::Leads::FollowupFormService.new(@assistant, conversation).pending?
+      return 'The follow-up form is already waiting for submission. Do not show another form, save a lead or repeat the invitation. Continue helping.'
+    end
+    return not_ready_instruction unless Captain::Leads::FollowupReadiness.new(@assistant, tool_context).ready?
     return if preview?(tool_context)
 
-    stage_followup(conversation, lead_type, summary, fields_json)
-    return unless conversation.reload.additional_attributes['business_lead_captured']
-
-    tool_context.state[:lead_summary_saved_this_run] = true
-    'Lead details saved. Confirm receipt in one short sentence.'
+    start_followup(tool_context, conversation, lead_type, summary, fields_json)
   end
 
-  def consent_required_instruction
-    'No form was shown or lead saved: the visitor has not requested or agreed to email follow-up. ' \
-      'Continue answering or ask one useful qualification question and wait. Offer follow-up separately when useful. ' \
-      'Do not mention a contact form, claim consent, or hand off just because this request was declined.'
+  def captured_instruction(tool_context)
+    tool_context.state[:lead_summary_saved_this_run] = true
+    tool_context.state[:lead_intake] = { captured: true, identity_available: true, form_pending: false }
+    'Email follow-up is saved using existing contact details. Briefly acknowledge the business inquiry for email follow-up. ' \
+      'Do not show a form, ask for identity or permission, or ask another qualification question. ' \
+      'Do not claim an email, CRM sync or sales alert was delivered.'
+  end
+
+  def not_ready_instruction
+    'No form was shown or lead saved. Establish a genuine business need with one useful qualification question, within the remaining allowance. ' \
+      'If the visitor refused contact or this is end-user support, respect that and keep helping. Do not ask for permission to show a form ' \
+      'or hand off because this tool request was declined.'
   end
 
   def form_instruction(tool_context)
     tool_context.state[:lead_followup_form_requested] = true
-    'The email follow-up contact form will appear after your reply. Briefly invite the visitor to complete it. ' \
-      'Do not ask them to type name or email in chat. No live handoff has happened; continue helping normally.'
+    'The optional email follow-up form will appear after your reply. Give one short, benefit-led invitation tailored to the business need. ' \
+      'Do not ask whether the team may contact them or ask another qualification question. Do not ask for name/email in prose. ' \
+      'No lead has been saved or follow-up requested yet: only submitting the form does that. No live handoff has happened.'
   end
 
   def preview?(tool_context) = tool_context.state[:source] == 'playground'
 
   def web_chat?(tool_context) = tool_context.state[:channel_type].in?([nil, 'Channel::WebWidget'])
 
-  def stage_followup(conversation, lead_type, summary, fields_json)
+  def start_followup(tool_context, conversation, lead_type, summary, fields_json)
+    if newer_customer_message_arrived?(tool_context.state)
+      return failure_result('Tool skipped because a newer customer message arrived', tool_context.state)
+    end
+
     Captain::Leads::FollowupCaptureService.new(conversation, @assistant).stage!(
       lead_type: lead_type, summary: summary, fields: JSON.parse(fields_json)
     )
+    captured_instruction(tool_context) if conversation.reload.additional_attributes['business_lead_captured']
   end
 
   def typed_identity_instruction

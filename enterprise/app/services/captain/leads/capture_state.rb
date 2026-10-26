@@ -13,7 +13,8 @@ class Captain::Leads::CaptureState
   end
 
   def prompt_context
-    { captured: captured?, identity_available: identity_available? }
+    { captured: captured?, identity_available: identity_available?,
+      form_pending: Captain::Leads::FollowupFormService.new(@assistant, @conversation).pending? }
   end
 
   def identity_available?

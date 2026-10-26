@@ -19,14 +19,15 @@ class Captain::Leads::QuestionBudget
   end
 
   def enforce!(run_result)
-    return if run_result.context&.dig(:state, :lead_intake, :captured)
+    state = run_result.context.to_h.fetch(:state, {})
+    return if state.fetch(:lead_intake, {}).values_at(:captured, :form_pending).any?
 
     return unless run_result.output['lead_qualification_question'] == true && remaining.zero?
 
     output = run_result.output
     parts = Captain::Assistant::ResponseParts.from_response(output).to_a.map(&:dup)
     remove_last_question(parts)
-    parts << { 'text' => I18n.t('captain.leads.followup_offer'), 'citation_indexes' => [] }
+    parts << { 'text' => I18n.t('captain.leads.question_limit_reply'), 'citation_indexes' => [] } if parts.empty?
     output['response_parts'] = parts
     output['lead_qualification_question'] = false
     output['suggested_replies'] = []

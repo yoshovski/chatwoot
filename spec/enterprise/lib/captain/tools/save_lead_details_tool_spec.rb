@@ -16,7 +16,7 @@ RSpec.describe Captain::Tools::SaveLeadDetailsTool, type: :model do
     )
   end
   let(:tool) { described_class.new(assistant) }
-  let(:inbox) { create(:inbox, account: account) }
+  let(:inbox) { create(:inbox, :with_email, account: account) }
   let(:contact) { create(:contact, account: account, name: 'visitor-lead-1') }
   let(:conversation) { create(:conversation, account: account, inbox: inbox, contact: contact) }
   let(:tool_context) { Struct.new(:state).new({ conversation: { id: conversation.id }, contact: { id: contact.id } }) }
