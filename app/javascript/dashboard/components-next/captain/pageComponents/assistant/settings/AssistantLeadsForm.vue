@@ -1,11 +1,12 @@
 <script setup>
-import { computed, nextTick, ref, toRaw, watch } from 'vue';
-import TeamsAPI from 'dashboard/api/teams';
-import { onMounted } from 'vue';
+import { computed, nextTick, onMounted, ref, toRaw, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
+import { useStore, useMapGetter } from 'dashboard/composables/store';
+import TeamsAPI from 'dashboard/api/teams';
 import Button from 'dashboard/components-next/button/Button.vue';
 import Input from 'dashboard/components-next/input/Input.vue';
+import Dialog from 'dashboard/components-next/dialog/Dialog.vue';
 import SettingsSwitchRow from './SettingsSwitchRow.vue';
 import SettingsSaveBar from './SettingsSaveBar.vue';
 import SettingsSplit from './SettingsSplit.vue';
@@ -17,28 +18,51 @@ const props = defineProps({
   save: { type: Function, required: true },
   canManageIntegrations: { type: Boolean, default: false },
 });
-const { t, n } = useI18n();
+
+const { t } = useI18n();
 const router = useRouter();
+const store = useStore();
+const contactAttributes = useMapGetter('attributes/getContactAttributes');
+
 const label = (key, params = {}) =>
   t(`CAPTAIN.ASSISTANTS.SETTINGS.LEADS.${key}`, params);
+
 const MAX_ENTRIES = 10;
-const MAX_QUESTIONS = 5;
 const MAX_TEXT_LENGTH = 300;
 const KEY_PATTERN = /^[a-z][a-z0-9_]{0,39}$/;
 const RESERVED_KEYS = ['type', 'summary', 'source', 'status'];
 const COMMON_FIELDS = ['company', 'country', 'audience_size', 'use_case'];
+const QUESTION_OPTIONS = [0, 1, 2, 3, 4, 5];
+const TYPE_PRESETS = ['ENTERPRISE', 'PARTNERSHIP', 'NEEDS_REVIEW'];
+
 const settings = ref({});
 const savedSnapshot = ref('');
 const saving = ref(false);
 const attempted = ref(false);
 const form = ref(null);
+
 const setup = useLeadSetup(
   computed(() => props.assistant.id),
   computed(() => settings.value.lead_fields)
 );
+
+const {
+  captureScenario,
+  existingScenario,
+  hubspotState,
+  transcriptState,
+  requiredMappingKeys,
+  unmappedKeys,
+  businessLeadsOnly,
+  loading,
+  scenarioError,
+} = setup;
+
 const teams = ref([]);
 const teamsError = ref(false);
+
 onMounted(async () => {
+  store.dispatch('attributes/get');
   try {
     const { data } = await TeamsAPI.get();
     teams.value = data;
@@ -46,23 +70,10 @@ onMounted(async () => {
     teamsError.value = true;
   }
 });
-const sync = computed(() => props.assistant.knowledge_sync || {});
-const syncLabel = computed(() => {
-  if (!sync.value.enabled || !sync.value.interval_hours)
-    return label('KNOWLEDGE.NOT_SCHEDULED');
-  return label('KNOWLEDGE.SCHEDULED', { hours: sync.value.interval_hours });
-});
-const {
-  captureScenario,
-  existingScenario,
-  hubspotState,
-  transcriptState,
-  businessLeadsOnly,
-  loading,
-  scenarioError,
-} = setup;
+
 const snapshot = () => JSON.stringify(settings.value);
 const isDirty = computed(() => snapshot() !== savedSnapshot.value);
+
 let lockedFields = new WeakSet();
 const fieldKeyLocked = field => lockedFields.has(toRaw(field));
 
@@ -81,6 +92,7 @@ const reset = () => {
   savedSnapshot.value = snapshot();
   attempted.value = false;
 };
+
 watch(
   () => props.assistant.config,
   () => {
@@ -98,37 +110,132 @@ const enableCapture = value => {
     });
   }
 };
-const availableFields = computed(() =>
-  COMMON_FIELDS.filter(
-    key => !settings.value.lead_fields.some(field => field.key === key)
-  )
-);
-const addField = key =>
-  settings.value.lead_fields.push({
-    key: key || '',
-    label: key ? label(`COMMON_FIELDS.${key}`) : '',
-  });
-const suggestKey = field => {
-  if (field.key) return;
-  field.key = field.label
+
+const slugifyKey = text =>
+  (text || '')
     .toLowerCase()
     .trim()
     .replace(/[^a-z0-9]+/g, '_')
     .replace(/^_+|_+$/g, '')
     .slice(0, 40);
+
+const isFieldSelected = key =>
+  settings.value.lead_fields.some(field => field.key === key);
+
+const togglePresetField = (key, displayLabel) => {
+  const index = settings.value.lead_fields.findIndex(
+    field => field.key === key
+  );
+  if (index >= 0) {
+    settings.value.lead_fields.splice(index, 1);
+    return;
+  }
+  if (settings.value.lead_fields.length >= MAX_ENTRIES) return;
+  settings.value.lead_fields.push({ key, label: displayLabel });
 };
-const fieldError = field => {
+
+const existingAttributeSuggestions = computed(() => {
+  const standardSet = new Set([...COMMON_FIELDS, ...RESERVED_KEYS]);
+  return (contactAttributes.value || [])
+    .map(attr => {
+      const rawKey = (attr.attributeKey || '').replace(/^lead_/, '');
+      return {
+        key: rawKey,
+        label: attr.attributeDisplayName || rawKey,
+      };
+    })
+    .filter(
+      item =>
+        KEY_PATTERN.test(item.key) &&
+        !standardSet.has(item.key) &&
+        !isFieldSelected(item.key)
+    );
+});
+
+const customFieldChips = computed(() =>
+  settings.value.lead_fields.filter(
+    field => !COMMON_FIELDS.includes(field.key)
+  )
+);
+
+// Custom Field Dialog
+const fieldDialogRef = ref(null);
+const editingFieldIndex = ref(-1);
+const fieldDraft = ref({ key: '', label: '', locked: false });
+const fieldDraftAttempted = ref(false);
+
+const suggestDraftKey = () => {
+  if (fieldDraft.value.locked || fieldDraft.value.key) return;
+  fieldDraft.value.key = slugifyKey(fieldDraft.value.label);
+};
+
+const fieldErrorFor = (field, ignoreIndex = -1) => {
   if (!KEY_PATTERN.test(field.key) || RESERVED_KEYS.includes(field.key))
     return label('ERRORS.KEY');
   if (
-    settings.value.lead_fields.filter(item => item.key === field.key).length > 1
+    settings.value.lead_fields.some(
+      (item, idx) => idx !== ignoreIndex && item.key === field.key
+    )
   )
     return label('ERRORS.DUPLICATE_KEY');
   if (!field.label.trim() || field.label.length > MAX_TEXT_LENGTH)
     return label('ERRORS.FIELD');
   return '';
 };
-const typeError = type => {
+
+const fieldError = field =>
+  fieldErrorFor(field, settings.value.lead_fields.indexOf(field));
+
+const fieldDraftError = computed(() =>
+  fieldErrorFor(fieldDraft.value, editingFieldIndex.value)
+);
+
+const openFieldDialog = (index = -1) => {
+  editingFieldIndex.value = index;
+  fieldDraftAttempted.value = false;
+  if (index >= 0) {
+    const target = settings.value.lead_fields[index];
+    fieldDraft.value = {
+      key: target.key,
+      label: target.label,
+      locked: fieldKeyLocked(target),
+    };
+  } else {
+    fieldDraft.value = { key: '', label: '', locked: false };
+  }
+  fieldDialogRef.value?.open();
+};
+
+const confirmFieldDialog = () => {
+  suggestDraftKey();
+  fieldDraftAttempted.value = true;
+  if (fieldDraftError.value) return;
+  const entry = {
+    key: fieldDraft.value.key.trim(),
+    label: fieldDraft.value.label.trim(),
+  };
+  if (editingFieldIndex.value >= 0) {
+    Object.assign(settings.value.lead_fields[editingFieldIndex.value], entry);
+  } else if (settings.value.lead_fields.length < MAX_ENTRIES) {
+    settings.value.lead_fields.push(entry);
+  }
+  fieldDialogRef.value?.close();
+};
+
+const removeEditingField = () => {
+  if (editingFieldIndex.value >= 0) {
+    settings.value.lead_fields.splice(editingFieldIndex.value, 1);
+  }
+  fieldDialogRef.value?.close();
+};
+
+// Lead Type Dialog
+const typeDialogRef = ref(null);
+const editingTypeIndex = ref(-1);
+const typeDraft = ref({ name: '', rule: '' });
+const typeDraftAttempted = ref(false);
+
+const typeErrorFor = (type, ignoreIndex = -1) => {
   if (
     !type.name.trim() ||
     !type.rule.trim() ||
@@ -137,25 +244,74 @@ const typeError = type => {
   )
     return label('ERRORS.TYPE');
   if (
-    settings.value.lead_types.filter(
-      item => item.name.trim() === type.name.trim()
-    ).length > 1
+    settings.value.lead_types.some(
+      (item, idx) =>
+        idx !== ignoreIndex && item.name.trim() === type.name.trim()
+    )
   )
     return label('ERRORS.DUPLICATE_TYPE');
   return '';
 };
+
+const typeError = type =>
+  typeErrorFor(type, settings.value.lead_types.indexOf(type));
+
+const typeDraftError = computed(() =>
+  typeErrorFor(typeDraft.value, editingTypeIndex.value)
+);
+
+const openTypeDialog = (index = -1) => {
+  editingTypeIndex.value = index;
+  typeDraftAttempted.value = false;
+  if (index >= 0) {
+    const target = settings.value.lead_types[index];
+    typeDraft.value = { name: target.name, rule: target.rule };
+  } else {
+    typeDraft.value = { name: '', rule: '' };
+  }
+  typeDialogRef.value?.open();
+};
+
+const applyTypePreset = presetKey => {
+  typeDraft.value = {
+    name: label(`TYPE_PRESETS.${presetKey}.NAME`),
+    rule: label(`TYPE_PRESETS.${presetKey}.RULE`),
+  };
+};
+
+const confirmTypeDialog = () => {
+  typeDraftAttempted.value = true;
+  if (typeDraftError.value) return;
+  const entry = {
+    name: typeDraft.value.name.trim(),
+    rule: typeDraft.value.rule.trim(),
+  };
+  if (editingTypeIndex.value >= 0) {
+    settings.value.lead_types.splice(editingTypeIndex.value, 1, entry);
+  } else if (settings.value.lead_types.length < MAX_ENTRIES) {
+    settings.value.lead_types.push(entry);
+  }
+  typeDialogRef.value?.close();
+};
+
+const removeEditingType = () => {
+  if (editingTypeIndex.value >= 0) {
+    settings.value.lead_types.splice(editingTypeIndex.value, 1);
+  }
+  typeDialogRef.value?.close();
+};
+
+// Scenario & HubSpot Modals
+const scenarioDialogRef = ref(null);
+const hubspotDialogRef = ref(null);
+
 const hasErrors = computed(
   () =>
     (settings.value.leads_enabled && !settings.value.lead_types.length) ||
     settings.value.lead_fields.some(fieldError) ||
     settings.value.lead_types.some(typeError)
 );
-const changeQuestions = delta => {
-  settings.value.lead_max_questions = Math.max(
-    0,
-    Math.min(MAX_QUESTIONS, settings.value.lead_max_questions + delta)
-  );
-};
+
 const save = async () => {
   attempted.value = true;
   if (hasErrors.value) {
@@ -167,6 +323,7 @@ const save = async () => {
   try {
     const result = await props.save({ config: JSON.parse(snapshot()) });
     if (result === false) return false;
+    store.dispatch('attributes/get');
     savedSnapshot.value = snapshot();
     attempted.value = false;
     return true;
@@ -174,7 +331,9 @@ const save = async () => {
     saving.value = false;
   }
 };
+
 const openScenarios = async () => {
+  scenarioDialogRef.value?.close();
   if (isDirty.value && !(await save())) return;
   router.push({
     name: 'captain_assistants_scenarios_index',
@@ -182,6 +341,12 @@ const openScenarios = async () => {
     query: existingScenario.value ? {} : { template: 'capture_business_lead' },
   });
 };
+
+const openHubspotSettings = () => {
+  hubspotDialogRef.value?.close();
+  router.push({ name: 'settings_integrations_hubspot' });
+};
+
 const hubspotLabel = computed(() =>
   label(`HUBSPOT.${hubspotState.value.toUpperCase()}`)
 );
@@ -197,6 +362,16 @@ const statusLabel = computed(() => {
   if (existingScenario.value) return label('STATUS.PAUSED_SCENARIO');
   return label('STATUS.NEEDS_SCENARIO');
 });
+
+const selectedTeamName = computed(
+  () =>
+    teams.value.find(team => team.id === settings.value.lead_notification_team_id)
+      ?.name || ''
+);
+
+const isHubspotConnected = computed(
+  () => !['not_connected', 'loading'].includes(hubspotState.value)
+);
 </script>
 
 <template>
@@ -205,345 +380,378 @@ const statusLabel = computed(() => {
       :disabled="saving"
       class="m-0 flex min-w-0 flex-col gap-6 border-0 p-0"
     >
+      <!-- Hero Bar: Master Toggle + Scenario Readiness Pill -->
       <section
-        class="rounded-xl bg-n-solid-1 px-5 py-1 outline outline-1 outline-n-weak"
+        class="flex flex-col gap-3 rounded-2xl bg-n-solid-1 px-5 py-3 outline outline-1 outline-n-weak sm:flex-row sm:items-center sm:justify-between"
       >
         <SettingsSwitchRow
+          class="flex-1 !py-1"
           :model-value="settings.leads_enabled"
           :title="label('ENABLE')"
           :description="label('ENABLE_DESCRIPTION')"
           @update:model-value="enableCapture"
-        >
-          <span
-            class="mt-2 flex items-center gap-1.5 text-xs text-n-slate-11"
-            role="status"
+        />
+        <div class="flex shrink-0 items-center gap-2">
+          <button
+            type="button"
+            class="flex items-center gap-2 rounded-full bg-n-alpha-1 px-3.5 py-1.5 text-xs font-medium text-n-slate-12 outline outline-1 outline-n-weak transition-colors hover:outline-n-strong"
+            @click="scenarioDialogRef?.open()"
           >
             <span
-              class="size-1.5 rounded-full"
+              class="size-2 rounded-full"
               :class="
                 !isDirty && settings.leads_enabled && captureScenario
                   ? 'bg-n-teal-9'
-                  : 'bg-n-slate-8'
+                  : settings.leads_enabled
+                    ? 'bg-n-amber-9'
+                    : 'bg-n-slate-8'
               "
               aria-hidden="true"
             />
-            {{ statusLabel }}
-          </span>
-        </SettingsSwitchRow>
-      </section>
-
-      <section
-        class="flex flex-col gap-3 rounded-xl bg-n-solid-1 p-5 outline outline-1 outline-n-weak"
-      >
-        <h3 class="m-0 text-base font-semibold text-n-slate-12">
-          {{ label('FLOW_TITLE') }}
-        </h3>
-        <p class="m-0 text-sm text-n-slate-11">{{ label('FLOW_HELP') }}</p>
-        <ol
-          class="m-0 flex list-decimal flex-col gap-2 ps-5 text-sm text-n-slate-12"
-        >
-          <li>{{ label('FLOW_ANSWER') }}</li>
-          <li>{{ label('FLOW_CAPTURE') }}</li>
-          <li>{{ label('FLOW_DELIVER') }}</li>
-        </ol>
-        <p class="m-0 text-xs text-n-slate-11">{{ label('FLOW_SCENARIOS') }}</p>
-        <div class="border-t border-n-weak pt-3">
-          <span class="text-sm font-medium text-n-slate-12">{{
-            label('KNOWLEDGE.TITLE')
-          }}</span>
-          <p
-            class="mb-0 mt-1 text-sm"
-            :class="
-              sync.enabled && sync.interval_hours
-                ? 'text-n-slate-11'
-                : 'text-n-amber-11'
-            "
-            role="status"
-          >
-            {{ syncLabel }}
-          </p>
-          <p class="mb-0 mt-1 text-xs text-n-slate-11">
-            {{ label('KNOWLEDGE.HELP') }}
-          </p>
-          <Button
-            type="button"
-            class="mt-2"
-            variant="link"
-            size="sm"
-            :label="label('KNOWLEDGE.ACTION')"
-            @click="
-              router.push({
-                name: 'captain_assistants_documents_index',
-                params: { assistantId: assistant.id },
-              })
-            "
-          />
+            <span>{{ statusLabel }}</span>
+            <span class="i-lucide-chevron-right size-3.5 text-n-slate-10" />
+          </button>
         </div>
       </section>
+
       <SettingsSplit>
-        <div class="flex flex-col gap-6">
+        <div
+          class="flex flex-col gap-5 transition-opacity"
+          :class="{ 'opacity-60': !settings.leads_enabled }"
+        >
+          <!-- BENTO CARD 1: WHAT TO COLLECT & PACING -->
           <section
-            class="flex flex-col gap-4 rounded-xl bg-n-solid-1 p-5 outline outline-1 outline-n-weak"
+            class="flex flex-col gap-4 rounded-2xl bg-n-solid-1 p-5 outline outline-1 outline-n-weak"
           >
-            <div class="flex items-start gap-3">
-              <span
-                class="flex size-7 shrink-0 items-center justify-center rounded-full bg-n-blue-3 text-sm font-medium text-n-blue-11"
-                aria-hidden="true"
-                >{{ n(1) }}</span
-              >
+            <div class="flex items-start justify-between gap-3">
               <div>
-                <h3 class="m-0 text-base font-semibold text-n-slate-12">
+                <h3 class="m-0 text-sm font-semibold text-n-slate-12">
                   {{ label('FIELDS') }}
                 </h3>
-                <p class="mb-0 mt-1 text-sm text-n-slate-11">
+                <p class="mb-0 mt-0.5 text-xs text-n-slate-11">
                   {{ label('FIELDS_HELP') }}
                 </p>
               </div>
-            </div>
-            <div
-              class="rounded-lg bg-n-slate-2 px-3 py-2.5 text-sm text-n-slate-11"
-            >
-              {{ label('INCLUDED') }}
-            </div>
-            <div
-              v-for="(field, index) in settings.lead_fields"
-              :key="index"
-              class="flex flex-col gap-2 rounded-lg outline outline-1 outline-n-weak p-3"
-            >
-              <div class="flex items-start gap-2">
-                <Input
-                  v-model="field.label"
-                  class="min-w-0 flex-1"
-                  :label="label('FIELD_LABEL')"
-                  :maxlength="MAX_TEXT_LENGTH"
-                  :placeholder="label('FIELD_PLACEHOLDER')"
-                  :aria-invalid="attempted && !!fieldError(field)"
-                  @blur="suggestKey(field)"
-                />
-                <Button
-                  type="button"
-                  variant="ghost"
-                  color="slate"
-                  icon="i-lucide-trash-2"
-                  class="mt-6"
-                  :aria-label="
-                    label('REMOVE_FIELD', {
-                      name: field.label || label('FIELD_LABEL'),
-                    })
-                  "
-                  @click="settings.lead_fields.splice(index, 1)"
-                />
-              </div>
-              <details
-                :open="attempted && !!fieldError(field)"
-                class="text-xs text-n-slate-11"
+              <span
+                class="shrink-0 rounded-full bg-n-alpha-1 px-2.5 py-0.5 text-xs font-medium text-n-slate-11 outline outline-1 outline-n-weak"
               >
-                <summary class="cursor-pointer">
-                  {{ label('FIELD_KEY') }}
-                  <code v-if="field.key" class="ms-1">{{ field.key }}</code>
-                </summary>
-                <Input
-                  v-model="field.key"
-                  class="mt-2"
-                  :label="label('FIELD_KEY')"
-                  :disabled="fieldKeyLocked(field)"
-                  :maxlength="40"
-                  :placeholder="label('KEY_PLACEHOLDER')"
-                  :aria-invalid="attempted && !!fieldError(field)"
-                />
-                <p class="mb-0 mt-2">
-                  {{ label(fieldKeyLocked(field) ? 'KEY_LOCKED' : 'KEY_HELP') }}
-                </p>
-              </details>
-              <p
-                v-if="attempted && fieldError(field)"
-                class="m-0 text-xs text-n-ruby-11"
-                role="alert"
-              >
-                {{ fieldError(field) }}
-              </p>
+                {{ settings.lead_fields.length }} / {{ MAX_ENTRIES }}
+              </span>
             </div>
-            <p
-              v-if="!settings.lead_fields.length"
-              class="m-0 text-sm text-n-slate-11"
-            >
-              {{ label('NO_FIELDS') }}
-            </p>
-            <div
-              v-if="settings.lead_fields.length < MAX_ENTRIES"
-              class="flex flex-wrap gap-2"
-            >
-              <Button
-                v-for="key in availableFields"
+
+            <!-- Check-Chips Grid (Always Included + Common Presets + Custom Fields) -->
+            <div class="flex flex-wrap gap-2">
+              <span
+                class="inline-flex items-center gap-1.5 rounded-xl bg-n-slate-2 px-3 py-1.5 text-xs font-medium text-n-slate-11"
+              >
+                <span class="i-lucide-check size-3.5 text-n-teal-10" />
+                {{ label('ALWAYS_NAME_EMAIL') }}
+              </span>
+              <span
+                class="inline-flex items-center gap-1.5 rounded-xl bg-n-slate-2 px-3 py-1.5 text-xs font-medium text-n-slate-11"
+              >
+                <span class="i-lucide-check size-3.5 text-n-teal-10" />
+                {{ label('ALWAYS_SUMMARY') }}
+              </span>
+
+              <!-- Common Field Toggle Chips -->
+              <button
+                v-for="key in COMMON_FIELDS"
                 :key="key"
                 type="button"
-                size="sm"
-                variant="faded"
-                color="slate"
-                icon="i-lucide-plus"
-                :label="label(`COMMON_FIELDS.${key}`)"
-                @click="addField(key)"
-              />
-              <Button
+                :aria-pressed="isFieldSelected(key)"
+                class="inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-medium transition-colors"
+                :class="
+                  isFieldSelected(key)
+                    ? 'bg-n-blue-1 text-n-blue-11 outline outline-2 outline-n-blue-9'
+                    : 'bg-n-alpha-1 text-n-slate-12 outline outline-1 outline-n-weak hover:outline-n-strong'
+                "
+                @click="togglePresetField(key, label(`COMMON_FIELDS.${key}`))"
+              >
+                <span
+                  :class="
+                    isFieldSelected(key) ? 'i-lucide-check' : 'i-lucide-plus'
+                  "
+                  class="size-3.5"
+                />
+                {{ label(`COMMON_FIELDS.${key}`) }}
+              </button>
+
+              <!-- Existing Account Contact Custom Attribute Suggestions -->
+              <button
+                v-for="attr in existingAttributeSuggestions"
+                :key="attr.key"
                 type="button"
-                size="sm"
-                variant="ghost"
-                icon="i-lucide-plus"
-                :label="label('ADD_FIELD')"
-                @click="addField()"
-              />
+                class="inline-flex items-center gap-1.5 rounded-xl bg-n-alpha-1 px-3 py-1.5 text-xs font-medium text-n-slate-11 outline outline-1 outline-n-weak transition-colors hover:text-n-slate-12 hover:outline-n-strong"
+                @click="togglePresetField(attr.key, attr.label)"
+              >
+                <span class="i-lucide-plus size-3.5" />
+                {{ attr.label }}
+              </button>
+
+              <!-- Custom Field Chips (Click to Edit) -->
+              <button
+                v-for="field in customFieldChips"
+                :key="field.key || field.label"
+                type="button"
+                :aria-invalid="attempted && !!fieldError(field)"
+                class="inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-medium transition-colors"
+                :class="
+                  attempted && fieldError(field)
+                    ? 'bg-n-ruby-2 text-n-ruby-11 outline outline-2 outline-n-ruby-9'
+                    : 'bg-n-blue-1 text-n-blue-11 outline outline-2 outline-n-blue-9'
+                "
+                @click="
+                  openFieldDialog(settings.lead_fields.indexOf(field))
+                "
+              >
+                <span class="i-lucide-sliders-horizontal size-3" />
+                <span>{{ field.label || field.key }}</span>
+                <code class="font-mono text-xs opacity-75">
+                  lead_{{ field.key }}
+                </code>
+              </button>
+
+              <button
+                v-if="settings.lead_fields.length < MAX_ENTRIES"
+                type="button"
+                class="inline-flex items-center gap-1.5 rounded-xl border border-dashed border-n-strong bg-transparent px-3 py-1.5 text-xs font-medium text-n-slate-11 transition-colors hover:border-n-brand hover:text-n-slate-12"
+                @click="openFieldDialog(-1)"
+              >
+                <span class="i-lucide-plus size-3.5" />
+                {{ label('ADD_FIELD') }}
+              </button>
             </div>
-            <p v-else class="m-0 text-xs text-n-slate-11">
-              {{ label('LIMIT', { count: MAX_ENTRIES }) }}
-            </p>
+
+            <!-- Pacing Segmented Control (Max Qualification Questions) -->
+            <div
+              class="flex flex-col gap-2.5 border-t border-n-weak pt-3.5 sm:flex-row sm:items-center sm:justify-between"
+            >
+              <div class="flex flex-col gap-0.5">
+                <span class="text-xs font-medium text-n-slate-12">
+                  {{ label('MAX_QUESTIONS') }}
+                </span>
+                <span class="text-xs text-n-slate-11">
+                  {{ label('QUESTIONS_HELP') }}
+                </span>
+              </div>
+              <div
+                class="flex shrink-0 self-start rounded-xl bg-n-alpha-1 p-1 outline outline-1 outline-n-weak"
+                role="radiogroup"
+                :aria-label="label('MAX_QUESTIONS')"
+              >
+                <button
+                  v-for="count in QUESTION_OPTIONS"
+                  :key="count"
+                  type="button"
+                  role="radio"
+                  :aria-checked="settings.lead_max_questions === count"
+                  class="rounded-lg px-2.5 py-1 text-xs font-semibold transition-colors"
+                  :class="
+                    settings.lead_max_questions === count
+                      ? 'bg-n-solid-1 text-n-slate-12 shadow-sm'
+                      : 'text-n-slate-11 hover:text-n-slate-12'
+                  "
+                  @click="settings.lead_max_questions = count"
+                >
+                  {{ count === 0 ? label('NONE_QUESTIONS') : count }}
+                </button>
+              </div>
+            </div>
           </section>
 
+          <!-- BENTO CARD 2: LEAD TYPES (INTENT RULES + CUSTOM ATTRIBUTE LIST SYNC) -->
           <section
-            class="flex flex-col gap-4 rounded-xl bg-n-solid-1 p-5 outline outline-1 outline-n-weak"
+            class="flex flex-col gap-3 rounded-2xl bg-n-solid-1 p-5 outline outline-1 outline-n-weak"
           >
-            <div class="flex items-start gap-3">
-              <span
-                class="flex size-7 shrink-0 items-center justify-center rounded-full bg-n-blue-3 text-sm font-medium text-n-blue-11"
-                aria-hidden="true"
-                >{{ n(2) }}</span
-              >
+            <div class="flex items-start justify-between gap-3">
               <div>
-                <h3 class="m-0 text-base font-semibold text-n-slate-12">
-                  {{ label('TYPES') }}
-                </h3>
-                <p class="mb-0 mt-1 text-sm text-n-slate-11">
+                <div class="flex items-center gap-2">
+                  <h3 class="m-0 text-sm font-semibold text-n-slate-12">
+                    {{ label('TYPES') }}
+                  </h3>
+                  <span
+                    class="rounded-md bg-n-blue-2 px-2 py-0.5 text-xs font-medium text-n-blue-11"
+                  >
+                    {{ label('LIST_ATTRIBUTE_BADGE') }}
+                  </span>
+                </div>
+                <p class="mb-0 mt-0.5 text-xs text-n-slate-11">
                   {{ label('TYPES_HELP') }}
                 </p>
               </div>
+              <Button
+                v-if="settings.lead_types.length < MAX_ENTRIES"
+                type="button"
+                variant="faded"
+                size="xs"
+                icon="i-lucide-plus"
+                :label="label('ADD_TYPE')"
+                @click="openTypeDialog(-1)"
+              />
             </div>
+
             <div
-              v-for="(type, index) in settings.lead_types"
-              :key="index"
-              class="flex flex-col gap-3 rounded-lg outline outline-1 outline-n-weak p-3"
+              v-if="settings.lead_types.length"
+              class="flex flex-col divide-y divide-n-weak -mx-2"
             >
-              <div class="flex items-start gap-2">
-                <Input
-                  v-model="type.name"
-                  class="min-w-0 flex-1"
-                  :label="label('TYPE_NAME')"
-                  :maxlength="MAX_TEXT_LENGTH"
-                  :placeholder="label('TYPE_PLACEHOLDER')"
-                  :aria-invalid="attempted && !!typeError(type)"
-                />
-                <Button
+              <div
+                v-for="(type, index) in settings.lead_types"
+                :key="index"
+                class="flex items-center justify-between gap-3 rounded-xl px-2.5 py-2.5 transition-colors hover:bg-n-alpha-1"
+              >
+                <button
                   type="button"
-                  variant="ghost"
-                  color="slate"
-                  icon="i-lucide-trash-2"
-                  class="mt-6"
-                  :aria-label="
-                    label('REMOVE_TYPE', {
-                      name: type.name || label('TYPE_NAME'),
-                    })
-                  "
-                  @click="settings.lead_types.splice(index, 1)"
-                />
-              </div>
-              <label
-                class="m-0 flex flex-col gap-1.5 text-sm font-medium text-n-slate-12"
-              >
-                {{ label('TYPE_RULE') }}
-                <textarea
-                  v-model="type.rule"
-                  rows="3"
-                  :maxlength="MAX_TEXT_LENGTH"
-                  :placeholder="label('RULE_PLACEHOLDER')"
                   :aria-invalid="attempted && !!typeError(type)"
-                  class="m-0 w-full resize-y rounded-lg border border-n-weak bg-n-alpha-black2 px-3 py-2 text-sm font-normal text-n-slate-12 placeholder:text-n-slate-10 focus:border-n-brand focus:outline-none"
-                />
-              </label>
-              <p
-                v-if="attempted && typeError(type)"
-                class="m-0 text-xs text-n-ruby-11"
-                role="alert"
-              >
-                {{ typeError(type) }}
-              </p>
+                  class="flex min-w-0 flex-1 flex-col items-start gap-0.5 text-start"
+                  @click="openTypeDialog(index)"
+                >
+                  <span class="flex items-center gap-2">
+                    <code
+                      class="rounded-md bg-n-alpha-2 px-2 py-0.5 font-mono text-xs font-semibold text-n-slate-12"
+                    >
+                      {{ type.name || label('TYPE_NAME') }}
+                    </code>
+                    <span
+                      v-if="attempted && typeError(type)"
+                      class="text-xs text-n-ruby-11"
+                    >
+                      {{ typeError(type) }}
+                    </span>
+                  </span>
+                  <span class="w-full truncate text-xs text-n-slate-11">
+                    {{ type.rule || label('RULE_PLACEHOLDER') }}
+                  </span>
+                </button>
+                <div class="flex shrink-0 items-center gap-1">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    color="slate"
+                    size="xs"
+                    icon="i-lucide-pencil"
+                    :aria-label="type.name || label('TYPE_NAME')"
+                    @click="openTypeDialog(index)"
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    color="slate"
+                    size="xs"
+                    icon="i-lucide-trash-2"
+                    :aria-label="
+                      label('REMOVE_TYPE', {
+                        name: type.name || label('TYPE_NAME'),
+                      })
+                    "
+                    @click="settings.lead_types.splice(index, 1)"
+                  />
+                </div>
+              </div>
             </div>
+
             <p
-              v-if="!settings.lead_types.length"
-              class="m-0 text-sm"
+              v-else
+              class="m-0 rounded-xl bg-n-alpha-1 px-3.5 py-3 text-xs"
               :class="
                 attempted && settings.leads_enabled
-                  ? 'text-n-ruby-11'
+                  ? 'text-n-ruby-11 outline outline-1 outline-n-ruby-8'
                   : 'text-n-slate-11'
               "
             >
               {{ label('NO_TYPES') }}
             </p>
-            <Button
-              v-if="settings.lead_types.length < MAX_ENTRIES"
-              type="button"
-              class="self-start"
-              variant="faded"
-              size="sm"
-              icon="i-lucide-plus"
-              :label="label('ADD_TYPE')"
-              @click="settings.lead_types.push({ name: '', rule: '' })"
-            />
-            <p class="m-0 text-xs text-n-slate-11">
-              {{ label('FALLBACK_HELP') }}
-            </p>
           </section>
 
+          <!-- BENTO CARD 3: DELIVERY & SMART BEHAVIORS -->
           <section
-            class="flex flex-col gap-4 rounded-xl bg-n-solid-1 p-5 outline outline-1 outline-n-weak"
+            class="flex flex-col divide-y divide-n-weak rounded-2xl bg-n-solid-1 px-5 py-4 outline outline-1 outline-n-weak"
           >
-            <div class="flex items-start gap-3">
-              <span
-                class="flex size-7 shrink-0 items-center justify-center rounded-full bg-n-blue-3 text-sm font-medium text-n-blue-11"
-                aria-hidden="true"
-                >{{ n(3) }}</span
-              >
-              <div>
-                <h3 class="m-0 text-base font-semibold text-n-slate-12">
-                  {{ label('CONVERSATION') }}
-                </h3>
-                <p class="mb-0 mt-1 text-sm text-n-slate-11">
-                  {{ label('CONVERSATION_HELP') }}
-                </p>
-              </div>
-            </div>
-            <div class="flex items-center justify-between gap-3">
-              <div class="text-sm text-n-slate-12">
-                {{ label('MAX_QUESTIONS') }}
-                <p class="mb-0 mt-1 text-xs text-n-slate-11">
-                  {{ label('QUESTIONS_HELP') }}
-                </p>
-              </div>
-              <div class="flex shrink-0 items-center gap-2">
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="faded"
-                  color="slate"
-                  icon="i-lucide-minus"
-                  :disabled="settings.lead_max_questions === 0"
-                  :aria-label="label('FEWER_QUESTIONS')"
-                  @click="changeQuestions(-1)"
-                />
-                <output
-                  class="w-5 text-center text-sm font-medium text-n-slate-12"
-                  aria-live="polite"
-                  >{{ settings.lead_max_questions }}</output
+            <header class="pb-3">
+              <h3 class="m-0 text-sm font-semibold text-n-slate-12">
+                {{ label('FOLLOW_UP') }}
+              </h3>
+              <p class="mb-0 mt-0.5 text-xs text-n-slate-11">
+                {{ label('FOLLOW_UP_HELP') }}
+              </p>
+            </header>
+
+            <!-- Row 1: Team Email Notification -->
+            <div
+              class="flex flex-col gap-2.5 py-3.5 sm:flex-row sm:items-center sm:justify-between"
+            >
+              <div class="flex min-w-0 flex-col gap-0.5">
+                <label
+                  for="lead-notification-team"
+                  class="text-sm font-medium text-n-slate-12"
                 >
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="faded"
-                  color="slate"
-                  icon="i-lucide-plus"
-                  :disabled="settings.lead_max_questions === MAX_QUESTIONS"
-                  :aria-label="label('MORE_QUESTIONS')"
-                  @click="changeQuestions(1)"
-                />
+                  {{ label('NOTIFICATION_TITLE') }}
+                </label>
+                <span class="text-xs text-n-slate-11">
+                  {{
+                    label(
+                      teamsError ? 'NOTIFICATION_ERROR' : 'NOTIFICATION_HELP'
+                    )
+                  }}
+                </span>
               </div>
+              <select
+                id="lead-notification-team"
+                v-model="settings.lead_notification_team_id"
+                :disabled="teamsError"
+                class="m-0 shrink-0 rounded-xl border border-n-weak bg-n-alpha-1 px-3 py-2 text-xs font-medium text-n-slate-12"
+              >
+                <option :value="null">{{ label('NOTIFICATION_OFF') }}</option>
+                <option v-for="team in teams" :key="team.id" :value="team.id">
+                  {{ team.name }}
+                </option>
+              </select>
             </div>
+
+            <!-- Row 2: Optional HubSpot CRM Row (Action Row -> Modal) -->
+            <div
+              class="flex items-center justify-between gap-3 py-3.5"
+            >
+              <div class="flex min-w-0 flex-col gap-0.5">
+                <div class="flex items-center gap-2">
+                  <span class="text-sm font-medium text-n-slate-12">
+                    {{ label('HUBSPOT_TITLE') }}
+                  </span>
+                  <span
+                    class="rounded-full px-2 py-0.5 text-xs font-medium"
+                    :class="
+                      hubspotState === 'mapped'
+                        ? 'bg-n-teal-3 text-n-teal-11'
+                        : isHubspotConnected
+                          ? 'bg-n-amber-3 text-n-amber-11'
+                          : 'bg-n-slate-3 text-n-slate-11'
+                    "
+                  >
+                    {{
+                      unmappedKeys.length
+                        ? label('UNMAPPED_COUNT', {
+                            count: unmappedKeys.length,
+                          })
+                        : label('OPTIONAL_BADGE')
+                    }}
+                  </span>
+                </div>
+                <span class="text-xs text-n-slate-11" role="status">
+                  {{ hubspotLabel }}
+                </span>
+              </div>
+              <Button
+                type="button"
+                variant="faded"
+                color="slate"
+                size="xs"
+                icon="i-lucide-sliders-horizontal"
+                :label="label('HUBSPOT_DETAILS')"
+                @click="hubspotDialogRef?.open()"
+              />
+            </div>
+
+            <!-- Row 3: Capture Across Human Handoff -->
             <SettingsSwitchRow
               :model-value="settings.lead_handoff_capture_enabled"
               :title="label('HANDOFF_TITLE')"
@@ -552,169 +760,30 @@ const statusLabel = computed(() => {
                 settings.lead_handoff_capture_enabled = $event
               "
             />
+
+            <!-- Row 4: Published Service Pricing -->
             <SettingsSwitchRow
               :model-value="settings.published_pricing_enabled"
               :title="label('PRICING_TITLE')"
               :description="label('PRICING_HELP')"
               @update:model-value="settings.published_pricing_enabled = $event"
             />
-            <div class="flex flex-col gap-2 border-t border-n-weak pt-4">
-              <span class="text-sm font-medium text-n-slate-12">{{
-                label('SCENARIO_TITLE')
-              }}</span>
-              <p class="m-0 text-sm text-n-slate-11">
-                {{
-                  loading
-                    ? label('STATUS.CHECKING')
-                    : scenarioError
-                      ? label('SCENARIO_ERROR')
-                      : captureScenario
-                        ? label('SCENARIO_FOUND', {
-                            name: captureScenario.title,
-                          })
-                        : existingScenario
-                          ? label('SCENARIO_PAUSED', {
-                              name: existingScenario.title,
-                            })
-                          : label('SCENARIO_MISSING')
-                }}
-              </p>
-              <Button
-                type="button"
-                class="self-start"
-                size="sm"
-                variant="faded"
-                icon="i-lucide-git-branch"
-                :disabled="!settings.leads_enabled || loading || scenarioError"
-                :is-loading="saving"
-                :label="
-                  label(
-                    existingScenario
-                      ? 'MANAGE_SCENARIO'
-                      : isDirty
-                        ? 'SAVE_ADD_SCENARIO'
-                        : 'ADD_SCENARIO'
-                  )
-                "
-                @click="openScenarios"
-              />
-            </div>
-          </section>
-
-          <section
-            class="flex flex-col gap-3 rounded-xl bg-n-solid-1 p-5 outline outline-1 outline-n-weak"
-          >
-            <h3 class="m-0 text-base font-semibold text-n-slate-12">
-              {{ label('FOLLOW_UP') }}
-            </h3>
-            <p class="m-0 text-sm text-n-slate-11">
-              {{ label('FOLLOW_UP_HELP') }}
-            </p>
-            <div
-              class="flex flex-wrap items-center justify-between gap-3 rounded-lg bg-n-slate-2 p-3"
-            >
-              <div class="flex flex-col gap-1">
-                <span class="text-sm font-medium text-n-slate-12">{{
-                  label('HUBSPOT_TITLE')
-                }}</span>
-                <span class="text-xs text-n-slate-11" role="status">{{
-                  hubspotLabel
-                }}</span>
-              </div>
-              <Button
-                v-if="canManageIntegrations"
-                type="button"
-                variant="link"
-                size="sm"
-                :label="label('HUBSPOT_ACTION')"
-                @click="router.push({ name: 'settings_integrations_hubspot' })"
-              />
-            </div>
-            <div class="flex flex-col gap-1 rounded-lg bg-n-slate-2 p-3">
-              <span class="text-sm font-medium text-n-slate-12">{{
-                label('TRANSCRIPT_TITLE')
-              }}</span>
-              <span class="text-xs text-n-slate-11" role="status">{{
-                transcriptLabel
-              }}</span>
-              <p class="mb-0 mt-1 text-xs text-n-slate-11">
-                {{
-                  label(
-                    businessLeadsOnly
-                      ? 'TRANSCRIPT_LEADS_HELP'
-                      : 'TRANSCRIPT_HELP'
-                  )
-                }}
-              </p>
-            </div>
-            <label class="flex flex-col gap-2 text-sm text-n-slate-12">
-              <span class="font-medium">{{ label('NOTIFICATION_TITLE') }}</span>
-              <select
-                v-model="settings.lead_notification_team_id"
-                :disabled="teamsError"
-                class="m-0 rounded-lg border border-n-weak bg-n-card px-3 py-2 text-sm text-n-slate-12"
-              >
-                <option :value="null">{{ label('NOTIFICATION_OFF') }}</option>
-                <option v-for="team in teams" :key="team.id" :value="team.id">
-                  {{ team.name }}
-                </option>
-              </select>
-              <span class="text-xs text-n-slate-11">{{
-                label(teamsError ? 'NOTIFICATION_ERROR' : 'NOTIFICATION_HELP')
-              }}</span>
-            </label>
-            <p class="m-0 text-xs text-n-slate-11">
-              {{ label('VERIFICATION') }}
-            </p>
-            <Button
-              type="button"
-              class="self-start"
-              variant="ghost"
-              color="slate"
-              size="sm"
-              icon="i-lucide-refresh-cw"
-              :label="label('REFRESH')"
-              :is-loading="loading"
-              @click="setup.refresh"
-            />
           </section>
         </div>
+
         <template #preview>
           <LeadCapturePreview
             :enabled="settings.leads_enabled"
             :fields="settings.lead_fields"
             :types="settings.lead_types"
             :max-questions="settings.lead_max_questions"
+            :handoff-capture="settings.lead_handoff_capture_enabled"
+            :team-name="selectedTeamName"
           />
         </template>
       </SettingsSplit>
-      <details
-        class="rounded-xl bg-n-solid-1 p-5 outline outline-1 outline-n-weak"
-      >
-        <summary class="cursor-pointer text-base font-semibold text-n-slate-12">
-          {{ label('TEST_TITLE') }}
-        </summary>
-        <p class="mb-3 mt-3 text-sm text-n-slate-11">
-          {{ label('TEST_HELP') }}
-        </p>
-        <ol
-          class="m-0 flex list-decimal flex-col gap-2 ps-5 text-sm text-n-slate-12"
-        >
-          <li
-            v-for="step in [
-              'BUSINESS',
-              'HANDOFF',
-              'VIEWER',
-              'REFUSAL',
-              'DELIVERY',
-            ]"
-            :key="step"
-          >
-            {{ label(`TEST_${step}`) }}
-          </li>
-        </ol>
-      </details>
     </fieldset>
+
     <p
       v-if="attempted && hasErrors"
       class="m-0 text-sm text-n-ruby-11"
@@ -722,11 +791,307 @@ const statusLabel = computed(() => {
     >
       {{ label('ERRORS.FORM') }}
     </p>
+
     <SettingsSaveBar
       :is-dirty="isDirty"
       :is-saving="saving"
       @save="save"
       @discard="reset"
     />
+
+    <!-- PROGRESSIVE DISCLOSURE DIALOG 1: ADD / EDIT CUSTOM ATTRIBUTE FIELD -->
+    <Dialog
+      ref="fieldDialogRef"
+      width="md"
+      :title="
+        editingFieldIndex >= 0 ? label('EDIT_FIELD_TITLE') : label('ADD_FIELD')
+      "
+      :confirm-button-label="label('APPLY')"
+      @confirm="confirmFieldDialog"
+    >
+      <div class="flex flex-col gap-3">
+        <Input
+          v-model="fieldDraft.label"
+          :label="label('FIELD_LABEL')"
+          :maxlength="MAX_TEXT_LENGTH"
+          :placeholder="label('FIELD_PLACEHOLDER')"
+          autofocus
+          @blur="suggestDraftKey"
+        />
+        <Input
+          v-model="fieldDraft.key"
+          :label="label('FIELD_KEY')"
+          :disabled="fieldDraft.locked"
+          :maxlength="40"
+          :placeholder="label('KEY_PLACEHOLDER')"
+        />
+        <p class="m-0 text-xs text-n-slate-11">
+          {{ label(fieldDraft.locked ? 'KEY_LOCKED' : 'KEY_HELP') }}
+        </p>
+        <p
+          v-if="fieldDraftAttempted && fieldDraftError"
+          class="m-0 text-xs text-n-ruby-11"
+          role="alert"
+        >
+          {{ fieldDraftError }}
+        </p>
+        <div v-if="editingFieldIndex >= 0" class="pt-1">
+          <Button
+            type="button"
+            variant="ghost"
+            color="ruby"
+            size="xs"
+            icon="i-lucide-trash-2"
+            :label="
+              label('REMOVE_FIELD', {
+                name: fieldDraft.label || fieldDraft.key,
+              })
+            "
+            @click="removeEditingField"
+          />
+        </div>
+      </div>
+    </Dialog>
+
+    <!-- PROGRESSIVE DISCLOSURE DIALOG 2: ADD / EDIT LEAD TYPE -->
+    <Dialog
+      ref="typeDialogRef"
+      width="md"
+      :title="
+        editingTypeIndex >= 0 ? label('EDIT_TYPE_TITLE') : label('ADD_TYPE')
+      "
+      :confirm-button-label="label('APPLY')"
+      @confirm="confirmTypeDialog"
+    >
+      <div class="flex flex-col gap-3">
+        <div v-if="editingTypeIndex < 0" class="flex flex-wrap gap-1.5">
+          <button
+            v-for="preset in TYPE_PRESETS"
+            :key="preset"
+            type="button"
+            class="rounded-lg bg-n-alpha-1 px-2.5 py-1 text-xs font-medium text-n-slate-12 outline outline-1 outline-n-weak hover:outline-n-strong"
+            @click="applyTypePreset(preset)"
+          >
+            + {{ label(`TYPE_PRESETS.${preset}.LABEL`) }}
+          </button>
+        </div>
+        <Input
+          v-model="typeDraft.name"
+          :label="label('TYPE_NAME')"
+          :maxlength="MAX_TEXT_LENGTH"
+          :placeholder="label('TYPE_PLACEHOLDER')"
+          autofocus
+        />
+        <label
+          class="m-0 flex flex-col gap-1.5 text-sm font-medium text-n-slate-12"
+        >
+          {{ label('TYPE_RULE') }}
+          <textarea
+            v-model="typeDraft.rule"
+            rows="3"
+            :maxlength="MAX_TEXT_LENGTH"
+            :placeholder="label('RULE_PLACEHOLDER')"
+            class="m-0 w-full resize-y rounded-lg border border-n-weak bg-n-alpha-black2 px-3 py-2 text-sm font-normal text-n-slate-12 placeholder:text-n-slate-10 focus:border-n-brand focus:outline-none"
+          />
+        </label>
+        <p class="m-0 text-xs text-n-slate-11">
+          {{ label('FALLBACK_HELP') }}
+        </p>
+        <p
+          v-if="typeDraftAttempted && typeDraftError"
+          class="m-0 text-xs text-n-ruby-11"
+          role="alert"
+        >
+          {{ typeDraftError }}
+        </p>
+        <div v-if="editingTypeIndex >= 0" class="pt-1">
+          <Button
+            type="button"
+            variant="ghost"
+            color="ruby"
+            size="xs"
+            icon="i-lucide-trash-2"
+            :label="
+              label('REMOVE_TYPE', {
+                name: typeDraft.name || label('TYPE_NAME'),
+              })
+            "
+            @click="removeEditingType"
+          />
+        </div>
+      </div>
+    </Dialog>
+
+    <!-- PROGRESSIVE DISCLOSURE DIALOG 3: SCENARIO & PRE-FLIGHT CHECKLIST -->
+    <Dialog
+      ref="scenarioDialogRef"
+      width="lg"
+      :title="label('SCENARIO_TITLE')"
+      :show-confirm-button="false"
+      :cancel-button-label="label('CLOSE')"
+    >
+      <div class="flex flex-col gap-4">
+        <div
+          class="flex flex-col gap-2 rounded-xl bg-n-alpha-1 p-3.5 outline outline-1 outline-n-weak"
+        >
+          <span class="text-xs font-medium text-n-slate-12">
+            {{
+              loading
+                ? label('STATUS.CHECKING')
+                : scenarioError
+                  ? label('SCENARIO_ERROR')
+                  : captureScenario
+                    ? label('SCENARIO_FOUND', { name: captureScenario.title })
+                    : existingScenario
+                      ? label('SCENARIO_PAUSED', {
+                          name: existingScenario.title,
+                        })
+                      : label('SCENARIO_MISSING')
+            }}
+          </span>
+          <div class="flex flex-wrap items-center gap-2 pt-1">
+            <Button
+              type="button"
+              size="xs"
+              variant="faded"
+              icon="i-lucide-git-branch"
+              :disabled="!settings.leads_enabled || loading || scenarioError"
+              :is-loading="saving"
+              :label="
+                label(
+                  existingScenario
+                    ? 'MANAGE_SCENARIO'
+                    : isDirty
+                      ? 'SAVE_ADD_SCENARIO'
+                      : 'ADD_SCENARIO'
+                )
+              "
+              @click="openScenarios"
+            />
+            <Button
+              type="button"
+              variant="ghost"
+              color="slate"
+              size="xs"
+              icon="i-lucide-refresh-cw"
+              :label="label('REFRESH')"
+              :is-loading="loading"
+              @click="setup.refresh"
+            />
+          </div>
+        </div>
+
+        <div class="flex flex-col gap-2">
+          <span class="text-xs font-semibold text-n-slate-12">
+            {{ label('TEST_TITLE') }}
+          </span>
+          <p class="m-0 text-xs text-n-slate-11">
+            {{ label('TEST_HELP') }}
+          </p>
+          <ol
+            class="m-0 flex list-decimal flex-col gap-1.5 ps-5 text-xs text-n-slate-12"
+          >
+            <li
+              v-for="step in [
+                'BUSINESS',
+                'HANDOFF',
+                'VIEWER',
+                'REFUSAL',
+                'DELIVERY',
+              ]"
+              :key="step"
+            >
+              {{ label(`TEST_${step}`) }}
+            </li>
+          </ol>
+        </div>
+      </div>
+    </Dialog>
+
+    <!-- PROGRESSIVE DISCLOSURE DIALOG 4: HUBSPOT CRM & TRANSCRIPTS -->
+    <Dialog
+      ref="hubspotDialogRef"
+      width="md"
+      :title="label('HUBSPOT_TITLE')"
+      :show-confirm-button="false"
+      :cancel-button-label="label('CLOSE')"
+    >
+      <div class="flex flex-col gap-4">
+        <div
+          class="flex flex-col gap-1 rounded-xl bg-n-alpha-1 p-3.5 outline outline-1 outline-n-weak"
+        >
+          <span class="text-xs font-semibold text-n-slate-12">
+            {{ hubspotLabel }}
+          </span>
+          <p class="m-0 text-xs text-n-slate-11">
+            {{ label('VERIFICATION') }}
+          </p>
+        </div>
+
+        <div
+          v-if="isHubspotConnected && requiredMappingKeys.length"
+          class="flex flex-col divide-y divide-n-weak rounded-xl bg-n-alpha-1 px-3.5 outline outline-1 outline-n-weak"
+        >
+          <div
+            v-for="key in requiredMappingKeys"
+            :key="key"
+            class="flex items-center justify-between py-2 text-xs"
+          >
+            <code class="font-mono text-n-slate-12">{{ key }}</code>
+            <span
+              class="font-medium"
+              :class="
+                unmappedKeys.includes(key)
+                  ? 'text-n-amber-11'
+                  : 'text-n-teal-11'
+              "
+            >
+              {{
+                label(
+                  unmappedKeys.includes(key) ? 'FIELD_UNMAPPED' : 'FIELD_MAPPED'
+                )
+              }}
+            </span>
+          </div>
+        </div>
+
+        <div
+          class="flex flex-col gap-1 rounded-xl bg-n-alpha-1 p-3.5 outline outline-1 outline-n-weak"
+        >
+          <span class="text-xs font-semibold text-n-slate-12">
+            {{ label('TRANSCRIPT_TITLE') }}
+          </span>
+          <span class="text-xs text-n-slate-11">{{ transcriptLabel }}</span>
+          <p class="mb-0 mt-1 text-xs text-n-slate-11">
+            {{
+              label(
+                businessLeadsOnly ? 'TRANSCRIPT_LEADS_HELP' : 'TRANSCRIPT_HELP'
+              )
+            }}
+          </p>
+        </div>
+
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <Button
+            type="button"
+            variant="ghost"
+            color="slate"
+            size="xs"
+            icon="i-lucide-refresh-cw"
+            :label="label('REFRESH')"
+            :is-loading="loading"
+            @click="setup.refresh"
+          />
+          <Button
+            v-if="canManageIntegrations"
+            type="button"
+            size="xs"
+            variant="faded"
+            :label="label('HUBSPOT_ACTION')"
+            @click="openHubspotSettings"
+          />
+        </div>
+      </div>
+    </Dialog>
   </form>
 </template>

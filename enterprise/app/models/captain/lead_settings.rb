@@ -70,12 +70,23 @@ module Captain::LeadSettings
 
   def ensure_lead_attribute_definitions
     attributes = lead_fields.map { |field| ["lead_#{field['key']}", field['label'], 'text'] }
-    attributes += %w[type summary source status].map { |key| ["lead_#{key}", I18n.t("captain.leads.attributes.#{key}"), 'text'] }
+    attributes += %w[summary source status].map { |key| ["lead_#{key}", I18n.t("captain.leads.attributes.#{key}"), 'text'] }
     attributes.each do |key, label, type|
       account.custom_attribute_definitions.find_or_create_by!(attribute_key: key, attribute_model: 'contact_attribute') do |definition|
         definition.attribute_display_name = label
         definition.attribute_display_type = type
       end
     end
+    sync_lead_type_attribute_definition
+  end
+
+  def sync_lead_type_attribute_definition
+    definition = account.custom_attribute_definitions.find_or_initialize_by(attribute_key: 'lead_type', attribute_model: 'contact_attribute')
+    definition.attribute_display_name ||= I18n.t('captain.leads.attributes.type')
+    definition.attribute_display_type = 'list'
+    configured_types = account.captain_assistants.flat_map { |assistant| assistant.lead_types.pluck('name') }
+    values = Array(definition.attribute_values) + lead_types.pluck('name') + configured_types
+    definition.attribute_values = values.map(&:strip).reject(&:blank?).uniq
+    definition.save!
   end
 end

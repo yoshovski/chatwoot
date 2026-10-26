@@ -63,19 +63,25 @@ export function useLeadSetup(assistantId, leadFields) {
     if (!hubspot.value.settings) return 'unavailable';
     return 'connected';
   });
+  const requiredMappingKeys = computed(() => [
+    'email',
+    'lead_type',
+    'lead_summary',
+    'lead_source',
+    ...(leadFields?.value || [])
+      .filter(field => field.key)
+      .map(field => `lead_${field.key}`),
+  ]);
+  const unmappedKeys = computed(() => {
+    if (hubspotConnectionState.value !== 'connected') return [];
+    const mapping = hubspot.value.settings?.field_mapping || {};
+    return requiredMappingKeys.value.filter(key => !mapping[key]);
+  });
   const hubspotState = computed(() => {
     if (hubspotConnectionState.value !== 'connected')
       return hubspotConnectionState.value;
     if (!hubspot.value.settings.sync_contacts) return 'sync_off';
-    const mapping = hubspot.value.settings?.field_mapping || {};
-    const keys = [
-      'email',
-      'lead_type',
-      'lead_summary',
-      'lead_source',
-      ...(leadFields?.value || []).map(field => `lead_${field.key}`),
-    ];
-    return keys.every(key => mapping[key]) ? 'mapped' : 'mapping_needed';
+    return unmappedKeys.value.length === 0 ? 'mapped' : 'mapping_needed';
   });
   const transcriptState = computed(() => {
     if (hubspotConnectionState.value !== 'connected')
@@ -88,6 +94,8 @@ export function useLeadSetup(assistantId, leadFields) {
     existingScenario,
     hubspotState,
     transcriptState,
+    requiredMappingKeys,
+    unmappedKeys,
     businessLeadsOnly: computed(
       () => hubspot.value?.settings?.contact_sync_scope === 'business_leads'
     ),
