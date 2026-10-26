@@ -15,4 +15,16 @@ RSpec.describe Captain::LeadSettings do
 
     expect(assistant).not_to be_valid
   end
+
+  it 'syncs configured lead_types into the lead_type contact list custom attribute' do
+    assistant.update!(config: assistant.config.merge(lead_config))
+
+    definition = assistant.account.custom_attribute_definitions.find_by!(
+      attribute_key: 'lead_type',
+      attribute_model: 'contact_attribute'
+    )
+
+    expect(definition.attribute_display_type).to eq('list')
+    expect(definition.attribute_values).to include('Partner')
+  end
 end
