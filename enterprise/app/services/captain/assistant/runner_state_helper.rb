@@ -34,6 +34,7 @@ module Captain::Assistant::RunnerStateHelper
   end
 
   def build_conversation_state(state)
+    state[:lead_questions_remaining] = Captain::Leads::QuestionBudget.new(@assistant, @conversation).remaining if @assistant.leads_enabled?
     state[:conversation] = slice_attrs(@conversation, CONVERSATION_STATE_ATTRIBUTES)
     state[:conversation][:label_list] = @conversation.label_list.to_a
     state[:channel_type] = @conversation.inbox&.channel_type

@@ -36,6 +36,7 @@ class Captain::Assistant::AgentRunnerService # rubocop:disable Metrics/ClassLeng
     message_to_process, context = run_payload(message_history)
     @last_run_result = run_response(message_to_process, context)
     validate_agent_result!(@last_run_result)
+    Captain::Leads::QuestionBudget.new(@assistant, @conversation).enforce!(@last_run_result) if @assistant.leads_enabled?
 
     record_turn_start(@last_run_result)
     @last_run_result = rewrite_oversized_response(@last_run_result) if response_too_long?(@last_run_result)
@@ -190,7 +191,8 @@ class Captain::Assistant::AgentRunnerService # rubocop:disable Metrics/ClassLeng
     Captain::ResponseSchema.for(
       suggested_replies: suggested_replies_enabled?,
       max_suggested_replies: @assistant.max_suggested_replies,
-      product_cards: product_cards_enabled?
+      product_cards: product_cards_enabled?,
+      lead_capture: @assistant.leads_enabled?
     )
   end
 

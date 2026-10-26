@@ -140,13 +140,27 @@ class Captain::Knowledge::OfferingEnumerator
     item_parts = page_info[:slice].map do |offering|
       indexes = register_offering_evidence(tool_context, offering, documents)
       {
-        'text' => "- **#{offering.fetch('name')}**: #{offering.fetch('purpose')}",
+        'text' => "- #{offering_title(offering, documents)}: #{offering.fetch('purpose')}",
         'citation_indexes' => indexes
       }
     end
     all_indexes = item_parts.flat_map { |part| part['citation_indexes'] }.uniq
     intro = intro_text(page_info[:slice].size, **page_info.slice(:page, :total, :total_pages, :offset))
     [{ 'text' => intro, 'citation_indexes' => all_indexes }] + item_parts
+  end
+
+  def offering_title(offering, documents)
+    name = offering.fetch('name').tr('[]', '()')
+    return "**#{name}**" if @assistant.config['helpful_links_mode'] == 'on_request'
+
+    urls = Array(offering['evidence']).filter_map { |item| documents[item['document_id'].to_i]&.customer_visible_source_url }
+    url = urls.first
+    return "**#{name}**" unless url
+
+    sanitizer = Captain::Conversation::ReplySanitizer.new(assistant: @assistant, evidence_urls: urls)
+    return "**#{name}**" unless sanitizer.allowed_link_url?(url)
+
+    "[**#{name}**](#{url.gsub('(', '%28').gsub(')', '%29')})"
   end
 
   def register_offering_evidence(tool_context, offering, documents)
@@ -164,22 +178,14 @@ class Captain::Knowledge::OfferingEnumerator
   end
 
   def intro_text(count, page:, total:, total_pages:, offset:)
-    scope_note = partial_coverage? ? ' from our currently reviewed sources' : ''
     if total_pages > 1
       first_num = offset + 1
       last_num = offset + count
       more_note = page < total_pages ? " Ask for page #{page + 1} to see the next set." : ''
-      "Showing #{first_num}–#{last_num} of #{total} supported offerings#{scope_note} (page #{page} of #{total_pages}).#{more_note}"
+      "Showing #{first_num}–#{last_num} of #{total} products and services (page #{page} of #{total_pages}).#{more_note}"
     else
-      "Here are the #{total} supported offerings#{scope_note}:"
+      'Our products and services include:'
     end
-  end
-
-  def partial_coverage?
-    cov = @assistant.knowledge_brief&.coverage_summary
-    return false unless cov.is_a?(Hash)
-
-    cov['partial'].to_i.positive? || cov['pending'].to_i.positive? || cov['failed'].to_i.positive? || cov['budget_stopped'] == true
   end
 
   def pagination_suggestions(page, total, total_pages, next_cursor)

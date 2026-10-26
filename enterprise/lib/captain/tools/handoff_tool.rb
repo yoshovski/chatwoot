@@ -93,7 +93,7 @@ class Captain::Tools::HandoffTool < Captain::Tools::BasePublicTool
 
   def handle_already_active_handoff(handoff_service, tool_context)
     triggering_message = find_triggering_message(tool_context.state, handoff_service.conversation)
-    handoff_service.trigger_contact_capture_form!(triggering_message: triggering_message)
+    handoff_service.trigger_contact_capture_form!(triggering_message: triggering_message) unless tool_context.state[:lead_intake_needs_review]
     tool_context.state[:captain_v2_handoff_tool_completed] = true
     :already_active
   end

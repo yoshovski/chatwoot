@@ -285,7 +285,7 @@ class Captain::Assistant < ApplicationRecord
   # Scenarios start from these tools too, so they can search knowledge and products mid-flow.
   def agent_tools
     tool_ids = %w[faq_lookup handoff]
-    tool_ids << 'save_lead_details' if leads_enabled?
+    tool_ids += %w[save_lead_details request_lead_followup] if leads_enabled?
     tool_ids += SHOPIFY_CATALOG_TOOL_IDS if shopify_catalog_tools_available?
     tool_ids << 'track_order' if shopify_order_tracking_available?
 

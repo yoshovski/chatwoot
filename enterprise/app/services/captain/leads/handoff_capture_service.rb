@@ -18,13 +18,13 @@ class Captain::Leads::HandoffCaptureService
       return if @conversation.additional_attributes['business_lead_captured']
 
       @conversation.update!(additional_attributes: @conversation.additional_attributes.merge(
-        'business_handoff' => verifier.generate(payload, purpose: PURPOSE, expires_in: 7.days)
+        attribute_key => verifier.generate(payload, purpose: self.class::PURPOSE, expires_in: 7.days)
       ))
     end
     complete!
   end
 
-  def complete!
+  def complete!(name: nil, email: nil)
     return unless enabled?
 
     @conversation.with_lock do
@@ -32,38 +32,38 @@ class Captain::Leads::HandoffCaptureService
       return unless payload
 
       contact = @conversation.contact.reload
-      return if Captain::Conversation::ContactCaptureService.missing_name?(contact) || contact.email.blank?
+      name ||= contact_identity_name(contact)
+      email ||= contact.email
+      return if name.blank? || email.blank?
 
-      capture!(contact, payload)
+      capture!(contact, payload, name: name, email: email)
     end
-    Captain::Leads::NotifyTeamJob.perform_later(@assistant.id, @conversation.id) if @assistant.config['lead_notification_team_id']
   end
 
   private
 
+  def contact_identity_name(contact)
+    contact.name unless Captain::Conversation::ContactCaptureService.missing_name?(contact)
+  end
+
   def verified_payload
-    payload = verifier.verified(@conversation.additional_attributes['business_handoff'], purpose: PURPOSE)
+    payload = verifier.verified(@conversation.additional_attributes[attribute_key], purpose: self.class::PURPOSE)
     payload if payload && payload.values_at('conversation_id', 'account_id', 'assistant_id') ==
                           [@conversation.id, @assistant.account_id, @assistant.id]
   end
 
-  def capture!(contact, payload)
+  def capture!(contact, payload, name:, email:)
     Captain::Leads::CaptureService.new(@assistant, contact).perform(
-      name: contact.name, email: contact.email, lead_type: payload['lead_type'], summary: payload['summary'], fields: payload['fields']
+      name: name, email: email, lead_type: payload['lead_type'], summary: payload['summary'], fields: payload['fields']
     )
-    note = @conversation.messages.create!(account: @assistant.account, inbox: @conversation.inbox, sender: @assistant,
-                                          message_type: :outgoing, private: true, content: payload['summary'])
-    labels = ['prospect', payload['lead_type'].tr('_', '-')]
-    @conversation.add_labels(@assistant.account.labels.where(title: labels).pluck(:title))
-    attributes = @conversation.additional_attributes.except('business_handoff').merge(
-      'business_lead_captured' => true, 'business_lead_summary_note_id' => note.id
-    )
-    @conversation.update!(additional_attributes: attributes)
+    Captain::Leads::DeliveryService.new(@assistant, @conversation).perform(lead_type: payload['lead_type'], summary: payload['summary'])
   end
 
   def enabled?
     @assistant&.leads_enabled? && @assistant.config['lead_handoff_capture_enabled'] == true && @conversation.account_id == @assistant.account_id
   end
 
-  def verifier = Rails.application.message_verifier(PURPOSE)
+  def attribute_key = 'business_handoff'
+
+  def verifier = Rails.application.message_verifier(self.class::PURPOSE)
 end

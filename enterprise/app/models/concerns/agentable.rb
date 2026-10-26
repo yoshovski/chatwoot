@@ -47,6 +47,7 @@ module Concerns::Agentable
       campaign: state[:campaign] || {},
       message_length_limit: state[:message_length_limit],
       ownership_instruction: state[:ownership_instruction],
+      lead_questions_remaining: state[:lead_questions_remaining],
       conversation_memory: state[:conversation_memory],
       suggested_replies_enabled: state[:suggested_replies_enabled],
       max_suggested_replies: state[:max_suggested_replies],

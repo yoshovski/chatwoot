@@ -126,6 +126,9 @@ class Captain::Conversation::ContactCaptureService # rubocop:disable Metrics/Cla
 
     submitted = message.content_attributes&.dig('submitted_values')
     return false if submitted.blank?
+    if message.content_attributes['purpose'] == 'business_followup'
+      return Captain::Leads::FollowupFormService.new(assistant, message.conversation).perform(message, submitted)
+    end
 
     return false unless claim_submission_processing(message)
 
@@ -141,7 +144,7 @@ class Captain::Conversation::ContactCaptureService # rubocop:disable Metrics/Cla
 
   def form_active?(message)
     return false unless form_message?(message)
-    return false if message.content_attributes&.dig('contact_details_saved') == true
+    return false if message.content_attributes.to_h.values_at('contact_details_saved', 'followup_needs_review').include?(true)
     return false if message_expired?(message)
     return false if message.conversation&.resolved?
 

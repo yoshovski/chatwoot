@@ -93,5 +93,5 @@ You have access to these tools:
 {% endfor %}
 {%- endif %}
 
-{% render 'lead_capture', lead_capture: lead_capture %}
+{% render 'lead_capture', lead_capture: lead_capture, lead_questions_remaining: lead_questions_remaining %}
 {% render 'published_pricing', published_pricing_enabled: published_pricing_enabled %}

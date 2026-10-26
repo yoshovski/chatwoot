@@ -7,7 +7,8 @@ class Captain::ResponseSchema < RubyLLM::Schema
                                   'the customer that a colleague or the team will continue, follow up, or confirm something. ' \
                                   'Also use the handoff tool when it is available, and say in the reply that a colleague will ' \
                                   'continue in this chat. False when no handoff is needed, or when you only ask whether the customer ' \
-                                  'wants a human.'.freeze
+                                  'wants a human. Email follow-up intake and its contact form do not transfer the live chat: ' \
+                                  'keep this false for request_lead_followup and a successful save_lead_details.'.freeze
 
   SUGGESTION_LABEL_MAX_LENGTH = 50
   SUGGESTION_MESSAGE_MAX_LENGTH = 120
@@ -25,20 +26,21 @@ class Captain::ResponseSchema < RubyLLM::Schema
   end
   boolean :handoff_requested, description: HANDOFF_REQUESTED_DESCRIPTION
 
-  def self.for(suggested_replies: false, max_suggested_replies: 3, product_cards: false)
-    return self unless suggested_replies || product_cards
+  def self.for(suggested_replies: false, max_suggested_replies: 3, product_cards: false, lead_capture: false)
+    return self unless suggested_replies || product_cards || lead_capture
 
     limit = (max_suggested_replies || 3).to_i.clamp(1, 5)
-    cache_key = "#{suggested_replies}:#{limit}:#{product_cards}"
+    cache_key = "#{suggested_replies}:#{limit}:#{product_cards}:#{lead_capture}"
     @schema_cache ||= {}
     @schema_cache[cache_key] ||= build_schema(
       suggested_replies: suggested_replies,
       limit: limit,
-      product_cards: product_cards
+      product_cards: product_cards,
+      lead_capture: lead_capture
     )
   end
 
-  def self.build_schema(suggested_replies:, limit:, product_cards:)
+  def self.build_schema(suggested_replies:, limit:, product_cards:, lead_capture: false)
     RubyLLM::Schema.create do
       name 'CaptainResponse'
       array :response_parts,
@@ -54,9 +56,16 @@ class Captain::ResponseSchema < RubyLLM::Schema
         end
       end
       boolean :handoff_requested, description: Captain::ResponseSchema::HANDOFF_REQUESTED_DESCRIPTION
+      Captain::ResponseSchema.define_lead_question(self) if lead_capture
       Captain::ResponseSchema.define_suggested_replies(self, limit) if suggested_replies
       Captain::ResponseSchema.define_product_handles(self) if product_cards
     end
+  end
+
+  def self.define_lead_question(builder)
+    builder.boolean :lead_qualification_question,
+                    description: 'True only if this reply asks an optional business qualification question: use case, scale, company or country. ' \
+                                 'False for an offer of email follow-up, collecting name/email after consent, or answering a customer question.'
   end
 
   def self.build_schema_with_suggestions(limit)

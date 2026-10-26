@@ -73,7 +73,7 @@ module Captain::Assistant::RunnerInstrumentationHelper
 
   def track_handoff_usage(tool_name, handoff_tool_name, context_wrapper)
     return unless context_wrapper&.context
-    return unless tool_name.to_s == handoff_tool_name
+    return unless tool_name.to_s == handoff_tool_name || context_wrapper.context.dig(:state, :lead_failure_handoff)
 
     # Mirror the flag onto the instance so error_response can surface it even when
     # the runner raises before returning a result (the context is unreachable then).

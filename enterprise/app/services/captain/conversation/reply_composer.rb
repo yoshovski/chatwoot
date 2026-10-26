@@ -1,9 +1,9 @@
 # Decides what the customer sees for one Captain V2 run: the answer (prose, citations, suggestion buttons or the
 # empty-answer fallback), the order card and the product cards. With cards, one suggestion group (with any closing
 # question) appears after all cards. Returns message payloads and writes nothing.
-class Captain::Conversation::ReplyComposer
+class Captain::Conversation::ReplyComposer # rubocop:disable Metrics/ClassLength
   # The last sentence of the prose when it is a question that follows at least one other sentence.
-  TRAILING_QUESTION = /(?<=[.!?])\s+([^\n.!?]+\?)\s*\z/
+  TRAILING_QUESTION = /(?:\n\s*\n|(?<=[.!?])\s+)([^\n.!?]+\?)\s*\z/
   attr_reader :assistant, :conversation, :response, :run_result, :customer_message
 
   def initialize(assistant:, response:, run_result:, conversation: nil, customer_message: nil)
@@ -18,9 +18,26 @@ class Captain::Conversation::ReplyComposer
   def messages(suppress_suggestions: false)
     content, parts = answer_content
     closing_question = content[TRAILING_QUESTION, 1]
-    buttons = suggestion_buttons(suppress_suggestions, has_closing_question: closing_question.present? || content.strip.end_with?('?'))
-    return composed_messages(answer_message(content, parts, buttons)) unless contains_cards?
-    return composed_messages(answer_message(content, parts, {})) if buttons.blank?
+    buttons = suggestion_buttons(suppress_suggestions || followup_form_requested?,
+                                 has_closing_question: closing_question.present? || content.strip.end_with?('?'))
+    if followup_form_requested?
+      form = Captain::Leads::FollowupFormService.new(assistant, conversation).payload
+      return composed_messages(answer_message(content, parts, {})) << form
+    end
+
+    compose_answer(content, parts, closing_question, buttons)
+  end
+
+  def empty_response?
+    formatted_prose.blank? && !catalog_searches_empty? && !customer_message_has_attachments? && !model_returned_answer?
+  end
+
+  private
+
+  def compose_answer(content, parts, closing_question, buttons)
+    separate_question = separate_closing_question?(closing_question)
+    return composed_messages(answer_message(content, parts, buttons)) unless contains_cards? || separate_question
+    return composed_messages(answer_message(content, parts, {})) if buttons.blank? && !separate_question
 
     if closing_question
       content = content.delete_suffix(content[TRAILING_QUESTION]).strip
@@ -29,11 +46,11 @@ class Captain::Conversation::ReplyComposer
     composed_messages(answer_message(content, parts, {})) << question_message(closing_question, buttons)
   end
 
-  def empty_response?
-    formatted_prose.blank? && !catalog_searches_empty? && !customer_message_has_attachments? && !model_returned_answer?
-  end
+  def followup_form_requested? = run_result&.context&.dig(:state, :lead_followup_form_requested) == true
 
-  private
+  def separate_closing_question?(question)
+    question.present? && assistant.leads_enabled? && conversation&.inbox&.channel_type == 'Channel::WebWidget'
+  end
 
   def composed_messages(answer)
     [answer] + order_card_messages + product_card_messages
@@ -105,6 +122,7 @@ class Captain::Conversation::ReplyComposer
     attributes = {}
     agent_name = response.is_a?(Hash) ? response['agent_name'] : nil
     attributes[:agent_name] = agent_name if agent_name.present?
+    attributes[Captain::Leads::QuestionBudget::ATTRIBUTE_KEY] = true if response.is_a?(Hash) && response['lead_qualification_question'] == true
     attributes[Captain::Assistant::ResponseParts::MESSAGE_ATTRIBUTE_KEY] = parts.to_a
     attributes
   end
@@ -113,6 +131,7 @@ class Captain::Conversation::ReplyComposer
     @formatted_prose ||= begin
       content = response_parts.customer_message_content(citation_urls: citation_urls, citation_titles: citation_titles,
                                                         sources_format: sources_format)
+      content = Captain::Knowledge::OfferingLinks.new(assistant).perform(content)
       cards_builder.clean_prose_content(grounded_screenshots(with_knowledge_media(content)))
     end
   end

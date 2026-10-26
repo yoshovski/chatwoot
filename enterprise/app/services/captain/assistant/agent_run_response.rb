@@ -15,7 +15,20 @@ module Captain::Assistant::AgentRunResponse
     structured_response['response'] = response_parts.plain_text
     structured_response['agent_name'] = run_result.context&.dig(:current_agent)
     structured_response['handoff_tool_called'] = run_result.context&.dig(:captain_v2_handoff_tool_called) || false
+    apply_lead_recovery_response(structured_response, run_result)
+    if run_result.context&.dig(:state, :lead_failure_handoff)
+      structured_response['handoff_requested'] = true
+      structured_response['suggested_replies'] = []
+    end
     structured_response
+  end
+
+  def apply_lead_recovery_response(response, run_result)
+    message = run_result.context&.dig(:state, :lead_capture_recovery_message)
+    return unless message
+
+    response.merge!('response_parts' => [{ 'text' => message, 'citation_indexes' => [] }], 'response' => message,
+                    'suggested_replies' => [], 'lead_qualification_question' => false)
   end
 
   # The reply text and tool results are customer data: keep them out of production (info) logs.
