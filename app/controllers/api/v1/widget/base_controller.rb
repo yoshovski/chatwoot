@@ -21,6 +21,7 @@ class Api::V1::Widget::BaseController < ApplicationController
   end
 
   def create_conversation
+    ClientIpResolver.refresh_contact_ip!(@contact, request)
     ::Conversation.create!(conversation_params)
   end
 

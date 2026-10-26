@@ -18,6 +18,7 @@ import ComposeConversation from 'dashboard/components-next/NewConversation/Compo
 import NextButton from 'dashboard/components-next/button/Button.vue';
 import VoiceCallButton from 'dashboard/components-next/Contacts/VoiceCallButton.vue';
 import InlineInput from 'dashboard/components-next/inline-input/InlineInput.vue';
+import countries from 'shared/constants/countries';
 
 export default {
   components: {
@@ -73,9 +74,17 @@ export default {
       const {
         country = '',
         city = '',
-        country_code: countryCode,
+        country_code: countryCode = '',
       } = this.additionalAttributes;
-      const cityAndCountry = [city, country].filter(item => !!item).join(', ');
+      const resolvedCountry =
+        countries.find(
+          item =>
+            item.id === countryCode.toUpperCase() ||
+            item.id === country.toUpperCase()
+        )?.name || country;
+      const cityAndCountry = [city, resolvedCountry]
+        .filter(item => !!item)
+        .join(', ');
 
       if (!cityAndCountry) {
         return '';

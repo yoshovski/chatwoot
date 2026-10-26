@@ -52,7 +52,10 @@ class WidgetsController < ActionController::Base
   end
 
   def build_contact
-    return if @contact.present?
+    if @contact.present?
+      ClientIpResolver.refresh_contact_ip!(@contact, request)
+      return
+    end
 
     @contact_inbox, @token = build_contact_inbox_with_token(@web_widget, additional_attributes)
     @contact = @contact_inbox.contact
@@ -66,7 +69,7 @@ class WidgetsController < ActionController::Base
 
   def additional_attributes
     if @web_widget.inbox.account.feature_enabled?('ip_lookup')
-      { created_at_ip: request.remote_ip }
+      ClientIpResolver.contact_attributes_from(request)
     else
       {}
     end
