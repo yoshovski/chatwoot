@@ -18,6 +18,7 @@ json.name resource.name
 json.avatar_url resource.avatar_url.presence || resource.default_avatar_url
 json.has_custom_avatar resource.avatar.attached?
 json.response_guidelines resource.response_guidelines
+json.lead_notification_status resource.lead_notification_status
 json.updated_at resource.updated_at.to_i
 json.prompt_presets do
   json.tone Captain::Assistant::TONE_INSTRUCTIONS
