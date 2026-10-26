@@ -23,18 +23,12 @@ class Captain::Leads::NotifyTeamJob < MutexApplicationJob
     return if conversation.additional_attributes['lead_notification_sent_at']
     return unless Captain::Leads::CaptureReceipt.valid?(assistant, conversation.contact)
 
-    validate_delivery!(assistant.account, team)
+    Captain::Leads::NotificationReadiness.validate!(assistant.account, team)
 
     TeamNotifications::BusinessLeadMailer.with(account: assistant.account).lead_created(conversation, team).deliver_now
     conversation.with_lock do
       conversation.update!(additional_attributes: conversation.additional_attributes.merge('lead_notification_sent_at' => Time.current.iso8601))
     end
     assistant.account.increment_email_sent_count
-  end
-
-  def validate_delivery!(account, team)
-    raise 'Configure SMTP before enabling lead notifications' unless ENV['SMTP_ADDRESS'].present? || Rails.env.development?
-    raise 'Add a member to the lead notification team' unless team.team_members.exists?
-    raise 'The account email limit has been reached' unless account.within_email_rate_limit?
   end
 end

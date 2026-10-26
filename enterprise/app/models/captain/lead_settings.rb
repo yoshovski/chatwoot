@@ -14,6 +14,13 @@ module Captain::LeadSettings
   def lead_types = config.fetch('lead_types', [])
   def lead_max_questions = config.fetch('lead_max_questions', 2)
 
+  def lead_notification_status
+    team_id = config['lead_notification_team_id']
+    return 'off' unless team_id
+
+    Captain::Leads::NotificationReadiness.status(account, account.teams.find_by(id: team_id))
+  end
+
   def lead_prompt_context
     return {} unless leads_enabled?
 
