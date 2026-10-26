@@ -17,11 +17,14 @@ class Captain::Conversation::ReplyComposer # rubocop:disable Metrics/ClassLength
   # suppress_suggestions: the caller knows the run ends in a handoff (or the conversation already waits for a human).
   def messages(suppress_suggestions: false)
     content, parts = answer_content
-    closing_question = content[TRAILING_QUESTION, 1]
+    closing_question = qualification_question(parts) || content[TRAILING_QUESTION, 1]
     buttons = suggestion_buttons(suppress_suggestions || followup_form_requested?,
                                  has_closing_question: closing_question.present? || content.strip.end_with?('?'))
     if followup_form_requested?
+      content, parts = remove_question(content, parts, closing_question) if closing_question
       form = Captain::Leads::FollowupFormService.new(assistant, conversation).payload
+      return [form] if content.blank?
+
       return composed_messages(answer_message(content, parts, {})) << form
     end
 
@@ -39,18 +42,37 @@ class Captain::Conversation::ReplyComposer # rubocop:disable Metrics/ClassLength
     return composed_messages(answer_message(content, parts, buttons)) unless contains_cards? || separate_question
     return composed_messages(answer_message(content, parts, {})) if buttons.blank? && !separate_question
 
-    if closing_question
-      content = content.delete_suffix(content[TRAILING_QUESTION]).strip
-      parts = without_trailing_question(parts, closing_question)
+    content, parts = remove_question(content, parts, closing_question) if closing_question
+    if content.blank?
+      question_parts = Captain::Assistant::ResponseParts.new([{ 'text' => closing_question, 'citation_indexes' => [] }])
+      return order_card_messages + product_card_messages + [answer_message(closing_question, question_parts, buttons)]
     end
+
     composed_messages(answer_message(content, parts, {})) << question_message(closing_question, buttons)
   end
 
   def followup_form_requested? = run_result&.context&.dig(:state, :lead_followup_form_requested) == true
 
-  def separate_closing_question?(question)
-    question.present? && assistant.leads_enabled? && conversation&.inbox&.channel_type == 'Channel::WebWidget'
+  def qualification_question(parts)
+    return unless response.is_a?(Hash) && response['lead_qualification_question'] == true
+
+    parts.to_a.reverse_each do |part|
+      text = part['text']
+      question = text[TRAILING_QUESTION, 1] || (text if text.end_with?('?'))
+      return question if question
+    end
+    nil
   end
+
+  def remove_question(content, parts, question)
+    [content.sub(question, '').strip, without_trailing_question(parts, question)]
+  end
+
+  def separate_closing_question?(question)
+    question.present? && qualification_reply? && conversation&.inbox&.channel_type == 'Channel::WebWidget'
+  end
+
+  def qualification_reply? = response.is_a?(Hash) && response['lead_qualification_question'] == true
 
   def composed_messages(answer)
     [answer] + order_card_messages + product_card_messages
@@ -113,8 +135,7 @@ class Captain::Conversation::ReplyComposer # rubocop:disable Metrics/ClassLength
   end
 
   def without_trailing_question(parts, question)
-    cloned = parts.to_a.map(&:dup)
-    cloned.last['text'] = cloned.last['text'].delete_suffix(question).strip
+    cloned = parts.to_a.map { |part| part.merge('text' => part['text'].sub(question, '').strip) }
     Captain::Assistant::ResponseParts.new(cloned)
   end
 
@@ -122,7 +143,9 @@ class Captain::Conversation::ReplyComposer # rubocop:disable Metrics/ClassLength
     attributes = {}
     agent_name = response.is_a?(Hash) ? response['agent_name'] : nil
     attributes[:agent_name] = agent_name if agent_name.present?
-    attributes[Captain::Leads::QuestionBudget::ATTRIBUTE_KEY] = true if response.is_a?(Hash) && response['lead_qualification_question'] == true
+    if !followup_form_requested? && response.is_a?(Hash) && response['lead_qualification_question'] == true
+      attributes[Captain::Leads::QuestionBudget::ATTRIBUTE_KEY] = true
+    end
     attributes[Captain::Assistant::ResponseParts::MESSAGE_ATTRIBUTE_KEY] = parts.to_a
     attributes
   end

@@ -9,23 +9,40 @@ class Captain::Tools::RequestLeadFollowupTool < Captain::Tools::BasePublicTool
     return typed_identity_instruction unless web_chat?(tool_context)
 
     conversation = find_conversation(tool_context.state)
-    unless preview?(tool_context)
-      return failure_result('Conversation not found', tool_context.state) unless conversation
+    instruction = prepare_followup(tool_context, conversation, lead_type, summary, fields_json)
+    return instruction if instruction
 
-      stage_followup(conversation, lead_type, summary, fields_json)
-      if conversation.reload.additional_attributes['business_lead_captured']
-        tool_context.state[:lead_summary_saved_this_run] = true
-        return 'Lead details saved. Confirm receipt in one short sentence.'
-      end
-    end
     form_instruction(tool_context)
-  rescue JSON::ParserError, ArgumentError, ActiveRecord::RecordInvalid => e
+  rescue JSON::ParserError, ArgumentError => e
+    failure_result("No form was shown. Correct the tool arguments and continue helping: #{e.message}", tool_context.state)
+  rescue ActiveRecord::RecordInvalid => e
     Captain::Leads::FailureHandoffService.new(@assistant, conversation).perform(
       tool_context, details: { summary: summary, fields: fields_json, error: e.class.name }
     )
   end
 
   private
+
+  def prepare_followup(tool_context, conversation, lead_type, summary, fields_json)
+    return failure_result('Conversation not found', tool_context.state) unless conversation || preview?(tool_context)
+    if Captain::Leads::CaptureState.new(@assistant, conversation).captured?
+      return 'Email follow-up is already captured. Do not show another form or restart intake. Continue helping with the current question.'
+    end
+    return consent_required_instruction unless Captain::Leads::FollowupConsent.new(@assistant, tool_context).granted?
+    return if preview?(tool_context)
+
+    stage_followup(conversation, lead_type, summary, fields_json)
+    return unless conversation.reload.additional_attributes['business_lead_captured']
+
+    tool_context.state[:lead_summary_saved_this_run] = true
+    'Lead details saved. Confirm receipt in one short sentence.'
+  end
+
+  def consent_required_instruction
+    'No form was shown or lead saved: the visitor has not requested or agreed to email follow-up. ' \
+      'Continue answering or ask one useful qualification question and wait. Offer follow-up separately when useful. ' \
+      'Do not mention a contact form, claim consent, or hand off just because this request was declined.'
+  end
 
   def form_instruction(tool_context)
     tool_context.state[:lead_followup_form_requested] = true

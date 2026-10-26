@@ -489,7 +489,7 @@ en:
         title: 'Request business follow-up'
         description: 'Collects contact details for agreed email follow-up without a live transfer'
       followup_form: 'Where should our team send your follow-up?'
-      followup_saved: 'Thanks, your details have been saved for email follow-up.'
+      followup_saved: 'Thanks, %{name}. We have your request for email follow-up.'
       followup_offer: 'Would you like our team to follow up by email?'
       intake_review: "Business follow-up needs review. Customer-provided details (unverified):\n%{details}"
       visitor_location_summary: 'Visitor location (detected): %{location}'

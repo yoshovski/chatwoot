@@ -19,6 +19,8 @@ class Captain::Leads::QuestionBudget
   end
 
   def enforce!(run_result)
+    return if run_result.context&.dig(:state, :lead_intake, :captured)
+
     return unless run_result.output['lead_qualification_question'] == true && remaining.zero?
 
     output = run_result.output
@@ -33,12 +35,13 @@ class Captain::Leads::QuestionBudget
   private
 
   def remove_last_question(parts)
-    text = parts.last.fetch('text')
-    question = text[Captain::Conversation::ReplyComposer::TRAILING_QUESTION, 1]
-    if question
-      parts.last['text'] = text.delete_suffix(question).strip
-    else
-      parts.pop
+    parts.reverse_each do |part|
+      text = part.fetch('text')
+      question = text[Captain::Conversation::ReplyComposer::TRAILING_QUESTION, 1] || (text if text.end_with?('?'))
+      next unless question
+
+      part['text'] = text.sub(question, '').strip
+      break
     end
     parts.reject! { |part| part['text'].blank? }
   end
