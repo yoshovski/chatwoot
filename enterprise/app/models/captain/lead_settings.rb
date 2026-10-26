@@ -6,6 +6,7 @@ module Captain::LeadSettings
   included do
     validate :validate_lead_settings
     after_save :ensure_lead_attribute_definitions, if: :leads_enabled?
+    after_save :sync_guided_lead_scenario
   end
 
   def leads_enabled? = config['leads_enabled'] == true
@@ -33,7 +34,19 @@ module Captain::LeadSettings
   end
 
   def valid_lead_switches?
-    %w[leads_enabled lead_handoff_capture_enabled published_pricing_enabled].all? { |key| BOOLEAN_VALUES.include?(config[key]) }
+    %w[leads_enabled lead_handoff_capture_enabled published_pricing_enabled lead_guided_setup].all? { |key| BOOLEAN_VALUES.include?(config[key]) }
+  end
+
+  def valid_guided_lead_settings?
+    { 'lead_trigger' => 500, 'lead_instructions' => 2000 }.all? do |key, limit|
+      config[key].nil? || (config[key].is_a?(String) && config[key].length <= limit)
+    end
+  end
+
+  def sync_guided_lead_scenario
+    return unless config['lead_guided_setup'] == true || config['lead_scenario_id']
+
+    Captain::Leads::GuidedSetupService.new(self).perform
   end
 
   def valid_lead_notification_team?
@@ -43,7 +56,7 @@ module Captain::LeadSettings
 
   def valid_lead_collections?
     valid_lead_entries?(lead_fields, %w[key label]) && valid_lead_entries?(lead_types, %w[name rule]) &&
-      valid_lead_field_keys? && unique_lead_entries?
+      valid_lead_field_keys? && unique_lead_entries? && valid_guided_lead_settings?
   end
 
   def valid_lead_questions? = lead_max_questions.is_a?(Integer) && lead_max_questions.between?(0, 5)
@@ -60,7 +73,8 @@ module Captain::LeadSettings
 
   def valid_lead_field_keys?
     lead_fields.all? do |field|
-      field['key'].match?(/\A[a-z][a-z0-9_]{0,39}\z/) && %w[type summary source status].exclude?(field['key'])
+      reserved = %w[type summary source status visitor_city visitor_country visitor_country_code]
+      field['key'].match?(/\A[a-z][a-z0-9_]{0,39}\z/) && reserved.exclude?(field['key'])
     end
   end
 
@@ -71,6 +85,9 @@ module Captain::LeadSettings
   def ensure_lead_attribute_definitions
     attributes = lead_fields.map { |field| ["lead_#{field['key']}", field['label'], 'text'] }
     attributes += %w[summary source status].map { |key| ["lead_#{key}", I18n.t("captain.leads.attributes.#{key}"), 'text'] }
+    attributes += %w[visitor_city visitor_country visitor_country_code].map do |key|
+      ["lead_#{key}", I18n.t("captain.leads.attributes.#{key}"), 'text']
+    end
     attributes.each do |key, label, type|
       account.custom_attribute_definitions.find_or_create_by!(attribute_key: key, attribute_model: 'contact_attribute') do |definition|
         definition.attribute_display_name = label

@@ -30,8 +30,16 @@ const label = (key, params = {}) =>
 const MAX_ENTRIES = 10;
 const MAX_TEXT_LENGTH = 300;
 const KEY_PATTERN = /^[a-z][a-z0-9_]{0,39}$/;
-const RESERVED_KEYS = ['type', 'summary', 'source', 'status'];
-const COMMON_FIELDS = ['company', 'country', 'audience_size', 'use_case'];
+const RESERVED_KEYS = [
+  'type',
+  'summary',
+  'source',
+  'status',
+  'visitor_city',
+  'visitor_country',
+  'visitor_country_code',
+];
+const COMMON_FIELDS = ['use_case', 'audience_size', 'company', 'country'];
 const QUESTION_OPTIONS = [0, 1, 2, 3, 4, 5];
 const TYPE_PRESETS = ['ENTERPRISE', 'PARTNERSHIP', 'NEEDS_REVIEW'];
 
@@ -58,6 +66,15 @@ const {
   scenarioError,
 } = setup;
 
+const guidedSetup = computed(
+  () => settings.value.lead_guided_setup ?? !existingScenario.value
+);
+const guidedDialogRef = ref(null);
+const adoptGuidedSetup = () => {
+  settings.value.lead_guided_setup = true;
+  guidedDialogRef.value?.close();
+};
+
 const teams = ref([]);
 const teamsError = ref(false);
 
@@ -72,7 +89,15 @@ onMounted(async () => {
 });
 
 const snapshot = () => JSON.stringify(settings.value);
-const isDirty = computed(() => snapshot() !== savedSnapshot.value);
+const isDirty = computed(
+  () =>
+    snapshot() !== savedSnapshot.value ||
+    (settings.value.leads_enabled &&
+      settings.value.lead_guided_setup === null &&
+      !loading.value &&
+      !scenarioError.value &&
+      !existingScenario.value)
+);
 
 let lockedFields = new WeakSet();
 const fieldKeyLocked = field => lockedFields.has(toRaw(field));
@@ -81,6 +106,9 @@ const reset = () => {
   const config = props.assistant.config || {};
   settings.value = {
     leads_enabled: config.leads_enabled === true,
+    lead_guided_setup: config.lead_guided_setup ?? null,
+    lead_trigger: config.lead_trigger ?? label('GUIDED.DEFAULT_TRIGGER'),
+    lead_instructions: config.lead_instructions ?? '',
     lead_max_questions: config.lead_max_questions ?? 2,
     lead_handoff_capture_enabled: config.lead_handoff_capture_enabled === true,
     lead_notification_team_id: config.lead_notification_team_id ?? null,
@@ -103,6 +131,18 @@ watch(
 
 const enableCapture = value => {
   settings.value.leads_enabled = value;
+  if (
+    value &&
+    !props.assistant.config?.leads_enabled &&
+    !settings.value.lead_fields.length
+  ) {
+    settings.value.lead_fields = ['use_case', 'audience_size', 'company'].map(
+      key => ({
+        key,
+        label: label(`COMMON_FIELDS.${key}`),
+      })
+    );
+  }
   if (value && !settings.value.lead_types.length) {
     settings.value.lead_types.push({
       name: 'business_inquiry',
@@ -311,6 +351,7 @@ const hasErrors = computed(
 );
 
 const save = async () => {
+  if (saving.value || loading.value || scenarioError.value) return false;
   attempted.value = true;
   if (hasErrors.value) {
     await nextTick();
@@ -319,9 +360,14 @@ const save = async () => {
   }
   saving.value = true;
   try {
-    const result = await props.save({ config: JSON.parse(snapshot()) });
+    const config = {
+      ...JSON.parse(snapshot()),
+      lead_guided_setup: guidedSetup.value,
+    };
+    const result = await props.save({ config });
     if (result === false) return false;
     store.dispatch('attributes/get');
+    setup.refresh();
     savedSnapshot.value = snapshot();
     attempted.value = false;
     return true;
@@ -418,6 +464,56 @@ const isHubspotConnected = computed(
           class="flex flex-col gap-5 transition-opacity"
           :class="{ 'opacity-60': !settings.leads_enabled }"
         >
+          <section
+            class="flex flex-col gap-4 rounded-2xl bg-n-solid-1 p-5 outline outline-1 outline-n-weak"
+          >
+            <h3 class="m-0 text-sm font-semibold text-n-slate-12">
+              {{ label('GUIDED.TITLE') }}
+            </h3>
+            <template v-if="guidedSetup">
+              <label
+                class="m-0 flex flex-col gap-1.5 text-sm font-medium text-n-slate-12"
+              >
+                {{ label('GUIDED.TRIGGER') }}
+                <textarea
+                  v-model="settings.lead_trigger"
+                  rows="3"
+                  maxlength="500"
+                  :placeholder="label('GUIDED.DEFAULT_TRIGGER')"
+                  class="m-0 w-full resize-y rounded-lg border border-n-weak bg-n-alpha-black2 px-3 py-2 text-sm font-normal text-n-slate-12 placeholder:text-n-slate-10 focus:border-n-brand focus:outline-none"
+                />
+              </label>
+              <label
+                class="m-0 flex flex-col gap-1.5 text-sm font-medium text-n-slate-12"
+              >
+                {{ label('GUIDED.NOTES') }}
+                <textarea
+                  v-model="settings.lead_instructions"
+                  rows="3"
+                  maxlength="2000"
+                  :placeholder="label('GUIDED.NOTES_PLACEHOLDER')"
+                  class="m-0 w-full resize-y rounded-lg border border-n-weak bg-n-alpha-black2 px-3 py-2 text-sm font-normal text-n-slate-12 placeholder:text-n-slate-10 focus:border-n-brand focus:outline-none"
+                />
+              </label>
+              <p class="m-0 text-xs text-n-slate-11">
+                {{ label('GUIDED.HELP') }}
+              </p>
+            </template>
+            <template v-else>
+              <p class="m-0 text-xs text-n-slate-11">
+                {{ label('GUIDED.CUSTOM_HELP') }}
+              </p>
+              <Button
+                type="button"
+                size="sm"
+                variant="faded"
+                :label="label('GUIDED.SWITCH')"
+                :disabled="loading || scenarioError"
+                @click="guidedDialogRef?.open()"
+              />
+            </template>
+          </section>
+
           <!-- BENTO CARD 1: WHAT TO COLLECT & PACING -->
           <section
             class="flex flex-col gap-4 rounded-2xl bg-n-solid-1 p-5 outline outline-1 outline-n-weak"
@@ -451,6 +547,12 @@ const isHubspotConnected = computed(
               >
                 <span class="i-lucide-check size-3.5 text-n-teal-10" />
                 {{ label('ALWAYS_SUMMARY') }}
+              </span>
+              <span
+                class="inline-flex items-center gap-1.5 rounded-xl bg-n-slate-2 px-3 py-1.5 text-xs font-medium text-n-slate-11"
+              >
+                <span class="i-lucide-map-pin size-3.5 text-n-teal-10" />
+                {{ label('GUIDED.LOCATION_INCLUDED') }}
               </span>
 
               <!-- Common Field Toggle Chips -->
@@ -504,9 +606,6 @@ const isHubspotConnected = computed(
               >
                 <span class="i-lucide-sliders-horizontal size-3" />
                 <span>{{ field.label || field.key }}</span>
-                <code class="font-mono text-xs opacity-75">
-                  {{ `lead_${field.key}` }}
-                </code>
               </button>
 
               <button
@@ -520,47 +619,61 @@ const isHubspotConnected = computed(
               </button>
             </div>
 
-            <!-- Pacing Segmented Control (Max Qualification Questions) -->
-            <div
-              class="flex flex-col gap-2.5 border-t border-n-weak pt-3.5 sm:flex-row sm:items-center sm:justify-between"
-            >
-              <div class="flex flex-col gap-0.5">
-                <span class="text-xs font-medium text-n-slate-12">
-                  {{ label('MAX_QUESTIONS') }}
-                </span>
-                <span class="text-xs text-n-slate-11">
-                  {{ label('QUESTIONS_HELP') }}
-                </span>
-              </div>
-              <div
-                class="flex shrink-0 self-start rounded-xl bg-n-alpha-1 p-1 outline outline-1 outline-n-weak"
-                role="radiogroup"
-                :aria-label="label('MAX_QUESTIONS')"
+            <p class="m-0 text-xs text-n-slate-11">
+              {{ label('GUIDED.LOCATION_HELP') }}
+            </p>
+            <details class="group">
+              <summary
+                class="cursor-pointer text-xs font-medium text-n-slate-11"
               >
-                <button
-                  v-for="count in QUESTION_OPTIONS"
-                  :key="count"
-                  type="button"
-                  role="radio"
-                  :aria-checked="settings.lead_max_questions === count"
-                  class="rounded-lg px-2.5 py-1 text-xs font-semibold transition-colors"
-                  :class="
-                    settings.lead_max_questions === count
-                      ? 'bg-n-solid-1 text-n-slate-12 shadow-sm'
-                      : 'text-n-slate-11 hover:text-n-slate-12'
-                  "
-                  @click="settings.lead_max_questions = count"
+                {{ label('GUIDED.PACING') }}
+              </summary>
+              <div
+                class="flex flex-col gap-2.5 border-t border-n-weak pt-3.5 sm:flex-row sm:items-center sm:justify-between"
+              >
+                <div class="flex flex-col gap-0.5">
+                  <span class="text-xs font-medium text-n-slate-12">
+                    {{ label('MAX_QUESTIONS') }}
+                  </span>
+                  <span class="text-xs text-n-slate-11">
+                    {{ label('QUESTIONS_HELP') }}
+                  </span>
+                </div>
+                <div
+                  class="flex shrink-0 self-start rounded-xl bg-n-alpha-1 p-1 outline outline-1 outline-n-weak"
+                  role="radiogroup"
+                  :aria-label="label('MAX_QUESTIONS')"
                 >
-                  {{ count === 0 ? label('NONE_QUESTIONS') : count }}
-                </button>
+                  <button
+                    v-for="count in QUESTION_OPTIONS"
+                    :key="count"
+                    type="button"
+                    role="radio"
+                    :aria-checked="settings.lead_max_questions === count"
+                    class="rounded-lg px-2.5 py-1 text-xs font-semibold transition-colors"
+                    :class="
+                      settings.lead_max_questions === count
+                        ? 'bg-n-solid-1 text-n-slate-12 shadow-sm'
+                        : 'text-n-slate-11 hover:text-n-slate-12'
+                    "
+                    @click="settings.lead_max_questions = count"
+                  >
+                    {{ count === 0 ? label('NONE_QUESTIONS') : count }}
+                  </button>
+                </div>
               </div>
-            </div>
+            </details>
           </section>
 
-          <!-- BENTO CARD 2: LEAD TYPES (INTENT RULES + CUSTOM ATTRIBUTE LIST SYNC) -->
-          <section
+          <!-- Optional business-specific categorization. -->
+          <details
             class="flex flex-col gap-3 rounded-2xl bg-n-solid-1 p-5 outline outline-1 outline-n-weak"
           >
+            <summary
+              class="cursor-pointer text-sm font-semibold text-n-slate-12"
+            >
+              {{ label('GUIDED.CATEGORIES') }}
+            </summary>
             <div class="flex items-start justify-between gap-3">
               <div>
                 <div class="flex items-center gap-2">
@@ -658,7 +771,7 @@ const isHubspotConnected = computed(
             >
               {{ label('NO_TYPES') }}
             </p>
-          </section>
+          </details>
 
           <!-- BENTO CARD 3: DELIVERY & SMART BEHAVIORS -->
           <section
@@ -696,7 +809,7 @@ const isHubspotConnected = computed(
                 id="lead-notification-team"
                 v-model="settings.lead_notification_team_id"
                 :disabled="teamsError"
-                class="m-0 shrink-0 rounded-xl border border-n-weak bg-n-alpha-1 px-3 py-2 text-xs font-medium text-n-slate-12"
+                class="m-0 w-full shrink-0 rounded-xl border border-n-weak bg-n-alpha-1 px-3 py-2 text-xs font-medium text-n-slate-12 sm:w-44"
               >
                 <option :value="null">{{ label('NOTIFICATION_OFF') }}</option>
                 <option v-for="team in teams" :key="team.id" :value="team.id">
@@ -794,6 +907,17 @@ const isHubspotConnected = computed(
       @discard="reset"
     />
 
+    <Dialog
+      ref="guidedDialogRef"
+      :title="label('GUIDED.SWITCH')"
+      :confirm-button-label="label('GUIDED.SWITCH')"
+      @confirm="adoptGuidedSetup"
+    >
+      <p class="m-0 text-sm text-n-slate-11">
+        {{ label('GUIDED.SWITCH_HELP') }}
+      </p>
+    </Dialog>
+
     <!-- PROGRESSIVE DISCLOSURE DIALOG 1: ADD / EDIT CUSTOM ATTRIBUTE FIELD -->
     <Dialog
       ref="fieldDialogRef"
@@ -813,16 +937,21 @@ const isHubspotConnected = computed(
           autofocus
           @blur="suggestDraftKey"
         />
-        <Input
-          v-model="fieldDraft.key"
-          :label="label('FIELD_KEY')"
-          :disabled="fieldDraft.locked"
-          :maxlength="40"
-          :placeholder="label('KEY_PLACEHOLDER')"
-        />
-        <p class="m-0 text-xs text-n-slate-11">
-          {{ label(fieldDraft.locked ? 'KEY_LOCKED' : 'KEY_HELP') }}
-        </p>
+        <details>
+          <summary class="cursor-pointer text-xs font-medium text-n-slate-11">
+            {{ label('GUIDED.ATTRIBUTE_SETTINGS') }}
+          </summary>
+          <Input
+            v-model="fieldDraft.key"
+            :label="label('FIELD_KEY')"
+            :disabled="fieldDraft.locked"
+            :maxlength="40"
+            :placeholder="label('KEY_PLACEHOLDER')"
+          />
+          <p class="m-0 text-xs text-n-slate-11">
+            {{ label(fieldDraft.locked ? 'KEY_LOCKED' : 'KEY_HELP') }}
+          </p>
+        </details>
         <p
           v-if="fieldDraftAttempted && fieldDraftError"
           class="m-0 text-xs text-n-ruby-11"

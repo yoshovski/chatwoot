@@ -1355,18 +1355,18 @@
         },
         "LEADS": {
           "TITLE": "Business leads",
-          "DESCRIPTION": "Qualify commercial inquiries, save contact custom attributes and route verified leads to your team or CRM.",
+          "DESCRIPTION": "Help interested businesses, collect useful details and offer email follow-up.",
           "ENABLE": "Capture business leads",
           "VERIFICATION": "Email format is checked, but mailbox ownership is not verified. Saving, CRM delivery and sales notification are separate steps.",
-          "MAX_QUESTIONS": "Questions before asking email",
+          "MAX_QUESTIONS": "Maximum optional questions",
           "NONE_QUESTIONS": "None",
-          "FIELDS": "What to collect",
-          "FIELDS_HELP": "Saved directly to Contact Custom Attributes. Toggle details for your AI agent to ask.",
+          "FIELDS": "What would you like to learn?",
+          "FIELDS_HELP": "Choose useful details. Your agent skips anything already shared and visitors can decline.",
           "ALWAYS_NAME_EMAIL": "Name & email",
           "ALWAYS_SUMMARY": "AI summary",
           "FIELD_KEY": "Contact attribute key",
           "FIELD_LABEL": "Detail to collect",
-          "ADD_FIELD": "Custom attribute",
+          "ADD_FIELD": "Another detail",
           "EDIT_FIELD_TITLE": "Edit custom attribute",
           "APPLY": "Apply",
           "CLOSE": "Close",
@@ -1402,7 +1402,7 @@
           "KEY_LOCKED": "This key is already saved. To protect existing mappings, add a new field to use a different key.",
           "NO_FIELDS": "No extra questions needed? Name, email and the summary can be enough.",
           "REMOVE_FIELD": "Remove {name}",
-          "TYPES_HELP": "Synced with the lead_type dropdown on Contacts. Tell the AI how to classify an inquiry.",
+          "TYPES_HELP": "Optional categories for organizing leads. The default business inquiry category is enough to get started.",
           "TYPE_PLACEHOLDER": "For example, enterprise",
           "RULE_PLACEHOLDER": "Describe the business interest or requirements that fit this type.",
           "NO_TYPES": "Add at least one lead type before enabling capture.",
@@ -1414,15 +1414,15 @@
           "QUESTIONS_HELP": "Asked one at a time, skipping anything already mentioned.",
           "FEWER_QUESTIONS": "Ask fewer optional questions",
           "MORE_QUESTIONS": "Ask more optional questions",
-          "SCENARIO_TITLE": "Lead capture scenario & checklist",
-          "SCENARIO_FOUND": "Active: {name}. Linked to the save_lead_details tool.",
-          "SCENARIO_MISSING": "Enabling this setting does not start a conversation flow. Add a scenario that asks for details and saves the lead.",
+          "SCENARIO_TITLE": "Advanced conversation settings",
+          "SCENARIO_FOUND": "Active conversation: {name}.",
+          "SCENARIO_MISSING": "Save these settings to create the guided conversation automatically.",
           "SCENARIO_ERROR": "Could not check the scenarios. Refresh the setup status to try again.",
           "MANAGE_SCENARIO": "Review scenarios",
           "ADD_SCENARIO": "Add lead capture scenario",
           "SAVE_ADD_SCENARIO": "Save and add scenario",
-          "FOLLOW_UP": "Delivery & smart behaviors",
-          "FOLLOW_UP_HELP": "Leads are always saved to Chatwoot Contacts. Configure team alerts, optional CRM sync and handoff behavior below.",
+          "FOLLOW_UP": "Where should leads go?",
+          "FOLLOW_UP_HELP": "Leads are saved to Contacts automatically. Choose a team for email alerts or connect HubSpot.",
           "HUBSPOT_TITLE": "HubSpot CRM & transcripts",
           "HUBSPOT_DETAILS": "Details",
           "HUBSPOT_ACTION": "Manage HubSpot",
@@ -1443,9 +1443,9 @@
           },
           "COMMON_FIELDS": {
             "company": "Company",
-            "country": "Country",
+            "country": "Business country",
             "audience_size": "Audience size",
-            "use_case": "Use case"
+            "use_case": "Business needs"
           },
           "HUBSPOT": {
             "LOADING": "Checking connection…",
@@ -1472,11 +1472,16 @@
               "VIEWER": "Viewer"
             },
             "CHAT": {
-              "VISITOR_QUESTION": "Hi, do you offer enterprise licensing for our 120-person team?",
-              "BOT_QUALIFY": "Yes, we offer custom enterprise plans. To help our team prepare options, could you share your {fields}?",
-              "BOT_ANSWER": "Yes, we offer custom enterprise plans. Would you like our team to follow up by email?",
-              "VISITOR_DETAILS": "We're Acme Media, launching a global channel.",
-              "BOT_ASK_CONTACT": "Got it! What is the best name and email address for our team to reach you?"
+              "VISITOR_QUESTION": "I'd like to use your service for my business.",
+              "BOT_ANSWER": "What would you like to use it for?",
+              "BOT_QUALIFY": "Could you share your {field}?",
+              "VISITOR_DETAILS": "Here are the details for our business.",
+              "BOT_FOLLOW_UP": "Would you like our team to follow up by email?",
+              "VISITOR_CONSENT": "Yes, please.",
+              "BOT_ASK_CONTACT": "What name and email should the team use?",
+              "BOT_SAVED": "Thanks, your details have been saved for email follow-up.",
+              "VISITOR_FIELD": "Shared by the visitor",
+              "DETECTED_LOCATION": "Visitor city and country included when detected"
             },
             "HANDOFF_SIM": {
               "VISITOR": "We want to discuss a Q4 sponsorship. Can I speak with someone right now?",
@@ -1489,8 +1494,8 @@
               "BOT": "Connecting you with customer support right away.",
               "NOTE": "Viewer support detected — no business lead created or sent to sales."
             },
-            "RECORD": "Contact attributes",
-            "EXAMPLE": "Verified lead",
+            "RECORD": "Saved lead",
+            "EXAMPLE": "Captured lead",
             "EXCLUDED_BADGE": "Excluded",
             "NO_LEAD_SAVED": "No lead_* attributes saved for this conversation.",
             "TEAM_ALERT": "Email alert",
@@ -1531,7 +1536,23 @@
           "TEST_VIEWER": "Ask about a personal subscription and request a person. Confirm transfer works without creating a business lead.",
           "TEST_DELIVERY": "Check one sales alert and the HubSpot contact. Resolve the conversation, then check its transcript note.",
           "TEST_REFUSAL": "Decline contact collection and confirm the agent keeps helping without saving a lead.",
-          "TRANSCRIPT_LEADS_HELP": "Only conversations where a business lead was captured are included. Public messages, timestamps and a conversation link are added after resolution. Viewer chats are excluded even if that contact was previously a business lead."
+          "TRANSCRIPT_LEADS_HELP": "Only conversations where a business lead was captured are included. Public messages, timestamps and a conversation link are added after resolution. Viewer chats are excluded even if that contact was previously a business lead.",
+          "GUIDED": {
+            "TITLE": "When should this run?",
+            "TRIGGER": "Who should your agent offer follow-up to?",
+            "DEFAULT_TRIGGER": "Businesses interested in buying, pricing, a demo, an integration or a partnership. Exclude personal end-user support.",
+            "NOTES": "Anything specific to your business? (optional)",
+            "NOTES_PLACEHOLDER": "For partnerships, ask what they want to integrate.",
+            "HELP": "Your agent handles questions, consent, contact details and saving automatically. No instructions to write.",
+            "CUSTOM_HELP": "You have a custom lead scenario. Keep it, or switch to the guided setup below.",
+            "SWITCH": "Use guided setup",
+            "SWITCH_HELP": "When you save, your current lead scenarios will be paused and kept in Scenarios. The guided flow will use the details selected here. Copy any business-specific preferences you want to keep into the optional notes.",
+            "LOCATION_INCLUDED": "Visitor location, when available",
+            "LOCATION_HELP": "Detected city and country are included automatically. Select Business country only if you also need to know where the company is based.",
+            "PACING": "Adjust conversation length",
+            "CATEGORIES": "Lead categories (optional)",
+            "ATTRIBUTE_SETTINGS": "Advanced field settings"
+          }
         }
       },
       "OPTIONS": {

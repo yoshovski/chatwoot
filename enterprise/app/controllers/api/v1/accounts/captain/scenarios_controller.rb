@@ -14,11 +14,17 @@ class Api::V1::Accounts::Captain::ScenariosController < Api::V1::Accounts::BaseC
   end
 
   def update
-    @scenario.update!(scenario_params)
+    @scenario.transaction do
+      @scenario.update!(scenario_params)
+      detach_guided_setup
+    end
   end
 
   def destroy
-    @scenario.destroy
+    @scenario.transaction do
+      @scenario.destroy!
+      detach_guided_setup
+    end
     head :no_content
   end
 
@@ -56,6 +62,13 @@ class Api::V1::Accounts::Captain::ScenariosController < Api::V1::Accounts::BaseC
 
   def assistant_scenarios
     @assistant.scenarios
+  end
+
+  # Explicitly editing/deleting the generated scenario returns ownership to the tenant.
+  def detach_guided_setup
+    return unless @assistant.config['lead_scenario_id'] == @scenario.id
+
+    @assistant.update!(config: @assistant.config.except('lead_scenario_id').merge('lead_guided_setup' => false))
   end
 
   def scenario_params

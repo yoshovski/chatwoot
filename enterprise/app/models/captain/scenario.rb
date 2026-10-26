@@ -69,7 +69,7 @@ class Captain::Scenario < ApplicationRecord
       tools: resolved_tools,
       commerce_enabled: assistant.commerce_enabled?,
       **assistant.business_prompt_context.slice(
-        :answer_format, :answer_length, :answer_length_instruction, :follow_up_questions, :helpful_links_mode
+        :answer_format, :answer_length, :answer_length_instruction, :follow_up_questions, :helpful_links_mode, :published_pricing_enabled
       ),
       feature_citation: assistant.citations_enabled?,
       # Same normalization the agents gem uses for handoff tool names, so the prompt names a tool that exists.

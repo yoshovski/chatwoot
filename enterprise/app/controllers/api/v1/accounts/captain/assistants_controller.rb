@@ -134,12 +134,12 @@ class Api::V1::Accounts::Captain::AssistantsController < Api::V1::Accounts::Base
 
   def assistant_config_attributes
     attributes = [
-      :product_name, :feature_faq, :feature_memory, :feature_citation, :lead_notification_team_id,
+      :product_name, :feature_faq, :feature_memory, :feature_citation, :lead_notification_team_id, :lead_trigger, :lead_instructions,
       :feature_contact_attributes, :welcome_message, :handoff_message, :resolution_message, :instructions, :temperature,
       :auto_resolve_mode, :handoff_collect_name, :handoff_collect_phone,
       :response_window, :published_pricing_enabled, :continue_while_waiting, :suggested_replies, :handoff_form_message,
       :max_suggested_replies, :product_cards, :tone, :off_limits_message, :business_type, :answer_length, :helpful_links_mode,
-      :tone_prompt, :answer_length_prompt, :follow_up_questions, :leads_enabled, :lead_max_questions,
+      :tone_prompt, :answer_length_prompt, :follow_up_questions, :leads_enabled, :lead_max_questions, :lead_guided_setup,
       :lead_handoff_capture_enabled, :handoff_when_online, :handoff_when_offline, :offline_handoff_message, :no_handoff_message,
       { link_allowlist: [], image_allowlist: [], handoff_rules: [], lead_fields: %i[key label], lead_types: %i[name rule] }
     ]
