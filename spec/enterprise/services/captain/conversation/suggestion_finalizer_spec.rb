@@ -47,12 +47,12 @@ RSpec.describe Captain::Conversation::SuggestionFinalizer do
     )
   end
 
-  describe 'exact count and fallback filling' do
+  describe 'maximum count without fallback filling' do
     [1, 3, 5].each do |target_count|
       context "when max_suggested_replies is #{target_count}" do
         let(:max_suggestions) { target_count }
 
-        it "returns exactly #{target_count} distinct suggestions by filling from the published brief pool" do
+        it "keeps one relevant suggestion without padding to the maximum of #{target_count}" do
           response = {
             'response_parts' => [{ 'text' => 'We help media brands manage subscriptions.', 'citation_indexes' => [] }],
             'suggested_replies' => [{ 'label' => 'Pricing plans', 'message' => 'How does pricing work?' }]
@@ -60,9 +60,9 @@ RSpec.describe Captain::Conversation::SuggestionFinalizer do
 
           items = described_class.new(assistant: assistant, response: response, run_result: run_result).perform
 
-          expect(items.size).to eq(target_count)
-          expect(items.pluck('title').uniq.size).to eq(target_count)
-          expect(tool_state[:suggestion_metrics]).to include(requested: target_count, delivered: target_count, snapshot_revision: 'rev-101')
+          expect(items.size).to eq(1)
+          expect(items.pluck('title')).to eq(['Pricing plans'])
+          expect(tool_state[:suggestion_metrics]).to include(requested: target_count, delivered: 1, fallback: 0, snapshot_revision: 'rev-101')
         end
       end
     end
@@ -82,8 +82,8 @@ RSpec.describe Captain::Conversation::SuggestionFinalizer do
 
     items = described_class.new(assistant: assistant, response: response, run_result: run_result).perform
 
-    expect(items.size).to eq(3)
-    expect(items.pluck('title').uniq.size).to eq(3)
+    expect(items.size).to eq(2)
+    expect(items.pluck('title').uniq.size).to eq(2)
     expect(items.pluck('title')).to include('Configure email notifications')
     expect(items.pluck('title')).not_to include('Cancel subscription', 'Learn more')
   end
@@ -103,7 +103,7 @@ RSpec.describe Captain::Conversation::SuggestionFinalizer do
     expect(items.first).to include('title' => 'Refund eligibility')
   end
 
-  it 'marks model choices as choice and fallback fills as follow_up when the reply ends with a question' do
+  it 'keeps the model choices without adding unrelated follow-ups to a closed question' do
     assistant.update!(config: assistant.config.merge('max_suggested_replies' => 4))
     response = {
       'response_parts' => [{ 'text' => 'Do you prefer monthly or annual billing?', 'citation_indexes' => [] }],
@@ -117,14 +117,11 @@ RSpec.describe Captain::Conversation::SuggestionFinalizer do
       assistant: assistant, response: response, run_result: run_result, has_closing_question: true
     ).perform
 
-    expect(items.size).to eq(4)
-    expect(items.first(2).pluck('kind')).to eq(%w[choice choice])
-    expect(items.last(2).pluck('kind')).to eq(%w[follow_up follow_up])
+    expect(items.pluck('title')).to eq(['Monthly billing', 'Annual billing'])
+    expect(tool_state[:suggestion_metrics]).to include(delivered: 2, fallback: 0)
   end
 
-  it 'immediately stops using fallback candidates whose supporting document is disabled or made agents_only' do
-    doc2.update!(enabled: false)
-    doc3.update!(agents_only: true)
+  it 'respects no suggestions even when the published brief has available product candidates' do
     response = {
       'response_parts' => [{ 'text' => 'Welcome to our platform.', 'citation_indexes' => [] }],
       'suggested_replies' => []
@@ -132,8 +129,8 @@ RSpec.describe Captain::Conversation::SuggestionFinalizer do
 
     items = described_class.new(assistant: assistant, response: response, run_result: run_result).perform
 
-    expect(items.pluck('title')).to eq(['Cleeng Core'])
-    expect(tool_state[:suggestion_metrics]).to include(delivered: 1, reason: 'insufficient_fallback_pool')
+    expect(items).to be_empty
+    expect(tool_state[:suggestion_metrics]).to include(delivered: 0, fallback: 0, reason: 'no_relevant_suggestions')
   end
 
   describe 'open-ended questions and qualification blocking' do
