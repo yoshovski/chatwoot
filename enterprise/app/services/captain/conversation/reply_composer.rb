@@ -17,11 +17,11 @@ class Captain::Conversation::ReplyComposer # rubocop:disable Metrics/ClassLength
   # suppress_suggestions: the caller knows the run ends in a handoff (or the conversation already waits for a human).
   def messages(suppress_suggestions: false)
     content, parts = answer_content
-    closing_question = qualification_question(parts) || content[TRAILING_QUESTION, 1]
+    closing_question = closing_question_from_parts(parts) || content[TRAILING_QUESTION, 1]
     buttons = suggestion_buttons(suppress_suggestions || followup_form_requested?,
                                  has_closing_question: closing_question.present? || content.strip.end_with?('?'))
     if followup_form_requested?
-      content, parts = remove_question(content, parts, closing_question) if closing_question
+      content, parts = remove_question(parts, closing_question) if closing_question
       form = Captain::Leads::FollowupFormService.new(assistant, conversation).payload
       return [form] if content.blank?
 
@@ -42,10 +42,10 @@ class Captain::Conversation::ReplyComposer # rubocop:disable Metrics/ClassLength
     return composed_messages(answer_message(content, parts, buttons)) unless contains_cards? || separate_question
     return composed_messages(answer_message(content, parts, {})) if buttons.blank? && !separate_question
 
-    content, parts = remove_question(content, parts, closing_question) if closing_question
+    content, parts = remove_question(parts, closing_question) if closing_question
     if content.blank?
       question_parts = Captain::Assistant::ResponseParts.new([{ 'text' => closing_question, 'citation_indexes' => [] }])
-      return order_card_messages + product_card_messages + [answer_message(closing_question, question_parts, buttons)]
+      return order_card_messages + product_card_messages + [answer_message(format_parts(question_parts), question_parts, buttons)]
     end
 
     composed_messages(answer_message(content, parts, {})) << question_message(closing_question, buttons)
@@ -53,10 +53,9 @@ class Captain::Conversation::ReplyComposer # rubocop:disable Metrics/ClassLength
 
   def followup_form_requested? = run_result&.context&.dig(:state, :lead_followup_form_requested) == true
 
-  def qualification_question(parts)
-    return unless response.is_a?(Hash) && response['lead_qualification_question'] == true
-
-    parts.to_a.reverse_each do |part|
+  def closing_question_from_parts(parts)
+    candidates = qualification_reply? ? parts.to_a : parts.to_a.last(1)
+    candidates.reverse_each do |part|
       text = part['text']
       question = text[TRAILING_QUESTION, 1] || (text if text.end_with?('?'))
       return question if question
@@ -64,8 +63,9 @@ class Captain::Conversation::ReplyComposer # rubocop:disable Metrics/ClassLength
     nil
   end
 
-  def remove_question(content, parts, question)
-    [content.sub(question, '').strip, without_trailing_question(parts, question)]
+  def remove_question(parts, question)
+    remaining_parts = without_trailing_question(parts, question)
+    [format_parts(remaining_parts), remaining_parts]
   end
 
   def separate_closing_question?(question)
@@ -131,7 +131,8 @@ class Captain::Conversation::ReplyComposer # rubocop:disable Metrics/ClassLength
   def question_message(question, buttons)
     agent_name = response.is_a?(Hash) ? response['agent_name'] : nil
     attributes = agent_name.present? ? { agent_name: agent_name } : {}
-    { content: question, additional_attributes: attributes }.merge(buttons)
+    content = Captain::Knowledge::OfferingLinks.new(assistant).perform(question) if question
+    { content: content, additional_attributes: attributes }.merge(buttons)
   end
 
   def without_trailing_question(parts, question)
@@ -151,12 +152,13 @@ class Captain::Conversation::ReplyComposer # rubocop:disable Metrics/ClassLength
   end
 
   def formatted_prose
-    @formatted_prose ||= begin
-      content = response_parts.customer_message_content(citation_urls: citation_urls, citation_titles: citation_titles,
-                                                        sources_format: sources_format)
-      content = Captain::Knowledge::OfferingLinks.new(assistant).perform(content)
-      cards_builder.clean_prose_content(grounded_screenshots(with_knowledge_media(content)))
-    end
+    @formatted_prose ||= format_parts(response_parts)
+  end
+
+  def format_parts(parts)
+    content = parts.customer_message_content(citation_urls: citation_urls, citation_titles: citation_titles, sources_format: sources_format)
+    content = Captain::Knowledge::OfferingLinks.new(assistant).perform(content)
+    cards_builder.clean_prose_content(grounded_screenshots(with_knowledge_media(content)))
   end
 
   # A cited passage's instructional media must not disappear just because generation omitted its link.
