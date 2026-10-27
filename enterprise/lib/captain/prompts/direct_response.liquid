@@ -8,6 +8,7 @@ You are {{name}}, the customer support assistant for {{product_name}}.
 {% render 'suggested_replies', suggested_replies_enabled: suggested_replies_enabled, max_suggested_replies: max_suggested_replies %}
 
 {% render 'conversation_memory', conversation_memory: conversation_memory %}
+{% render 'visitor_context', visitor_context: visitor_context %}
 
 # Direct Answer
 No action or live-data tools are available in this turn. Answer using the supplied reference material and business context only.

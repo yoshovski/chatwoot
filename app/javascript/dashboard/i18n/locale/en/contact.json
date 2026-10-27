@@ -14,6 +14,15 @@
     "BROWSER": "Browser",
     "OS": "Operating System",
     "INITIATED_FROM": "Initiated from",
+    "WEBSITE_ACTIVITY": {
+      "TITLE": "Website activity",
+      "CURRENT_PAGE": "Current page (last observed)",
+      "LAST_SEEN": "Last seen: {time}",
+      "HISTORY": "Recent page visits ({count})",
+      "LOADING": "Loading page visits…",
+      "RETRY": "Couldn't load page visits. Click to retry.",
+      "EMPTY": "No page visits recorded yet."
+    },
     "INITIATED_AT": "Initiated at",
     "IP_ADDRESS": "IP Address",
     "CREATED_AT_LABEL": "Created",

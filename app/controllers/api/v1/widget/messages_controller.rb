@@ -1,6 +1,7 @@
 class Api::V1::Widget::MessagesController < Api::V1::Widget::BaseController
   before_action :prevent_reply_to_resolved_conversation, only: [:create]
   before_action :set_conversation, only: [:create]
+  before_action :record_website_activity, only: [:create]
   before_action :set_message, only: [:update]
 
   def index
@@ -86,7 +87,7 @@ class Api::V1::Widget::MessagesController < Api::V1::Widget::BaseController
     params.permit(
       :id, :before, :after, :website_token,
       contact: [:name, :email],
-      message: [:content, :referer_url, :timestamp, :echo_id, :reply_to],
+      message: [:content, :referer_url, :page_title, :timestamp, :echo_id, :reply_to],
       custom_attributes: {},
       labels: []
     )
