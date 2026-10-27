@@ -3,10 +3,10 @@ class Api::V1::Widget::WebsiteActivityController < Api::V1::Widget::BaseControll
     page = params[:page]
     return head :unprocessable_entity unless valid_page?(page)
 
-    # Browsing is recorded only after this widget identity has interacted with the chat.
+    # Browsing is recorded only after this visitor has interacted with the chat.
     if conversations.joins(:messages).exists?(messages: { message_type: :incoming })
-      ::Widget::WebsiteActivity.new(@contact_inbox).record!(url: page[:url], title: page[:title], browser: browser_params,
-                                                            browser_language: browser.accept_language&.first&.code)
+      ::Widget::WebsiteActivity.new(conversation.contact_inbox).record!(url: page[:url], title: page[:title], browser: browser_params,
+                                                                        browser_language: browser.accept_language&.first&.code)
     end
     head :no_content
   end
