@@ -23,6 +23,7 @@ import { useAvailability } from 'widget/composables/useAvailability';
 import { SDK_SET_BUBBLE_VISIBILITY } from '../shared/constants/sharedFrameEvents';
 import { emitter } from 'shared/helpers/mitt';
 import { getWidgetForegroundColor } from 'shared/helpers/colorHelper';
+import { recordWebsiteActivity } from './api/websiteActivity';
 
 export default {
   name: 'App',
@@ -302,7 +303,10 @@ export default {
         if (message.event === 'config-set') {
           this.setLocale(message.locale);
           this.setBubbleLabel();
-          this.fetchOldConversations().then(() => this.setUnreadView());
+          this.fetchOldConversations().then(() => {
+            this.setUnreadView();
+            if (this.messageCount) recordWebsiteActivity();
+          });
           this.fetchAvailableAgents(websiteToken);
           this.setAppConfig(message);
           this.$store.dispatch('contacts/get');
@@ -310,14 +314,16 @@ export default {
         } else if (message.event === 'widget-visible') {
           this.scrollConversationToBottom();
         } else if (message.event === 'change-url') {
-          const { referrerURL, referrerHost } = message;
+          const { referrerURL, referrerHost, pageTitle } = message;
           this.initCampaigns({
             currentURL: referrerURL,
             websiteToken,
             isInBusinessHours: this.isInWorkingHours,
           });
           window.referrerURL = referrerURL;
+          window.referrerPageTitle = pageTitle || '';
           this.setReferrerHost(referrerHost);
+          if (this.messageCount) recordWebsiteActivity();
         } else if (message.event === 'toggle-close-button') {
           this.isMobile = message.isMobile;
         } else if (message.event === 'push-event') {

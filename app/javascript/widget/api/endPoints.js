@@ -17,6 +17,7 @@ const createConversation = params => {
         content: params.message,
         timestamp: new Date().toString(),
         referer_url: referrerURL,
+        page_title: window.referrerPageTitle || '',
       },
       custom_attributes: params.customAttributes,
     },
@@ -32,6 +33,7 @@ const sendMessage = (content, replyTo, { customAttributes, labels } = {}) => {
       reply_to: replyTo,
       timestamp: new Date().toString(),
       referer_url: referrerURL,
+      page_title: window.referrerPageTitle || '',
     },
   };
   if (customAttributes && Object.keys(customAttributes).length > 0) {
@@ -63,6 +65,7 @@ const sendAttachment = (
   }
 
   formData.append('message[referer_url]', referrerURL);
+  formData.append('message[page_title]', window.referrerPageTitle || '');
   formData.append('message[timestamp]', timestamp);
   if (replyTo !== null) {
     formData.append('message[reply_to]', replyTo);

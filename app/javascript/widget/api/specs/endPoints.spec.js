@@ -24,6 +24,7 @@ describe('#sendMessage', () => {
         message: {
           content: 'hello',
           referer_url: '',
+          page_title: '',
           timestamp: 'mock date',
         },
       },
@@ -68,6 +69,7 @@ describe('#createConversation', () => {
           content: 'hey',
           timestamp: 'mock date',
           referer_url: '',
+          page_title: '',
         },
         custom_attributes: { order_id: '12345' },
       },

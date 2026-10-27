@@ -170,7 +170,8 @@ class Captain::Assistant::DirectResponseService
       suggested_replies_enabled: context.dig(:state, :suggested_replies_enabled),
       max_suggested_replies: @assistant.max_suggested_replies,
       product_cards_enabled: context.dig(:state, :product_cards_enabled) || @assistant.product_cards?,
-      conversation_memory: context.dig(:state, :conversation_memory)
+      conversation_memory: context.dig(:state, :conversation_memory),
+      visitor_context: Captain::Assistant::VisitorContext.from_state(context[:state])
     )
   end
 

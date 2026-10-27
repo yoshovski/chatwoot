@@ -13,6 +13,12 @@
 {% endif -%}
 {% if conversation.additional_attributes -%}
   {% for attribute in conversation.additional_attributes -%}
+  {% unless attribute[0] == 'browser' or attribute[0] == 'browser_language' -%}
+  {% if attribute[0] == 'referer' -%}
+- Chat started from: {{ attribute[1] }}
+  {% else -%}
 - {{ attribute[0] }}: {{ attribute[1] }}
+  {% endif -%}
+  {% endunless -%}
   {% endfor -%}
 {% endif -%}

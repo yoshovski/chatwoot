@@ -10,6 +10,7 @@ class Api::V1::Widget::ConversationsController < Api::V1::Widget::BaseController
     ActiveRecord::Base.transaction do
       process_update_contact
       @conversation = create_conversation
+      record_website_activity
       conversation.messages.create!(message_params)
       # TODO: Temporary fix for message type cast issue, since message_type is returning as string instead of integer
       conversation.reload
@@ -96,7 +97,7 @@ class Api::V1::Widget::ConversationsController < Api::V1::Widget::BaseController
 
   def permitted_params
     params.permit(:id, :typing_status, :website_token, :email, contact: [:name, :email, :phone_number, { custom_attributes: {} }],
-                                                               message: [:content, :referer_url, :timestamp, :echo_id],
+                                                               message: [:content, :referer_url, :page_title, :timestamp, :echo_id],
                                                                custom_attributes: {})
   end
 end

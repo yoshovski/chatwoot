@@ -16,6 +16,7 @@ import ConversationParticipant from './ConversationParticipant.vue';
 import ContactInfo from './contact/ContactInfo.vue';
 import ContactNotes from './contact/ContactNotes.vue';
 import ConversationInfo from './ConversationInfo.vue';
+import WebsiteActivity from './WebsiteActivity.vue';
 import CustomAttributes from './customAttributes/CustomAttributes.vue';
 import SharedFiles from './SharedFiles.vue';
 import Draggable from 'vuedraggable';
@@ -219,6 +220,10 @@ onMounted(() => {
               <ConversationInfo
                 :conversation-attributes="conversationAdditionalAttributes"
                 :contact-attributes="contactAdditionalAttributes"
+              />
+              <WebsiteActivity
+                v-if="channelType === 'Channel::WebWidget'"
+                :conversation-id="conversationId"
               />
             </AccordionItem>
           </div>

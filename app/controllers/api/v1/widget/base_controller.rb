@@ -90,4 +90,10 @@ class Api::V1::Widget::BaseController < ApplicationController
       message_type: :incoming
     }
   end
+
+  def record_website_activity
+    page = permitted_params[:message]
+    ::Widget::WebsiteActivity.new(conversation.contact_inbox).record!(url: page[:referer_url], title: page[:page_title], browser: browser_params,
+                                                                      browser_language: browser.accept_language&.first&.code)
+  end
 end

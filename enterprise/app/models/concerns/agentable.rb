@@ -43,6 +43,7 @@ module Concerns::Agentable
     attrs = {
       current_time: format_current_time(state[:timezone]),
       conversation: state[:conversation] || {},
+      visitor_context: Captain::Assistant::VisitorContext.from_state(state),
       contact: config['feature_contact_attributes'].present? ? state[:contact] : nil,
       campaign: state[:campaign] || {},
       message_length_limit: state[:message_length_limit],

@@ -10,6 +10,10 @@ class ConversationApi extends ApiClient {
     return axios.get(`${this.url}/${conversationID}/labels`);
   }
 
+  getWebsiteActivity(conversationID) {
+    return axios.get(`${this.url}/${conversationID}/website_activity`);
+  }
+
   updateLabels(conversationID, labels) {
     return axios.post(`${this.url}/${conversationID}/labels`, { labels });
   }

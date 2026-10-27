@@ -50,6 +50,7 @@ class ActionCableConnector extends BaseActionCableConnector {
       'presence.update': this.onPresenceUpdate,
       'contact.deleted': this.onContactDelete,
       'contact.updated': this.onContactUpdate,
+      'website_activity.updated': this.onWebsiteActivityUpdate,
       'conversation.mentioned': this.onConversationMentioned,
       'notification.created': this.onNotificationCreated,
       'notification.deleted': this.onNotificationDeleted,
@@ -149,6 +150,11 @@ class ActionCableConnector extends BaseActionCableConnector {
   onConversationUpdated = data => {
     this.app.$store.dispatch('updateConversation', data);
     this.fetchConversationStats();
+  };
+
+  // eslint-disable-next-line class-methods-use-this
+  onWebsiteActivityUpdate = data => {
+    emitter.emit(BUS_EVENTS.WEBSITE_ACTIVITY_UPDATED, data);
   };
 
   onConversationUnreadCountChanged = () => {

@@ -43,11 +43,13 @@ export const onLocationChange = ({ referrerURL, referrerHost }) => {
   IFrameHelper.events.onLocationChange({
     referrerURL,
     referrerHost,
+    pageTitle: document.title,
   });
 };
 
 export const onLocationChangeListener = () => {
   let oldHref = document.location.href;
+  let oldTitle = document.title;
   const referrerHost = document.location.host;
   const config = {
     childList: true,
@@ -59,17 +61,33 @@ export const onLocationChangeListener = () => {
   });
 
   const bodyList = document.querySelector('body');
-  const observer = new MutationObserver(mutations => {
-    mutations.forEach(() => {
-      if (oldHref !== document.location.href) {
-        oldHref = document.location.href;
-        onLocationChange({
-          referrerURL: oldHref,
-          referrerHost,
-        });
-      }
-    });
+  const observer = new MutationObserver(() => {
+    if (oldHref === document.location.href && oldTitle === document.title)
+      return;
+    oldHref = document.location.href;
+    oldTitle = document.title;
+    onLocationChange({ referrerURL: oldHref, referrerHost });
   });
 
   observer.observe(bodyList, config);
+  observer.observe(document.head, { ...config, characterData: true });
+
+  const refreshPage = () => {
+    if (document.visibilityState === 'hidden') return;
+    oldHref = document.location.href;
+    oldTitle = document.title;
+    onLocationChange({ referrerURL: oldHref, referrerHost });
+  };
+  ['pushState', 'replaceState'].forEach(method => {
+    const original = window.history[method];
+    window.history[method] = function updateHistory(...args) {
+      const result = original.apply(this, args);
+      refreshPage();
+      return result;
+    };
+  });
+  window.addEventListener('popstate', refreshPage);
+  window.addEventListener('hashchange', refreshPage);
+  window.addEventListener('focus', refreshPage);
+  document.addEventListener('visibilitychange', refreshPage);
 };

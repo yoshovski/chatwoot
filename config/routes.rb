@@ -237,6 +237,7 @@ Rails.application.routes.draw do
                 end
               end
               resource :contact_info_request, only: [:create]
+              resource :website_activity, only: [:show], controller: 'website_activity'
               resources :assignments, only: [:create]
               resources :labels, only: [:create, :index]
               resource :participants, only: [:show, :create, :update, :destroy]
@@ -583,6 +584,7 @@ Rails.application.routes.draw do
         resource :config, only: [:create]
         resources :campaigns, only: [:index]
         resources :events, only: [:create]
+        resource :website_activity, only: [:create], controller: 'website_activity'
         resources :messages, only: [:index, :create, :update]
         resources :conversations, only: [:index, :create] do
           collection do
