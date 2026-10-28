@@ -25,7 +25,7 @@ const render = progress =>
 describe('SetupProgressCard', () => {
   it('lists done, skipped and open steps', async () => {
     const wrapper = render(
-      buildSetupProgress({ ai_agent: true }, ['knowledge'])
+      buildSetupProgress({ knowledge: true }, ['test_agent'])
     );
 
     expect(wrapper.findAll('li')).toHaveLength(6);
@@ -37,7 +37,7 @@ describe('SetupProgressCard', () => {
     const skipped = wrapper.findAll('li')[1];
     expect(skipped.text()).toContain('HOME.SETUP.SKIPPED');
     await skipped.find('button').trigger('click');
-    expect(wrapper.emitted('unskip')).toEqual([['knowledge']]);
+    expect(wrapper.emitted('unskip')).toEqual([['test_agent']]);
 
     const open = wrapper.findAll('li')[2];
     expect(open.text()).toContain('HOME.SETUP.STEPS.AGENT_INBOX.HINT');

@@ -14,31 +14,10 @@ const emit = defineEmits(['skip', 'unskip']);
 
 const { t } = useI18n();
 
-const STEP_TEXT = {
-  ai_agent: [
-    'HOME.SETUP.STEPS.AI_AGENT.TITLE',
-    'HOME.SETUP.STEPS.AI_AGENT.HINT',
-  ],
-  knowledge: [
-    'HOME.SETUP.STEPS.KNOWLEDGE.TITLE',
-    'HOME.SETUP.STEPS.KNOWLEDGE.HINT',
-  ],
-  agent_inbox: [
-    'HOME.SETUP.STEPS.AGENT_INBOX.TITLE',
-    'HOME.SETUP.STEPS.AGENT_INBOX.HINT',
-  ],
-  chat_widget: [
-    'HOME.SETUP.STEPS.CHAT_WIDGET.TITLE',
-    'HOME.SETUP.STEPS.CHAT_WIDGET.HINT',
-  ],
-  mailbox: ['HOME.SETUP.STEPS.MAILBOX.TITLE', 'HOME.SETUP.STEPS.MAILBOX.HINT'],
-  teammate: [
-    'HOME.SETUP.STEPS.TEAMMATE.TITLE',
-    'HOME.SETUP.STEPS.TEAMMATE.HINT',
-  ],
-};
-const stepTitle = key => t(STEP_TEXT[key][0]);
-const stepHint = key => t(STEP_TEXT[key][1]);
+const stepText = (key, part) =>
+  t(`HOME.SETUP.STEPS.${key.toUpperCase()}.${part}`);
+const stepTitle = key => stepText(key, 'TITLE');
+const stepHint = key => stepText(key, 'HINT');
 const isOpen = step => !step.done && !step.skipped;
 const stepIcon = step => {
   if (step.done) return 'i-lucide-circle-check';

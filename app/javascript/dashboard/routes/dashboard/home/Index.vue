@@ -6,7 +6,11 @@ import { useAdmin } from 'dashboard/composables/useAdmin';
 import { useUISettings } from 'dashboard/composables/useUISettings';
 import { useAbortableRequest } from 'dashboard/composables/useAbortableRequest';
 import CaptainHomeAPI from 'dashboard/api/captain/home';
-import { buildSetupProgress } from './homeSetup';
+import {
+  buildSetupProgress,
+  FINISHED_SETTING,
+  SKIPPED_SETTING,
+} from './homeSetup';
 
 import Button from 'dashboard/components-next/button/Button.vue';
 import Icon from 'dashboard/components-next/icon/Icon.vue';
@@ -15,8 +19,6 @@ import SetupProgressCard from './components/SetupProgressCard.vue';
 import StatTile from './components/StatTile.vue';
 import StatusRow from './components/StatusRow.vue';
 import UsageCard from './components/UsageCard.vue';
-
-const SKIPPED_SETTING = 'home_setup_skipped';
 
 const { t } = useI18n();
 const { isAdmin } = useAdmin();
@@ -33,13 +35,18 @@ const captainRoute = navigationPath => ({
   params: { navigationPath },
 });
 const stepRoute = step =>
-  step.navigationPath
-    ? captainRoute(step.navigationPath)
+  step.guided
+    ? { name: 'account_home_setup', params: { step: step.key } }
     : { name: step.route };
 
 const skippedSteps = computed(() => uiSettings.value[SKIPPED_SETTING] || []);
+const finishedSteps = computed(() => uiSettings.value[FINISHED_SETTING] || []);
 const setupProgress = computed(() =>
-  buildSetupProgress(summary.value?.setup, skippedSteps.value)
+  buildSetupProgress(
+    summary.value?.setup,
+    skippedSteps.value,
+    finishedSteps.value
+  )
 );
 const showSetup = computed(
   () => isAdmin.value && summary.value && !setupProgress.value.isComplete
