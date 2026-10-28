@@ -1,0 +1,76 @@
+{
+  "HOME": {
+    "TITLE": "Welcome back, {name}",
+    "SUBTITLE": "A short look at your workspace. Open any card for the details.",
+    "ERROR": "Couldn't load your overview.",
+    "RETRY": "Try again",
+    "SETUP": {
+      "TITLE": "Set up your workspace",
+      "PROGRESS": "{done} of {total} done",
+      "GO": "Start",
+      "SKIP": "Skip",
+      "STEPS": {
+        "AI_AGENT": {
+          "TITLE": "Create your AI agent",
+          "HINT": "Give it a name and describe your business."
+        },
+        "KNOWLEDGE": {
+          "TITLE": "Add knowledge",
+          "HINT": "Add your website, documents or FAQs."
+        },
+        "AGENT_INBOX": {
+          "TITLE": "Connect the AI agent to an inbox",
+          "HINT": "Choose where it answers customers."
+        },
+        "CHAT_WIDGET": {
+          "TITLE": "Add the chat widget to your website",
+          "HINT": "Paste the widget script into your site."
+        },
+        "MAILBOX": {
+          "TITLE": "Connect a mailbox",
+          "HINT": "Answer customer emails from the same place."
+        },
+        "TEAMMATE": {
+          "TITLE": "Invite a teammate",
+          "HINT": "Share the conversations the AI hands over."
+        }
+      }
+    },
+    "QUICK_ACTIONS": {
+      "TITLE": "Needs attention",
+      "UNASSIGNED": "Unassigned chats",
+      "UNANSWERED": "Unanswered questions",
+      "LIVE_VISITORS": "Visitors online"
+    },
+    "PERFORMANCE": {
+      "TITLE": "Performance",
+      "LINK": "Overview",
+      "WINDOW": "Last 7 days",
+      "AI_RESOLUTION": "Resolved by AI",
+      "SALES_ASSISTED": "Sales assisted",
+      "LEADS": "Leads captured"
+    },
+    "STATUS": {
+      "TITLE": "Project status",
+      "WIDGET": "Chat widget",
+      "MAILBOX": "Mailbox",
+      "DOMAIN": "Help center domain",
+      "INSTALLED": "Installed",
+      "INSTALL": "Install",
+      "CONNECTED": "Connected",
+      "CONNECT": "Connect",
+      "DOMAIN_VERIFIED": "Verified",
+      "DOMAIN_PENDING": "Pending",
+      "DOMAIN_NONE": "Set up"
+    },
+    "USAGE": {
+      "TITLE": "Usage this month",
+      "LINK": "Billing",
+      "AI_REPLIES": "AI replies",
+      "DOCUMENTS": "Knowledge documents",
+      "CONVERSATIONS": "Conversations",
+      "OF_LIMIT": "{used} / {limit}",
+      "NO_LIMIT": "No limit on your plan"
+    }
+  }
+}

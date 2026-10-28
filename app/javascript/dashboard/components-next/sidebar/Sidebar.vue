@@ -316,6 +316,12 @@ const reportRoutes = computed(() => newReportRoutes());
 const menuItems = computed(() => {
   return [
     {
+      name: 'Home',
+      label: t('SIDEBAR.HOME'),
+      icon: 'i-lucide-house',
+      to: accountScopedRoute('account_home'),
+    },
+    {
       name: 'Inbox',
       badgeCount: notificationUnreadCount.value,
       label: t('SIDEBAR.INBOX'),
