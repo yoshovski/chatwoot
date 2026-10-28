@@ -80,7 +80,7 @@ class Captain::ActionStepsValidator < ActiveModel::Validator
 
   def validate_output(output, request_keys, attribute)
     errors.add(attribute, 'must come from a request step') unless request_keys.include?(output['step'])
-    errors.add(attribute, 'needs a response path') if output['path'].blank?
+    errors.add(attribute, 'needs a valid response path') unless Captain::Tools::ResponsePath.valid?(output['path'])
     errors.add(attribute, "type must be one of #{OUTPUT_TYPES.join(', ')}") if output['type'].present? && OUTPUT_TYPES.exclude?(output['type'])
   end
 

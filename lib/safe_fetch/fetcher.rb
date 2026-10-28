@@ -19,7 +19,8 @@ class SafeFetch::Fetcher
         tempfile: tempfile,
         filename: options.filename,
         content_type: normalized_content_type(response['content-type']),
-        headers: response.each_header.to_h
+        headers: response.each_header.to_h,
+        status: response.code.to_i
       )
     end
   end

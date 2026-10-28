@@ -53,8 +53,8 @@ class Api::V1::Accounts::Captain::CustomToolsController < Api::V1::Accounts::Bas
   end
 
   def execute_test_request(tool)
-    http_tool = Captain::Tools::HttpTool.new(nil, tool)
-    http_tool.send(:execute_http_request, tool.endpoint_url, nil, nil)
+    tool.valid?
+    Captain::Tools::ActionRunner.new(tool, mode: :test).run(params: {}, contact: {}).last_request_body
   end
 
   # Auth values are write-only: secrets are stored encrypted and a blank secret keeps the saved one.
