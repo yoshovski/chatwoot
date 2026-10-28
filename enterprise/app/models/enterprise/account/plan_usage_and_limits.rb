@@ -55,7 +55,7 @@ module Enterprise::Account::PlanUsageAndLimits # rubocop:disable Metrics/ModuleL
     default_limits = default_captain_limits
 
     {
-      documents: self[:limits][CAPTAIN_DOCUMENTS] || default_limits['documents'],
+      documents: self[:limits][CAPTAIN_DOCUMENTS] || billing_plan_limit(:documents) || default_limits['documents'],
       responses: self[:limits][CAPTAIN_RESPONSES] || default_limits['responses']
     }.with_indifferent_access
   end
@@ -153,11 +153,17 @@ module Enterprise::Account::PlanUsageAndLimits # rubocop:disable Metrics/ModuleL
   def get_limits(limit_name)
     config_name = "ACCOUNT_#{limit_name.to_s.upcase}_LIMIT"
     return self[:limits][limit_name.to_s] if self[:limits][limit_name.to_s].present?
+    return billing_plan_limit(limit_name) if billing_plan_limit(limit_name).present?
     return shopify_plan_limits.fetch(limit_name.to_s, 0) if shopify_billing?
 
     return GlobalConfig.get(config_name)[config_name] if GlobalConfig.get(config_name)[config_name].present?
 
     ChatwootApp.max_limit
+  end
+
+  # The Super Admin plan's limit; the account's own `limits` still win.
+  def billing_plan_limit(name)
+    account_subscription&.billing_plan&.public_send("#{name}_limit")
   end
 
   def shopify_billing?

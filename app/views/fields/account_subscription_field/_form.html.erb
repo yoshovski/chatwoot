@@ -4,7 +4,26 @@
   <% AccountSubscription::CONFIGURATION_FIELDS.each do |name| %>
     <%= label_tag "account_subscription_#{name}", t("super_admin.account_subscription.#{name}") %>
     <% value = name == 'reset_usage' ? false : field.data.public_send(name) %>
-    <% if %w[enabled founder_plan trial_enabled reset_usage new_custom_payment].include?(name) %>
+    <% if name == 'billing_plan_id' %>
+      <p class="mb-2 text-sm"><%= t('super_admin.account_subscription.plan_helper') %></p>
+      <%= select_tag "account[subscription_settings][billing_plan_id]",
+                     options_from_collection_for_select(BillingPlan.ordered, :id, :name, value),
+                     include_blank: t('super_admin.account_subscription.no_plan'), id: "account_subscription_#{name}", class: 'mb-3 block w-full' %>
+      <% plan = field.data.billing_plan %>
+      <% if plan %>
+        <div class="mb-3">
+          <span class="block text-sm"><%= t('super_admin.account_subscription.add_ons') %></span>
+          <%= hidden_field_tag 'account[subscription_settings][add_ons][]', '' %>
+          <% plan.add_ons.each do |key, price| %>
+            <label class="block text-sm">
+              <%= check_box_tag 'account[subscription_settings][add_ons][]', key, field.data.add_ons.include?(key), id: "account_subscription_add_on_#{key}" %>
+              <%= t("super_admin.billing_plan.features.#{key}") %> (<%= format('%.2f', price / 100.0) %> <%= plan.currency.upcase %>)
+            </label>
+          <% end %>
+          <% if plan.add_ons.empty? %><span class="text-sm"><%= t('super_admin.account_subscription.no_add_ons') %></span><% end %>
+        </div>
+      <% end %>
+    <% elsif %w[enabled founder_plan trial_enabled reset_usage new_custom_payment].include?(name) %>
       <%= hidden_field_tag "account[subscription_settings][#{name}]", '0' %>
       <%= check_box_tag "account[subscription_settings][#{name}]", '1', value, id: "account_subscription_#{name}" %>
     <% elsif %w[billing_interval currency custom_payment_description].include?(name) %>

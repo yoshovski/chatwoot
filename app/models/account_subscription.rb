@@ -2,9 +2,11 @@ class AccountSubscription < ApplicationRecord
   SUPPORTED_CURRENCIES = %w[eur usd gbp brl].freeze
   PRICE_FIELDS = %w[monthly_price annual_price setup_fee custom_payment].freeze
   PRICE_FORMAT = /\A\d+(?:[.,]\d{1,2})?\z/
-  CONFIGURATION_FIELDS = %w[enabled founder_plan monthly_limit billing_interval currency monthly_price annual_price annual_discount_percent
-                            setup_fee custom_payment custom_payment_description new_custom_payment trial_enabled trial_days
+  CONFIGURATION_FIELDS = %w[billing_plan_id enabled founder_plan monthly_limit billing_interval currency monthly_price annual_price
+                            annual_discount_percent setup_fee custom_payment custom_payment_description new_custom_payment trial_enabled trial_days
                             trial_ends_at period_started_at period_ends_at reset_usage].freeze
+  include AccountSubscriptionPlan
+
   belongs_to :account
   attr_accessor :reset_usage, :new_custom_payment
 
@@ -46,8 +48,14 @@ class AccountSubscription < ApplicationRecord
     [anchor.advance(months: months), anchor.advance(months: months + 1)]
   end
 
+  # AI conversations counted against the limit: lifetime during a capped trial, otherwise the current monthly quota.
+  def counted_windows(at: Time.current)
+    windows = account.conversation_usage_windows
+    trial_capped? ? windows : windows.where(quota_period_start: quota_period(at: at).first)
+  end
+
   def consumed(at: Time.current)
-    account.conversation_usage_windows.where(quota_period_start: quota_period(at: at).first).count
+    counted_windows(at: at).count
   end
 
   def trial_active?
@@ -57,15 +65,15 @@ class AccountSubscription < ApplicationRecord
   def ai_reply_allowed?(conversation = nil)
     return true unless trial_active?
     return false unless trial_ends_at && trial_ends_at > Time.current
-    return true if monthly_limit.nil?
 
-    period = quota_period.first
+    limit = effective_limit
+    return true if limit.nil?
+
     window = conversation && account.conversation_usage_windows.where(conversation: conversation).where('ends_at > ?', Time.current).last
-    return consumed < monthly_limit unless window
+    return consumed < limit unless window
 
     # The final allowed conversation may finish its 24-hour window. A new window beyond the quota cannot reply.
-    account.conversation_usage_windows.where(quota_period_start: period).where('(started_at, id) <= (?, ?)', window.started_at,
-                                                                               window.id).count <= monthly_limit
+    counted_windows.where('(started_at, id) <= (?, ?)', window.started_at, window.id).count <= limit
   end
 
   def annual_amount_cents
@@ -102,18 +110,21 @@ class AccountSubscription < ApplicationRecord
 
   def daily_usage
     today = Time.current.utc.to_date
-    start_date = [today - 29, (created_at || Time.current).utc.to_date].max
-    counts = account.conversation_usage_windows.where(started_at: Time.utc(start_date.year, start_date.month, start_date.day)..Time.current)
-                    .group(Arel.sql('DATE(started_at)')).count
-    (start_date..today).map { |day| { date: day.iso8601, consumed: counts.fetch(day, 0) } }
+    start_date = today - 29
+    counts = daily_counts(account.conversation_usage_windows, :started_at, start_date)
+    conversations = daily_counts(account.conversations, :created_at, start_date)
+    (start_date..today).map { |day| { date: day.iso8601, consumed: counts.fetch(day, 0), conversations: conversations.fetch(day, 0) } }
   end
 
   def usage_summary
     start_at, end_at = quota_period
     usage = consumed
+    limit = effective_limit
     {
-      enabled: enabled, monthly_limit: monthly_limit, consumed: usage, quota_started_at: start_at, quota_resets_at: end_at,
-      ai_replies_paused: !ai_reply_allowed?, warning: !monthly_limit.nil? && (monthly_limit.zero? || usage >= monthly_limit * 0.8),
+      enabled: enabled, monthly_limit: limit, consumed: usage, quota_started_at: start_at, quota_resets_at: end_at,
+      trial_enabled: trial_active?, trial_ends_at: (trial_ends_at if trial_active?),
+      plan: plan_summary, products: product_usage,
+      ai_replies_paused: !ai_reply_allowed?, warning: !limit.nil? && (limit.zero? || usage >= limit * 0.8),
       daily_usage: daily_usage,
       history: account.conversation_usage_windows.group(:quota_period_start).order(quota_period_start: :desc).limit(12).count.map do |period, count|
         { period_started_at: period, consumed: count }
@@ -152,7 +163,7 @@ class AccountSubscription < ApplicationRecord
     return unless trial_enabled?
     return unless will_save_change_to_trial_enabled? || trial_ends_at.blank?
 
-    self.trial_ends_at ||= Time.current + trial_days.days
+    self.trial_ends_at ||= Time.current + plan_trial_days.days
     self.payment_status = 'trialing' if stripe_subscription_id.blank?
   end
 

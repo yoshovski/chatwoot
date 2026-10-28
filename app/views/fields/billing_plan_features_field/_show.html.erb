@@ -1,0 +1,8 @@
+<ul class="m-0 list-none p-0">
+  <% field.resource.features.each do |key| %>
+    <li><%= t("super_admin.billing_plan.features.#{key}") %>: <%= t('super_admin.billing_plan.included') %></li>
+  <% end %>
+  <% field.resource.add_ons.each do |key, price| %>
+    <li><%= t("super_admin.billing_plan.features.#{key}") %>: <%= t('super_admin.billing_plan.add_on') %> (<%= format('%.2f', price / 100.0) %> <%= field.resource.currency.upcase %>)</li>
+  <% end %>
+</ul>
