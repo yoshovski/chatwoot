@@ -14,7 +14,7 @@ import HomeCard from './components/HomeCard.vue';
 import SetupProgressCard from './components/SetupProgressCard.vue';
 import StatTile from './components/StatTile.vue';
 import StatusRow from './components/StatusRow.vue';
-import UsageMeter from './components/UsageMeter.vue';
+import UsageCard from './components/UsageCard.vue';
 
 const SKIPPED_SETTING = 'home_setup_skipped';
 
@@ -252,40 +252,12 @@ onMounted(loadSummary);
           </ul>
         </HomeCard>
 
-        <HomeCard
+        <UsageCard
           class="md:col-span-2 xl:col-span-3"
-          :title="$t('HOME.USAGE.TITLE')"
-          :link-label="isAdmin ? $t('HOME.USAGE.LINK') : ''"
-          :to="isAdmin ? { name: 'billing_settings_index' } : null"
-        >
-          <div
-            v-if="isLoading"
-            class="grid grid-cols-1 gap-4 sm:grid-cols-3"
-            aria-busy="true"
-          >
-            <span
-              v-for="n in 3"
-              :key="n"
-              class="h-8 w-full animate-pulse rounded bg-n-alpha-2"
-            />
-          </div>
-          <div v-else class="grid grid-cols-1 gap-4 sm:grid-cols-3">
-            <UsageMeter
-              :label="$t('HOME.USAGE.AI_REPLIES')"
-              :used="summary.usage.ai_replies.used"
-              :limit="summary.usage.ai_replies.limit"
-            />
-            <UsageMeter
-              :label="$t('HOME.USAGE.DOCUMENTS')"
-              :used="summary.usage.documents.used"
-              :limit="summary.usage.documents.limit"
-            />
-            <UsageMeter
-              :label="$t('HOME.USAGE.CONVERSATIONS')"
-              :used="summary.usage.conversations.used"
-            />
-          </div>
-        </HomeCard>
+          :usage="summary?.usage"
+          :is-loading="isLoading"
+          :billing-route="isAdmin ? { name: 'billing_settings_index' } : null"
+        />
       </div>
     </div>
   </section>
