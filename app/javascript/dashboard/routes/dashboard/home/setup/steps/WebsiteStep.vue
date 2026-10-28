@@ -82,12 +82,12 @@ const submit = async () => {
     <form
       v-if="showForm"
       class="flex flex-col gap-3 sm:flex-row sm:items-start"
+      novalidate
       @submit.prevent="submit"
     >
       <Input
         v-model="url"
         class="flex-1"
-        type="url"
         autofocus
         :label="$t('HOME.GUIDED.WEBSITE.LABEL')"
         :placeholder="$t('HOME.GUIDED.WEBSITE.PLACEHOLDER')"

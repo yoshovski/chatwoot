@@ -47,6 +47,8 @@ export function useGuidedSetup() {
         true
       );
       source.value = data;
+      // Imported pages count as knowledge on the checklist right away.
+      await loadSummary();
     } catch (error) {
       importError.value = errorMessage(error) || 'IMPORT_FAILED';
     } finally {
@@ -61,13 +63,10 @@ export function useGuidedSetup() {
       assistantId.value,
       sourceId
     );
-    const wasImporting = isImporting.value;
     source.value = data;
     if (progress.value.phase === 'select' && !importError.value) {
       await importRecommended();
     }
-    // The checklist marks knowledge done once the first page is read.
-    if (wasImporting && !isImporting.value) await loadSummary();
   };
 
   const poll = useTimeoutPoll(

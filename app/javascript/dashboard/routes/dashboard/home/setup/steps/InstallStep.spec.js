@@ -29,7 +29,7 @@ const inbox = {
   id: 3,
   name: 'Website',
   website_url: 'https://www.example.com',
-  web_widget_script: '<script>token</script>',
+  web_widget_script: '\n    <script>\n      token\n    </script>\n  ',
 };
 
 describe('InstallStep', () => {
@@ -49,7 +49,7 @@ describe('InstallStep', () => {
       checkInstallation,
     });
 
-    expect(wrapper.find('code').text()).toBe('<script>token</script>');
+    expect(wrapper.find('code').text()).toBe('<script>\n  token\n</script>');
     await wrapper
       .find('button[data-label="HOME.GUIDED.INSTALL.CHECK"]')
       .trigger('click');

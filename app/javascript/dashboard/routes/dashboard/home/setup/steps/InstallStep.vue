@@ -26,7 +26,18 @@ const isChecking = ref(false);
 const result = ref(props.guided.setup?.chat_widget ? 'installed' : '');
 
 const inbox = computed(() => props.guided.state?.widget_inbox);
-const snippet = computed(() => inbox.value?.web_widget_script?.trim() || '');
+// The server's script is indented for an ERB template; drop the shared indent so it pastes cleanly.
+const dedent = text => {
+  const lines = text.replace(/^\n+|\s+$/g, '').split('\n');
+  const indents = lines
+    .filter(line => line.trim())
+    .map(line => line.match(/^\s*/)[0].length);
+  const shared = Math.min(...indents);
+  return lines.map(line => line.slice(shared)).join('\n');
+};
+const snippet = computed(() =>
+  dedent(inbox.value?.web_widget_script || '')
+);
 const site = computed(() => {
   try {
     return new URL(inbox.value.website_url).host.replace(/^www\./, '');

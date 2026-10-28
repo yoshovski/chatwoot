@@ -114,7 +114,7 @@ onBeforeUnmount(guided.stopPolling);
 <template>
   <section class="flex h-full w-full flex-col overflow-y-auto bg-n-background">
     <div
-      class="mx-auto flex w-full max-w-[48rem] flex-1 flex-col gap-5 px-4 py-5 sm:px-6 sm:py-8"
+      class="mx-auto flex w-full max-w-[48rem] flex-col gap-5 px-4 pb-24 pt-5 sm:px-6 sm:py-8"
     >
       <header class="flex items-start justify-between gap-3">
         <div class="flex min-w-0 flex-col gap-0.5">
@@ -160,7 +160,7 @@ onBeforeUnmount(guided.stopPolling);
             <Icon
               v-if="segment.done"
               icon="i-lucide-check"
-              class="size-3 shrink-0 text-n-teal-10"
+              class="hidden size-3 shrink-0 text-n-teal-10 sm:inline-block"
             />
             <span class="truncate">{{ segment.label }}</span>
           </button>
@@ -168,11 +168,11 @@ onBeforeUnmount(guided.stopPolling);
       </ol>
 
       <div
-        class="flex flex-1 flex-col rounded-xl bg-n-solid-1 p-4 outline outline-1 -outline-offset-1 outline-n-container sm:p-6"
+        class="flex flex-col rounded-xl bg-n-solid-1 p-4 outline outline-1 -outline-offset-1 outline-n-container sm:p-6"
       >
         <div
           v-if="guided.isLoading"
-          class="flex flex-1 items-center justify-center py-16"
+          class="flex items-center justify-center py-16"
           aria-busy="true"
         >
           <Spinner :size="20" class="text-n-slate-10" />
@@ -180,7 +180,7 @@ onBeforeUnmount(guided.stopPolling);
         <div
           v-else-if="guided.loadError"
           role="alert"
-          class="flex flex-1 flex-col items-center justify-center gap-3 py-16 text-center"
+          class="flex flex-col items-center justify-center gap-3 py-16 text-center"
         >
           <Icon icon="i-lucide-circle-alert" class="size-5 text-n-ruby-10" />
           <p class="mb-0 text-sm text-n-slate-11">
