@@ -92,6 +92,7 @@ class Captain::Assistant < ApplicationRecord
   has_many :document_analyses, class_name: 'Captain::DocumentAnalysis', dependent: :destroy_async
   has_many :responses, class_name: 'Captain::AssistantResponse', dependent: :destroy_async
   has_many :faq_suggestions, class_name: 'Captain::FaqSuggestion', dependent: :destroy_async
+  has_many :knowledge_gaps, class_name: 'Captain::KnowledgeGap', dependent: :destroy_async
   has_many :captain_inboxes,
            class_name: 'CaptainInbox',
            foreign_key: :captain_assistant_id,

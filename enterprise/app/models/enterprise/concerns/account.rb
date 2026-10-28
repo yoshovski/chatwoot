@@ -13,6 +13,7 @@ module Enterprise::Concerns::Account
     has_many :captain_assistant_responses, dependent: :destroy_async, class_name: 'Captain::AssistantResponse'
     has_many :captain_faq_observations, dependent: :destroy_async, class_name: 'Captain::FaqObservation'
     has_many :captain_faq_suggestions, dependent: :destroy_async, class_name: 'Captain::FaqSuggestion'
+    has_many :captain_knowledge_gaps, dependent: :destroy_async, class_name: 'Captain::KnowledgeGap'
     has_many :captain_documents, dependent: :destroy_async, class_name: 'Captain::Document'
     has_many :captain_custom_tools, dependent: :destroy_async, class_name: 'Captain::CustomTool'
     has_many :captain_mcp_servers, dependent: :destroy_async, class_name: 'Captain::McpServer'

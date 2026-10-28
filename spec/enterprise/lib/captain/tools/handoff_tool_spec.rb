@@ -75,6 +75,12 @@ RSpec.describe Captain::Tools::HandoffTool, type: :model do
           expect(tool_context.state[:captain_v2_handoff_tool_completed]).to be true
         end
 
+        it 'keeps the reason category in state for knowledge-gap tracking' do
+          tool.perform(tool_context, reason: 'Not in the knowledge', reason_category: 'missing_knowledge')
+
+          expect(tool_context.state[:captain_handoff_reason_category]).to eq('missing_knowledge')
+        end
+
         it 'dispatches the handoff event after leaving the lock transaction' do
           found_conversation = Conversation.find(conversation.id)
           scoped_conversations = Conversation.where(account_id: assistant.account_id)
