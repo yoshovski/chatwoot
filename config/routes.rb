@@ -157,6 +157,11 @@ Rails.application.routes.draw do
               post :dismiss, on: :member
             end
             resource :home, only: [:show], controller: 'home'
+            resource :guided_setup, only: [:show], controller: 'guided_setup' do
+              post :website
+              post :go_live
+              post :check_installation
+            end
             resources :message_reports, only: [:create]
             resources :bulk_actions, only: [:create]
             resources :copilot_threads, only: [:index, :create] do

@@ -8,6 +8,7 @@ import AddAccountModal from 'dashboard/components/app/AddAccountModal.vue';
 import UpgradePage from 'dashboard/routes/dashboard/upgrade/UpgradePage.vue';
 
 import { useUISettings } from 'dashboard/composables/useUISettings';
+import { useGuidedSetupAutoOpen } from 'dashboard/routes/dashboard/home/setup/useGuidedSetupAutoOpen';
 import { useAccount } from 'dashboard/composables/useAccount';
 import { useWindowSize } from '@vueuse/core';
 
@@ -47,6 +48,7 @@ export default {
     const { accountId } = useAccount();
     const { width: windowWidth } = useWindowSize();
     const callsStore = useCallsStore();
+    useGuidedSetupAutoOpen();
 
     return {
       uiSettings,

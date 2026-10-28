@@ -18,6 +18,11 @@ vi.mock('dashboard/composables/useAccount', async () => {
   return { useAccount: () => ({ accountId: createRef(1) }) };
 });
 
+// Opening the guided setup needs the store and the Captain API; it has its own spec.
+vi.mock('dashboard/routes/dashboard/home/setup/useGuidedSetupAutoOpen', () => ({
+  useGuidedSetupAutoOpen: vi.fn(),
+}));
+
 vi.mock('dashboard/stores/calls', () => ({
   useCallsStore: () => ({ hasActiveCall: false, hasIncomingCall: false }),
 }));

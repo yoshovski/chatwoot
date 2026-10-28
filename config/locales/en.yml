@@ -506,6 +506,12 @@ en:
         visitor_city: 'Visitor city (detected)'
         visitor_country: 'Visitor country (detected)'
         visitor_country_code: 'Visitor country code (detected)'
+    guided_setup:
+      default_agent_name: 'AI agent'
+      default_description: 'You help customers of %{business} with questions about its products, services and orders.'
+      invalid_url: 'Enter a website address like example.com.'
+      not_ready: 'Add knowledge before turning the AI agent on.'
+      inbox_taken: 'Another AI agent already answers in the website chat. Disconnect it first.'
     websites:
       already_added: 'This website is already listed. Open its page selection to discover it again.'
       invalid_selection: 'Select only discovered pages that are available for import.'

@@ -10,17 +10,17 @@
       "GO": "Start",
       "SKIP": "Skip",
       "STEPS": {
-        "AI_AGENT": {
-          "TITLE": "Create your AI agent",
-          "HINT": "Give it a name and describe your business."
-        },
         "KNOWLEDGE": {
-          "TITLE": "Add knowledge",
-          "HINT": "Add your website, documents or FAQs."
+          "TITLE": "Add your website",
+          "HINT": "Import its pages so the AI agent can answer."
+        },
+        "TEST_AGENT": {
+          "TITLE": "Test your AI agent",
+          "HINT": "Ask a few questions your customers would ask."
         },
         "AGENT_INBOX": {
-          "TITLE": "Connect the AI agent to an inbox",
-          "HINT": "Choose where it answers customers."
+          "TITLE": "Turn the AI agent on",
+          "HINT": "Let it answer in your website chat."
         },
         "CHAT_WIDGET": {
           "TITLE": "Add the chat widget to your website",
@@ -79,6 +79,80 @@
       "TRIAL_ENDS": "Trial · ends {date}",
       "TRIAL_ENDED": "Trial ended",
       "PAUSED": "AI replies paused"
+    },
+    "GUIDED": {
+      "TITLE": "Set up your AI agent",
+      "STEP_OF": "Step {current} of {total}",
+      "CLOSE": "Close setup",
+      "BACK": "Back",
+      "CONTINUE": "Continue",
+      "SKIP": "Skip for now",
+      "FINISH": "Finish",
+      "ERROR": "Couldn't load your setup.",
+      "RETRY": "Try again",
+      "STEP_NAMES": {
+        "KNOWLEDGE": "Website",
+        "TEST_AGENT": "Test",
+        "AGENT_INBOX": "Turn on",
+        "CHAT_WIDGET": "Install"
+      },
+      "WEBSITE": {
+        "TITLE": "Start with your website",
+        "DESCRIPTION": "Your AI agent learns from your pages and answers customers with what it finds there.",
+        "LABEL": "Website address",
+        "PLACEHOLDER": "example.com",
+        "SUBMIT": "Import website",
+        "INVALID": "Enter a website address like example.com.",
+        "STAGES": {
+          "FIND": "Find your pages",
+          "PICK": "Pick the useful ones",
+          "READ": "Read them"
+        },
+        "FINDING": "{count} page found so far. This usually takes a minute or two. | {count} pages found so far. This usually takes a minute or two.",
+        "READING": "{ready} of {total} pages ready. You can continue; the rest are read in the background.",
+        "DONE": "{ready} page imported. Your AI agent answers from it. | {ready} pages imported. Your AI agent answers from them.",
+        "SOME_FAILED": "{count} page couldn't be read. | {count} pages couldn't be read.",
+        "EMPTY_TITLE": "No pages to import automatically",
+        "EMPTY_BODY": "Choose pages yourself in Knowledge, or try another address.",
+        "FAILED_TITLE": "We couldn't read this website",
+        "FAILED_BODY": "Check that the address is right and the site is public, then try again.",
+        "IMPORT_FAILED": "The pages couldn't be imported. Try again.",
+        "REVIEW": "Review pages",
+        "OTHER_URL": "Use another address"
+      },
+      "TEST": {
+        "TITLE": "Test your AI agent",
+        "DESCRIPTION": "Ask what your customers would ask. Nothing you type here reaches a customer.",
+        "NO_AGENT": "Add your website first, so the AI agent has something to answer from."
+      },
+      "LIVE": {
+        "TITLE": "Turn your AI agent on",
+        "DESCRIPTION": "It answers visitors in your website chat. Your team can take over any conversation.",
+        "KNOWLEDGE_READY": "Knowledge is ready",
+        "KNOWLEDGE_IMPORTING": "Pages are still being read. It answers from the ready ones.",
+        "NO_KNOWLEDGE": "No knowledge yet. Add your website first.",
+        "INBOX_READY": "Website chat: {name}",
+        "INBOX_NEW": "A website chat will be created",
+        "TURN_ON": "Turn on",
+        "ON_TITLE": "Your AI agent is on",
+        "ON_BODY": "It answers new conversations in {name}."
+      },
+      "INSTALL": {
+        "TITLE": "Add the chat to your website",
+        "DESCRIPTION": "Paste this code before the closing body tag on every page, or into your site builder's custom code setting.",
+        "COPY": "Copy code",
+        "COPIED": "Code copied",
+        "CHECK": "Check installation",
+        "NO_INBOX": "Turn the AI agent on first. That creates your website chat.",
+        "SETTINGS": "Chat settings",
+        "RESULT": {
+          "INSTALLED": "The chat runs on your website.",
+          "SCRIPT_FOUND": "Found the code on {site}. It shows as installed after the first visit.",
+          "NOT_FOUND": "We couldn't find the code on {site}. If you add it with a tag manager, open your site once and check again.",
+          "UNREACHABLE": "We couldn't open {site}. Check that it is public.",
+          "ERROR": "The check didn't finish. Try again."
+        }
+      }
     }
   }
 }

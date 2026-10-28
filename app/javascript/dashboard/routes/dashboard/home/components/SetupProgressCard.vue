@@ -15,13 +15,13 @@ const emit = defineEmits(['skip', 'unskip']);
 const { t } = useI18n();
 
 const STEP_TEXT = {
-  ai_agent: [
-    'HOME.SETUP.STEPS.AI_AGENT.TITLE',
-    'HOME.SETUP.STEPS.AI_AGENT.HINT',
-  ],
   knowledge: [
     'HOME.SETUP.STEPS.KNOWLEDGE.TITLE',
     'HOME.SETUP.STEPS.KNOWLEDGE.HINT',
+  ],
+  test_agent: [
+    'HOME.SETUP.STEPS.TEST_AGENT.TITLE',
+    'HOME.SETUP.STEPS.TEST_AGENT.HINT',
   ],
   agent_inbox: [
     'HOME.SETUP.STEPS.AGENT_INBOX.TITLE',
