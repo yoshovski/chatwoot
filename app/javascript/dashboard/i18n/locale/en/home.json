@@ -34,7 +34,10 @@
           "TITLE": "Invite a teammate",
           "HINT": "Share the conversations the AI hands over."
         }
-      }
+      },
+      "DONE": "Done",
+      "SKIPPED": "Skipped",
+      "UNDO": "Undo"
     },
     "QUICK_ACTIONS": {
       "TITLE": "Needs attention",

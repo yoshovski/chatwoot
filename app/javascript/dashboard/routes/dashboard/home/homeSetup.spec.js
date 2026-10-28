@@ -1,20 +1,26 @@
 import { buildSetupProgress, SETUP_STEPS } from './homeSetup';
 
 describe('buildSetupProgress', () => {
-  it('lists the first three open steps in order', () => {
-    const progress = buildSetupProgress({ ai_agent: true, knowledge: true });
-
-    expect(progress.doneCount).toBe(2);
-    expect(progress.total).toBe(SETUP_STEPS.length);
-    expect(progress.openSteps.map(step => step.key)).toEqual([
-      'agent_inbox',
-      'chat_widget',
+  it('keeps every step in order with its state', () => {
+    const progress = buildSetupProgress({ ai_agent: true, knowledge: true }, [
       'mailbox',
     ]);
+
+    expect(progress.steps.map(step => step.key)).toEqual(
+      SETUP_STEPS.map(step => step.key)
+    );
+    expect(progress.steps.filter(step => step.done).map(s => s.key)).toEqual([
+      'ai_agent',
+      'knowledge',
+    ]);
+    expect(progress.steps.find(step => step.key === 'mailbox').skipped).toBe(
+      true
+    );
+    expect(progress.doneCount).toBe(2);
     expect(progress.isComplete).toBe(false);
   });
 
-  it('leaves skipped steps out and counts them as settled', () => {
+  it('is complete when every step is done or skipped', () => {
     const setup = { ai_agent: true, knowledge: true, agent_inbox: true };
     const progress = buildSetupProgress(setup, [
       'chat_widget',
@@ -23,7 +29,6 @@ describe('buildSetupProgress', () => {
     ]);
 
     expect(progress.doneCount).toBe(3);
-    expect(progress.openSteps).toEqual([]);
     expect(progress.isComplete).toBe(true);
   });
 
@@ -31,6 +36,6 @@ describe('buildSetupProgress', () => {
     const progress = buildSetupProgress(undefined);
 
     expect(progress.doneCount).toBe(0);
-    expect(progress.openSteps).toHaveLength(3);
+    expect(progress.steps.every(step => !step.done)).toBe(true);
   });
 });
