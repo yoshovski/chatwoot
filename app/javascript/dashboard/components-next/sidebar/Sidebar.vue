@@ -864,6 +864,7 @@ const menuItems = computed(() => {
         ? t('SIDEBAR.BILLING')
         : t('ACCOUNT_SUBSCRIPTION.TITLE'),
       icon: 'i-lucide-credit-card',
+      activeOn: ['billing_settings_index', 'billing_settings_usage'],
       to: accountScopedRoute('billing_settings_index'),
     },
     {

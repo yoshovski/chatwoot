@@ -1,6 +1,7 @@
 import { frontendURL } from '../../../../helper/URLHelper';
 import SettingsWrapper from '../SettingsWrapper.vue';
 import ProviderIndex from './ProviderIndex.vue';
+import UsagePage from './UsagePage.vue';
 
 export default {
   routes: [
@@ -22,6 +23,14 @@ export default {
           path: '',
           name: 'billing_settings_index',
           component: ProviderIndex,
+          meta: {
+            permissions: ['administrator'],
+          },
+        },
+        {
+          path: 'usage',
+          name: 'billing_settings_usage',
+          component: UsagePage,
           meta: {
             permissions: ['administrator'],
           },
