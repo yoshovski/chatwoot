@@ -2375,7 +2375,6 @@
           "NOTE": "Custom tools allow your AI agent to interact with external APIs and services. Create tools to fetch data, perform actions, or integrate with your existing systems to enhance your AI agent's capabilities."
         }
       },
-      "FORM_DESCRIPTION": "Configure your custom tool to connect with external APIs",
       "OPTIONS": {
         "EDIT_TOOL": "Edit tool",
         "DELETE_TOOL": "Delete tool"
@@ -2397,14 +2396,12 @@
         "CONFIRM": "Disable tool"
       },
       "CREATE": {
-        "TITLE": "Create Custom Tool",
-        "SUCCESS_MESSAGE": "Custom tool created successfully",
-        "ERROR_MESSAGE": "Failed to create custom tool"
+        "SUCCESS_MESSAGE": "Action created",
+        "ERROR_MESSAGE": "Failed to create the action"
       },
       "EDIT": {
-        "TITLE": "Edit Custom Tool",
-        "SUCCESS_MESSAGE": "Custom tool updated successfully",
-        "ERROR_MESSAGE": "Failed to update custom tool"
+        "SUCCESS_MESSAGE": "Action saved",
+        "ERROR_MESSAGE": "Failed to save the action"
       },
       "DELETE": {
         "TITLE": "Delete Custom Tool",
@@ -2425,11 +2422,121 @@
         "UPGRADE_PROMPT": "Please upgrade to a paid plan to use this feature.",
         "ASK_ADMIN": "Please reach out to your administrator for the upgrade."
       },
-      "TEST": {
-        "BUTTON": "Test connection",
-        "SUCCESS": "Endpoint returned HTTP {status}",
-        "ERROR": "Connection failed",
-        "DISABLED_HINT": "Testing is only available for endpoints without templates or request bodies."
+      "ACTION": {
+        "NEW_TITLE": "New action",
+        "EDIT_TITLE": "Edit action",
+        "SAVE": "Save action",
+        "LEAVE": "You have unsaved changes. Leave this page?",
+        "LOAD_ERROR": "Could not load the action",
+        "NAME": {
+          "LABEL": "Name",
+          "PLACEHOLDER": "Cancel order"
+        },
+        "WHEN": {
+          "LABEL": "When to use",
+          "PLACEHOLDER": "Use when the customer asks to cancel an order that hasn't shipped yet.",
+          "HELP": "The AI reads this to decide when to run the action. Say what the customer wants, not how the API works."
+        },
+        "INPUTS": {
+          "TITLE": "Inputs",
+          "HELP": "What the AI asks the customer for. The test value is used when you run a test.",
+          "TEST_VALUE": "Test value"
+        },
+        "CONNECTION": {
+          "TITLE": "Connection",
+          "SAVED": "Saved",
+          "REPLACE": "Replace"
+        },
+        "STEPS": {
+          "TITLE": "Steps",
+          "HELP": "Steps run in order. The first one that fails stops the action, and the AI gets no data from it.",
+          "REQUEST": "Request",
+          "VERIFY": "Verify",
+          "KEY": "Step key",
+          "ADD_REQUEST": "Add request",
+          "ADD_VERIFY": "Add verify",
+          "MOVE_UP": "Move step up",
+          "MOVE_DOWN": "Move step down",
+          "REMOVE": "Remove step",
+          "URL_PLACEHOLDER": "https://api.example.com/orders?number={'{{'} order_number {'}}'}",
+          "HEADERS": "Headers",
+          "HEADER_NAME_PLACEHOLDER": "Header",
+          "HEADER_VALUE_PLACEHOLDER": "Value",
+          "ADD_HEADER": "Add header",
+          "REMOVE_HEADER": "Remove header",
+          "BODY_PLACEHOLDER": "{'{'} \"reason\": \"customer request\" {'}'}",
+          "BODY_TYPES": {
+            "JSON": "JSON",
+            "TEXT": "Text"
+          },
+          "LEFT": "Value",
+          "RIGHT": "Must match",
+          "COMPARISONS": {
+            "EXACT": "is exactly",
+            "CASE_INSENSITIVE": "matches, ignoring case",
+            "EMAIL": "is the same email",
+            "PHONE": "is the same phone number"
+          },
+          "REQUIRE_VERIFIED": "Require a verified contact",
+          "VERIFY_PREVIEW": "Stop unless {left} {comparison} {right}"
+        },
+        "VARIABLES": {
+          "INSERT": "Insert a variable",
+          "INPUTS": "Inputs",
+          "OUTPUTS": "Outputs of earlier steps",
+          "CONTACT": "Contact",
+          "EMPTY": "Nothing here yet"
+        },
+        "OUTPUTS": {
+          "TITLE": "Outputs",
+          "HELP": "Fields saved from the responses. Later steps can use them; the AI only sees the ones you allow.",
+          "EMPTY": "Run a test, then click a field in the response to save it as an output.",
+          "KEY": "Key",
+          "SOURCE": "From",
+          "TYPE": "Type",
+          "AI_VISIBLE": "AI can see it",
+          "REQUIRED": "Required",
+          "REMOVE": "Remove output",
+          "TEMPLATE_PLACEHOLDER": "Order {'{{'} outputs.order_id {'}}'} is {'{{'} outputs.status {'}}'}"
+        },
+        "MODE": {
+          "TITLE": "When the AI runs it",
+          "BACKGROUND": "In the background",
+          "BACKGROUND_HELP": "The AI runs it and uses the result in its reply.",
+          "CONFIRM": "Ask the customer to confirm",
+          "CONFIRM_HELP": "The customer sees a Confirm button first. Best for anything that changes data.",
+          "CONFIRM_PROMPT": "Confirmation question",
+          "CONFIRM_PROMPT_PLACEHOLDER": "Cancel order #{'{{'} outputs.order_id {'}}'}?",
+          "SUCCESS": "Message when it worked",
+          "SUCCESS_PLACEHOLDER": "Your order is cancelled.",
+          "FAILURE": "Message when it failed",
+          "FAILURE_PLACEHOLDER": "Sorry, I couldn't cancel it. A teammate will help.",
+          "PREVIEW": "Preview",
+          "DEFAULT_PROMPT": "Do you want me to {title}?",
+          "THIS_ACTION": "run this action",
+          "CONFIRM_BUTTON": "Confirm",
+          "CANCEL_BUTTON": "Cancel",
+          "CHANNEL_NOTE": "The card works in the website widget. On channels without buttons, the AI won't run this action."
+        },
+        "TEST": {
+          "TITLE": "Test",
+          "HELP": "Runs the steps against the real API with the test values and a sample contact (test{'@'}example.com).",
+          "RUN": "Run test",
+          "RUN_UP_TO": "Up to {key}",
+          "CHANGE_WARNING": "These steps change data in the real API. Run them anyway?",
+          "RUN_ANYWAY": "Run anyway",
+          "ERROR": "The test could not run",
+          "PASSED": "passed",
+          "FAILED": "failed",
+          "DURATION": "{ms} ms",
+          "MISSING": "Required outputs missing: {keys}",
+          "COMPARED": "Compared \"{left}\" with \"{right}\"",
+          "ARRAY_CHOICE": "Save this item or the field of every item?",
+          "THIS_ITEM": "This item {index}",
+          "EVERY_ITEM": "Every item [*]",
+          "OUTPUTS": "What the action saved",
+          "NO_OUTPUTS": "No outputs yet"
+        }
       },
       "FORM": {
         "TITLE": {
@@ -2441,14 +2548,6 @@
         "DESCRIPTION": {
           "LABEL": "Description",
           "PLACEHOLDER": "Looks up order details by order ID"
-        },
-        "HTTP_METHOD": {
-          "LABEL": "Method"
-        },
-        "ENDPOINT_URL": {
-          "LABEL": "Endpoint URL",
-          "PLACEHOLDER": "https://api.example.com/orders/{'{{'} order_id {'}}'}",
-          "ERROR": "Valid URL is required"
         },
         "AUTH_TYPE": {
           "LABEL": "Authentication Type"
@@ -2494,10 +2593,6 @@
         },
         "PARAM_REQUIRED": {
           "LABEL": "Required"
-        },
-        "REQUEST_TEMPLATE": {
-          "LABEL": "Request Body Template (Optional)",
-          "PLACEHOLDER": "{'{'}\n  \"order_id\": \"{'{{'} order_id {'}}'}\"\n{'}'}"
         },
         "RESPONSE_TEMPLATE": {
           "LABEL": "Response Template (Optional)",

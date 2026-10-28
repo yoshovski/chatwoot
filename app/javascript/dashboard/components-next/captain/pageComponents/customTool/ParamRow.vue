@@ -30,6 +30,11 @@ const required = defineModel('required', {
   default: false,
 });
 
+const testValue = defineModel('testValue', {
+  type: String,
+  default: '',
+});
+
 const paramTypeOptions = computed(() => [
   { value: 'string', label: t('CAPTAIN.CUSTOM_TOOLS.FORM.PARAM_TYPES.STRING') },
   { value: 'number', label: t('CAPTAIN.CUSTOM_TOOLS.FORM.PARAM_TYPES.NUMBER') },
@@ -87,6 +92,10 @@ defineExpose({ validate });
           :placeholder="
             t('CAPTAIN.CUSTOM_TOOLS.FORM.PARAM_DESCRIPTION.PLACEHOLDER')
           "
+        />
+        <Input
+          v-model="testValue"
+          :placeholder="t('CAPTAIN.CUSTOM_TOOLS.ACTION.INPUTS.TEST_VALUE')"
         />
         <label class="flex items-center gap-2 cursor-pointer">
           <Checkbox v-model="required" />

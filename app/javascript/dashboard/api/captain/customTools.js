@@ -32,9 +32,11 @@ class CaptainCustomTools extends ApiClient {
     return axios.delete(`${this.url}/${id}`);
   }
 
-  test(data = {}) {
+  // options: id (use the saved secrets of that tool) and stop_after (a step key).
+  test(data = {}, options = {}) {
     return axios.post(`${this.url}/test`, {
       custom_tool: data,
+      ...options,
     });
   }
 }
