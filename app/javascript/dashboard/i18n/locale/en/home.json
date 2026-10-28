@@ -64,13 +64,18 @@
       "DOMAIN_NONE": "Set up"
     },
     "USAGE": {
-      "TITLE": "Usage this month",
+      "TITLE": "Usage",
       "LINK": "Billing",
-      "AI_REPLIES": "AI replies",
+      "AI_CONVERSATIONS": "AI conversations",
+      "SEATS": "Seats",
+      "INBOXES": "Inboxes",
       "DOCUMENTS": "Knowledge documents",
-      "CONVERSATIONS": "Conversations",
       "OF_LIMIT": "{used} / {limit}",
-      "NO_LIMIT": "No limit on your plan"
+      "RESETS": "Resets {date}",
+      "NO_LIMIT_SET": "No limit set",
+      "TRIAL_ENDS": "Trial · ends {date}",
+      "TRIAL_ENDED": "Trial ended",
+      "PAUSED": "AI replies paused"
     }
   }
 }
