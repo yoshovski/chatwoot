@@ -3,6 +3,7 @@ import FaqSuggestions from './FaqSuggestions.vue';
 
 const mocks = vi.hoisted(() => ({
   apiGet: vi.fn(),
+  gapsGet: vi.fn(),
   dispatch: vi.fn(),
   replace: vi.fn(),
   route: null,
@@ -11,6 +12,10 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock('dashboard/api/captain/faqSuggestions', () => ({
   default: { get: mocks.apiGet },
+}));
+
+vi.mock('dashboard/api/captain/knowledgeGaps', () => ({
+  default: { get: mocks.gapsGet },
 }));
 
 vi.mock('dashboard/composables/store', async () => {
@@ -71,11 +76,33 @@ const FaqSuggestionCardStub = {
   template: '<div>{{ suggestion.question }}</div>',
 };
 
+const KnowledgeGapCardStub = {
+  props: ['gap'],
+  template: '<div>{{ gap.question }}</div>',
+};
+
+const mountPage = () =>
+  shallowMount(FaqSuggestions, {
+    global: {
+      mocks: { $t: key => key },
+      stubs: {
+        PageLayout: PageLayoutStub,
+        FaqSuggestionCard: FaqSuggestionCardStub,
+        KnowledgeGapCard: KnowledgeGapCardStub,
+      },
+    },
+  });
+
+const gapsResponse = payload => ({
+  data: { payload, meta: { page: 1, total_count: payload.length } },
+});
+
 describe('FaqSuggestions', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.route.params.assistantId = 1;
     mocks.route.query = {};
+    mocks.gapsGet.mockResolvedValue(gapsResponse([]));
     mocks.getterValues['captainFaqSuggestions/getRecords'].value = [];
     mocks.getterValues['captainFaqSuggestions/getMeta'].value = {
       totalCount: 0,
@@ -93,7 +120,35 @@ describe('FaqSuggestions', () => {
     });
   });
 
+  it('opens on the unanswered questions', async () => {
+    mocks.gapsGet.mockResolvedValue(
+      gapsResponse([{ id: 7, question: 'Do you ship to Spain?' }])
+    );
+    mocks.apiGet.mockResolvedValue({
+      data: {
+        payload: [{ id: 1, question: 'Agent answer' }],
+        meta: { page: 1, total_count: 1 },
+      },
+    });
+
+    const wrapper = mountPage();
+    await flushPromises();
+
+    expect(wrapper.text()).toContain('Do you ship to Spain?');
+    expect(wrapper.text()).not.toContain('Agent answer');
+    expect(mocks.gapsGet).toHaveBeenCalledWith(
+      expect.objectContaining({ assistantId: 1, page: 1 })
+    );
+    expect(mocks.replace).toHaveBeenCalledWith({
+      query: { tab: 'unanswered', page: 1 },
+    });
+
+    wrapper.unmount();
+  });
+
   it('keeps the latest assistant results when an older request is superseded', async () => {
+    // The agent-resolved list moved to the second tab when unanswered questions became the default.
+    mocks.route.query = { tab: 'answered' };
     const firstRequest = deferred();
     const secondRequest = deferred();
     const queued = [firstRequest, secondRequest];

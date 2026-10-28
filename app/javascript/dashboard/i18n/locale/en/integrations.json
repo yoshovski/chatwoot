@@ -2720,7 +2720,7 @@
       }
     },
     "FAQ_SUGGESTIONS": {
-      "HEADER": "FAQ suggestions",
+      "HEADER": "Suggestions",
       "SEARCH_PLACEHOLDER": "Search suggestions...",
       "QUEUE_COUNT": "{count} suggestion to review | {count} suggestions to review",
       "QUEUE_HINT": "Ranked by customer demand",
@@ -2754,6 +2754,42 @@
         "APPROVE": "There was an error approving the FAQ. Please try again.",
         "DISMISS": "There was an error dismissing the suggestion. Please try again.",
         "SAVE": "There was an error saving the suggestion. Please try again."
+      }
+    },
+    "KNOWLEDGE_GAPS": {
+      "TABS": {
+        "UNANSWERED": "Unanswered",
+        "ANSWERED": "Answered by agents"
+      },
+      "QUEUE_HINT": "Questions your AI agent couldn't answer, most asked first. Add an answer once and it's used from then on.",
+      "CONVERSATIONS": "{count} conversation | {count} conversations",
+      "LAST_SEEN": "Last seen {time}",
+      "REASON": {
+        "HANDOFF": "Handed to a person",
+        "NO_SOURCE": "No answer in knowledge"
+      },
+      "ADD_ANSWER": "Add answer",
+      "DISMISS": "Dismiss",
+      "DIALOG": {
+        "TITLE": "Add an answer",
+        "DESCRIPTION": "Customers asked this in {count} conversation. Your answer is saved as an FAQ and used by the AI agent. | Customers asked this in {count} conversations. Your answer is saved as an FAQ and used by the AI agent.",
+        "ANSWER_PLACEHOLDER": "Write the answer the AI agent should give",
+        "SEEN_IN": "Asked in",
+        "NO_CONVERSATIONS": "No conversations you can open.",
+        "SAVE": "Save answer"
+      },
+      "EMPTY_STATE": {
+        "TITLE": "No unanswered questions",
+        "SUBTITLE": "Questions your AI agent couldn't answer from its knowledge will show up here."
+      },
+      "SUCCESS": {
+        "ANSWERED": "Answer saved to the AI agent's knowledge.",
+        "DISMISSED": "Question dismissed."
+      },
+      "ERRORS": {
+        "LOAD": "There was an error loading unanswered questions. Please try again.",
+        "ANSWER": "There was an error saving the answer. Please try again.",
+        "DISMISS": "There was an error dismissing the question. Please try again."
       }
     },
     "INBOXES": {

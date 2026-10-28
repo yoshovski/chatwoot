@@ -283,4 +283,63 @@ RSpec.describe Captain::Assistant::SessionCaptureService do
       expect(service.capture!.scenario_ids).to eq([])
     end
   end
+
+  describe 'knowledge gaps' do
+    let!(:customer_message) do
+      create(:message, account: account, conversation: conversation, message_type: :incoming, content: 'Do you ship to Spain?')
+    end
+
+    before { run_context[:state][:responding_to_message_id] = customer_message.id }
+
+    it 'records a gap when the AI searched and the reply used no source' do
+      service.capture!
+
+      gap = assistant.knowledge_gaps.sole
+      expect(gap).to have_attributes(question: 'Do you ship to Spain?', occurrences_count: 1)
+      expect(gap.occurrences.sole).to have_attributes(conversation_id: conversation.id, message_id: customer_message.id, reason: 'no_source')
+    end
+
+    it 'records no gap when the reply used a found source' do
+      run_context[:state][:cw_metadata][:used_faq_ids] = [11]
+
+      service.capture!
+
+      expect(assistant.knowledge_gaps).to be_empty
+    end
+
+    it 'records no gap when the AI did not search' do
+      run_context[:conversation_history] = [{ role: :user, content: 'Hi' }, { role: :assistant, content: 'Hello!', agent_name: 'Assistant' }]
+
+      service.capture!
+
+      expect(assistant.knowledge_gaps).to be_empty
+    end
+
+    it 'records a gap for a direct knowledge route without sources' do
+      run_context[:conversation_history] = [{ role: :user, content: 'Do you ship to Spain?' }]
+      run_context[:state][:intent_route] = 'faq_kb'
+
+      service.capture!
+
+      expect(assistant.knowledge_gaps.sole.occurrences.sole.reason).to eq('no_source')
+    end
+
+    it 'records a gap for a missing-knowledge handoff' do
+      run_context[:conversation_history] = [{ role: :user, content: 'Do you ship to Spain?' }]
+      run_context[:state][:captain_handoff_reason_category] = 'missing_knowledge'
+
+      service.capture!
+
+      expect(assistant.knowledge_gaps.sole.occurrences.sole.reason).to eq('handoff')
+    end
+
+    it 'records no gap when the customer asked for a human' do
+      run_context[:conversation_history] = [{ role: :user, content: 'Can I talk to a person?' }]
+      run_context[:state][:captain_handoff_reason_category] = 'customer_request'
+
+      service.capture!
+
+      expect(assistant.knowledge_gaps).to be_empty
+    end
+  end
 end

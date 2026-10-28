@@ -1,5 +1,7 @@
 class Captain::Assistant::SessionCaptureService
   SOURCES_FOUND_ATTRIBUTE = 'captain_sources_found'.freeze
+  HANDOFF_REASON_STATE_KEY = :captain_handoff_reason_category
+  KNOWLEDGE_TOOL_SUFFIX = 'faq_lookup'.freeze
   SCENARIO_AGENT_REGEX = /\A#{Captain::Scenario::HANDOFF_KEY_PREFIX}_(\d+)_/
   # A reply sentence of at least this many words, mostly found in a source's text, shows the source was used.
   OVERLAP_MIN_WORDS = 8
@@ -25,7 +27,6 @@ class Captain::Assistant::SessionCaptureService
   end
 
   def capture!
-    model = context.dig(:state, :generation_model) || @assistant.agent_model
     captured_sources = sources
 
     session = Captain::AgentSession.create!(
@@ -33,7 +34,7 @@ class Captain::Assistant::SessionCaptureService
       session_type: :assistant,
       subject: @conversation,
       result: result_message,
-      llm_model: model_label(model),
+      llm_model: model_label(context.dig(:state, :generation_model) || @assistant.agent_model),
       credits_consumed: @credits_consumed,
       faq_ids: metadata[:faq_ids] || [],
       used_faq_ids: metadata[:used_faq_ids] || [],
@@ -44,6 +45,7 @@ class Captain::Assistant::SessionCaptureService
       run_context: current_turn_history
     )
     record_sources_found(captured_sources.size)
+    record_knowledge_gap(captured_sources)
     session
   end
 
@@ -65,6 +67,42 @@ class Captain::Assistant::SessionCaptureService
 
   def mark_sources_found(message, count)
     message.update!(additional_attributes: message.additional_attributes.to_h.merge(SOURCES_FOUND_ATTRIBUTE => count))
+  end
+
+  # A turn the AI couldn't answer from knowledge: it handed off for missing knowledge, or it searched and the reply
+  # used none of what it found. Greetings and other turns without a search are never gaps.
+  def record_knowledge_gap(captured_sources)
+    reason = knowledge_gap_reason(captured_sources)
+    return unless reason
+
+    question_message = customer_question_message
+    return if question_message&.content.blank?
+
+    Captain::KnowledgeGaps::Recorder.new(assistant: @assistant, conversation: @conversation, question: question_message.content,
+                                         reason: reason, message_id: question_message.id).record
+  end
+
+  def knowledge_gap_reason(captured_sources)
+    return 'handoff' if context.dig(:state, HANDOFF_REASON_STATE_KEY) == 'missing_knowledge'
+    return unless knowledge_searched?
+    return if captured_sources.any? { |source| source[:used] } || metadata[:used_faq_ids].present?
+
+    'no_source'
+  end
+
+  def knowledge_searched?
+    return true if context.dig(:state, :intent_route) == 'faq_kb'
+
+    current_turn_history.any? do |message|
+      Array(message[:tool_calls]).any? { |call| call.to_h.with_indifferent_access[:name].to_s.end_with?(KNOWLEDGE_TOOL_SUFFIX) }
+    end
+  end
+
+  def customer_question_message
+    message_id = context.dig(:state, :responding_to_message_id)
+    return @conversation.messages.incoming.find_by(id: message_id) if message_id.present?
+
+    @conversation.messages.incoming.reorder(created_at: :desc).first
   end
 
   def context

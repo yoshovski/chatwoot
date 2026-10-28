@@ -40,6 +40,7 @@ class Captain::Tools::HandoffTool < Captain::Tools::BasePublicTool
     failure_message = handoff_failure_message(handoff_result)
     return failure_result(failure_message, tool_context.state) if failure_message
 
+    tool_context.state[Captain::Assistant::SessionCaptureService::HANDOFF_REASON_STATE_KEY] = reason_category
     capture_business_handoff(conversation, tool_context, **business_details)
     "Conversation handed off to human support team#{" (Reason: #{reason})" if reason}"
   rescue StandardError => e

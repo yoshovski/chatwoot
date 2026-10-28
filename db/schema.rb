@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_10_28_120000) do
+ActiveRecord::Schema[7.2].define(version: 2026_10_29_120000) do
   # These extensions should be enabled to support this database
   enable_extension "pg_stat_statements"
   enable_extension "pg_trgm"
@@ -667,6 +667,35 @@ ActiveRecord::Schema[7.2].define(version: 2026_10_28_120000) do
     t.jsonb "examples", default: {}, null: false
     t.index ["account_id"], name: "index_captain_knowledge_briefs_on_account_id"
     t.index ["assistant_id"], name: "index_captain_knowledge_briefs_on_assistant_id", unique: true
+  end
+
+  create_table "captain_knowledge_gap_occurrences", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.bigint "knowledge_gap_id", null: false
+    t.bigint "conversation_id", null: false
+    t.bigint "message_id"
+    t.string "reason", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id"], name: "index_captain_knowledge_gap_occurrences_on_account_id"
+    t.index ["conversation_id"], name: "index_captain_knowledge_gap_occurrences_on_conversation_id"
+    t.index ["knowledge_gap_id", "conversation_id"], name: "idx_captain_knowledge_gap_occurrences_unique", unique: true
+  end
+
+  create_table "captain_knowledge_gaps", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.bigint "assistant_id", null: false
+    t.string "question", limit: 500, null: false
+    t.string "normalized_question", null: false
+    t.integer "status", default: 0, null: false
+    t.integer "occurrences_count", default: 0, null: false
+    t.datetime "last_seen_at", null: false
+    t.bigint "response_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id", "assistant_id", "status", "last_seen_at"], name: "idx_captain_knowledge_gaps_listing"
+    t.index ["account_id"], name: "index_captain_knowledge_gaps_on_account_id"
+    t.index ["assistant_id", "normalized_question"], name: "idx_on_assistant_id_normalized_question_8e596bcf5e", unique: true
   end
 
   create_table "captain_mcp_servers", force: :cascade do |t|
