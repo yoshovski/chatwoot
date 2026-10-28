@@ -58,18 +58,12 @@ class Captain::HomeSummaryBuilder
     }
   end
 
-  # The same numbers as Billing: AI conversations against the Super Admin monthly limit (and trial), plus the
-  # account's seat, inbox and document limits. A limit left unset in Super Admin comes back as nil.
+  # The same numbers as Billing (AccountSubscription#product_usage): AI conversations against the plan or Super Admin
+  # limit (the trial cap during a capped trial), plus seats, inboxes and documents. An unset limit comes back as nil.
   def usage
     subscription = account.subscription_settings
-    limits = account.usage_limits
-    {
-      plan: plan_status(subscription),
-      ai_conversations: { used: subscription.consumed, limit: (subscription.monthly_limit if subscription.enabled?) },
-      agents: { used: account.account_users.count, limit: finite(limits[:agents]) },
-      inboxes: { used: account.inboxes.count, limit: finite(limits[:inboxes]) },
-      documents: { used: account.captain_documents.count, limit: finite(limits.dig(:captain, :documents, :total_count)) }
-    }
+    products = subscription.product_usage
+    products.merge(plan: plan_status(subscription), ai_conversations: products[:ai_conversations].slice(:used, :limit))
   end
 
   def plan_status(subscription)
@@ -122,11 +116,5 @@ class Captain::HomeSummaryBuilder
 
   def performance_range
     PERFORMANCE_WINDOW.ago..Time.current
-  end
-
-  def finite(limit)
-    return if limit.nil? || limit.to_i >= ChatwootApp.max_limit
-
-    limit.to_i
   end
 end
