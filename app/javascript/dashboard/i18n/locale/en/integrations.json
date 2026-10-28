@@ -2364,20 +2364,20 @@
     },
     "CUSTOM_TOOLS": {
       "HEADER": "Tools & MCP",
-      "SECTION_TITLE": "Custom tools",
-      "ADD_NEW": "Add tool",
-      "SOFT_LIMIT_WARNING": "Having more than 10 tools may reduce the AI agent's reliability in selecting the right tool. Consider removing unused tools for better results.",
+      "SECTION_TITLE": "Actions",
+      "ADD_NEW": "Add action",
+      "SOFT_LIMIT_WARNING": "Having more than 10 actions may reduce the AI agent's reliability in picking the right one. Consider removing unused actions for better results.",
       "EMPTY_STATE": {
-        "TITLE": "No tools or MCP servers yet",
-        "SUBTITLE": "Add a custom tool for a single API call, or connect an MCP server to use its tools. Your AI agent can then fetch data and take actions in scenarios.",
+        "TITLE": "No actions or MCP servers yet",
+        "SUBTITLE": "Add an action to look something up or change it through your API, step by step, or connect an MCP server to use its tools. Your AI agent can then fetch data and take actions in conversations and scenarios.",
         "FEATURE_SPOTLIGHT": {
-          "TITLE": "Custom Tools",
-          "NOTE": "Custom tools allow your AI agent to interact with external APIs and services. Create tools to fetch data, perform actions, or integrate with your existing systems to enhance your AI agent's capabilities."
+          "TITLE": "Actions",
+          "NOTE": "Actions let your AI agent call your APIs: check the customer's details, look up a record, or change it after the customer confirms. Test each step with sample values and pick the response fields the AI may see."
         }
       },
       "OPTIONS": {
-        "EDIT_TOOL": "Edit tool",
-        "DELETE_TOOL": "Delete tool"
+        "EDIT_TOOL": "Edit action",
+        "DELETE_TOOL": "Delete action"
       },
       "STATUS": {
         "ENABLED": "Enabled",
@@ -2385,15 +2385,15 @@
         "TOGGLE": "Toggle {title}"
       },
       "TOGGLE": {
-        "ENABLED": "Tool enabled successfully",
-        "DISABLED": "Tool disabled successfully",
-        "ERROR": "Failed to update tool status"
+        "ENABLED": "Action enabled",
+        "DISABLED": "Action disabled",
+        "ERROR": "Failed to update the action"
       },
       "DISABLE_CONFIRMATION": {
         "TITLE": "Disable {title}?",
-        "DESCRIPTION_ONE": "This tool is used by {count} enabled scenario. Disabling it may cause that scenario to stop working as expected.",
-        "DESCRIPTION_OTHER": "This tool is used by {count} enabled scenarios. Disabling it may cause those scenarios to stop working as expected.",
-        "CONFIRM": "Disable tool"
+        "DESCRIPTION_ONE": "This action is used by {count} enabled scenario. Disabling it may cause that scenario to stop working as expected.",
+        "DESCRIPTION_OTHER": "This action is used by {count} enabled scenarios. Disabling it may cause those scenarios to stop working as expected.",
+        "CONFIRM": "Disable action"
       },
       "CREATE": {
         "SUCCESS_MESSAGE": "Action created",
@@ -2404,11 +2404,11 @@
         "ERROR_MESSAGE": "Failed to save the action"
       },
       "DELETE": {
-        "TITLE": "Delete Custom Tool",
-        "DESCRIPTION": "Are you sure you want to delete this custom tool? This action cannot be undone.",
+        "TITLE": "Delete action",
+        "DESCRIPTION": "Are you sure you want to delete this action? This cannot be undone.",
         "CONFIRM": "Yes, delete",
-        "SUCCESS_MESSAGE": "Custom tool deleted successfully",
-        "ERROR_MESSAGE": "Failed to delete custom tool"
+        "SUCCESS_MESSAGE": "Action deleted",
+        "ERROR_MESSAGE": "Failed to delete the action"
       },
       "PAYWALL": {
         "TITLE": "Upgrade to use tools with Captain",
