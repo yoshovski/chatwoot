@@ -152,6 +152,11 @@ Rails.application.routes.draw do
               post :approve, on: :member
               post :dismiss, on: :member
             end
+            resources :knowledge_gaps, only: [:index, :show] do
+              post :answer, on: :member
+              post :dismiss, on: :member
+            end
+            resource :home, only: [:show], controller: 'home'
             resources :message_reports, only: [:create]
             resources :bulk_actions, only: [:create]
             resources :copilot_threads, only: [:index, :create] do
