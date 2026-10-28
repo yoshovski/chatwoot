@@ -1,113 +1,69 @@
 <script setup>
-import { computed, ref, watch } from 'vue';
+import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import Button from 'dashboard/components-next/button/Button.vue';
 import Input from 'dashboard/components-next/input/Input.vue';
 import ComboBox from 'dashboard/components-next/combobox/ComboBox.vue';
-import Checkbox from 'dashboard/components-next/checkbox/Checkbox.vue';
+import Switch from 'dashboard/components-next/switch/Switch.vue';
 
+// One thing the AI asks the customer for, on a single line.
 const emit = defineEmits(['remove']);
 const { t } = useI18n();
-const showErrors = ref(false);
 
-const name = defineModel('name', {
-  type: String,
-  required: true,
-});
+const name = defineModel('name', { type: String, required: true });
+const type = defineModel('type', { type: String, required: true });
+const description = defineModel('description', { type: String, default: '' });
+const required = defineModel('required', { type: Boolean, default: false });
 
-const type = defineModel('type', {
-  type: String,
-  required: true,
-});
-
-const description = defineModel('description', {
-  type: String,
-  default: '',
-});
-
-const required = defineModel('required', {
-  type: Boolean,
-  default: false,
-});
-
-const paramTypeOptions = computed(() => [
-  { value: 'string', label: t('CAPTAIN.CUSTOM_TOOLS.FORM.PARAM_TYPES.STRING') },
-  { value: 'number', label: t('CAPTAIN.CUSTOM_TOOLS.FORM.PARAM_TYPES.NUMBER') },
-  {
-    value: 'boolean',
-    label: t('CAPTAIN.CUSTOM_TOOLS.FORM.PARAM_TYPES.BOOLEAN'),
-  },
-  { value: 'array', label: t('CAPTAIN.CUSTOM_TOOLS.FORM.PARAM_TYPES.ARRAY') },
-  { value: 'object', label: t('CAPTAIN.CUSTOM_TOOLS.FORM.PARAM_TYPES.OBJECT') },
-]);
-
-const validationError = computed(() => {
-  if (!name.value || name.value.trim() === '') {
-    return 'PARAM_NAME_REQUIRED';
-  }
-  return null;
-});
-
-watch([name, type, description, required], () => {
-  showErrors.value = false;
-});
-
-const validate = () => {
-  showErrors.value = true;
-  return !validationError.value;
-};
-
-defineExpose({ validate });
+const paramTypeOptions = computed(() =>
+  ['string', 'number', 'boolean', 'array', 'object'].map(value => ({
+    value,
+    label: t(`CAPTAIN.CUSTOM_TOOLS.FORM.PARAM_TYPES.${value.toUpperCase()}`),
+  }))
+);
 </script>
 
 <template>
-  <li class="list-none">
-    <div
-      class="flex items-start gap-2 p-3 rounded-lg border border-n-weak bg-n-alpha-2"
-      :class="{
-        'animate-wiggle border-n-ruby-9': showErrors && validationError,
-      }"
-    >
-      <div class="flex flex-col flex-1 gap-3">
-        <div class="grid grid-cols-3 gap-2">
-          <Input
-            v-model="name"
-            :placeholder="t('CAPTAIN.CUSTOM_TOOLS.FORM.PARAM_NAME.PLACEHOLDER')"
-            class="col-span-2"
-          />
-          <ComboBox
-            v-model="type"
-            :options="paramTypeOptions"
-            :placeholder="t('CAPTAIN.CUSTOM_TOOLS.FORM.PARAM_TYPE.PLACEHOLDER')"
-            class="[&>div>button]:bg-n-alpha-black2"
-          />
-        </div>
-        <Input
-          v-model="description"
-          :placeholder="
-            t('CAPTAIN.CUSTOM_TOOLS.FORM.PARAM_DESCRIPTION.PLACEHOLDER')
-          "
+  <li class="flex flex-wrap items-center gap-2 list-none">
+    <Input
+      v-model="name"
+      :placeholder="t('CAPTAIN.CUSTOM_TOOLS.FORM.PARAM_NAME.PLACEHOLDER')"
+      :aria-label="t('CAPTAIN.CUSTOM_TOOLS.ACTION.INPUTS.NAME')"
+      custom-input-class="font-mono !h-8 text-sm"
+      class="w-40 shrink-0"
+    />
+    <Input
+      v-model="description"
+      :placeholder="
+        t('CAPTAIN.CUSTOM_TOOLS.FORM.PARAM_DESCRIPTION.PLACEHOLDER')
+      "
+      :aria-label="t('CAPTAIN.CUSTOM_TOOLS.ACTION.INPUTS.DESCRIPTION')"
+      custom-input-class="!h-8 text-sm"
+      class="flex-1 min-w-[12rem]"
+    />
+    <div class="flex items-center gap-3 ms-auto shrink-0">
+      <div class="w-28">
+        <ComboBox
+          v-model="type"
+          :options="paramTypeOptions"
+          class="[&>div>button]:bg-n-alpha-black2 [&>div>button]:!py-1.5"
         />
-        <label class="flex items-center gap-2 cursor-pointer">
-          <Checkbox v-model="required" />
-          <span class="text-sm text-n-slate-11">
-            {{ t('CAPTAIN.CUSTOM_TOOLS.FORM.PARAM_REQUIRED.LABEL') }}
-          </span>
-        </label>
       </div>
+      <label
+        class="flex items-center gap-1.5 text-xs text-n-slate-11 whitespace-nowrap"
+      >
+        <Switch v-model="required" />
+        {{ t('CAPTAIN.CUSTOM_TOOLS.FORM.PARAM_REQUIRED.LABEL') }}
+      </label>
       <Button
-        solid
-        slate
-        icon="i-lucide-trash"
-        class="flex-shrink-0"
-        @click.stop="emit('remove')"
+        type="button"
+        size="xs"
+        variant="ghost"
+        color="slate"
+        icon="i-lucide-x"
+        :aria-label="t('CAPTAIN.CUSTOM_TOOLS.ACTION.INPUTS.REMOVE')"
+        @click="emit('remove')"
       />
     </div>
-    <span
-      v-if="showErrors && validationError"
-      class="block mt-1 text-sm text-n-ruby-11"
-    >
-      {{ t(`CAPTAIN.CUSTOM_TOOLS.FORM.ERRORS.${validationError}`) }}
-    </span>
   </li>
 </template>

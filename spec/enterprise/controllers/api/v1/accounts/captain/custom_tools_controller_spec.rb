@@ -257,6 +257,229 @@ RSpec.describe 'Api::V1::Accounts::Captain::CustomTools', type: :request do
     end
   end
 
+  describe 'auth secrets' do
+    let(:custom_tool) { create(:captain_custom_tool, account: account, auth_type: 'api_key') }
+
+    before do
+      custom_tool.assign_auth('name' => 'X-API-Key', 'key' => 'stored-secret')
+      custom_tool.save!
+    end
+
+    it 'never returns secrets, only that auth is configured' do
+      get "/api/v1/accounts/#{account.id}/captain/custom_tools/#{custom_tool.id}",
+          headers: admin.create_new_auth_token,
+          as: :json
+
+      expect(response.body).not_to include('stored-secret')
+      expect(json_response[:auth_config]).to eq(name: 'X-API-Key')
+      expect(json_response[:auth_configured]).to be(true)
+    end
+
+    it 'keeps the stored secret when the update leaves it blank' do
+      patch "/api/v1/accounts/#{account.id}/captain/custom_tools/#{custom_tool.id}",
+            params: { custom_tool: { auth_config: { name: 'X-Key', key: '' } } },
+            headers: admin.create_new_auth_token,
+            as: :json
+
+      expect(response).to have_http_status(:success)
+      expect(custom_tool.reload.build_auth_headers).to eq('X-Key' => 'stored-secret')
+    end
+
+    it 'stores a new secret encrypted instead of in auth_config' do
+      patch "/api/v1/accounts/#{account.id}/captain/custom_tools/#{custom_tool.id}",
+            params: { custom_tool: { auth_config: { name: 'X-API-Key', key: 'new-secret' } } },
+            headers: admin.create_new_auth_token,
+            as: :json
+
+      expect(custom_tool.reload.auth_config).to eq('name' => 'X-API-Key')
+      expect(custom_tool.auth_secrets).to eq('key' => 'new-secret')
+    end
+
+    it "stores a step's own secret and only says that it is configured" do
+      step = custom_tool.steps.first.merge('auth' => { 'type' => 'bearer', 'token' => 'step-secret' })
+      patch "/api/v1/accounts/#{account.id}/captain/custom_tools/#{custom_tool.id}",
+            params: { custom_tool: { steps: [step] } },
+            headers: admin.create_new_auth_token,
+            as: :json
+
+      expect(response.body).not_to include('step-secret')
+      expect(json_response[:steps].first[:auth]).to eq(type: 'bearer')
+      expect(json_response[:steps].first[:auth_configured]).to be(true)
+      expect(custom_tool.reload.request_auth(custom_tool.steps.first)['token']).to eq('step-secret')
+    end
+  end
+
+  describe 'action fields' do
+    let(:action_attributes) do
+      {
+        custom_tool: {
+          title: 'Look up order',
+          description: 'Finds an order',
+          execution_mode: 'background',
+          param_schema: [{ name: 'order_number', type: 'string', description: 'Order number', required: true, test_value: '1042' }],
+          steps: [{ key: 'lookup', type: 'request', method: 'GET', url: 'https://example.com/orders/{{ order_number }}',
+                    headers: [{ name: 'Accept', value: 'application/json' }], body_type: 'json', body: '' }],
+          outputs: [{ key: 'status', step: 'lookup', path: 'order.status', type: 'string', available_to_ai: true, required: true }],
+          messages: { success: 'Done' }
+        }
+      }
+    end
+
+    it 'saves steps, outputs, execution mode, messages and test values' do
+      post "/api/v1/accounts/#{account.id}/captain/custom_tools",
+           params: action_attributes,
+           headers: admin.create_new_auth_token,
+           as: :json
+
+      expect(response).to have_http_status(:success)
+      tool = Captain::CustomTool.find(json_response[:id])
+      expect(tool.steps.first).to include('key' => 'lookup', 'method' => 'GET', 'headers' => [{ 'name' => 'Accept', 'value' => 'application/json' }])
+      expect(tool.outputs.first).to include('key' => 'status', 'available_to_ai' => true)
+      expect(tool.param_schema.first['test_value']).to eq('1042')
+      expect(tool.messages).to eq('success' => 'Done')
+      expect(tool.endpoint_url).to eq('https://example.com/orders/{{ order_number }}')
+    end
+
+    it 'returns step errors by attribute' do
+      action_attributes[:custom_tool][:steps].first[:url] = 'https://example.com/{{ missing }}'
+
+      post "/api/v1/accounts/#{account.id}/captain/custom_tools",
+           params: action_attributes,
+           headers: admin.create_new_auth_token,
+           as: :json
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(json_response[:errors][:'steps.lookup']).to eq(['uses unknown variables: missing'])
+    end
+  end
+
+  describe 'POST /api/v1/accounts/{account.id}/captain/custom_tools/test' do
+    let(:test_attributes) do
+      {
+        custom_tool: {
+          title: 'Look up order',
+          param_schema: [{ name: 'order_number', type: 'string', description: 'Order number', test_value: '1042' },
+                         { name: 'email', type: 'string', description: 'Email', test_value: 'jane@example.com' }],
+          steps: [
+            { key: 'lookup', type: 'request', method: 'GET', url: 'https://example.com/orders/{{ order_number }}', headers: [], body_type: 'json' },
+            { key: 'check', type: 'verify', left: '{{ outputs.order_email }}', right: '{{ email }}', compare: 'email' },
+            { key: 'cancel', type: 'request', method: 'POST', url: 'https://example.com/orders/{{ order_number }}/cancel', headers: [],
+              body_type: 'json', body: '{}' }
+          ],
+          outputs: [{ key: 'order_email', step: 'lookup', path: 'order.email', type: 'string', available_to_ai: false, required: true }]
+        }
+      }
+    end
+
+    before do
+      stub_request(:get, 'https://example.com/orders/1042').to_return(status: 200, body: { order: { email: 'jane@example.com' } }.to_json)
+      stub_request(:post, 'https://example.com/orders/1042/cancel').to_return(status: 200, body: 'cancelled')
+    end
+
+    after { Redis::Alfred.delete(format(Redis::Alfred::CAPTAIN_ACTION_TEST_COUNT, user_id: admin.id, minute: Time.current.to_i / 60)) }
+
+    it 'runs every step with the test values and returns each response' do
+      post "/api/v1/accounts/#{account.id}/captain/custom_tools/test",
+           params: test_attributes,
+           headers: admin.create_new_auth_token,
+           as: :json
+
+      expect(response).to have_http_status(:success)
+      expect(json_response[:steps].pluck(:key)).to eq(%w[lookup check cancel])
+      expect(json_response[:steps].first).to include(ok: true, status: 200, response: { order: { email: 'jane@example.com' } })
+      expect(json_response[:steps].first[:request]).to include(method: 'GET', url: 'https://example.com/orders/1042')
+      expect(json_response[:steps].last[:response]).to eq('cancelled')
+      expect(json_response[:outputs]).to eq(order_email: 'jane@example.com')
+      expect(json_response[:error_kind]).to be_nil
+    end
+
+    it 'stops after the given step and lets the request override test values' do
+      stub_request(:get, 'https://example.com/orders/7').to_return(status: 200, body: { order: { email: 'x@example.com' } }.to_json)
+
+      post "/api/v1/accounts/#{account.id}/captain/custom_tools/test",
+           params: test_attributes.merge(stop_after: 'lookup', test_values: { order_number: '7' }),
+           headers: admin.create_new_auth_token,
+           as: :json
+
+      expect(json_response[:steps].pluck(:key)).to eq(['lookup'])
+      expect(WebMock).not_to have_requested(:post, %r{/cancel})
+    end
+
+    it 'reports a failed verify step' do
+      post "/api/v1/accounts/#{account.id}/captain/custom_tools/test",
+           params: test_attributes.merge(test_values: { email: 'other@example.com' }),
+           headers: admin.create_new_auth_token,
+           as: :json
+
+      expect(json_response[:error_kind]).to eq('verification_failed')
+      expect(json_response[:steps].last).to include(key: 'check', ok: false, compared: { left: 'jane@example.com', right: 'other@example.com' })
+    end
+
+    it 'uses the stored secrets of a saved tool and redacts them' do
+      tool = create(:captain_custom_tool, account: account, auth_type: 'bearer')
+      tool.assign_auth('token' => 'stored-token')
+      tool.save!
+      test_attributes[:custom_tool].merge!(auth_type: 'bearer', auth_config: { token: '' })
+
+      post "/api/v1/accounts/#{account.id}/captain/custom_tools/test",
+           params: test_attributes.merge(id: tool.id, stop_after: 'lookup'),
+           headers: admin.create_new_auth_token,
+           as: :json
+
+      expect(WebMock).to have_requested(:get, 'https://example.com/orders/1042').with(headers: { 'Authorization' => 'Bearer stored-token' })
+      expect(response.body).not_to include('stored-token')
+      expect(json_response[:steps].first.dig(:request, :headers, :Authorization)).to eq('[REDACTED]')
+      expect(tool.reload.steps.first['url']).to eq('https://api.example.com/endpoint')
+    end
+
+    it 'removes credentials from the echoed URL' do
+      test_attributes[:custom_tool][:steps] =
+        [{ key: 'lookup', type: 'request', method: 'GET', url: 'https://user:pass@example.com/orders/{{ order_number }}' }]
+      test_attributes[:custom_tool][:outputs] = []
+      stub_request(:get, 'https://example.com/orders/1042').with(basic_auth: %w[user pass]).to_return(status: 200, body: '{}')
+
+      post "/api/v1/accounts/#{account.id}/captain/custom_tools/test",
+           params: test_attributes,
+           headers: admin.create_new_auth_token,
+           as: :json
+
+      expect(json_response[:steps].first.dig(:request, :url)).to eq('https://example.com/orders/1042')
+    end
+
+    it 'returns validation errors for the steps without calling the API' do
+      test_attributes[:custom_tool][:steps].first[:url] = 'http://localhost/orders'
+
+      post "/api/v1/accounts/#{account.id}/captain/custom_tools/test",
+           params: test_attributes,
+           headers: admin.create_new_auth_token,
+           as: :json
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(json_response[:errors]).to have_key(:'steps.lookup')
+    end
+
+    it 'allows 20 test runs per user per minute' do
+      Redis::Alfred.set(format(Redis::Alfred::CAPTAIN_ACTION_TEST_COUNT, user_id: admin.id, minute: Time.current.to_i / 60), 20)
+
+      post "/api/v1/accounts/#{account.id}/captain/custom_tools/test",
+           params: test_attributes,
+           headers: admin.create_new_auth_token,
+           as: :json
+
+      expect(response).to have_http_status(:too_many_requests)
+      expect(WebMock).not_to have_requested(:get, 'https://example.com/orders/1042')
+    end
+
+    it 'is not available to agents' do
+      post "/api/v1/accounts/#{account.id}/captain/custom_tools/test",
+           params: test_attributes,
+           headers: agent.create_new_auth_token,
+           as: :json
+
+      expect(response).to have_http_status(:unauthorized)
+    end
+  end
+
   describe 'DELETE /api/v1/accounts/{account.id}/captain/custom_tools/{id}' do
     let!(:custom_tool) { create(:captain_custom_tool, account: account) }
 

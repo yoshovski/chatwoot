@@ -48,23 +48,22 @@ module Concerns::Toolable
     render_template(request_template, params)
   end
 
-  def build_auth_headers
-    return {} if auth_none?
-
-    case auth_type
+  # auth: a resolved auth hash (type, username, name and secrets), by default the action's own.
+  def build_auth_headers(auth = action_auth)
+    case auth['type']
     when 'bearer'
-      { 'Authorization' => "Bearer #{auth_config['token']}" }
+      { 'Authorization' => "Bearer #{auth['token']}" }
     when 'api_key'
-      { auth_config['name'] => auth_config['key'] }
+      { auth['name'] => auth['key'] }
     else
       {}
     end
   end
 
-  def build_basic_auth_credentials
-    return nil unless auth_type == 'basic'
+  def build_basic_auth_credentials(auth = action_auth)
+    return nil unless auth['type'] == 'basic'
 
-    [auth_config['username'], auth_config['password']]
+    [auth['username'], auth['password']]
   end
 
   def build_metadata_headers(state)

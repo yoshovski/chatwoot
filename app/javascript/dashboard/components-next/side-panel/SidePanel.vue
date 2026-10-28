@@ -16,7 +16,7 @@ const props = defineProps({
   width: {
     type: String,
     default: 'xl',
-    validator: value => ['md', 'lg', 'xl', '2xl', '3xl'].includes(value),
+    validator: value => ['md', 'lg', 'xl', '2xl', '3xl', '5xl'].includes(value),
   },
   closeOnClickOutside: {
     type: Boolean,
@@ -34,6 +34,7 @@ const MAX_WIDTH_CLASSES = {
   xl: 'max-w-xl',
   '2xl': 'max-w-2xl',
   '3xl': 'max-w-3xl',
+  '5xl': 'max-w-5xl',
 };
 
 const isOpen = ref(false);

@@ -2363,22 +2363,21 @@
       }
     },
     "CUSTOM_TOOLS": {
-      "HEADER": "Tools & MCP",
-      "SECTION_TITLE": "Custom tools",
-      "ADD_NEW": "Add tool",
-      "SOFT_LIMIT_WARNING": "Having more than 10 tools may reduce the AI agent's reliability in selecting the right tool. Consider removing unused tools for better results.",
+      "HEADER": "Actions & MCP",
+      "SECTION_TITLE": "Actions",
+      "ADD_NEW": "Add action",
+      "SOFT_LIMIT_WARNING": "Having more than 10 actions may reduce the AI agent's reliability in picking the right one. Consider removing unused actions for better results.",
       "EMPTY_STATE": {
-        "TITLE": "No tools or MCP servers yet",
-        "SUBTITLE": "Add a custom tool for a single API call, or connect an MCP server to use its tools. Your AI agent can then fetch data and take actions in scenarios.",
+        "TITLE": "No actions or MCP servers yet",
+        "SUBTITLE": "Add an action to look something up or change it through your API, step by step, or connect an MCP server to use its tools. Your AI agent can then fetch data and take actions in conversations and scenarios.",
         "FEATURE_SPOTLIGHT": {
-          "TITLE": "Custom Tools",
-          "NOTE": "Custom tools allow your AI agent to interact with external APIs and services. Create tools to fetch data, perform actions, or integrate with your existing systems to enhance your AI agent's capabilities."
+          "TITLE": "Actions",
+          "NOTE": "Actions let your AI agent call your APIs: check the customer's details, look up a record, or change it after the customer confirms. Test each step with sample values and pick the response fields the AI may see."
         }
       },
-      "FORM_DESCRIPTION": "Configure your custom tool to connect with external APIs",
       "OPTIONS": {
-        "EDIT_TOOL": "Edit tool",
-        "DELETE_TOOL": "Delete tool"
+        "EDIT_TOOL": "Edit action",
+        "DELETE_TOOL": "Delete action"
       },
       "STATUS": {
         "ENABLED": "Enabled",
@@ -2386,32 +2385,30 @@
         "TOGGLE": "Toggle {title}"
       },
       "TOGGLE": {
-        "ENABLED": "Tool enabled successfully",
-        "DISABLED": "Tool disabled successfully",
-        "ERROR": "Failed to update tool status"
+        "ENABLED": "Action enabled",
+        "DISABLED": "Action disabled",
+        "ERROR": "Failed to update the action"
       },
       "DISABLE_CONFIRMATION": {
         "TITLE": "Disable {title}?",
-        "DESCRIPTION_ONE": "This tool is used by {count} enabled scenario. Disabling it may cause that scenario to stop working as expected.",
-        "DESCRIPTION_OTHER": "This tool is used by {count} enabled scenarios. Disabling it may cause those scenarios to stop working as expected.",
-        "CONFIRM": "Disable tool"
+        "DESCRIPTION_ONE": "This action is used by {count} enabled scenario. Disabling it may cause that scenario to stop working as expected.",
+        "DESCRIPTION_OTHER": "This action is used by {count} enabled scenarios. Disabling it may cause those scenarios to stop working as expected.",
+        "CONFIRM": "Disable action"
       },
       "CREATE": {
-        "TITLE": "Create Custom Tool",
-        "SUCCESS_MESSAGE": "Custom tool created successfully",
-        "ERROR_MESSAGE": "Failed to create custom tool"
+        "SUCCESS_MESSAGE": "Action created",
+        "ERROR_MESSAGE": "Failed to create the action"
       },
       "EDIT": {
-        "TITLE": "Edit Custom Tool",
-        "SUCCESS_MESSAGE": "Custom tool updated successfully",
-        "ERROR_MESSAGE": "Failed to update custom tool"
+        "SUCCESS_MESSAGE": "Action saved",
+        "ERROR_MESSAGE": "Failed to save the action"
       },
       "DELETE": {
-        "TITLE": "Delete Custom Tool",
-        "DESCRIPTION": "Are you sure you want to delete this custom tool? This action cannot be undone.",
+        "TITLE": "Delete action",
+        "DESCRIPTION": "Are you sure you want to delete this action? This cannot be undone.",
         "CONFIRM": "Yes, delete",
-        "SUCCESS_MESSAGE": "Custom tool deleted successfully",
-        "ERROR_MESSAGE": "Failed to delete custom tool"
+        "SUCCESS_MESSAGE": "Action deleted",
+        "ERROR_MESSAGE": "Failed to delete the action"
       },
       "PAYWALL": {
         "TITLE": "Upgrade to use tools with Captain",
@@ -2425,11 +2422,147 @@
         "UPGRADE_PROMPT": "Please upgrade to a paid plan to use this feature.",
         "ASK_ADMIN": "Please reach out to your administrator for the upgrade."
       },
-      "TEST": {
-        "BUTTON": "Test connection",
-        "SUCCESS": "Endpoint returned HTTP {status}",
-        "ERROR": "Connection failed",
-        "DISABLED_HINT": "Testing is only available for endpoints without templates or request bodies."
+      "ACTION": {
+        "NEW_TITLE": "New action",
+        "EDIT_TITLE": "Edit action",
+        "SAVE": "Save",
+        "LEAVE": "You have unsaved changes. Leave this page?",
+        "LOAD_ERROR": "Could not load the action",
+        "NAME": {
+          "LABEL": "Name",
+          "PLACEHOLDER": "Cancel order"
+        },
+        "WHEN": {
+          "LABEL": "When should {agent} use it?",
+          "PLACEHOLDER": "When the customer asks to cancel an order that hasn't shipped yet"
+        },
+        "INPUTS": {
+          "TITLE": "Asks the customer for",
+          "ADD": "Add",
+          "EMPTY": "Nothing. The action runs without asking.",
+          "NAME": "Name",
+          "DESCRIPTION": "Description",
+          "REMOVE": "Remove"
+        },
+        "STEPS": {
+          "TITLE": "Steps",
+          "REQUEST": "Request",
+          "VERIFY": "Check",
+          "ADD_REQUEST": "Request",
+          "ADD_VERIFY": "Check",
+          "MOVE_UP": "Move step up",
+          "MOVE_DOWN": "Move step down",
+          "REMOVE": "Remove step",
+          "URL_PLACEHOLDER": "https://api.example.com/orders?number={'{{'} order_number {'}}'}",
+          "HEADERS": "Headers",
+          "HEADER_NAME_PLACEHOLDER": "Header",
+          "HEADER_VALUE_PLACEHOLDER": "Value",
+          "ADD_HEADER": "Add header",
+          "REMOVE_HEADER": "Remove header",
+          "BODY_PLACEHOLDER": "{'{'} \"reason\": \"customer request\" {'}'}",
+          "BODY_TYPES": {
+            "JSON": "JSON",
+            "TEXT": "Text"
+          },
+          "LEFT": "Value",
+          "RIGHT": "Compared with",
+          "COMPARISONS": {
+            "EXACT": "is exactly",
+            "NOT_EQUAL": "is not",
+            "CASE_INSENSITIVE": "matches, ignoring case",
+            "CONTAINS": "contains",
+            "NOT_CONTAINS": "doesn't contain",
+            "STARTS_WITH": "starts with",
+            "ONE_OF": "is one of",
+            "NOT_ONE_OF": "is not one of",
+            "GREATER_THAN": "is greater than",
+            "LESS_THAN": "is less than",
+            "PRESENT": "is not empty",
+            "EMAIL": "is the same email",
+            "PHONE": "is the same phone number"
+          },
+          "REQUIRE_VERIFIED": "Require a verified contact",
+          "NO_URL": "No URL yet",
+          "PANEL_TITLE": "Step {number} · {type}",
+          "DONE": "Done",
+          "BODY": "Body",
+          "LEFT_PLACEHOLDER": "{'{{'} outputs.order_email {'}}'}",
+          "RIGHT_PLACEHOLDER": "{'{{'} email {'}}'}",
+          "FAILURE_MESSAGE": "Reply when it doesn't match (optional)",
+          "FAILURE_MESSAGE_PLACEHOLDER": "This order has already shipped, so it can't be changed.",
+          "LIST_PLACEHOLDER": "pending, on_hold"
+        },
+        "VARIABLES": {
+          "INSERT": "Insert a variable",
+          "INPUTS": "Inputs",
+          "OUTPUTS": "Outputs of earlier steps",
+          "CONTACT": "Contact",
+          "EMPTY": "Nothing here yet"
+        },
+        "OUTPUTS": {
+          "TITLE": "Saved from this step",
+          "EMPTY": "Run a test and click a field in the response to save it.",
+          "KEY": "Key",
+          "TYPE": "Type",
+          "AI_VISIBLE": "Visible to {agent}",
+          "REQUIRED": "Required",
+          "REMOVE": "Remove output",
+          "TEMPLATE_PLACEHOLDER": "Order {'{{'} outputs.order_id {'}}'} is {'{{'} outputs.status {'}}'}",
+          "SUMMARY_TITLE": "Response data",
+          "SUMMARY_EMPTY": "Nothing yet. Open a step, run a test and click a field in the response.",
+          "TEMPLATE": "Reply template",
+          "SAVE_TO_CONTACT": "Save to contact",
+          "NOT_SAVED": "Don't save",
+          "VISIBLE_GROUP": "{agent} sees",
+          "HIDDEN_GROUP": "Only used by the steps",
+          "NONE": "Nothing"
+        },
+        "MODE": {
+          "TITLE": "How it runs",
+          "BACKGROUND": "In the background",
+          "BACKGROUND_HELP": "Runs without asking, and {agent} uses the result in its reply.",
+          "CONFIRM": "Ask to confirm",
+          "CONFIRM_HELP": "The customer taps Confirm first. Use it for anything that changes data.",
+          "CONFIRM_PROMPT": "Confirmation question",
+          "CONFIRM_PROMPT_PLACEHOLDER": "Cancel order #{'{{'} outputs.order_id {'}}'}?",
+          "SUCCESS": "Message when it worked",
+          "SUCCESS_PLACEHOLDER": "Your order is cancelled.",
+          "FAILURE": "Message when it failed",
+          "FAILURE_PLACEHOLDER": "Sorry, I couldn't cancel it. A teammate will help.",
+          "DEFAULT_PROMPT": "Do you want me to {title}?",
+          "THIS_ACTION": "run this action",
+          "CONFIRM_BUTTON": "Confirm",
+          "CANCEL_BUTTON": "Cancel",
+          "CHANNEL_NOTE": "The card works in the website widget. On channels without buttons, {agent} won't run this action.",
+          "CUSTOMIZE": "Customize messages"
+        },
+        "TEST": {
+          "TITLE": "Test",
+          "RUN": "Run test",
+          "CHANGE_WARNING": "These steps change data in the real API. Run them anyway?",
+          "RUN_ANYWAY": "Run anyway",
+          "ERROR": "The test could not run",
+          "PASSED": "passed",
+          "FAILED": "failed",
+          "DURATION": "{ms} ms",
+          "MISSING": "Required outputs missing: {keys}",
+          "COMPARED": "Compared \"{left}\" with \"{right}\"",
+          "ARRAY_CHOICE": "Save this item or the field of every item?",
+          "THIS_ITEM": "This item {index}",
+          "EVERY_ITEM": "Every item [*]",
+          "VALUES": "Test values",
+          "PICK_HINT": "Click a field to save it.",
+          "EARLIER_FAILED": "An earlier step failed: {error}"
+        },
+        "ADVANCED": "Advanced",
+        "AGENT_FALLBACK": "your AI agent",
+        "AUTH": {
+          "LABEL": "Authentication",
+          "SAME_AS": "Same as step {number}",
+          "SAVED": "Saved",
+          "REPLACE": "Replace",
+          "KEY": "API key"
+        }
       },
       "FORM": {
         "TITLE": {
@@ -2441,14 +2574,6 @@
         "DESCRIPTION": {
           "LABEL": "Description",
           "PLACEHOLDER": "Looks up order details by order ID"
-        },
-        "HTTP_METHOD": {
-          "LABEL": "Method"
-        },
-        "ENDPOINT_URL": {
-          "LABEL": "Endpoint URL",
-          "PLACEHOLDER": "https://api.example.com/orders/{'{{'} order_id {'}}'}",
-          "ERROR": "Valid URL is required"
         },
         "AUTH_TYPE": {
           "LABEL": "Authentication Type"
@@ -2494,10 +2619,6 @@
         },
         "PARAM_REQUIRED": {
           "LABEL": "Required"
-        },
-        "REQUEST_TEMPLATE": {
-          "LABEL": "Request Body Template (Optional)",
-          "PLACEHOLDER": "{'{'}\n  \"order_id\": \"{'{{'} order_id {'}}'}\"\n{'}'}"
         },
         "RESPONSE_TEMPLATE": {
           "LABEL": "Response Template (Optional)",

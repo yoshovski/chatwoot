@@ -1,6 +1,7 @@
 <script setup>
 import { computed, onMounted, ref, nextTick } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { useRoute, useRouter } from 'vue-router';
 import { useMapGetter, useStore } from 'dashboard/composables/store';
 import { useAlert } from 'dashboard/composables';
 import { FEATURE_FLAGS } from 'dashboard/featureFlags';
@@ -9,7 +10,6 @@ import { usePolicy } from 'dashboard/composables/usePolicy';
 import PageLayout from 'dashboard/components-next/captain/PageLayout.vue';
 import CaptainPaywall from 'dashboard/components-next/captain/pageComponents/Paywall.vue';
 import CustomToolsPageEmptyState from 'dashboard/components-next/captain/pageComponents/emptyStates/CustomToolsPageEmptyState.vue';
-import CreateCustomToolDialog from 'dashboard/components-next/captain/pageComponents/customTool/CreateCustomToolDialog.vue';
 import CustomToolCard from 'dashboard/components-next/captain/pageComponents/customTool/CustomToolCard.vue';
 import DeleteDialog from 'dashboard/components-next/captain/pageComponents/DeleteDialog.vue';
 import Dialog from 'dashboard/components-next/dialog/Dialog.vue';
@@ -23,6 +23,8 @@ import { parseAPIErrorResponse } from 'dashboard/store/utils/api';
 
 const store = useStore();
 const { t } = useI18n();
+const route = useRoute();
+const router = useRouter();
 const { isFeatureFlagEnabled, shouldShowPaywall } = usePolicy();
 const { isAdmin } = useAdmin();
 
@@ -105,11 +107,9 @@ const showSoftLimitWarning = computed(
   () => !isV2.value && customToolsMeta.value.totalCount > SOFT_LIMIT
 );
 
-const createDialogRef = ref(null);
 const deleteDialogRef = ref(null);
 const disableDialogRef = ref(null);
 const selectedTool = ref(null);
-const dialogType = ref('');
 const pendingToggleIds = ref(new Set());
 const pendingDisable = ref(null);
 const isDisableSaving = ref(false);
@@ -147,17 +147,15 @@ const fetchCustomTools = (page = 1) => {
 
 const onPageChange = page => fetchCustomTools(page);
 
-const openCreateDialog = () => {
-  dialogType.value = 'create';
-  selectedTool.value = null;
-  nextTick(() => createDialogRef.value.dialogRef.open());
-};
+// Actions are created and edited on their own page, which has room for the steps and the test panel.
+const openCreateDialog = () =>
+  router.push({ name: 'captain_tools_new', params: route.params });
 
-const handleEdit = tool => {
-  dialogType.value = 'edit';
-  selectedTool.value = tool;
-  nextTick(() => createDialogRef.value.dialogRef.open());
-};
+const handleEdit = tool =>
+  router.push({
+    name: 'captain_tools_edit',
+    params: { ...route.params, toolId: tool.id },
+  });
 
 const handleDelete = tool => {
   selectedTool.value = tool;
@@ -233,11 +231,6 @@ const handleDisableDialogClose = () => {
   }
   pendingDisable.value = null;
   isDisableSaving.value = false;
-};
-
-const handleDialogClose = () => {
-  dialogType.value = '';
-  selectedTool.value = null;
 };
 
 const onDeleteSuccess = () => {
@@ -350,14 +343,6 @@ onMounted(() => {
       </div>
     </template>
   </PageLayout>
-
-  <CreateCustomToolDialog
-    v-if="dialogType"
-    ref="createDialogRef"
-    :type="dialogType"
-    :selected-tool="selectedTool"
-    @close="handleDialogClose"
-  />
 
   <ConnectMcpServerDialog
     v-if="mcpDialogServer !== undefined"
