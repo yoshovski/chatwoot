@@ -10,13 +10,17 @@ class Api::V1::Accounts::Captain::CustomToolsController < Api::V1::Accounts::Bas
   def show; end
 
   def create
-    @custom_tool = account_custom_tools.create!(custom_tool_params)
+    @custom_tool = account_custom_tools.new(custom_tool_params)
+    assign_auth(@custom_tool)
+    @custom_tool.save!
   rescue Captain::CustomTool::LimitExceededError => e
     render_could_not_create_error(e.message)
   end
 
   def update
-    @custom_tool.update!(custom_tool_params)
+    @custom_tool.assign_attributes(custom_tool_params)
+    assign_auth(@custom_tool)
+    @custom_tool.save!
   end
 
   def destroy
@@ -53,6 +57,12 @@ class Api::V1::Accounts::Captain::CustomToolsController < Api::V1::Accounts::Bas
     http_tool.send(:execute_http_request, tool.endpoint_url, nil, nil)
   end
 
+  # Auth values are write-only: secrets are stored encrypted and a blank secret keeps the saved one.
+  def assign_auth(tool)
+    auth_config = params.require(:custom_tool).permit(auth_config: {})[:auth_config]
+    tool.assign_auth(auth_config) if auth_config || tool.will_save_change_to_auth_type?
+  end
+
   def custom_tool_params
     params.require(:custom_tool).permit(
       :title,
@@ -63,7 +73,6 @@ class Api::V1::Accounts::Captain::CustomToolsController < Api::V1::Accounts::Bas
       :response_template,
       :auth_type,
       :enabled,
-      auth_config: {},
       param_schema: [:name, :type, :description, :required]
     )
   end

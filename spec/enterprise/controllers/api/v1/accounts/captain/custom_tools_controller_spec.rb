@@ -257,6 +257,45 @@ RSpec.describe 'Api::V1::Accounts::Captain::CustomTools', type: :request do
     end
   end
 
+  describe 'auth secrets' do
+    let(:custom_tool) { create(:captain_custom_tool, account: account, auth_type: 'api_key') }
+
+    before do
+      custom_tool.assign_auth('name' => 'X-API-Key', 'key' => 'stored-secret')
+      custom_tool.save!
+    end
+
+    it 'never returns secrets, only that auth is configured' do
+      get "/api/v1/accounts/#{account.id}/captain/custom_tools/#{custom_tool.id}",
+          headers: admin.create_new_auth_token,
+          as: :json
+
+      expect(response.body).not_to include('stored-secret')
+      expect(json_response[:auth_config]).to eq(name: 'X-API-Key')
+      expect(json_response[:auth_configured]).to be(true)
+    end
+
+    it 'keeps the stored secret when the update leaves it blank' do
+      patch "/api/v1/accounts/#{account.id}/captain/custom_tools/#{custom_tool.id}",
+            params: { custom_tool: { auth_config: { name: 'X-Key', key: '' } } },
+            headers: admin.create_new_auth_token,
+            as: :json
+
+      expect(response).to have_http_status(:success)
+      expect(custom_tool.reload.build_auth_headers).to eq('X-Key' => 'stored-secret')
+    end
+
+    it 'stores a new secret encrypted instead of in auth_config' do
+      patch "/api/v1/accounts/#{account.id}/captain/custom_tools/#{custom_tool.id}",
+            params: { custom_tool: { auth_config: { name: 'X-API-Key', key: 'new-secret' } } },
+            headers: admin.create_new_auth_token,
+            as: :json
+
+      expect(custom_tool.reload.auth_config).to eq('name' => 'X-API-Key')
+      expect(custom_tool.auth_secrets).to eq('key' => 'new-secret')
+    end
+  end
+
   describe 'DELETE /api/v1/accounts/{account.id}/captain/custom_tools/{id}' do
     let!(:custom_tool) { create(:captain_custom_tool, account: account) }
 

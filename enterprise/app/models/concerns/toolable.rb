@@ -53,9 +53,9 @@ module Concerns::Toolable
 
     case auth_type
     when 'bearer'
-      { 'Authorization' => "Bearer #{auth_config['token']}" }
+      { 'Authorization' => "Bearer #{auth_value('token')}" }
     when 'api_key'
-      { auth_config['name'] => auth_config['key'] }
+      { auth_config['name'] => auth_value('key') }
     else
       {}
     end
@@ -64,7 +64,7 @@ module Concerns::Toolable
   def build_basic_auth_credentials
     return nil unless auth_type == 'basic'
 
-    [auth_config['username'], auth_config['password']]
+    [auth_config['username'], auth_value('password')]
   end
 
   def build_metadata_headers(state)

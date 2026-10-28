@@ -7,12 +7,17 @@
 #  auth_type         :string           default("none")
 #  description       :text
 #  enabled           :boolean          default(TRUE), not null
+#  encrypted_auth    :text
 #  endpoint_url      :text             not null
+#  execution_mode    :string           default("background"), not null
 #  http_method       :string           default("GET"), not null
+#  messages          :jsonb            not null
+#  outputs           :jsonb            not null
 #  param_schema      :jsonb
 #  request_template  :text
 #  response_template :text
 #  slug              :string           not null
+#  steps             :jsonb            not null
 #  title             :string           not null
 #  created_at        :datetime         not null
 #  updated_at        :datetime         not null
@@ -30,6 +35,7 @@ class Captain::CustomTool < ApplicationRecord
 
   include Concerns::Toolable
   include Concerns::SafeEndpointValidatable
+  include Concerns::ActionSteps
 
   self.table_name = 'captain_custom_tools'
 
@@ -47,17 +53,24 @@ class Captain::CustomTool < ApplicationRecord
         'name': { 'type': 'string' },
         'type': { 'type': 'string' },
         'description': { 'type': 'string' },
-        'required': { 'type': 'boolean' }
+        'required': { 'type': 'boolean' },
+        'test_value': { 'type': 'string' }
       },
       'required': %w[name type description],
       'additionalProperties': false
     }
   }.to_json.freeze
 
+  # Auth values that are only stored encrypted and never sent back to the browser.
+  SECRET_AUTH_KEYS = %w[token password key].freeze
+
   belongs_to :account
+
+  encrypts :encrypted_auth if Chatwoot.encryption_configured?
 
   enum :http_method, %w[GET POST].index_by(&:itself), validate: true
   enum :auth_type, %w[none bearer basic api_key].index_by(&:itself), default: :none, validate: true, prefix: :auth
+  enum :execution_mode, %w[background confirm].index_by(&:itself), validate: true
 
   before_validation :generate_slug
   before_create :ensure_within_limit
@@ -79,6 +92,31 @@ class Captain::CustomTool < ApplicationRecord
       emoji: '🔌',
       custom: true
     }
+  end
+
+  def auth_secrets
+    encrypted_auth.present? ? JSON.parse(encrypted_auth) : {}
+  end
+
+  # Secrets win over legacy auth_config values, which existing rows keep until they are saved through the API.
+  def auth_value(name)
+    auth_secrets[name].presence || auth_config.to_h[name]
+  end
+
+  # Stores the given auth values: secrets go encrypted, the rest (header name, username) into auth_config.
+  # A blank secret keeps the stored one, since the browser never gets it back; a new auth type starts empty.
+  def assign_auth(values)
+    values = values.to_h.stringify_keys
+    kept = will_save_change_to_auth_type? ? {} : auth_secrets
+    secrets = kept.merge(values.slice(*SECRET_AUTH_KEYS).compact_blank)
+    self.encrypted_auth = secrets.presence&.to_json
+    self.auth_config = values.except(*SECRET_AUTH_KEYS)
+  end
+
+  def public_auth_config = auth_config.to_h.except(*SECRET_AUTH_KEYS)
+
+  def auth_configured?
+    SECRET_AUTH_KEYS.any? { |key| auth_value(key).present? }
   end
 
   def enabled_scenarios_count

@@ -7,8 +7,13 @@ json.http_method custom_tool.http_method
 json.request_template custom_tool.request_template
 json.response_template custom_tool.response_template
 json.auth_type custom_tool.auth_type
-json.auth_config custom_tool.auth_config if Current.user&.administrator?
+json.auth_config custom_tool.public_auth_config if Current.user&.administrator?
+json.auth_configured custom_tool.auth_configured?
 json.param_schema custom_tool.param_schema
+json.steps custom_tool.steps
+json.outputs custom_tool.outputs
+json.execution_mode custom_tool.execution_mode
+json.messages custom_tool.messages
 json.enabled custom_tool.enabled
 json.account_id custom_tool.account_id
 json.created_at custom_tool.created_at.to_i

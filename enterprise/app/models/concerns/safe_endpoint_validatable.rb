@@ -13,72 +13,49 @@ module Concerns::SafeEndpointValidatable
   def validate_safe_endpoint_url
     return if endpoint_url.blank?
 
-    uri = parse_endpoint_uri
-    return errors.add(:endpoint_url, 'must be a valid URL') unless uri
-
-    validate_endpoint_scheme(uri)
-    validate_endpoint_host(uri)
-    validate_not_ip_address(uri)
-    validate_no_unicode_chars(uri)
+    safe_endpoint_errors(endpoint_url).each { |message| errors.add(:endpoint_url, message) }
   end
 
-  def parse_endpoint_uri
+  # The reasons a URL (which may hold Liquid placeholders) is not a safe outbound endpoint; empty when it is.
+  def safe_endpoint_errors(url)
+    uri = parse_endpoint_uri(url)
+    return ['must be a valid URL'] unless uri
+
+    [endpoint_scheme_error(uri), endpoint_host_error(uri), ip_address_error(uri), unicode_error(uri)].compact
+  end
+
+  def parse_endpoint_uri(url)
     # Strip Liquid template syntax for validation
     # Replace {{ variable }} with a placeholder value
-    sanitized_url = endpoint_url.gsub(/\{\{[^}]+\}\}/, 'placeholder')
+    sanitized_url = url.gsub(/\{\{[^}]+\}\}/, 'placeholder')
     URI.parse(sanitized_url)
   rescue URI::InvalidURIError
     nil
   end
 
-  def validate_endpoint_scheme(uri)
-    return if uri.scheme == 'https'
-
-    errors.add(:endpoint_url, 'must use HTTPS protocol')
+  def endpoint_scheme_error(uri)
+    'must use HTTPS protocol' unless uri.scheme == 'https'
   end
 
-  def validate_endpoint_host(uri)
-    if uri.host.blank?
-      errors.add(:endpoint_url, 'must have a valid hostname')
-      return
-    end
+  def endpoint_host_error(uri)
+    return 'must have a valid hostname' if uri.host.blank?
+    return 'cannot point to the application itself' if uri.host == FRONTEND_HOST
 
-    if uri.host == FRONTEND_HOST
-      errors.add(:endpoint_url, 'cannot point to the application itself')
-      return
-    end
-
-    DISALLOWED_HOSTS.each do |pattern|
-      matched = if pattern.is_a?(Regexp)
-                  uri.host =~ pattern
-                else
-                  uri.host.downcase == pattern
-                end
-
-      next unless matched
-
-      errors.add(:endpoint_url, 'cannot use disallowed hostname')
-      break
-    end
+    disallowed = DISALLOWED_HOSTS.any? { |pattern| pattern.is_a?(Regexp) ? uri.host =~ pattern : uri.host.downcase == pattern }
+    'cannot use disallowed hostname' if disallowed
   end
 
-  def validate_not_ip_address(uri)
-    # Check for IPv4
-    if /\A\d+\.\d+\.\d+\.\d+\z/.match?(uri.host)
-      errors.add(:endpoint_url, 'cannot be an IP address, must be a hostname')
-      return
-    end
+  def ip_address_error(uri)
+    return if uri.host.blank?
+    return unless /\A\d+\.\d+\.\d+\.\d+\z/.match?(uri.host) || uri.host.include?(':')
 
-    # Check for IPv6
-    return unless uri.host.include?(':')
-
-    errors.add(:endpoint_url, 'cannot be an IP address, must be a hostname')
+    'cannot be an IP address, must be a hostname'
   end
 
-  def validate_no_unicode_chars(uri)
+  def unicode_error(uri)
     return unless uri.host
     return if /\A[\x00-\x7F]+\z/.match?(uri.host)
 
-    errors.add(:endpoint_url, 'hostname cannot contain non-ASCII characters')
+    'hostname cannot contain non-ASCII characters'
   end
 end
