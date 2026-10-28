@@ -14,11 +14,31 @@ const props = defineProps({
 defineEmits(['open']);
 
 const RESULT_STYLE = {
-  installed: { icon: 'i-lucide-circle-check', tone: 'text-n-teal-10' },
-  script_found: { icon: 'i-lucide-clock', tone: 'text-n-amber-10' },
-  not_found: { icon: 'i-lucide-circle-alert', tone: 'text-n-amber-10' },
-  unreachable: { icon: 'i-lucide-circle-x', tone: 'text-n-ruby-10' },
-  error: { icon: 'i-lucide-circle-x', tone: 'text-n-ruby-10' },
+  installed: {
+    icon: 'i-lucide-circle-check',
+    tone: 'text-n-teal-10',
+    text: 'HOME.GUIDED.INSTALL.RESULT.INSTALLED',
+  },
+  script_found: {
+    icon: 'i-lucide-clock',
+    tone: 'text-n-amber-10',
+    text: 'HOME.GUIDED.INSTALL.RESULT.SCRIPT_FOUND',
+  },
+  not_found: {
+    icon: 'i-lucide-circle-alert',
+    tone: 'text-n-amber-10',
+    text: 'HOME.GUIDED.INSTALL.RESULT.NOT_FOUND',
+  },
+  unreachable: {
+    icon: 'i-lucide-circle-x',
+    tone: 'text-n-ruby-10',
+    text: 'HOME.GUIDED.INSTALL.RESULT.UNREACHABLE',
+  },
+  error: {
+    icon: 'i-lucide-circle-x',
+    tone: 'text-n-ruby-10',
+    text: 'HOME.GUIDED.INSTALL.RESULT.ERROR',
+  },
 };
 
 const { t } = useI18n();
@@ -35,9 +55,7 @@ const dedent = text => {
   const shared = Math.min(...indents);
   return lines.map(line => line.slice(shared)).join('\n');
 };
-const snippet = computed(() =>
-  dedent(inbox.value?.web_widget_script || '')
-);
+const snippet = computed(() => dedent(inbox.value?.web_widget_script || ''));
 const site = computed(() => {
   try {
     return new URL(inbox.value.website_url).host.replace(/^www\./, '');
@@ -46,9 +64,7 @@ const site = computed(() => {
   }
 });
 const resultText = computed(() =>
-  t(`HOME.GUIDED.INSTALL.RESULT.${result.value.toUpperCase()}`, {
-    site: site.value,
-  })
+  t(RESULT_STYLE[result.value].text, { site: site.value })
 );
 
 const copy = async () => {

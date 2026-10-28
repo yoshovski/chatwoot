@@ -22,10 +22,22 @@ const canTurnOn = computed(() =>
 
 const knowledgeRow = computed(() => {
   if (readiness.value === 'ready')
-    return { icon: 'i-lucide-circle-check', tone: 'text-n-teal-10', key: 'KNOWLEDGE_READY' };
+    return {
+      icon: 'i-lucide-circle-check',
+      tone: 'text-n-teal-10',
+      label: 'HOME.GUIDED.LIVE.KNOWLEDGE_READY',
+    };
   if (readiness.value === 'importing')
-    return { icon: 'i-lucide-loader-circle', tone: 'text-n-amber-10', key: 'KNOWLEDGE_IMPORTING' };
-  return { icon: 'i-lucide-circle-x', tone: 'text-n-ruby-10', key: 'NO_KNOWLEDGE' };
+    return {
+      icon: 'i-lucide-loader-circle',
+      tone: 'text-n-amber-10',
+      label: 'HOME.GUIDED.LIVE.KNOWLEDGE_IMPORTING',
+    };
+  return {
+    icon: 'i-lucide-circle-x',
+    tone: 'text-n-ruby-10',
+    label: 'HOME.GUIDED.LIVE.NO_KNOWLEDGE',
+  };
 });
 
 const turnOn = async () => {
@@ -68,7 +80,7 @@ const turnOn = async () => {
             class="mt-0.5 size-4 shrink-0"
             :class="knowledgeRow.tone"
           />
-          {{ $t(`HOME.GUIDED.LIVE.${knowledgeRow.key}`) }}
+          {{ $t(knowledgeRow.label) }}
         </li>
         <li class="flex items-start gap-2.5 text-sm text-n-slate-12">
           <Icon

@@ -47,7 +47,11 @@ const importError = computed(() => {
 const STAGE_ORDER = ['finding', 'select', 'reading', 'done'];
 const stages = computed(() => {
   const reached = STAGE_ORDER.indexOf(phase.value);
-  return ['FIND', 'PICK', 'READ'].map((key, index) => ({
+  return [
+    'HOME.GUIDED.WEBSITE.STAGES.FIND',
+    'HOME.GUIDED.WEBSITE.STAGES.PICK',
+    'HOME.GUIDED.WEBSITE.STAGES.READ',
+  ].map((key, index) => ({
     key,
     done: reached > index,
     active: reached === index,
@@ -191,7 +195,7 @@ const submit = async () => {
             icon="i-lucide-circle-dashed"
             class="size-4 shrink-0 text-n-slate-9"
           />
-          {{ $t(`HOME.GUIDED.WEBSITE.STAGES.${stage.key}`) }}
+          {{ $t(stage.key) }}
         </li>
       </ol>
 
@@ -208,7 +212,11 @@ const submit = async () => {
         <p class="mb-0 text-sm text-n-slate-11">
           {{
             phase === 'done'
-              ? $t('HOME.GUIDED.WEBSITE.DONE', { ready: progress.ready }, progress.ready)
+              ? $t(
+                  'HOME.GUIDED.WEBSITE.DONE',
+                  { ready: progress.ready },
+                  progress.ready
+                )
               : $t('HOME.GUIDED.WEBSITE.READING', {
                   ready: progress.ready,
                   total: progress.total,

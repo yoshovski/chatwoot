@@ -19,6 +19,13 @@ import TestStep from './steps/TestStep.vue';
 import GoLiveStep from './steps/GoLiveStep.vue';
 import InstallStep from './steps/InstallStep.vue';
 
+const STEP_NAMES = {
+  knowledge: 'HOME.GUIDED.STEP_NAMES.KNOWLEDGE',
+  test_agent: 'HOME.GUIDED.STEP_NAMES.TEST_AGENT',
+  agent_inbox: 'HOME.GUIDED.STEP_NAMES.AGENT_INBOX',
+  chat_widget: 'HOME.GUIDED.STEP_NAMES.CHAT_WIDGET',
+};
+
 const STEP_COMPONENTS = {
   knowledge: WebsiteStep,
   test_agent: TestStep,
@@ -51,7 +58,7 @@ const isLastStep = computed(
 const segments = computed(() =>
   GUIDED_STEPS.map((key, index) => ({
     key,
-    label: t(`HOME.GUIDED.STEP_NAMES.${key.toUpperCase()}`),
+    label: t(STEP_NAMES[key]),
     current: index === currentIndex.value,
     done: stepState(key)?.done,
     skipped: stepState(key)?.skipped,
@@ -140,7 +147,10 @@ onBeforeUnmount(guided.stopPolling);
         />
       </header>
 
-      <ol class="grid grid-cols-4 gap-1.5" :aria-label="$t('HOME.GUIDED.TITLE')">
+      <ol
+        class="grid grid-cols-4 gap-1.5"
+        :aria-label="$t('HOME.GUIDED.TITLE')"
+      >
         <li
           v-for="segment in segments"
           :key="segment.key"
