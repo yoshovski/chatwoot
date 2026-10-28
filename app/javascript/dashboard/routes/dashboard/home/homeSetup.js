@@ -9,8 +9,6 @@ export const SETUP_STEPS = [
   { key: 'teammate', route: 'agent_list' },
 ];
 
-export const NEXT_STEPS_SHOWN = 3;
-
 export const buildSetupProgress = (setup = {}, skipped = []) => {
   const steps = SETUP_STEPS.map(step => ({
     ...step,
@@ -23,9 +21,6 @@ export const buildSetupProgress = (setup = {}, skipped = []) => {
     steps,
     doneCount: steps.filter(step => step.done).length,
     total: steps.length,
-    openSteps: steps
-      .filter(step => !step.done && !step.skipped)
-      .slice(0, NEXT_STEPS_SHOWN),
     isComplete: settled === steps.length,
   };
 };

@@ -1040,7 +1040,7 @@ const menuItems = computed(() => {
         ],
       },
     ]"
-    class="fixed top-0 z-40 flex h-full w-[18.5rem] max-w-full shrink-0 border-e border-n-weak bg-n-background transition-transform start-0 md:relative md:translate-x-0"
+    class="fixed top-0 z-40 flex h-full w-fit max-w-full shrink-0 border-e border-n-weak bg-n-background transition-transform start-0 md:relative md:translate-x-0"
     :class="{
       'ltr:-translate-x-full rtl:translate-x-full':
         !isMobileSidebarOpen && isMobile,

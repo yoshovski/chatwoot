@@ -47,6 +47,10 @@ const showSetup = computed(
 
 const skipStep = key =>
   updateUISettings({ [SKIPPED_SETTING]: [...skippedSteps.value, key] });
+const unskipStep = key =>
+  updateUISettings({
+    [SKIPPED_SETTING]: skippedSteps.value.filter(step => step !== key),
+  });
 
 const value = path =>
   path.split('.').reduce((obj, key) => obj?.[key], summary.value) ?? 0;
@@ -184,6 +188,7 @@ onMounted(loadSummary);
           :progress="setupProgress"
           :step-route="stepRoute"
           @skip="skipStep"
+          @unskip="unskipStep"
         />
 
         <HomeCard

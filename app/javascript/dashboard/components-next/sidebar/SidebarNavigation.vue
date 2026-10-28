@@ -50,6 +50,8 @@ const panelItems = computed(() => {
   const item = activeModule.value;
   return item?.children || (item ? [item] : []);
 });
+// A module without sub-pages (Home) is the page itself; a panel listing just that page adds nothing.
+const showPanel = computed(() => Boolean(activeModule.value?.children));
 const mainModules = computed(() =>
   modules.value.filter(item => item.name !== 'Settings')
 );
@@ -85,7 +87,8 @@ watch(
 <template>
   <nav
     :aria-label="t('PLATFORM_NAV.PRODUCT_AREAS')"
-    class="flex w-[3.75rem] shrink-0 flex-col items-center gap-3 border-e border-n-weak bg-n-background py-3"
+    class="flex w-[3.75rem] shrink-0 flex-col items-center gap-3 border-n-weak bg-n-background py-3"
+    :class="{ 'border-e': showPanel }"
   >
     <slot name="brand" />
     <div class="flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto px-2 pt-1">
@@ -130,7 +133,10 @@ watch(
     </button>
     <slot name="profile" />
   </nav>
-  <section class="flex min-w-0 flex-1 flex-col bg-n-background">
+  <section
+    v-if="showPanel"
+    class="flex w-[14.75rem] min-w-0 flex-col bg-n-background"
+  >
     <div class="border-b border-n-weak px-3 py-3">
       <slot name="account" />
     </div>
