@@ -3,8 +3,9 @@ class ConversationUsageWindow < ApplicationRecord
   belongs_to :conversation, optional: true
   belongs_to :message, optional: true
 
+  # One window is one "AI conversation": only inboxes where a bot (Captain assistant or agent bot) answers count.
   def self.record(message)
-    return unless message.incoming? && !message.private?
+    return unless message.incoming? && !message.private? && message.inbox.active_bot?
 
     # Lock the account so first-use creation and concurrent inbox messages share one serialization point.
     account = Account.find(message.account_id)

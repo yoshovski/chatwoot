@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_10_29_120000) do
+ActiveRecord::Schema[7.2].define(version: 2026_10_30_120000) do
   # These extensions should be enabled to support this database
   enable_extension "pg_stat_statements"
   enable_extension "pg_trgm"
@@ -81,7 +81,10 @@ ActiveRecord::Schema[7.2].define(version: 2026_10_29_120000) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.boolean "founder_plan", default: false, null: false
+    t.bigint "billing_plan_id"
+    t.jsonb "add_ons", default: [], null: false
     t.index ["account_id"], name: "index_account_subscriptions_on_account_id", unique: true
+    t.index ["billing_plan_id"], name: "index_account_subscriptions_on_billing_plan_id"
     t.index ["stripe_customer_id"], name: "index_account_subscriptions_on_stripe_customer_id", unique: true
   end
 
@@ -368,6 +371,26 @@ ActiveRecord::Schema[7.2].define(version: 2026_10_29_120000) do
     t.boolean "active", default: true, null: false
     t.integer "execution_delay"
     t.index ["account_id"], name: "index_automation_rules_on_account_id"
+  end
+
+  create_table "billing_plans", force: :cascade do |t|
+    t.string "name", null: false
+    t.text "description"
+    t.boolean "active", default: true, null: false
+    t.integer "position", default: 0, null: false
+    t.string "currency", default: "eur", null: false
+    t.integer "monthly_price_cents", default: 0, null: false
+    t.integer "ai_conversations_limit"
+    t.integer "trial_ai_conversations_limit", default: 50
+    t.integer "trial_days", default: 14, null: false
+    t.integer "agents_limit"
+    t.integer "inboxes_limit"
+    t.integer "documents_limit"
+    t.jsonb "features", default: [], null: false
+    t.jsonb "add_ons", default: {}, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["name"], name: "index_billing_plans_on_name", unique: true
   end
 
   create_table "calls", force: :cascade do |t|
@@ -1854,6 +1877,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_10_29_120000) do
   add_foreign_key "account_data_exports", "accounts"
   add_foreign_key "account_data_exports", "users"
   add_foreign_key "account_subscriptions", "accounts"
+  add_foreign_key "account_subscriptions", "billing_plans", on_delete: :nullify
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "campaign_recipients", "accounts", on_delete: :cascade
