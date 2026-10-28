@@ -2363,7 +2363,7 @@
       }
     },
     "CUSTOM_TOOLS": {
-      "HEADER": "Tools & MCP",
+      "HEADER": "Actions & MCP",
       "SECTION_TITLE": "Actions",
       "ADD_NEW": "Add action",
       "SOFT_LIMIT_WARNING": "Having more than 10 actions may reduce the AI agent's reliability in picking the right one. Consider removing unused actions for better results.",
@@ -2433,7 +2433,7 @@
           "PLACEHOLDER": "Cancel order"
         },
         "WHEN": {
-          "LABEL": "When should the AI use it?",
+          "LABEL": "When should {agent} use it?",
           "PLACEHOLDER": "When the customer asks to cancel an order that hasn't shipped yet"
         },
         "INPUTS": {
@@ -2497,19 +2497,19 @@
           "EMPTY": "Run a test and click a field in the response to save it.",
           "KEY": "Key",
           "TYPE": "Type",
-          "AI_VISIBLE": "AI can see it",
+          "AI_VISIBLE": "Visible to {agent}",
           "REQUIRED": "Required",
           "REMOVE": "Remove output",
           "TEMPLATE_PLACEHOLDER": "Order {'{{'} outputs.order_id {'}}'} is {'{{'} outputs.status {'}}'}",
           "SUMMARY_TITLE": "Gets back",
           "SUMMARY_EMPTY": "Nothing yet. Open a step, run a test and click a field in the response.",
-          "AI_HIDDEN": "Hidden from the AI",
+          "AI_HIDDEN": "Hidden from {agent}",
           "TEMPLATE": "Reply template"
         },
         "MODE": {
           "TITLE": "How it runs",
           "BACKGROUND": "In the background",
-          "BACKGROUND_HELP": "The AI runs it and uses the result in its reply.",
+          "BACKGROUND_HELP": "Runs without asking, and {agent} uses the result in its reply.",
           "CONFIRM": "Ask to confirm",
           "CONFIRM_HELP": "The customer taps Confirm first. Use it for anything that changes data.",
           "CONFIRM_PROMPT": "Confirmation question",
@@ -2522,7 +2522,7 @@
           "THIS_ACTION": "run this action",
           "CONFIRM_BUTTON": "Confirm",
           "CANCEL_BUTTON": "Cancel",
-          "CHANNEL_NOTE": "The card works in the website widget. On channels without buttons, the AI won't run this action.",
+          "CHANNEL_NOTE": "The card works in the website widget. On channels without buttons, {agent} won't run this action.",
           "CUSTOMIZE": "Customize messages"
         },
         "TEST": {
@@ -2543,7 +2543,8 @@
           "PICK_HINT": "Click a field to save it.",
           "EARLIER_FAILED": "An earlier step failed: {error}"
         },
-        "ADVANCED": "Advanced"
+        "ADVANCED": "Advanced",
+        "AGENT_FALLBACK": "your AI agent"
       },
       "FORM": {
         "TITLE": {

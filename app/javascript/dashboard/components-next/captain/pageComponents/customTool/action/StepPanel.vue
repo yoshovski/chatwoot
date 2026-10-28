@@ -12,6 +12,7 @@ import { variablesBefore } from './actionForm';
 const props = defineProps({
   index: { type: Number, required: true },
   toolId: { type: Number, default: null },
+  agentName: { type: String, required: true },
   errors: { type: Object, default: () => ({}) },
 });
 
@@ -123,6 +124,7 @@ onMounted(() => panel.value.open());
           <OutputsTable
             v-model:outputs="form.outputs"
             :step-key="step.key"
+            :agent-name="agentName"
             :focused-key="focusedOutputKey"
             :errors="errors"
           />

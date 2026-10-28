@@ -3,6 +3,7 @@ import { computed, onMounted, reactive, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { onBeforeRouteLeave, useRoute, useRouter } from 'vue-router';
 import { useAlert } from 'dashboard/composables';
+import { useStore } from 'dashboard/composables/store';
 import CustomToolsAPI from 'dashboard/api/captain/customTools';
 
 import PageLayout from 'dashboard/components-next/captain/PageLayout.vue';
@@ -29,6 +30,7 @@ import {
 const { t } = useI18n();
 const route = useRoute();
 const router = useRouter();
+const store = useStore();
 
 const toolId = computed(() =>
   route.params.toolId ? Number(route.params.toolId) : null
@@ -43,6 +45,14 @@ const openStepIndex = ref(null);
 const testResult = ref(null);
 const showMessages = ref(false);
 const modeTouched = ref(!!toolId.value);
+
+// Copy names the AI agent this action belongs to, e.g. "Visible to Store Bot".
+const agentName = computed(
+  () =>
+    store.getters['captainAssistants/getRecord'](
+      Number(route.params.assistantId)
+    )?.name || t('CAPTAIN.CUSTOM_TOOLS.ACTION.AGENT_FALLBACK')
+);
 
 const backUrl = computed(() => ({
   name: 'captain_tools_index',
@@ -235,7 +245,9 @@ onMounted(async () => {
           />
           <TextArea
             v-model="form.description"
-            :label="t('CAPTAIN.CUSTOM_TOOLS.ACTION.WHEN.LABEL')"
+            :label="
+              t('CAPTAIN.CUSTOM_TOOLS.ACTION.WHEN.LABEL', { agent: agentName })
+            "
             :placeholder="t('CAPTAIN.CUSTOM_TOOLS.ACTION.WHEN.PLACEHOLDER')"
             :rows="2"
             auto-height
@@ -342,8 +354,12 @@ onMounted(async () => {
               "
               :title="
                 output.available_to_ai
-                  ? t('CAPTAIN.CUSTOM_TOOLS.ACTION.OUTPUTS.AI_VISIBLE')
-                  : t('CAPTAIN.CUSTOM_TOOLS.ACTION.OUTPUTS.AI_HIDDEN')
+                  ? t('CAPTAIN.CUSTOM_TOOLS.ACTION.OUTPUTS.AI_VISIBLE', {
+                      agent: agentName,
+                    })
+                  : t('CAPTAIN.CUSTOM_TOOLS.ACTION.OUTPUTS.AI_HIDDEN', {
+                      agent: agentName,
+                    })
               "
               data-test="output-chip"
               @click="openOutputStep(output)"
@@ -392,7 +408,8 @@ onMounted(async () => {
           <p class="mb-0 text-sm text-n-slate-11">
             {{
               t(
-                `CAPTAIN.CUSTOM_TOOLS.ACTION.MODE.${form.execution_mode.toUpperCase()}_HELP`
+                `CAPTAIN.CUSTOM_TOOLS.ACTION.MODE.${form.execution_mode.toUpperCase()}_HELP`,
+                { agent: agentName }
               )
             }}
           </p>
@@ -451,7 +468,11 @@ onMounted(async () => {
               </div>
             </template>
             <p class="mb-0 text-xs text-n-slate-10">
-              {{ t('CAPTAIN.CUSTOM_TOOLS.ACTION.MODE.CHANNEL_NOTE') }}
+              {{
+                t('CAPTAIN.CUSTOM_TOOLS.ACTION.MODE.CHANNEL_NOTE', {
+                  agent: agentName,
+                })
+              }}
             </p>
           </template>
         </section>
@@ -492,6 +513,7 @@ onMounted(async () => {
         v-model:result="testResult"
         :index="openStepIndex"
         :tool-id="toolId"
+        :agent-name="agentName"
         :errors="serverErrors"
         @move="move"
         @remove="deleteStep"

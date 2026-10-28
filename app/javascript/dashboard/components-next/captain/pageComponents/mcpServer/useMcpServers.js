@@ -1,7 +1,7 @@
 import { ref } from 'vue';
 import api from 'dashboard/api/captain/mcpServers';
 
-// MCP servers of the account, shared by the Tools & MCP page, its cards and the connect dialog.
+// MCP servers of the account, shared by the Actions & MCP page, its cards and the connect dialog.
 export function useMcpServers() {
   const servers = ref([]);
   const isFetching = ref(false);

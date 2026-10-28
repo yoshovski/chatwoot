@@ -10,6 +10,7 @@ import { OUTPUT_TYPES } from './actionForm';
 // The outputs saved from one step's response.
 const props = defineProps({
   stepKey: { type: String, required: true },
+  agentName: { type: String, required: true },
   focusedKey: { type: String, default: '' },
   errors: { type: Object, default: () => ({}) },
 });
@@ -72,7 +73,11 @@ const errorFor = output =>
         </span>
         <label class="flex items-center gap-1.5 text-n-slate-11 ms-auto">
           <Switch v-model="output.available_to_ai" />
-          {{ t('CAPTAIN.CUSTOM_TOOLS.ACTION.OUTPUTS.AI_VISIBLE') }}
+          {{
+            t('CAPTAIN.CUSTOM_TOOLS.ACTION.OUTPUTS.AI_VISIBLE', {
+              agent: agentName,
+            })
+          }}
         </label>
         <label class="flex items-center gap-1.5 text-n-slate-11">
           <Switch v-model="output.required" />
