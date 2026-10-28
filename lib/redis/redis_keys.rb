@@ -92,6 +92,8 @@ module Redis::RedisKeys
   HUBSPOT_TOKEN_REFRESH_MUTEX = 'HUBSPOT_TOKEN_REFRESH_LOCK::%<hook_id>s'.freeze
   CAPTAIN_DOCUMENT_SYNC_MUTEX = 'CAPTAIN_DOCUMENT_SYNC_LOCK::%<document_id>s'.freeze
   CAPTAIN_CONVERSATION_FAQ_MUTEX = 'CAPTAIN_CONVERSATION_FAQ_LOCK::%<assistant_id>s::%<language>s'.freeze
+  CAPTAIN_ACTION_VERIFY_FAILURES = 'CAPTAIN_ACTION_VERIFY_FAILURES::%<conversation_id>s::%<tool_id>s'.freeze
+  CAPTAIN_ACTION_TEST_COUNT = 'CAPTAIN_ACTION_TEST_COUNT::%<user_id>s::%<minute>s'.freeze
 
   ## Auto Assignment Keys
   # Track conversation assignments to agents for rate limiting
