@@ -8,18 +8,20 @@ const { t } = useI18n();
 const route = useRoute();
 const router = useRouter();
 
-const TABS = [
-  { name: 'billing_settings_index', label: 'ACCOUNT_SUBSCRIPTION.TABS.BILLING' },
-  { name: 'billing_settings_usage', label: 'ACCOUNT_SUBSCRIPTION.TABS.USAGE' },
-];
-
-const tabs = computed(() =>
-  TABS.map(tab => ({ name: tab.name, label: t(tab.label) }))
-);
+const tabs = computed(() => [
+  {
+    name: 'billing_settings_index',
+    label: t('ACCOUNT_SUBSCRIPTION.TABS.BILLING'),
+  },
+  {
+    name: 'billing_settings_usage',
+    label: t('ACCOUNT_SUBSCRIPTION.TABS.USAGE'),
+  },
+]);
 const activeIndex = computed(() =>
   Math.max(
     0,
-    TABS.findIndex(tab => tab.name === route.name)
+    tabs.value.findIndex(tab => tab.name === route.name)
   )
 );
 const onChange = tab => {

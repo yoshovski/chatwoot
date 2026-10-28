@@ -21,7 +21,9 @@ const dayLabel = date =>
     timeZone: 'UTC',
   });
 
-const total = computed(() => props.days.reduce((sum, day) => sum + day.value, 0));
+const total = computed(() =>
+  props.days.reduce((sum, day) => sum + day.value, 0)
+);
 const chart = computed(() => ({
   categories: props.days.map(day => dayLabel(day.date)),
   series: [
@@ -41,7 +43,9 @@ const axisLabels = computed(() => {
   return Array.from(
     { length: AXIS_LABELS },
     (_, index) =>
-      categories[Math.round(((categories.length - 1) * index) / (AXIS_LABELS - 1))]
+      categories[
+        Math.round(((categories.length - 1) * index) / (AXIS_LABELS - 1))
+      ]
   );
 });
 const domain = computed(() => [
@@ -62,7 +66,9 @@ const domain = computed(() => [
       <span
         class="shrink-0 rounded-md bg-n-alpha-2 px-2 py-1 text-xs font-medium tabular-nums text-n-slate-12"
       >
-        {{ t('ACCOUNT_SUBSCRIPTION.USAGE_PAGE.TOTAL', { count: number(total) }) }}
+        {{
+          t('ACCOUNT_SUBSCRIPTION.USAGE_PAGE.TOTAL', { count: number(total) })
+        }}
       </span>
     </div>
     <template v-if="total > 0">

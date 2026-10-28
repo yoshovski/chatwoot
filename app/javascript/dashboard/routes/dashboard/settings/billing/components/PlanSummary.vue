@@ -91,10 +91,7 @@ const featureLabel = key => t(`ACCOUNT_SUBSCRIPTION.PLAN_FEATURES.${key}`);
         :key="feature"
         class="inline-flex items-center gap-1 rounded-md bg-n-alpha-1 px-2 py-1 text-xs text-n-slate-12"
       >
-        <span
-          class="i-lucide-check size-3 text-n-teal-11"
-          aria-hidden="true"
-        />
+        <span class="i-lucide-check size-3 text-n-teal-11" aria-hidden="true" />
         {{ featureLabel(feature) }}
       </li>
     </ul>

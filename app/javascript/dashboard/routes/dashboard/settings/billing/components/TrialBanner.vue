@@ -14,8 +14,12 @@ const daysLeft = computed(() =>
 );
 const ended = computed(() => daysLeft.value <= 0);
 const ai = computed(() => props.billing.products?.ai_conversations || {});
-const capped = computed(() => ai.value.period === 'trial' && ai.value.limit !== null);
-const capReached = computed(() => capped.value && ai.value.used >= ai.value.limit);
+const capped = computed(
+  () => ai.value.period === 'trial' && ai.value.limit !== null
+);
+const capReached = computed(
+  () => capped.value && ai.value.used >= ai.value.limit
+);
 const paused = computed(() => ended.value || capReached.value);
 
 const title = computed(() => {
