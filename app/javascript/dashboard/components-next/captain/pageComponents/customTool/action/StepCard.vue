@@ -7,12 +7,14 @@ import Button from 'dashboard/components-next/button/Button.vue';
 import ComboBox from 'dashboard/components-next/combobox/ComboBox.vue';
 import Checkbox from 'dashboard/components-next/checkbox/Checkbox.vue';
 import VariablePicker from './VariablePicker.vue';
+import StepAuth from './StepAuth.vue';
 import { COMPARISONS, REQUEST_METHODS } from './actionForm';
 
 // The fields of one step, shown in the step panel.
 defineProps({
   variables: { type: Object, required: true },
   errors: { type: Array, default: () => [] },
+  sameAsOptions: { type: Array, default: () => [] },
 });
 
 const step = defineModel('step', { type: Object, required: true });
@@ -80,6 +82,18 @@ const removeHeader = position => step.value.headers.splice(position, 1);
         <VariablePicker
           :variables="variables"
           @insert="text => append('url', text)"
+        />
+      </div>
+
+      <div class="flex flex-col gap-2">
+        <span class="text-xs font-medium text-n-slate-11">
+          {{ t('CAPTAIN.CUSTOM_TOOLS.ACTION.AUTH.LABEL') }}
+        </span>
+        <StepAuth
+          :key="step.key"
+          v-model:auth="step.auth"
+          :same-as-options="sameAsOptions"
+          :configured="step.auth_configured"
         />
       </div>
 
@@ -202,6 +216,13 @@ const removeHeader = position => step.value.headers.splice(position, 1);
           {{ t('CAPTAIN.CUSTOM_TOOLS.ACTION.STEPS.REQUIRE_VERIFIED') }}
         </span>
       </label>
+      <Input
+        v-model="step.failure_message"
+        :label="t('CAPTAIN.CUSTOM_TOOLS.ACTION.STEPS.FAILURE_MESSAGE')"
+        :placeholder="
+          t('CAPTAIN.CUSTOM_TOOLS.ACTION.STEPS.FAILURE_MESSAGE_PLACEHOLDER')
+        "
+      />
     </template>
 
     <ul v-if="errors.length" class="mb-0 text-sm list-none text-n-ruby-11">

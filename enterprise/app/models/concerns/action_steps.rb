@@ -21,6 +21,11 @@ module Concerns::ActionSteps
 
   def outputs_for_step(step_key) = outputs.select { |output| output['step'] == step_key }
 
+  # The customer-facing message of a check step that stopped the run, if it has one.
+  def failure_message_for(step_key)
+    steps.find { |step| step['key'] == step_key && step['type'] == 'verify' }&.dig('failure_message').presence
+  end
+
   # Legacy templates were never checked against the params, so a step built from them isn't either.
   def action_templates_changed?
     return false if @steps_from_legacy_columns

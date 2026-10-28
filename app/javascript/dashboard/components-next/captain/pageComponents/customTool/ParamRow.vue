@@ -24,24 +24,13 @@ const paramTypeOptions = computed(() =>
 </script>
 
 <template>
-  <li
-    class="grid items-center gap-2 list-none grid-cols-[minmax(0,1fr)_auto] md:grid-cols-[minmax(0,10rem)_minmax(0,1fr)_7rem_auto_auto]"
-  >
+  <li class="flex flex-wrap items-center gap-2 list-none">
     <Input
       v-model="name"
       :placeholder="t('CAPTAIN.CUSTOM_TOOLS.FORM.PARAM_NAME.PLACEHOLDER')"
       :aria-label="t('CAPTAIN.CUSTOM_TOOLS.ACTION.INPUTS.NAME')"
       custom-input-class="font-mono !h-8 text-sm"
-    />
-    <Button
-      type="button"
-      size="xs"
-      variant="ghost"
-      color="slate"
-      icon="i-lucide-x"
-      class="md:order-last"
-      :aria-label="t('CAPTAIN.CUSTOM_TOOLS.ACTION.INPUTS.REMOVE')"
-      @click="emit('remove')"
+      class="w-40 shrink-0"
     />
     <Input
       v-model="description"
@@ -50,10 +39,10 @@ const paramTypeOptions = computed(() =>
       "
       :aria-label="t('CAPTAIN.CUSTOM_TOOLS.ACTION.INPUTS.DESCRIPTION')"
       custom-input-class="!h-8 text-sm"
-      class="col-span-2 md:col-span-1"
+      class="flex-1 min-w-[12rem]"
     />
-    <div class="flex items-center col-span-2 gap-4 md:contents">
-      <div class="w-28 md:w-auto">
+    <div class="flex items-center gap-3 ms-auto shrink-0">
+      <div class="w-28">
         <ComboBox
           v-model="type"
           :options="paramTypeOptions"
@@ -66,6 +55,15 @@ const paramTypeOptions = computed(() =>
         <Switch v-model="required" />
         {{ t('CAPTAIN.CUSTOM_TOOLS.FORM.PARAM_REQUIRED.LABEL') }}
       </label>
+      <Button
+        type="button"
+        size="xs"
+        variant="ghost"
+        color="slate"
+        icon="i-lucide-x"
+        :aria-label="t('CAPTAIN.CUSTOM_TOOLS.ACTION.INPUTS.REMOVE')"
+        @click="emit('remove')"
+      />
     </div>
   </li>
 </template>

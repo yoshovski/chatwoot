@@ -158,4 +158,52 @@ RSpec.describe Captain::Tools::ActionRunner do
       end
     end
   end
+
+  describe 'auth per request step' do
+    it 'sends each step its own auth, or the auth of the step it reuses' do
+      stub_request(:post, 'https://example.com/orders/1042/cancel').to_return(status: 200, body: '{}')
+      check = { 'key' => 'recheck', 'type' => 'request', 'method' => 'GET', 'url' => 'https://example.com/orders?number=1042',
+                'headers' => [], 'auth' => { 'same_as' => 'lookup' } }
+      tool.update!(steps: [lookup_step.merge('auth' => { 'type' => 'bearer', 'token' => 'lookup-token' }),
+                           cancel_step.merge('auth' => { 'type' => 'api_key', 'name' => 'X-Key', 'key' => 'cancel-key' }), check])
+
+      expect(run_action).to be_ok
+      expect(WebMock).to have_requested(:get, 'https://example.com/orders?number=1042')
+        .with(headers: { 'Authorization' => 'Bearer lookup-token' }).twice
+      own_key_only = ->(request) { request.headers['X-Key'] == 'cancel-key' && !request.headers.key?('Authorization') }
+      expect(WebMock).to have_requested(:post, 'https://example.com/orders/1042/cancel').with(&own_key_only)
+    end
+
+    it "uses the action's auth for steps saved without one" do
+      tool.update!(auth_type: 'bearer', auth_config: { 'token' => 'action-token' })
+
+      run_action(stop_after: 'lookup')
+
+      expect(WebMock).to have_requested(:get, 'https://example.com/orders?number=1042').with(headers: { 'Authorization' => 'Bearer action-token' })
+    end
+  end
+
+  describe 'saving outputs to the contact' do
+    let(:contact_record) { create(:contact, account: account, custom_attributes: { 'plan' => 'basic' }) }
+    let(:state) { { account_id: account.id, contact: { id: contact_record.id } } }
+
+    before do
+      create(:custom_attribute_definition, account: account, attribute_model: 'contact_attribute', attribute_key: 'order_ref')
+      tool.update!(steps: [lookup_step], outputs: [outputs.first.merge('contact_attribute' => 'order_ref')])
+    end
+
+    it 'saves mapped outputs after a live run that passed' do
+      described_class.new(tool, state: state).run(params: { order_number: '1042' }, contact: contact)
+
+      expect(contact_record.reload.custom_attributes).to eq('plan' => 'basic', 'order_ref' => 1042)
+    end
+
+    it 'saves nothing from a test run or a failed run' do
+      described_class.new(tool, state: state, mode: :test).run(params: { order_number: '1042' }, contact: contact)
+      stub_request(:get, 'https://example.com/orders?number=1').to_return(status: 404)
+      described_class.new(tool, state: state).run(params: { order_number: '1' }, contact: contact)
+
+      expect(contact_record.reload.custom_attributes).to eq('plan' => 'basic')
+    end
+  end
 end

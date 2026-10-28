@@ -2444,11 +2444,6 @@
           "DESCRIPTION": "Description",
           "REMOVE": "Remove"
         },
-        "CONNECTION": {
-          "TITLE": "Connection",
-          "SAVED": "Saved",
-          "REPLACE": "Replace"
-        },
         "STEPS": {
           "TITLE": "Steps",
           "REQUEST": "Request",
@@ -2483,7 +2478,9 @@
           "DONE": "Done",
           "BODY": "Body",
           "LEFT_PLACEHOLDER": "{'{{'} outputs.order_email {'}}'}",
-          "RIGHT_PLACEHOLDER": "{'{{'} email {'}}'}"
+          "RIGHT_PLACEHOLDER": "{'{{'} email {'}}'}",
+          "FAILURE_MESSAGE": "Reply when it doesn't match (optional)",
+          "FAILURE_MESSAGE_PLACEHOLDER": "This order has already shipped, so it can't be changed."
         },
         "VARIABLES": {
           "INSERT": "Insert a variable",
@@ -2504,7 +2501,9 @@
           "SUMMARY_TITLE": "Gets back",
           "SUMMARY_EMPTY": "Nothing yet. Open a step, run a test and click a field in the response.",
           "AI_HIDDEN": "Hidden from {agent}",
-          "TEMPLATE": "Reply template"
+          "TEMPLATE": "Reply template",
+          "SAVE_TO_CONTACT": "Save to contact",
+          "NOT_SAVED": "Don't save"
         },
         "MODE": {
           "TITLE": "How it runs",
@@ -2544,7 +2543,14 @@
           "EARLIER_FAILED": "An earlier step failed: {error}"
         },
         "ADVANCED": "Advanced",
-        "AGENT_FALLBACK": "your AI agent"
+        "AGENT_FALLBACK": "your AI agent",
+        "AUTH": {
+          "LABEL": "Authentication",
+          "SAME_AS": "Same as step {number}",
+          "SAVED": "Saved",
+          "REPLACE": "Replace",
+          "KEY": "API key"
+        }
       },
       "FORM": {
         "TITLE": {

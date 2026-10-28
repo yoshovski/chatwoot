@@ -21,10 +21,14 @@ class Captain::Tools::ConfirmedActionJob < ApplicationJob
     result = Captain::Tools::ActionRunner.new(@tool, state: tool_state).run(
       params: pending['params'], contact: contact_values, outputs: pending['outputs'], start_at: pending['start_at'].to_i
     )
-    key = result.ok? ? 'success' : 'failure'
-    post(Captain::Tools::ActionConfirmation.message(@tool, key, params: pending['params'], outputs: result.outputs, locale: account_locale))
+    post(@tool.failure_message_for(result.failed_step) || outcome_message(result, pending))
     outcome = result.ok? ? :succeeded : :failed
     post_note(outcome, error: [result.error_kind, result.status].compact.join(' '))
+  end
+
+  def outcome_message(result, pending)
+    key = result.ok? ? 'success' : 'failure'
+    Captain::Tools::ActionConfirmation.message(@tool, key, params: pending['params'], outputs: result.outputs, locale: account_locale)
   end
 
   def post_cancelled(outcome)

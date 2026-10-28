@@ -42,6 +42,7 @@ class Captain::Tools::ActionRunner
       failure = run_step(step)
       return result(failure.merge(failed_step: step['key'])) if failure
     end
+    save_contact_attributes if @mode == :live
     result({})
   end
 
@@ -72,10 +73,11 @@ class Captain::Tools::ActionRunner
   def run_request(step)
     record = { key: step['key'], type: 'request', ok: false }
     @results << record
-    url, body, headers = build_request(step)
-    record[:request] = { method: step['method'], url: url, headers: redacted(headers) }
+    auth = @tool.request_auth(step)
+    url, body, headers = build_request(step, auth)
+    record[:request] = { method: step['method'], url: url, headers: redacted(headers, auth) }
 
-    record[:status], record[:body] = fetch(step['method'], url, body, headers)
+    record[:status], record[:body] = fetch(step['method'], url, body, headers, auth)
     record[:ok] = true
     extract_outputs(step, record)
   rescue SafeFetch::HttpError => e
@@ -87,7 +89,7 @@ class Captain::Tools::ActionRunner
     { error_kind: :request_failed }
   end
 
-  def fetch(method, url, body, headers)
+  def fetch(method, url, body, headers, auth)
     status = nil
     response_body = +''
     SafeFetch.fetch(
@@ -95,8 +97,8 @@ class Captain::Tools::ActionRunner
       method: method.downcase.to_sym,
       body: body,
       headers: headers,
-      sensitive_headers: auth_headers.keys,
-      http_basic_authentication: @tool.build_basic_auth_credentials,
+      sensitive_headers: @tool.build_auth_headers(auth).keys,
+      http_basic_authentication: @tool.build_basic_auth_credentials(auth),
       max_bytes: MAX_RESPONSE_SIZE,
       open_timeout: [remaining_time, SafeFetch::DEFAULT_OPEN_TIMEOUT].min,
       read_timeout: [remaining_time, SafeFetch::DEFAULT_READ_TIMEOUT].min,
@@ -108,24 +110,21 @@ class Captain::Tools::ActionRunner
     [status, response_body]
   end
 
-  def build_request(step)
+  def build_request(step, auth)
     body = render(step['body'].to_s).presence if step['method'] != 'GET'
-    [render(step['url']), body, request_headers(step, body)]
+    [render(step['url']), body, request_headers(step, body, auth)]
   end
 
-  def request_headers(step, body)
+  def request_headers(step, body, auth)
     headers = @tool.build_metadata_headers(@state)
     Array(step['headers']).each { |header| headers[header['name']] = render(header['value'].to_s) }
     headers['Content-Type'] ||= step['body_type'] == 'text' ? 'text/plain' : 'application/json' if body.present?
-    headers.merge(auth_headers)
+    headers.merge(@tool.build_auth_headers(auth))
   end
 
-  def auth_headers
-    @auth_headers ||= @tool.build_auth_headers
-  end
-
-  def redacted(headers)
-    headers.to_h { |name, value| [name, auth_headers.key?(name) ? '[REDACTED]' : value] }
+  def redacted(headers, auth)
+    secret_names = @tool.build_auth_headers(auth).keys
+    headers.to_h { |name, value| [name, secret_names.include?(name) ? '[REDACTED]' : value] }
   end
 
   def extract_outputs(step, record)
@@ -161,6 +160,29 @@ class Captain::Tools::ActionRunner
     return false if left.blank? || right.blank?
 
     COMPARATORS.fetch(compare).call(left, right)
+  end
+
+  # Only a live run that passed every step writes to the contact, so a failed check never stores record data.
+  def save_contact_attributes
+    values = contact_attribute_values
+    contact = values.present? && Contact.find_by(id: @state.dig(:contact, :id), account_id: @state[:account_id])
+    return if !contact || contact.update(custom_attributes: contact.custom_attributes.to_h.merge(values))
+
+    Rails.logger.error("Action #{@tool.slug} could not save contact attributes: #{contact.errors.full_messages.join(', ')}")
+  end
+
+  def contact_attribute_values
+    @tool.outputs.filter_map do |output|
+      value = @outputs[output['key']]
+      [output['contact_attribute'], contact_attribute_value(value)] if output['contact_attribute'].present? && !value.nil?
+    end.to_h
+  end
+
+  def contact_attribute_value(value)
+    return value unless value.is_a?(Array) || value.is_a?(Hash)
+    return value.join(', ') if value.is_a?(Array) && value.none? { |item| item.is_a?(Array) || item.is_a?(Hash) }
+
+    value.to_json
   end
 
   def render(template)

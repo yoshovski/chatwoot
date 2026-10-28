@@ -164,6 +164,70 @@ RSpec.describe Captain::CustomTool, type: :model do
     end
   end
 
+  describe 'auth per request step' do
+    let(:own_auth) { { 'type' => 'bearer', 'token' => 'step-secret' } }
+
+    it 'stores step secrets encrypted, outside the step, and keeps them on a blank update' do
+      tool = build_action([lookup_step.merge('auth' => own_auth)])
+      tool.save!
+
+      expect(tool.reload.steps.first['auth']).to eq('type' => 'bearer')
+      expect(tool.encrypted_auth).not_to include('step-secret') if Chatwoot.encryption_configured?
+      tool.update!(steps: [lookup_step.merge('auth' => { 'type' => 'bearer', 'token' => '' })])
+      expect(tool.reload.request_auth(tool.steps.first)['token']).to eq('step-secret')
+      expect(tool.public_steps.first['auth_configured']).to be(true)
+    end
+
+    it 'drops a step secret when its auth type changes or the step is removed' do
+      tool = build_action([lookup_step.merge('auth' => own_auth), cancel_step.merge('auth' => own_auth)])
+      tool.save!
+
+      tool.update!(steps: [lookup_step.merge('auth' => { 'type' => 'basic', 'username' => 'u', 'password' => '' })])
+
+      expect(tool.reload.request_auth(tool.steps.first)['password']).to be_nil
+      expect(tool.auth_secrets['steps']).to be_nil
+    end
+
+    it 'keeps step secrets when the action auth changes' do
+      tool = build_action([lookup_step.merge('auth' => own_auth)])
+      tool.save!
+
+      tool.auth_type = 'api_key'
+      tool.assign_auth('name' => 'X-Key', 'key' => 'action-key')
+      tool.save!
+
+      expect(tool.reload.request_auth(tool.steps.first)['token']).to eq('step-secret')
+    end
+
+    it 'only reuses the auth of an earlier request step and needs a header name for an API key' do
+      tool = build_action([lookup_step.merge('auth' => { 'same_as' => 'cancel' }),
+                           cancel_step.merge('auth' => { 'type' => 'api_key', 'name' => '' })])
+
+      expect(tool).not_to be_valid
+      expect(tool.errors[:'steps.lookup']).to include('can only reuse the auth of an earlier request step')
+      expect(tool.errors[:'steps.cancel']).to include('API key auth needs a header name')
+    end
+  end
+
+  describe 'check messages and contact attributes' do
+    it 'rejects a check message with variables' do
+      tool = build_action([lookup_step, verify_step.merge('failure_message' => 'Order {{ outputs.order_id }} has shipped')])
+
+      expect(tool).not_to be_valid
+      expect(tool.errors[:'steps.check_email']).to include("message can't use variables")
+    end
+
+    it 'saves an output only to an existing contact attribute' do
+      create(:custom_attribute_definition, account: account, attribute_model: 'contact_attribute', attribute_key: 'order_ref')
+      valid = build_action([lookup_step], outputs: [outputs.first.merge('contact_attribute' => 'order_ref')])
+      invalid = build_action([lookup_step], outputs: [outputs.first.merge('contact_attribute' => 'missing')])
+
+      expect(valid).to be_valid
+      expect(invalid).not_to be_valid
+      expect(invalid.errors[:'outputs.order_email']).to include('must be saved to an existing contact attribute')
+    end
+  end
+
   describe 'data migration' do
     require Rails.root.join('db/migrate/20261028120000_add_action_steps_to_captain_custom_tools.rb')
 

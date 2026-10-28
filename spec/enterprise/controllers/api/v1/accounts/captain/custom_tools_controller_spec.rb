@@ -294,6 +294,19 @@ RSpec.describe 'Api::V1::Accounts::Captain::CustomTools', type: :request do
       expect(custom_tool.reload.auth_config).to eq('name' => 'X-API-Key')
       expect(custom_tool.auth_secrets).to eq('key' => 'new-secret')
     end
+
+    it "stores a step's own secret and only says that it is configured" do
+      step = custom_tool.steps.first.merge('auth' => { 'type' => 'bearer', 'token' => 'step-secret' })
+      patch "/api/v1/accounts/#{account.id}/captain/custom_tools/#{custom_tool.id}",
+            params: { custom_tool: { steps: [step] } },
+            headers: admin.create_new_auth_token,
+            as: :json
+
+      expect(response.body).not_to include('step-secret')
+      expect(json_response[:steps].first[:auth]).to eq(type: 'bearer')
+      expect(json_response[:steps].first[:auth_configured]).to be(true)
+      expect(custom_tool.reload.request_auth(custom_tool.steps.first)['token']).to eq('step-secret')
+    end
   end
 
   describe 'action fields' do

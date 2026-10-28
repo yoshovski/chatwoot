@@ -6,6 +6,8 @@ export const COMPARISONS = ['exact', 'case_insensitive', 'email', 'phone'];
 export const CONTACT_FIELDS = ['email', 'phone_number', 'name'];
 export const OUTPUT_TYPES = ['string', 'number', 'boolean', 'array', 'object'];
 export const SECRET_AUTH_KEYS = ['token', 'password', 'key'];
+export const AUTH_TYPES = ['none', 'bearer', 'basic', 'api_key'];
+const NO_AUTH = { type: 'none' };
 export const EVERY_ITEM = '*';
 const KEY_LENGTH = 32;
 const PLAIN_PATH_KEY = /^[A-Za-z0-9_$-]+$/;
@@ -42,8 +44,14 @@ export const newStep = (type, steps) => {
       right: '',
       compare: 'exact',
       require_verified_contact: false,
+      failure_message: '',
     };
   }
+  // A new request reuses the auth of the first request that has one.
+  const withAuth = steps.find(
+    step =>
+      step.type === 'request' && step.auth?.type && step.auth.type !== 'none'
+  );
   return {
     key: uniqueKey('request', keys),
     type: 'request',
@@ -52,25 +60,44 @@ export const newStep = (type, steps) => {
     headers: [],
     body_type: 'json',
     body: '',
+    auth: withAuth ? { same_as: withAuth.key } : { ...NO_AUTH },
+    auth_configured: false,
   };
 };
+
+// A request can only reuse the auth of a request before it; after a move or removal any other falls back to none.
+const fixSameAs = steps =>
+  steps.map((step, index) => {
+    const sameAs = step.auth?.same_as;
+    if (!sameAs) return step;
+    const earlier = steps.slice(0, index).some(other => other.key === sameAs);
+    return earlier ? step : { ...step, auth: { ...NO_AUTH } };
+  });
 
 export const moveStep = (steps, index, offset) => {
   const target = index + offset;
   if (target < 0 || target >= steps.length) return steps;
   const moved = [...steps];
   [moved[index], moved[target]] = [moved[target], moved[index]];
-  return moved;
+  return fixSameAs(moved);
 };
 
 // Removing a step also removes the outputs saved from its response.
 export const removeStep = (steps, outputs, index) => {
   const { key } = steps[index];
   return {
-    steps: steps.filter((_, position) => position !== index),
+    steps: fixSameAs(steps.filter((_, position) => position !== index)),
     outputs: outputs.filter(output => output.step !== key),
   };
 };
+
+// The earlier requests a step can reuse the auth of, numbered as in the step list.
+export const sameAsOptions = (steps, index) =>
+  steps
+    .slice(0, index)
+    .map((step, position) => ({ step, number: position + 1 }))
+    .filter(({ step }) => step.type === 'request' && !step.auth?.same_as)
+    .map(({ step, number }) => ({ key: step.key, number }));
 
 // What a step's templates may read: inputs, outputs of earlier steps and a few contact fields.
 export const variablesBefore = (
@@ -144,54 +171,95 @@ export const outputFromPick = ({ stepKey, segments, value }, outputs) => {
   };
 };
 
-export const fromTool = (tool = {}) => ({
-  title: tool.title || '',
-  description: tool.description || '',
-  auth_type: tool.auth_type || 'none',
-  auth_config: { ...(tool.auth_config || {}) },
-  auth_configured: !!tool.auth_configured,
-  param_schema: (tool.param_schema || []).map(param => ({
-    test_value: '',
-    ...param,
-  })),
-  steps: (tool.steps || []).map(step =>
-    step.type === 'request' ? { headers: [], body: '', ...step } : { ...step }
-  ),
-  outputs: (tool.outputs || []).map(output => ({ ...output })),
-  execution_mode: tool.execution_mode || 'background',
-  messages: { confirm_prompt: '', success: '', failure: '', ...tool.messages },
-  response_template: tool.response_template || '',
-});
-
-// Blank secrets are left out so the saved ones stay; blank messages are left out so defaults apply.
-export const toPayload = form => {
-  const authConfig = Object.fromEntries(
-    Object.entries(form.auth_config).filter(
-      ([key, value]) => !SECRET_AUTH_KEYS.includes(key) || value
-    )
-  );
+// Steps saved before auth moved into each request use the action's auth: the first request shows it, later
+// ones reuse the first.
+const requestAuth = (step, tool, firstRequestKey) => {
+  if (step.auth) return { ...NO_AUTH, ...step.auth };
+  const type = tool.auth_type || 'none';
+  if (step.key !== firstRequestKey)
+    return type === 'none' ? { ...NO_AUTH } : { same_as: firstRequestKey };
   return {
-    title: form.title,
-    description: form.description,
-    auth_type: form.auth_type,
-    auth_config: authConfig,
-    param_schema: form.param_schema.map(param => ({
-      ...param,
-      test_value: String(param.test_value ?? ''),
-    })),
-    steps: form.steps.map(step =>
-      step.type === 'request'
-        ? {
-            ...step,
-            headers: step.headers.filter(header => header.name),
-          }
-        : step
-    ),
-    outputs: form.outputs,
-    execution_mode: form.execution_mode,
-    messages: Object.fromEntries(
-      Object.entries(form.messages).filter(([, value]) => value)
-    ),
-    response_template: form.response_template,
+    type,
+    username: tool.auth_config?.username || '',
+    name: tool.auth_config?.name || '',
   };
 };
+
+export const fromTool = (tool = {}) => {
+  const steps = tool.steps || [];
+  const firstRequestKey = steps.find(step => step.type === 'request')?.key;
+  return {
+    title: tool.title || '',
+    description: tool.description || '',
+    param_schema: (tool.param_schema || []).map(param => ({
+      test_value: '',
+      ...param,
+    })),
+    steps: steps.map(step =>
+      step.type === 'request'
+        ? {
+            headers: [],
+            body: '',
+            ...step,
+            auth: requestAuth(step, tool, firstRequestKey),
+            auth_configured: !!step.auth_configured,
+          }
+        : { failure_message: '', ...step }
+    ),
+    outputs: (tool.outputs || []).map(output => ({ ...output })),
+    execution_mode: tool.execution_mode || 'background',
+    messages: {
+      confirm_prompt: '',
+      success: '',
+      failure: '',
+      ...tool.messages,
+    },
+    response_template: tool.response_template || '',
+  };
+};
+
+// Only the fields of the chosen auth type are sent. Blank secrets are left out so the saved ones stay.
+const AUTH_FIELDS = {
+  none: [],
+  bearer: ['token'],
+  basic: ['username', 'password'],
+  api_key: ['name', 'key'],
+};
+const authPayload = auth => {
+  if (auth.same_as) return { same_as: auth.same_as };
+  const fields = AUTH_FIELDS[auth.type] || [];
+  return {
+    type: auth.type,
+    ...Object.fromEntries(
+      fields
+        .filter(field => !SECRET_AUTH_KEYS.includes(field) || auth[field])
+        .map(field => [field, auth[field] || ''])
+    ),
+  };
+};
+
+// Blank messages are left out so the defaults apply.
+export const toPayload = form => ({
+  title: form.title,
+  description: form.description,
+  param_schema: form.param_schema.map(param => ({
+    ...param,
+    test_value: String(param.test_value ?? ''),
+  })),
+  steps: form.steps.map(step => {
+    if (step.type !== 'request') return step;
+    const request = { ...step };
+    delete request.auth_configured;
+    return {
+      ...request,
+      headers: step.headers.filter(header => header.name),
+      auth: authPayload(step.auth),
+    };
+  }),
+  outputs: form.outputs,
+  execution_mode: form.execution_mode,
+  messages: Object.fromEntries(
+    Object.entries(form.messages).filter(([, value]) => value)
+  ),
+  response_template: form.response_template,
+});

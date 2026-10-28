@@ -93,6 +93,18 @@ RSpec.describe Captain::Tools::ActionConfirmation do
     expect(conversation.messages.where(private: true).last.content).to include('failed (http_error 500)')
   end
 
+  it "posts the check's own message when a check after the confirmation fails" do
+    stub_request(:post, 'https://example.com/orders/1042/cancel').to_return(status: 200, body: '{}')
+    check = { 'key' => 'check', 'type' => 'verify', 'left' => '{{ order_number }}', 'right' => '1', 'compare' => 'exact',
+              'failure_message' => 'That order could not be cancelled.' }
+    tool.update!(steps: steps + [check])
+    http_tool.perform(tool_context, order_number: '1042')
+
+    click(card_message, 'confirm')
+
+    expect(conversation.messages.where(private: false).last.content).to eq('That order could not be cancelled.')
+  end
+
   it 'does nothing on Cancel' do
     http_tool.perform(tool_context, order_number: '1042')
 

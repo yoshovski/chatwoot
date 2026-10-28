@@ -10,7 +10,10 @@ json.auth_type custom_tool.auth_type
 json.auth_config custom_tool.public_auth_config if Current.user&.administrator?
 json.auth_configured custom_tool.auth_configured?
 json.param_schema custom_tool.param_schema
-json.steps custom_tool.steps
+# Like auth_config, a step's auth username and header name are for administrators only.
+json.steps(custom_tool.public_steps.map do |step|
+  step['auth'].present? && !Current.user&.administrator? ? step.merge('auth' => step['auth'].slice('type', 'same_as')) : step
+end)
 json.outputs custom_tool.outputs
 json.execution_mode custom_tool.execution_mode
 json.messages custom_tool.messages

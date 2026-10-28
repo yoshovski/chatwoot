@@ -51,6 +51,15 @@ RSpec.describe Captain::Tools::HttpTool, type: :model do
     expect(result).not_to include('shipped', 'jane@example.com', '1 Main St')
   end
 
+  it "gives the AI the check's own message when it has one" do
+    custom_tool.update!(steps: [lookup_step, verify_step.merge('failure_message' => "This order isn't yours to change.")])
+
+    result = tool.perform(tool_context, order_number: '1042', email: 'someone@example.com')
+
+    expect(result).to eq(format(described_class::CHECK_MESSAGE, message: "This order isn't yours to change."))
+    expect(result).not_to include('shipped', 'jane@example.com')
+  end
+
   it 'returns a short message when a required output is missing' do
     stub_request(:get, 'https://example.com/orders/1042').to_return(status: 200, body: '{"order": {"secret": "x"}}')
 

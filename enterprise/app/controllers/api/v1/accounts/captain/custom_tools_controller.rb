@@ -135,8 +135,9 @@ class Api::V1::Accounts::Captain::CustomToolsController < Api::V1::Accounts::Bas
       :enabled,
       :execution_mode,
       param_schema: [:name, :type, :description, :required, :test_value],
-      steps: [:key, :type, :method, :url, :body_type, :body, :left, :right, :compare, :require_verified_contact, { headers: [:name, :value] }],
-      outputs: [:key, :step, :path, :type, :available_to_ai, :required],
+      steps: [:key, :type, :method, :url, :body_type, :body, :left, :right, :compare, :require_verified_contact, :failure_message,
+              { headers: [:name, :value], auth: [:type, :username, :name, :same_as, *Captain::CustomTool::SECRET_AUTH_KEYS] }],
+      outputs: [:key, :step, :path, :type, :available_to_ai, :required, :contact_attribute],
       messages: [:confirm_prompt, :success, :failure]
     )
   end

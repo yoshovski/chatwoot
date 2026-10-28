@@ -10,10 +10,8 @@ import PageLayout from 'dashboard/components-next/captain/PageLayout.vue';
 import Input from 'dashboard/components-next/input/Input.vue';
 import TextArea from 'dashboard/components-next/textarea/TextArea.vue';
 import Button from 'dashboard/components-next/button/Button.vue';
-import ComboBox from 'dashboard/components-next/combobox/ComboBox.vue';
 import Accordion from 'dashboard/components-next/Accordion/Accordion.vue';
 import ParamRow from 'dashboard/components-next/captain/pageComponents/customTool/ParamRow.vue';
-import AuthConfig from 'dashboard/components-next/captain/pageComponents/customTool/AuthConfig.vue';
 import StepRow from 'dashboard/components-next/captain/pageComponents/customTool/action/StepRow.vue';
 import StepPanel from 'dashboard/components-next/captain/pageComponents/customTool/action/StepPanel.vue';
 import VariablePicker from 'dashboard/components-next/captain/pageComponents/customTool/action/VariablePicker.vue';
@@ -54,6 +52,15 @@ const agentName = computed(
     )?.name || t('CAPTAIN.CUSTOM_TOOLS.ACTION.AGENT_FALLBACK')
 );
 
+const contactAttributes = computed(() =>
+  store.getters['attributes/getAttributesByModel']('contact_attribute').map(
+    attribute => ({
+      value: attribute.attribute_key,
+      label: attribute.attribute_display_name,
+    })
+  )
+);
+
 const backUrl = computed(() => ({
   name: 'captain_tools_index',
   params: {
@@ -63,16 +70,6 @@ const backUrl = computed(() => ({
 }));
 const snapshot = () => JSON.stringify(toPayload(form));
 const isDirty = computed(() => snapshot() !== savedSnapshot.value);
-
-const authTypeOptions = computed(() => [
-  { value: 'none', label: t('CAPTAIN.CUSTOM_TOOLS.FORM.AUTH_TYPES.NONE') },
-  { value: 'bearer', label: t('CAPTAIN.CUSTOM_TOOLS.FORM.AUTH_TYPES.BEARER') },
-  { value: 'basic', label: t('CAPTAIN.CUSTOM_TOOLS.FORM.AUTH_TYPES.BASIC') },
-  {
-    value: 'api_key',
-    label: t('CAPTAIN.CUSTOM_TOOLS.FORM.AUTH_TYPES.API_KEY'),
-  },
-]);
 
 const allOutputs = computed(() => ({
   inputs: form.param_schema.filter(param => param.name).map(p => p.name),
@@ -195,6 +192,7 @@ onBeforeRouteLeave(() => {
 });
 
 onMounted(async () => {
+  store.dispatch('attributes/get');
   if (toolId.value) {
     try {
       const { data } = await CustomToolsAPI.show(toolId.value);
@@ -318,10 +316,7 @@ onMounted(async () => {
               @click="addParam"
             />
           </div>
-          <ul
-            v-if="form.param_schema.length"
-            class="flex flex-col gap-3 mb-0 md:gap-2"
-          >
+          <ul v-if="form.param_schema.length" class="flex flex-col gap-3 mb-0">
             <ParamRow
               v-for="(param, index) in form.param_schema"
               :key="index"
@@ -478,32 +473,15 @@ onMounted(async () => {
         </section>
 
         <Accordion :title="t('CAPTAIN.CUSTOM_TOOLS.ACTION.ADVANCED')">
-          <div class="flex flex-col gap-6">
-            <div class="flex flex-col gap-2">
-              <span class="text-sm font-medium text-n-slate-12">
-                {{ t('CAPTAIN.CUSTOM_TOOLS.ACTION.CONNECTION.TITLE') }}
-              </span>
-              <ComboBox
-                v-model="form.auth_type"
-                :options="authTypeOptions"
-                class="[&>div>button]:bg-n-alpha-black2"
-              />
-              <AuthConfig
-                v-model:auth-config="form.auth_config"
-                :auth-type="form.auth_type"
-                :configured="form.auth_configured"
-              />
-            </div>
-            <TextArea
-              v-model="form.response_template"
-              :label="t('CAPTAIN.CUSTOM_TOOLS.ACTION.OUTPUTS.TEMPLATE')"
-              :placeholder="
-                t('CAPTAIN.CUSTOM_TOOLS.ACTION.OUTPUTS.TEMPLATE_PLACEHOLDER')
-              "
-              :rows="2"
-              class="[&_textarea]:font-mono"
-            />
-          </div>
+          <TextArea
+            v-model="form.response_template"
+            :label="t('CAPTAIN.CUSTOM_TOOLS.ACTION.OUTPUTS.TEMPLATE')"
+            :placeholder="
+              t('CAPTAIN.CUSTOM_TOOLS.ACTION.OUTPUTS.TEMPLATE_PLACEHOLDER')
+            "
+            :rows="2"
+            class="[&_textarea]:font-mono"
+          />
         </Accordion>
       </form>
 
@@ -514,6 +492,7 @@ onMounted(async () => {
         :index="openStepIndex"
         :tool-id="toolId"
         :agent-name="agentName"
+        :contact-attributes="contactAttributes"
         :errors="serverErrors"
         @move="move"
         @remove="deleteStep"

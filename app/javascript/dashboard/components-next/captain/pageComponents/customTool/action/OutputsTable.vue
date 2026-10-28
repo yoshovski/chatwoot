@@ -11,6 +11,8 @@ import { OUTPUT_TYPES } from './actionForm';
 const props = defineProps({
   stepKey: { type: String, required: true },
   agentName: { type: String, required: true },
+  // Contact attributes an output can be saved to: [{ value, label }].
+  contactAttributes: { type: Array, default: () => [] },
   focusedKey: { type: String, default: '' },
   errors: { type: Object, default: () => ({}) },
 });
@@ -22,6 +24,10 @@ const typeOptions = OUTPUT_TYPES.map(type => ({ value: type, label: type }));
 const stepOutputs = computed(() =>
   outputs.value.filter(output => output.step === props.stepKey)
 );
+const contactOptions = computed(() => [
+  { value: '', label: t('CAPTAIN.CUSTOM_TOOLS.ACTION.OUTPUTS.NOT_SAVED') },
+  ...props.contactAttributes,
+]);
 const remove = output => outputs.value.splice(outputs.value.indexOf(output), 1);
 const errorFor = output =>
   (props.errors[`outputs.${output.key}`] || []).join(', ');
@@ -83,6 +89,22 @@ const errorFor = output =>
           <Switch v-model="output.required" />
           {{ t('CAPTAIN.CUSTOM_TOOLS.ACTION.OUTPUTS.REQUIRED') }}
         </label>
+      </div>
+      <div
+        v-if="contactAttributes.length"
+        class="flex items-center justify-between gap-2 text-xs text-n-slate-11"
+      >
+        <span>{{
+          t('CAPTAIN.CUSTOM_TOOLS.ACTION.OUTPUTS.SAVE_TO_CONTACT')
+        }}</span>
+        <div class="w-48">
+          <ComboBox
+            :model-value="output.contact_attribute || ''"
+            :options="contactOptions"
+            class="[&>div>button]:bg-n-alpha-black2 [&>div>button]:!py-1.5"
+            @update:model-value="value => (output.contact_attribute = value)"
+          />
+        </div>
       </div>
     </li>
   </ul>

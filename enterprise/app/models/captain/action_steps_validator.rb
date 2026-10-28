@@ -10,11 +10,14 @@ class Captain::ActionStepsValidator < ActiveModel::Validator
   CONTACT_FIELDS = %w[email phone_number name].freeze
   KEY_FORMAT = /\A[a-z0-9_]{1,32}\z/
   HEADER_NAME_FORMAT = /\A[A-Za-z0-9-]+\z/
+  AUTH_TYPES = %w[none bearer basic api_key].freeze
+  MAX_FAILURE_MESSAGE_LENGTH = 500
   MAX_STEPS = { 'request' => 3, 'verify' => 2 }.freeze
   KEY_ERROR = 'must use a-z, 0-9 and _ (32 characters at most)'.freeze
 
   def validate(record)
     @record = record
+    @contact_attribute_keys = nil
     validate_steps
     validate_outputs
     validate_messages
@@ -51,6 +54,21 @@ class Captain::ActionStepsValidator < ActiveModel::Validator
     errors.add(attribute, "body type must be one of #{BODY_TYPES.join(', ')}") unless BODY_TYPES.include?(step['body_type'] || 'json')
     errors.add(attribute, 'headers need a name made of letters, digits and dashes') unless valid_headers?(step['headers'] || [])
     validate_request_url(step['url'], attribute)
+    validate_request_auth(step, attribute) if step['auth'].present?
+  end
+
+  # A step's own auth, or "same_as" another request step before it.
+  def validate_request_auth(step, attribute)
+    auth = step['auth']
+    return validate_same_as(step, auth['same_as'], attribute) if auth['same_as'].present?
+    return errors.add(attribute, "auth type must be one of #{AUTH_TYPES.join(', ')}") unless AUTH_TYPES.include?(auth['type'])
+
+    errors.add(attribute, 'API key auth needs a header name') if auth['type'] == 'api_key' && !HEADER_NAME_FORMAT.match?(auth['name'].to_s)
+  end
+
+  def validate_same_as(step, same_as, attribute)
+    earlier = record.request_steps.take_while { |other| other['key'] != step['key'] }
+    errors.add(attribute, 'can only reuse the auth of an earlier request step') unless earlier.pluck('key').include?(same_as)
   end
 
   def validate_request_url(url, attribute)
@@ -66,6 +84,13 @@ class Captain::ActionStepsValidator < ActiveModel::Validator
   def validate_verify_step(step, attribute)
     errors.add(attribute, 'needs a value on both sides') if step['left'].blank? || step['right'].blank?
     errors.add(attribute, "comparison must be one of #{COMPARISONS.join(', ')}") unless COMPARISONS.include?(step['compare'])
+    validate_failure_message(step['failure_message'].to_s, attribute)
+  end
+
+  # Sent to the customer as written: no variables, so a failed check can't reveal data from the record.
+  def validate_failure_message(message, attribute)
+    errors.add(attribute, "message can't use variables") if message.include?('{{') || message.include?('{%')
+    errors.add(attribute, "message is longer than #{MAX_FAILURE_MESSAGE_LENGTH} characters") if message.length > MAX_FAILURE_MESSAGE_LENGTH
   end
 
   def validate_outputs
@@ -82,6 +107,13 @@ class Captain::ActionStepsValidator < ActiveModel::Validator
     errors.add(attribute, 'must come from a request step') unless request_keys.include?(output['step'])
     errors.add(attribute, 'needs a valid response path') unless Captain::Tools::ResponsePath.valid?(output['path'])
     errors.add(attribute, "type must be one of #{OUTPUT_TYPES.join(', ')}") if output['type'].present? && OUTPUT_TYPES.exclude?(output['type'])
+    return if output['contact_attribute'].blank? || contact_attribute_keys.include?(output['contact_attribute'])
+
+    errors.add(attribute, 'must be saved to an existing contact attribute')
+  end
+
+  def contact_attribute_keys
+    @contact_attribute_keys ||= record.account.custom_attribute_definitions.contact_attribute.pluck(:attribute_key)
   end
 
   def validate_messages

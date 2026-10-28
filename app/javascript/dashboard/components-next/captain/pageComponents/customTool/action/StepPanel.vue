@@ -6,13 +6,14 @@ import Button from 'dashboard/components-next/button/Button.vue';
 import StepCard from './StepCard.vue';
 import TestPanel from './TestPanel.vue';
 import OutputsTable from './OutputsTable.vue';
-import { variablesBefore } from './actionForm';
+import { sameAsOptions, variablesBefore } from './actionForm';
 
 // Edits one step next to a test run of it, so a response field can be saved as an output with one click.
 const props = defineProps({
   index: { type: Number, required: true },
   toolId: { type: Number, default: null },
   agentName: { type: String, required: true },
+  contactAttributes: { type: Array, default: () => [] },
   errors: { type: Object, default: () => ({}) },
 });
 
@@ -99,6 +100,7 @@ onMounted(() => panel.value.open());
       <StepCard
         v-model:step="form.steps[index]"
         :variables="variablesBefore(form, index)"
+        :same-as-options="sameAsOptions(form.steps, index)"
         :errors="errors[`steps.${step.key}`] || []"
       />
       <div
@@ -125,6 +127,7 @@ onMounted(() => panel.value.open());
             v-model:outputs="form.outputs"
             :step-key="step.key"
             :agent-name="agentName"
+            :contact-attributes="contactAttributes"
             :focused-key="focusedOutputKey"
             :errors="errors"
           />

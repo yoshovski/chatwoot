@@ -23,8 +23,6 @@ const ButtonStub = {
 const buildForm = (overrides = {}) => ({
   title: 'Lookup',
   description: '',
-  auth_type: 'none',
-  auth_config: {},
   param_schema: [],
   steps: [
     {
@@ -33,6 +31,7 @@ const buildForm = (overrides = {}) => ({
       method: 'GET',
       url: 'https://example.com',
       headers: [],
+      auth: { type: 'none' },
     },
   ],
   outputs: [],
@@ -195,6 +194,7 @@ describe('TestPanel', () => {
             method: 'POST',
             url: 'https://example.com',
             headers: [],
+            auth: { type: 'none' },
           },
         ],
       })

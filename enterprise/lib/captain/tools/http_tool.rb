@@ -4,6 +4,7 @@ class Captain::Tools::HttpTool < Captain::Tools::BasePublicTool
   REQUEST_FAILED = 'An error occurred while executing the request'.freeze
   NOT_FOUND = 'No matching record was found. Ask the customer to check the details they gave.'.freeze
   VERIFICATION_FAILED = "The details the customer gave don't match. Ask them to check them. Don't reveal anything about the record.".freeze
+  CHECK_MESSAGE = "The check didn't pass. Tell the customer exactly this, and nothing else about the record: %<message>s".freeze
   TOO_MANY_FAILED_CHECKS = 'Too many failed checks; hand the conversation to a human.'.freeze
   CONFIRMATION_SHOWN = "A confirmation card was shown to the customer. Don't say the action is done.".freeze
   CONFIRMATION_UNAVAILABLE = "This action needs the customer to confirm with a button, which this channel doesn't have. " \
@@ -100,7 +101,8 @@ class Captain::Tools::HttpTool < Captain::Tools::BasePublicTool
     case result.error_kind
     when :verification_failed
       count_verification_failure(state)
-      VERIFICATION_FAILED
+      check_message = @custom_tool.failure_message_for(result.failed_step)
+      check_message ? format(CHECK_MESSAGE, message: check_message) : VERIFICATION_FAILED
     when :not_found then NOT_FOUND
     else REQUEST_FAILED
     end

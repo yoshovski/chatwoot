@@ -6,6 +6,7 @@ import {
   outputFromPick,
   pathFromSegments,
   removeStep,
+  sameAsOptions,
   templateParts,
   toPayload,
   uniqueKey,
@@ -153,17 +154,66 @@ describe('actionForm', () => {
     it('leaves out blank secrets, empty headers and blank messages', () => {
       const form = fromTool({
         title: 'Lookup',
-        auth_type: 'api_key',
-        auth_config: { name: 'X-Key' },
-        steps: [{ ...lookup, headers: [{ name: '', value: 'x' }] }],
+        steps: [
+          {
+            ...lookup,
+            headers: [{ name: '', value: 'x' }],
+            auth: { type: 'api_key', name: 'X-Key' },
+            auth_configured: true,
+          },
+        ],
         messages: { success: 'Done' },
       });
 
       const payload = toPayload(form);
 
-      expect(payload.auth_config).toEqual({ name: 'X-Key' });
+      expect(payload.steps[0].auth).toEqual({ type: 'api_key', name: 'X-Key' });
+      expect(payload.steps[0]).not.toHaveProperty('auth_configured');
       expect(payload.steps[0].headers).toEqual([]);
       expect(payload.messages).toEqual({ success: 'Done' });
+    });
+
+    it("shows the action's auth on the first request and reuses it on later ones", () => {
+      const form = fromTool({
+        auth_type: 'bearer',
+        auth_configured: true,
+        steps: [lookup, check, cancel],
+      });
+
+      expect(form.steps[0].auth).toMatchObject({ type: 'bearer' });
+      expect(form.steps[2].auth).toEqual({ same_as: 'lookup' });
+      expect(toPayload(form).steps[2].auth).toEqual({ same_as: 'lookup' });
+    });
+  });
+
+  describe('auth per request', () => {
+    const withAuth = { ...lookup, auth: { type: 'bearer' } };
+
+    it('starts a new request with the auth of the first request that has one', () => {
+      expect(newStep('request', [withAuth]).auth).toEqual({
+        same_as: 'lookup',
+      });
+      expect(
+        newStep('request', [{ ...lookup, auth: { type: 'none' } }]).auth
+      ).toEqual({ type: 'none' });
+    });
+
+    it('drops a reused auth that no longer points to an earlier request', () => {
+      const steps = [withAuth, { ...cancel, auth: { same_as: 'lookup' } }];
+
+      expect(moveStep(steps, 0, 1)[0].auth).toEqual({ type: 'none' });
+      expect(removeStep(steps, [], 0).steps[0].auth).toEqual({ type: 'none' });
+    });
+
+    it('offers only earlier requests that have their own auth', () => {
+      const steps = [
+        withAuth,
+        check,
+        { ...cancel, auth: { same_as: 'lookup' } },
+        lookup,
+      ];
+
+      expect(sameAsOptions(steps, 3)).toEqual([{ key: 'lookup', number: 1 }]);
     });
   });
 });
