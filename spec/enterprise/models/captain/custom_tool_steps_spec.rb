@@ -98,7 +98,7 @@ RSpec.describe Captain::CustomTool, type: :model do
     end
 
     it 'checks the URL of every request step' do
-      tool = build_action([lookup_step, cancel_step.merge('url' => 'http://localhost/cancel')])
+      tool = build_action([lookup_step, cancel_step.merge('url' => 'http://printer.local/cancel')])
 
       expect(tool).not_to be_valid
       expect(tool.errors[:'steps.cancel']).to include('URL must use HTTPS protocol', 'URL cannot use disallowed hostname')
