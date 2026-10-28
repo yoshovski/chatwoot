@@ -21,7 +21,7 @@ class BillingPlanDashboard < Administrate::BaseDashboard
     updated_at: Field::DateTime
   }.freeze
 
-  COLLECTION_ATTRIBUTES = %i[name active monthly_price currency ai_conversations_limit trial_ai_conversations_limit account_subscriptions].freeze
+  COLLECTION_ATTRIBUTES = %i[name active monthly_price currency account_subscriptions].freeze
   SHOW_PAGE_ATTRIBUTES = %i[name description active position currency monthly_price ai_conversations_limit trial_ai_conversations_limit
                             trial_days agents_limit inboxes_limit documents_limit features account_subscriptions].freeze
   FORM_ATTRIBUTES = %i[name description active position currency monthly_price ai_conversations_limit trial_ai_conversations_limit

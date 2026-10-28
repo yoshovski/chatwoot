@@ -65,13 +65,14 @@ const domain = computed(() => [
         {{ t('ACCOUNT_SUBSCRIPTION.USAGE_PAGE.TOTAL', { count: number(total) }) }}
       </span>
     </div>
-    <template v-if="total > 0 && days.length > 1">
+    <template v-if="total > 0">
       <LineChart
         :data="chart"
         :format-value="number"
         :y-domain="domain"
         :height="200"
         :point-radius="2"
+        :show-values="false"
         :x-inset="0"
         :aria-label="title"
         class="w-full [&_.cw-viz-line\_\_x-tick]:hidden [--cw-viz-line-label-color:rgb(var(--slate-11))] [--cw-viz-line-axis-color:rgb(var(--slate-4))] [--cw-viz-line-tooltip-background:rgb(var(--solid-2))] [--cw-viz-line-tooltip-color:rgb(var(--slate-12))] [--cw-viz-line-tooltip-border-color:rgb(var(--border-strong))]"

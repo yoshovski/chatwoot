@@ -110,7 +110,7 @@ class AccountSubscription < ApplicationRecord
 
   def daily_usage
     today = Time.current.utc.to_date
-    start_date = [today - 29, (created_at || Time.current).utc.to_date].max
+    start_date = today - 29
     counts = daily_counts(account.conversation_usage_windows, :started_at, start_date)
     conversations = daily_counts(account.conversations, :created_at, start_date)
     (start_date..today).map { |day| { date: day.iso8601, consumed: counts.fetch(day, 0), conversations: conversations.fetch(day, 0) } }

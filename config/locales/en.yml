@@ -87,6 +87,10 @@ en:
         documents_limit: 'Knowledge documents (blank = unlimited)'
         features: 'Features and add-ons'
         account_subscriptions: 'Accounts'
+  helpers:
+    label:
+      billing_plan:
+        account_subscriptions: 'Accounts'
   errors:
     account_subscription:
       trial_exhausted: 'Trial AI replies are paused because the trial expired or its conversation quota was exhausted.'
