@@ -839,6 +839,7 @@ Rails.application.routes.draw do
         post :apply_subscription_pricing, on: :member
         post :extend_subscription_period, on: :member
       end
+      resources :billing_plans, only: [:index, :new, :create, :show, :edit, :update, :destroy]
       resources :users, only: [:index, :new, :create, :show, :edit, :update, :destroy] do
         delete :avatar, on: :member, action: :destroy_avatar
         post :resend_confirmation, on: :member

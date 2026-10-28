@@ -75,6 +75,18 @@ en:
 
   account_subscription:
     setup_fee: 'Customization and setup'
+  activerecord:
+    attributes:
+      billing_plan:
+        monthly_price: 'Monthly price (display, e.g. 49,00)'
+        ai_conversations_limit: 'AI conversations per month (blank = unlimited)'
+        trial_ai_conversations_limit: 'AI conversations during the whole trial (blank = no trial cap)'
+        trial_days: 'Trial length (days)'
+        agents_limit: 'Seats (blank = unlimited)'
+        inboxes_limit: 'Inboxes (blank = unlimited)'
+        documents_limit: 'Knowledge documents (blank = unlimited)'
+        features: 'Features and add-ons'
+        account_subscriptions: 'Accounts'
   errors:
     account_subscription:
       trial_exhausted: 'Trial AI replies are paused because the trial expired or its conversation quota was exhausted.'
@@ -797,7 +809,12 @@ en:
       custom_payment: 'Custom one-time payment'
       custom_payment_description: 'Custom payment description'
       new_custom_payment: 'Issue a new payment request at the same amount'
-      monthly_limit: "Monthly conversation limit (blank means unlimited)"
+      monthly_limit: "Monthly AI conversation limit (blank uses the plan, or unlimited without a plan)"
+      billing_plan_id: "Plan"
+      no_plan: "No plan (configure this account by hand)"
+      add_ons: "Bought add-ons"
+      no_add_ons: "This plan has no add-ons."
+      plan_helper: "Assigning a plan turns billing on. The plan sets features, add-ons and limits; values below and in Limits override it when filled in."
       billing_interval: "Billing interval"
       currency: "Currency"
       monthly_price: "Monthly price"
@@ -816,6 +833,25 @@ en:
       period_extended: 'Stripe renewal extended to the saved date.'
       apply_pricing: "Apply saved pricing to Stripe (future renewals, no proration)"
       pricing_applied: "Saved pricing applied to Stripe."
+    billing_plan:
+      helper: "Choose per feature: not in the plan, included, or a paid add-on with its monthly price. Changing features updates every account on this plan."
+      not_included: "Not included"
+      included: "Included"
+      add_on: "Paid add-on"
+      add_on_price: "Add-on price per month"
+      accounts: "%{count} accounts"
+      features:
+        captain_integration: "AI agent"
+        captain_integration_v2: "Scenarios and actions"
+        native_ai_knowledge: "Knowledge library"
+        help_center: "Help Center"
+        campaigns: "Campaigns"
+        reports: "Reports"
+        channel_voice: "Voice channel"
+        calls: "Calls dashboard"
+        crm_integration: "CRM integration"
+        shopify_integration: "Shopify"
+        disable_branding: "Remove branding"
     dify_workspace:
       title: Shared Dify workspace
       description: Configure one workspace for all accounts. Every account inherits this connection, and each assistant keeps separate knowledge datasets.

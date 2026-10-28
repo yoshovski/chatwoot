@@ -1,0 +1,25 @@
+<div class="field-unit__label"><%= f.label field.attribute %></div>
+<div class="field-unit__field">
+  <p class="mb-3 text-sm"><%= t('super_admin.billing_plan.helper') %></p>
+  <table class="w-full text-sm">
+    <tbody>
+      <% BillingPlan::FEATURES.each do |key| %>
+        <tr>
+          <td class="py-1 pr-3"><%= t("super_admin.billing_plan.features.#{key}") %></td>
+          <td class="py-1 pr-3">
+            <%= select_tag "billing_plan[feature_settings][#{key}]",
+                           options_for_select([[t('super_admin.billing_plan.not_included'), ''],
+                                               [t('super_admin.billing_plan.included'), 'included'],
+                                               [t('super_admin.billing_plan.add_on'), 'add_on']], field.resource.feature_setting(key)) %>
+          </td>
+          <td class="py-1">
+            <% price = field.resource.add_ons[key] %>
+            <%= text_field_tag "billing_plan[add_on_prices][#{key}]", (format('%.2f', price / 100.0) if price),
+                               inputmode: 'decimal', placeholder: '10,00', pattern: '[0-9]+([.,][0-9]{1,2})?',
+                               'aria-label': t('super_admin.billing_plan.add_on_price') %>
+          </td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>
