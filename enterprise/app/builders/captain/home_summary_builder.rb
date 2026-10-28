@@ -58,13 +58,27 @@ class Captain::HomeSummaryBuilder
     }
   end
 
+  # The same numbers as Billing: AI conversations against the Super Admin monthly limit (and trial), plus the
+  # account's seat, inbox and document limits. A limit left unset in Super Admin comes back as nil.
   def usage
-    limits = account.captain_monthly_limit
-    month = Time.current.beginning_of_month..Time.current
+    subscription = account.subscription_settings
+    limits = account.usage_limits
     {
-      ai_replies: { used: account.captain_agent_sessions.session_assistant.where(created_at: month).count, limit: finite(limits[:responses]) },
-      documents: { used: account.captain_documents.count, limit: finite(limits[:documents]) },
-      conversations: { used: account.conversations.where(created_at: month).count, limit: nil }
+      plan: plan_status(subscription),
+      ai_conversations: { used: subscription.consumed, limit: (subscription.monthly_limit if subscription.enabled?) },
+      agents: { used: account.account_users.count, limit: finite(limits[:agents]) },
+      inboxes: { used: account.inboxes.count, limit: finite(limits[:inboxes]) },
+      documents: { used: account.captain_documents.count, limit: finite(limits.dig(:captain, :documents, :total_count)) }
+    }
+  end
+
+  def plan_status(subscription)
+    {
+      billing_enabled: subscription.enabled?,
+      trial: subscription.trial_active?,
+      trial_ends_at: (subscription.trial_ends_at&.to_i if subscription.trial_active?),
+      ai_replies_paused: !subscription.ai_reply_allowed?,
+      quota_resets_at: subscription.quota_period.last.to_i
     }
   end
 
@@ -111,6 +125,8 @@ class Captain::HomeSummaryBuilder
   end
 
   def finite(limit)
-    limit.to_i >= ChatwootApp.max_limit ? nil : limit.to_i
+    return if limit.nil? || limit.to_i >= ChatwootApp.max_limit
+
+    limit.to_i
   end
 end

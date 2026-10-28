@@ -44,7 +44,39 @@ RSpec.describe 'Api::V1::Accounts::Captain::Home', type: :request do
       expect(body['quick_actions']).to include('unassigned_conversations' => 1, 'unanswered_questions' => 1)
       expect(body['performance']).to include('sales_assisted' => 1, 'leads_captured' => 1)
       expect(body['project_status']).to eq('widget_installed' => true, 'mailbox_connected' => false, 'domain' => 'verified')
-      expect(body['usage']['ai_replies']).to include('used' => 1)
+    end
+  end
+
+  describe 'usage' do
+    it 'shows no limits when none are set in Super Admin' do
+      get url, headers: admin.create_new_auth_token, as: :json
+
+      usage = response.parsed_body['usage']
+      expect(usage['ai_conversations']).to eq('used' => 0, 'limit' => nil)
+      expect(usage['agents']).to include('used' => 1, 'limit' => nil)
+      expect(usage['plan']).to include('billing_enabled' => false, 'trial' => false, 'ai_replies_paused' => false)
+    end
+
+    it 'uses the Super Admin conversation limit, trial and account limits' do
+      account.update!(limits: { 'agents' => 3, 'inboxes' => 2 },
+                      subscription_settings: { enabled: true, monthly_limit: 50, trial_enabled: true, trial_days: 14 })
+
+      get url, headers: admin.create_new_auth_token, as: :json
+
+      usage = response.parsed_body['usage']
+      expect(usage['ai_conversations']).to eq('used' => 0, 'limit' => 50)
+      expect(usage['agents']).to include('limit' => 3)
+      expect(usage['inboxes']).to include('used' => 0, 'limit' => 2)
+      expect(usage['plan']).to include('billing_enabled' => true, 'trial' => true, 'ai_replies_paused' => false)
+      expect(usage['plan']['trial_ends_at']).to be_within(60).of(14.days.from_now.to_i)
+    end
+
+    it 'reports paused AI replies after the trial ends' do
+      account.update!(subscription_settings: { enabled: true, trial_enabled: true, trial_ends_at: 1.day.ago })
+
+      get url, headers: admin.create_new_auth_token, as: :json
+
+      expect(response.parsed_body['usage']['plan']).to include('trial' => true, 'ai_replies_paused' => true)
     end
   end
 end
