@@ -2,6 +2,7 @@
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import TemplateText from './TemplateText.vue';
+import { UNARY_COMPARISONS } from './actionForm';
 
 // One line of the step list. Opens the step panel on click.
 const props = defineProps({
@@ -66,8 +67,18 @@ const STATUS_CLASSES = {
           class="flex items-center flex-1 min-w-0 gap-1 text-sm text-n-slate-12"
         >
           <TemplateText :text="step.left" class="min-w-0" />
-          <span class="i-lucide-equal size-3.5 text-n-slate-10 shrink-0" />
-          <TemplateText :text="step.right" class="min-w-0" />
+          <span class="text-xs text-n-slate-10 shrink-0">
+            {{
+              t(
+                `CAPTAIN.CUSTOM_TOOLS.ACTION.STEPS.COMPARISONS.${(step.compare || 'exact').toUpperCase()}`
+              )
+            }}
+          </span>
+          <TemplateText
+            v-if="!UNARY_COMPARISONS.includes(step.compare)"
+            :text="step.right"
+            class="min-w-0"
+          />
         </span>
       </template>
       <span

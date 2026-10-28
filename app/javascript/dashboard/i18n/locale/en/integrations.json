@@ -2465,10 +2465,19 @@
             "TEXT": "Text"
           },
           "LEFT": "Value",
-          "RIGHT": "Must match",
+          "RIGHT": "Compared with",
           "COMPARISONS": {
             "EXACT": "is exactly",
+            "NOT_EQUAL": "is not",
             "CASE_INSENSITIVE": "matches, ignoring case",
+            "CONTAINS": "contains",
+            "NOT_CONTAINS": "doesn't contain",
+            "STARTS_WITH": "starts with",
+            "ONE_OF": "is one of",
+            "NOT_ONE_OF": "is not one of",
+            "GREATER_THAN": "is greater than",
+            "LESS_THAN": "is less than",
+            "PRESENT": "is not empty",
             "EMAIL": "is the same email",
             "PHONE": "is the same phone number"
           },
@@ -2480,7 +2489,8 @@
           "LEFT_PLACEHOLDER": "{'{{'} outputs.order_email {'}}'}",
           "RIGHT_PLACEHOLDER": "{'{{'} email {'}}'}",
           "FAILURE_MESSAGE": "Reply when it doesn't match (optional)",
-          "FAILURE_MESSAGE_PLACEHOLDER": "This order has already shipped, so it can't be changed."
+          "FAILURE_MESSAGE_PLACEHOLDER": "This order has already shipped, so it can't be changed.",
+          "LIST_PLACEHOLDER": "pending, on_hold"
         },
         "VARIABLES": {
           "INSERT": "Insert a variable",
@@ -2498,12 +2508,14 @@
           "REQUIRED": "Required",
           "REMOVE": "Remove output",
           "TEMPLATE_PLACEHOLDER": "Order {'{{'} outputs.order_id {'}}'} is {'{{'} outputs.status {'}}'}",
-          "SUMMARY_TITLE": "Gets back",
+          "SUMMARY_TITLE": "Response data",
           "SUMMARY_EMPTY": "Nothing yet. Open a step, run a test and click a field in the response.",
-          "AI_HIDDEN": "Hidden from {agent}",
           "TEMPLATE": "Reply template",
           "SAVE_TO_CONTACT": "Save to contact",
-          "NOT_SAVED": "Don't save"
+          "NOT_SAVED": "Don't save",
+          "VISIBLE_GROUP": "{agent} sees",
+          "HIDDEN_GROUP": "Only used by the steps",
+          "NONE": "Nothing"
         },
         "MODE": {
           "TITLE": "How it runs",

@@ -14,7 +14,7 @@ import Accordion from 'dashboard/components-next/Accordion/Accordion.vue';
 import ParamRow from 'dashboard/components-next/captain/pageComponents/customTool/ParamRow.vue';
 import StepRow from 'dashboard/components-next/captain/pageComponents/customTool/action/StepRow.vue';
 import StepPanel from 'dashboard/components-next/captain/pageComponents/customTool/action/StepPanel.vue';
-import VariablePicker from 'dashboard/components-next/captain/pageComponents/customTool/action/VariablePicker.vue';
+import TemplateField from 'dashboard/components-next/captain/pageComponents/customTool/action/TemplateField.vue';
 import {
   canAddStep,
   fromTool,
@@ -134,9 +134,21 @@ const openOutputStep = output => {
   openStepIndex.value = form.steps.findIndex(step => step.key === output.step);
 };
 
-const appendMessage = (key, text) => {
-  form.messages[key] = `${form.messages[key] || ''}${text}`;
-};
+// Response data split by what the agent may see, so the summary explains itself.
+const outputGroups = computed(() => [
+  {
+    key: 'visible',
+    label: t('CAPTAIN.CUSTOM_TOOLS.ACTION.OUTPUTS.VISIBLE_GROUP', {
+      agent: agentName.value,
+    }),
+    outputs: form.outputs.filter(output => output.available_to_ai),
+  },
+  {
+    key: 'hidden',
+    label: t('CAPTAIN.CUSTOM_TOOLS.ACTION.OUTPUTS.HIDDEN_GROUP'),
+    outputs: form.outputs.filter(output => !output.available_to_ai),
+  },
+]);
 
 const confirmPreview = computed(
   () =>
@@ -255,6 +267,37 @@ onMounted(async () => {
         <section class="flex flex-col gap-3">
           <div class="flex items-center justify-between gap-2">
             <h2 class="mb-0 text-sm font-medium text-n-slate-12">
+              {{ t('CAPTAIN.CUSTOM_TOOLS.ACTION.INPUTS.TITLE') }}
+            </h2>
+            <Button
+              type="button"
+              size="xs"
+              variant="ghost"
+              color="slate"
+              icon="i-lucide-plus"
+              :label="t('CAPTAIN.CUSTOM_TOOLS.ACTION.INPUTS.ADD')"
+              @click="addParam"
+            />
+          </div>
+          <ul v-if="form.param_schema.length" class="flex flex-col gap-3 mb-0">
+            <ParamRow
+              v-for="(param, index) in form.param_schema"
+              :key="index"
+              v-model:name="param.name"
+              v-model:type="param.type"
+              v-model:description="param.description"
+              v-model:required="param.required"
+              @remove="form.param_schema.splice(index, 1)"
+            />
+          </ul>
+          <p v-else class="mb-0 text-sm text-n-slate-10">
+            {{ t('CAPTAIN.CUSTOM_TOOLS.ACTION.INPUTS.EMPTY') }}
+          </p>
+        </section>
+
+        <section class="flex flex-col gap-3">
+          <div class="flex items-center justify-between gap-2">
+            <h2 class="mb-0 text-sm font-medium text-n-slate-12">
               {{ t('CAPTAIN.CUSTOM_TOOLS.ACTION.STEPS.TITLE') }}
             </h2>
             <div class="flex gap-1">
@@ -302,74 +345,48 @@ onMounted(async () => {
         </section>
 
         <section class="flex flex-col gap-3">
-          <div class="flex items-center justify-between gap-2">
-            <h2 class="mb-0 text-sm font-medium text-n-slate-12">
-              {{ t('CAPTAIN.CUSTOM_TOOLS.ACTION.INPUTS.TITLE') }}
-            </h2>
-            <Button
-              type="button"
-              size="xs"
-              variant="ghost"
-              color="slate"
-              icon="i-lucide-plus"
-              :label="t('CAPTAIN.CUSTOM_TOOLS.ACTION.INPUTS.ADD')"
-              @click="addParam"
-            />
-          </div>
-          <ul v-if="form.param_schema.length" class="flex flex-col gap-3 mb-0">
-            <ParamRow
-              v-for="(param, index) in form.param_schema"
-              :key="index"
-              v-model:name="param.name"
-              v-model:type="param.type"
-              v-model:description="param.description"
-              v-model:required="param.required"
-              @remove="form.param_schema.splice(index, 1)"
-            />
-          </ul>
-          <p v-else class="mb-0 text-sm text-n-slate-10">
-            {{ t('CAPTAIN.CUSTOM_TOOLS.ACTION.INPUTS.EMPTY') }}
-          </p>
-        </section>
-
-        <section class="flex flex-col gap-3">
           <h2 class="mb-0 text-sm font-medium text-n-slate-12">
             {{ t('CAPTAIN.CUSTOM_TOOLS.ACTION.OUTPUTS.SUMMARY_TITLE') }}
           </h2>
-          <div v-if="form.outputs.length" class="flex flex-wrap gap-2">
-            <button
-              v-for="output in form.outputs"
-              :key="`${output.step}.${output.key}`"
-              type="button"
-              class="flex items-center gap-1.5 px-2.5 py-1 font-mono text-xs rounded-lg outline outline-1 hover:bg-n-alpha-1"
-              :class="
-                serverErrors[`outputs.${output.key}`]
-                  ? 'outline-n-ruby-8 text-n-ruby-11'
-                  : 'outline-n-weak text-n-slate-12'
-              "
-              :title="
-                output.available_to_ai
-                  ? t('CAPTAIN.CUSTOM_TOOLS.ACTION.OUTPUTS.AI_VISIBLE', {
-                      agent: agentName,
-                    })
-                  : t('CAPTAIN.CUSTOM_TOOLS.ACTION.OUTPUTS.AI_HIDDEN', {
-                      agent: agentName,
-                    })
-              "
-              data-test="output-chip"
-              @click="openOutputStep(output)"
+          <dl v-if="form.outputs.length" class="grid gap-2 mb-0">
+            <div
+              v-for="group in outputGroups"
+              :key="group.key"
+              class="grid items-start gap-2 sm:grid-cols-[12rem_minmax(0,1fr)]"
             >
-              <span
-                class="size-3.5"
-                :class="
-                  output.available_to_ai
-                    ? 'i-lucide-sparkles text-n-blue-11'
-                    : 'i-lucide-eye-off text-n-slate-10'
-                "
-              />
-              {{ output.key }}
-            </button>
-          </div>
+              <dt class="py-1 text-sm text-n-slate-11">{{ group.label }}</dt>
+              <dd class="flex flex-wrap gap-2 mb-0">
+                <button
+                  v-for="output in group.outputs"
+                  :key="`${output.step}.${output.key}`"
+                  type="button"
+                  class="flex items-center gap-1.5 px-2.5 py-1 font-mono text-xs rounded-lg outline outline-1 hover:bg-n-alpha-1"
+                  :class="
+                    serverErrors[`outputs.${output.key}`]
+                      ? 'outline-n-ruby-8 text-n-ruby-11'
+                      : 'outline-n-weak text-n-slate-12'
+                  "
+                  data-test="output-chip"
+                  @click="openOutputStep(output)"
+                >
+                  {{ output.key }}
+                  <span
+                    v-if="output.contact_attribute"
+                    class="i-lucide-contact size-3.5 text-n-slate-10"
+                    :title="
+                      t('CAPTAIN.CUSTOM_TOOLS.ACTION.OUTPUTS.SAVE_TO_CONTACT')
+                    "
+                  />
+                </button>
+                <span
+                  v-if="!group.outputs.length"
+                  class="py-1 text-sm text-n-slate-10"
+                >
+                  {{ t('CAPTAIN.CUSTOM_TOOLS.ACTION.OUTPUTS.NONE') }}
+                </span>
+              </dd>
+            </div>
+          </dl>
           <p v-else class="mb-0 text-sm text-n-slate-10">
             {{ t('CAPTAIN.CUSTOM_TOOLS.ACTION.OUTPUTS.SUMMARY_EMPTY') }}
           </p>
@@ -439,28 +456,20 @@ onMounted(async () => {
               @click="showMessages = true"
             />
             <template v-else>
-              <div
+              <TemplateField
                 v-for="key in ['confirm_prompt', 'success', 'failure']"
                 :key="key"
-                class="flex items-end gap-2"
-              >
-                <Input
-                  v-model="form.messages[key]"
-                  :label="
-                    t(`CAPTAIN.CUSTOM_TOOLS.ACTION.MODE.${key.toUpperCase()}`)
-                  "
-                  :placeholder="
-                    t(
-                      `CAPTAIN.CUSTOM_TOOLS.ACTION.MODE.${key.toUpperCase()}_PLACEHOLDER`
-                    )
-                  "
-                  class="flex-1 min-w-0"
-                />
-                <VariablePicker
-                  :variables="allOutputs"
-                  @insert="text => appendMessage(key, text)"
-                />
-              </div>
+                v-model="form.messages[key]"
+                :variables="allOutputs"
+                :label="
+                  t(`CAPTAIN.CUSTOM_TOOLS.ACTION.MODE.${key.toUpperCase()}`)
+                "
+                :placeholder="
+                  t(
+                    `CAPTAIN.CUSTOM_TOOLS.ACTION.MODE.${key.toUpperCase()}_PLACEHOLDER`
+                  )
+                "
+              />
             </template>
             <p class="mb-0 text-xs text-n-slate-10">
               {{
@@ -473,14 +482,14 @@ onMounted(async () => {
         </section>
 
         <Accordion :title="t('CAPTAIN.CUSTOM_TOOLS.ACTION.ADVANCED')">
-          <TextArea
+          <TemplateField
             v-model="form.response_template"
+            :variables="allOutputs"
             :label="t('CAPTAIN.CUSTOM_TOOLS.ACTION.OUTPUTS.TEMPLATE')"
             :placeholder="
               t('CAPTAIN.CUSTOM_TOOLS.ACTION.OUTPUTS.TEMPLATE_PLACEHOLDER')
             "
-            :rows="2"
-            class="[&_textarea]:font-mono"
+            multiline
           />
         </Accordion>
       </form>

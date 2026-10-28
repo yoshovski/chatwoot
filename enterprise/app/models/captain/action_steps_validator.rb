@@ -4,7 +4,7 @@ class Captain::ActionStepsValidator < ActiveModel::Validator
   STEP_TYPES = %w[request verify].freeze
   REQUEST_METHODS = %w[GET POST PUT PATCH DELETE].freeze
   BODY_TYPES = %w[json text].freeze
-  COMPARISONS = %w[exact case_insensitive email phone].freeze
+  COMPARISONS = Captain::Tools::Comparisons::NAMES
   OUTPUT_TYPES = %w[string number boolean array object].freeze
   MESSAGE_KEYS = %w[confirm_prompt success failure].freeze
   CONTACT_FIELDS = %w[email phone_number name].freeze
@@ -82,7 +82,8 @@ class Captain::ActionStepsValidator < ActiveModel::Validator
   end
 
   def validate_verify_step(step, attribute)
-    errors.add(attribute, 'needs a value on both sides') if step['left'].blank? || step['right'].blank?
+    errors.add(attribute, 'needs a value to check') if step['left'].blank?
+    errors.add(attribute, 'needs a value to compare with') if step['right'].blank? && Captain::Tools::Comparisons::UNARY.exclude?(step['compare'])
     errors.add(attribute, "comparison must be one of #{COMPARISONS.join(', ')}") unless COMPARISONS.include?(step['compare'])
     validate_failure_message(step['failure_message'].to_s, attribute)
   end

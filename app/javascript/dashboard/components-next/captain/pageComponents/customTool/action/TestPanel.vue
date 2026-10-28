@@ -11,6 +11,7 @@ import {
   outputFromPick,
   pathFromSegments,
   toPayload,
+  usedParams,
 } from './actionForm';
 
 // Runs the action up to one step and shows that step's response. Clicking a field saves it as an output.
@@ -30,9 +31,8 @@ const runError = ref('');
 const showChangeWarning = ref(false);
 const pendingPick = ref(null); // an array item click waiting for "this item" or "every item"
 
-const namedParams = computed(() =>
-  form.value.param_schema.filter(param => param.name)
-);
+// Like the request, only the inputs the steps up to this one use.
+const namedParams = computed(() => usedParams(form.value, props.stepKey));
 const stepsUpToHere = computed(() => {
   const last = form.value.steps.findIndex(step => step.key === props.stepKey);
   return form.value.steps.slice(0, last + 1);

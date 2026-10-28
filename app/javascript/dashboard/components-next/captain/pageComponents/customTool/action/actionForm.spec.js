@@ -10,6 +10,7 @@ import {
   templateParts,
   toPayload,
   uniqueKey,
+  usedParams,
   variablesBefore,
 } from './actionForm';
 
@@ -138,15 +139,37 @@ describe('actionForm', () => {
         )
       ).toEqual([
         { text: 'example.com/orders/' },
-        { variable: 'order_number' },
+        { variable: 'order_number', raw: '{{ order_number }}' },
         { text: '?e=' },
-        { variable: 'outputs.email' },
+        { variable: 'outputs.email', raw: '{{outputs.email}}' },
       ]);
     });
 
     it('returns nothing for a blank template', () => {
       expect(templateParts('')).toEqual([]);
       expect(templateParts(undefined)).toEqual([]);
+    });
+  });
+
+  describe('usedParams', () => {
+    it('returns the inputs the steps up to the given one read', () => {
+      const form = {
+        param_schema: [
+          { name: 'order_number' },
+          { name: 'email' },
+          { name: 'reason' },
+        ],
+        steps: [
+          { ...lookup, url: 'https://example.com/{{ order_number | upcase }}' },
+          { ...check, left: '{{ email }}', right: 'x' },
+          { ...cancel, body: '{"reason": "{{ reason }}"}' },
+        ],
+      };
+
+      expect(usedParams(form, 'lookup').map(param => param.name)).toEqual([
+        'order_number',
+      ]);
+      expect(usedParams(form, 'cancel')).toHaveLength(3);
     });
   });
 

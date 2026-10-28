@@ -2,7 +2,23 @@
 // a value in a test response. Paths match the backend's Captain::Tools::ResponsePath syntax.
 export const MAX_STEPS = { request: 3, verify: 2 };
 export const REQUEST_METHODS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'];
-export const COMPARISONS = ['exact', 'case_insensitive', 'email', 'phone'];
+// Same order and names as Captain::Tools::Comparisons. "present" has no value to compare with.
+export const COMPARISONS = [
+  'exact',
+  'not_equal',
+  'case_insensitive',
+  'contains',
+  'not_contains',
+  'starts_with',
+  'one_of',
+  'not_one_of',
+  'greater_than',
+  'less_than',
+  'present',
+  'email',
+  'phone',
+];
+export const UNARY_COMPARISONS = ['present'];
 export const CONTACT_FIELDS = ['email', 'phone_number', 'name'];
 export const OUTPUT_TYPES = ['string', 'number', 'boolean', 'array', 'object'];
 export const SECRET_AUTH_KEYS = ['token', 'password', 'key'];
@@ -121,8 +137,27 @@ export const templateParts = text =>
     .filter(Boolean)
     .map(part => {
       const variable = part.match(/^{{\s*([^}]*?)\s*}}$/);
-      return variable ? { variable: variable[1] } : { text: part };
+      return variable ? { variable: variable[1], raw: part } : { text: part };
     });
+
+const stepTemplates = step =>
+  step.type === 'request'
+    ? [step.url, step.body, ...(step.headers || []).map(header => header.value)]
+    : [step.left, step.right];
+
+// The inputs the steps up to this one read, for the test values to fill in.
+export const usedParams = ({ param_schema: params, steps }, stepKey) => {
+  const last = steps.findIndex(step => step.key === stepKey);
+  const roots = new Set(
+    steps
+      .slice(0, last + 1)
+      .flatMap(stepTemplates)
+      .flatMap(templateParts)
+      .filter(part => part.variable)
+      .map(part => part.variable.match(/^[\w$]+/)?.[0])
+  );
+  return params.filter(param => param.name && roots.has(param.name));
+};
 
 export const pathFromSegments = segments =>
   segments

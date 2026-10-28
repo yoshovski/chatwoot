@@ -6,14 +6,6 @@ class Captain::Tools::ActionRunner
   MAX_RESPONSE_SIZE = 1.megabyte
   TIME_BUDGET = 20.0
   CONTACT_FIELDS = Captain::ActionStepsValidator::CONTACT_FIELDS
-  PHONE_DIGITS_COMPARED = 9
-  PHONE_DIGITS = ->(value) { value.gsub(/\D/, '').last(PHONE_DIGITS_COMPARED) }
-  COMPARATORS = {
-    'exact' => ->(left, right) { left == right },
-    'case_insensitive' => ->(left, right) { left.casecmp?(right) },
-    'email' => ->(left, right) { left.downcase == right.downcase },
-    'phone' => ->(left, right) { PHONE_DIGITS.call(left).present? && PHONE_DIGITS.call(left) == PHONE_DIGITS.call(right) }
-  }.freeze
 
   Result = Data.define(:ok, :failed_step, :outputs, :step_results, :error_kind, :status) do
     def ok? = ok
@@ -145,7 +137,7 @@ class Captain::Tools::ActionRunner
   def run_verify(step)
     left = render(step['left'].to_s).strip
     right = render(step['right'].to_s).strip
-    ok = values_match?(step['compare'], left, right) && (!step['require_verified_contact'] || @contact['verified'] == true)
+    ok = Captain::Tools::Comparisons.match?(step['compare'], left, right) && (!step['require_verified_contact'] || @contact['verified'] == true)
     record = { key: step['key'], type: 'verify', ok: ok }
     record[:compared] = { left: left, right: right } if @mode == :test
     @results << record
@@ -153,13 +145,6 @@ class Captain::Tools::ActionRunner
   rescue StandardError => e
     @results << { key: step['key'], type: 'verify', ok: false, error: e.message }
     { error_kind: :verification_failed }
-  end
-
-  # Never a match on blank values, so a missing field can't pass the check.
-  def values_match?(compare, left, right)
-    return false if left.blank? || right.blank?
-
-    COMPARATORS.fetch(compare).call(left, right)
   end
 
   # Only a live run that passed every step writes to the contact, so a failed check never stores record data.

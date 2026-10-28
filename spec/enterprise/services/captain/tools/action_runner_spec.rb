@@ -147,7 +147,16 @@ RSpec.describe Captain::Tools::ActionRunner do
       'exact' => [%w[ABC ABC], %w[ABC abc]],
       'case_insensitive' => [%w[Madrid mADRID], %w[Madrid Paris]],
       'email' => [[' Jane@Example.com', 'jane@example.com '], ['jane@example.com', 'jane@example.org']],
-      'phone' => [['+34 600 123 456', '600-123-456'], ['+34 600 123 456', '+34 600 123 457']]
+      'phone' => [['+34 600 123 456', '600-123-456'], ['+34 600 123 456', '+34 600 123 457']],
+      'not_equal' => [%w[shipped pending], %w[shipped shipped]],
+      'contains' => [['Express Delivery', 'express'], ['Standard', 'express']],
+      'not_contains' => [['Standard', 'express'], ['Express Delivery', 'express']],
+      'starts_with' => [%w[ORD-1042 ord-], %w[INV-1042 ord-]],
+      'one_of' => [['pending', 'Pending, on_hold'], ['shipped', 'pending, on_hold']],
+      'not_one_of' => [['pending', 'shipped, delivered'], ['shipped', 'shipped, delivered']],
+      'greater_than' => [%w[120.5 100], %w[abc 100]],
+      'less_than' => [%w[3 14], %w[30 14]],
+      'present' => [['ORD-1', ''], ['', '']]
     }.each do |compare, (matching, different)|
       it "compares #{compare} values" do
         verify = { 'key' => 'check', 'type' => 'verify', 'left' => '{{ order_number }}', 'right' => '{{ email }}', 'compare' => compare }

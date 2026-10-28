@@ -2,13 +2,12 @@
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import Input from 'dashboard/components-next/input/Input.vue';
-import TextArea from 'dashboard/components-next/textarea/TextArea.vue';
 import Button from 'dashboard/components-next/button/Button.vue';
 import ComboBox from 'dashboard/components-next/combobox/ComboBox.vue';
 import Checkbox from 'dashboard/components-next/checkbox/Checkbox.vue';
-import VariablePicker from './VariablePicker.vue';
+import TemplateField from './TemplateField.vue';
 import StepAuth from './StepAuth.vue';
-import { COMPARISONS, REQUEST_METHODS } from './actionForm';
+import { COMPARISONS, REQUEST_METHODS, UNARY_COMPARISONS } from './actionForm';
 
 // The fields of one step, shown in the step panel.
 defineProps({
@@ -21,25 +20,20 @@ const step = defineModel('step', { type: Object, required: true });
 
 const { t } = useI18n();
 
+const BODY_TYPES = ['json', 'text'];
+
 const isRequest = computed(() => step.value.type === 'request');
 const sendsBody = computed(
   () => isRequest.value && step.value.method !== 'GET'
+);
+const hasExpectedValue = computed(
+  () => !UNARY_COMPARISONS.includes(step.value.compare)
 );
 
 const methodOptions = REQUEST_METHODS.map(method => ({
   value: method,
   label: method,
 }));
-const bodyTypeOptions = computed(() => [
-  {
-    value: 'json',
-    label: t('CAPTAIN.CUSTOM_TOOLS.ACTION.STEPS.BODY_TYPES.JSON'),
-  },
-  {
-    value: 'text',
-    label: t('CAPTAIN.CUSTOM_TOOLS.ACTION.STEPS.BODY_TYPES.TEXT'),
-  },
-]);
 const compareOptions = computed(() =>
   COMPARISONS.map(compare => ({
     value: compare,
@@ -48,23 +42,20 @@ const compareOptions = computed(() =>
     ),
   }))
 );
-
-const append = (field, text) => {
-  step.value[field] = `${step.value[field] || ''}${text}`;
-};
-
-const appendHeader = (header, text) => {
-  header.value = `${header.value || ''}${text}`;
-};
+const rightPlaceholder = computed(() =>
+  ['one_of', 'not_one_of'].includes(step.value.compare)
+    ? t('CAPTAIN.CUSTOM_TOOLS.ACTION.STEPS.LIST_PLACEHOLDER')
+    : t('CAPTAIN.CUSTOM_TOOLS.ACTION.STEPS.RIGHT_PLACEHOLDER')
+);
 
 const addHeader = () => step.value.headers.push({ name: '', value: '' });
 const removeHeader = position => step.value.headers.splice(position, 1);
 </script>
 
 <template>
-  <div class="flex flex-col gap-4">
+  <div class="flex flex-col gap-5">
     <template v-if="isRequest">
-      <div class="flex flex-wrap items-center gap-2">
+      <div class="flex flex-wrap items-start gap-2">
         <div class="w-28 shrink-0">
           <ComboBox
             v-model="step.method"
@@ -72,16 +63,12 @@ const removeHeader = position => step.value.headers.splice(position, 1);
             class="[&_button]:font-mono [&_li]:font-mono [&>div>button]:bg-n-alpha-black2"
           />
         </div>
-        <Input
+        <TemplateField
           v-model="step.url"
+          :variables="variables"
           :placeholder="t('CAPTAIN.CUSTOM_TOOLS.ACTION.STEPS.URL_PLACEHOLDER')"
-          custom-input-class="font-mono"
           class="flex-1 min-w-[12rem]"
           data-test="step-url"
-        />
-        <VariablePicker
-          :variables="variables"
-          @insert="text => append('url', text)"
         />
       </div>
 
@@ -104,7 +91,7 @@ const removeHeader = position => step.value.headers.splice(position, 1);
         <div
           v-for="(header, position) in step.headers"
           :key="position"
-          class="flex items-center gap-2"
+          class="flex items-start gap-2"
         >
           <Input
             v-model="header.name"
@@ -114,17 +101,13 @@ const removeHeader = position => step.value.headers.splice(position, 1);
             custom-input-class="font-mono"
             class="w-28 sm:w-36 shrink-0"
           />
-          <Input
+          <TemplateField
             v-model="header.value"
+            :variables="variables"
             :placeholder="
               t('CAPTAIN.CUSTOM_TOOLS.ACTION.STEPS.HEADER_VALUE_PLACEHOLDER')
             "
-            custom-input-class="font-mono"
-            class="flex-1 min-w-0"
-          />
-          <VariablePicker
-            :variables="variables"
-            @insert="text => appendHeader(header, text)"
+            class="flex-1"
           />
           <Button
             type="button"
@@ -132,6 +115,7 @@ const removeHeader = position => step.value.headers.splice(position, 1);
             variant="ghost"
             color="slate"
             icon="i-lucide-x"
+            class="mt-2"
             :aria-label="t('CAPTAIN.CUSTOM_TOOLS.ACTION.STEPS.REMOVE_HEADER')"
             @click="removeHeader(position)"
           />
@@ -153,63 +137,61 @@ const removeHeader = position => step.value.headers.splice(position, 1);
           <span class="text-xs font-medium text-n-slate-11">
             {{ t('CAPTAIN.CUSTOM_TOOLS.ACTION.STEPS.BODY') }}
           </span>
-          <div class="flex items-center gap-2">
-            <div class="w-24">
-              <ComboBox
-                v-model="step.body_type"
-                :options="bodyTypeOptions"
-                class="[&>div>button]:bg-n-alpha-black2"
-              />
-            </div>
-            <VariablePicker
-              :variables="variables"
-              @insert="text => append('body', text)"
-            />
+          <div
+            class="flex p-0.5 rounded-md bg-n-alpha-1"
+            role="radiogroup"
+            :aria-label="t('CAPTAIN.CUSTOM_TOOLS.ACTION.STEPS.BODY')"
+          >
+            <button
+              v-for="type in BODY_TYPES"
+              :key="type"
+              type="button"
+              role="radio"
+              :aria-checked="(step.body_type || 'json') === type"
+              class="px-2 py-0.5 text-xs rounded"
+              :class="
+                (step.body_type || 'json') === type
+                  ? 'bg-n-solid-3 text-n-slate-12 shadow-sm'
+                  : 'text-n-slate-11 hover:text-n-slate-12'
+              "
+              @click="step.body_type = type"
+            >
+              {{
+                t(
+                  `CAPTAIN.CUSTOM_TOOLS.ACTION.STEPS.BODY_TYPES.${type.toUpperCase()}`
+                )
+              }}
+            </button>
           </div>
         </div>
-        <TextArea
+        <TemplateField
           v-model="step.body"
+          :variables="variables"
           :placeholder="t('CAPTAIN.CUSTOM_TOOLS.ACTION.STEPS.BODY_PLACEHOLDER')"
-          :rows="4"
-          class="[&_textarea]:font-mono"
+          multiline
         />
       </div>
     </template>
 
     <template v-else>
-      <div class="flex items-end gap-2">
-        <Input
-          v-model="step.left"
-          :label="t('CAPTAIN.CUSTOM_TOOLS.ACTION.STEPS.LEFT')"
-          :placeholder="t('CAPTAIN.CUSTOM_TOOLS.ACTION.STEPS.LEFT_PLACEHOLDER')"
-          custom-input-class="font-mono"
-          class="flex-1 min-w-0"
-        />
-        <VariablePicker
-          :variables="variables"
-          @insert="text => append('left', text)"
-        />
-      </div>
+      <TemplateField
+        v-model="step.left"
+        :variables="variables"
+        :label="t('CAPTAIN.CUSTOM_TOOLS.ACTION.STEPS.LEFT')"
+        :placeholder="t('CAPTAIN.CUSTOM_TOOLS.ACTION.STEPS.LEFT_PLACEHOLDER')"
+      />
       <ComboBox
         v-model="step.compare"
         :options="compareOptions"
         class="[&>div>button]:bg-n-alpha-black2"
       />
-      <div class="flex items-end gap-2">
-        <Input
-          v-model="step.right"
-          :label="t('CAPTAIN.CUSTOM_TOOLS.ACTION.STEPS.RIGHT')"
-          :placeholder="
-            t('CAPTAIN.CUSTOM_TOOLS.ACTION.STEPS.RIGHT_PLACEHOLDER')
-          "
-          custom-input-class="font-mono"
-          class="flex-1 min-w-0"
-        />
-        <VariablePicker
-          :variables="variables"
-          @insert="text => append('right', text)"
-        />
-      </div>
+      <TemplateField
+        v-if="hasExpectedValue"
+        v-model="step.right"
+        :variables="variables"
+        :label="t('CAPTAIN.CUSTOM_TOOLS.ACTION.STEPS.RIGHT')"
+        :placeholder="rightPlaceholder"
+      />
       <label class="flex items-center gap-2 cursor-pointer">
         <Checkbox v-model="step.require_verified_contact" />
         <span class="text-sm text-n-slate-11">
