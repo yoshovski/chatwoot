@@ -320,6 +320,7 @@ const menuItems = computed(() => {
       label: t('SIDEBAR.HOME'),
       icon: 'i-lucide-house',
       to: accountScopedRoute('account_home'),
+      activeOn: ['account_home', 'account_home_setup'],
     },
     {
       name: 'Inbox',
