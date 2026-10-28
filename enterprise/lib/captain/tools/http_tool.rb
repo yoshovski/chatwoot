@@ -5,6 +5,9 @@ class Captain::Tools::HttpTool < Captain::Tools::BasePublicTool
   NOT_FOUND = 'No matching record was found. Ask the customer to check the details they gave.'.freeze
   VERIFICATION_FAILED = "The details the customer gave don't match. Ask them to check them. Don't reveal anything about the record.".freeze
   TOO_MANY_FAILED_CHECKS = 'Too many failed checks; hand the conversation to a human.'.freeze
+  CONFIRMATION_SHOWN = "A confirmation card was shown to the customer. Don't say the action is done.".freeze
+  CONFIRMATION_UNAVAILABLE = "This action needs the customer to confirm with a button, which this channel doesn't have. " \
+                             "Don't run it here; offer to hand the conversation to a human.".freeze
   MAX_VERIFICATION_FAILURES = 3
   VERIFICATION_FAILURE_TTL = 1.hour
 
@@ -22,12 +25,12 @@ class Captain::Tools::HttpTool < Captain::Tools::BasePublicTool
   def perform(tool_context, **params)
     state = tool_context&.state || {}
     return failure_result(TOO_MANY_FAILED_CHECKS, state) if verification_failures(state) >= MAX_VERIFICATION_FAILURES
+    return request_confirmation(state, params) if @custom_tool.confirm?
 
-    result = Captain::Tools::ActionRunner.new(@custom_tool, state: state).run(params: params, contact: contact_values(state))
+    result = run_steps(state, params)
     return ai_response(result) if result.ok?
 
-    log_failure(result)
-    failure_result(failure_message(result, state), state)
+    step_failure(result, state)
   rescue StandardError => e
     Rails.logger.error("HttpTool execution error for #{@custom_tool.slug}: #{e.class} - #{e.message}")
     failure_result(REQUEST_FAILED, tool_context&.state)
@@ -38,6 +41,44 @@ class Captain::Tools::HttpTool < Captain::Tools::BasePublicTool
   end
 
   private
+
+  def run_steps(state, params, stop_after: nil)
+    Captain::Tools::ActionRunner.new(@custom_tool, state: state).run(params: params, contact: contact_values(state), stop_after: stop_after)
+  end
+
+  def step_failure(result, state)
+    log_failure(result)
+    failure_result(failure_message(result, state), state)
+  end
+
+  # Confirm mode: run the steps before the first one that changes data, then leave the rest to the customer's click.
+  def request_confirmation(state, params)
+    confirmation = Captain::Tools::ActionConfirmation
+    return failure_result(CONFIRMATION_UNAVAILABLE, state) unless confirmation.buttons_supported?(state)
+
+    start_at = confirmation.steps_before_confirmation(@custom_tool)
+    outputs = {}
+    if start_at.positive?
+      result = run_steps(state, params, stop_after: @custom_tool.steps[start_at - 1]['key'])
+      return step_failure(result, state) unless result.ok?
+
+      outputs = result.outputs
+    end
+    show_confirmation(state, params.to_h.stringify_keys, outputs, start_at)
+  end
+
+  def show_confirmation(state, params, outputs, start_at)
+    conversation = find_conversation(state)
+    nonce = if conversation
+              Captain::Tools::ActionConfirmation.store!(conversation, tool: @custom_tool, params: params, outputs: outputs, start_at: start_at)
+            else
+              SecureRandom.hex(16)
+            end
+    content = Captain::Tools::ActionConfirmation.message(@custom_tool, 'confirm_prompt', params: params, outputs: outputs,
+                                                                                         locale: @assistant.account.locale)
+    state[Captain::Tools::ActionConfirmation::STATE_KEY] = { 'nonce' => nonce, 'content' => content }
+    CONFIRMATION_SHOWN
+  end
 
   def safe_to_run_after_new_customer_message?
     @custom_tool.read_only_action?

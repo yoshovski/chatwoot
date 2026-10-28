@@ -15,7 +15,22 @@ class Captain::Conversation::ReplyComposer # rubocop:disable Metrics/ClassLength
   end
 
   # suppress_suggestions: the caller knows the run ends in a handoff (or the conversation already waits for a human).
+  # A confirm-mode action's Confirm/Cancel card comes last and replaces the suggestion buttons.
   def messages(suppress_suggestions: false)
+    return reply_messages(suppress_suggestions) if suppress_suggestions || action_confirmation.blank?
+
+    reply_messages(true) << Captain::Tools::ActionConfirmation.card_payload(action_confirmation, assistant.account.locale)
+  end
+
+  def empty_response?
+    formatted_prose.blank? && !catalog_searches_empty? && !customer_message_has_attachments? && !model_returned_answer?
+  end
+
+  private
+
+  def action_confirmation = run_result&.context&.dig(:state, Captain::Tools::ActionConfirmation::STATE_KEY)
+
+  def reply_messages(suppress_suggestions)
     content, parts = answer_content
     closing_question = closing_question_from_parts(parts) || content[TRAILING_QUESTION, 1]
     buttons = suggestion_buttons(suppress_suggestions || followup_form_requested?,
@@ -30,12 +45,6 @@ class Captain::Conversation::ReplyComposer # rubocop:disable Metrics/ClassLength
 
     compose_answer(content, parts, closing_question, buttons)
   end
-
-  def empty_response?
-    formatted_prose.blank? && !catalog_searches_empty? && !customer_message_has_attachments? && !model_returned_answer?
-  end
-
-  private
 
   def compose_answer(content, parts, closing_question, buttons)
     separate_question = separate_closing_question?(closing_question)

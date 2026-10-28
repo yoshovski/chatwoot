@@ -17,7 +17,11 @@ class CaptainListener < BaseListener
     return if message.blank?
 
     handle_csat_update(message) if message.input_csat?
-    handle_suggestion_button_click(message) if message.input_select?
+    if action_confirmation_card?(message)
+      handle_action_confirmation(message)
+    elsif message.input_select?
+      handle_suggestion_button_click(message)
+    end
     handle_contact_form_submission(message) if message.form? && message.submitted_values.present?
   end
 
@@ -74,6 +78,33 @@ class CaptainListener < BaseListener
     return unless response
 
     tracker(message.conversation).record_csat(response: response)
+  end
+
+  def action_confirmation_card?(message)
+    message.input_select? && message.content_attributes&.dig(Captain::Tools::ActionConfirmation::NONCE_ATTRIBUTE).present?
+  end
+
+  # The customer's Confirm/Cancel click on a confirm-mode action's card. The card is claimed once, so a second click
+  # (or a replayed update) can't run the action twice.
+  def handle_action_confirmation(message)
+    return unless message.sender_type == 'Captain::Assistant' && captain_active_for_conversation?(message.conversation)
+
+    choice = message.send(:first_submitted_option)&.with_indifferent_access&.dig(:value)
+    return if choice.blank? || !claim_action_confirmation(message)
+
+    nonce = message.content_attributes[Captain::Tools::ActionConfirmation::NONCE_ATTRIBUTE]
+    Captain::Tools::ConfirmedActionJob.perform_later(message.conversation, nonce, choice)
+  end
+
+  def claim_action_confirmation(message)
+    message.with_lock do
+      return false if message.content_attributes&.dig(Captain::Tools::ActionConfirmation::HANDLED_ATTRIBUTE)
+
+      attrs = message.content_attributes.to_h.deep_dup
+      attrs[Captain::Tools::ActionConfirmation::HANDLED_ATTRIBUTE] = true
+      message.update_columns(content_attributes: attrs) # rubocop:disable Rails/SkipsModelValidations
+      true
+    end
   end
 
   def handle_suggestion_button_click(message)
