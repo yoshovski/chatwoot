@@ -6,6 +6,7 @@ import {
   outputFromPick,
   pathFromSegments,
   removeStep,
+  templateParts,
   toPayload,
   uniqueKey,
   variablesBefore,
@@ -125,6 +126,26 @@ describe('actionForm', () => {
       expect(
         outputFromPick({ stepKey: 'lookup', segments: [0], value: {} }, [])
       ).toMatchObject({ key: 'lookup', type: 'object' });
+    });
+  });
+
+  describe('templateParts', () => {
+    it('splits a template into text and variables', () => {
+      expect(
+        templateParts(
+          'example.com/orders/{{ order_number }}?e={{outputs.email}}'
+        )
+      ).toEqual([
+        { text: 'example.com/orders/' },
+        { variable: 'order_number' },
+        { text: '?e=' },
+        { variable: 'outputs.email' },
+      ]);
+    });
+
+    it('returns nothing for a blank template', () => {
+      expect(templateParts('')).toEqual([]);
+      expect(templateParts(undefined)).toEqual([]);
     });
   });
 

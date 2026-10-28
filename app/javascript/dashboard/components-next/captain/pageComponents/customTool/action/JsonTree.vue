@@ -59,7 +59,7 @@ const pick = () => {
       <span v-else class="size-4 shrink-0" />
       <button
         type="button"
-        class="text-n-slate-11 hover:text-n-blue-11 hover:underline"
+        class="text-n-slate-11 whitespace-nowrap shrink-0 hover:text-n-blue-11 hover:underline"
         data-test="json-key"
         @click="pick"
       >
@@ -69,7 +69,7 @@ const pick = () => {
       <button
         v-else
         type="button"
-        class="truncate text-n-slate-12 hover:text-n-blue-11"
+        class="min-w-0 truncate text-n-slate-12 hover:text-n-blue-11"
         data-test="json-value"
         @click="pick"
       >

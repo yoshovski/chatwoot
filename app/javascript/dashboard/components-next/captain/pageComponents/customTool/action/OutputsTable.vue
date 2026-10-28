@@ -1,12 +1,15 @@
 <script setup>
+import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import Input from 'dashboard/components-next/input/Input.vue';
 import Button from 'dashboard/components-next/button/Button.vue';
 import ComboBox from 'dashboard/components-next/combobox/ComboBox.vue';
-import Checkbox from 'dashboard/components-next/checkbox/Checkbox.vue';
+import Switch from 'dashboard/components-next/switch/Switch.vue';
 import { OUTPUT_TYPES } from './actionForm';
 
-defineProps({
+// The outputs saved from one step's response.
+const props = defineProps({
+  stepKey: { type: String, required: true },
   focusedKey: { type: String, default: '' },
   errors: { type: Object, default: () => ({}) },
 });
@@ -15,83 +18,67 @@ const outputs = defineModel('outputs', { type: Array, required: true });
 const { t } = useI18n();
 
 const typeOptions = OUTPUT_TYPES.map(type => ({ value: type, label: type }));
-const remove = position => outputs.value.splice(position, 1);
+const stepOutputs = computed(() =>
+  outputs.value.filter(output => output.step === props.stepKey)
+);
+const remove = output => outputs.value.splice(outputs.value.indexOf(output), 1);
+const errorFor = output =>
+  (props.errors[`outputs.${output.key}`] || []).join(', ');
 </script>
 
 <template>
-  <p
-    v-if="!outputs.length"
-    class="p-4 mb-0 text-sm text-center rounded-xl bg-n-alpha-1 text-n-slate-11"
-  >
+  <p v-if="!stepOutputs.length" class="mb-0 text-sm text-n-slate-10">
     {{ t('CAPTAIN.CUSTOM_TOOLS.ACTION.OUTPUTS.EMPTY') }}
   </p>
-  <div v-else class="overflow-x-auto">
-    <table class="w-full text-sm">
-      <thead>
-        <tr class="text-xs text-start text-n-slate-11">
-          <th class="py-1 font-medium text-start">
-            {{ t('CAPTAIN.CUSTOM_TOOLS.ACTION.OUTPUTS.KEY') }}
-          </th>
-          <th class="py-1 font-medium text-start">
-            {{ t('CAPTAIN.CUSTOM_TOOLS.ACTION.OUTPUTS.SOURCE') }}
-          </th>
-          <th class="py-1 font-medium text-start">
-            {{ t('CAPTAIN.CUSTOM_TOOLS.ACTION.OUTPUTS.TYPE') }}
-          </th>
-          <th class="py-1 font-medium text-center">
-            {{ t('CAPTAIN.CUSTOM_TOOLS.ACTION.OUTPUTS.AI_VISIBLE') }}
-          </th>
-          <th class="py-1 font-medium text-center">
-            {{ t('CAPTAIN.CUSTOM_TOOLS.ACTION.OUTPUTS.REQUIRED') }}
-          </th>
-          <th />
-        </tr>
-      </thead>
-      <tbody>
-        <tr
-          v-for="(output, position) in outputs"
-          :key="position"
-          class="align-top"
-          :class="{ 'bg-n-blue-2': output.key === focusedKey }"
-          :data-output-key="output.key"
-        >
-          <td class="py-1 pe-2">
-            <Input
-              v-model="output.key"
-              custom-input-class="font-mono !h-8 text-xs"
-              :message="(errors[`outputs.${output.key}`] || []).join(', ')"
-              :message-type="errors[`outputs.${output.key}`] ? 'error' : 'info'"
-            />
-          </td>
-          <td class="py-1 font-mono text-xs break-all pe-2 text-n-slate-11">
-            {{ output.step }} · {{ output.path }}
-          </td>
-          <td class="w-28 py-1 pe-2">
-            <ComboBox
-              v-model="output.type"
-              :options="typeOptions"
-              class="[&>div>button]:bg-n-alpha-black2"
-            />
-          </td>
-          <td class="py-2 text-center">
-            <Checkbox v-model="output.available_to_ai" />
-          </td>
-          <td class="py-2 text-center">
-            <Checkbox v-model="output.required" />
-          </td>
-          <td class="py-1">
-            <Button
-              type="button"
-              size="xs"
-              variant="ghost"
-              color="slate"
-              icon="i-lucide-trash"
-              :aria-label="t('CAPTAIN.CUSTOM_TOOLS.ACTION.OUTPUTS.REMOVE')"
-              @click="remove(position)"
-            />
-          </td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
+  <ul v-else class="flex flex-col gap-2 mb-0 list-none">
+    <li
+      v-for="output in stepOutputs"
+      :key="outputs.indexOf(output)"
+      class="flex flex-col gap-2 p-3 rounded-lg bg-n-alpha-1"
+      :class="{
+        'outline outline-1 outline-n-blue-8': output.key === focusedKey,
+      }"
+      :data-output-key="output.key"
+    >
+      <div class="flex items-center gap-2">
+        <Input
+          v-model="output.key"
+          custom-input-class="font-mono !h-8 text-xs"
+          class="flex-1 min-w-0"
+          :aria-label="t('CAPTAIN.CUSTOM_TOOLS.ACTION.OUTPUTS.KEY')"
+          :message="errorFor(output)"
+          :message-type="errorFor(output) ? 'error' : 'info'"
+        />
+        <div class="w-24 shrink-0">
+          <ComboBox
+            v-model="output.type"
+            :options="typeOptions"
+            class="[&>div>button]:bg-n-alpha-black2 [&>div>button]:!py-1.5"
+          />
+        </div>
+        <Button
+          type="button"
+          size="xs"
+          variant="ghost"
+          color="slate"
+          icon="i-lucide-trash"
+          :aria-label="t('CAPTAIN.CUSTOM_TOOLS.ACTION.OUTPUTS.REMOVE')"
+          @click="remove(output)"
+        />
+      </div>
+      <div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs">
+        <span class="font-mono break-all text-n-slate-10">
+          {{ output.path }}
+        </span>
+        <label class="flex items-center gap-1.5 text-n-slate-11 ms-auto">
+          <Switch v-model="output.available_to_ai" />
+          {{ t('CAPTAIN.CUSTOM_TOOLS.ACTION.OUTPUTS.AI_VISIBLE') }}
+        </label>
+        <label class="flex items-center gap-1.5 text-n-slate-11">
+          <Switch v-model="output.required" />
+          {{ t('CAPTAIN.CUSTOM_TOOLS.ACTION.OUTPUTS.REQUIRED') }}
+        </label>
+      </div>
+    </li>
+  </ul>
 </template>

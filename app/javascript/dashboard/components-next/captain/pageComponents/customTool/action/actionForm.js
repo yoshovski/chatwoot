@@ -87,6 +87,16 @@ export const variablesBefore = (
   };
 };
 
+// Splits a template into text and {{ variable }} parts so summaries can show variables as tags.
+export const templateParts = text =>
+  String(text || '')
+    .split(/({{[^}]*}})/)
+    .filter(Boolean)
+    .map(part => {
+      const variable = part.match(/^{{\s*([^}]*?)\s*}}$/);
+      return variable ? { variable: variable[1] } : { text: part };
+    });
+
 export const pathFromSegments = segments =>
   segments
     .map((segment, position) => {

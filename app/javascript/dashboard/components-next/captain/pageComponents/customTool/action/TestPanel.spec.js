@@ -61,11 +61,14 @@ const response = {
   error_kind: null,
 };
 
-const mountPanel = form =>
+const mountPanel = (form, stepKey = form.steps[0].key) =>
   mount(TestPanel, {
-    props: { form, toolId: 4 },
+    props: { form, stepKey, toolId: 4 },
     global: { stubs: { Button: ButtonStub } },
   });
+
+const runTest = wrapper =>
+  wrapper.find('[data-test="run-test"]').trigger('click');
 
 const clickKey = (wrapper, label) =>
   wrapper
@@ -79,27 +82,50 @@ describe('TestPanel', () => {
     mocks.test.mockResolvedValue({ data: response });
   });
 
-  it('runs the test with the saved tool id', async () => {
+  it('runs the action up to its step with the saved tool id', async () => {
     const wrapper = mountPanel(buildForm());
 
-    await wrapper.find('button').trigger('click');
+    await runTest(wrapper);
     await flushPromises();
 
     expect(mocks.test).toHaveBeenCalledWith(
       expect.objectContaining({ title: 'Lookup' }),
       {
         id: 4,
-        stop_after: null,
+        stop_after: 'lookup',
       }
     );
     expect(wrapper.text()).toContain('a@b.c');
+    expect(wrapper.emitted('update:result')[0][0]).toEqual(response);
+  });
+
+  it('says when an earlier step stopped the run', async () => {
+    const form = buildForm({
+      steps: [
+        ...buildForm().steps,
+        { key: 'check', type: 'verify', left: 'a', right: 'b' },
+      ],
+    });
+    mocks.test.mockResolvedValue({
+      data: {
+        steps: [{ key: 'lookup', ok: false, error: 'Not found' }],
+        outputs: {},
+      },
+    });
+    const wrapper = mountPanel(form, 'check');
+
+    await runTest(wrapper);
+    await flushPromises();
+
+    expect(wrapper.text()).toContain('EARLIER_FAILED');
+    expect(wrapper.text()).toContain('Not found');
   });
 
   it('saves a clicked field as an output with a de-duplicated key', async () => {
     const wrapper = mountPanel(
       buildForm({ outputs: [{ key: 'email', step: 'other', path: 'email' }] })
     );
-    await wrapper.find('button').trigger('click');
+    await runTest(wrapper);
     await flushPromises();
 
     await clickKey(wrapper, 'email');
@@ -114,7 +140,7 @@ describe('TestPanel', () => {
 
   it('asks whether to save one array item or every item', async () => {
     const wrapper = mountPanel(buildForm());
-    await wrapper.find('button').trigger('click');
+    await runTest(wrapper);
     await flushPromises();
 
     const skuKeys = wrapper
@@ -149,7 +175,7 @@ describe('TestPanel', () => {
         outputs: [{ key: 'email', step: 'lookup', path: 'customer.email' }],
       })
     );
-    await wrapper.find('button').trigger('click');
+    await runTest(wrapper);
     await flushPromises();
 
     expect(wrapper.find('[data-test="json-saved"]').exists()).toBe(true);
@@ -174,7 +200,7 @@ describe('TestPanel', () => {
       })
     );
 
-    await wrapper.find('button').trigger('click');
+    await runTest(wrapper);
     expect(mocks.test).not.toHaveBeenCalled();
     expect(wrapper.find('[data-test="change-warning"]').exists()).toBe(true);
 
