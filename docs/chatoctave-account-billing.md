@@ -24,6 +24,23 @@ Turning on a trial initializes its expiry from Trial duration if the expiry fiel
 
 Accounts see consumption, quota reset, billing period and a daily conversation timeline (up to 30 UTC days, with optional exact totals) under **Settings → Usage & billing**. A compact notice above the workspace appears only near the limit or when trial AI replies pause; the sidebar contains no billing card. Administrators can subscribe monthly/yearly, manage payments and pay a specific customization request. Yearly price is custom yearly price when supplied, otherwise `monthly price × 12 × (100 − yearly discount) / 100`, rounded to cents.
 
+## Plans
+
+Super Admin → **Billing Plans** defines what you sell: display price, AI conversations per month, AI conversations for
+the whole trial (default 50), trial length, seats, inboxes, knowledge documents and, per plan feature, *Not included /
+Included / Paid add-on* with the add-on's monthly price. Only these features are plan-managed: AI agent, scenarios and
+actions, knowledge library, Help Center, campaigns, reports, voice channel, calls dashboard, CRM integration, Shopify
+and remove branding. Other feature flags stay per account.
+
+Assign a plan in Accounts → Edit → Subscription settings (this turns billing on) and tick the add-ons the client
+bought. Saving sets the account's plan features (included plus bought add-ons) and turns off the other plan features.
+Editing a plan's features updates every account on it. Accounts without a plan are never changed.
+
+Limits: an account value (subscription monthly limit, or Limits → agents/inboxes/captain_documents) overrides the
+plan; blank inherits it. During an active trial with a trial cap, AI conversations count for the whole trial instead
+of per month. An AI conversation is a 24-hour window in an inbox where a bot (Octave AI agent or agent bot) answers;
+human-only inboxes do not count. Stripe checkout still uses the account's saved price.
+
 ## Stripe setup and client-specific payments
 
 Use `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` and the public `FRONTEND_URL`. Start with test-mode credentials. Register `/enterprise/webhooks/stripe` for:
