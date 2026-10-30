@@ -1,4 +1,4 @@
-import TwilioVoiceClient from 'dashboard/api/channel/voice/twilioVoiceClient';
+import VoiceClient from 'dashboard/api/channel/voice/voiceClient';
 import { cleanupWhatsappSession } from 'dashboard/composables/useWhatsappCallSession';
 import { VOICE_CALL_PROVIDERS } from 'dashboard/helper/inbox';
 import { TERMINAL_STATUSES } from 'dashboard/helper/voice';
@@ -8,7 +8,7 @@ const teardownByProvider = call => {
   if (call?.provider === VOICE_CALL_PROVIDERS.WHATSAPP) {
     cleanupWhatsappSession();
   } else {
-    TwilioVoiceClient.endClientCall();
+    VoiceClient.endClientCall();
   }
 };
 

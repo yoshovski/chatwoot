@@ -13,6 +13,10 @@ module Enterprise::Channel::TwilioSms
     end
   end
 
+  def voice_provider
+    :twilio
+  end
+
   def initiate_call(to:, conference_sid: nil, agent_id: nil)
     Voice::Provider::Twilio::Adapter.new(self).initiate_call(
       to: to,

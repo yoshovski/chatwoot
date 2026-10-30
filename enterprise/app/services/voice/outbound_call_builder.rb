@@ -24,7 +24,7 @@ class Voice::OutboundCallBuilder
     ActiveRecord::Base.transaction do
       contact_inbox = ensure_contact_inbox!
       conversation = @existing_conversation || create_conversation!(contact_inbox)
-      # Dial before locking so the Twilio round-trip doesn't hold the conversation row lock.
+      # Dial before locking so the provider round-trip doesn't hold the conversation row lock.
       call_sid = initiate_call!
       if claim_for_caller
         @existing_conversation.lock!

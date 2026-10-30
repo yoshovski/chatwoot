@@ -1,6 +1,7 @@
 class Voice::StatusUpdateService
-  pattr_initialize [:account!, :call_sid!, :call_status, { payload: {} }]
+  pattr_initialize [:account!, :call_sid!, :call_status, { payload: {}, provider: :twilio }]
 
+  # Telnyx TeXML reports the same CallStatus values as Twilio.
   TWILIO_STATUS_MAP = {
     'queued' => 'ringing',
     'initiated' => 'ringing',
@@ -19,7 +20,7 @@ class Voice::StatusUpdateService
     normalized_status = normalize_status(call_status)
     return if normalized_status.blank?
 
-    call = Call.where(account_id: account.id).find_by(provider: :twilio, provider_call_id: call_sid)
+    call = Call.where(account_id: account.id).find_by(provider: provider, provider_call_id: call_sid)
     return unless call
 
     Voice::CallStatus::Manager.new(call: call).process_status_update(

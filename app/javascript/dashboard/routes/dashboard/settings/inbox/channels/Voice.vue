@@ -1,5 +1,5 @@
 <script setup>
-import { reactive, computed } from 'vue';
+import { reactive, computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
 import { useVuelidate } from '@vuelidate/core';
@@ -11,8 +11,10 @@ import { useStore, useMapGetter } from 'dashboard/composables/store';
 import PageHeader from '../../SettingsSubPageHeader.vue';
 import Input from 'dashboard/components-next/input/Input.vue';
 import NextButton from 'dashboard/components-next/button/Button.vue';
+import TelnyxSms from './TelnyxSms.vue';
 
 const { t } = useI18n();
+const provider = ref('twilio');
 const store = useStore();
 const router = useRouter();
 
@@ -99,7 +101,23 @@ async function createChannel() {
       :header-content="t('INBOX_MGMT.ADD.VOICE.DESC')"
     />
 
+    <div class="flex-shrink-0 flex-grow-0">
+      <label>
+        {{ t('INBOX_MGMT.ADD.VOICE.PROVIDERS.LABEL') }}
+        <select v-model="provider">
+          <option value="twilio">
+            {{ t('INBOX_MGMT.ADD.VOICE.PROVIDERS.TWILIO') }}
+          </option>
+          <option value="telnyx">
+            {{ t('INBOX_MGMT.ADD.VOICE.PROVIDERS.TELNYX') }}
+          </option>
+        </select>
+      </label>
+    </div>
+
+    <TelnyxSms v-if="provider === 'telnyx'" voice />
     <form
+      v-else
       class="flex flex-col gap-4 flex-wrap mx-0"
       @submit.prevent="createChannel"
     >
