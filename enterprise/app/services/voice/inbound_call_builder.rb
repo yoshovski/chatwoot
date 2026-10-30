@@ -99,8 +99,8 @@ class Voice::InboundCallBuilder
       provider_call_id: call_sid,
       meta: { 'initiated_at' => Time.zone.now.to_i }.merge(extra_meta.stringify_keys)
     )
-    # `conference_sid` is a Twilio bridging concept; WhatsApp goes browser↔Meta.
-    call.update!(conference_sid: call.default_conference_sid) if call.twilio?
+    # `conference_sid` is a Twilio/Telnyx bridging concept; WhatsApp goes browser↔Meta.
+    call.update!(conference_sid: call.default_conference_sid) if call.twilio? || call.telnyx?
     call
   end
 end

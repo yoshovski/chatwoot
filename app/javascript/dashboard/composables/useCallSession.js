@@ -2,7 +2,7 @@ import { computed, readonly, ref, watch, onUnmounted, onMounted } from 'vue';
 import { useStore } from 'vuex';
 import { useI18n } from 'vue-i18n';
 import VoiceAPI from 'dashboard/api/channel/voice/voiceAPIClient';
-import TwilioVoiceClient from 'dashboard/api/channel/voice/twilioVoiceClient';
+import VoiceClient from 'dashboard/api/channel/voice/voiceClient';
 import { useCallsStore } from 'dashboard/stores/calls';
 import { useAlert } from 'dashboard/composables';
 import {
@@ -46,7 +46,7 @@ const handleBeforeUnloadGlobal = event => {
   event.returnValue = '';
 };
 const handlePageHideGlobal = () => sendWhatsappTerminateBeacon();
-const handleTwilioDisconnectedGlobal = () =>
+const handleVoiceClientDisconnectedGlobal = () =>
   storedCallsStoreRef?.clearActiveCall();
 
 const attachGlobalsOnFirstMount = callsStore => {
@@ -56,9 +56,9 @@ const attachGlobalsOnFirstMount = callsStore => {
   globalDurationTimer = new Timer(elapsed => {
     globalCallDuration.value = elapsed;
   });
-  TwilioVoiceClient.addEventListener(
+  VoiceClient.addEventListener(
     'call:disconnected',
-    handleTwilioDisconnectedGlobal
+    handleVoiceClientDisconnectedGlobal
   );
   window.addEventListener('beforeunload', handleBeforeUnloadGlobal);
   window.addEventListener('pagehide', handlePageHideGlobal);
@@ -71,9 +71,9 @@ const detachGlobalsOnLastUnmount = () => {
   globalDurationTimer = null;
   globalCallDuration.value = 0;
   storedCallsStoreRef = null;
-  TwilioVoiceClient.removeEventListener(
+  VoiceClient.removeEventListener(
     'call:disconnected',
-    handleTwilioDisconnectedGlobal
+    handleVoiceClientDisconnectedGlobal
   );
   window.removeEventListener('beforeunload', handleBeforeUnloadGlobal);
   window.removeEventListener('pagehide', handlePageHideGlobal);
@@ -102,7 +102,7 @@ const buildCallActions = ({ callsStore, whatsappSession, t }) => {
     try {
       await VoiceAPI.leaveConference({ inboxId, conversationId, callSid });
     } finally {
-      TwilioVoiceClient.endClientCall();
+      VoiceClient.endClientCall();
       globalDurationTimer?.stop();
       callsStore.clearActiveCall();
       clearLocalCall(callSid);
@@ -140,7 +140,10 @@ const buildCallActions = ({ callsStore, whatsappSession, t }) => {
         return { callId: call.callId };
       }
 
-      const device = await TwilioVoiceClient.initializeDevice(inboxId);
+      const device = await VoiceClient.initializeDevice(
+        inboxId,
+        call?.provider
+      );
       if (!device) return null;
 
       // Set BEFORE the join call lands so the account-wide voice_call.accepted
@@ -155,7 +158,7 @@ const buildCallActions = ({ callsStore, whatsappSession, t }) => {
         callSid,
       });
 
-      await TwilioVoiceClient.joinClientCall({
+      await VoiceClient.joinClientCall({
         to: joinResponse?.conference_sid,
         conversationId,
         callSid,
@@ -170,14 +173,14 @@ const buildCallActions = ({ callsStore, whatsappSession, t }) => {
       if (!isWhatsappCall(call)) clearLocalCall(callSid);
       // 409 = the call already ended before accept landed (e.g. caller hung up mid-ring).
       if (error?.response?.status === 409) {
-        TwilioVoiceClient.endClientCall();
+        VoiceClient.endClientCall();
         markCallDismissed(callSid);
         callsStore.dismissCall(callSid);
       } else if (!isWhatsappCall(call)) {
         // Tear down the Twilio Device on any other join error so a retry
         // starts from a clean state — joinClientCall can leave the device
         // half-initialized after a network blip.
-        TwilioVoiceClient.endClientCall();
+        VoiceClient.endClientCall();
       }
       // eslint-disable-next-line no-console
       console.error('Failed to join call:', error);
@@ -213,7 +216,7 @@ const buildCallActions = ({ callsStore, whatsappSession, t }) => {
           callSid,
         });
       } else {
-        TwilioVoiceClient.endClientCall();
+        VoiceClient.endClientCall();
       }
     } finally {
       markCallDismissed(callSid);

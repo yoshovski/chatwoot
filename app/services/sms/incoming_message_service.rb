@@ -130,6 +130,9 @@ class Sms::IncomingMessageService
   # scheme, host and port, and no embedded userinfo. Anything else from the
   # payload is treated as untrusted and fetched without credentials.
   def provider_hosted?(media_url)
+    # Telnyx serves inbound media from public, pre-signed URLs; its API key is a bearer token, not basic auth.
+    return false if channel.telnyx?
+
     uri = URI.parse(media_url)
     uri.userinfo.nil? && uri.scheme == provider_uri.scheme &&
       uri.port == provider_uri.port && provider_uri.host.casecmp?(uri.host.to_s)

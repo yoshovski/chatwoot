@@ -167,6 +167,7 @@ const startCall = async (inboxId, conversationIdHint = null) => {
       callSid,
       conversationId,
       inboxId,
+      provider: getVoiceCallProvider(inbox),
       callDirection: VOICE_CALL_DIRECTION.OUTBOUND,
     });
 

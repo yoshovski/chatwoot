@@ -98,6 +98,10 @@ module Enterprise::Api::V1::Accounts::InboxesController
   def create_channel
     return create_voice_channel if permitted_params[:channel][:type] == 'voice'
 
+    # Turning on Telnyx voice through the SMS endpoint needs the same feature flag as the Voice channel.
+    sms_voice = ActiveModel::Type::Boolean.new.cast(params.dig(:channel, :provider_config, :voice_enabled))
+    raise Pundit::NotAuthorizedError if sms_voice && !Current.account.feature_enabled?('channel_voice')
+
     super
   end
 
@@ -109,6 +113,7 @@ module Enterprise::Api::V1::Accounts::InboxesController
 
   def create_voice_channel
     raise Pundit::NotAuthorizedError unless Current.account.feature_enabled?('channel_voice')
+    return Telnyx::VoiceChannelBuilder.new(account: Current.account, params: params).perform if params.dig(:channel, :provider) == 'telnyx'
 
     voice_params = params.require(:channel).permit(
       :phone_number, :provider,

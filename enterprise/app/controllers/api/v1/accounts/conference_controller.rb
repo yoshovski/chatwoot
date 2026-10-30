@@ -1,9 +1,11 @@
 class Api::V1::Accounts::ConferenceController < Api::V1::Accounts::BaseController
+  VOICE_CHANNEL_TYPES = %w[Channel::TwilioSms Channel::Sms].freeze
+
   before_action :set_voice_inbox_for_conference
   rescue_from CustomExceptions::CallAlreadyAccepted, with: :render_call_already_accepted
 
   def token
-    render json: Voice::Provider::Twilio::TokenService.new(
+    render json: provider_namespace::TokenService.new(
       inbox: @voice_inbox,
       user: Current.user,
       account: Current.account
@@ -13,11 +15,12 @@ class Api::V1::Accounts::ConferenceController < Api::V1::Accounts::BaseControlle
   def create
     call = resolve_call!
 
-    conference_service = Voice::Provider::Twilio::ConferenceService.new(call: call)
+    conference_service = provider_namespace::ConferenceService.new(call: call)
     conference_sid = conference_service.ensure_conference_sid
+    # For Telnyx this also rings the agent's WebRTC client, which answers into the conference.
     conference_service.mark_agent_joined(user: current_user)
     # voice_call.accepted broadcasts from Voice::Conference::Manager#join_agent! once
-    # Twilio confirms the leg joined, not here — joinClientCall can still fail after this.
+    # the provider confirms the leg joined, not here — joinClientCall can still fail after this.
 
     render json: {
       status: 'success',
@@ -30,7 +33,7 @@ class Api::V1::Accounts::ConferenceController < Api::V1::Accounts::BaseControlle
   def destroy
     call = resolve_call!
     # Tear down provider side first so a teardown failure leaves the call repairable.
-    Voice::Provider::Twilio::ConferenceService.new(call: call).end_conference
+    provider_namespace::ConferenceService.new(call: call).end_conference
     finalize_call!(call)
     # Account-wide, so every other tab/agent stops showing this call as ringing/active —
     # matches the equivalent WhatsApp broadcast (Whatsapp::CallService#broadcast).
@@ -45,13 +48,22 @@ class Api::V1::Accounts::ConferenceController < Api::V1::Accounts::BaseControlle
     raise ActionController::ParameterMissing, :call_sid if sid.blank?
 
     conversation = fetch_conversation_by_display_id
-    Call.where(inbox_id: @voice_inbox.id, provider: :twilio, conversation_id: conversation.id)
+    Call.where(inbox_id: @voice_inbox.id, provider: voice_provider, conversation_id: conversation.id)
         .find_by!(provider_call_id: sid)
   end
 
   def set_voice_inbox_for_conference
-    @voice_inbox = Current.account.inboxes.where(channel_type: 'Channel::TwilioSms').find(params[:inbox_id])
+    @voice_inbox = Current.account.inboxes.where(channel_type: VOICE_CHANNEL_TYPES).find(params[:inbox_id])
     authorize @voice_inbox, :show?
+    raise ActiveRecord::RecordNotFound, 'Voice not enabled' unless @voice_inbox.channel.try(:voice_provider)
+  end
+
+  def voice_provider
+    @voice_inbox.channel.voice_provider
+  end
+
+  def provider_namespace
+    voice_provider == :telnyx ? Voice::Provider::Telnyx : Voice::Provider::Twilio
   end
 
   def fetch_conversation_by_display_id

@@ -200,10 +200,46 @@
         "PROVIDERS": {
           "LABEL": "API Provider",
           "TWILIO": "Twilio",
-          "BANDWIDTH": "Bandwidth"
+          "BANDWIDTH": "Bandwidth",
+          "TELNYX": "Telnyx"
         },
         "API": {
           "ERROR_MESSAGE": "We were not able to save the SMS channel"
+        },
+        "TELNYX": {
+          "INBOX_NAME": {
+            "LABEL": "Inbox Name",
+            "PLACEHOLDER": "Please enter an inbox name",
+            "ERROR": "This field is required"
+          },
+          "API_KEY": {
+            "LABEL": "API Key",
+            "PLACEHOLDER": "Enter your Telnyx API key (KEY...)",
+            "ERROR": "This field is required"
+          },
+          "MESSAGING_PROFILE_ID": {
+            "LABEL": "Messaging Profile ID",
+            "PLACEHOLDER": "Enter your Telnyx messaging profile ID",
+            "HELP": "We point this profile's webhook at Chatwoot and assign the number to it.",
+            "ERROR": "This field is required"
+          },
+          "ACCOUNT_SID": {
+            "LABEL": "Account ID",
+            "PLACEHOLDER": "Enter your Telnyx account ID",
+            "HELP": "Shown under Account Settings in the Telnyx portal. Needed to place and end calls.",
+            "ERROR": "This field is required"
+          },
+          "OUTBOUND_VOICE_PROFILE_ID": {
+            "LABEL": "Outbound Voice Profile ID (optional)",
+            "PLACEHOLDER": "Enter your Telnyx outbound voice profile ID",
+            "HELP": "Required by Telnyx for outbound calls. Leave empty to attach one in the portal later."
+          },
+          "PUBLIC_KEY": {
+            "LABEL": "Webhook Public Key (optional)",
+            "PLACEHOLDER": "Enter your Telnyx public key",
+            "HELP": "From Keys & Credentials in the Telnyx portal. When set, unsigned webhooks are rejected."
+          },
+          "SUBMIT_BUTTON": "Create Telnyx Channel"
         },
         "BANDWIDTH": {
           "ACCOUNT_ID": {
@@ -449,7 +485,12 @@
       },
       "VOICE": {
         "TITLE": "Voice Channel",
-        "DESC": "Integrate Twilio Voice and start supporting your customers via phone calls.",
+        "DESC": "Integrate Twilio or Telnyx voice and start supporting your customers via phone calls.",
+        "PROVIDERS": {
+          "LABEL": "Voice Provider",
+          "TWILIO": "Twilio",
+          "TELNYX": "Telnyx"
+        },
         "PHONE_NUMBER": {
           "LABEL": "Phone Number",
           "PLACEHOLDER": "Enter your phone number (e.g. +1234567890)",
@@ -599,7 +640,7 @@
           },
           "SMS": {
             "TITLE": "SMS",
-            "DESCRIPTION": "Integrate SMS channel with Twilio or bandwidth"
+            "DESCRIPTION": "Integrate SMS channel with Twilio, Bandwidth or Telnyx"
           },
           "API": {
             "TITLE": "API",
@@ -624,7 +665,7 @@
           },
           "VOICE": {
             "TITLE": "Voice",
-            "DESCRIPTION": "Integrate with Twilio Voice"
+            "DESCRIPTION": "Integrate with Twilio or Telnyx Voice"
           }
         }
       },

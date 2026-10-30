@@ -7,11 +7,7 @@ class Voice::Provider::Twilio::RecordingAttachmentService
   def perform
     return unless attachable?
 
-    SafeFetch.fetch(
-      recording_url,
-      http_basic_authentication: [account_sid, auth_token],
-      allowed_content_type_prefixes: ALLOWED_CONTENT_TYPE_PREFIXES
-    ) do |result|
+    SafeFetch.fetch(recording_url, **fetch_options) do |result|
       persist_recording!(result)
     end
 
@@ -25,6 +21,10 @@ class Voice::Provider::Twilio::RecordingAttachmentService
   end
 
   private
+
+  def fetch_options
+    { http_basic_authentication: [account_sid, auth_token], allowed_content_type_prefixes: ALLOWED_CONTENT_TYPE_PREFIXES }
+  end
 
   def attachable?
     return false if recording_sid.blank? || recording_url.blank?

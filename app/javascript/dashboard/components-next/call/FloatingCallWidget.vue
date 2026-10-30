@@ -4,7 +4,7 @@ import { useRoute, useRouter } from 'vue-router';
 import { useStore } from 'vuex';
 import { useCallSession } from 'dashboard/composables/useCallSession';
 import { setWhatsappCallMuted } from 'dashboard/composables/useWhatsappCallSession';
-import TwilioVoiceClient from 'dashboard/api/channel/voice/twilioVoiceClient';
+import VoiceClient from 'dashboard/api/channel/voice/voiceClient';
 import { frontendURL, conversationUrl } from 'dashboard/helper/URLHelper';
 import { VOICE_CALL_PROVIDERS } from 'dashboard/helper/inbox';
 import { VOICE_CALL_DIRECTION } from 'dashboard/components-next/message/constants';
@@ -67,7 +67,7 @@ const toggleMute = () => {
   if (isWhatsappActive.value) {
     setWhatsappCallMuted(isMuted.value);
   } else {
-    TwilioVoiceClient.setMuted(isMuted.value);
+    VoiceClient.setMuted(isMuted.value);
   }
 };
 

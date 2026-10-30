@@ -37,6 +37,7 @@ export const CHANNEL_TYPES = {
 export const VOICE_CALL_PROVIDERS = {
   TWILIO: 'twilio',
   WHATSAPP: 'whatsapp',
+  TELNYX: 'telnyx',
 };
 
 export const getVoiceCallProvider = inbox => {
@@ -51,6 +52,8 @@ export const getVoiceCallProvider = inbox => {
   if (channelType === INBOX_TYPES.TWILIO) return VOICE_CALL_PROVIDERS.TWILIO;
   if (channelType === INBOX_TYPES.WHATSAPP)
     return VOICE_CALL_PROVIDERS.WHATSAPP;
+  // Only Telnyx SMS inboxes report voice_enabled for Channel::Sms.
+  if (channelType === INBOX_TYPES.SMS) return VOICE_CALL_PROVIDERS.TELNYX;
 
   return null;
 };
@@ -61,6 +64,7 @@ export const isVoiceCallEnabled = inbox => getVoiceCallProvider(inbox) !== null;
 export const VOICE_CALL_ICONS = {
   [VOICE_CALL_PROVIDERS.WHATSAPP]: 'i-woot-whatsapp-voice',
   [VOICE_CALL_PROVIDERS.TWILIO]: 'i-woot-voice-call',
+  [VOICE_CALL_PROVIDERS.TELNYX]: 'i-woot-voice-call',
 };
 
 export const getVoiceCallIcon = provider =>
