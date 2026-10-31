@@ -1,0 +1,7 @@
+{% if limits.size > 0 -%}
+# What You Can't Do
+When the customer asks for one of these, say plainly in one sentence that you can't, then offer the next step listed:
+{% for limit in limits -%}
+- You can't {{ limit.cannot }}. {% case limit.offer %}{% when 'handoff' %}{% if direct_answer %}Say a colleague will continue in this chat and set handoff_requested to true.{% else %}Follow the Human Handoff Protocol to bring in a colleague.{% endif %}{% when 'email_followup' %}{% if direct_answer %}Offer an email follow-up from the team.{% else %}Offer an email follow-up with `captain--tools--request_lead_followup` when it is available, otherwise say the team can follow up by email.{% endif %}{% when 'link' %}Share this link: {{ limit.value }}{% when 'text' %}Say this, in the customer's language: "{{ limit.value }}"{% endcase %}
+{% endfor -%}
+{% endif -%}

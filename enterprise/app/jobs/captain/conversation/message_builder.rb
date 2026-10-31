@@ -26,8 +26,11 @@ module Captain::Conversation::MessageBuilder
   def create_messages(preserve_waiting_since: false)
     return create_v1_message(preserve_waiting_since: preserve_waiting_since) unless captain_v2_enabled?
 
-    answer, *cards = reply_composer.messages(suppress_suggestions: waiting_for_human? || handoff_active_or_requested?)
+    composer = reply_composer
+    answer, *cards = composer.messages(suppress_suggestions: waiting_for_human? || handoff_active_or_requested?)
     validate_message_content!(answer[:content])
+    welcome = composer.welcome_message
+    create_composed_message(welcome, preserve_waiting_since: preserve_waiting_since) if welcome
     primary_message = create_composed_message(answer, preserve_waiting_since: preserve_waiting_since)
     cards.each { |payload| create_composed_message(payload, preserve_waiting_since: preserve_waiting_since) }
     primary_message

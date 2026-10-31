@@ -215,6 +215,29 @@ RSpec.describe 'Api::V1::Accounts::Captain::Assistants', type: :request do
         expect(assistant.reload.config).to include(handoff.stringify_keys)
       end
 
+      it 'saves how the agent talks and what it cannot do' do
+        conversation = { agent_role: 'sales', visitor_audience: 'prospects', greeting_mode: 'fixed', welcome_message: 'Hi there!',
+                         separate_follow_up: false, limits: [{ cannot: 'issue refunds', offer: 'handoff' },
+                                                             { cannot: 'give legal advice', offer: 'link', value: 'https://example.com/legal' }] }
+
+        patch "/api/v1/accounts/#{account.id}/captain/assistants/#{assistant.id}",
+              params: { assistant: { config: conversation } }, headers: admin.create_new_auth_token, as: :json
+
+        expect(response).to have_http_status(:success)
+        expect(assistant.reload.config).to include(conversation.deep_stringify_keys)
+        expect(json_response[:config]).to include(agent_role: 'sales', visitor_audience: 'prospects', greeting_mode: 'fixed',
+                                                  separate_follow_up: false)
+        expect(json_response[:config][:limits].size).to eq(2)
+      end
+
+      it 'rejects a limit that offers a link without one' do
+        patch "/api/v1/accounts/#{account.id}/captain/assistants/#{assistant.id}",
+              params: { assistant: { config: { limits: [{ cannot: 'give legal advice', offer: 'link' }] } } },
+              headers: admin.create_new_auth_token, as: :json
+
+        expect(response).to have_http_status(:unprocessable_entity)
+      end
+
       it 'rejects an unknown handoff choice' do
         patch "/api/v1/accounts/#{account.id}/captain/assistants/#{assistant.id}",
               params: { assistant: { config: { handoff_when_offline: 'ignore' } } }, headers: admin.create_new_auth_token, as: :json

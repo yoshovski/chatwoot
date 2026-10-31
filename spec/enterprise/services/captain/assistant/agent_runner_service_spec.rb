@@ -649,6 +649,31 @@ RSpec.describe Captain::Assistant::AgentRunnerService do
       )
     end
 
+    it 'marks the first AI reply of a conversation so the agent can greet' do
+      context = service.send(:build_context, [{ role: 'user', content: 'Hi' }])
+
+      expect(context[:state][:first_ai_reply]).to be(true)
+    end
+
+    it 'does not greet again after an earlier reply' do
+      expect(service.send(:build_context, message_history)[:state][:first_ai_reply]).to be(false)
+    end
+
+    it 'does not greet when the greeting is off' do
+      assistant.update!(config: assistant.config.merge('greeting_mode' => 'off'))
+
+      expect(service.send(:build_context, [{ role: 'user', content: 'Hi' }])[:state][:first_ai_reply]).to be(false)
+    end
+
+    context 'when a campaign opened the conversation' do
+      let(:campaign) { create(:campaign, account: account, title: 'Spring offer', message: 'Need help choosing?') }
+      let(:conversation) { create(:conversation, account: account, inbox: inbox, contact: contact, campaign: campaign) }
+
+      it 'counts the opener as the greeting' do
+        expect(service.send(:build_context, [{ role: 'user', content: 'Hi' }])[:state][:first_ai_reply]).to be(false)
+      end
+    end
+
     context 'with multimodal content' do
       let(:multimodal_content) do
         [

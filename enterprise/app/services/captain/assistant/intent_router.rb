@@ -1,4 +1,4 @@
-class Captain::Assistant::IntentRouter
+class Captain::Assistant::IntentRouter # rubocop:disable Metrics/ClassLength
   INTENTS = %w[smalltalk faq_kb action_agent business_overview].freeze
   MAX_QUERIES = 2
   MAX_QUERY_CHARS = 250
@@ -95,7 +95,9 @@ class Captain::Assistant::IntentRouter
     return unless text
 
     route = { 'intent' => 'smalltalk', 'queries' => [], 'reason' => 'greeting' }
-    route['canned_response'] = text if @assistant.guardrails.blank? && @assistant.response_guidelines.blank? && !@assistant.suggested_replies?
+    # With a greeting on, the model says hello in the agent's own voice.
+    plain = !@assistant.greeting? && @assistant.guardrails.blank? && @assistant.response_guidelines.blank?
+    route['canned_response'] = text if plain && !@assistant.suggested_replies?
     route
   end
 
@@ -137,6 +139,7 @@ class Captain::Assistant::IntentRouter
       When lead_capture is present in the routing policy and recent history shows an ongoing business evaluation, pricing/quote inquiry,
       or lead qualification dialogue, route follow-up messages (including side product/pricing questions from that prospect) to
       action_agent rather than faq_kb or business_overview so the agent retains its lead-capture tools and scenario state.
+      A reply accepting a next step offered in recent history ("yes, book a demo", "yes please" to a follow-up) uses action_agent.
       action_agent also covers product discovery: the customer names a need, use case or product category without a specific product
       ("interested in", "do you have", "looking for", "what options", "which X for Y", "recommend"), or compares or chooses products.
       Mixed knowledge/live-data requests, ongoing workflows, and uncertain routing use action_agent. Queries must be empty.

@@ -235,6 +235,13 @@ RSpec.describe Concerns::Agentable do
       expect(schema_hash[:required]).to include(:handoff_requested)
     end
 
+    it 'adds separate_parts only when an instruction asks for a separate message' do
+      schema = Captain::ResponseSchema.for(separate_parts: true).new.to_json_schema[:schema]
+
+      expect(schema.dig(:properties, :separate_parts, :items, :minimum)).to eq(1)
+      expect(Captain::ResponseSchema.for).to eq(Captain::ResponseSchema)
+    end
+
     it 'defines complete structured response parts with nested citation indexes' do
       schema = Captain::ResponseSchema.new.to_json_schema[:schema]
       response_parts = schema.dig(:properties, :response_parts)

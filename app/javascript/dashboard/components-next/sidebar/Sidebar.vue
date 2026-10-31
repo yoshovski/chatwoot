@@ -536,6 +536,15 @@ const menuItems = computed(() => {
               activeOn: ['captain_assistants_guidelines_index'],
             },
             {
+              name: 'captain_assistants_settings_conversation_index',
+              label: t('PLATFORM_NAV.CONVERSATION'),
+              icon: 'i-lucide-message-circle-more',
+              to: captainAssistantRoute(
+                'captain_assistants_settings_conversation_index'
+              ),
+              activeOn: ['captain_assistants_settings_conversation_index'],
+            },
+            {
               name: 'captain_assistants_guardrails_index',
               label: t('PLATFORM_NAV.BOUNDARIES'),
               icon: 'i-lucide-shield-check',

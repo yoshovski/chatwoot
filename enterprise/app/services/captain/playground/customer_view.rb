@@ -16,7 +16,7 @@ class Captain::Playground::CustomerView
     source = Captain::Conversation::HandoffDetector.new(
       assistant: @assistant, response: @response, customer_message: @customer_message, composer: composer
     ).source
-    messages = composer.messages(suppress_suggestions: source.present?)
+    messages = [composer.welcome_message, *composer.messages(suppress_suggestions: source.present?)].compact
     return { messages: messages, handoff: nil } unless source
 
     capture = Captain::Conversation::ContactCaptureService

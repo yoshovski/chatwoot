@@ -17,6 +17,7 @@ import AssistantSystemSettingsIndex from './assistants/settings/System.vue';
 import AssistantAudienceSettingsIndex from './assistants/settings/Audience.vue';
 import AssistantScheduleSettingsIndex from './assistants/settings/Schedule.vue';
 import AssistantAfterChatSettingsIndex from './assistants/settings/AfterChat.vue';
+import AssistantConversationSettingsIndex from './assistants/settings/Conversation.vue';
 import AssistantInboxesIndex from './assistants/inboxes/Index.vue';
 import AssistantPlaygroundIndex from './assistants/playground/Index.vue';
 import AssistantGuardrailsIndex from './assistants/guardrails/Index.vue';
@@ -177,6 +178,14 @@ const assistantRoutes = [
     component: AssistantAfterChatSettingsIndex,
     name: 'captain_assistants_settings_after_chat_index',
     meta,
+  },
+  {
+    path: frontendURL(
+      'accounts/:accountId/captain/:assistantId/settings/conversation'
+    ),
+    component: AssistantConversationSettingsIndex,
+    name: 'captain_assistants_settings_conversation_index',
+    meta: metaV2,
   },
   {
     path: frontendURL(

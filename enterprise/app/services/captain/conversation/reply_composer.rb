@@ -4,6 +4,9 @@
 class Captain::Conversation::ReplyComposer # rubocop:disable Metrics/ClassLength
   # The last sentence of the prose when it is a question that follows at least one other sentence.
   TRAILING_QUESTION = /(?:\n\s*\n|(?<=[.!?])\s+)([^\n.!?]+\?)\s*\z/
+  # Bubbles one reply may split into through separate_parts.
+  MAX_SEPARATE_BUBBLES = 3
+  MIN_SEPARATED_ANSWER_WORDS = 4
   attr_reader :assistant, :conversation, :response, :run_result, :customer_message
 
   def initialize(assistant:, response:, run_result:, conversation: nil, customer_message: nil)
@@ -22,6 +25,14 @@ class Captain::Conversation::ReplyComposer # rubocop:disable Metrics/ClassLength
     reply_messages(true) << Captain::Tools::ActionConfirmation.card_payload(action_confirmation, assistant.account.locale)
   end
 
+  # The fixed welcome message, sent as its own bubble before the first AI reply of a conversation.
+  def welcome_message
+    return unless assistant.greeting_mode == 'fixed' && run_result&.context&.dig(:state, :first_ai_reply) == true
+
+    content = Liquid::Template.parse(assistant.welcome_message).render('contact' => ContactDrop.new(conversation&.contact)).strip
+    { content: content, content_type: 'text', additional_attributes: {} } if content.present?
+  end
+
   def empty_response?
     formatted_prose.blank? && !catalog_searches_empty? && !customer_message_has_attachments? && !model_returned_answer?
   end
@@ -32,6 +43,7 @@ class Captain::Conversation::ReplyComposer # rubocop:disable Metrics/ClassLength
 
   def reply_messages(suppress_suggestions)
     content, parts = answer_content
+    leading_messages, content, parts = split_leading_bubbles(content, parts)
     closing_question = closing_question_from_parts(parts) || content[TRAILING_QUESTION, 1]
     buttons = suggestion_buttons(suppress_suggestions || followup_form_requested?,
                                  has_closing_question: closing_question.present? || content.strip.end_with?('?'))
@@ -43,7 +55,37 @@ class Captain::Conversation::ReplyComposer # rubocop:disable Metrics/ClassLength
       return composed_messages(answer_message(content, parts, {})) << form
     end
 
-    compose_answer(content, parts, closing_question, buttons)
+    leading_messages + compose_answer(content, parts, closing_question, buttons)
+  end
+
+  # The bubbles before the last one when the model listed separate_parts; the last one is composed as usual.
+  def split_leading_bubbles(content, parts)
+    *groups, last = separate_part_groups(parts)
+    return [[], content, parts] if groups.empty?
+
+    # The last bubble lists only the sources its own parts cite.
+    @structured_sources = group_sources(last)
+    leading = groups.map { |group| answer_message(format_parts(group, media: false), group, {}, sources: group_sources(group)) }
+    [leading, format_parts(last), last]
+  end
+
+  # Parts listed in separate_parts start a new bubble, at most MAX_SEPARATE_BUBBLES per reply. Email keeps one message.
+  def separate_part_groups(parts)
+    starts = separate_part_starts(parts.to_a.size)
+    return [parts] if starts.empty? || followup_form_requested? || conversation&.inbox&.channel_type == 'Channel::Email'
+
+    [0, *starts, parts.to_a.size].each_cons(2).map { |from, to| Captain::Assistant::ResponseParts.new(parts.to_a[from...to]) }
+  end
+
+  def separate_part_starts(size)
+    indexes = response.is_a?(Hash) ? Array(response['separate_parts']) : []
+    indexes.grep(Integer).select { |index| index.between?(1, size - 1) }.uniq.sort.first(MAX_SEPARATE_BUBBLES - 1)
+  end
+
+  def group_sources(parts)
+    return [] unless sources_format == :structured
+
+    parts.sources(citation_urls: citation_urls, citation_titles: citation_titles)
   end
 
   def compose_answer(content, parts, closing_question, buttons)
@@ -77,9 +119,18 @@ class Captain::Conversation::ReplyComposer # rubocop:disable Metrics/ClassLength
     [format_parts(remaining_parts), remaining_parts]
   end
 
+  # On the widget (and the playground) the follow-up question gets its own bubble; a qualification question always does.
+  # With cards, the question keeps its place: after the cards with its buttons, or in the intro without them.
   def separate_closing_question?(question)
-    question.present? && qualification_reply? && conversation&.inbox&.channel_type == 'Channel::WebWidget'
+    question.present? && widget? && (qualification_reply? || (assistant.separate_follow_up? && !contains_cards? && answer_before?(question)))
   end
+
+  # A short greeting such as "Hi! How can I help?" stays one bubble, and so does the empty-answer fallback.
+  def answer_before?(question)
+    formatted_prose.sub(question, '').scan(/[[:alnum:]]+/).size >= MIN_SEPARATED_ANSWER_WORDS
+  end
+
+  def widget? = conversation.nil? || conversation.inbox&.channel_type == 'Channel::WebWidget'
 
   def qualification_reply? = response.is_a?(Hash) && response['lead_qualification_question'] == true
 
@@ -103,12 +154,12 @@ class Captain::Conversation::ReplyComposer # rubocop:disable Metrics/ClassLength
     [content, Captain::Assistant::ResponseParts.new([{ 'text' => content, 'citation_indexes' => [] }])]
   end
 
-  def answer_message(content, parts, buttons)
+  def answer_message(content, parts, buttons, sources: structured_sources)
     message = { content: content, content_type: 'text', additional_attributes: answer_attributes(parts) }.merge(buttons)
-    return message if structured_sources.empty?
+    return message if sources.empty?
 
     message.merge(content_attributes: message.fetch(:content_attributes, {})
-                                             .merge(Captain::Assistant::ResponseParts::SOURCES_ATTRIBUTE_KEY => structured_sources))
+                                             .merge(Captain::Assistant::ResponseParts::SOURCES_ATTRIBUTE_KEY => sources))
   end
 
   def sources_format
@@ -164,10 +215,12 @@ class Captain::Conversation::ReplyComposer # rubocop:disable Metrics/ClassLength
     @formatted_prose ||= format_parts(response_parts)
   end
 
-  def format_parts(parts)
+  # media: false leaves the knowledge videos and screenshots to the last bubble of a split reply.
+  def format_parts(parts, media: true)
     content = parts.customer_message_content(citation_urls: citation_urls, citation_titles: citation_titles, sources_format: sources_format)
     content = Captain::Knowledge::OfferingLinks.new(assistant).perform(content)
-    cards_builder.clean_prose_content(grounded_screenshots(with_knowledge_media(content)))
+    content = with_knowledge_media(content) if media
+    cards_builder.clean_prose_content(grounded_screenshots(content))
   end
 
   # A cited passage's instructional media must not disappear just because generation omitted its link.
