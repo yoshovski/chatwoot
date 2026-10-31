@@ -69,7 +69,7 @@ class Voice::OutboundCallBuilder
       conversation: conversation,
       contact: contact,
       accepted_by_agent: user,
-      provider: :twilio,
+      provider: inbox.channel.voice_provider,
       direction: :outgoing,
       status: 'ringing',
       provider_call_id: call_sid,

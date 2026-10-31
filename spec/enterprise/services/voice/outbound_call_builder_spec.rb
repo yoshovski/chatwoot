@@ -136,5 +136,17 @@ RSpec.describe Voice::OutboundCallBuilder do
         )
       end.to raise_error(ArgumentError, 'Agent required')
     end
+
+    context 'when the inbox is a Telnyx voice inbox' do
+      let(:channel) { create(:channel_sms, :telnyx_voice, account: account, phone_number: '+34960291745') }
+      let(:call_sid) { 'telnyx-6f1c2f1e-0000-4000-8000-000000000000' }
+
+      it 'stores the call with the telnyx provider so Telnyx webhooks can find it' do
+        call = described_class.perform!(account: account, inbox: inbox, user: user, contact: contact)
+
+        expect(call.provider).to eq('telnyx')
+        expect(Call.where(inbox_id: inbox.id, provider: :telnyx).find_by!(provider_call_id: call_sid)).to eq(call)
+      end
+    end
   end
 end
