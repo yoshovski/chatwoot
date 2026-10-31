@@ -13,6 +13,9 @@ class Captain::ResponseSchema < RubyLLM::Schema
   SEPARATE_PARTS_DESCRIPTION = 'Indexes of response parts (0 is the first) that must start a new message. List a part only when a ' \
                                'scenario step or instruction says to send it as a separate message; otherwise return an empty array.'.freeze
 
+  WELCOME_DESCRIPTION = "This is your first reply in the conversation: one short, warm welcome sentence in the customer's language, " \
+                        'without their name unless you know it. It is shown before your answer, so the response parts must not greet again.'.freeze
+
   SUGGESTION_LABEL_MAX_LENGTH = 50
   SUGGESTION_MESSAGE_MAX_LENGTH = 120
 
@@ -29,23 +32,21 @@ class Captain::ResponseSchema < RubyLLM::Schema
   end
   boolean :handoff_requested, description: HANDOFF_REQUESTED_DESCRIPTION
 
-  # separate_parts: an instruction or scenario asks to send something as a separate message.
-  def self.for(suggested_replies: false, max_suggested_replies: 3, product_cards: false, lead_capture: false, separate_parts: false)
-    return self if [suggested_replies, product_cards, lead_capture, separate_parts].none?
+  SCHEMA_OPTIONS = %i[suggested_replies product_cards lead_capture separate_parts welcome].freeze
+
+  # Options (all false by default): suggested_replies, product_cards, lead_capture,
+  # separate_parts (an instruction or scenario asks to send something as a separate message) and
+  # welcome (the first AI reply with the AI greeting on; a required field so the model can't skip it).
+  def self.for(max_suggested_replies: 3, **options)
+    flags = SCHEMA_OPTIONS.index_with { |key| options[key] == true }
+    return self if flags.values.none?
 
     limit = (max_suggested_replies || 3).to_i.clamp(1, 5)
-    cache_key = "#{suggested_replies}:#{limit}:#{product_cards}:#{lead_capture}:#{separate_parts}"
     @schema_cache ||= {}
-    @schema_cache[cache_key] ||= build_schema(
-      suggested_replies: suggested_replies,
-      limit: limit,
-      product_cards: product_cards,
-      lead_capture: lead_capture,
-      separate_parts: separate_parts
-    )
+    @schema_cache[[limit, flags]] ||= build_schema(limit: limit, **flags)
   end
 
-  def self.build_schema(suggested_replies:, limit:, product_cards:, lead_capture: false, separate_parts: false)
+  def self.build_schema(limit:, suggested_replies: false, product_cards: false, lead_capture: false, **shape)
     RubyLLM::Schema.create do
       name 'CaptainResponse'
       array :response_parts,
@@ -61,13 +62,14 @@ class Captain::ResponseSchema < RubyLLM::Schema
         end
       end
       boolean :handoff_requested, description: Captain::ResponseSchema::HANDOFF_REQUESTED_DESCRIPTION
-      Captain::ResponseSchema.define_reply_shape(self, separate_parts: separate_parts, lead_capture: lead_capture)
+      Captain::ResponseSchema.define_reply_shape(self, lead_capture: lead_capture, **shape)
       Captain::ResponseSchema.define_suggested_replies(self, limit) if suggested_replies
       Captain::ResponseSchema.define_product_handles(self) if product_cards
     end
   end
 
-  def self.define_reply_shape(builder, separate_parts:, lead_capture:)
+  def self.define_reply_shape(builder, lead_capture:, separate_parts: false, welcome: false)
+    builder.string :welcome, description: WELCOME_DESCRIPTION, min_length: 1 if welcome
     if separate_parts
       builder.array :separate_parts, description: SEPARATE_PARTS_DESCRIPTION do
         integer minimum: 1

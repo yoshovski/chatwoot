@@ -1,6 +1,6 @@
 {% if first_ai_reply -%}
 {% if greeting_mode == 'ai' -%}
-This is your first reply in this conversation. Start with a short, warm welcome in the customer's language (one sentence, no name unless you know it), then answer.
+This is your first reply in this conversation. Write a short, warm welcome in the customer's language (one sentence, no name unless you know it) in `welcome`; it is shown before your answer.
 {% elsif greeting_mode == 'fixed' -%}
 A welcome message is sent just before your reply, so don't greet; answer directly.
 {% endif -%}

@@ -77,9 +77,11 @@ class Captain::Conversation::ReplyComposer # rubocop:disable Metrics/ClassLength
     [0, *starts, parts.to_a.size].each_cons(2).map { |from, to| Captain::Assistant::ResponseParts.new(parts.to_a[from...to]) }
   end
 
+  # The indexes count the model's response parts; a prepended AI welcome shifts them by one.
   def separate_part_starts(size)
     indexes = response.is_a?(Hash) ? Array(response['separate_parts']) : []
-    indexes.grep(Integer).select { |index| index.between?(1, size - 1) }.uniq.sort.first(MAX_SEPARATE_BUBBLES - 1)
+    offset = response.is_a?(Hash) && response['welcome'].present? ? 1 : 0
+    indexes.grep(Integer).map { |index| index + offset }.select { |index| index.between?(1, size - 1) }.uniq.sort.first(MAX_SEPARATE_BUBBLES - 1)
   end
 
   def group_sources(parts)

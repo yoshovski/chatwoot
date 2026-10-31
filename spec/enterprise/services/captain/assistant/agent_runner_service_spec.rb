@@ -655,6 +655,14 @@ RSpec.describe Captain::Assistant::AgentRunnerService do
       expect(context[:state][:first_ai_reply]).to be(true)
     end
 
+    it 'asks the reply schema for a welcome only on the first reply with the AI greeting' do
+      service.send(:build_context, [{ role: 'user', content: 'Hi' }])
+      expect(service.send(:response_schema_for_runner)).not_to eq(Captain::ResponseSchema)
+
+      service.send(:build_context, message_history)
+      expect(service.send(:response_schema_for_runner)).to eq(Captain::ResponseSchema)
+    end
+
     it 'does not greet again after an earlier reply' do
       expect(service.send(:build_context, message_history)[:state][:first_ai_reply]).to be(false)
     end
