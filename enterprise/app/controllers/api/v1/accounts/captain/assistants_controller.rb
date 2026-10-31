@@ -1,4 +1,7 @@
 class Api::V1::Accounts::Captain::AssistantsController < Api::V1::Accounts::BaseController # rubocop:disable Metrics/ClassLength
+  CONVERSATION_CONFIG_ATTRIBUTES = [:agent_role, :agent_role_prompt, :visitor_audience, :greeting_mode, :separate_follow_up,
+                                    { limits: %i[cannot offer value] }].freeze
+
   before_action -> { check_authorization(Captain::Assistant) }
 
   before_action :set_assistant, only: [:show, :update, :destroy, :playground, :playground_run, :metrics, :faq_stats, :summary, :drilldown, :avatar]
@@ -136,7 +139,7 @@ class Api::V1::Accounts::Captain::AssistantsController < Api::V1::Accounts::Base
     attributes = [
       :product_name, :feature_faq, :feature_memory, :feature_citation, :lead_notification_team_id, :lead_trigger, :lead_instructions,
       :feature_contact_attributes, :welcome_message, :handoff_message, :resolution_message, :instructions, :temperature,
-      :auto_resolve_mode, :handoff_collect_name, :handoff_collect_phone,
+      :auto_resolve_mode, :handoff_collect_name, :handoff_collect_phone, *CONVERSATION_CONFIG_ATTRIBUTES,
       :response_window, :published_pricing_enabled, :continue_while_waiting, :suggested_replies, :handoff_form_message,
       :max_suggested_replies, :product_cards, :tone, :off_limits_message, :business_type, :answer_length, :helpful_links_mode,
       :tone_prompt, :answer_length_prompt, :follow_up_questions, :leads_enabled, :lead_max_questions, :lead_guided_setup,

@@ -77,6 +77,17 @@ class Captain::Assistant < ApplicationRecord
     }
   }.freeze
   CUSTOM_PROMPT_LENGTH_LIMIT = 1000
+  # Who the agent is and how it moves a conversation forward. Existing agents keep support.
+  AGENT_ROLES = %w[support sales shopping custom].freeze
+  # Who visitors usually are. Customers keeps today's prompt; new agents decide per conversation.
+  VISITOR_AUDIENCES = %w[customers prospects detect].freeze
+  GREETING_MODES = %w[off ai fixed].freeze
+  WELCOME_MESSAGE_LENGTH_LIMIT = 300
+  # "Can't do X → offer Y": what the agent says it can't do, and the next step it offers instead.
+  LIMIT_OFFERS = %w[handoff email_followup link text].freeze
+  MAX_LIMITS = 15
+  LIMIT_CANNOT_LENGTH_LIMIT = 200
+  LIMIT_VALUE_LENGTH_LIMIT = 300
 
   include Avatarable
   include Concerns::CaptainToolsHelpers
@@ -117,7 +128,8 @@ class Captain::Assistant < ApplicationRecord
                  :handoff_fallback_agent_id, :handoff_fallback_team_id, :tone, :off_limits_message, :business_type,
                  :handoff_when_online, :handoff_when_offline, :offline_handoff_message, :no_handoff_message, :handoff_rules,
                  :answer_length, :tone_prompt, :answer_length_prompt, :follow_up_questions, :helpful_links_mode,
-                 :handoff_form_message, :handoff_collect_name, :handoff_collect_phone
+                 :handoff_form_message, :handoff_collect_name, :handoff_collect_phone,
+                 :agent_role, :agent_role_prompt, :visitor_audience, :greeting_mode, :welcome_message, :separate_follow_up, :limits
 
   BOOLEAN_CONFIG_KEYS = %w[
     feature_faq
@@ -134,10 +146,12 @@ class Captain::Assistant < ApplicationRecord
     follow_up_questions
     handoff_collect_name
     handoff_collect_phone
+    separate_follow_up
   ].freeze
 
   before_validation :set_default_auto_resolve_mode, on: :create
   before_validation :set_knowledge_processing_version, on: :create
+  before_validation :set_conversation_defaults, on: :create
   before_validation :normalize_auto_resolve_after
   before_validation :normalize_boolean_config_attributes
   before_validation :normalize_max_suggested_replies
@@ -171,6 +185,13 @@ class Captain::Assistant < ApplicationRecord
   validates :handoff_when_online, :handoff_when_offline, inclusion: { in: Captain::Conversation::HandoffPolicy::ACTIONS }, allow_blank: true
   validates :offline_handoff_message, :no_handoff_message, :handoff_form_message, length: { maximum: HANDOFF_MESSAGE_LENGTH_LIMIT }
   validate :validate_handoff_rules
+  validates :agent_role, inclusion: { in: AGENT_ROLES }
+  validates :agent_role_prompt, presence: true, if: -> { agent_role == 'custom' }
+  validates :agent_role_prompt, length: { maximum: CUSTOM_PROMPT_LENGTH_LIMIT }
+  validates :visitor_audience, inclusion: { in: VISITOR_AUDIENCES }
+  validates :greeting_mode, inclusion: { in: GREETING_MODES }
+  validates :welcome_message, presence: true, length: { maximum: WELCOME_MESSAGE_LENGTH_LIMIT }, if: -> { greeting_mode == 'fixed' }
+  validate :validate_limits
   validates :max_suggested_replies,
             numericality: {
               only_integer: true,
@@ -209,6 +230,17 @@ class Captain::Assistant < ApplicationRecord
 
   def auto_resolve_mode
     config.fetch('auto_resolve_mode') { account&.captain_auto_resolve_mode || 'evaluated' }
+  end
+
+  def agent_role = config.fetch('agent_role', 'support')
+  def visitor_audience = config.fetch('visitor_audience', 'customers')
+  def greeting_mode = config.fetch('greeting_mode', 'off')
+  def greeting? = greeting_mode != 'off'
+  def limits = config.fetch('limits', [])
+
+  # On unless turned off: on the widget the follow-up question gets its own bubble.
+  def separate_follow_up?
+    config['separate_follow_up'] != false
   end
 
   def inactive_conversation_resolution_disabled?
@@ -498,6 +530,38 @@ class Captain::Assistant < ApplicationRecord
 
   def set_knowledge_processing_version
     self.config = { 'knowledge_processing_version' => 3 }.merge(config)
+  end
+
+  def set_conversation_defaults
+    self.config = { 'visitor_audience' => 'detect', 'greeting_mode' => 'ai' }.merge(config)
+  end
+
+  def validate_limits
+    valid = limits.is_a?(Array) && limits.size <= MAX_LIMITS && limits.all? { |limit| valid_limit?(limit) }
+    errors.add(:limits, :invalid) unless valid
+  end
+
+  def valid_limit?(limit)
+    return false unless limit.is_a?(Hash) && (limit.keys.map(&:to_s) - %w[cannot offer value]).empty?
+
+    limit = limit.with_indifferent_access
+    valid_limit_text?(limit[:cannot]) && LIMIT_OFFERS.include?(limit[:offer]) && valid_limit_value?(limit[:offer], limit[:value])
+  end
+
+  def valid_limit_text?(text) = text.is_a?(String) && text.strip.present? && text.length <= LIMIT_CANNOT_LENGTH_LIMIT
+
+  def valid_limit_value?(offer, value)
+    return false unless value.nil? || (value.is_a?(String) && value.length <= LIMIT_VALUE_LENGTH_LIMIT)
+    return http_url?(value) if offer == 'link'
+
+    offer != 'text' || value.to_s.strip.present?
+  end
+
+  def http_url?(value)
+    uri = URI.parse(value.to_s.strip)
+    uri.is_a?(URI::HTTP) && uri.host.present?
+  rescue URI::InvalidURIError
+    false
   end
 
   def shopify_tools_hook

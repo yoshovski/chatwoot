@@ -173,6 +173,94 @@ RSpec.describe Captain::Assistant, type: :model do
     end
   end
 
+  describe 'conversation settings' do
+    it 'keeps the current behaviour for agents saved before these settings existed' do
+      assistant = build(:captain_assistant, account: account, config: {})
+
+      expect(assistant).to have_attributes(agent_role: 'support', visitor_audience: 'customers', greeting_mode: 'off', limits: [])
+      expect(assistant.separate_follow_up?).to be(true)
+      expect(assistant.greeting?).to be(false)
+    end
+
+    it 'decides the audience per conversation and greets for new agents' do
+      expect(assistant).to have_attributes(visitor_audience: 'detect', greeting_mode: 'ai')
+    end
+
+    it 'keeps choices sent on create' do
+      assistant = create(:captain_assistant, account: account, config: { 'visitor_audience' => 'prospects', 'greeting_mode' => 'off' })
+
+      expect(assistant).to have_attributes(visitor_audience: 'prospects', greeting_mode: 'off')
+    end
+
+    it 'turns separate follow-up questions off only when set to false' do
+      assistant.config['separate_follow_up'] = 'false'
+      assistant.validate
+
+      expect(assistant.separate_follow_up?).to be(false)
+    end
+
+    it 'rejects unknown roles, audiences and greeting modes' do
+      { 'agent_role' => 'pirate', 'visitor_audience' => 'everyone', 'greeting_mode' => 'loud' }.each do |key, value|
+        assistant.config[key] = value
+        expect(assistant).not_to be_valid
+        assistant.config.delete(key)
+      end
+    end
+
+    it 'requires the custom role text and the fixed welcome message' do
+      assistant.config.merge!('agent_role' => 'custom', 'greeting_mode' => 'fixed')
+
+      expect(assistant).not_to be_valid
+      expect(assistant.errors[:agent_role_prompt]).to be_present
+      expect(assistant.errors[:welcome_message]).to be_present
+
+      assistant.config.merge!('agent_role_prompt' => 'You help gardeners choose seeds.', 'welcome_message' => 'Hi {{contact.first_name}}!')
+      expect(assistant).to be_valid
+    end
+
+    it 'allows a long welcome message from an earlier setup while the greeting is not fixed' do
+      assistant.config['welcome_message'] = 'a' * 400
+
+      expect(assistant).to be_valid
+    end
+  end
+
+  describe 'limits validation' do
+    it 'accepts each offer with its value' do
+      assistant.config['limits'] = [
+        { 'cannot' => 'issue refunds', 'offer' => 'handoff' },
+        { 'cannot' => 'change a subscription plan', 'offer' => 'email_followup', 'value' => '' },
+        { 'cannot' => 'give legal advice', 'offer' => 'link', 'value' => 'https://example.com/legal' },
+        { 'cannot' => 'book a call', 'offer' => 'text', 'value' => 'Email hello@example.com to book a call.' }
+      ]
+
+      expect(assistant).to be_valid
+    end
+
+    it 'rejects unknown keys, offers, missing values and long text' do
+      [
+        { 'cannot' => 'issue refunds', 'offer' => 'handoff', 'extra' => 'x' },
+        { 'cannot' => 'issue refunds', 'offer' => 'refund' },
+        { 'cannot' => '', 'offer' => 'handoff' },
+        { 'cannot' => 'a' * 201, 'offer' => 'handoff' },
+        { 'cannot' => 'give legal advice', 'offer' => 'link', 'value' => 'javascript:alert(1)' },
+        { 'cannot' => 'give legal advice', 'offer' => 'link' },
+        { 'cannot' => 'book a call', 'offer' => 'text', 'value' => ' ' },
+        { 'cannot' => 'book a call', 'offer' => 'text', 'value' => 'a' * 301 }
+      ].each do |limit|
+        assistant.config['limits'] = [limit]
+        expect(assistant).not_to be_valid, limit.inspect
+      end
+    end
+
+    it 'accepts at most 15 limits' do
+      assistant.config['limits'] = Array.new(16) { |index| { 'cannot' => "do thing #{index}", 'offer' => 'handoff' } }
+
+      expect(assistant).not_to be_valid
+      expect(assistant.errors[:limits]).to be_present
+    end
+  end
+
   describe 'audience validation' do
     let(:leaf) { { 'attribute_key' => 'country_code', 'filter_operator' => 'equal_to', 'values' => ['US'] } }
 
