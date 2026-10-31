@@ -1319,6 +1319,7 @@
           "ROLE": {
             "TITLE": "Role",
             "DESC": "Who {name} is and how it moves a conversation forward.",
+            "ADAPTIVE": { "LABEL": "All-round", "DESC": "Supports customers, sells to prospects and helps shoppers, decided in each conversation. Works best with Detect automatically." },
             "SUPPORT": { "LABEL": "Support", "DESC": "Solves questions and problems." },
             "SALES": { "LABEL": "Sales", "DESC": "Answers, learns the visitor's goal and offers a next step, like a demo." },
             "SHOPPING": { "LABEL": "Shopping assistant", "DESC": "Helps shoppers find the right product." },
@@ -1351,7 +1352,13 @@
             }
           },
           "PREVIEW": {
+            "VISITOR": "Sample visitor",
+            "VISITOR_PROSPECT": "Prospect asks",
+            "VISITOR_CUSTOMER": "Customer asks",
             "QUESTION": "Can I try it before I pay?",
+            "CUSTOMER_QUESTION": "My export fails in the dashboard. What should I do?",
+            "ANSWER_EXISTING_CUSTOMER": "Open Exports, pick the date range again and select Retry. Large exports finish in the background.",
+            "FOLLOW_UP_CUSTOMER": "Did that fix it?",
             "GREETING": "Hi! Thanks for reaching out.",
             "ANSWER_CUSTOMERS": "Yes. Open Billing in your account and choose Start trial.",
             "ANSWER_PROSPECTS": "Yes, you can try every feature free for 14 days, no card needed.",

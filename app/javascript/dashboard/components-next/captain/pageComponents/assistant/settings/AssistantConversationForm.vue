@@ -2,6 +2,7 @@
 import { computed, reactive, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 
+import Button from 'dashboard/components-next/button/Button.vue';
 import TextArea from 'dashboard/components-next/textarea/TextArea.vue';
 import AssistantChatPreview from './AssistantChatPreview.vue';
 import ChoiceCard from './ChoiceCard.vue';
@@ -39,6 +40,14 @@ const state = reactive({
 const name = computed(() => props.assistant.name);
 
 const roleOptions = computed(() => [
+  {
+    value: 'adaptive',
+    icon: 'i-lucide-sparkles',
+    label: t('CAPTAIN.ASSISTANTS.SETTINGS.CONVERSATION.ROLE.ADAPTIVE.LABEL'),
+    description: t(
+      'CAPTAIN.ASSISTANTS.SETTINGS.CONVERSATION.ROLE.ADAPTIVE.DESC'
+    ),
+  },
   {
     value: 'support',
     icon: 'i-lucide-life-buoy',
@@ -201,18 +210,37 @@ const previewGreeting = computed(() => {
     );
 });
 
-const previewAnswer = computed(() =>
-  state.visitorAudience === 'customers'
-    ? t('CAPTAIN.ASSISTANTS.SETTINGS.CONVERSATION.PREVIEW.ANSWER_CUSTOMERS')
-    : t('CAPTAIN.ASSISTANTS.SETTINGS.CONVERSATION.PREVIEW.ANSWER_PROSPECTS')
+// The sample question comes from a prospect or from an existing customer, so a role can be compared on both.
+const previewVisitor = ref('prospect');
+const isCustomerPreview = computed(() => previewVisitor.value === 'customer');
+
+const previewQuestion = computed(() =>
+  isCustomerPreview.value
+    ? t('CAPTAIN.ASSISTANTS.SETTINGS.CONVERSATION.PREVIEW.CUSTOMER_QUESTION')
+    : t('CAPTAIN.ASSISTANTS.SETTINGS.CONVERSATION.PREVIEW.QUESTION')
 );
 
+const previewAnswer = computed(() => {
+  if (isCustomerPreview.value)
+    return t(
+      'CAPTAIN.ASSISTANTS.SETTINGS.CONVERSATION.PREVIEW.ANSWER_EXISTING_CUSTOMER'
+    );
+  return state.visitorAudience === 'customers'
+    ? t('CAPTAIN.ASSISTANTS.SETTINGS.CONVERSATION.PREVIEW.ANSWER_CUSTOMERS')
+    : t('CAPTAIN.ASSISTANTS.SETTINGS.CONVERSATION.PREVIEW.ANSWER_PROSPECTS');
+});
+
 const previewFollowUp = computed(() => {
-  if (state.agentRole === 'sales')
+  const role = state.agentRole;
+  if (role === 'sales' || (role === 'adaptive' && !isCustomerPreview.value))
     return t(
       'CAPTAIN.ASSISTANTS.SETTINGS.CONVERSATION.PREVIEW.FOLLOW_UP_SALES'
     );
-  if (state.agentRole === 'shopping')
+  if (isCustomerPreview.value)
+    return t(
+      'CAPTAIN.ASSISTANTS.SETTINGS.CONVERSATION.PREVIEW.FOLLOW_UP_CUSTOMER'
+    );
+  if (role === 'shopping')
     return t(
       'CAPTAIN.ASSISTANTS.SETTINGS.CONVERSATION.PREVIEW.FOLLOW_UP_SHOPPING'
     );
@@ -359,9 +387,43 @@ const previewBubbles = computed(() => {
     />
 
     <template #preview>
+      <div
+        class="flex gap-1 p-1 rounded-lg bg-n-alpha-1 w-fit"
+        role="group"
+        :aria-label="
+          t('CAPTAIN.ASSISTANTS.SETTINGS.CONVERSATION.PREVIEW.VISITOR')
+        "
+      >
+        <Button
+          type="button"
+          size="xs"
+          :variant="isCustomerPreview ? 'ghost' : 'solid'"
+          :color="isCustomerPreview ? 'slate' : 'blue'"
+          :label="
+            t(
+              'CAPTAIN.ASSISTANTS.SETTINGS.CONVERSATION.PREVIEW.VISITOR_PROSPECT'
+            )
+          "
+          data-test-id="preview-prospect"
+          @click="previewVisitor = 'prospect'"
+        />
+        <Button
+          type="button"
+          size="xs"
+          :variant="isCustomerPreview ? 'solid' : 'ghost'"
+          :color="isCustomerPreview ? 'blue' : 'slate'"
+          :label="
+            t(
+              'CAPTAIN.ASSISTANTS.SETTINGS.CONVERSATION.PREVIEW.VISITOR_CUSTOMER'
+            )
+          "
+          data-test-id="preview-customer"
+          @click="previewVisitor = 'customer'"
+        />
+      </div>
       <AssistantChatPreview :name="name" :avatar-url="assistant.avatar_url">
         <p class="preview-bubble preview-bubble--customer">
-          {{ t('CAPTAIN.ASSISTANTS.SETTINGS.CONVERSATION.PREVIEW.QUESTION') }}
+          {{ previewQuestion }}
         </p>
         <p
           v-for="(bubble, index) in previewBubbles"

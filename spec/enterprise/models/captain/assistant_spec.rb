@@ -182,8 +182,8 @@ RSpec.describe Captain::Assistant, type: :model do
       expect(assistant.greeting?).to be(false)
     end
 
-    it 'decides the audience per conversation and greets for new agents' do
-      expect(assistant).to have_attributes(visitor_audience: 'detect', greeting_mode: 'ai')
+    it 'adapts the role and audience per conversation and greets for new agents' do
+      expect(assistant).to have_attributes(agent_role: 'adaptive', visitor_audience: 'detect', greeting_mode: 'ai')
     end
 
     it 'keeps choices sent on create' do
