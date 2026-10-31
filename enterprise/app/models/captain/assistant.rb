@@ -413,7 +413,12 @@ class Captain::Assistant < ApplicationRecord
       response_guidelines: response_guidelines || [],
       guardrails: guardrails || [], handoff_rules: handoff_rules || []
     }
-    context.merge(business_prompt_context, Captain::Knowledge::BriefPrompt.new(self).context, lead_prompt_context)
+    context.merge(business_prompt_context, conversation_prompt_context, Captain::Knowledge::BriefPrompt.new(self).context, lead_prompt_context)
+  end
+
+  # Who the agent is and who it talks to.
+  def conversation_prompt_context
+    { agent_role: agent_role, agent_role_prompt: agent_role_prompt.presence, visitor_audience: visitor_audience }
   end
 
   def tone_instruction
