@@ -77,8 +77,8 @@ class Captain::Assistant < ApplicationRecord
     }
   }.freeze
   CUSTOM_PROMPT_LENGTH_LIMIT = 1000
-  # Who the agent is and how it moves a conversation forward. Existing agents keep support.
-  AGENT_ROLES = %w[support sales shopping custom].freeze
+  # Who the agent is and how it moves a conversation forward. Existing agents keep support; new ones adapt per conversation.
+  AGENT_ROLES = %w[adaptive support sales shopping custom].freeze
   # Who visitors usually are. Customers keeps today's prompt; new agents decide per conversation.
   VISITOR_AUDIENCES = %w[customers prospects detect].freeze
   GREETING_MODES = %w[off ai fixed].freeze
@@ -545,7 +545,7 @@ class Captain::Assistant < ApplicationRecord
   end
 
   def set_conversation_defaults
-    self.config = { 'visitor_audience' => 'detect', 'greeting_mode' => 'ai' }.merge(config)
+    self.config = { 'agent_role' => 'adaptive', 'visitor_audience' => 'detect', 'greeting_mode' => 'ai' }.merge(config)
   end
 
   def validate_limits

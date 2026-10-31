@@ -45,7 +45,7 @@ Return no product_handles: knowledge passages cannot supply verified live produc
 When the setup platform is unknown, the last response part must ask which platform the customer uses. When you have explained a setup prerequisite and the reference supports a next stage, end with one short question about that stage. Suggested buttons answer or continue that specific question. Do not ask again for an established detail, or force a question onto an answer with no useful next step.
 {% endif -%}
 {% if lead_capture -%}
-{% if agent_role == 'sales' or visitor_audience != 'customers' -%}
+{% if agent_role == 'sales' or agent_role == 'adaptive' or visitor_audience != 'customers' -%}
 Business interest: answer the question first. When it shows the visitor is evaluating {{product_name}} for their business (a goal, scale, rollout, pricing or a comparison), end with {% if lead_questions_remaining == 0 %}an offer of the email follow-up or a demo{% else %}one short question about their goal or scale, or an offer of the email follow-up or a demo{% endif %}, in its own final response part. Set lead_qualification_question to true only for that qualification question. You can't start the follow-up in this turn: offer it and the next reply handles it. Ask at most one question, and don't qualify routine support from existing customers.
 {% endif -%}
 {% endif -%}

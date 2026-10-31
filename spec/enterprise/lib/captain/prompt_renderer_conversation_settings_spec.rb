@@ -10,6 +10,8 @@ RSpec.describe Captain::PromptRenderer do
 
   describe 'role' do
     it 'keeps the support identity of each prompt' do
+      assistant.update!(config: config.merge('agent_role' => 'support'))
+
       expect(assistant_prompt).to include('You are Ava, a helpful, friendly, and knowledgeable assistant for Acme Streaming Tools.')
       expect(assistant_prompt).to include('Help with anything Acme Streaming Tools offers')
       expect(direct_prompt).to include('You are Ava, the customer support assistant for Acme Streaming Tools.')
@@ -23,6 +25,19 @@ RSpec.describe Captain::PromptRenderer do
         expect([assistant_prompt, direct_prompt]).to all(include(identity))
         expect(direct_prompt).not_to include('customer support assistant')
         expect(assistant_prompt).to include('Help with anything Acme Streaming Tools offers')
+      end
+    end
+
+    context 'with the all-round role' do
+      let(:config) { { 'product_name' => 'Acme Streaming Tools', 'agent_role' => 'adaptive' } }
+
+      it 'decides per conversation between support, sales and shopping in both prompts' do
+        expect([assistant_prompt, direct_prompt]).to all(include(
+                                                           'Decide in each conversation what the visitor needs',
+                                                           'solve their problem fully, without a sales pitch',
+                                                           'find the best fit'
+                                                         ))
+        expect(direct_prompt).not_to include('customer support assistant')
       end
     end
 
@@ -94,6 +109,12 @@ RSpec.describe Captain::PromptRenderer do
       expect(direct_prompt).not_to include('Business lead capture')
     end
 
+    it 'offers the follow-up for an all-round agent even for customers' do
+      assistant.update!(config: config.merge(lead_config, 'agent_role' => 'adaptive', 'visitor_audience' => 'customers'))
+
+      expect(direct_prompt).to include('Business interest: answer the question first.')
+    end
+
     it 'only offers the follow-up when no questions remain' do
       assistant.update!(config: config.merge(lead_config, 'visitor_audience' => 'detect'))
       prompt = described_class.render('direct_response', context.merge(lead_questions_remaining: 0).with_indifferent_access)
@@ -163,6 +184,20 @@ RSpec.describe Captain::PromptRenderer do
       assistant.update!(config: config.merge('limits' => []))
 
       expect(assistant_prompt).not_to include("What You Can't Do")
+    end
+  end
+
+  describe 'scenario prompt' do
+    let(:config) do
+      { 'product_name' => 'Acme Streaming Tools', 'visitor_audience' => 'prospects',
+        'limits' => [{ 'cannot' => 'issue refunds', 'offer' => 'handoff' }] }
+    end
+    let(:scenario) { create(:captain_scenario, assistant: assistant, title: 'Demo request', instruction: 'Ask for the company size.') }
+    let(:scenario_prompt) { described_class.render('scenario', scenario.prompt_context.with_indifferent_access) }
+
+    it 'knows what the agent cannot do and who the visitors are' do
+      expect(scenario_prompt).to include("You can't issue refunds. Bring in a colleague with `captain--tools--handoff`",
+                                         'Visitors are usually not customers yet; they want to know what Acme Streaming Tools can do')
     end
   end
 

@@ -35,6 +35,10 @@ const mountComponent = (config = {}, save = vi.fn().mockResolvedValue()) =>
         SettingsSplit: false,
         AssistantChatPreview: false,
         Avatar: true,
+        Button: {
+          emits: ['click'],
+          template: '<button @click="$emit(\'click\')" />',
+        },
       },
     },
   });
@@ -65,7 +69,7 @@ describe('AssistantConversationForm', () => {
   it('shows the saved choices', () => {
     const wrapper = mountComponent({ agent_role: 'sales' });
 
-    expect(cards(wrapper, 'agent-role')).toHaveLength(4);
+    expect(cards(wrapper, 'agent-role')).toHaveLength(5);
     expect(cards(wrapper, 'visitor-audience')).toHaveLength(3);
     expect(cards(wrapper, 'greeting-mode')).toHaveLength(3);
     expect(
@@ -145,6 +149,28 @@ describe('AssistantConversationForm', () => {
 
     expect(previewBubbles(wrapper)).toEqual([
       'CAPTAIN.ASSISTANTS.SETTINGS.CONVERSATION.PREVIEW.GREETING CAPTAIN.ASSISTANTS.SETTINGS.CONVERSATION.PREVIEW.ANSWER_PROSPECTS CAPTAIN.ASSISTANTS.SETTINGS.CONVERSATION.PREVIEW.FOLLOW_UP_SALES',
+    ]);
+  });
+
+  it('previews an all-round agent selling to a prospect and supporting a customer', async () => {
+    const wrapper = mountComponent({
+      agent_role: 'adaptive',
+      visitor_audience: 'detect',
+    });
+
+    expect(previewBubbles(wrapper)).toEqual([
+      'CAPTAIN.ASSISTANTS.SETTINGS.CONVERSATION.PREVIEW.ANSWER_PROSPECTS',
+      'CAPTAIN.ASSISTANTS.SETTINGS.CONVERSATION.PREVIEW.FOLLOW_UP_SALES',
+    ]);
+
+    await wrapper.find('[data-test-id="preview-customer"]').trigger('click');
+
+    expect(wrapper.text()).toContain(
+      'CAPTAIN.ASSISTANTS.SETTINGS.CONVERSATION.PREVIEW.CUSTOMER_QUESTION'
+    );
+    expect(previewBubbles(wrapper)).toEqual([
+      'CAPTAIN.ASSISTANTS.SETTINGS.CONVERSATION.PREVIEW.ANSWER_EXISTING_CUSTOMER',
+      'CAPTAIN.ASSISTANTS.SETTINGS.CONVERSATION.PREVIEW.FOLLOW_UP_CUSTOMER',
     ]);
   });
 

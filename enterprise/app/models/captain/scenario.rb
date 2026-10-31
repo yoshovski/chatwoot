@@ -76,7 +76,9 @@ class Captain::Scenario < ApplicationRecord
       assistant_name: Agents::Helpers::NameNormalizer.to_tool_name(assistant.agent_name),
       response_guidelines: response_guidelines || [],
       guardrails: guardrails || [],
-      off_limits_message: assistant.off_limits_message.presence
+      off_limits_message: assistant.off_limits_message.presence,
+      product_name: product_name || 'this product',
+      **assistant.conversation_prompt_context.slice(:visitor_audience, :limits)
     }
   end
 
