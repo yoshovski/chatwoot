@@ -136,7 +136,7 @@ RSpec.describe Captain::PromptRenderer do
     it 'asks for a short welcome in the first reply of both prompts' do
       prompts = %w[assistant direct_response].map { |template| described_class.render(template, first_reply_context) }
 
-      expect(prompts).to all(include('Start with a short, warm welcome'))
+      expect(prompts).to all(include('Write a short, warm welcome'))
     end
 
     it 'does not greet in later replies or with the greeting off' do

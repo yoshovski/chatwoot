@@ -58,6 +58,9 @@ module Captain::Assistant::RunnerStateHelper
     @conversation&.campaign_id.blank? && history.none? { |entry| entry[:role] == :assistant }
   end
 
+  # Set by build_context, which runs before the agents and their reply schema are built.
+  def ai_welcome? = @first_ai_reply == true && @assistant.greeting_mode == 'ai'
+
   def ownership_instruction
     return unless respond_to?(:ownership_service, true)
 

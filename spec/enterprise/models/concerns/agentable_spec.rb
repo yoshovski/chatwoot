@@ -235,6 +235,13 @@ RSpec.describe Concerns::Agentable do
       expect(schema_hash[:required]).to include(:handoff_requested)
     end
 
+    it 'requires a welcome only for the first AI reply with the AI greeting' do
+      schema = Captain::ResponseSchema.for(welcome: true).new.to_json_schema[:schema]
+
+      expect(schema[:required]).to include(:welcome)
+      expect(Captain::ResponseSchema.for(welcome: false)).to eq(Captain::ResponseSchema)
+    end
+
     it 'adds separate_parts only when an instruction asks for a separate message' do
       schema = Captain::ResponseSchema.for(separate_parts: true).new.to_json_schema[:schema]
 

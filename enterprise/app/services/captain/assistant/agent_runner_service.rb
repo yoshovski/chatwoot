@@ -74,7 +74,7 @@ class Captain::Assistant::AgentRunnerService # rubocop:disable Metrics/ClassLeng
     end
     reset_resolved_scenario_attribution!(conversation_history)
     state = build_state
-    state[:first_ai_reply] = first_ai_reply?(conversation_history)
+    state[:first_ai_reply] = @first_ai_reply = first_ai_reply?(conversation_history)
 
     {
       session_id: "#{@assistant.account_id}_#{@conversation&.display_id}",
@@ -195,7 +195,8 @@ class Captain::Assistant::AgentRunnerService # rubocop:disable Metrics/ClassLeng
       max_suggested_replies: @assistant.max_suggested_replies,
       product_cards: product_cards_enabled?,
       lead_capture: @assistant.leads_enabled?,
-      separate_parts: !reply_suggestion? && @assistant.separate_parts_requested?
+      separate_parts: !reply_suggestion? && @assistant.separate_parts_requested?,
+      welcome: ai_welcome?
     )
   end
 

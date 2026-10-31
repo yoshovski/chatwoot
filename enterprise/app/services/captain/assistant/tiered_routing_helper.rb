@@ -98,13 +98,7 @@ module Captain::Assistant::TieredRoutingHelper
     log_route(route, mode, context)
     return if mode == 'shadow' || route['intent'] == 'action_agent'
 
-    schema = Captain::ResponseSchema.for(
-      suggested_replies: suggested_replies_enabled?,
-      max_suggested_replies: @assistant.max_suggested_replies,
-      product_cards: (respond_to?(:product_cards_enabled?, true) ? product_cards_enabled? : @assistant.product_cards?),
-      lead_capture: @assistant.leads_enabled?,
-      separate_parts: @assistant.separate_parts_requested?
-    )
+    schema = response_schema_for_runner
     service = Captain::Assistant::DirectResponseService.new(assistant: @assistant, response_schema: schema)
     result = service.run(message: message, context: context, route: route)
     @response_discarded = newer_customer_message_arrived? if message_burst_protection_active?

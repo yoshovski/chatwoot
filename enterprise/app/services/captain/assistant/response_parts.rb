@@ -17,7 +17,9 @@ class Captain::Assistant::ResponseParts
     return new([{ text: response.to_s, citation_indexes: [] }]) unless response.is_a?(Hash)
 
     response = response.with_indifferent_access
-    return new(response[:response_parts]) if response.key?(:response_parts)
+    # The AI welcome of a first reply opens the answer bubble.
+    welcome = response[:welcome].presence && [{ text: response[:welcome], citation_indexes: [] }]
+    return new(Array(welcome) + Array(response[:response_parts])) if response.key?(:response_parts)
 
     new([{ text: response[:response], citation_indexes: [] }])
   end

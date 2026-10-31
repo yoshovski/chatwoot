@@ -86,4 +86,13 @@ RSpec.describe Captain::Assistant::ResponseParts do
       expect(cited.to_a.first['citation_indexes']).to eq([])
     end
   end
+
+  it 'opens with the AI welcome of a first reply' do
+    parts = described_class.from_response(
+      { 'welcome' => 'Hi, thanks for reaching out!', 'response_parts' => [{ 'text' => 'Yes, you can.', 'citation_indexes' => [1] }] }
+    )
+
+    expect(parts.plain_text).to eq("Hi, thanks for reaching out!\n\nYes, you can.")
+    expect(parts.to_a.first['citation_indexes']).to eq([])
+  end
 end

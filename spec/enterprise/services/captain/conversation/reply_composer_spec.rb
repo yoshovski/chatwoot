@@ -325,6 +325,13 @@ RSpec.describe Captain::Conversation::ReplyComposer do
       expect(last[:content_attributes]).not_to have_key('captain_sources')
     end
 
+    it 'opens the first bubble with the AI welcome and still splits at the listed parts' do
+      response['welcome'] = 'Hi there, thanks for asking!'
+
+      expect(composer.messages.map { |message| message[:content] }.first(2))
+        .to eq(["Hi there, thanks for asking!\n\nOur trial lasts 14 days.", 'You can add teammates at any time.'])
+    end
+
     it 'sends one message by email' do
       inbox.update!(channel: create(:channel_email, account: account))
 
