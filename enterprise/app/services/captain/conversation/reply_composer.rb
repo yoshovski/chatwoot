@@ -22,6 +22,14 @@ class Captain::Conversation::ReplyComposer # rubocop:disable Metrics/ClassLength
     reply_messages(true) << Captain::Tools::ActionConfirmation.card_payload(action_confirmation, assistant.account.locale)
   end
 
+  # The fixed welcome message, sent as its own bubble before the first AI reply of a conversation.
+  def welcome_message
+    return unless assistant.greeting_mode == 'fixed' && run_result&.context&.dig(:state, :first_ai_reply) == true
+
+    content = Liquid::Template.parse(assistant.welcome_message).render('contact' => ContactDrop.new(conversation&.contact)).strip
+    { content: content, content_type: 'text', additional_attributes: {} } if content.present?
+  end
+
   def empty_response?
     formatted_prose.blank? && !catalog_searches_empty? && !customer_message_has_attachments? && !model_returned_answer?
   end

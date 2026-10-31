@@ -109,6 +109,31 @@ RSpec.describe Captain::PromptRenderer do
     end
   end
 
+  describe 'greeting' do
+    let(:first_reply_context) { context.merge(first_ai_reply: true).with_indifferent_access }
+
+    it 'asks for a short welcome in the first reply of both prompts' do
+      prompts = %w[assistant direct_response].map { |template| described_class.render(template, first_reply_context) }
+
+      expect(prompts).to all(include('Start with a short, warm welcome'))
+    end
+
+    it 'does not greet in later replies or with the greeting off' do
+      expect(assistant_prompt).not_to include('warm welcome')
+      assistant.update!(config: config.merge('greeting_mode' => 'off'))
+
+      expect(described_class.render('direct_response', assistant.prompt_context.merge(first_ai_reply: true).with_indifferent_access))
+        .not_to include('warm welcome')
+    end
+
+    it 'answers directly after a fixed welcome message' do
+      assistant.update!(config: config.merge('greeting_mode' => 'fixed', 'welcome_message' => 'Hi there!'))
+      prompt = described_class.render('assistant', assistant.prompt_context.merge(first_ai_reply: true).with_indifferent_access)
+
+      expect(prompt).to include("A welcome message is sent just before your reply, so don't greet")
+    end
+  end
+
   it 'describes software visitors without assuming they are customers' do
     assistant.update!(config: config.merge('business_type' => 'software'))
 

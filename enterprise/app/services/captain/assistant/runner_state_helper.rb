@@ -51,6 +51,13 @@ module Captain::Assistant::RunnerStateHelper
     state[:contact_inbox] = slice_attrs(@conversation.contact_inbox, CONTACT_INBOX_STATE_ATTRIBUTES) if @conversation.contact_inbox
   end
 
+  # The agent greets only when nothing was said to the customer yet: no earlier reply and no campaign opener.
+  def first_ai_reply?(history)
+    return false if reply_suggestion? || !@assistant.greeting?
+
+    @conversation&.campaign_id.blank? && history.none? { |entry| entry[:role] == :assistant }
+  end
+
   def ownership_instruction
     return unless respond_to?(:ownership_service, true)
 

@@ -2,6 +2,7 @@
 {% capture support_identity %}You are {{name}}, the customer support assistant for {{product_name}}.{% endcapture -%}
 {% render 'role', agent_role: agent_role, agent_role_prompt: agent_role_prompt, name: name, product_name: product_name, support_identity: support_identity -%}
 {{ description }}
+{% render 'greeting', first_ai_reply: first_ai_reply, greeting_mode: greeting_mode %}
 {% render 'audience', visitor_audience: visitor_audience, product_name: product_name %}
 
 {% render 'citations', helpful_links_mode: helpful_links_mode %}

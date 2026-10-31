@@ -73,11 +73,13 @@ class Captain::Assistant::AgentRunnerService # rubocop:disable Metrics/ClassLeng
       }.merge(msg.slice(:message_id, :source_digest))
     end
     reset_resolved_scenario_attribution!(conversation_history)
+    state = build_state
+    state[:first_ai_reply] = first_ai_reply?(conversation_history)
 
     {
       session_id: "#{@assistant.account_id}_#{@conversation&.display_id}",
       conversation_history: conversation_history,
-      state: build_state
+      state: state
     }
   end
 

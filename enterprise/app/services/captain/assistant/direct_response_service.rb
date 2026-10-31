@@ -172,6 +172,7 @@ class Captain::Assistant::DirectResponseService
       product_cards_enabled: context.dig(:state, :product_cards_enabled) || @assistant.product_cards?,
       conversation_memory: context.dig(:state, :conversation_memory),
       lead_questions_remaining: context.dig(:state, :lead_questions_remaining),
+      first_ai_reply: context.dig(:state, :first_ai_reply),
       visitor_context: Captain::Assistant::VisitorContext.from_state(context[:state])
     )
   end

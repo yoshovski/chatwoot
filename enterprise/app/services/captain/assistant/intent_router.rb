@@ -95,7 +95,9 @@ class Captain::Assistant::IntentRouter # rubocop:disable Metrics/ClassLength
     return unless text
 
     route = { 'intent' => 'smalltalk', 'queries' => [], 'reason' => 'greeting' }
-    route['canned_response'] = text if @assistant.guardrails.blank? && @assistant.response_guidelines.blank? && !@assistant.suggested_replies?
+    # With a greeting on, the model says hello in the agent's own voice.
+    plain = !@assistant.greeting? && @assistant.guardrails.blank? && @assistant.response_guidelines.blank?
+    route['canned_response'] = text if plain && !@assistant.suggested_replies?
     route
   end
 
