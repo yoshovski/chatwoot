@@ -84,6 +84,7 @@ Always respect these boundaries:
 {% endfor %}
 {% endif -%}
 
+{% render 'limits', limits: limits, direct_answer: false %}
 # Declining
 {% render 'scope' %}
 {% if off_limits_message -%}

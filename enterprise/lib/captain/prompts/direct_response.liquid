@@ -49,6 +49,7 @@ When the setup platform is unknown, the last response part must ask which platfo
 Business interest: answer the question first. When it shows the visitor is evaluating {{product_name}} for their business (a goal, scale, rollout, pricing or a comparison), end with {% if lead_questions_remaining == 0 %}an offer of the email follow-up or a demo{% else %}one short question about their goal or scale, or an offer of the email follow-up or a demo{% endif %}, in its own final response part. Set lead_qualification_question to true only for that qualification question. You can't start the follow-up in this turn: offer it and the next reply handles it. Ask at most one question, and don't qualify routine support from existing customers.
 {% endif -%}
 {% endif -%}
+{% render 'limits', limits: limits, direct_answer: true %}
 {% render 'scope' %}
 {% if off_limits_message %}When declining, use this in the customer's language: {{ off_limits_message }}{% endif %}
 {% if message_length_limit %}Keep the complete response at or below {{ message_length_limit }} characters.{% endif %}

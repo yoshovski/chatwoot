@@ -134,6 +134,38 @@ RSpec.describe Captain::PromptRenderer do
     end
   end
 
+  describe 'limits' do
+    let(:config) do
+      { 'product_name' => 'Acme Streaming Tools', 'limits' => [
+        { 'cannot' => 'issue refunds', 'offer' => 'handoff' },
+        { 'cannot' => 'change a subscription plan', 'offer' => 'email_followup' },
+        { 'cannot' => 'give legal advice', 'offer' => 'link', 'value' => 'https://example.com/legal' },
+        { 'cannot' => 'book a call', 'offer' => 'text', 'value' => 'Email hello@example.com to book a call.' }
+      ] }
+    end
+
+    it 'lists what the agent cannot do and what it offers instead in both prompts' do
+      expect([assistant_prompt, direct_prompt]).to all(include(
+                                                         '# What You Can\'t Do', 'You can\'t issue refunds.',
+                                                         'You can\'t give legal advice. Share this link: https://example.com/legal',
+                                                         'Say this, in the customer\'s language: "Email hello@example.com to book a call."'
+                                                       ))
+    end
+
+    it 'hands off through the protocol in the main prompt and the schema flag on the direct route' do
+      expect(assistant_prompt).to include('Follow the Human Handoff Protocol to bring in a colleague.',
+                                          '`captain--tools--request_lead_followup`')
+      expect(direct_prompt).to include('Say a colleague will continue in this chat and set handoff_requested to true.',
+                                       'Offer an email follow-up from the team.')
+    end
+
+    it 'adds nothing without limits' do
+      assistant.update!(config: config.merge('limits' => []))
+
+      expect(assistant_prompt).not_to include("What You Can't Do")
+    end
+  end
+
   it 'describes software visitors without assuming they are customers' do
     assistant.update!(config: config.merge('business_type' => 'software'))
 

@@ -1188,6 +1188,34 @@
             "TITLE": "When a question is off-limits, {name} says",
             "DESC": "Used whenever a guardrail or a question outside your business makes the AI agent decline. Translated to the customer's language.",
             "PLACEHOLDER": "I can only help with questions about our products and orders. Is there something I can help you with there?"
+          },
+          "LIMITS": {
+            "TITLE": "What {name} can't do",
+            "DESC": "When a customer asks for one of these, the AI agent says plainly it can't and offers the next step you choose.",
+            "EMPTY": "No limits yet. Add things your AI agent can't do, like issuing refunds.",
+            "CANNOT": "Can't",
+            "OFFER": "Offer instead",
+            "ADD": "Add a limit",
+            "REMOVE": "Remove limit",
+            "LINK_PLACEHOLDER": "https://example.com/help",
+            "TEXT_PLACEHOLDER": "What the AI agent says instead",
+            "EXAMPLES": {
+              "REFUNDS": "issue refunds",
+              "PLAN_CHANGE": "change a subscription plan",
+              "LEGAL": "give legal advice"
+            },
+            "OFFERS": {
+              "HANDOFF": "Hand off to the team",
+              "EMAIL_FOLLOWUP": "Email follow-up",
+              "LINK": "A link",
+              "TEXT": "A message"
+            },
+            "ERRORS": {
+              "CANNOT_REQUIRED": "Describe what the AI agent can't do.",
+              "LINK": "Enter a link starting with http:// or https://.",
+              "TEXT": "Enter the message to send instead.",
+              "TOO_LONG": "Keep this under {max} characters."
+            }
           }
         },
         "HANDOVER": {

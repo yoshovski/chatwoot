@@ -15,6 +15,7 @@ import SettingsCard from 'dashboard/components-next/captain/pageComponents/assis
 import SettingsSplit from 'dashboard/components-next/captain/pageComponents/assistant/settings/SettingsSplit.vue';
 import AssistantChatPreview from 'dashboard/components-next/captain/pageComponents/assistant/settings/AssistantChatPreview.vue';
 import AssistantOffLimitsMessage from 'dashboard/components-next/captain/pageComponents/assistant/settings/AssistantOffLimitsMessage.vue';
+import AssistantLimits from 'dashboard/components-next/captain/pageComponents/assistant/settings/AssistantLimits.vue';
 import SettingsSwitchRow from 'dashboard/components-next/captain/pageComponents/assistant/settings/SettingsSwitchRow.vue';
 import SuggestedRules from 'dashboard/components-next/captain/assistant/SuggestedRules.vue';
 import AddNewRulesDialog from 'dashboard/components-next/captain/assistant/AddNewRulesDialog.vue';
@@ -286,6 +287,7 @@ const addAllExample = () => {
           />
         </div>
       </section>
+      <AssistantLimits :assistant="assistant" @submit="updateAssistant" />
       <AssistantOffLimitsMessage
         v-model:draft="offLimitsDraft"
         :assistant="assistant"

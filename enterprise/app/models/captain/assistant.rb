@@ -422,9 +422,10 @@ class Captain::Assistant < ApplicationRecord
     context.merge(business_prompt_context, conversation_prompt_context, Captain::Knowledge::BriefPrompt.new(self).context, lead_prompt_context)
   end
 
-  # Who the agent is, who it talks to and how it opens a conversation.
+  # Who the agent is, who it talks to, how it opens a conversation and what it can't do.
   def conversation_prompt_context
-    { agent_role: agent_role, agent_role_prompt: agent_role_prompt.presence, visitor_audience: visitor_audience, greeting_mode: greeting_mode }
+    { agent_role: agent_role, agent_role_prompt: agent_role_prompt.presence, visitor_audience: visitor_audience, greeting_mode: greeting_mode,
+      limits: limits }
   end
 
   def tone_instruction
