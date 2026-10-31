@@ -576,6 +576,16 @@ RSpec.describe Captain::Conversation::ResponseBuilderJob, type: :job do
         expect(account.usage_limits[:captain][:responses][:consumed]).to eq(1)
       end
 
+      it 'posts the follow-up question as its own message after the answer' do
+        parts = [{ 'text' => 'You can pause a plan for up to three months. Which plan are you on?', 'citation_indexes' => [] }]
+        allow(mock_agent_runner_service).to receive(:generate_response).and_return({ 'response_parts' => parts })
+
+        described_class.perform_now(conversation, assistant)
+
+        expect(conversation.messages.outgoing.order(:id).pluck(:content))
+          .to eq(['You can pause a plan for up to three months.', 'Which plan are you on?'])
+      end
+
       context 'with a fixed welcome message' do
         before do
           assistant.update!(config: assistant.config.merge('greeting_mode' => 'fixed', 'welcome_message' => 'Welcome to Acme!'))

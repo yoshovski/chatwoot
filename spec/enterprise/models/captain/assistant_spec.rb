@@ -225,6 +225,21 @@ RSpec.describe Captain::Assistant, type: :model do
     end
   end
 
+  describe '#separate_parts_requested?' do
+    it 'is true when a guideline or an enabled scenario asks for a separate message' do
+      expect(assistant.separate_parts_requested?).to be(false)
+
+      create(:captain_scenario, assistant: assistant, enabled: true, instruction: 'Answer, then in a separate message ask for the company size.')
+      expect(assistant.separate_parts_requested?).to be(true)
+    end
+
+    it 'reads the response guidelines' do
+      assistant.update!(response_guidelines: ['Send the booking link in its own message.'])
+
+      expect(assistant.separate_parts_requested?).to be(true)
+    end
+  end
+
   describe 'limits validation' do
     it 'accepts each offer with its value' do
       assistant.config['limits'] = [

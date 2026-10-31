@@ -88,6 +88,8 @@ class Captain::Assistant < ApplicationRecord
   MAX_LIMITS = 15
   LIMIT_CANNOT_LENGTH_LIMIT = 200
   LIMIT_VALUE_LENGTH_LIMIT = 300
+  # A guideline or scenario step that asks for this gets the separate_parts field in the reply schema.
+  SEPARATE_MESSAGE_PATTERN = /\b(?:separate|own|new|second|another) (?:message|bubble)\b/i
 
   include Avatarable
   include Concerns::CaptainToolsHelpers
@@ -241,6 +243,10 @@ class Captain::Assistant < ApplicationRecord
   # On unless turned off: on the widget the follow-up question gets its own bubble.
   def separate_follow_up?
     config['separate_follow_up'] != false
+  end
+
+  def separate_parts_requested?
+    (Array(response_guidelines) + scenarios.enabled.pluck(:instruction)).any? { |text| text.to_s.match?(SEPARATE_MESSAGE_PATTERN) }
   end
 
   def inactive_conversation_resolution_disabled?

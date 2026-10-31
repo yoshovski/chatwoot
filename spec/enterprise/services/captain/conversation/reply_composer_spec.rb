@@ -241,6 +241,97 @@ RSpec.describe Captain::Conversation::ReplyComposer do
     end
   end
 
+  context 'when the answer ends with a follow-up question' do
+    let(:response) do
+      {
+        'agent_name' => 'Store Bot',
+        'response_parts' => [{ 'text' => 'You can pause a plan for up to three months. Which plan are you on?', 'citation_indexes' => [] }],
+        'suggested_replies' => [{ 'label' => 'Monthly', 'message' => 'I am on the monthly plan.' }]
+      }
+    end
+
+    it 'asks the question in its own bubble on the widget, with the buttons' do
+      answer, question = composer.messages
+
+      expect(answer).to include(content: 'You can pause a plan for up to three months.', content_type: 'text')
+      expect(question).to include(content: 'Which plan are you on?', content_type: 'input_select')
+    end
+
+    it 'keeps one bubble when separate follow-up questions are off' do
+      assistant.update!(config: assistant.config.merge('separate_follow_up' => false))
+
+      expect(composer.messages.map { |message| message[:content] })
+        .to eq(['You can pause a plan for up to three months. Which plan are you on?'])
+    end
+
+    it 'keeps one bubble on other channels' do
+      inbox.update!(channel: create(:channel_sms, account: account))
+
+      expect(composer.messages.size).to eq(1)
+    end
+
+    it 'still splits a qualification question when the switch is off' do
+      assistant.update!(config: assistant.config.merge('separate_follow_up' => false))
+      response['lead_qualification_question'] = true
+
+      expect(composer.messages.map { |message| message[:content] })
+        .to eq(['You can pause a plan for up to three months.', 'Which plan are you on?'])
+    end
+
+    it 'keeps a short greeting and its question together' do
+      response['response_parts'] = [{ 'text' => 'Hi there! How can I help?', 'citation_indexes' => [] }]
+
+      expect(composer.messages.map { |message| message[:content] }).to eq(['Hi there! How can I help?'])
+    end
+  end
+
+  context 'when the model lists separate parts' do
+    let(:assistant) do
+      create(:captain_assistant, account: account,
+                                 config: { 'suggested_replies' => true, 'max_suggested_replies' => 3, 'feature_citation' => true,
+                                           'separate_follow_up' => false })
+    end
+    let(:response) do
+      {
+        'response_parts' => [
+          { 'text' => 'Our trial lasts 14 days.', 'citation_indexes' => [1] },
+          { 'text' => 'You can add teammates at any time.', 'citation_indexes' => [2] },
+          { 'text' => 'Exports work on every plan.', 'citation_indexes' => [] },
+          { 'text' => 'How large is your team?', 'citation_indexes' => [] }
+        ],
+        'separate_parts' => [3, 1, 2, 9],
+        'suggested_replies' => ['Under 10']
+      }
+    end
+
+    before do
+      allow(assistant).to receive_messages(trusted_citation_urls: { 1 => 'https://example.com/trial', 2 => 'https://example.com/teams' },
+                                           citation_titles: { 1 => 'Trial', 2 => 'Teams' })
+    end
+
+    it 'starts a new bubble at each listed part, at most three, with the buttons on the last one' do
+      messages = composer.messages
+
+      expect(messages.map { |message| message[:content] })
+        .to eq(['Our trial lasts 14 days.', 'You can add teammates at any time.', "Exports work on every plan.\n\nHow large is your team?"])
+      expect(messages.map { |message| message[:content_type] }).to eq(%w[text text input_select])
+    end
+
+    it 'keeps each source on the bubble that cites it' do
+      first, second, last = composer.messages
+
+      expect(first[:content_attributes]['captain_sources']).to eq([{ 'title' => 'Trial', 'url' => 'https://example.com/trial' }])
+      expect(second[:content_attributes]['captain_sources']).to eq([{ 'title' => 'Teams', 'url' => 'https://example.com/teams' }])
+      expect(last[:content_attributes]).not_to have_key('captain_sources')
+    end
+
+    it 'sends one message by email' do
+      inbox.update!(channel: create(:channel_email, account: account))
+
+      expect(composer.messages.size).to eq(1)
+    end
+  end
+
   describe '#welcome_message' do
     let(:contact) { create(:contact, account: account, name: 'jamie rivera') }
     let(:conversation) { create(:conversation, account: account, inbox: inbox, contact: contact) }

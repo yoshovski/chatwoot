@@ -10,6 +10,9 @@ class Captain::ResponseSchema < RubyLLM::Schema
                                   'wants a human. Email follow-up intake and its contact form do not transfer the live chat: ' \
                                   'keep this false for request_lead_followup and a successful save_lead_details.'.freeze
 
+  SEPARATE_PARTS_DESCRIPTION = 'Indexes of response parts (0 is the first) that must start a new message. List a part only when a ' \
+                               'scenario step or instruction says to send it as a separate message; otherwise return an empty array.'.freeze
+
   SUGGESTION_LABEL_MAX_LENGTH = 50
   SUGGESTION_MESSAGE_MAX_LENGTH = 120
 
@@ -26,21 +29,23 @@ class Captain::ResponseSchema < RubyLLM::Schema
   end
   boolean :handoff_requested, description: HANDOFF_REQUESTED_DESCRIPTION
 
-  def self.for(suggested_replies: false, max_suggested_replies: 3, product_cards: false, lead_capture: false)
-    return self unless suggested_replies || product_cards || lead_capture
+  # separate_parts: an instruction or scenario asks to send something as a separate message.
+  def self.for(suggested_replies: false, max_suggested_replies: 3, product_cards: false, lead_capture: false, separate_parts: false)
+    return self if [suggested_replies, product_cards, lead_capture, separate_parts].none?
 
     limit = (max_suggested_replies || 3).to_i.clamp(1, 5)
-    cache_key = "#{suggested_replies}:#{limit}:#{product_cards}:#{lead_capture}"
+    cache_key = "#{suggested_replies}:#{limit}:#{product_cards}:#{lead_capture}:#{separate_parts}"
     @schema_cache ||= {}
     @schema_cache[cache_key] ||= build_schema(
       suggested_replies: suggested_replies,
       limit: limit,
       product_cards: product_cards,
-      lead_capture: lead_capture
+      lead_capture: lead_capture,
+      separate_parts: separate_parts
     )
   end
 
-  def self.build_schema(suggested_replies:, limit:, product_cards:, lead_capture: false)
+  def self.build_schema(suggested_replies:, limit:, product_cards:, lead_capture: false, separate_parts: false)
     RubyLLM::Schema.create do
       name 'CaptainResponse'
       array :response_parts,
@@ -56,10 +61,19 @@ class Captain::ResponseSchema < RubyLLM::Schema
         end
       end
       boolean :handoff_requested, description: Captain::ResponseSchema::HANDOFF_REQUESTED_DESCRIPTION
-      Captain::ResponseSchema.define_lead_question(self) if lead_capture
+      Captain::ResponseSchema.define_reply_shape(self, separate_parts: separate_parts, lead_capture: lead_capture)
       Captain::ResponseSchema.define_suggested_replies(self, limit) if suggested_replies
       Captain::ResponseSchema.define_product_handles(self) if product_cards
     end
+  end
+
+  def self.define_reply_shape(builder, separate_parts:, lead_capture:)
+    if separate_parts
+      builder.array :separate_parts, description: SEPARATE_PARTS_DESCRIPTION do
+        integer minimum: 1
+      end
+    end
+    define_lead_question(builder) if lead_capture
   end
 
   def self.define_lead_question(builder)

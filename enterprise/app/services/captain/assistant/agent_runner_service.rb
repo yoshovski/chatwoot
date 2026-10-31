@@ -194,7 +194,8 @@ class Captain::Assistant::AgentRunnerService # rubocop:disable Metrics/ClassLeng
       suggested_replies: suggested_replies_enabled?,
       max_suggested_replies: @assistant.max_suggested_replies,
       product_cards: product_cards_enabled?,
-      lead_capture: @assistant.leads_enabled?
+      lead_capture: @assistant.leads_enabled?,
+      separate_parts: !reply_suggestion? && @assistant.separate_parts_requested?
     )
   end
 
