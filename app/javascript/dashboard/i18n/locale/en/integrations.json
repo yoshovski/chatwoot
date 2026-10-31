@@ -1314,6 +1314,53 @@
             "KEPT_ALWAYS": "{name} keeps the conversation and never hands it over"
           }
         },
+        "CONVERSATION": {
+          "DESCRIPTION": "Behavior applies to every conversation. For steps in one situation, use a scenario.",
+          "ROLE": {
+            "TITLE": "Role",
+            "DESC": "Who {name} is and how it moves a conversation forward.",
+            "SUPPORT": { "LABEL": "Support", "DESC": "Solves questions and problems." },
+            "SALES": { "LABEL": "Sales", "DESC": "Answers, learns the visitor's goal and offers a next step, like a demo." },
+            "SHOPPING": { "LABEL": "Shopping assistant", "DESC": "Helps shoppers find the right product." },
+            "CUSTOM": { "LABEL": "Custom", "DESC": "Describe the role in your own words." },
+            "CUSTOM_PLACEHOLDER": "You help gardeners plan their vegetable beds and suggest seeds that fit their climate.",
+            "CUSTOM_REQUIRED": "Describe the role."
+          },
+          "AUDIENCE": {
+            "TITLE": "Who are your visitors?",
+            "DESC": "Prospects get what is possible and the benefit instead of step-by-step clicks inside your product.",
+            "CUSTOMERS": { "LABEL": "Customers", "DESC": "People who already use your product." },
+            "PROSPECTS": { "LABEL": "Prospects", "DESC": "People finding out whether your product fits them." },
+            "DETECT": { "LABEL": "Detect automatically", "DESC": "{name} decides from what each visitor says." }
+          },
+          "GREETING": {
+            "TITLE": "Greeting",
+            "DESC": "A short welcome in the first reply of a conversation.",
+            "OFF": { "LABEL": "Off", "DESC": "{name} answers right away." },
+            "AI": { "LABEL": "Let the AI greet", "DESC": "One warm sentence in the visitor's language, then the answer." },
+            "FIXED": { "LABEL": "Use my message", "DESC": "Your message is sent as its own bubble before the first answer." },
+            "MESSAGE_PLACEHOLDER": "Hi! Thanks for stopping by.",
+            "MESSAGE_HINT": "Add {'{{'}contact.first_name{'}}'} to use the visitor's first name.",
+            "MESSAGE_REQUIRED": "Write the welcome message."
+          },
+          "MESSAGES": {
+            "TITLE": "Messages",
+            "SEPARATE_FOLLOW_UP": {
+              "TITLE": "Ask follow-up questions in a separate message",
+              "DESC": "On the website chat, the question after an answer arrives as its own bubble."
+            }
+          },
+          "PREVIEW": {
+            "QUESTION": "Can I try it before I pay?",
+            "GREETING": "Hi! Thanks for reaching out.",
+            "ANSWER_CUSTOMERS": "Yes. Open Billing in your account and choose Start trial.",
+            "ANSWER_PROSPECTS": "Yes, you can try every feature free for 14 days, no card needed.",
+            "FOLLOW_UP_SUPPORT": "Would you like the steps to invite your team too?",
+            "FOLLOW_UP_SALES": "What would you like to achieve with it?",
+            "FOLLOW_UP_SHOPPING": "What will you use it for most?",
+            "FIRST_NAME": "Sam"
+          }
+        },
         "AFTER_CHAT": {
           "TITLE": "After the chat",
           "DESCRIPTION": "What happens when a conversation ends or the customer goes quiet.",
