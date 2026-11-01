@@ -77,12 +77,6 @@ class Captain::Assistant < ApplicationRecord
     }
   }.freeze
   CUSTOM_PROMPT_LENGTH_LIMIT = 1000
-  # Who the agent is and how it moves a conversation forward. Existing agents keep support; new ones adapt per conversation.
-  AGENT_ROLES = %w[adaptive support sales shopping custom].freeze
-  # Who visitors usually are. Customers keeps today's prompt; new agents decide per conversation.
-  VISITOR_AUDIENCES = %w[customers prospects detect].freeze
-  GREETING_MODES = %w[off ai fixed].freeze
-  WELCOME_MESSAGE_LENGTH_LIMIT = 300
   # "Can't do X → offer Y": what the agent says it can't do, and the next step it offers instead.
   LIMIT_OFFERS = %w[handoff email_followup link text].freeze
   MAX_LIMITS = 15
@@ -130,8 +124,7 @@ class Captain::Assistant < ApplicationRecord
                  :handoff_fallback_agent_id, :handoff_fallback_team_id, :tone, :off_limits_message, :business_type,
                  :handoff_when_online, :handoff_when_offline, :offline_handoff_message, :no_handoff_message, :handoff_rules,
                  :answer_length, :tone_prompt, :answer_length_prompt, :follow_up_questions, :helpful_links_mode,
-                 :handoff_form_message, :handoff_collect_name, :handoff_collect_phone,
-                 :agent_role, :agent_role_prompt, :visitor_audience, :greeting_mode, :welcome_message, :separate_follow_up, :limits
+                 :handoff_form_message, :handoff_collect_name, :handoff_collect_phone, :limits
 
   BOOLEAN_CONFIG_KEYS = %w[
     feature_faq
@@ -148,12 +141,10 @@ class Captain::Assistant < ApplicationRecord
     follow_up_questions
     handoff_collect_name
     handoff_collect_phone
-    separate_follow_up
   ].freeze
 
   before_validation :set_default_auto_resolve_mode, on: :create
   before_validation :set_knowledge_processing_version, on: :create
-  before_validation :set_conversation_defaults, on: :create
   before_validation :normalize_auto_resolve_after
   before_validation :normalize_boolean_config_attributes
   before_validation :normalize_max_suggested_replies
@@ -187,12 +178,6 @@ class Captain::Assistant < ApplicationRecord
   validates :handoff_when_online, :handoff_when_offline, inclusion: { in: Captain::Conversation::HandoffPolicy::ACTIONS }, allow_blank: true
   validates :offline_handoff_message, :no_handoff_message, :handoff_form_message, length: { maximum: HANDOFF_MESSAGE_LENGTH_LIMIT }
   validate :validate_handoff_rules
-  validates :agent_role, inclusion: { in: AGENT_ROLES }
-  validates :agent_role_prompt, presence: true, if: -> { agent_role == 'custom' }
-  validates :agent_role_prompt, length: { maximum: CUSTOM_PROMPT_LENGTH_LIMIT }
-  validates :visitor_audience, inclusion: { in: VISITOR_AUDIENCES }
-  validates :greeting_mode, inclusion: { in: GREETING_MODES }
-  validates :welcome_message, presence: true, length: { maximum: WELCOME_MESSAGE_LENGTH_LIMIT }, if: -> { greeting_mode == 'fixed' }
   validate :validate_limits
   validates :max_suggested_replies,
             numericality: {
@@ -234,16 +219,13 @@ class Captain::Assistant < ApplicationRecord
     config.fetch('auto_resolve_mode') { account&.captain_auto_resolve_mode || 'evaluated' }
   end
 
-  def agent_role = config.fetch('agent_role', 'support')
-  def visitor_audience = config.fetch('visitor_audience', 'customers')
-  def greeting_mode = config.fetch('greeting_mode', 'off')
-  def greeting? = greeting_mode != 'off'
+  # Fixed for every agent (Captain::Behaviour); values stored by older settings are ignored.
+  def agent_role = Captain::Behaviour::ROLE
+  def visitor_audience = 'detect'
+  def greeting_mode = 'ai'
+  def greeting? = Captain::Behaviour::WELCOME_ON_FIRST_REPLY
+  def separate_follow_up? = Captain::Behaviour::SEPARATE_FOLLOW_UP_ON_WIDGET
   def limits = config.fetch('limits', [])
-
-  # On unless turned off: on the widget the follow-up question gets its own bubble.
-  def separate_follow_up?
-    config['separate_follow_up'] != false
-  end
 
   def separate_parts_requested?
     (Array(response_guidelines) + scenarios.enabled.pluck(:instruction)).any? { |text| text.to_s.match?(SEPARATE_MESSAGE_PATTERN) }
@@ -424,8 +406,7 @@ class Captain::Assistant < ApplicationRecord
 
   # Who the agent is, who it talks to, how it opens a conversation and what it can't do.
   def conversation_prompt_context
-    { agent_role: agent_role, agent_role_prompt: agent_role_prompt.presence, visitor_audience: visitor_audience, greeting_mode: greeting_mode,
-      limits: limits }
+    { agent_role: agent_role, visitor_audience: visitor_audience, greeting_mode: greeting_mode, limits: limits }
   end
 
   def tone_instruction
@@ -542,10 +523,6 @@ class Captain::Assistant < ApplicationRecord
 
   def set_knowledge_processing_version
     self.config = { 'knowledge_processing_version' => 3 }.merge(config)
-  end
-
-  def set_conversation_defaults
-    self.config = { 'agent_role' => 'adaptive', 'visitor_audience' => 'detect', 'greeting_mode' => 'ai' }.merge(config)
   end
 
   def validate_limits

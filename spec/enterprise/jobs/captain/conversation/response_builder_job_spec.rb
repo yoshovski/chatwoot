@@ -586,20 +586,6 @@ RSpec.describe Captain::Conversation::ResponseBuilderJob, type: :job do
           .to eq(['You can pause a plan for up to three months.', 'Which plan are you on?'])
       end
 
-      context 'with a fixed welcome message' do
-        before do
-          assistant.update!(config: assistant.config.merge('greeting_mode' => 'fixed', 'welcome_message' => 'Welcome to Acme!'))
-          allow(mock_agent_runner_service).to receive(:last_run_result)
-            .and_return(Agents::RunResult.new(output: {}, messages: [], context: { state: { first_ai_reply: true } }, usage: nil))
-        end
-
-        it 'posts the welcome as its own message before the answer' do
-          described_class.perform_now(conversation, assistant)
-
-          expect(conversation.messages.outgoing.order(:id).pluck(:content)).to eq(['Welcome to Acme!', 'Hey, welcome to Captain V2'])
-        end
-      end
-
       context 'with suggested replies' do
         before do
           assistant.config['suggested_replies'] = true

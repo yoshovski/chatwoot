@@ -257,13 +257,6 @@ RSpec.describe Captain::Conversation::ReplyComposer do
       expect(question).to include(content: 'Which plan are you on?', content_type: 'input_select')
     end
 
-    it 'keeps one bubble when separate follow-up questions are off' do
-      assistant.update!(config: assistant.config.merge('separate_follow_up' => false))
-
-      expect(composer.messages.map { |message| message[:content] })
-        .to eq(['You can pause a plan for up to three months. Which plan are you on?'])
-    end
-
     it 'keeps one bubble on other channels' do
       inbox.update!(channel: create(:channel_sms, account: account))
 
@@ -347,32 +340,6 @@ RSpec.describe Captain::Conversation::ReplyComposer do
       inbox.update!(channel: create(:channel_email, account: account))
 
       expect(composer.messages.size).to eq(1)
-    end
-  end
-
-  describe '#welcome_message' do
-    let(:contact) { create(:contact, account: account, name: 'jamie rivera') }
-    let(:conversation) { create(:conversation, account: account, inbox: inbox, contact: contact) }
-    let(:assistant) do
-      create(:captain_assistant, account: account,
-                                 config: { 'greeting_mode' => 'fixed', 'welcome_message' => 'Hi {{contact.first_name}}, welcome!' })
-    end
-    let(:tool_state) { { first_ai_reply: true } }
-
-    it 'renders the fixed welcome for the first AI reply' do
-      expect(composer.welcome_message).to eq(content: 'Hi Jamie, welcome!', content_type: 'text', additional_attributes: {})
-    end
-
-    it 'sends nothing after an earlier reply or an opener' do
-      tool_state[:first_ai_reply] = false
-
-      expect(composer.welcome_message).to be_nil
-    end
-
-    it 'sends nothing when the AI greets itself' do
-      assistant.update!(config: assistant.config.merge('greeting_mode' => 'ai'))
-
-      expect(composer.welcome_message).to be_nil
     end
   end
 

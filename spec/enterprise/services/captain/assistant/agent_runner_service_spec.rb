@@ -667,12 +667,6 @@ RSpec.describe Captain::Assistant::AgentRunnerService do
       expect(service.send(:build_context, message_history)[:state][:first_ai_reply]).to be(false)
     end
 
-    it 'does not greet when the greeting is off' do
-      assistant.update!(config: assistant.config.merge('greeting_mode' => 'off'))
-
-      expect(service.send(:build_context, [{ role: 'user', content: 'Hi' }])[:state][:first_ai_reply]).to be(false)
-    end
-
     context 'when a campaign opened the conversation' do
       let(:campaign) { create(:campaign, account: account, title: 'Spring offer', message: 'Need help choosing?') }
       let(:conversation) { create(:conversation, account: account, inbox: inbox, contact: contact, campaign: campaign) }
