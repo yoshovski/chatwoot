@@ -1560,6 +1560,21 @@
       "AUTH_MECHANISM": "Authentication"
     },
     "NOTE": "Note: ",
+    "WIDGET_PREVIEW": {
+      "TITLE": "Widget preview",
+      "FRAME_TITLE": "Live preview of your chat widget",
+      "VIEW_LABEL": "Preview screen",
+      "VIEWS": {
+        "HOME": "Home",
+        "CONVERSATION": "Conversation",
+        "LAUNCHER": "Closed launcher"
+      },
+      "LIGHT": "Show in light mode",
+      "DARK": "Show in dark mode",
+      "MOBILE": "Show at mobile width",
+      "DESKTOP": "Show at desktop width",
+      "ERROR": "The preview couldn't load. Reload the page to try again."
+    },
     "WIDGET_BUILDER": {
       "WIDGET_OPTIONS": {
         "AVATAR": {

@@ -32,6 +32,7 @@ Rails.application.routes.draw do
     get '/app/accounts/:account_id/onboarding/inbox-setup', to: 'dashboard#index', as: 'app_onboarding_inbox_setup'
 
     resource :widget, only: [:show]
+    get '/widget/preview', to: 'widgets/previews#show', as: :widget_preview
     get '/demo/:id', to: 'demos#show', as: :inbox_demo
     namespace :survey do
       resources :responses, only: [:show]
@@ -380,6 +381,7 @@ Rails.application.routes.draw do
             post :register_webhook, on: :member
             post :reset_secret, on: :member
             post :rotate_hmac_token, on: :member
+            post :widget_preview_token, on: :member
             if ChatwootApp.enterprise?
               resource :conference, only: %i[create destroy], controller: 'conference' do
                 get :token, on: :member

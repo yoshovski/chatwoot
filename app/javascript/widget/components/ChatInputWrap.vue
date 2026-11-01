@@ -7,6 +7,7 @@ import ChatSendButton from 'widget/components/ChatSendButton.vue';
 import { useAttachments } from '../composables/useAttachments';
 import FluentIcon from 'shared/components/FluentIcon/Index.vue';
 import ResizableTextArea from 'shared/components/ResizableTextArea.vue';
+import { isPreviewMode } from 'widget/helpers/previewMode';
 
 const EmojiPicker = defineAsyncComponent(
   () => import('shared/components/emoji/EmojiPicker.vue')
@@ -41,6 +42,7 @@ export default {
       canHandleAttachments,
       shouldShowEmojiPicker,
       hasEmojiPickerEnabled,
+      isPreview: isPreviewMode(),
     };
   },
   data() {
@@ -94,6 +96,7 @@ export default {
       this.focusInput();
     },
     handleButtonClick() {
+      if (this.isPreview) return;
       if (this.attachedFile) {
         this.onSendAttachment({
           attachment: this.attachedFile,
@@ -175,6 +178,7 @@ export default {
       :rows="1"
       :aria-label="$t('CHAT_PLACEHOLDER')"
       :placeholder="$t('CHAT_PLACEHOLDER')"
+      :disabled="isPreview"
       class="reset-base h-8 min-h-8 max-h-40 w-full resize-none border-none bg-transparent px-0 py-1 text-base leading-6 text-n-slate-12 outline-none placeholder:text-n-slate-10"
       @typing-off="onTypingOff"
       @typing-on="onTypingOn"
@@ -205,9 +209,12 @@ export default {
         @select="onSelectEmoji"
         @keydown.esc="hideEmojiPicker"
       />
+      <span v-if="isPreview" class="ms-auto text-xs text-n-slate-10">
+        {{ $t('PREVIEW.COMPOSER_HINT') }}
+      </span>
       <ChatSendButton
-        class="ms-auto"
-        :disabled="!hasInput"
+        :class="{ 'ms-auto': !isPreview }"
+        :disabled="isPreview || !hasInput"
         @click="handleButtonClick"
       />
     </div>

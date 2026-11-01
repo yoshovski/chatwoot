@@ -24,10 +24,19 @@ import { SDK_SET_BUBBLE_VISIBILITY } from '../shared/constants/sharedFrameEvents
 import { emitter } from 'shared/helpers/mitt';
 import { getWidgetForegroundColor } from 'shared/helpers/colorHelper';
 import { recordWebsiteActivity } from './api/websiteActivity';
+import PreviewLauncher from './components/PreviewLauncher.vue';
+import {
+  isPreviewMode,
+  previewState,
+  setWidgetColorVariables,
+  startPreview,
+  PREVIEW_VIEWS,
+} from './helpers/previewMode';
 
 export default {
   name: 'App',
   components: {
+    PreviewLauncher,
     Spinner,
   },
   mixins: [configMixin],
@@ -36,7 +45,12 @@ export default {
     const router = useRouter();
     const { isInWorkingHours } = useAvailability();
 
-    return { prefersDarkMode, router, isInWorkingHours };
+    return {
+      prefersDarkMode,
+      router,
+      isInWorkingHours,
+      isPreview: isPreviewMode(),
+    };
   },
   data() {
     return {
@@ -71,6 +85,9 @@ export default {
     isUnreadOrCampaignView() {
       return ['unread-messages', 'campaigns'].includes(this.$route.name);
     },
+    showsPreviewLauncher() {
+      return this.isPreview && previewState.view === PREVIEW_VIEWS.LAUNCHER;
+    },
   },
   watch: {
     activeCampaign() {
@@ -99,7 +116,16 @@ export default {
     this.setLocale(locale);
     this.setWidgetColor(widgetColor);
     this.setWidgetTextColor(resolvedWidgetTextColor);
-    this.setWidgetColorVariables(widgetColor, resolvedWidgetTextColor);
+    setWidgetColorVariables(widgetColor, resolvedWidgetTextColor);
+    if (this.isPreview) {
+      startPreview({
+        store: this.$store,
+        router: this.router,
+        t: this.$t,
+        setLocale: this.setLocale,
+      });
+      return;
+    }
     setHeader(window.authToken);
     if (this.isIFrame) {
       this.registerListeners();
@@ -134,20 +160,6 @@ export default {
       'selectResponse',
     ]),
     ...mapActions('agent', ['fetchAvailableAgents']),
-    setWidgetColorVariables(widgetColor, widgetTextColor) {
-      if (widgetColor) {
-        document.documentElement.style.setProperty(
-          '--widget-color',
-          widgetColor
-        );
-      }
-      if (widgetTextColor) {
-        document.documentElement.style.setProperty(
-          '--widget-text-color',
-          widgetTextColor
-        );
-      }
-    },
     scrollConversationToBottom() {
       const container = this.$el.querySelector('.conversation-wrap');
       container.scrollTop = container.scrollHeight;
@@ -421,7 +433,8 @@ export default {
       dark: prefersDarkMode,
     }"
   >
-    <router-view />
+    <PreviewLauncher v-if="showsPreviewLauncher" />
+    <router-view v-else />
   </div>
 </template>
 

@@ -5,6 +5,7 @@ import { IFrameHelper } from 'widget/helpers/utils';
 import { shouldTriggerMessageUpdateEvent } from './IframeEventHelper';
 import { CHATWOOT_ON_MESSAGE } from '../constants/sdkEvents';
 import { emitter } from '../../shared/helpers/mitt';
+import { isPreviewMode } from './previewMode';
 
 const isMessageInActiveConversation = (getters, message) => {
   const { conversation_id: conversationId } = message;
@@ -145,5 +146,9 @@ class ActionCableConnector extends BaseActionCableConnector {
     }, 60000);
   };
 }
+
+// The settings preview has no visitor session, so it never opens a socket.
+export const connectWidgetSocket = (app, pubsubToken) =>
+  isPreviewMode() ? null : new ActionCableConnector(app, pubsubToken);
 
 export default ActionCableConnector;

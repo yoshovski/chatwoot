@@ -71,6 +71,53 @@ RSpec.describe 'Inboxes API', type: :request do
     end
   end
 
+  describe 'POST /api/v1/accounts/{account.id}/inboxes/{inbox.id}/widget_preview_token' do
+    let(:inbox) { create(:channel_widget, account: account).inbox }
+    let(:url) { "/api/v1/accounts/#{account.id}/inboxes/#{inbox.id}/widget_preview_token" }
+
+    it 'returns a signed preview token for an administrator' do
+      freeze_time do
+        post url, headers: admin.create_new_auth_token, as: :json
+
+        expect(response).to have_http_status(:ok)
+        expect(response.parsed_body['expires_at']).to eq(15.minutes.from_now.to_i)
+        expect(Widget::PreviewToken.verify(response.parsed_body['token'])).to include(inbox_id: inbox.id, user_id: admin.id)
+      end
+    end
+
+    it 'rejects an assigned agent' do
+      create(:inbox_member, user: agent, inbox: inbox)
+
+      post url, headers: agent.create_new_auth_token, as: :json
+
+      expect(response).to have_http_status(:unauthorized)
+    end
+
+    it 'rejects unauthenticated requests' do
+      post url, as: :json
+
+      expect(response).to have_http_status(:unauthorized)
+    end
+
+    it 'returns not found for an inbox belonging to another account' do
+      other_inbox = create(:channel_widget).inbox
+
+      post "/api/v1/accounts/#{account.id}/inboxes/#{other_inbox.id}/widget_preview_token",
+           headers: admin.create_new_auth_token, as: :json
+
+      expect(response).to have_http_status(:not_found)
+    end
+
+    it 'returns not found for an inbox that is not a web widget' do
+      email_inbox = create(:inbox, :with_email, account: account)
+
+      post "/api/v1/accounts/#{account.id}/inboxes/#{email_inbox.id}/widget_preview_token",
+           headers: admin.create_new_auth_token, as: :json
+
+      expect(response).to have_http_status(:not_found)
+    end
+  end
+
   describe 'GET /api/v1/accounts/{account.id}/inboxes' do
     context 'when it is an unauthenticated user' do
       it 'returns unauthorized' do
