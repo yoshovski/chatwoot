@@ -137,5 +137,24 @@ RSpec.describe 'Api::V1::Accounts::Captain::GuidedSetup', type: :request do
       stub_request(:get, 'https://www.example.com').to_return(status: 500)
       expect(check).to eq('unreachable')
     end
+
+    it 'checks the website inbox it is given' do
+      other_channel = create(:channel_widget, account: account, website_url: 'https://www.example.com')
+      stub_request(:get, 'https://www.example.com').to_return(body: "<script>websiteToken: '#{other_channel.website_token}'</script>")
+
+      post "#{base_url}/check_installation", params: { inbox_id: other_channel.inbox.id }, headers: admin.create_new_auth_token, as: :json
+
+      expect(json_response['status']).to eq('script_found')
+    end
+
+    it 'does not check an inbox of another account or one that is not a website' do
+      post "#{base_url}/check_installation", params: { inbox_id: create(:channel_widget).inbox.id },
+                                             headers: admin.create_new_auth_token, as: :json
+      expect(response).to have_http_status(:not_found)
+
+      post "#{base_url}/check_installation", params: { inbox_id: create(:inbox, :with_email, account: account).id },
+                                             headers: admin.create_new_auth_token, as: :json
+      expect(response).to have_http_status(:not_found)
+    end
   end
 end

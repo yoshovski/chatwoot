@@ -3,9 +3,11 @@ import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useAlert } from 'dashboard/composables';
 import { copyTextToClipboard } from 'shared/helpers/clipboard';
+import { dedentScript } from 'dashboard/helper/widgetScript';
 import Button from 'dashboard/components-next/button/Button.vue';
 import Icon from 'dashboard/components-next/icon/Icon.vue';
 import StepIntro from './StepIntro.vue';
+import InstallCheckResult from './InstallCheckResult.vue';
 
 const props = defineProps({
   guided: { type: Object, required: true },
@@ -13,49 +15,14 @@ const props = defineProps({
 
 defineEmits(['open']);
 
-const RESULT_STYLE = {
-  installed: {
-    icon: 'i-lucide-circle-check',
-    tone: 'text-n-teal-10',
-    text: 'HOME.GUIDED.INSTALL.RESULT.INSTALLED',
-  },
-  script_found: {
-    icon: 'i-lucide-clock',
-    tone: 'text-n-amber-10',
-    text: 'HOME.GUIDED.INSTALL.RESULT.SCRIPT_FOUND',
-  },
-  not_found: {
-    icon: 'i-lucide-circle-alert',
-    tone: 'text-n-amber-10',
-    text: 'HOME.GUIDED.INSTALL.RESULT.NOT_FOUND',
-  },
-  unreachable: {
-    icon: 'i-lucide-circle-x',
-    tone: 'text-n-ruby-10',
-    text: 'HOME.GUIDED.INSTALL.RESULT.UNREACHABLE',
-  },
-  error: {
-    icon: 'i-lucide-circle-x',
-    tone: 'text-n-ruby-10',
-    text: 'HOME.GUIDED.INSTALL.RESULT.ERROR',
-  },
-};
-
 const { t } = useI18n();
 const isChecking = ref(false);
 const result = ref(props.guided.setup?.chat_widget ? 'installed' : '');
 
 const inbox = computed(() => props.guided.state?.widget_inbox);
-// The server's script is indented for an ERB template; drop the shared indent so it pastes cleanly.
-const dedent = text => {
-  const lines = text.replace(/^\n+|\s+$/g, '').split('\n');
-  const indents = lines
-    .filter(line => line.trim())
-    .map(line => line.match(/^\s*/)[0].length);
-  const shared = Math.min(...indents);
-  return lines.map(line => line.slice(shared)).join('\n');
-};
-const snippet = computed(() => dedent(inbox.value?.web_widget_script || ''));
+const snippet = computed(() =>
+  dedentScript(inbox.value?.web_widget_script || '')
+);
 const site = computed(() => {
   try {
     return new URL(inbox.value.website_url).host.replace(/^www\./, '');
@@ -63,9 +30,6 @@ const site = computed(() => {
     return inbox.value?.website_url || '';
   }
 });
-const resultText = computed(() =>
-  t(RESULT_STYLE[result.value].text, { site: site.value })
-);
 
 const copy = async () => {
   await copyTextToClipboard(snippet.value);
@@ -147,18 +111,11 @@ const check = async () => {
             />
           </router-link>
         </div>
-        <p
+        <InstallCheckResult
           v-if="result && !isChecking"
-          role="status"
-          class="mb-0 flex items-start gap-2 text-sm text-n-slate-11"
-        >
-          <Icon
-            :icon="RESULT_STYLE[result].icon"
-            class="mt-0.5 size-4 shrink-0"
-            :class="RESULT_STYLE[result].tone"
-          />
-          {{ resultText }}
-        </p>
+          :result="result"
+          :site="site"
+        />
       </div>
     </template>
   </div>

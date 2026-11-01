@@ -318,6 +318,7 @@ export default {
           this.fetchOldConversations().then(() => {
             this.setUnreadView();
             if (this.messageCount) recordWebsiteActivity();
+            if (message.showHome === false) this.skipHomeScreen();
           });
           this.fetchAvailableAgents(websiteToken);
           this.setAppConfig(message);
@@ -396,6 +397,15 @@ export default {
         } else if (message.event === SDK_SET_BUBBLE_VISIBILITY) {
           this.setBubbleVisibility(message.hideMessageBubble);
         }
+      });
+    },
+    // The install snippet can open the widget straight into the conversation.
+    skipHomeScreen() {
+      if (this.$route.name !== 'home') return;
+      const showsPreChatForm =
+        this.shouldShowPreChatForm && !this.conversationSize;
+      this.router.replace({
+        name: showsPreChatForm ? 'prechat-form' : 'messages',
       });
     },
     sendLoadedEvent() {

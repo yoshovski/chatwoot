@@ -18,8 +18,11 @@ class CaptainGuidedSetup extends ApiClient {
     return axios.post(`${this.url}/go_live`);
   }
 
-  checkInstallation() {
-    return axios.post(`${this.url}/check_installation`);
+  checkInstallation(inboxId) {
+    return axios.post(
+      `${this.url}/check_installation`,
+      inboxId ? { inbox_id: inboxId } : {}
+    );
   }
 }
 
