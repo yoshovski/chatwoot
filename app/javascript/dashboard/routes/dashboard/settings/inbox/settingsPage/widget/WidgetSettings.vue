@@ -188,7 +188,7 @@ onMounted(loadAiAgent);
 
 <template>
   <div
-    class="grid items-start gap-6 lg:gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,26rem)]"
+    class="grid grid-cols-1 items-start gap-6 lg:gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,26rem)]"
   >
     <div class="flex flex-col min-w-0 gap-6">
       <WidgetEssentials
