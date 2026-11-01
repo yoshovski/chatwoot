@@ -136,6 +136,17 @@ RSpec.describe Captain::AssistantMigration::DraftApplier do
       )
     end
 
+    it 'keeps imported greeting copy as an instruction for the first reply' do
+      draft[:conversation_messages] = { welcome_message: 'Welcome to Fernbrook Gardens!', handoff_message: 'A gardener will join shortly.' }
+
+      described_class.new(assistant: assistant, draft: draft, dry_run: false).perform
+      assistant.reload
+
+      expect(assistant.response_guidelines).to include('Use this welcome on the first reply: Welcome to Fernbrook Gardens!')
+      expect(assistant.config).not_to have_key('welcome_message')
+      expect(assistant.config['handoff_message']).to eq('A gardener will join shortly.')
+    end
+
     it 'rejects an oversized assistant description from a stale draft' do
       long_context = 'This assistant supports a very broad product surface with many long details. ' * 10
       original_description = assistant.description

@@ -62,7 +62,13 @@ class Captain::AssistantMigration::DraftApplier
   end
 
   def response_guidelines
-    (Array(assistant.response_guidelines) + item_values(:response_guidelines) + scenario_response_guidelines).uniq
+    (Array(assistant.response_guidelines) + item_values(:response_guidelines) + welcome_guideline + scenario_response_guidelines).uniq
+  end
+
+  # Every agent writes its own welcome on the first reply (Captain::Behaviour); imported greeting copy guides it.
+  def welcome_guideline
+    welcome = draft_hash.dig(:conversation_messages, :welcome_message).to_s.squish
+    welcome.present? ? ["Use this welcome on the first reply: #{welcome}"] : []
   end
 
   def guardrails
@@ -130,7 +136,6 @@ class Captain::AssistantMigration::DraftApplier
     messages = messages.deep_stringify_keys
 
     {
-      'welcome_message' => messages['welcome_message'].to_s.strip,
       'handoff_message' => messages['handoff_message'].to_s.strip,
       'resolution_message' => messages['resolution_message'].to_s.strip
     }
