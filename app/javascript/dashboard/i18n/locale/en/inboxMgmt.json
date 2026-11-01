@@ -1679,39 +1679,11 @@
             "ERROR_MESSAGE": "Unable to update widget settings"
           }
         },
-        "WIDGET_VIEW_OPTION": {
-          "PREVIEW": "Preview",
-          "SCRIPT": "Script"
-        },
         "WIDGET_BUBBLE_POSITION": {
           "LEFT": "Left",
           "RIGHT": "Right"
         }
-      },
-      "WIDGET_SCREEN": {
-        "DEFAULT": "Default",
-        "CHAT": "Chat mode"
-      },
-      "REPLY_TIME": {
-        "IMMEDIATELY": "We reply immediately",
-        "IN_A_FEW_MINUTES": "Typically replies in a few minutes",
-        "IN_A_FEW_HOURS": "Typically replies in a few hours",
-        "IN_A_DAY": "Typically replies in a day"
-      },
-      "FOOTER": {
-        "START_CONVERSATION_BUTTON_TEXT": "Start Conversation",
-        "CHAT_INPUT_PLACEHOLDER": "Type your message"
-      },
-      "BODY": {
-        "TEAM_AVAILABILITY": {
-          "ONLINE": "We are Online",
-          "OFFLINE": "We are away at the moment"
-        },
-        "USER_MESSAGE": "Hi",
-        "AGENT_MESSAGE": "Hello"
-      },
-      "BRANDING_TEXT": "Powered by Chatwoot",
-      "SCRIPT_SETTINGS": "\n      window.chatwootSettings = {options};"
+      }
     },
     "EMAIL_PROVIDERS": {
       "MICROSOFT": {
