@@ -257,11 +257,11 @@ RSpec.describe Captain::Conversation::ReplyComposer do
       expect(question).to include(content: 'Which plan are you on?', content_type: 'input_select')
     end
 
-    it 'keeps one bubble when separate follow-up questions are off' do
+    it 'still asks the question in its own bubble when an older setting turned that off' do
       assistant.update!(config: assistant.config.merge('separate_follow_up' => false))
 
       expect(composer.messages.map { |message| message[:content] })
-        .to eq(['You can pause a plan for up to three months. Which plan are you on?'])
+        .to eq(['You can pause a plan for up to three months.', 'Which plan are you on?'])
     end
 
     it 'keeps one bubble on other channels' do
@@ -309,22 +309,6 @@ RSpec.describe Captain::Conversation::ReplyComposer do
                                            citation_titles: { 1 => 'Trial', 2 => 'Teams' })
     end
 
-    it 'starts a new bubble at each listed part, at most three, with the buttons on the last one' do
-      messages = composer.messages
-
-      expect(messages.map { |message| message[:content] })
-        .to eq(['Our trial lasts 14 days.', 'You can add teammates at any time.', "Exports work on every plan.\n\nHow large is your team?"])
-      expect(messages.map { |message| message[:content_type] }).to eq(%w[text text input_select])
-    end
-
-    it 'keeps each source on the bubble that cites it' do
-      first, second, last = composer.messages
-
-      expect(first[:content_attributes]['captain_sources']).to eq([{ 'title' => 'Trial', 'url' => 'https://example.com/trial' }])
-      expect(second[:content_attributes]['captain_sources']).to eq([{ 'title' => 'Teams', 'url' => 'https://example.com/teams' }])
-      expect(last[:content_attributes]).not_to have_key('captain_sources')
-    end
-
     it 'opens the first bubble with the AI welcome and still splits at the listed parts' do
       response['welcome'] = 'Hi there, thanks for asking!'
 
@@ -332,14 +316,24 @@ RSpec.describe Captain::Conversation::ReplyComposer do
         .to eq(["Hi there, thanks for asking!\n\nOur trial lasts 14 days.", 'You can add teammates at any time.'])
     end
 
-    it 'sends the AI welcome once when the model repeats it and still splits at the listed part' do
+    it 'starts a new bubble at each listed part, at most three, and asks the closing question in its own bubble' do
+      messages = composer.messages
+
+      expect(messages.map { |message| message[:content] })
+        .to eq(['Our trial lasts 14 days.', 'You can add teammates at any time.', 'Exports work on every plan.', 'How large is your team?'])
+      expect(messages.map { |message| message[:content_type] }).to eq(%w[text text text input_select])
+      expect(messages.first(2).map { |message| message[:content_attributes]['captain_sources'] })
+        .to eq([[{ 'title' => 'Trial', 'url' => 'https://example.com/trial' }], [{ 'title' => 'Teams', 'url' => 'https://example.com/teams' }]])
+    end
+
+    it 'sends the AI welcome once when the model repeats it and still splits at the listed part and the question' do
       response['welcome'] = 'Hi there, thanks for asking!'
       response['response_parts'].unshift({ 'text' => 'Hi there, thanks for asking!', 'citation_indexes' => [] })
       response['separate_parts'] = [2]
       contents = composer.messages.map { |message| message[:content] }
 
       expect(contents).to eq(["Hi there, thanks for asking!\n\nOur trial lasts 14 days.",
-                              "You can add teammates at any time.\n\nExports work on every plan.\n\nHow large is your team?"])
+                              "You can add teammates at any time.\n\nExports work on every plan.", 'How large is your team?'])
       expect(contents.join.scan('thanks for asking').size).to eq(1)
     end
 
@@ -347,32 +341,6 @@ RSpec.describe Captain::Conversation::ReplyComposer do
       inbox.update!(channel: create(:channel_email, account: account))
 
       expect(composer.messages.size).to eq(1)
-    end
-  end
-
-  describe '#welcome_message' do
-    let(:contact) { create(:contact, account: account, name: 'jamie rivera') }
-    let(:conversation) { create(:conversation, account: account, inbox: inbox, contact: contact) }
-    let(:assistant) do
-      create(:captain_assistant, account: account,
-                                 config: { 'greeting_mode' => 'fixed', 'welcome_message' => 'Hi {{contact.first_name}}, welcome!' })
-    end
-    let(:tool_state) { { first_ai_reply: true } }
-
-    it 'renders the fixed welcome for the first AI reply' do
-      expect(composer.welcome_message).to eq(content: 'Hi Jamie, welcome!', content_type: 'text', additional_attributes: {})
-    end
-
-    it 'sends nothing after an earlier reply or an opener' do
-      tool_state[:first_ai_reply] = false
-
-      expect(composer.welcome_message).to be_nil
-    end
-
-    it 'sends nothing when the AI greets itself' do
-      assistant.update!(config: assistant.config.merge('greeting_mode' => 'ai'))
-
-      expect(composer.welcome_message).to be_nil
     end
   end
 

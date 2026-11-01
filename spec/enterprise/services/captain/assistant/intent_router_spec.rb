@@ -8,8 +8,10 @@ RSpec.describe Captain::Assistant::IntentRouter do
   let(:context) { { conversation_history: [], state: {} } }
 
   describe 'greetings' do
-    it 'answers a plain hello with the canned text when the greeting is off' do
-      expect(router.classify(message: 'Hi!', context: context)).to include('intent' => 'smalltalk', 'canned_response' => 'Hello!')
+    it 'routes a plain hello to the model without canned text, whatever an older setting stored' do
+      route = router.classify(message: 'Thank you!', context: context)
+
+      expect(route).to eq('intent' => 'smalltalk', 'queries' => [], 'reason' => 'greeting')
     end
 
     it 'lets the model greet in the agent voice when the greeting is on' do

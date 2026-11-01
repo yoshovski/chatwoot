@@ -58,7 +58,6 @@ class Captain::AssistantMigration::InstructionClassifier < Captain::BaseTaskServ
       description: assistant.description,
       product_name: assistant.config['product_name'],
       instructions: truncated_instructions,
-      welcome_message: assistant.config['welcome_message'],
       handoff_message: assistant.config['handoff_message'],
       resolution_message: assistant.config['resolution_message'],
       existing_response_guidelines: assistant.response_guidelines || [],
@@ -160,7 +159,6 @@ class Captain::AssistantMigration::InstructionClassifier < Captain::BaseTaskServ
       inbox_count: assistant.captain_inboxes.size,
       instruction_length: assistant.config['instructions'].to_s.length,
       original_instructions: assistant.config['instructions'].to_s,
-      welcome_message: assistant.config['welcome_message'].to_s,
       handoff_message: assistant.config['handoff_message'].to_s,
       resolution_message: assistant.config['resolution_message'].to_s
     }

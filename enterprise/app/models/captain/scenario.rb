@@ -78,7 +78,7 @@ class Captain::Scenario < ApplicationRecord
       guardrails: guardrails || [],
       off_limits_message: assistant.off_limits_message.presence,
       product_name: product_name || 'this product',
-      **assistant.conversation_prompt_context.slice(:visitor_audience, :limits)
+      limits: assistant.limits
     }
   end
 

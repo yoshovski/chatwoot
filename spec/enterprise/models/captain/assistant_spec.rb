@@ -173,58 +173,6 @@ RSpec.describe Captain::Assistant, type: :model do
     end
   end
 
-  describe 'conversation settings' do
-    it 'keeps the current behaviour for agents saved before these settings existed' do
-      assistant = build(:captain_assistant, account: account, config: {})
-
-      expect(assistant).to have_attributes(agent_role: 'support', visitor_audience: 'customers', greeting_mode: 'off', limits: [])
-      expect(assistant.separate_follow_up?).to be(true)
-      expect(assistant.greeting?).to be(false)
-    end
-
-    it 'adapts the role and audience per conversation and greets for new agents' do
-      expect(assistant).to have_attributes(agent_role: 'adaptive', visitor_audience: 'detect', greeting_mode: 'ai')
-    end
-
-    it 'keeps choices sent on create' do
-      assistant = create(:captain_assistant, account: account, config: { 'visitor_audience' => 'prospects', 'greeting_mode' => 'off' })
-
-      expect(assistant).to have_attributes(visitor_audience: 'prospects', greeting_mode: 'off')
-    end
-
-    it 'turns separate follow-up questions off only when set to false' do
-      assistant.config['separate_follow_up'] = 'false'
-      assistant.validate
-
-      expect(assistant.separate_follow_up?).to be(false)
-    end
-
-    it 'rejects unknown roles, audiences and greeting modes' do
-      { 'agent_role' => 'pirate', 'visitor_audience' => 'everyone', 'greeting_mode' => 'loud' }.each do |key, value|
-        assistant.config[key] = value
-        expect(assistant).not_to be_valid
-        assistant.config.delete(key)
-      end
-    end
-
-    it 'requires the custom role text and the fixed welcome message' do
-      assistant.config.merge!('agent_role' => 'custom', 'greeting_mode' => 'fixed')
-
-      expect(assistant).not_to be_valid
-      expect(assistant.errors[:agent_role_prompt]).to be_present
-      expect(assistant.errors[:welcome_message]).to be_present
-
-      assistant.config.merge!('agent_role_prompt' => 'You help gardeners choose seeds.', 'welcome_message' => 'Hi {{contact.first_name}}!')
-      expect(assistant).to be_valid
-    end
-
-    it 'allows a long welcome message from an earlier setup while the greeting is not fixed' do
-      assistant.config['welcome_message'] = 'a' * 400
-
-      expect(assistant).to be_valid
-    end
-  end
-
   describe '#separate_parts_requested?' do
     it 'is true when a guideline or an enabled scenario asks for a separate message' do
       expect(assistant.separate_parts_requested?).to be(false)

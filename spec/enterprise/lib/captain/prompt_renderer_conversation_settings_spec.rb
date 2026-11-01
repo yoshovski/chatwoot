@@ -9,25 +9,6 @@ RSpec.describe Captain::PromptRenderer do
   let(:direct_prompt) { described_class.render('direct_response', context.with_indifferent_access) }
 
   describe 'role' do
-    it 'keeps the support identity of each prompt' do
-      assistant.update!(config: config.merge('agent_role' => 'support'))
-
-      expect(assistant_prompt).to include('You are Ava, a helpful, friendly, and knowledgeable assistant for Acme Streaming Tools.')
-      expect(assistant_prompt).to include('Help with anything Acme Streaming Tools offers')
-      expect(direct_prompt).to include('You are Ava, the customer support assistant for Acme Streaming Tools.')
-    end
-
-    context 'with the sales role' do
-      let(:config) { { 'product_name' => 'Acme Streaming Tools', 'agent_role' => 'sales' } }
-
-      it 'helps visitors find out whether the product fits in both prompts' do
-        identity = 'You are Ava, who helps visitors find out whether Acme Streaming Tools fits their needs.'
-        expect([assistant_prompt, direct_prompt]).to all(include(identity))
-        expect(direct_prompt).not_to include('customer support assistant')
-        expect(assistant_prompt).to include('Help with anything Acme Streaming Tools offers')
-      end
-    end
-
     context 'with the all-round role' do
       let(:config) { { 'product_name' => 'Acme Streaming Tools', 'agent_role' => 'adaptive' } }
 
@@ -40,47 +21,24 @@ RSpec.describe Captain::PromptRenderer do
         expect(direct_prompt).not_to include('customer support assistant')
       end
     end
-
-    context 'with the shopping role' do
-      let(:config) { { 'product_name' => 'Acme Garden', 'agent_role' => 'shopping' } }
-
-      it 'helps shoppers find the right product' do
-        expect([assistant_prompt, direct_prompt]).to all(include('You are Ava, who helps shoppers find the right product at Acme Garden.'))
-      end
-    end
-
-    context 'with a custom role' do
-      let(:config) do
-        { 'product_name' => 'Acme Garden', 'agent_role' => 'custom', 'agent_role_prompt' => 'You help gardeners plan their beds.' }
-      end
-
-      it 'uses the custom text after the name and product' do
-        expect([assistant_prompt, direct_prompt]).to all(include('You are Ava, the assistant for Acme Garden. You help gardeners plan their beds.'))
-      end
-    end
   end
 
-  describe 'audience' do
-    it 'adds nothing for customers' do
-      assistant.update!(config: config.merge('visitor_audience' => 'customers'))
-
-      expect(assistant_prompt).not_to include('# Visitors')
-      expect(direct_prompt).not_to include('# Visitors')
+  describe 'fixed role' do
+    let(:config) do
+      { 'product_name' => 'Fernbrook Gardens', 'agent_role' => 'custom', 'agent_role_prompt' => 'You only talk about roses.',
+        'visitor_audience' => 'customers' }
     end
 
-    context 'with prospects' do
-      let(:config) { { 'product_name' => 'Acme Streaming Tools', 'visitor_audience' => 'prospects' } }
-
-      it 'explains what is possible instead of click paths' do
-        expect([assistant_prompt, direct_prompt]).to all(include('Visitors are usually not customers yet', "Don't give in-product click paths"))
-      end
-    end
-
-    context 'with detect' do
-      let(:config) { { 'product_name' => 'Acme Streaming Tools', 'visitor_audience' => 'detect' } }
-
-      it 'decides from what the visitor says' do
-        expect([assistant_prompt, direct_prompt]).to all(include('Visitors may be prospects or existing customers', 'at most one short setup hint'))
+    it 'tells customers, prospects and shoppers apart in both prompts, whatever an older setting stored' do
+      expect([assistant_prompt, direct_prompt]).to all(include(
+                                                         'You are Ava, the assistant for Fernbrook Gardens.',
+                                                         'solve their problem fully, without a sales pitch',
+                                                         "Don't give in-product click paths, admin steps or settings locations",
+                                                         'find the best fit',
+                                                         'at most one short setup hint'
+                                                       ))
+      [assistant_prompt, direct_prompt].each do |prompt|
+        expect(prompt).not_to include('You only talk about roses.', '# Visitors', 'customer support assistant')
       end
     end
   end
@@ -92,12 +50,6 @@ RSpec.describe Captain::PromptRenderer do
 
     it 'is not shown without lead capture' do
       assistant.update!(config: config.merge('agent_role' => 'sales'))
-
-      expect(direct_prompt).not_to include('Business interest:')
-    end
-
-    it 'is not shown to a support agent for customers' do
-      assistant.update!(config: config.merge(lead_config, 'visitor_audience' => 'customers'))
 
       expect(direct_prompt).not_to include('Business interest:')
     end
@@ -139,19 +91,13 @@ RSpec.describe Captain::PromptRenderer do
       expect(prompts).to all(include('Write a short, warm welcome'))
     end
 
-    it 'does not greet in later replies or with the greeting off' do
-      expect(assistant_prompt).not_to include('warm welcome')
-      assistant.update!(config: config.merge('greeting_mode' => 'off'))
-
-      expect(described_class.render('direct_response', assistant.prompt_context.merge(first_ai_reply: true).with_indifferent_access))
-        .not_to include('warm welcome')
-    end
-
-    it 'answers directly after a fixed welcome message' do
+    it 'welcomes only in the first reply, whatever an older setting stored' do
       assistant.update!(config: config.merge('greeting_mode' => 'fixed', 'welcome_message' => 'Hi there!'))
-      prompt = described_class.render('assistant', assistant.prompt_context.merge(first_ai_reply: true).with_indifferent_access)
+      first_reply = described_class.render('direct_response', assistant.prompt_context.merge(first_ai_reply: true).with_indifferent_access)
 
-      expect(prompt).to include("A welcome message is sent just before your reply, so don't greet")
+      expect(first_reply).to include('Write a short, warm welcome')
+      expect(first_reply).not_to include('A welcome message is sent just before your reply')
+      expect(assistant_prompt).not_to include('warm welcome')
     end
   end
 
@@ -188,16 +134,12 @@ RSpec.describe Captain::PromptRenderer do
   end
 
   describe 'scenario prompt' do
-    let(:config) do
-      { 'product_name' => 'Acme Streaming Tools', 'visitor_audience' => 'prospects',
-        'limits' => [{ 'cannot' => 'issue refunds', 'offer' => 'handoff' }] }
-    end
-    let(:scenario) { create(:captain_scenario, assistant: assistant, title: 'Demo request', instruction: 'Ask for the company size.') }
+    let(:config) { { 'product_name' => 'Fernbrook Gardens', 'limits' => [{ 'cannot' => 'issue refunds', 'offer' => 'handoff' }] } }
+    let(:scenario) { create(:captain_scenario, assistant: assistant, title: 'Planting plan', instruction: 'Ask for the bed size.') }
     let(:scenario_prompt) { described_class.render('scenario', scenario.prompt_context.with_indifferent_access) }
 
-    it 'knows what the agent cannot do and who the visitors are' do
-      expect(scenario_prompt).to include("You can't issue refunds. Bring in a colleague with `captain--tools--handoff`",
-                                         'Visitors are usually not customers yet; they want to know what Acme Streaming Tools can do')
+    it 'knows what the agent cannot do' do
+      expect(scenario_prompt).to include("You can't issue refunds. Bring in a colleague with `captain--tools--handoff`")
     end
   end
 

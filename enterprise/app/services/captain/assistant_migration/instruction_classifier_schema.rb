@@ -55,6 +55,7 @@ class Captain::AssistantMigration::InstructionClassifierSchema < RubyLLM::Schema
   object :conversation_messages, description: 'Exact globally reusable customer-facing message copy found in instructions. ' \
                                               'Leave empty for conditional, placeholder, or workflow-specific copy.' do
     string :welcome_message, description: 'Exact globally reusable initial greeting copy from instructions, or empty string. ' \
+                                          'It becomes an instruction for the first reply. ' \
                                           'Do not convert an instruction about greeting into message copy.',
                              max_length: 1000
     string :handoff_message,

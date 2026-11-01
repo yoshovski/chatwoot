@@ -8,10 +8,6 @@ json.config resource.client_config.merge(
   'product_cards' => resource.product_cards?,
   'link_allowlist' => resource.link_allowlist,
   'image_allowlist' => resource.image_allowlist,
-  'agent_role' => resource.agent_role,
-  'visitor_audience' => resource.visitor_audience,
-  'greeting_mode' => resource.greeting_mode,
-  'separate_follow_up' => resource.separate_follow_up?,
   'limits' => resource.limits
 )
 json.created_at resource.created_at.to_i

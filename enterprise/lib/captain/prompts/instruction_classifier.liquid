@@ -83,8 +83,9 @@ The original custom instructions remain stored unchanged. Your job is only to de
 
 - Extract only exact, globally reusable welcome, handoff, or resolution copy found in the custom instructions.
 - Leave conditional, scenario-specific, placeholder-based, or merely suggested wording out of conversation_messages.
-- Existing config messages remain active and are preserved. If source wording has the same intent, keep the existing config message.
-- Migration applies extracted copy only when the corresponding existing config field is blank.
+- Extracted welcome copy becomes a response guideline for the first reply. Leave welcome_message empty when existing_response_guidelines already set a welcome.
+- Existing handoff and resolution config messages remain active and are preserved. If source wording has the same intent, keep the existing config message.
+- Migration applies extracted handoff or resolution copy only when the corresponding existing config field is blank.
 
 ## FAQ Candidates
 

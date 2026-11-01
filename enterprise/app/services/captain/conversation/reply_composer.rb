@@ -25,14 +25,6 @@ class Captain::Conversation::ReplyComposer # rubocop:disable Metrics/ClassLength
     reply_messages(true) << Captain::Tools::ActionConfirmation.card_payload(action_confirmation, assistant.account.locale)
   end
 
-  # The fixed welcome message, sent as its own bubble before the first AI reply of a conversation.
-  def welcome_message
-    return unless assistant.greeting_mode == 'fixed' && run_result&.context&.dig(:state, :first_ai_reply) == true
-
-    content = Liquid::Template.parse(assistant.welcome_message).render('contact' => ContactDrop.new(conversation&.contact)).strip
-    { content: content, content_type: 'text', additional_attributes: {} } if content.present?
-  end
-
   def empty_response?
     formatted_prose.blank? && !catalog_searches_empty? && !customer_message_has_attachments? && !model_returned_answer?
   end
@@ -124,7 +116,8 @@ class Captain::Conversation::ReplyComposer # rubocop:disable Metrics/ClassLength
   # On the widget (and the playground) the follow-up question gets its own bubble; a qualification question always does.
   # With cards, the question keeps its place: after the cards with its buttons, or in the intro without them.
   def separate_closing_question?(question)
-    question.present? && widget? && (qualification_reply? || (assistant.separate_follow_up? && !contains_cards? && answer_before?(question)))
+    question.present? && widget? &&
+      (qualification_reply? || (Captain::Behaviour::SEPARATE_FOLLOW_UP_ON_WIDGET && !contains_cards? && answer_before?(question)))
   end
 
   # A short greeting such as "Hi! How can I help?" stays one bubble, and so does the empty-answer fallback.

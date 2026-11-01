@@ -215,18 +215,16 @@ RSpec.describe 'Api::V1::Accounts::Captain::Assistants', type: :request do
         expect(assistant.reload.config).to include(handoff.stringify_keys)
       end
 
-      it 'saves how the agent talks and what it cannot do' do
-        conversation = { agent_role: 'sales', visitor_audience: 'prospects', greeting_mode: 'fixed', welcome_message: 'Hi there!',
-                         separate_follow_up: false, limits: [{ cannot: 'issue refunds', offer: 'handoff' },
-                                                             { cannot: 'give legal advice', offer: 'link', value: 'https://example.com/legal' }] }
+      it 'saves what the agent cannot do and ignores the removed behaviour settings' do
+        limits = [{ cannot: 'issue refunds', offer: 'handoff' }, { cannot: 'give legal advice', offer: 'link', value: 'https://example.com/legal' }]
 
         patch "/api/v1/accounts/#{account.id}/captain/assistants/#{assistant.id}",
-              params: { assistant: { config: conversation } }, headers: admin.create_new_auth_token, as: :json
+              params: { assistant: { config: { limits: limits, agent_role: 'sales', greeting_mode: 'fixed', welcome_message: 'Hi there!' } } },
+              headers: admin.create_new_auth_token, as: :json
 
         expect(response).to have_http_status(:success)
-        expect(assistant.reload.config).to include(conversation.deep_stringify_keys)
-        expect(json_response[:config]).to include(agent_role: 'sales', visitor_audience: 'prospects', greeting_mode: 'fixed',
-                                                  separate_follow_up: false)
+        expect(assistant.reload.config['limits']).to eq(limits.map(&:stringify_keys))
+        expect(assistant.config.keys).not_to include('agent_role', 'greeting_mode', 'welcome_message')
         expect(json_response[:config][:limits].size).to eq(2)
       end
 

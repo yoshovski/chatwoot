@@ -228,6 +228,9 @@ const addAllExample = async () => {
             </BulkSelectBar>
           </div>
         </div>
+        <p class="m-0 text-sm text-n-slate-11">
+          {{ t('CAPTAIN.ASSISTANTS.SETTINGS.BEHAVIOR.RULES.EXPLAINER') }}
+        </p>
         <SuggestedRules
           v-if="shouldShowSuggestedRules"
           :title="t('CAPTAIN.ASSISTANTS.RESPONSE_GUIDELINES.TITLE')"
