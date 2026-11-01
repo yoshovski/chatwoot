@@ -9,9 +9,11 @@ class Captain::Assistant::DirectResponseService
                           'Use the exact endpoint supplied for the selected platform. If it is missing, ask which platform applies ' \
                           'or explain that the endpoint is not supplied. Never invent a URL or leave an empty placeholder.'.freeze
 
-  def initialize(assistant:, response_schema:)
+  # runtime_configuration: the playground's unsaved rules, scenarios and reference text.
+  def initialize(assistant:, response_schema:, runtime_configuration: nil)
     @assistant = assistant
     @response_schema = response_schema
+    @runtime_configuration = runtime_configuration
   end
 
   def run(message:, context:, route:)
@@ -164,7 +166,9 @@ class Captain::Assistant::DirectResponseService
   end
 
   def prompt_context(context)
-    @assistant.prompt_context.merge(
+    base = @assistant.prompt_context
+    base = @runtime_configuration.prompt_context_for(@assistant, base) if @runtime_configuration
+    base.merge(
       message_length_limit: context.dig(:state, :message_length_limit),
       ownership_instruction: context.dig(:state, :ownership_instruction),
       suggested_replies_enabled: context.dig(:state, :suggested_replies_enabled),
