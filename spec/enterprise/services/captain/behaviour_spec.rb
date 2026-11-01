@@ -9,10 +9,8 @@ RSpec.describe Captain::Behaviour do
 
   it 'applies to agents with values stored by the removed settings' do
     assistant = create(:captain_assistant)
-    stored = { 'agent_role' => 'support', 'visitor_audience' => 'customers', 'greeting_mode' => 'off', 'separate_follow_up' => false }
-    assistant.update_columns(config: assistant.config.merge(stored)) # rubocop:disable Rails/SkipsModelValidations
+    assistant.update_columns(config: assistant.config.merge('greeting_mode' => 'off', 'separate_follow_up' => false)) # rubocop:disable Rails/SkipsModelValidations
 
-    expect(assistant.reload).to have_attributes(agent_role: 'adaptive', visitor_audience: 'detect', greeting_mode: 'ai',
-                                                greeting?: true, separate_follow_up?: true)
+    expect(assistant.reload).to have_attributes(greeting_mode: 'ai', greeting?: true, separate_follow_up?: true)
   end
 end

@@ -173,12 +173,6 @@ RSpec.describe Captain::Assistant, type: :model do
     end
   end
 
-  describe 'conversation settings' do
-    it 'adapts the role and audience per conversation and greets for new agents' do
-      expect(assistant).to have_attributes(agent_role: 'adaptive', visitor_audience: 'detect', greeting_mode: 'ai')
-    end
-  end
-
   describe '#separate_parts_requested?' do
     it 'is true when a guideline or an enabled scenario asks for a separate message' do
       expect(assistant.separate_parts_requested?).to be(false)

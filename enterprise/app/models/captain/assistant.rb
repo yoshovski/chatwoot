@@ -220,8 +220,6 @@ class Captain::Assistant < ApplicationRecord
   end
 
   # Fixed for every agent (Captain::Behaviour); values stored by older settings are ignored.
-  def agent_role = Captain::Behaviour::ROLE
-  def visitor_audience = 'detect'
   def greeting_mode = 'ai'
   def greeting? = Captain::Behaviour::WELCOME_ON_FIRST_REPLY
   def separate_follow_up? = Captain::Behaviour::SEPARATE_FOLLOW_UP_ON_WIDGET
@@ -399,14 +397,9 @@ class Captain::Assistant < ApplicationRecord
       tone_instruction: tone_instruction,
       off_limits_message: off_limits_message.presence,
       response_guidelines: response_guidelines || [],
-      guardrails: guardrails || [], handoff_rules: handoff_rules || []
+      guardrails: guardrails || [], handoff_rules: handoff_rules || [], limits: limits
     }
-    context.merge(business_prompt_context, conversation_prompt_context, Captain::Knowledge::BriefPrompt.new(self).context, lead_prompt_context)
-  end
-
-  # Who the agent is, who it talks to, how it opens a conversation and what it can't do.
-  def conversation_prompt_context
-    { agent_role: agent_role, visitor_audience: visitor_audience, greeting_mode: greeting_mode, limits: limits }
+    context.merge(business_prompt_context, Captain::Knowledge::BriefPrompt.new(self).context, lead_prompt_context)
   end
 
   def tone_instruction

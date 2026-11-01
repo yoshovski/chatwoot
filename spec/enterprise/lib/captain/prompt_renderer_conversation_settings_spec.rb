@@ -23,12 +23,22 @@ RSpec.describe Captain::PromptRenderer do
     end
   end
 
-  describe 'audience' do
-    context 'with detect' do
-      let(:config) { { 'product_name' => 'Acme Streaming Tools', 'visitor_audience' => 'detect' } }
+  describe 'fixed role' do
+    let(:config) do
+      { 'product_name' => 'Fernbrook Gardens', 'agent_role' => 'custom', 'agent_role_prompt' => 'You only talk about roses.',
+        'visitor_audience' => 'customers' }
+    end
 
-      it 'decides from what the visitor says' do
-        expect([assistant_prompt, direct_prompt]).to all(include('Visitors may be prospects or existing customers', 'at most one short setup hint'))
+    it 'tells customers, prospects and shoppers apart in both prompts, whatever an older setting stored' do
+      expect([assistant_prompt, direct_prompt]).to all(include(
+                                                         'You are Ava, the assistant for Fernbrook Gardens.',
+                                                         'solve their problem fully, without a sales pitch',
+                                                         "Don't give in-product click paths, admin steps or settings locations",
+                                                         'find the best fit',
+                                                         'at most one short setup hint'
+                                                       ))
+      [assistant_prompt, direct_prompt].each do |prompt|
+        expect(prompt).not_to include('You only talk about roses.', '# Visitors', 'customer support assistant')
       end
     end
   end
@@ -80,6 +90,15 @@ RSpec.describe Captain::PromptRenderer do
 
       expect(prompts).to all(include('Write a short, warm welcome'))
     end
+
+    it 'welcomes only in the first reply, whatever an older setting stored' do
+      assistant.update!(config: config.merge('greeting_mode' => 'fixed', 'welcome_message' => 'Hi there!'))
+      first_reply = described_class.render('direct_response', assistant.prompt_context.merge(first_ai_reply: true).with_indifferent_access)
+
+      expect(first_reply).to include('Write a short, warm welcome')
+      expect(first_reply).not_to include('A welcome message is sent just before your reply')
+      expect(assistant_prompt).not_to include('warm welcome')
+    end
   end
 
   describe 'limits' do
@@ -111,6 +130,16 @@ RSpec.describe Captain::PromptRenderer do
       assistant.update!(config: config.merge('limits' => []))
 
       expect(assistant_prompt).not_to include("What You Can't Do")
+    end
+  end
+
+  describe 'scenario prompt' do
+    let(:config) { { 'product_name' => 'Fernbrook Gardens', 'limits' => [{ 'cannot' => 'issue refunds', 'offer' => 'handoff' }] } }
+    let(:scenario) { create(:captain_scenario, assistant: assistant, title: 'Planting plan', instruction: 'Ask for the bed size.') }
+    let(:scenario_prompt) { described_class.render('scenario', scenario.prompt_context.with_indifferent_access) }
+
+    it 'knows what the agent cannot do' do
+      expect(scenario_prompt).to include("You can't issue refunds. Bring in a colleague with `captain--tools--handoff`")
     end
   end
 
