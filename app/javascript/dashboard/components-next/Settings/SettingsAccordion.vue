@@ -1,5 +1,6 @@
 <script setup>
-import { useToggle } from '@vueuse/core';
+import { ref } from 'vue';
+import Icon from 'dashboard/components-next/icon/Icon.vue';
 
 const props = defineProps({
   title: {
@@ -12,19 +13,26 @@ const props = defineProps({
   },
 });
 
-const [isOpen, toggle] = useToggle(props.defaultOpen);
+const isOpen = ref(props.defaultOpen);
 </script>
 
 <template>
-  <div
+  <button
     v-bind="$attrs"
-    class="flex items-center justify-between w-full cursor-pointer pb-2 pt-4 border-t border-n-weak"
-    @click="toggle()"
+    type="button"
+    class="flex items-center justify-between w-full gap-2 pb-2 pt-4 border-0 border-t border-solid border-n-weak bg-transparent text-start cursor-pointer"
+    :aria-expanded="isOpen"
+    @click="isOpen = !isOpen"
   >
     <span class="text-heading-2 text-n-slate-12 w-full">
       {{ title }}
     </span>
-  </div>
+    <Icon
+      icon="i-lucide-chevron-down"
+      class="size-4 shrink-0 text-n-slate-11 transition-transform"
+      :class="{ 'rotate-180': isOpen }"
+    />
+  </button>
   <div v-if="isOpen" class="w-full space-y-4 pt-4 mb-4">
     <slot />
   </div>

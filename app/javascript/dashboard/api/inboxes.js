@@ -29,6 +29,10 @@ class Inboxes extends CacheEnabledApiClient {
     });
   }
 
+  getWidgetPreviewToken(inboxId) {
+    return axios.post(`${this.url}/${inboxId}/widget_preview_token`);
+  }
+
   syncTemplates(inboxId) {
     return axios.post(`${this.url}/${inboxId}/sync_templates`);
   }

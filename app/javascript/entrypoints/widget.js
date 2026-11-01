@@ -1,15 +1,16 @@
-import { createApp } from 'vue';
+import { createApp, reactive } from 'vue';
 import { createI18n } from 'vue-i18n';
 
 import VueDOMPurifyHTML from 'vue-dompurify-html';
 import store from '../widget/store';
 import App from '../widget/App.vue';
-import ActionCableConnector from '../widget/helpers/actionCable';
+import { connectWidgetSocket } from '../widget/helpers/actionCable';
 import i18nMessages from '../widget/i18n';
 import router from '../widget/router';
 import { directive as onClickaway } from 'vue3-click-away';
 import { domPurifyConfig } from '../shared/helpers/HTMLSanitizer';
 import { plugin, defaultConfig } from '@formkit/vue';
+import { isPreviewMode } from '../widget/helpers/previewMode';
 
 import {
   startsWithPlus,
@@ -46,8 +47,12 @@ app.use(
 // Vue.config.productionTip = false;
 
 window.onload = () => {
+  // The settings page edits the preview's channel config live, so the widget has to react to it.
+  if (isPreviewMode()) {
+    window.chatwootWebChannel = reactive(window.chatwootWebChannel);
+  }
   window.WOOT_WIDGET = app.mount('#app');
-  window.actionCable = new ActionCableConnector(
+  window.actionCable = connectWidgetSocket(
     window.WOOT_WIDGET,
     window.chatwootPubsubToken
   );

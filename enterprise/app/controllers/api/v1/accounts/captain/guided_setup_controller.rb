@@ -29,9 +29,10 @@ class Api::V1::Accounts::Captain::GuidedSetupController < Api::V1::Accounts::Bas
     render json: state.payload
   end
 
+  # inbox_id checks a specific website inbox (its settings page); without it, the guided setup's inbox.
   def check_installation
-    inbox = state.widget_inbox
-    return head :not_found unless inbox
+    inbox = params[:inbox_id] ? Current.account.inboxes.find(params[:inbox_id]) : state.widget_inbox
+    return head :not_found unless inbox&.web_widget?
 
     render json: { status: Captain::GuidedSetup::InstallationCheck.new(inbox).perform }
   end

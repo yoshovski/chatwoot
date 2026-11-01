@@ -76,6 +76,26 @@
   "BUBBLE": {
     "LABEL": "Chat with us"
   },
+  "PREVIEW": {
+    "COMPOSER_HINT": "Preview",
+    "SAMPLE": {
+      "AGENT_NAME": "AI agent",
+      "GREETING": "Hi! I'm here to help with orders, delivery and returns. What can I do for you?",
+      "QUESTION": "How long does delivery take?",
+      "ANSWER": "Orders usually arrive within 2 to 4 working days. You get a tracking link by email as soon as your parcel ships.",
+      "SOURCE_TITLE": "Delivery and shipping",
+      "SUGGESTIONS": {
+        "TRACK": {
+          "TITLE": "Track my order",
+          "VALUE": "How can I track my order?"
+        },
+        "RETURNS": {
+          "TITLE": "Returns",
+          "VALUE": "How do I return an item?"
+        }
+      }
+    }
+  },
   "POWERED_BY": "Powered by Chatwoot",
   "EMAIL_PLACEHOLDER": "Please enter your email",
   "CHAT_PLACEHOLDER": "Type your message",

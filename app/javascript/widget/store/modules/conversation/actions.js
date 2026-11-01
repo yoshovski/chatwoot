@@ -13,6 +13,8 @@ import {
 import { ON_CONVERSATION_CREATED } from 'widget/constants/widgetBusEvents';
 import { createTemporaryMessage, getNonDeletedMessages } from './helpers';
 import { emitter } from 'shared/helpers/mitt';
+import { isPreviewMode } from 'widget/helpers/previewMode';
+
 export const actions = {
   createConversation: async ({ commit, dispatch }, params) => {
     commit('setConversationUIFlag', { isCreating: true });
@@ -31,6 +33,8 @@ export const actions = {
     }
   },
   sendMessage: async ({ dispatch, state: conversationState }, params) => {
+    // Nothing is sent from the settings preview, so its sample conversation stays as configured.
+    if (isPreviewMode()) return;
     const { content, replyTo } = params;
     const message = createTemporaryMessage({ content, replyTo });
     const { pendingCustomAttributes, pendingLabels } = conversationState;
@@ -79,6 +83,7 @@ export const actions = {
   },
 
   sendAttachment: async ({ commit, state: conversationState }, params) => {
+    if (isPreviewMode()) return;
     const {
       attachment: { thumbUrl, fileType },
       content,

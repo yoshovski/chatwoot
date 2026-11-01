@@ -856,7 +856,6 @@
       }
     },
     "CHANNEL_PREFERENCES": "Channel Preferences",
-    "WIDGET_FEATURES": "Widget features",
     "TWILIO_HEALTH": {
       "TITLE": "Manage your Twilio number",
       "DESCRIPTION": "Review the Twilio account, sender and webhooks backing this inbox. Anything Chatwoot cannot receive is flagged here",
@@ -1560,6 +1559,63 @@
       "AUTH_MECHANISM": "Authentication"
     },
     "NOTE": "Note: ",
+    "WIDGET_SETTINGS": {
+      "ESSENTIALS": {
+        "TITLE": "Essentials",
+        "DESCRIPTION": "What visitors see first on your website.",
+        "POSITION": "Launcher position",
+        "LAUNCHER_STYLE": {
+          "LABEL": "Launcher style",
+          "STANDARD": "Icon only",
+          "EXPANDED": "Icon and text"
+        },
+        "LAUNCHER_TEXT": "Launcher text"
+      },
+      "INSTALLATION": {
+        "TITLE": "Installation",
+        "DESCRIPTION": "Paste this snippet before the closing body tag on every page where the chat should appear.",
+        "COPY": "Copy",
+        "COPIED": "Snippet copied",
+        "SNIPPET_CHANGED": "The launcher settings changed. Save, then copy the snippet again and replace it on your website.",
+        "CHECK": "Check installation"
+      },
+      "AI_AGENT": {
+        "TITLE": "AI agent",
+        "DESCRIPTION": "Your AI agent greets visitors and answers. Its behaviour is set in AI agent → Instructions.",
+        "LINK": "Open Instructions"
+      },
+      "ADVANCED": {
+        "TITLE": "Advanced",
+        "HOME_SCREEN": {
+          "TITLE": "Show the home screen",
+          "DESCRIPTION": "Visitors land on your welcome message and conversation starters. Turn it off to open straight into the conversation. Part of the install snippet."
+        },
+        "PRE_CHAT": {
+          "TITLE": "Pre-chat form",
+          "DESCRIPTION": "Ask visitors for their details before the conversation starts.",
+          "LINK": "Edit the form"
+        }
+      },
+      "PREVIEW_TOGGLE": {
+        "SHOW": "Preview",
+        "HIDE": "Hide preview"
+      }
+    },
+    "WIDGET_PREVIEW": {
+      "TITLE": "Widget preview",
+      "FRAME_TITLE": "Live preview of your chat widget",
+      "VIEW_LABEL": "Preview screen",
+      "VIEWS": {
+        "HOME": "Home",
+        "CONVERSATION": "Conversation",
+        "LAUNCHER": "Closed launcher"
+      },
+      "LIGHT": "Show in light mode",
+      "DARK": "Show in dark mode",
+      "MOBILE": "Show at mobile width",
+      "DESKTOP": "Show at desktop width",
+      "ERROR": "The preview couldn't load. Reload the page to try again."
+    },
     "WIDGET_BUILDER": {
       "WIDGET_OPTIONS": {
         "AVATAR": {
@@ -1612,12 +1668,8 @@
         },
         "REORDER": "Reorder item",
         "DELETE": "Delete item",
-        "WIDGET_BUBBLE": "Bubble",
-        "WIDGET_BUBBLE_POSITION_LABEL": "Position:",
-        "WIDGET_BUBBLE_TYPE_LABEL": "Type:",
         "WIDGET_BUBBLE_LAUNCHER_TITLE": {
           "DEFAULT": "Chat with us",
-          "LABEL": "Launcher Title",
           "PLACE_HOLDER": "Chat with us"
         },
         "UPDATE": {
@@ -1627,43 +1679,11 @@
             "ERROR_MESSAGE": "Unable to update widget settings"
           }
         },
-        "WIDGET_VIEW_OPTION": {
-          "PREVIEW": "Preview",
-          "SCRIPT": "Script"
-        },
         "WIDGET_BUBBLE_POSITION": {
           "LEFT": "Left",
           "RIGHT": "Right"
-        },
-        "WIDGET_BUBBLE_TYPE": {
-          "STANDARD": "Standard",
-          "EXPANDED_BUBBLE": "Expanded Bubble"
         }
-      },
-      "WIDGET_SCREEN": {
-        "DEFAULT": "Default",
-        "CHAT": "Chat mode"
-      },
-      "REPLY_TIME": {
-        "IMMEDIATELY": "We reply immediately",
-        "IN_A_FEW_MINUTES": "Typically replies in a few minutes",
-        "IN_A_FEW_HOURS": "Typically replies in a few hours",
-        "IN_A_DAY": "Typically replies in a day"
-      },
-      "FOOTER": {
-        "START_CONVERSATION_BUTTON_TEXT": "Start Conversation",
-        "CHAT_INPUT_PLACEHOLDER": "Type your message"
-      },
-      "BODY": {
-        "TEAM_AVAILABILITY": {
-          "ONLINE": "We are Online",
-          "OFFLINE": "We are away at the moment"
-        },
-        "USER_MESSAGE": "Hi",
-        "AGENT_MESSAGE": "Hello"
-      },
-      "BRANDING_TEXT": "Powered by Chatwoot",
-      "SCRIPT_SETTINGS": "\n      window.chatwootSettings = {options};"
+      }
     },
     "EMAIL_PROVIDERS": {
       "MICROSOFT": {

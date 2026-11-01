@@ -177,6 +177,7 @@ export const IFrameHelper = {
         enableFileUpload: window.$chatwoot.enableFileUpload,
         enableEmojiPicker: window.$chatwoot.enableEmojiPicker,
         enableEndConversation: window.$chatwoot.enableEndConversation,
+        showHome: window.$chatwoot.showHome,
       });
       IFrameHelper.onLoad({
         widgetColor: channelConfig.widgetColor,
