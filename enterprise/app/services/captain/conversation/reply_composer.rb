@@ -77,10 +77,10 @@ class Captain::Conversation::ReplyComposer # rubocop:disable Metrics/ClassLength
     [0, *starts, parts.to_a.size].each_cons(2).map { |from, to| Captain::Assistant::ResponseParts.new(parts.to_a[from...to]) }
   end
 
-  # The indexes count the model's response parts; a prepended AI welcome shifts them by one.
+  # The indexes count the model's response parts; a prepended AI welcome or a dropped repeated welcome shifts them.
   def separate_part_starts(size)
     indexes = response.is_a?(Hash) ? Array(response['separate_parts']) : []
-    offset = response.is_a?(Hash) && response['welcome'].present? ? 1 : 0
+    offset = response_parts.index_offset
     indexes.grep(Integer).map { |index| index + offset }.select { |index| index.between?(1, size - 1) }.uniq.sort.first(MAX_SEPARATE_BUBBLES - 1)
   end
 
@@ -174,7 +174,7 @@ class Captain::Conversation::ReplyComposer # rubocop:disable Metrics/ClassLength
 
   # The run's parts, citing the matching page when the model cited none; the product name is in every title.
   def response_parts
-    @response_parts ||= Captain::Assistant::ResponseParts.from_response(response).with_fallback_citation(
+    @response_parts ||= Captain::Assistant::ResponseParts.from_response(response).log_welcome_guard.with_fallback_citation(
       citation_titles: citation_titles.slice(*citation_urls.keys), ignored_words: assistant.product_name.to_s.split
     )
   end
