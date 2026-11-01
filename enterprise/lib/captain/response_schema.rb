@@ -13,14 +13,19 @@ class Captain::ResponseSchema < RubyLLM::Schema
   SEPARATE_PARTS_DESCRIPTION = 'Indexes of response parts (0 is the first) that must start a new message. List a part only when a ' \
                                'scenario step or instruction says to send it as a separate message; otherwise return an empty array.'.freeze
 
-  WELCOME_DESCRIPTION = "This is your first reply in the conversation: one short, warm welcome sentence in the customer's language, " \
-                        'without their name unless you know it. It is shown before your answer, so the response parts must not greet again.'.freeze
+  WELCOME_DESCRIPTION = "Write this first: one short, warm welcome sentence in the customer's language, without their name " \
+                        'unless you know it. It is sent before your answer. Never repeat it or greet again in response_parts.'.freeze
+
+  RESPONSE_PARTS_DESCRIPTION = 'Ordered parts of the message to send to the user. Keep all customer-visible text within each part text field.'.freeze
+  # Added when the schema has a welcome: the model writes fields in schema order and otherwise opens the answer
+  # with the same greeting it then copies into welcome.
+  RESPONSE_PARTS_AFTER_WELCOME = 'Start with the answer itself; the welcome is sent separately.'.freeze
 
   SUGGESTION_LABEL_MAX_LENGTH = 50
   SUGGESTION_MESSAGE_MAX_LENGTH = 120
 
   array :response_parts,
-        description: 'Ordered parts of the message to send to the user. Keep all customer-visible text within each part text field.',
+        description: RESPONSE_PARTS_DESCRIPTION,
         min_items: 1 do
     object do
       string :text, description: 'Customer-visible text without citation markers. Inline links must copy exact URLs from tool results.', min_length: 1
@@ -46,12 +51,13 @@ class Captain::ResponseSchema < RubyLLM::Schema
     @schema_cache[[limit, flags]] ||= build_schema(limit: limit, **flags)
   end
 
+  # The welcome is declared first so the model writes it before the answer instead of copying the answer's opener.
   def self.build_schema(limit:, suggested_replies: false, product_cards: false, lead_capture: false, **shape)
+    welcome = shape.delete(:welcome)
     RubyLLM::Schema.create do
       name 'CaptainResponse'
-      array :response_parts,
-            description: 'Ordered parts of the message to send to the user. Keep all customer-visible text within each part text field.',
-            min_items: 1 do
+      string :welcome, description: Captain::ResponseSchema::WELCOME_DESCRIPTION, min_length: 1 if welcome
+      array :response_parts, description: Captain::ResponseSchema.response_parts_description(welcome: welcome), min_items: 1 do
         object do
           string :text, min_length: 1,
                         description: 'Customer-visible text without citation markers. Inline links must copy exact URLs from tool results.'
@@ -68,8 +74,11 @@ class Captain::ResponseSchema < RubyLLM::Schema
     end
   end
 
-  def self.define_reply_shape(builder, lead_capture:, separate_parts: false, welcome: false)
-    builder.string :welcome, description: WELCOME_DESCRIPTION, min_length: 1 if welcome
+  def self.response_parts_description(welcome: false)
+    welcome ? "#{RESPONSE_PARTS_DESCRIPTION} #{RESPONSE_PARTS_AFTER_WELCOME}" : RESPONSE_PARTS_DESCRIPTION
+  end
+
+  def self.define_reply_shape(builder, lead_capture:, separate_parts: false)
     if separate_parts
       builder.array :separate_parts, description: SEPARATE_PARTS_DESCRIPTION do
         integer minimum: 1

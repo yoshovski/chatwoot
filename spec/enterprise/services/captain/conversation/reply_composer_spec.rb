@@ -332,6 +332,17 @@ RSpec.describe Captain::Conversation::ReplyComposer do
         .to eq(["Hi there, thanks for asking!\n\nOur trial lasts 14 days.", 'You can add teammates at any time.'])
     end
 
+    it 'sends the AI welcome once when the model repeats it and still splits at the listed part' do
+      response['welcome'] = 'Hi there, thanks for asking!'
+      response['response_parts'].unshift({ 'text' => 'Hi there, thanks for asking!', 'citation_indexes' => [] })
+      response['separate_parts'] = [2]
+      contents = composer.messages.map { |message| message[:content] }
+
+      expect(contents).to eq(["Hi there, thanks for asking!\n\nOur trial lasts 14 days.",
+                              "You can add teammates at any time.\n\nExports work on every plan.\n\nHow large is your team?"])
+      expect(contents.join.scan('thanks for asking').size).to eq(1)
+    end
+
     it 'sends one message by email' do
       inbox.update!(channel: create(:channel_email, account: account))
 
