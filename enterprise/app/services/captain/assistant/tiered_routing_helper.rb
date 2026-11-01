@@ -68,7 +68,7 @@ module Captain::Assistant::TieredRoutingHelper
   end
 
   def routing_mode
-    return 'off' if reply_suggestion? || @runtime_configuration
+    return 'off' if reply_suggestion?
 
     Captain::Assistant::TieredRoutingHelper.mode_for(@assistant.account_id)
   end
@@ -94,12 +94,15 @@ module Captain::Assistant::TieredRoutingHelper
     mode = routing_mode
     return unless mode.in?(%w[shadow on])
 
-    route = Captain::Assistant::IntentRouter.new(assistant: @assistant, conversation: @conversation).classify(message: message, context: context)
+    route = Captain::Assistant::IntentRouter.new(assistant: @assistant, conversation: @conversation, runtime_configuration: @runtime_configuration)
+                                            .classify(message: message, context: context)
     log_route(route, mode, context)
     return if mode == 'shadow' || route['intent'] == 'action_agent'
 
     schema = response_schema_for_runner
-    service = Captain::Assistant::DirectResponseService.new(assistant: @assistant, response_schema: schema)
+    service = Captain::Assistant::DirectResponseService.new(
+      assistant: @assistant, response_schema: schema, runtime_configuration: @runtime_configuration
+    )
     result = service.run(message: message, context: context, route: route)
     @response_discarded = newer_customer_message_arrived? if message_burst_protection_active?
     result

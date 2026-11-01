@@ -17,9 +17,10 @@ class Captain::Assistant::IntentRouter # rubocop:disable Metrics/ClassLength
     boundary ? history.drop(boundary + 1) : history
   end
 
-  def initialize(assistant:, conversation: nil)
+  def initialize(assistant:, conversation: nil, runtime_configuration: nil)
     @assistant = assistant
     @conversation = conversation
+    @runtime_configuration = runtime_configuration
   end
 
   def classify(message:, context:)
@@ -56,7 +57,11 @@ class Captain::Assistant::IntentRouter # rubocop:disable Metrics/ClassLength
   end
 
   def active_scenario?(context)
-    names = @assistant.scenarios.enabled.map(&:handoff_key)
+    names = if @runtime_configuration
+              @runtime_configuration.scenarios.map { |scenario| @runtime_configuration.agent_name_for(scenario) }
+            else
+              @assistant.scenarios.enabled.map(&:handoff_key)
+            end
     active_name = context.dig(:state, :conversation_memory, :active_agent_name)
     last_name = self.class.recent_history(context).reverse.find { |entry| entry[:role].to_s == 'assistant' }&.dig(:agent_name)
     names.include?(active_name) || names.include?(last_name)
@@ -151,7 +156,9 @@ class Captain::Assistant::IntentRouter # rubocop:disable Metrics/ClassLength
   end
 
   def routing_policy
-    policy = @assistant.prompt_context.slice(
+    context = @assistant.prompt_context
+    context = @runtime_configuration.prompt_context_for(@assistant, context) if @runtime_configuration
+    policy = context.slice(
       :description, :scenarios, :response_guidelines, :guardrails, :business_overview, :knowledge_topics, :knowledge_offerings,
       :lead_capture
     )

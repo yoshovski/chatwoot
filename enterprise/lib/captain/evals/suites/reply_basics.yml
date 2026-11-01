@@ -1,0 +1,220 @@
+# Basic widget replies for an invented software business. The cases describe the behaviour ChatOctave fixes for every
+# agent (adaptive role, AI welcome, the follow-up question in its own bubble), so settings only carry merchant content.
+version: 1
+business:
+  name: Acme Streaming Tools
+  product_name: Acme
+  description: Acme helps streaming services reduce churn with analytics, offers and win-back campaigns.
+  knowledge:
+    - title: How to clear your browser cache
+      url: https://help.acme-streaming.test/clear-cache
+      content: |
+        If the Acme dashboard shows old numbers or does not load, clear your browser cache.
+        To clear the cache in Chrome:
+        1. Click the three-dot menu in the top right corner.
+        2. Choose Delete browsing data.
+        3. Select Cached images and files, set the time range to All time and click Delete data.
+        [Video](https://fast.wistia.net/embed/iframe/acme0clear1)
+        To clear the cache in Safari:
+        1. Open Safari Settings and choose Advanced.
+        2. Turn on Show features for web developers.
+        3. In the Develop menu choose Empty Caches.
+        To clear the cache in Firefox:
+        1. Open Settings and choose Privacy & Security.
+        2. Under Cookies and Site Data click Clear Data.
+        3. Select Cached Web Content and click Clear.
+    - title: Free trial
+      url: https://help.acme-streaming.test/free-trial
+      content: |
+        Every new workspace starts with a 14-day free trial of the Growth plan. No credit card is needed.
+        During the trial you can connect one streaming platform and invite up to five team members.
+        When the trial ends, the workspace moves to the Starter plan unless you choose a paid plan.
+    - title: Plans and pricing
+      url: https://acme-streaming.test/pricing
+      content: |
+        Acme has three plans, billed monthly or yearly (two months free with yearly billing).
+        Starter: 49 USD per month, up to 10,000 subscribers, churn dashboard, 3 team members.
+        Growth: 199 USD per month, up to 100,000 subscribers, churn prediction, offers and win-back campaigns, 10 team members.
+        Enterprise: custom pricing, unlimited subscribers, SSO, dedicated success manager and a 99.9% uptime SLA.
+        Small teams usually start on Starter and move to Growth when they want automated win-back campaigns.
+    - title: Churn analytics overview
+      url: https://help.acme-streaming.test/churn-analytics
+      content: |
+        Acme's churn analytics show which subscribers are likely to cancel in the next 30 days.
+        The churn score combines viewing activity, payment failures and support contacts.
+        Services with 10,000 to 500,000 subscribers see the most value: the model needs at least 3 months of history.
+        You can export at-risk subscribers to your email tool or start a win-back campaign from the same screen.
+    - title: Refund policy
+      url: https://help.acme-streaming.test/refunds
+      content: |
+        Yearly plans can be refunded within 30 days of payment. Monthly plans are not refunded, but you can cancel at any time
+        and keep access until the end of the billing period. Refunds are issued by our billing team, never automatically.
+    - title: Create an API key
+      url: https://help.acme-streaming.test/api-keys
+      content: |
+        API keys let your backend send subscriber events to Acme.
+        1. In the Acme dashboard open Settings and choose API keys.
+        2. Click Create key and give it a name, for example "Production backend".
+        3. Choose the scope: Events (write) or Reports (read).
+        4. Copy the key right away. Acme shows it only once.
+        Keep keys on your server; never put them in a mobile app or a web page.
+defaults:
+  agent_role: adaptive
+  visitor_audience: detect
+  greeting_mode: ai
+cases:
+  - id: R01
+    title: First reply, how-to with video (CWAI-141)
+    message: How do I clear my cache on Chrome?
+    expect:
+      route: faq_kb
+      checks:
+        - welcome_once
+        - starts_with_greeting: true
+        - contains_video: true
+        - no_empty_bubbles
+        - bubbles: { min: 1, max: 2 }
+        - links_from_knowledge
+  - id: R02
+    title: First reply, how-to that needs a platform question
+    message: How do I clear my cache?
+    expect:
+      checks:
+        - welcome_once
+        - no_empty_bubbles
+        - question_bubble: true
+  - id: R03
+    title: Conversation started by a campaign opener
+    campaign: Hi there! Want to see how Acme cuts churn for streaming services?
+    message: Does Acme offer a free trial?
+    expect:
+      route: faq_kb
+      checks:
+        - starts_with_greeting: false
+        - no_repeated_sentences
+        - no_empty_bubbles
+  - id: R04
+    title: First message is only hi
+    message: hi
+    expect:
+      route: smalltalk
+      checks:
+        - welcome_once
+        - no_empty_bubbles
+        - bubbles: { min: 1, max: 1 }
+        - max_chars: 300
+  - id: R05
+    title: hi after an answer
+    history:
+      - role: user
+        content: Does Acme offer a free trial?
+      - role: assistant
+        content: Yes. Every new workspace starts with a 14-day free trial of the Growth plan, and no credit card is needed.
+    message: hi
+    expect:
+      route: smalltalk
+      checks:
+        - starts_with_greeting: true
+        - welcome_once
+        - bubbles: { min: 1, max: 1 }
+        - max_chars: 200
+  - id: R06
+    title: Prospect with 50k subscribers, lead capture on
+    settings:
+      leads_enabled: true
+      lead_fields:
+        - { key: company_size, label: Number of subscribers }
+      lead_types:
+        - { name: Qualified prospect, rule: A streaming service with more than 10,000 subscribers }
+    message: We run a streaming service with about 50k subscribers. Would Acme fit us?
+    expect:
+      checks:
+        - welcome_once
+        - no_click_paths
+        - no_empty_bubbles
+        - question_bubble: true
+        - links_from_knowledge
+  - id: R07
+    title: Existing customer asks how to create an API key
+    history:
+      - role: user
+        content: Hi, we use Acme for our service.
+      - role: assistant
+        content: Hello! Great to have you here. What can I help you with?
+    message: In our dashboard, how do I create an API key for our backend?
+    expect:
+      route: faq_kb
+      checks:
+        - no_repeated_sentences
+        - no_empty_bubbles
+        - links_from_knowledge
+        - judge: The reply gives numbered steps to create the key and asks no sales or qualification question.
+  - id: R08
+    title: Refund request with a handoff limit
+    settings:
+      limits:
+        - { cannot: issue refunds, offer: handoff }
+    message: Can you refund my last invoice?
+    expect:
+      checks:
+        - handoff: true
+        - no_empty_bubbles
+        - max_chars: 400
+  - id: R09
+    title: Which plan fits a small team
+    message: We are a small team of three people. Which plan should we pick?
+    expect:
+      checks:
+        - welcome_once
+        - no_empty_bubbles
+        - links_from_knowledge
+        - max_chars: 900
+        - judge: The reply briefly compares two or three plans from the pricing page and asks at most one question.
+  - id: R10
+    title: Email channel
+    channel: email
+    message: Hello, how long is the free trial and do I need a credit card?
+    expect:
+      checks:
+        - welcome_once
+        - no_empty_bubbles
+        - bubbles: { min: 1, max: 1 }
+        - links_from_knowledge
+  - id: R11
+    title: German question
+    locale: de
+    message: Wie lange dauert die kostenlose Testphase?
+    expect:
+      checks:
+        - language: de
+        - welcome_once
+        - no_empty_bubbles
+  - id: R12
+    title: Scenario asks the company size in a separate message
+    scenarios:
+      - title: Company size
+        description: Use for every question about Acme plans or the free trial.
+        instruction: Answer the question from the knowledge, then in a separate message ask how many subscribers their service has.
+    message: How long is the free trial?
+    expect:
+      checks:
+        - no_empty_bubbles
+        - bubbles: { min: 2, max: 2 }
+        - question_bubble: true
+  - id: R13
+    title: Off-topic question
+    message: Can you write me a poem about the ocean?
+    expect:
+      checks:
+        - handoff: false
+        - no_empty_bubbles
+        - max_chars: 400
+        - judge: The reply politely declines or redirects to Acme topics and does not write a poem.
+  - id: R14
+    title: Question with no matching knowledge
+    message: Does Acme integrate with Roku TV dashboards for live sports scores?
+    expect:
+      checks:
+        - no_empty_bubbles
+        - links_from_knowledge
+        - judge: The reply says it does not know or has no information about this, without inventing an integration.
