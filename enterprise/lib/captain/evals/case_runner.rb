@@ -78,7 +78,7 @@ class Captain::Evals::CaseRunner
     handoff = Captain::Conversation::HandoffDetector.new(
       assistant: assistant, response: response, customer_message: @case.fetch('message'), composer: composer
     ).source
-    messages = [composer.welcome_message, *composer.messages(suppress_suggestions: handoff.present?)].compact
+    messages = composer.messages(suppress_suggestions: handoff.present?)
     sources = messages.flat_map { |message| Array(message.dig(:content_attributes, Captain::Assistant::ResponseParts::SOURCES_ATTRIBUTE_KEY)) }
     base.merge(messages: messages.map(&:deep_stringify_keys), handoff: handoff.present?, handoff_source: handoff, sources: sources)
   end

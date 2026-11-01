@@ -53,13 +53,13 @@ module Captain::Assistant::RunnerStateHelper
 
   # The agent greets only when nothing was said to the customer yet: no earlier reply and no campaign opener.
   def first_ai_reply?(history)
-    return false if reply_suggestion? || !@assistant.greeting?
+    return false if reply_suggestion? || !Captain::Behaviour::WELCOME_ON_FIRST_REPLY
 
     @conversation&.campaign_id.blank? && history.none? { |entry| entry[:role] == :assistant }
   end
 
   # Set by build_context, which runs before the agents and their reply schema are built.
-  def ai_welcome? = @first_ai_reply == true && @assistant.greeting_mode == 'ai'
+  def ai_welcome? = @first_ai_reply == true
 
   def ownership_instruction
     return unless respond_to?(:ownership_service, true)

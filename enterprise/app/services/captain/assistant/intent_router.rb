@@ -1,13 +1,9 @@
-class Captain::Assistant::IntentRouter # rubocop:disable Metrics/ClassLength
+class Captain::Assistant::IntentRouter
   INTENTS = %w[smalltalk faq_kb action_agent business_overview].freeze
   MAX_QUERIES = 2
   MAX_QUERY_CHARS = 250
   ACTION = { 'intent' => 'action_agent', 'queries' => [] }.freeze
-  GREETINGS = {
-    'hi' => 'Hello!', 'hello' => 'Hello!', 'hey' => 'Hello!', 'thanks' => "You're welcome!", 'thank you' => "You're welcome!",
-    'hola' => '¡Hola!', 'gracias' => '¡De nada!', 'bonjour' => 'Bonjour !', 'merci' => 'Avec plaisir !',
-    'hallo' => 'Hallo!', 'danke' => 'Gern geschehen!', 'ciao' => 'Ciao!', 'grazie' => 'Prego!'
-  }.freeze
+  GREETINGS = ['hi', 'hello', 'hey', 'thanks', 'thank you', 'hola', 'gracias', 'bonjour', 'merci', 'hallo', 'danke', 'ciao', 'grazie'].freeze
 
   def self.recent_history(context)
     return context[:memory_history] if context.key?(:memory_history)
@@ -95,15 +91,11 @@ class Captain::Assistant::IntentRouter # rubocop:disable Metrics/ClassLength
     end
   end
 
+  # A plain hello or thanks skips the classifier; the model answers it in the agent's own voice.
   def greeting_route(message)
-    text = GREETINGS[message.strip.downcase.sub(/[.!¡¿?]+\z/, '')]
-    return unless text
+    return unless GREETINGS.include?(message.strip.downcase.sub(/[.!¡¿?]+\z/, ''))
 
-    route = { 'intent' => 'smalltalk', 'queries' => [], 'reason' => 'greeting' }
-    # With a greeting on, the model says hello in the agent's own voice.
-    plain = !@assistant.greeting? && @assistant.guardrails.blank? && @assistant.response_guidelines.blank?
-    route['canned_response'] = text if plain && !@assistant.suggested_replies?
-    route
+    { 'intent' => 'smalltalk', 'queries' => [], 'reason' => 'greeting' }
   end
 
   def router_input(message, context)

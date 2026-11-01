@@ -219,10 +219,6 @@ class Captain::Assistant < ApplicationRecord
     config.fetch('auto_resolve_mode') { account&.captain_auto_resolve_mode || 'evaluated' }
   end
 
-  # Fixed for every agent (Captain::Behaviour); values stored by older settings are ignored.
-  def greeting_mode = 'ai'
-  def greeting? = Captain::Behaviour::WELCOME_ON_FIRST_REPLY
-  def separate_follow_up? = Captain::Behaviour::SEPARATE_FOLLOW_UP_ON_WIDGET
   def limits = config.fetch('limits', [])
 
   def separate_parts_requested?
