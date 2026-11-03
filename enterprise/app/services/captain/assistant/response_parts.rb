@@ -10,91 +10,18 @@ class Captain::Assistant::ResponseParts
   # Sources are page-title links, never numbers after each part: customers cannot tell what "[1]" means.
   # The chat widget draws them under the bubble from this content attribute; other channels get them as text lines.
   SOURCES_ATTRIBUTE_KEY = 'captain_sources'.freeze
-  # A first sentence this short that opens with a greeting word is a greeting, not part of the answer.
-  MAX_GREETING_WORDS = 8
-  GREETING_START = /\A(?:hi|hello|hey|welcome|greetings|good\s(?:morning|afternoon|evening)|thanks\sfor\sreaching\sout|hola|buenos\sd[ií]as|
-                     bonjour|salut|hallo|guten\stag|ciao|buongiorno|ol[áa]|oi|hej)\b/x
-  # Greeting words count as the same word, so "Hi there!" repeats the welcome "Hello and welcome!".
-  GREETING_WORDS = %w[hi hello hey welcome greetings hola bonjour salut hallo ciao buongiorno olá ola oi hej].freeze
-  SENTENCE_BREAK = /\A[ \t]*(?:[.,!?;:…\n]|\p{Extended_Pictographic}|\z)/
-  LEADING_FILLER = /\A(?:[\s.,!?;:¡¿…–—-]|\p{Extended_Pictographic}|\u{FE0F})+/
-
   # index_offset: how far the model's part indexes (separate_parts) moved: +1 for the prepended welcome, -1 for a dropped part.
   # welcome_guard: 'dropped' or 'stripped' when a repeated welcome was removed from the model's first part.
   attr_reader :parts, :index_offset, :welcome_guard
 
+  # The AI welcome of a first reply opens the answer bubble; Captain::Reply::Draft removes a repeated one.
   def self.from_response(response)
-    return new([{ text: response.to_s, citation_indexes: [] }]) unless response.is_a?(Hash)
+    draft = Captain::Reply::Draft.from_response(response)
+    parts = draft.parts.map(&:to_response_part)
+    return new(parts) if draft.welcome.blank?
 
-    response = response.with_indifferent_access
-    return new([{ text: response[:response], citation_indexes: [] }]) unless response.key?(:response_parts)
-    return new(response[:response_parts]) if response[:welcome].blank?
-
-    # The AI welcome of a first reply opens the answer bubble.
-    with_welcome(response[:welcome], new(response[:response_parts]).parts)
+    new([draft.welcome_part.to_response_part, *parts], index_offset: draft.welcome_guard == 'dropped' ? 0 : 1, welcome_guard: draft.welcome_guard)
   end
-
-  # The model may still open its answer with the welcome or another greeting; never send the welcome twice. If nothing
-  # of the answer would remain, the parts stay as the model wrote them.
-  def self.with_welcome(welcome, model_parts)
-    first, *rest = model_parts
-    text = without_repeated_welcome(first['text'], welcome) if first
-    kept = text.present? ? [first.merge('text' => text), *rest] : citations_moved(first, rest) unless text.nil?
-    welcome_part = { 'text' => welcome, 'citation_indexes' => [] }
-    return new([welcome_part, *model_parts], index_offset: 1) if kept.blank?
-
-    dropped = kept.size < model_parts.size
-    new([welcome_part, *kept], index_offset: dropped ? 0 : 1, welcome_guard: dropped ? 'dropped' : 'stripped')
-  end
-
-  # A dropped part's citations move to the next part.
-  def self.citations_moved(dropped, rest)
-    return [] if rest.empty?
-
-    [rest.first.merge('citation_indexes' => (dropped['citation_indexes'] + rest.first['citation_indexes']).uniq), *rest.drop(1)]
-  end
-
-  # The text without the repeated welcome (blank when it is only the welcome), or nil when it doesn't repeat it.
-  def self.without_repeated_welcome(text, welcome)
-    welcome_words = words(welcome)
-    return if welcome_words.empty?
-    return '' if words(text) == welcome_words
-
-    after_welcome = welcome_prefix_remainder(text, welcome_words)
-    return after_welcome.sub(LEADING_FILLER, '') if after_welcome
-
-    sentence, remainder = text.split(/(?<=[.!?])\s+|\n+/, 2)
-    remainder.to_s.sub(LEADING_FILLER, '') if greeting_sentence?(sentence, welcome)
-  end
-
-  # The text after the welcome when the text opens with the whole welcome sentence ("Hello and welcome! To clear…"),
-  # not when the welcome's words run on into the answer ("Hello and welcome to…").
-  def self.welcome_prefix_remainder(text, welcome_words)
-    return unless words(text).first(welcome_words.size) == welcome_words
-
-    remainder = text[text.to_enum(:scan, /[[:alnum:]]+/).map { Regexp.last_match.end(0) }[welcome_words.size - 1]..]
-    remainder if remainder.match?(SENTENCE_BREAK)
-  end
-
-  def self.greeting_sentence?(sentence, welcome)
-    sentence_words = greeting_words(sentence).uniq
-    return false if sentence_words.size > MAX_GREETING_WORDS || !words(sentence).join(' ').match?(GREETING_START)
-
-    (sentence_words & greeting_words(welcome)).size * 2 >= sentence_words.size
-  end
-
-  # Lowercase words without punctuation or emoji.
-  def self.words(text)
-    text.to_s.downcase.scan(/[[:alnum:]]+/)
-  end
-
-  # Words with every greeting word as "hello".
-  def self.greeting_words(text)
-    words(text).map { |word| GREETING_WORDS.include?(word) ? 'hello' : word }
-  end
-
-  private_class_method :with_welcome, :citations_moved, :without_repeated_welcome, :welcome_prefix_remainder, :greeting_sentence?, :words,
-                       :greeting_words
 
   def initialize(response_parts, index_offset: 0, welcome_guard: nil)
     @parts = Array(response_parts).filter_map { |part| normalize_part(part) }
@@ -102,7 +29,7 @@ class Captain::Assistant::ResponseParts
     @welcome_guard = welcome_guard
   end
 
-  # Called once where the reply is composed, so one guarded reply logs once.
+  # Reply composition logs the guard through Captain::Reply::Checks, with the assistant and conversation.
   def log_welcome_guard
     Rails.logger.info "[Captain][ReplyGuard] rule=duplicate_welcome action=#{welcome_guard}" if welcome_guard
     self

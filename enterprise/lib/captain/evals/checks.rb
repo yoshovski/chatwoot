@@ -148,7 +148,7 @@ module Captain::Evals::Checks # rubocop:disable Metrics/ModuleLength
   end
 
   def greeting?(normalized_sentence)
-    normalized_sentence.match?(Captain::Assistant::ResponseParts::GREETING_START)
+    normalized_sentence.match?(Captain::Reply::Draft::GREETING_START)
   end
 
   def repeated(items) = items.tally.select { |_item, count| count > 1 }.keys
