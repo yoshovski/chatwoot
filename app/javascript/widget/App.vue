@@ -23,7 +23,7 @@ import { useAvailability } from 'widget/composables/useAvailability';
 import { SDK_SET_BUBBLE_VISIBILITY } from '../shared/constants/sharedFrameEvents';
 import { emitter } from 'shared/helpers/mitt';
 import { getWidgetForegroundColor } from 'shared/helpers/colorHelper';
-import { recordWebsiteActivity } from './api/websiteActivity';
+import { recordWebsiteActivity, setArrival } from './api/websiteActivity';
 import PreviewLauncher from './components/PreviewLauncher.vue';
 import {
   isPreviewMode,
@@ -335,6 +335,7 @@ export default {
           });
           window.referrerURL = referrerURL;
           window.referrerPageTitle = pageTitle || '';
+          setArrival(message.arrival);
           this.setReferrerHost(referrerHost);
           if (this.messageCount) recordWebsiteActivity();
         } else if (message.event === 'toggle-close-button') {

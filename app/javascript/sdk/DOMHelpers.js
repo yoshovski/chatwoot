@@ -1,5 +1,6 @@
 import SDK_CSS from './sdk.css?inline';
 import { IFrameHelper } from './IFrameHelper';
+import { readArrival } from './arrival';
 
 export const loadCSS = () => {
   const css = document.createElement('style');
@@ -39,11 +40,12 @@ export const removeClasses = (elm, classes) => {
   elm.classList.remove(...classes.split(' '));
 };
 
-export const onLocationChange = ({ referrerURL, referrerHost }) => {
+export const onLocationChange = ({ referrerURL, referrerHost, arrival }) => {
   IFrameHelper.events.onLocationChange({
     referrerURL,
     referrerHost,
     pageTitle: document.title,
+    arrival,
   });
 };
 
@@ -55,9 +57,11 @@ export const onLocationChangeListener = () => {
     childList: true,
     subtree: true,
   };
+  // Arrival is read once per page load, before the visitor's own navigation changes the URL.
   onLocationChange({
     referrerURL: oldHref,
     referrerHost,
+    arrival: readArrival(),
   });
 
   const bodyList = document.querySelector('body');
