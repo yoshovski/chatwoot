@@ -26,8 +26,10 @@ module Captain::Conversation::MessageBuilder
   def create_messages(preserve_waiting_since: false)
     return create_v1_message(preserve_waiting_since: preserve_waiting_since) unless captain_v2_enabled?
 
-    answer, *cards = reply_composer.messages(suppress_suggestions: waiting_for_human? || handoff_active_or_requested?)
-    validate_message_content!(answer[:content])
+    payloads = reply_composer.messages(suppress_suggestions: waiting_for_human? || handoff_active_or_requested?, segment_kinds: true)
+    # Buttons-only bubbles may have no text; every text bubble must.
+    payloads.each { |payload| validate_message_content!(payload[:content]) if payload[:content_type].in?([nil, 'text']) }
+    answer, *cards = payloads
     primary_message = create_composed_message(answer, preserve_waiting_since: preserve_waiting_since)
     cards.each { |payload| create_composed_message(payload, preserve_waiting_since: preserve_waiting_since) }
     primary_message

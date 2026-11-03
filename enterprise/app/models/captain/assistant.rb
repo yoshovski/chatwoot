@@ -393,9 +393,9 @@ class Captain::Assistant < ApplicationRecord
       tone_instruction: tone_instruction,
       off_limits_message: off_limits_message.presence,
       response_guidelines: response_guidelines || [],
-      guardrails: guardrails || [], handoff_rules: handoff_rules || [], limits: limits
+      guardrails: guardrails || [], handoff_rules: handoff_rules || []
     }
-    context.merge(business_prompt_context, Captain::Knowledge::BriefPrompt.new(self).context, lead_prompt_context)
+    context.merge(Captain::Behaviour.for(self).prompt_context, Captain::Knowledge::BriefPrompt.new(self).context)
   end
 
   def tone_instruction

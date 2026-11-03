@@ -62,13 +62,14 @@ class Captain::Scenario < ApplicationRecord
   end
 
   def prompt_context
+    behaviour = Captain::Behaviour.for(assistant).prompt_context
     {
-      **assistant.lead_prompt_context,
+      **behaviour.slice(:lead_capture),
       title: title,
       instructions: resolved_instructions,
       tools: resolved_tools,
       commerce_enabled: assistant.commerce_enabled?,
-      **assistant.business_prompt_context.slice(
+      **behaviour.slice(
         :answer_format, :answer_length, :answer_length_instruction, :follow_up_questions, :helpful_links_mode, :published_pricing_enabled
       ),
       feature_citation: assistant.citations_enabled?,
@@ -78,7 +79,7 @@ class Captain::Scenario < ApplicationRecord
       guardrails: guardrails || [],
       off_limits_message: assistant.off_limits_message.presence,
       product_name: product_name || 'this product',
-      limits: assistant.limits
+      limits: behaviour.fetch(:limits)
     }
   end
 

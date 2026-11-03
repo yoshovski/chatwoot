@@ -1,12 +1,7 @@
 # Decides what the customer sees for one Captain V2 run: the answer (prose, citations, suggestion buttons or the
 # empty-answer fallback), the order card and the product cards. With cards, one suggestion group (with any closing
-# question) appears after all cards. Returns message payloads and writes nothing.
-class Captain::Conversation::ReplyComposer # rubocop:disable Metrics/ClassLength
-  # The last sentence of the prose when it is a question that follows at least one other sentence.
-  TRAILING_QUESTION = /(?:\n\s*\n|(?<=[.!?])\s+)([^\n.!?]+\?)\s*\z/
-  # Bubbles one reply may split into through separate_parts.
-  MAX_SEPARATE_BUBBLES = 3
-  MIN_SEPARATED_ANSWER_WORDS = 4
+# question) appears after all cards. Returns message payloads and writes nothing; Captain::Reply::Builder does the work.
+class Captain::Conversation::ReplyComposer
   attr_reader :assistant, :conversation, :response, :run_result, :customer_message
 
   def initialize(assistant:, response:, run_result:, conversation: nil, customer_message: nil)
@@ -18,301 +13,27 @@ class Captain::Conversation::ReplyComposer # rubocop:disable Metrics/ClassLength
   end
 
   # suppress_suggestions: the caller knows the run ends in a handoff (or the conversation already waits for a human).
-  # A confirm-mode action's Confirm/Cancel card comes last and replaces the suggestion buttons.
-  def messages(suppress_suggestions: false)
-    return reply_messages(suppress_suggestions) if suppress_suggestions || action_confirmation.blank?
+  # segment_kinds: true adds captain_segment_kinds, which the chat job stores with each message.
+  def messages(suppress_suggestions: false, segment_kinds: false)
+    plan(suppress_suggestions: suppress_suggestions).payloads(segment_kinds: segment_kinds)
+  end
 
-    reply_messages(true) << Captain::Tools::ActionConfirmation.card_payload(action_confirmation, assistant.account.locale)
+  def plan(suppress_suggestions: false)
+    Captain::Reply::Builder.build(context(suppress_suggestions), draft)
   end
 
   def empty_response?
-    formatted_prose.blank? && !catalog_searches_empty? && !customer_message_has_attachments? && !model_returned_answer?
+    Captain::Reply::Builder.empty_answer?(context(false), draft)
   end
 
   private
 
-  def action_confirmation = run_result&.context&.dig(:state, Captain::Tools::ActionConfirmation::STATE_KEY)
-
-  def reply_messages(suppress_suggestions)
-    content, parts = answer_content
-    leading_messages, content, parts = split_leading_bubbles(content, parts)
-    closing_question = closing_question_from_parts(parts) || content[TRAILING_QUESTION, 1]
-    buttons = suggestion_buttons(suppress_suggestions || followup_form_requested?,
-                                 has_closing_question: closing_question.present? || content.strip.end_with?('?'))
-    if followup_form_requested?
-      content, parts = remove_question(parts, closing_question) if closing_question
-      form = Captain::Leads::FollowupFormService.new(assistant, conversation).payload
-      return [form] if content.blank?
-
-      return composed_messages(answer_message(content, parts, {})) << form
-    end
-
-    leading_messages + compose_answer(content, parts, closing_question, buttons)
+  def context(suppress_suggestions)
+    Captain::Reply::Context.build(assistant: assistant, conversation: conversation, run_result: run_result,
+                                  customer_message: customer_message, suppress_suggestions: suppress_suggestions)
   end
 
-  # The bubbles before the last one when the model listed separate_parts; the last one is composed as usual.
-  def split_leading_bubbles(content, parts)
-    *groups, last = separate_part_groups(parts)
-    return [[], content, parts] if groups.empty?
-
-    # The last bubble lists only the sources its own parts cite.
-    @structured_sources = group_sources(last)
-    leading = groups.map { |group| answer_message(format_parts(group, media: false), group, {}, sources: group_sources(group)) }
-    [leading, format_parts(last), last]
-  end
-
-  # Parts listed in separate_parts start a new bubble, at most MAX_SEPARATE_BUBBLES per reply. Email keeps one message.
-  def separate_part_groups(parts)
-    starts = separate_part_starts(parts.to_a.size)
-    return [parts] if starts.empty? || followup_form_requested? || conversation&.inbox&.channel_type == 'Channel::Email'
-
-    [0, *starts, parts.to_a.size].each_cons(2).map { |from, to| Captain::Assistant::ResponseParts.new(parts.to_a[from...to]) }
-  end
-
-  # The indexes count the model's response parts; a prepended AI welcome or a dropped repeated welcome shifts them.
-  def separate_part_starts(size)
-    indexes = response.is_a?(Hash) ? Array(response['separate_parts']) : []
-    offset = response_parts.index_offset
-    indexes.grep(Integer).map { |index| index + offset }.select { |index| index.between?(1, size - 1) }.uniq.sort.first(MAX_SEPARATE_BUBBLES - 1)
-  end
-
-  def group_sources(parts)
-    return [] unless sources_format == :structured
-
-    parts.sources(citation_urls: citation_urls, citation_titles: citation_titles)
-  end
-
-  def compose_answer(content, parts, closing_question, buttons)
-    separate_question = separate_closing_question?(closing_question)
-    return composed_messages(answer_message(content, parts, buttons)) unless contains_cards? || separate_question
-    return composed_messages(answer_message(content, parts, {})) if buttons.blank? && !separate_question
-
-    content, parts = remove_question(parts, closing_question) if closing_question
-    if content.blank?
-      question_parts = Captain::Assistant::ResponseParts.new([{ 'text' => closing_question, 'citation_indexes' => [] }])
-      return order_card_messages + product_card_messages + [answer_message(format_parts(question_parts), question_parts, buttons)]
-    end
-
-    composed_messages(answer_message(content, parts, {})) << question_message(closing_question, buttons)
-  end
-
-  def followup_form_requested? = run_result&.context&.dig(:state, :lead_followup_form_requested) == true
-
-  def closing_question_from_parts(parts)
-    candidates = qualification_reply? ? parts.to_a : parts.to_a.last(1)
-    candidates.reverse_each do |part|
-      text = part['text']
-      question = text[TRAILING_QUESTION, 1] || (text if text.end_with?('?'))
-      return question if question
-    end
-    nil
-  end
-
-  def remove_question(parts, question)
-    remaining_parts = without_trailing_question(parts, question)
-    [format_parts(remaining_parts), remaining_parts]
-  end
-
-  # On the widget (and the playground) the follow-up question gets its own bubble; a qualification question always does.
-  # With cards, the question keeps its place: after the cards with its buttons, or in the intro without them.
-  def separate_closing_question?(question)
-    question.present? && widget? &&
-      (qualification_reply? || (Captain::Behaviour::SEPARATE_FOLLOW_UP_ON_WIDGET && !contains_cards? && answer_before?(question)))
-  end
-
-  # A short greeting such as "Hi! How can I help?" stays one bubble, and so does the empty-answer fallback.
-  def answer_before?(question)
-    formatted_prose.sub(question, '').scan(/[[:alnum:]]+/).size >= MIN_SEPARATED_ANSWER_WORDS
-  end
-
-  def widget? = conversation.nil? || conversation.inbox&.channel_type == 'Channel::WebWidget'
-
-  def qualification_reply? = response.is_a?(Hash) && response['lead_qualification_question'] == true
-
-  def composed_messages(answer)
-    [answer] + order_card_messages + product_card_messages
-  end
-
-  def order_card_messages
-    @order_card_messages ||= Captain::Conversation::OrderCardBuilder.new(assistant: assistant, run_result: run_result).build_messages
-  end
-
-  def product_card_messages
-    @product_card_messages ||= cards_builder.build_messages(agent_name: response.is_a?(Hash) ? response['agent_name'] : nil)
-  end
-
-  def answer_content
-    content = formatted_prose
-    return [content, response_parts] if content.present?
-
-    content = empty_reply_fallback_text
-    [content, Captain::Assistant::ResponseParts.new([{ 'text' => content, 'citation_indexes' => [] }])]
-  end
-
-  def answer_message(content, parts, buttons, sources: structured_sources)
-    message = { content: content, content_type: 'text', additional_attributes: answer_attributes(parts) }.merge(buttons)
-    return message if sources.empty?
-
-    message.merge(content_attributes: message.fetch(:content_attributes, {})
-                                             .merge(Captain::Assistant::ResponseParts::SOURCES_ATTRIBUTE_KEY => sources))
-  end
-
-  def sources_format
-    @sources_format ||= Captain::Assistant::ResponseParts.sources_format(conversation, sources_card: assistant.citations_enabled?)
-  end
-
-  def citation_titles
-    @citation_titles ||= assistant.citation_titles(run_result)
-  end
-
-  # The run's parts, citing the matching page when the model cited none; the product name is in every title.
-  def response_parts
-    @response_parts ||= Captain::Assistant::ResponseParts.from_response(response).log_welcome_guard.with_fallback_citation(
-      citation_titles: citation_titles.slice(*citation_urls.keys), ignored_words: assistant.product_name.to_s.split
-    )
-  end
-
-  def citation_urls
-    @citation_urls ||= cards_builder.filter_citation_urls(assistant.trusted_citation_urls(run_result))
-  end
-
-  # Shown under the bubble by the widget and playground; text channels already carry them in the content.
-  def structured_sources
-    return [] unless sources_format == :structured
-
-    @structured_sources ||= response_parts.sources(citation_urls: citation_urls, citation_titles: citation_titles)
-  end
-
-  def question_message(question, buttons)
-    agent_name = response.is_a?(Hash) ? response['agent_name'] : nil
-    attributes = agent_name.present? ? { agent_name: agent_name } : {}
-    content = Captain::Knowledge::OfferingLinks.new(assistant).perform(question) if question
-    { content: content, additional_attributes: attributes }.merge(buttons)
-  end
-
-  def without_trailing_question(parts, question)
-    cloned = parts.to_a.map { |part| part.merge('text' => part['text'].sub(question, '').strip) }
-    Captain::Assistant::ResponseParts.new(cloned)
-  end
-
-  def answer_attributes(parts)
-    attributes = {}
-    agent_name = response.is_a?(Hash) ? response['agent_name'] : nil
-    attributes[:agent_name] = agent_name if agent_name.present?
-    if !followup_form_requested? && response.is_a?(Hash) && response['lead_qualification_question'] == true
-      attributes[Captain::Leads::QuestionBudget::ATTRIBUTE_KEY] = true
-    end
-    attributes[Captain::Assistant::ResponseParts::MESSAGE_ATTRIBUTE_KEY] = parts.to_a
-    attributes
-  end
-
-  def formatted_prose
-    @formatted_prose ||= format_parts(response_parts)
-  end
-
-  # media: false leaves the knowledge videos and screenshots to the last bubble of a split reply.
-  def format_parts(parts, media: true)
-    content = parts.customer_message_content(citation_urls: citation_urls, citation_titles: citation_titles, sources_format: sources_format)
-    content = Captain::Knowledge::OfferingLinks.new(assistant).perform(content)
-    content = with_knowledge_media(content) if media
-    cards_builder.clean_prose_content(grounded_screenshots(content))
-  end
-
-  # A cited passage's instructional media must not disappear just because generation omitted its link.
-  # Use only media in the retrieved excerpt of a source the answer actually uses, with bounded counts.
-  def with_knowledge_media(content)
-    return content if response.is_a?(Hash) && response['handoff_requested'] == true
-
-    knowledge_media_links.reduce(content) do |body, link|
-      url = link[Captain::Conversation::ReplySanitizer::MARKDOWN_LINK_REGEX, 2]
-      text = body.gsub(Captain::Conversation::ReplySanitizer::MARKDOWN_LINK_REGEX) do |existing|
-        Regexp.last_match(2) == url ? '' : existing
-      end
-      "#{text.strip}\n\n#{link}"
-    end
-  end
-
-  def knowledge_media_links
-    media = run_result&.context&.dig(:state, :knowledge_media).to_h
-    indexes = response_parts.to_a.flat_map { |part| part['citation_indexes'] }.uniq
-    links = indexes.flat_map { |index| Array(media[index]) }.uniq
-    videos, screenshots = links.partition { |link| Captain::Knowledge::VideoLink.line?(link) }
-    # Screenshots are useful alongside actual steps, not a platform-selection or general factual answer.
-    screenshots = [] unless response_parts.plain_text.match?(/^\s*\d+[.)]\s/)
-    videos.first(1) + screenshots.first(2)
-  end
-
-  # A stored Shopify-only default must not hide documentation screenshots. Custom image rules still
-  # apply, and every screenshot must have occurred in this turn's retrieved evidence.
-  def grounded_screenshots(content)
-    urls = Array(run_result&.context&.dig(:state, :knowledge_screenshots))
-    sanitizer = Captain::Conversation::ReplySanitizer.new(assistant: assistant)
-    default_images = assistant.image_allowlist == assistant.default_image_allowlist
-    content.gsub(Captain::Knowledge::ScreenshotLink::LINE) do |link|
-      url = Regexp.last_match(2)
-      allowed = default_images || sanitizer.allowed_image_url?(url)
-      urls.include?(url) && allowed ? link : ''
-    end
-  end
-
-  def cards_builder
-    @cards_builder ||= Captain::Conversation::ProductCardsBuilder.new(
-      assistant: assistant, conversation: conversation, response: response, run_result: run_result
-    )
-  end
-
-  def suggestion_buttons(suppress_suggestions, has_closing_question: false)
-    suggestions = Captain::Conversation::SuggestionFinalizer.new(
-      assistant: assistant,
-      response: response,
-      run_result: run_result,
-      customer_message: customer_message,
-      suppress_suggestions: suppress_suggestions,
-      has_closing_question: has_closing_question
-    ).perform
-    return {} if suggestions.blank?
-
-    # submit_value: a click sends the item's value (the full question), while the button shows its short title.
-    {
-      content_type: 'input_select',
-      content_attributes: { items: suggestions, submit_value: true }
-    }
-  end
-
-  def contains_cards?
-    return true if order_card_messages.any? || cards_builder.has_products?
-
-    response.is_a?(Hash) && (response['cards'].present? || response['content_type'] == 'cards')
-  end
-
-  def empty_reply_fallback_text
-    I18n.with_locale(assistant.account.locale) do
-      if catalog_searches_empty?
-        I18n.t('conversations.captain.empty_response_catalog_empty')
-      elsif customer_message_has_attachments?
-        I18n.t('conversations.captain.empty_response_attachments')
-      elsif model_returned_answer?
-        I18n.t('conversations.captain.empty_response_unusable')
-      else
-        I18n.t('conversations.captain.empty_response_handoff')
-      end
-    end
-  end
-
-  def catalog_searches_empty?
-    stats = assistant.run_result_product_search_stats(run_result)
-    return false if stats.blank?
-
-    stats[:searches].positive? && stats[:results].zero?
-  end
-
-  def customer_message_has_attachments?
-    customer_message.respond_to?(:attachments) && customer_message.attachments.any?
-  end
-
-  def model_returned_answer?
-    raw_response = response.is_a?(Hash) ? (response['response'] || response[:response]) : response.to_s
-    response_parts_text = Captain::Assistant::ResponseParts.from_response(response).plain_text
-    raw_response.to_s.strip.present? || response_parts_text.strip.present?
+  def draft
+    @draft ||= Captain::Reply::Draft.from_response(response)
   end
 end
