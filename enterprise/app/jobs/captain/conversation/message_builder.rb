@@ -29,6 +29,7 @@ module Captain::Conversation::MessageBuilder
     payloads = reply_composer.messages(suppress_suggestions: waiting_for_human? || handoff_active_or_requested?, segment_kinds: true)
     # Buttons-only bubbles may have no text; every text bubble must.
     payloads.each { |payload| validate_message_content!(payload[:content]) if payload[:content_type].in?([nil, 'text']) }
+    payloads = Captain::Reply::Pacing.stamp(payloads, responding_to: responding_to_customer_message) if inbox.web_widget?
     answer, *cards = payloads
     primary_message = create_composed_message(answer, preserve_waiting_since: preserve_waiting_since)
     cards.each { |payload| create_composed_message(payload, preserve_waiting_since: preserve_waiting_since) }

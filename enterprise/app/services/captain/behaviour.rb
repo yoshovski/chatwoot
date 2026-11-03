@@ -7,6 +7,20 @@ module Captain::Behaviour
   # On the widget the follow-up question gets its own bubble.
   SEPARATE_FOLLOW_UP_ON_WIDGET = true
 
+  # On the widget the bubbles of one reply arrive like a person typing: the first after at least
+  # REPLY_MIN_TYPING_MS of typing since the visitor's message, each later text bubble after a pause that grows with
+  # its length (REPLY_PAUSE_BASE_MS + REPLY_PAUSE_PER_CHAR_MS per character, kept between the min and max).
+  # Cards and forms come with the bubble before them.
+  REPLY_MIN_TYPING_MS = 1000
+  REPLY_PAUSE_BASE_MS = 500
+  REPLY_PAUSE_PER_CHAR_MS = 12
+  REPLY_PAUSE_MIN_MS = 800
+  REPLY_PAUSE_MAX_MS = 2500
+
+  def self.bubble_pause_ms(text)
+    (REPLY_PAUSE_BASE_MS + (REPLY_PAUSE_PER_CHAR_MS * text.to_s.length)).clamp(REPLY_PAUSE_MIN_MS, REPLY_PAUSE_MAX_MS)
+  end
+
   # After a quiet period the agent sends one short check-in (a lead offer for prospects), then auto-resolve applies.
   # It comes after half of auto_resolve_after, rounded down to 5 minutes and kept between 5 and 30 minutes.
   CHECK_IN_STEP_MINUTES = 5
