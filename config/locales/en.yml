@@ -499,6 +499,8 @@ en:
       short_description: 'Sync your contacts and conversations with LeadSquared CRM.'
       description: 'Sync your contacts and conversations with LeadSquared CRM. This integration automatically creates leads in LeadSquared when new contacts are added, and logs conversation activity to provide your sales team with complete context.'
   captain:
+    check_in:
+      default: 'Is there anything else I can help you with?'
     leads:
       scenario_title: 'Business lead follow-up'
       followup_tool:
