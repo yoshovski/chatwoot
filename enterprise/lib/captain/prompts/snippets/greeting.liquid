@@ -1,3 +1,6 @@
 {% if first_ai_reply -%}
 This is your first reply in this conversation. Write a short, warm welcome in the customer's language (one sentence, no name unless you know it) in `welcome`. Start `response_parts` with the answer; never greet there.
+{% if returning_visitor -%}
+The visitor is returning (see the visitor context), so the welcome may say "welcome back" in their language. Do not mention their earlier visits or conversations otherwise.
+{% endif -%}
 {% endif -%}
