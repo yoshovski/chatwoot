@@ -18,7 +18,7 @@ class Captain::ConversationCompletionService < Captain::BaseTaskService
     response = make_api_call(
       feature: 'conversation_completion',
       messages: [
-        { role: 'system', content: prompt_from_file('conversation_completion') },
+        { role: 'system', content: system_prompt },
         { role: 'user', content: content }
       ],
       schema: RESPONSE_SCHEMA
@@ -31,6 +31,30 @@ class Captain::ConversationCompletionService < Captain::BaseTaskService
 
   private
 
+  # Conversations without a check-in get the plain completion prompt.
+  def system_prompt
+    prompt = prompt_from_file('conversation_completion')
+    return prompt unless check_in_state&.unanswered_check_in?
+
+    [prompt, prompt_from_file('conversation_completion_check_in')].join("\n\n")
+  end
+
+  def check_in_state
+    assistant = conversation.inbox&.captain_assistant
+    return unless assistant
+
+    @check_in_state ||= Captain::Conversation::CheckInState.new(conversation: conversation, assistant: assistant)
+  end
+
+  def check_in_lines
+    return [] unless check_in_state
+
+    lines = []
+    lines << 'Check-in sent and not answered by the customer: true' if check_in_state.unanswered_check_in?
+    lines << 'Lead follow-up offer sent: true' if check_in_state.lead_offer_sent?
+    lines
+  end
+
   def prompt_from_file(file_name)
     Rails.root.join('enterprise/lib/captain/prompts', "#{file_name}.liquid").read
   end
@@ -42,6 +66,7 @@ class Captain::ConversationCompletionService < Captain::BaseTaskService
     [
       "Conversation status: #{conversation.status}",
       "Business lead intake saved: #{conversation.additional_attributes['business_lead_captured'] == true}",
+      *check_in_lines,
       format_messages_as_string(messages)
     ].join("\n\n")
   end

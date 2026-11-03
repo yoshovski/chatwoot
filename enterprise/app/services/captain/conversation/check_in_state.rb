@@ -2,6 +2,7 @@
 class Captain::Conversation::CheckInState
   ATTRIBUTE_KEY = 'captain_initiated'.freeze
   CHECK_IN = 'check_in'.freeze
+  LEAD_OFFER = 'lead_offer'.freeze
 
   def initialize(conversation:, assistant:)
     @conversation = conversation
@@ -29,6 +30,10 @@ class Captain::Conversation::CheckInState
   def unanswered_check_in?
     message = last_public_message
     message.present? && message.outgoing? && message.additional_attributes.to_h[ATTRIBUTE_KEY].present?
+  end
+
+  def lead_offer_sent?
+    initiated_messages.exists?(['messages.additional_attributes @> ?', { ATTRIBUTE_KEY => LEAD_OFFER }.to_json])
   end
 
   # The last public messages as chat roles, oldest first, for the check-in and lead offer prompts.
