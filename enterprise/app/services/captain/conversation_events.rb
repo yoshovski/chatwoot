@@ -31,6 +31,16 @@ class Captain::ConversationEvents
       )
     end
 
+    def checked_in(conversation:, assistant:, kind:, at:)
+      dispatch(
+        Events::Types::CAPTAIN_CONVERSATION_CHECKED_IN,
+        at: at,
+        conversation: conversation,
+        assistant: assistant,
+        kind: kind
+      )
+    end
+
     def response_completed(conversation:, assistant:, message:, at:)
       dispatch(
         Events::Types::CAPTAIN_RESPONSE_COMPLETED,

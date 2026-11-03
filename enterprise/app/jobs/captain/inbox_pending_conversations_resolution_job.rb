@@ -5,7 +5,11 @@ class Captain::InboxPendingConversationsResolutionJob < ApplicationJob
 
   def perform(inbox)
     @captain_assistant = inbox.captain_assistant
-    return if captain_assistant.blank? || captain_assistant.inactive_conversation_resolution_disabled?
+    return if captain_assistant.blank?
+
+    # Check-ins run first and also when auto-resolve is off; a check-in restarts the resolve clock.
+    @checked_in_ids = Captain::Conversation::CheckInRunner.new(inbox: inbox, assistant: captain_assistant).perform
+    return if captain_assistant.inactive_conversation_resolution_disabled?
 
     @inactivity_cutoff_time = Time.current - captain_assistant.inactivity_threshold_minutes.minutes
 
@@ -20,7 +24,7 @@ class Captain::InboxPendingConversationsResolutionJob < ApplicationJob
 
   private
 
-  attr_reader :captain_assistant, :inactivity_cutoff_time
+  attr_reader :captain_assistant, :inactivity_cutoff_time, :checked_in_ids
 
   def evaluate_conversation_completion?(account)
     account.feature_enabled?('captain_tasks') && captain_assistant.evaluate_inactive_conversations_before_resolving?
@@ -57,9 +61,13 @@ class Captain::InboxPendingConversationsResolutionJob < ApplicationJob
   end
 
   def resolvable_pending_conversations(inbox)
-    inbox.conversations.pending
-         .where('last_activity_at < ?', inactivity_cutoff_time)
-         .limit(Limits::BULK_ACTIONS_LIMIT)
+    conversations = inbox.conversations.pending
+                         .where('last_activity_at < ?', inactivity_cutoff_time)
+                         .where.not(id: checked_in_ids)
+                         .limit(Limits::BULK_ACTIONS_LIMIT)
+    return conversations unless captain_assistant.leads_enabled?
+
+    conversations.reject { |conversation| Captain::Conversation::CheckInRunner.awaiting_lead_offer?(conversation, captain_assistant) }
   end
 
   def inactive_for_initial_action?(conversation) = conversation.last_activity_at < inactivity_cutoff_time

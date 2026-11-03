@@ -342,4 +342,73 @@ RSpec.describe Captain::ConversationCompletionService do
       end
     end
   end
+
+  describe 'check-ins' do
+    let(:captain_assistant) { create(:captain_assistant, account: account) }
+    let(:plain_prompt) { Rails.root.join('enterprise/lib/captain/prompts/conversation_completion.liquid').read }
+    let(:mock_response) do
+      instance_double(RubyLLM::Message, content: { 'complete' => true, 'reason' => 'Answered' }, input_tokens: 100, output_tokens: 20)
+    end
+    let(:prompts) { [] }
+
+    before do
+      create(:captain_inbox, inbox: inbox, captain_assistant: captain_assistant)
+      conversation.update!(status: :pending)
+      create(:message, conversation: conversation, inbox: inbox, account: account, content: 'Do you ship to Canada?')
+      create(:message, conversation: conversation, inbox: inbox, account: account, message_type: :outgoing,
+                       sender: captain_assistant, content: 'Yes, in 5 to 7 business days.')
+      allow(mock_chat).to receive(:with_instructions) { |prompt| prompts << prompt }
+    end
+
+    def check_in(kind = 'check_in')
+      create(:message, conversation: conversation, inbox: inbox, account: account, message_type: :outgoing,
+                       sender: captain_assistant, content: 'Anything else about shipping?',
+                       additional_attributes: { 'captain_initiated' => kind })
+    end
+
+    it 'gives a conversation without a check-in exactly the plain prompt and input' do
+      expect(mock_chat).to receive(:ask) do |content|
+        expect(content).not_to include('Check-in sent', 'Lead follow-up offer sent')
+        mock_response
+      end
+
+      service.perform
+
+      expect(prompts).to eq([plain_prompt])
+    end
+
+    it 'adds the check-in rule when the customer did not answer the check-in' do
+      check_in
+      expect(mock_chat).to receive(:ask) do |content|
+        expect(content).to include('Check-in sent and not answered by the customer: true')
+        expect(content).not_to include('Lead follow-up offer sent')
+        mock_response
+      end
+
+      service.perform
+
+      expect(prompts.sole).to start_with(plain_prompt)
+      expect(prompts.sole).to include('is COMPLETE unless an earlier customer request is still unanswered')
+    end
+
+    it 'keeps the plain prompt once the customer answered the check-in' do
+      check_in
+      create(:message, conversation: conversation, inbox: inbox, account: account, content: 'What about Mexico?')
+      allow(mock_chat).to receive(:ask).and_return(mock_response)
+
+      service.perform
+
+      expect(prompts).to eq([plain_prompt])
+    end
+
+    it 'tells the evaluator about a lead offer' do
+      check_in('lead_offer')
+      expect(mock_chat).to receive(:ask) do |content|
+        expect(content).to include('Check-in sent and not answered by the customer: true', 'Lead follow-up offer sent: true')
+        mock_response
+      end
+
+      service.perform
+    end
+  end
 end

@@ -488,4 +488,54 @@ RSpec.describe Captain::InboxPendingConversationsResolutionJob, type: :job do
 
     expect(resolvable_pending_conversation.reload.status).to eq('pending')
   end
+
+  context 'with check-ins' do
+    let(:quiet_conversation) { create(:conversation, inbox: inbox, account: inbox.account, status: :pending) }
+
+    before do
+      inbox.account.enable_features!('captain_integration_v2')
+      create(:message, conversation: quiet_conversation, account: inbox.account, inbox: inbox, created_at: 3.hours.ago)
+      create(:message, conversation: quiet_conversation, account: inbox.account, inbox: inbox, message_type: :outgoing,
+                       sender: captain_assistant, content: 'Our store opens at 9am.', created_at: 2.hours.ago)
+      allow(Captain::Conversation::CheckInService).to receive(:new)
+        .and_return(instance_double(Captain::Conversation::CheckInService, perform: 'Anything else about our hours?'))
+    end
+
+    def check_in_count = quiet_conversation.messages.where("additional_attributes->>'captain_initiated' = 'check_in'").count
+
+    it 'checks in instead of resolving in the same run' do
+      allow(Captain::ConversationCompletionService).to receive(:new)
+        .and_return(instance_double(Captain::ConversationCompletionService, perform: { complete: true, reason: 'Answered' }))
+
+      described_class.perform_now(inbox)
+
+      expect(check_in_count).to eq(1)
+      expect(quiet_conversation.reload.status).to eq('pending')
+    end
+
+    it 'checks in when auto-resolve is disabled' do
+      captain_assistant.update!(config: { 'auto_resolve_mode' => 'disabled' })
+
+      described_class.perform_now(inbox)
+
+      expect(check_in_count).to eq(1)
+      expect(quiet_conversation.reload.status).to eq('pending')
+    end
+
+    it 'does not resolve a prospect before the lead offer' do
+      captain_assistant.update!(config: captain_assistant.config.merge(
+        'leads_enabled' => true, 'lead_types' => [{ 'name' => 'Demo', 'rule' => 'Wants to see the product' }]
+      ))
+      quiet_conversation.messages.where(sender: captain_assistant).update_all(additional_attributes: { 'business_lead_question' => true }) # rubocop:disable Rails/SkipsModelValidations
+      allow(Captain::Conversation::CheckInRunner).to receive(:new)
+        .and_return(instance_double(Captain::Conversation::CheckInRunner, perform: []))
+      allow(Captain::ConversationCompletionService).to receive(:new)
+        .and_return(instance_double(Captain::ConversationCompletionService, perform: { complete: true, reason: 'Answered' }))
+
+      described_class.perform_now(inbox.reload)
+
+      expect(quiet_conversation.reload.status).to eq('pending')
+      expect(resolvable_pending_conversation.reload.status).to eq('resolved')
+    end
+  end
 end

@@ -24,6 +24,7 @@ module Events::Types
   CONVERSATION_RESOLVED = 'conversation.resolved'
   CAPTAIN_CONVERSATION_HANDED_OFF = 'captain.conversation.handed_off'
   CAPTAIN_CONVERSATION_RESOLVED = 'captain.conversation.resolved'
+  CAPTAIN_CONVERSATION_CHECKED_IN = 'captain.conversation.checked_in'
   CAPTAIN_RESPONSE_COMPLETED = 'captain.response.completed'
   CAPTAIN_RESPONSE_FAILED = 'captain.response.failed'
 
