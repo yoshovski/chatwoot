@@ -157,4 +157,77 @@ RSpec.describe Captain::Conversation::CheckInRunner do
     runner.perform
     expect(check_ins.count).to eq(1)
   end
+
+  context 'with a business prospect' do
+    let(:config) do
+      { 'auto_resolve_mode' => 'evaluated', 'auto_resolve_after' => 60, 'leads_enabled' => true,
+        'lead_types' => [{ 'name' => 'Demo', 'rule' => 'Wants to see the product' }] }
+    end
+    let(:offer_service) { instance_double(Captain::Conversation::LeadOfferService, proposal: proposal) }
+    let(:proposal) { { 'offer' => 'Our team can email you a walkthrough.', 'lead_type' => 'Demo', 'summary' => 'Agency evaluating.' } }
+
+    before do
+      message(:incoming, at: 42.minutes.ago, content: 'Could Acme work for our agency?')
+      message(:outgoing, at: 41.minutes.ago, content: 'How many clients do you manage?',
+                         additional_attributes: { 'business_lead_question' => true })
+      message(:incoming, at: 41.minutes.ago, content: 'About 40')
+      message(:outgoing, at: 40.minutes.ago, content: 'Acme handles 40 client workspaces on the Agency plan.')
+      allow(Captain::Conversation::LeadOfferService).to receive(:new).and_return(offer_service)
+    end
+
+    def lead_offers = conversation.messages.where("additional_attributes->>'captain_initiated' = 'lead_offer'")
+
+    it 'sends a lead offer instead of a plain check-in' do
+      allow(offer_service).to receive(:deliver!) do
+        [message(:outgoing, at: Time.current, content: proposal['offer'], additional_attributes: { 'captain_initiated' => 'lead_offer' })]
+      end
+      expect(Captain::ConversationEvents).to receive(:checked_in).with(hash_including(kind: 'lead_offer'))
+
+      expect(runner.perform).to eq([conversation.id])
+      expect(lead_offers.count).to eq(1)
+      expect(check_ins).to be_empty
+    end
+
+    it 'never sends a second lead offer' do
+      message(:outgoing, at: 50.minutes.ago, content: 'Our team can email you.', additional_attributes: { 'captain_initiated' => 'lead_offer' })
+      message(:incoming, at: 41.minutes.ago, content: 'Maybe later')
+      message(:outgoing, at: 40.minutes.ago, content: 'Sure, take your time.')
+      allow(offer_service).to receive(:deliver!)
+
+      runner.perform
+
+      expect(offer_service).not_to have_received(:deliver!)
+      expect(check_ins.count).to eq(1)
+    end
+
+    it 'sends a plain check-in that marks the offer skipped when follow-up is not appropriate' do
+      allow(offer_service).to receive(:deliver!).and_return(nil)
+
+      runner.perform
+
+      expect(check_ins.sole.additional_attributes).to include('lead_offer_skipped' => true)
+      expect(Captain::Conversation::CheckInState.new(conversation: conversation, assistant: assistant).lead_guard?).to be(false)
+    end
+
+    it 'falls back to a plain check-in when the offer cannot be written' do
+      allow(offer_service).to receive(:proposal).and_return(nil)
+
+      runner.perform
+
+      expect(check_ins.sole.additional_attributes).to include('lead_offer_skipped' => true)
+    end
+
+    it 'keeps auto-resolve waiting for the offer' do
+      expect(described_class.awaiting_lead_offer?(conversation, assistant)).to be(true)
+
+      message(:outgoing, at: Time.current, content: proposal['offer'], additional_attributes: { 'captain_initiated' => 'lead_offer' })
+      expect(described_class.awaiting_lead_offer?(conversation, assistant)).to be(false)
+    end
+
+    it 'does not wait when the visitor wrote last, since no offer can follow' do
+      message(:incoming, at: 39.minutes.ago, content: 'Hello?')
+
+      expect(described_class.awaiting_lead_offer?(conversation, assistant)).to be(false)
+    end
+  end
 end

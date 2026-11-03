@@ -15,6 +15,15 @@ class Captain::Conversation::CheckInRunner
 
   def self.check_in_after(assistant) = Captain::Behaviour.check_in_after_minutes(assistant).minutes
 
+  # Auto-resolve waits for a prospect's lead offer while the runner can still send it.
+  def self.awaiting_lead_offer?(conversation, assistant)
+    return false unless assistant.leads_enabled?
+    return false if conversation.last_activity_at < Captain::Behaviour::CHECK_IN_LOOKBACK.ago
+
+    state = Captain::Conversation::CheckInState.new(conversation: conversation, assistant: assistant)
+    state.assistant_spoke_last? && state.lead_guard?
+  end
+
   private
 
   def candidates
@@ -41,18 +50,37 @@ class Captain::Conversation::CheckInRunner
   def check_in(conversation)
     return false unless eligible?(conversation)
 
+    # A prospect's first check-in is a lead offer; when follow-up isn't appropriate, a plain check-in marks the offer skipped.
+    if check_in_state(conversation).lead_guard?
+      return emitted(conversation, Captain::Conversation::CheckInState::LEAD_OFFER) if offer_lead(conversation)
+
+      lead_offer_skipped = true
+    end
+    post_check_in(conversation, lead_offer_skipped: lead_offer_skipped)
+  rescue ActiveRecord::RecordNotFound
+    false
+  end
+
+  def offer_lead(conversation)
+    service = Captain::Conversation::LeadOfferService.new(conversation: conversation, assistant: @assistant)
+    proposal = service.proposal
+    return false unless proposal
+
+    post_locked(conversation) { service.deliver!(proposal) if check_in_state(conversation).lead_guard? }.present?
+  end
+
+  def post_check_in(conversation, lead_offer_skipped:)
     content = Captain::Conversation::CheckInService.new(conversation: conversation, assistant: @assistant).perform
+    attributes = { 'agent_name' => @assistant.agent_name,
+                   Captain::Conversation::CheckInState::ATTRIBUTE_KEY => Captain::Conversation::CheckInState::CHECK_IN }
+    attributes[Captain::Conversation::CheckInState::LEAD_OFFER_SKIPPED_KEY] = true if lead_offer_skipped
     message = post_locked(conversation) do
       conversation.messages.create!(
         content: content, content_type: 'text', message_type: :outgoing, account_id: conversation.account_id,
-        inbox_id: conversation.inbox_id, sender: @assistant, preserve_waiting_since: true,
-        additional_attributes: { 'agent_name' => @assistant.agent_name,
-                                 Captain::Conversation::CheckInState::ATTRIBUTE_KEY => Captain::Conversation::CheckInState::CHECK_IN }
+        inbox_id: conversation.inbox_id, sender: @assistant, preserve_waiting_since: true, additional_attributes: attributes
       )
     end
-    emitted(conversation, Captain::Conversation::CheckInState::CHECK_IN) if message
-  rescue ActiveRecord::RecordNotFound
-    false
+    message ? emitted(conversation, Captain::Conversation::CheckInState::CHECK_IN) : false
   end
 
   # Model calls happen outside the lock; inside it the conversation is reloaded and checked again,
@@ -69,7 +97,7 @@ class Captain::Conversation::CheckInRunner
   def eligible?(conversation)
     return false unless conversation.pending? && conversation.last_activity_at < cutoff_time
 
-    state = Captain::Conversation::CheckInState.new(conversation: conversation, assistant: @assistant)
+    state = check_in_state(conversation)
     return false unless state.assistant_spoke_last? && agent_may_reply?(conversation)
     # A form waits for the visitor: the business follow-up form, or any form the agent sent last.
     return false if state.last_public_message.content_type == 'form'
@@ -77,6 +105,8 @@ class Captain::Conversation::CheckInRunner
 
     !state.checked_in_this_quiet_period?
   end
+
+  def check_in_state(conversation) = Captain::Conversation::CheckInState.new(conversation: conversation, assistant: @assistant)
 
   def agent_may_reply?(conversation)
     ownership = Captain::Conversation::OwnershipService.new(conversation: conversation, assistant: @assistant)

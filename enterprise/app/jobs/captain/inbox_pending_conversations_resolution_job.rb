@@ -61,10 +61,13 @@ class Captain::InboxPendingConversationsResolutionJob < ApplicationJob
   end
 
   def resolvable_pending_conversations(inbox)
-    inbox.conversations.pending
-         .where('last_activity_at < ?', inactivity_cutoff_time)
-         .where.not(id: checked_in_ids)
-         .limit(Limits::BULK_ACTIONS_LIMIT)
+    conversations = inbox.conversations.pending
+                         .where('last_activity_at < ?', inactivity_cutoff_time)
+                         .where.not(id: checked_in_ids)
+                         .limit(Limits::BULK_ACTIONS_LIMIT)
+    return conversations unless captain_assistant.leads_enabled?
+
+    conversations.reject { |conversation| Captain::Conversation::CheckInRunner.awaiting_lead_offer?(conversation, captain_assistant) }
   end
 
   def inactive_for_initial_action?(conversation) = conversation.last_activity_at < inactivity_cutoff_time

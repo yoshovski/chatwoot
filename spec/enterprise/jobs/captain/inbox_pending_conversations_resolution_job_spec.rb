@@ -521,5 +521,21 @@ RSpec.describe Captain::InboxPendingConversationsResolutionJob, type: :job do
       expect(check_in_count).to eq(1)
       expect(quiet_conversation.reload.status).to eq('pending')
     end
+
+    it 'does not resolve a prospect before the lead offer' do
+      captain_assistant.update!(config: captain_assistant.config.merge(
+        'leads_enabled' => true, 'lead_types' => [{ 'name' => 'Demo', 'rule' => 'Wants to see the product' }]
+      ))
+      quiet_conversation.messages.where(sender: captain_assistant).update_all(additional_attributes: { 'business_lead_question' => true }) # rubocop:disable Rails/SkipsModelValidations
+      allow(Captain::Conversation::CheckInRunner).to receive(:new)
+        .and_return(instance_double(Captain::Conversation::CheckInRunner, perform: []))
+      allow(Captain::ConversationCompletionService).to receive(:new)
+        .and_return(instance_double(Captain::ConversationCompletionService, perform: { complete: true, reason: 'Answered' }))
+
+      described_class.perform_now(inbox.reload)
+
+      expect(quiet_conversation.reload.status).to eq('pending')
+      expect(resolvable_pending_conversation.reload.status).to eq('resolved')
+    end
   end
 end
