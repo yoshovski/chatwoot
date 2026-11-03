@@ -6,7 +6,9 @@ import { formatUnixDate } from 'shared/helpers/DateHelper';
 export const getters = {
   getAllMessagesLoaded: _state => _state.uiFlags.allMessagesLoaded,
   getIsCreating: _state => _state.uiFlags.isCreating,
-  getIsAgentTyping: _state => _state.uiFlags.isAgentTyping,
+  // The server's typing event, or bubbles of a Captain reply still held by the widget's pacing.
+  getIsAgentTyping: _state =>
+    _state.uiFlags.isAgentTyping || _state.uiFlags.isRevealingReply === true,
   getConversation: _state => _state.conversations,
   getConversationSize: _state => Object.keys(_state.conversations).length,
   getEarliestMessage: _state => {

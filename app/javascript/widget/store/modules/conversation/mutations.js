@@ -104,6 +104,10 @@ export const mutations = {
     $state.uiFlags.isAgentTyping = status === 'on';
   },
 
+  setReplyRevealing($state, status) {
+    $state.uiFlags.isRevealingReply = status;
+  },
+
   setMetaUserLastSeenAt($state, lastSeen) {
     $state.meta.userLastSeenAt = lastSeen;
   },

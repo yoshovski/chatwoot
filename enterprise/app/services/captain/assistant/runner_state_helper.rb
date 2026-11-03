@@ -49,6 +49,13 @@ module Captain::Assistant::RunnerStateHelper
     state[:contact] = slice_attrs(@conversation.contact, CONTACT_STATE_ATTRIBUTES) if @conversation.contact
     state[:campaign] = slice_attrs(@conversation.campaign, CAMPAIGN_STATE_ATTRIBUTES) if @conversation.campaign
     state[:contact_inbox] = slice_attrs(@conversation.contact_inbox, CONTACT_INBOX_STATE_ATTRIBUTES) if @conversation.contact_inbox
+    state[:visitor_history] = visitor_history if @conversation.contact
+  end
+
+  # Earlier conversations of this contact in this inbox, for the returning-visitor line of the visitor context.
+  def visitor_history
+    earlier = ::Conversation.where(contact_id: @conversation.contact_id, inbox_id: @conversation.inbox_id).where.not(id: @conversation.id)
+    { earlier_conversations: earlier.count, last_conversation_status: earlier.order(:created_at).last&.status }
   end
 
   # The agent greets only when nothing was said to the customer yet: no earlier reply and no campaign opener.

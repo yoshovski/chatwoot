@@ -10,10 +10,30 @@ import {
   deleteCustomAttribute,
 } from 'widget/api/conversation';
 
-import { ON_CONVERSATION_CREATED } from 'widget/constants/widgetBusEvents';
+import {
+  ON_AGENT_MESSAGE_RECEIVED,
+  ON_CONVERSATION_CREATED,
+} from 'widget/constants/widgetBusEvents';
 import { createTemporaryMessage, getNonDeletedMessages } from './helpers';
+import { createReplyPacer } from './replyPacing';
 import { emitter } from 'shared/helpers/mitt';
 import { isPreviewMode } from 'widget/helpers/previewMode';
+import { recordVisitAfterFirstMessage } from 'widget/api/websiteActivity';
+
+// One pacer for the widget's single store; it reveals through the store that used it last.
+let replyPacer = null;
+const pacerFor = ({ commit, dispatch }) => {
+  if (!replyPacer) {
+    replyPacer = createReplyPacer({
+      reveal: message =>
+        dispatch('addOrUpdateMessage', message).then(() =>
+          emitter.emit(ON_AGENT_MESSAGE_RECEIVED)
+        ),
+      setTyping: status => commit('setReplyRevealing', status),
+    });
+  }
+  return replyPacer;
+};
 
 export const actions = {
   createConversation: async ({ commit, dispatch }, params) => {
@@ -24,6 +44,7 @@ export const actions = {
       const [message = {}] = messages;
       commit('pushMessageToConversation', message);
       dispatch('conversationAttributes/getAttributes', {}, { root: true });
+      recordVisitAfterFirstMessage();
       // Emit event to notify that conversation is created and show the chat screen
       emitter.emit(ON_CONVERSATION_CREATED);
     } catch (error) {
@@ -45,10 +66,12 @@ export const actions = {
     });
   },
   sendMessageWithData: async (
-    { commit },
+    { commit, dispatch },
     { message, pendingCustomAttributes = {}, pendingLabels = [] }
   ) => {
     const { id, content, replyTo, meta = {} } = message;
+    // Bubbles still held from the last reply come before the visitor's message.
+    pacerFor({ commit, dispatch }).flush();
     const hasPendingMetadata =
       Object.keys(pendingCustomAttributes).length > 0 ||
       pendingLabels.length > 0;
@@ -69,6 +92,7 @@ export const actions = {
       // [VITE] Don't delete this manually, since `pushMessageToConversation` does the replacement for us anyway
       // commit('deleteMessage', message.id);
       commit('pushMessageToConversation', { ...data, status: 'sent' });
+      recordVisitAfterFirstMessage();
     } catch (error) {
       commit('pushMessageToConversation', { ...message, status: 'failed' });
       commit('updateMessageMeta', {
@@ -82,8 +106,12 @@ export const actions = {
     commit('setLastMessageId');
   },
 
-  sendAttachment: async ({ commit, state: conversationState }, params) => {
+  sendAttachment: async (
+    { commit, dispatch, state: conversationState },
+    params
+  ) => {
     if (isPreviewMode()) return;
+    pacerFor({ commit, dispatch }).flush();
     const {
       attachment: { thumbUrl, fileType },
       content,
@@ -176,8 +204,29 @@ export const actions = {
     }
   },
 
-  clearConversations: ({ commit }) => {
+  clearConversations: ({ commit, dispatch }) => {
+    pacerFor({ commit, dispatch }).clear();
     commit('clearConversations');
+  },
+
+  // A live message.created event: Captain reply bubbles are paced, everything else shows at once.
+  receiveLiveMessage: (context, data) => {
+    if (data.content_attributes?.deleted) {
+      context.dispatch('addOrUpdateMessage', data);
+      return;
+    }
+    pacerFor(context).receive(data);
+  },
+
+  // A live message.updated event; a held bubble keeps waiting with the new content.
+  updateLiveMessage: (context, data) => {
+    if (data.content_attributes?.deleted || !pacerFor(context).update(data)) {
+      context.dispatch('addOrUpdateMessage', data);
+    }
+  },
+
+  revealPacedReplies: context => {
+    pacerFor(context).flush();
   },
 
   addOrUpdateMessage: async ({ commit }, data) => {

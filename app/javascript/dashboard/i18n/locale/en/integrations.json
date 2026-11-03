@@ -1163,7 +1163,7 @@
           },
           "RULES": {
             "TITLE": "Style rules",
-            "EXPLAINER": "Your agent adapts to customers, prospects and shoppers, greets new visitors and asks follow-up questions in a separate message. Add anything specific to your business here."
+            "EXPLAINER": "Your agent adapts to customers, prospects and shoppers, greets new visitors and asks follow-up questions in a separate message. It sees the page the visitor is on, their approximate location and whether they visited before, and never lists that back to them. Add anything specific to your business here."
           }
         },
         "WORKING_HOURS": {

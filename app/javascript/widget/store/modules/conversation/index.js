@@ -11,6 +11,7 @@ const state = {
     allMessagesLoaded: false,
     isFetchingList: false,
     isAgentTyping: false,
+    isRevealingReply: false,
     isCreating: false,
   },
   lastMessageId: null,
