@@ -25,4 +25,20 @@ module Captain::Behaviour
     half = (assistant.inactivity_threshold_minutes / 2 / CHECK_IN_STEP_MINUTES) * CHECK_IN_STEP_MINUTES
     half.clamp(CHECK_IN_MIN_MINUTES, CHECK_IN_MAX_MINUTES)
   end
+
+  # The content one agent's merchant set that shapes its replies, read in one place.
+  Settings = Data.define(:assistant) do
+    def limits = assistant.limits
+
+    def leads_enabled? = assistant.leads_enabled?
+
+    def business_type = assistant.effective_business_type
+
+    # The behaviour part of the reply prompt: answer shape, business add-on, limits and lead capture.
+    def prompt_context
+      { **assistant.business_prompt_context, limits: limits, **assistant.lead_prompt_context }
+    end
+  end
+
+  def self.for(assistant) = Settings.new(assistant)
 end
