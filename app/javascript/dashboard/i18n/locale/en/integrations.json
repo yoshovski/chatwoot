@@ -1349,7 +1349,14 @@
             "CLOSES": "The conversation closes",
             "STAYS_OPEN": "The conversation stays open",
             "SAYS_GOODBYE": "When it closes, {name} says",
-            "DEFAULT_GOODBYE": "Thanks for chatting with us. Message us anytime if you need more help."
+            "DEFAULT_GOODBYE": "Thanks for chatting with us. Message us anytime if you need more help.",
+            "CHECK_IN": "After {duration}, {name} checks in once",
+            "CHECK_IN_DETAIL": "One short message that fits the conversation, for example asking again what the customer didn’t answer.",
+            "LEAD_OFFER": "Prospects get an email follow-up offer instead",
+            "LEAD_OFFER_DETAIL": "When the customer looks like a business lead that wasn’t captured yet. The conversation stays open until the offer was made.",
+            "WAIT_AFTER_CHECK_IN": "{duration} pass with no reply after the check-in",
+            "CONTINUITY_HINT": "Turn on email continuity in {inbox} so customers who left get the check-in by email.",
+            "CONTINUITY_LINK": "Open inbox settings"
           }
         },
         "SAVE_BAR": {

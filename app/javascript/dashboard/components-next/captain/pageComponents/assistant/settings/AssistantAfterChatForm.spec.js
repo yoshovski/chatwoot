@@ -6,6 +6,7 @@ import ChoiceCard from './ChoiceCard.vue';
 import SettingsSaveBar from './SettingsSaveBar.vue';
 import DurationSelect from './DurationSelect.vue';
 import SettingsSwitchRow from './SettingsSwitchRow.vue';
+import AfterChatFlow from './AfterChatFlow.vue';
 
 vi.mock('vue-i18n', () => ({
   useI18n: () => ({ t: key => key }),
@@ -177,5 +178,35 @@ describe('AssistantAfterChatForm', () => {
     expect(wrapper.text()).toContain(
       'CAPTAIN.ASSISTANTS.FORM.INACTIVITY_RESOLUTION.ALWAYS_WARNING'
     );
+  });
+
+  it('passes lead capture and a website inbox without email continuity to the flow', () => {
+    const wrapper = shallowMount(AssistantAfterChatForm, {
+      props: {
+        assistant: {
+          ...assistant,
+          config: { ...assistant.config, leads_enabled: true },
+        },
+        save: vi.fn(),
+        inboxes: [
+          { id: 1, channel_type: 'Channel::Api', continuity_via_email: false },
+          {
+            id: 2,
+            channel_type: 'Channel::WebWidget',
+            continuity_via_email: true,
+          },
+          {
+            id: 3,
+            channel_type: 'Channel::WebWidget',
+            continuity_via_email: false,
+          },
+        ],
+      },
+      global: { stubs: { SettingsSplit: false } },
+    });
+
+    const flow = wrapper.findComponent(AfterChatFlow);
+    expect(flow.props('leadsEnabled')).toBe(true);
+    expect(flow.props('continuityOffInbox')).toMatchObject({ id: 3 });
   });
 });

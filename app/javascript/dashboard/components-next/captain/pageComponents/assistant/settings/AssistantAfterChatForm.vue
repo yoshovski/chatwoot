@@ -27,6 +27,11 @@ const props = defineProps({
     type: Function,
     required: true,
   },
+  // Inboxes connected to the agent, for the email continuity hint.
+  inboxes: {
+    type: Array,
+    default: () => [],
+  },
 });
 
 const { t } = useI18n();
@@ -54,6 +59,15 @@ const initialState = {
 const state = reactive({ ...initialState });
 
 const name = computed(() => props.assistant.name);
+const leadsEnabled = computed(
+  () => props.assistant.config?.leads_enabled === true
+);
+const continuityOffInbox = computed(() =>
+  props.inboxes.find(
+    inbox =>
+      inbox.channel_type === 'Channel::WebWidget' && !inbox.continuity_via_email
+  )
+);
 
 const autoResolveOptions = computed(() => [
   {
@@ -352,6 +366,8 @@ watch(
           state.sendInactivityResolutionMessage ? state.resolutionMessage : ''
         "
         :send-goodbye="state.sendInactivityResolutionMessage"
+        :leads-enabled="leadsEnabled"
+        :continuity-off-inbox="continuityOffInbox || null"
       />
     </template>
   </SettingsSplit>
