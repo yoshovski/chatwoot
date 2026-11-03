@@ -113,6 +113,19 @@ RSpec.describe Captain::Conversation::CheckInRunner do
     expect(runner.perform).to be_empty
   end
 
+  it 'sends nothing when the visitor never wrote' do
+    message(:outgoing, at: 40.minutes.ago, content: 'Hi! Looking for a plan for your team?')
+
+    expect(runner.perform).to be_empty
+  end
+
+  it 'keeps going when one check-in fails' do
+    quiet_exchange
+    allow(Captain::Conversation::CheckInService).to receive(:new).and_raise(ActiveRecord::StatementInvalid)
+
+    expect(runner.perform).to be_empty
+  end
+
   it 'sends nothing when the conversation was handed off' do
     quiet_exchange
     conversation.update!(status: :open)

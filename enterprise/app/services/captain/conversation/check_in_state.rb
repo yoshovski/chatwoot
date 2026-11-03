@@ -15,10 +15,11 @@ class Captain::Conversation::CheckInState
     public_messages.reorder(id: :desc).first
   end
 
-  # The agent spoke last, so a check-in fits; the visitor's or a colleague's message is never followed by one.
+  # The visitor wrote and the agent spoke last, so a check-in fits. A visitor's or colleague's message is never followed
+  # by one, and neither is an opener the visitor never answered.
   def assistant_spoke_last?
     message = last_public_message
-    message.present? && message.outgoing? && message.sender == @assistant
+    message.present? && message.outgoing? && message.sender == @assistant && public_messages.incoming.exists?
   end
 
   def checked_in_this_quiet_period?

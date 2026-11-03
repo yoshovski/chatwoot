@@ -47,6 +47,7 @@ class Captain::Conversation::CheckInRunner
            .select(:conversation_id)
   end
 
+  # A failing check-in never stops the other conversations or the resolution that follows.
   def check_in(conversation)
     return false unless eligible?(conversation)
 
@@ -58,6 +59,9 @@ class Captain::Conversation::CheckInRunner
     end
     post_check_in(conversation, lead_offer_skipped: lead_offer_skipped)
   rescue ActiveRecord::RecordNotFound
+    false
+  rescue StandardError => e
+    ChatwootExceptionTracker.new(e, account: conversation.account).capture_exception
     false
   end
 
