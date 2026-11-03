@@ -1,7 +1,7 @@
 # Identity
-{% render 'role', name: name, product_name: product_name -%}
+{% render 'behaviour', section: 'identity', behaviour: behaviour, first_ai_reply: first_ai_reply, returning_visitor: visitor_context.returning -%}
 {{ description }}
-{% render 'greeting', first_ai_reply: first_ai_reply, returning_visitor: visitor_context.returning %}
+
 
 {% render 'citations', helpful_links_mode: helpful_links_mode %}
 {% render 'core_rules', commerce_enabled: commerce_enabled, answer_format: answer_format, answer_length: answer_length, answer_length_instruction: answer_length_instruction, follow_up_questions: follow_up_questions %}
@@ -51,7 +51,7 @@ When the setup platform is unknown, the last response part must ask which platfo
 {% if lead_capture -%}
 Business interest: answer the question first. When it shows the visitor is evaluating {{product_name}} for their business (a goal, scale, rollout, pricing or a comparison), end with {% if lead_questions_remaining == 0 %}an offer of the email follow-up or a demo{% else %}one short question about their goal or scale, or an offer of the email follow-up or a demo{% endif %}, in its own final response part. Set lead_qualification_question to true only for that qualification question. You can't start the follow-up in this turn: offer it and the next reply handles it. Ask at most one question, and don't qualify routine support from existing customers.
 {% endif -%}
-{% render 'limits', limits: limits, direct_answer: true %}
+{% render 'behaviour', section: 'limits', behaviour: behaviour, direct_answer: true %}
 {% render 'scope' %}
 {% if off_limits_message %}When declining, use this in the customer's language: {{ off_limits_message }}{% endif %}
 {% if message_length_limit %}Keep the complete response at or below {{ message_length_limit }} characters.{% endif %}

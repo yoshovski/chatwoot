@@ -143,6 +143,42 @@ RSpec.describe Captain::PromptRenderer do
     end
   end
 
+  describe 'behaviour block parity' do
+    let(:lead_config) { { 'leads_enabled' => true, 'lead_types' => [{ 'name' => 'Demo', 'rule' => 'Wants a demo' }] } }
+    let(:limit_config) { { 'limits' => [{ 'cannot' => 'issue refunds', 'offer' => 'handoff' }] } }
+    let(:welcome_line) { 'Write a short, warm welcome' }
+    let(:role_line) { 'You are Ava, the assistant for Acme Streaming Tools. Decide in each conversation what the visitor needs' }
+    let(:limit_lines) do
+      { 'assistant' => "You can't issue refunds. Follow the Human Handoff Protocol to bring in a colleague.",
+        'direct_response' => "You can't issue refunds. Say a colleague will continue in this chat and set handoff_requested to true.",
+        'scenario' => "You can't issue refunds. Bring in a colleague with `captain--tools--handoff`" }
+    end
+
+    [true, false].product([true, false], [true, false], [true, false], [true, false]).each do |first_reply, opener, leads, limits, email|
+      it "renders the same behaviour lines (first reply #{first_reply}, opener #{opener}, leads #{leads}, limits #{limits}, " \
+         "email #{email})" do
+        assistant.update!(config: config.merge(leads ? lead_config : {}, limits ? limit_config : {}))
+        scenario = create(:captain_scenario, assistant: assistant, title: 'Planting plan', instruction: 'Ask for the bed size.')
+        runtime = { first_ai_reply: first_reply && !opener, campaign: opener ? { id: 7, title: 'Spring offer' } : {},
+                    message_length_limit: email ? nil : 1000, visitor_context: { returning: { earlier_conversations: 1 } } }
+        prompts = { 'assistant' => assistant.prompt_context, 'direct_response' => assistant.prompt_context,
+                    'scenario' => scenario.prompt_context }.to_h do |template, base|
+          [template, described_class.render(template, base.merge(runtime).with_indifferent_access)]
+        end
+
+        prompts.each do |template, prompt|
+          expect(prompt.include?(welcome_line)).to eq(first_reply && !opener)
+          expect(prompt.include?('welcome back')).to eq(first_reply && !opener)
+          expect(prompt.include?(role_line)).to eq(template != 'scenario')
+          expect(prompt.include?("# What You Can't Do")).to eq(limits)
+          expect(prompt.include?(limit_lines.fetch(template))).to eq(limits)
+        end
+        expect(prompts.values_at('assistant', 'scenario').map { |prompt| prompt.include?('## Business lead capture') }).to all(eq(leads))
+        expect(prompts['direct_response'].include?('Business interest:')).to eq(leads)
+      end
+    end
+  end
+
   it 'describes software visitors without assuming they are customers' do
     assistant.update!(config: config.merge('business_type' => 'software'))
 
