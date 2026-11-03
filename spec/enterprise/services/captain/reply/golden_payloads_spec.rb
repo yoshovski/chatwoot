@@ -207,6 +207,7 @@ RSpec.describe 'Captain reply golden payloads' do # rubocop:disable RSpec/Descri
                                        { 'text' => 'Offline notes sync when you reconnect.', 'citation_indexes' => [] }],
                   'separate_parts' => [2] },
       kinds: [%w[greeting answer], %w[answer]],
+      repairs: %w[duplicate_welcome],
       expected: [{ content: "Hi there, welcome to Lumen Notes!\n\nSync runs every five minutes.",
                    content_type: 'text',
                    additional_attributes: { 'captain_v2_response_parts' => [{ 'text' => 'Hi there, welcome to Lumen Notes!',
@@ -225,6 +226,7 @@ RSpec.describe 'Captain reply golden payloads' do # rubocop:disable RSpec/Descri
                                        { 'text' => 'Offline notes sync when you reconnect.', 'citation_indexes' => [] }],
                   'separate_parts' => [1] },
       kinds: [%w[greeting answer], %w[answer]],
+      repairs: %w[duplicate_welcome],
       expected: [{ content: "Hi there, welcome to Lumen Notes!\n\nSync runs every five minutes.",
                    content_type: 'text',
                    additional_attributes: { 'captain_v2_response_parts' => [{ 'text' => 'Hi there, welcome to Lumen Notes!',
@@ -240,6 +242,7 @@ RSpec.describe 'Captain reply golden payloads' do # rubocop:disable RSpec/Descri
       response: { 'welcome' => 'Hi there, welcome to Lumen Notes!',
                   'response_parts' => [{ 'text' => 'Hello and welcome! Sync runs every five minutes.', 'citation_indexes' => [] }] },
       kinds: [%w[greeting answer]],
+      repairs: %w[duplicate_welcome],
       expected: [{ content: "Hi there, welcome to Lumen Notes!\n\nSync runs every five minutes.",
                    content_type: 'text',
                    additional_attributes: { 'captain_v2_response_parts' => [{ 'text' => 'Hi there, welcome to Lumen Notes!',
@@ -251,11 +254,11 @@ RSpec.describe 'Captain reply golden payloads' do # rubocop:disable RSpec/Descri
       response: { 'welcome' => 'Hi there, welcome to Lumen Notes!',
                   'response_parts' => [{ 'text' => 'Hi there, welcome to Lumen Notes!', 'citation_indexes' => [] }] },
       kinds: [%w[greeting answer]],
-      expected: [{ content: "Hi there, welcome to Lumen Notes!\n\nHi there, welcome to Lumen Notes!",
+      # Before the reply checks (CWAI-143) the welcome was sent twice: "#{welcome}\n\n#{welcome}".
+      repairs: %w[no_repeated_sentences],
+      expected: [{ content: 'Hi there, welcome to Lumen Notes!',
                    content_type: 'text',
                    additional_attributes: { 'captain_v2_response_parts' => [{ 'text' => 'Hi there, welcome to Lumen Notes!',
-                                                                              'citation_indexes' => [] },
-                                                                            { 'text' => 'Hi there, welcome to Lumen Notes!',
                                                                               'citation_indexes' => [] }] } }]
     },
     sources_structured: {
@@ -527,9 +530,15 @@ RSpec.describe 'Captain reply golden payloads' do # rubocop:disable RSpec/Descri
       composer = Captain::Conversation::ReplyComposer.new(assistant: assistant, conversation: conversation, response: resolve(input[:response]),
                                                           run_result: run_result, customer_message: customer_message)
 
+      repairs = []
+      allow(Rails.logger).to receive(:info).and_wrap_original do |original, *args, &block|
+        repairs << args.first[/\[ReplyGuard\] rule=(\w+)/, 1] if args.first.is_a?(String)
+        original.call(*args, &block)
+      end
       messages = composer.messages(suppress_suggestions: input.fetch(:suppress, false))
 
       expect(messages).to eq(input[:expected].map { |payload| resolve(payload) })
+      expect(repairs.compact).to eq(input.fetch(:repairs, []))
 
       kinds = composer.messages(suppress_suggestions: input.fetch(:suppress, false), segment_kinds: true)
                       .map { |payload| payload[:additional_attributes][Captain::Reply::Plan::SEGMENT_KINDS_KEY] }

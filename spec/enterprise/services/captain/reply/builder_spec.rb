@@ -14,11 +14,11 @@ RSpec.describe Captain::Reply::Builder do
   end
 
   it 'takes the closing question only out of the part it came from' do
-    plan = build('response_parts' => [{ 'text' => 'Which plan are you on? Plans differ in storage.', 'citation_indexes' => [] },
-                                      { 'text' => 'Pausing keeps your notes safe for months. Which plan are you on?', 'citation_indexes' => [] }])
+    plan = build('response_parts' => [{ 'text' => 'Monthly or yearly? Plans differ in storage.', 'citation_indexes' => [] },
+                                      { 'text' => 'Pausing keeps your notes safe for months. Monthly or yearly?', 'citation_indexes' => [] }])
 
     expect(plan.payloads(segment_kinds: false).pluck(:content))
-      .to eq(["Which plan are you on? Plans differ in storage.\n\nPausing keeps your notes safe for months.", 'Which plan are you on?'])
+      .to eq(["Monthly or yearly? Plans differ in storage.\n\nPausing keeps your notes safe for months.", 'Monthly or yearly?'])
   end
 
   it 'splits at the model indexes after a welcome the draft removed' do

@@ -1,4 +1,5 @@
-# Builds the plan of one reply from the model's draft: each policy shapes one aspect, always in this order.
+# Builds the plan of one reply from the model's draft: each policy shapes one aspect, always in this order, and the
+# checks repair what still breaks the reply rules.
 class Captain::Reply::Builder
   POLICIES = [
     Captain::Reply::Policies::Greeting, Captain::Reply::Policies::Answer, Captain::Reply::Policies::Split,
@@ -9,7 +10,7 @@ class Captain::Reply::Builder
   def self.build(context, draft)
     workspace = Captain::Reply::Workspace.new(context, draft)
     POLICIES.each { |policy| policy.new(workspace).apply }
-    Captain::Reply::Plan.new(workspace.segments)
+    Captain::Reply::Checks.new(context, draft).repair(Captain::Reply::Plan.new(workspace.segments))
   end
 
   # Whether the run left nothing to say and no reason to say so (the chat job then hands the customer over).
