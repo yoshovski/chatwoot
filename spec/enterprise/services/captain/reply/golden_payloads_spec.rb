@@ -34,6 +34,7 @@ RSpec.describe 'Captain reply golden payloads' do # rubocop:disable RSpec/Descri
     plain_answer: {
       response: { 'agent_name' => 'Lumen', 'response_parts' => [{ 'text' => 'Sync runs every five minutes.', 'citation_indexes' => [] }],
                   'suggested_replies' => ['Sync now', 'Offline mode'] },
+      kinds: [%w[answer]],
       expected: [{ content: 'Sync runs every five minutes.',
                    content_type: 'input_select',
                    additional_attributes: { :agent_name => 'Lumen',
@@ -48,6 +49,7 @@ RSpec.describe 'Captain reply golden payloads' do # rubocop:disable RSpec/Descri
                   'response_parts' => [{ 'text' => 'You can pause a plan for up to three months. Which plan are you on?',
                                          'citation_indexes' => [] }],
                   'suggested_replies' => [{ 'label' => 'Monthly', 'message' => 'I am on the monthly plan.' }] },
+      kinds: [%w[answer], %w[question]],
       expected: [{ content: 'You can pause a plan for up to three months.',
                    content_type: 'text',
                    additional_attributes: { :agent_name => 'Lumen',
@@ -63,6 +65,7 @@ RSpec.describe 'Captain reply golden payloads' do # rubocop:disable RSpec/Descri
       response: { 'response_parts' => [{ 'text' => 'You can pause a plan for up to three months. Which plan are you on?',
                                          'citation_indexes' => [] }],
                   'suggested_replies' => ['Monthly'] },
+      kinds: [%w[answer]],
       expected: [{ content: 'You can pause a plan for up to three months. Which plan are you on?',
                    content_type: 'input_select',
                    additional_attributes: { 'captain_v2_response_parts' => [{ 'text' =>
@@ -75,6 +78,7 @@ RSpec.describe 'Captain reply golden payloads' do # rubocop:disable RSpec/Descri
       response: { 'response_parts' => [{ 'text' => 'You can pause a plan for up to three months. Which plan are you on?',
                                          'citation_indexes' => [] }],
                   'suggested_replies' => ['Monthly'] },
+      kinds: [%w[answer]],
       expected: [{ content: 'You can pause a plan for up to three months. Which plan are you on?',
                    content_type: 'input_select',
                    additional_attributes: { 'captain_v2_response_parts' => [{ 'text' =>
@@ -84,6 +88,7 @@ RSpec.describe 'Captain reply golden payloads' do # rubocop:disable RSpec/Descri
     },
     short_greeting_with_question: {
       response: { 'response_parts' => [{ 'text' => 'Hi there! How can I help?', 'citation_indexes' => [] }] },
+      kinds: [%w[answer]],
       expected: [{ content: 'Hi there! How can I help?',
                    content_type: 'text',
                    additional_attributes: { 'captain_v2_response_parts' => [{ 'text' => 'Hi there! How can I help?', 'citation_indexes' => [] }] } }]
@@ -93,6 +98,7 @@ RSpec.describe 'Captain reply golden payloads' do # rubocop:disable RSpec/Descri
                   'response_parts' => [{ 'text' => 'Team spaces suit groups. How large is your team?', 'citation_indexes' => [] },
                                        { 'text' => 'Exports work on every plan.', 'citation_indexes' => [] }],
                   'suggested_replies' => ['Under 10'] },
+      kinds: [%w[answer], %w[question]],
       expected: [{ content: "Team spaces suit groups.\n\nExports work on every plan.",
                    content_type: 'text',
                    additional_attributes: { :agent_name => 'Lumen',
@@ -112,6 +118,7 @@ RSpec.describe 'Captain reply golden payloads' do # rubocop:disable RSpec/Descri
                                        { 'text' => 'Exports work on every plan.', 'citation_indexes' => [] },
                                        { 'text' => 'How large is your team?', 'citation_indexes' => [] }],
                   'separate_parts' => [3, 1, 2, 9], 'suggested_replies' => ['Under 10'] },
+      kinds: [%w[answer], %w[answer], %w[answer], %w[question]],
       expected: [{ content: 'Our trial lasts 14 days.',
                    content_type: 'text',
                    additional_attributes: { 'captain_v2_response_parts' => [{ 'text' => 'Our trial lasts 14 days.', 'citation_indexes' => [1] }] },
@@ -137,6 +144,7 @@ RSpec.describe 'Captain reply golden payloads' do # rubocop:disable RSpec/Descri
                                        { 'text' => 'You can add teammates at any time.', 'citation_indexes' => [2] },
                                        { 'text' => 'How large is your team?', 'citation_indexes' => [] }],
                   'separate_parts' => [1] },
+      kinds: [%w[greeting answer], %w[answer], %w[question]],
       expected: [{ content: "Hi there, thanks for asking!\n\nOur trial lasts 14 days.",
                    content_type: 'text',
                    additional_attributes: { 'captain_v2_response_parts' => [{ 'text' => 'Hi there, thanks for asking!', 'citation_indexes' => [] },
@@ -154,6 +162,7 @@ RSpec.describe 'Captain reply golden payloads' do # rubocop:disable RSpec/Descri
                   'response_parts' => [{ 'text' => 'Our trial lasts 14 days.', 'citation_indexes' => [] },
                                        { 'text' => 'You can add teammates at any time.', 'citation_indexes' => [] }],
                   'separate_parts' => [0, 1] },
+      kinds: [%w[greeting], %w[answer], %w[answer]],
       expected: [{ content: 'Hi there, thanks for asking!',
                    content_type: 'text',
                    additional_attributes:
@@ -171,6 +180,7 @@ RSpec.describe 'Captain reply golden payloads' do # rubocop:disable RSpec/Descri
       response: { 'response_parts' => [{ 'text' => 'Our trial lasts 14 days.', 'citation_indexes' => [] },
                                        { 'text' => 'You can add teammates at any time.', 'citation_indexes' => [] }],
                   'separate_parts' => [1] },
+      kinds: [%w[answer]],
       expected: [{ content: "Our trial lasts 14 days.\n\nYou can add teammates at any time.",
                    content_type: 'text',
                    additional_attributes: { 'captain_v2_response_parts' => [{ 'text' => 'Our trial lasts 14 days.', 'citation_indexes' => [] },
@@ -181,6 +191,7 @@ RSpec.describe 'Captain reply golden payloads' do # rubocop:disable RSpec/Descri
       response: { 'welcome' => 'Hi there, welcome to Lumen Notes!',
                   'response_parts' => [{ 'text' => 'Sync runs every five minutes.', 'citation_indexes' => [] }],
                   'suggested_replies' => ['Sync now'] },
+      kinds: [%w[greeting answer]],
       expected: [{ content: "Hi there, welcome to Lumen Notes!\n\nSync runs every five minutes.",
                    content_type: 'input_select',
                    additional_attributes: { 'captain_v2_response_parts' => [{ 'text' => 'Hi there, welcome to Lumen Notes!',
@@ -195,6 +206,7 @@ RSpec.describe 'Captain reply golden payloads' do # rubocop:disable RSpec/Descri
                                        { 'text' => 'Sync runs every five minutes.', 'citation_indexes' => [] },
                                        { 'text' => 'Offline notes sync when you reconnect.', 'citation_indexes' => [] }],
                   'separate_parts' => [2] },
+      kinds: [%w[greeting answer], %w[answer]],
       expected: [{ content: "Hi there, welcome to Lumen Notes!\n\nSync runs every five minutes.",
                    content_type: 'text',
                    additional_attributes: { 'captain_v2_response_parts' => [{ 'text' => 'Hi there, welcome to Lumen Notes!',
@@ -212,6 +224,7 @@ RSpec.describe 'Captain reply golden payloads' do # rubocop:disable RSpec/Descri
                                          'citation_indexes' => [] },
                                        { 'text' => 'Offline notes sync when you reconnect.', 'citation_indexes' => [] }],
                   'separate_parts' => [1] },
+      kinds: [%w[greeting answer], %w[answer]],
       expected: [{ content: "Hi there, welcome to Lumen Notes!\n\nSync runs every five minutes.",
                    content_type: 'text',
                    additional_attributes: { 'captain_v2_response_parts' => [{ 'text' => 'Hi there, welcome to Lumen Notes!',
@@ -226,6 +239,7 @@ RSpec.describe 'Captain reply golden payloads' do # rubocop:disable RSpec/Descri
     welcome_repeated_as_greeting: {
       response: { 'welcome' => 'Hi there, welcome to Lumen Notes!',
                   'response_parts' => [{ 'text' => 'Hello and welcome! Sync runs every five minutes.', 'citation_indexes' => [] }] },
+      kinds: [%w[greeting answer]],
       expected: [{ content: "Hi there, welcome to Lumen Notes!\n\nSync runs every five minutes.",
                    content_type: 'text',
                    additional_attributes: { 'captain_v2_response_parts' => [{ 'text' => 'Hi there, welcome to Lumen Notes!',
@@ -236,6 +250,7 @@ RSpec.describe 'Captain reply golden payloads' do # rubocop:disable RSpec/Descri
     welcome_is_the_whole_answer: {
       response: { 'welcome' => 'Hi there, welcome to Lumen Notes!',
                   'response_parts' => [{ 'text' => 'Hi there, welcome to Lumen Notes!', 'citation_indexes' => [] }] },
+      kinds: [%w[greeting answer]],
       expected: [{ content: "Hi there, welcome to Lumen Notes!\n\nHi there, welcome to Lumen Notes!",
                    content_type: 'text',
                    additional_attributes: { 'captain_v2_response_parts' => [{ 'text' => 'Hi there, welcome to Lumen Notes!',
@@ -247,6 +262,7 @@ RSpec.describe 'Captain reply golden payloads' do # rubocop:disable RSpec/Descri
       citations: true,
       response: { 'response_parts' => [{ 'text' => 'Sync runs every five minutes.', 'citation_indexes' => [1] }],
                   'suggested_replies' => ['Sync now'] },
+      kinds: [%w[answer]],
       expected: [{ content: 'Sync runs every five minutes.',
                    content_type: 'input_select',
                    additional_attributes: { 'captain_v2_response_parts' =>
@@ -258,6 +274,7 @@ RSpec.describe 'Captain reply golden payloads' do # rubocop:disable RSpec/Descri
     sources_off: {
       stub_citations: true,
       response: { 'response_parts' => [{ 'text' => 'Sync runs every five minutes.', 'citation_indexes' => [1] }] },
+      kinds: [%w[answer]],
       expected: [{ content: 'Sync runs every five minutes.',
                    content_type: 'text',
                    additional_attributes: { 'captain_v2_response_parts' =>
@@ -266,6 +283,7 @@ RSpec.describe 'Captain reply golden payloads' do # rubocop:disable RSpec/Descri
     sources_email: {
       channel: :email, citations: true,
       response: { 'response_parts' => [{ 'text' => 'Sync runs every five minutes.', 'citation_indexes' => [1, 2] }] },
+      kinds: [%w[answer]],
       expected: [{ content:
                    "Sync runs every five minutes.\n\n→ [Sync your notes](https://docs.lumen-notes.test/sync)\n→ [Team spaces](https://docs.lumen-notes.test/teams)",
                    content_type: 'text',
@@ -275,6 +293,7 @@ RSpec.describe 'Captain reply golden payloads' do # rubocop:disable RSpec/Descri
     sources_sms: {
       channel: :sms, citations: true,
       response: { 'response_parts' => [{ 'text' => 'Sync runs every five minutes.', 'citation_indexes' => [1] }] },
+      kinds: [%w[answer]],
       expected: [{ content: "Sync runs every five minutes.\n\n→ Sync your notes: https://docs.lumen-notes.test/sync",
                    content_type: 'text',
                    additional_attributes: { 'captain_v2_response_parts' =>
@@ -284,6 +303,7 @@ RSpec.describe 'Captain reply golden payloads' do # rubocop:disable RSpec/Descri
       stub_citations: true,
       state: :knowledge_media,
       response: { 'response_parts' => [{ 'text' => :steps, 'citation_indexes' => [1] }], 'suggested_replies' => ['Sync now'] },
+      kinds: [%w[answer]],
       expected: [{ content:
                    :steps_with_media,
                    content_type: 'input_select',
@@ -297,6 +317,7 @@ RSpec.describe 'Captain reply golden payloads' do # rubocop:disable RSpec/Descri
       response: { 'response_parts' => [{ 'text' => 'Sync keeps every device current.', 'citation_indexes' => [] },
                                        { 'text' => :steps, 'citation_indexes' => [1] }],
                   'separate_parts' => [1] },
+      kinds: [%w[answer], %w[answer]],
       expected: [{ content: 'Sync keeps every device current.',
                    content_type: 'text',
                    additional_attributes: { 'captain_v2_response_parts' => [{ 'text' => 'Sync keeps every device current.',
@@ -311,6 +332,7 @@ RSpec.describe 'Captain reply golden payloads' do # rubocop:disable RSpec/Descri
       state: :products,
       response: { 'agent_name' => 'Acme', 'response_parts' => [{ 'text' => 'The Trail Boot is waterproof.', 'citation_indexes' => [] }],
                   'product_handles' => %w[trail-boot], 'suggested_replies' => ['Sizes'] },
+      kinds: [%w[answer], %w[product_cards], %w[question]],
       expected: [{ content: 'The Trail Boot is waterproof.',
                    content_type: 'text',
                    additional_attributes: { :agent_name => 'Acme',
@@ -336,6 +358,7 @@ RSpec.describe 'Captain reply golden payloads' do # rubocop:disable RSpec/Descri
                   'response_parts' => [{ 'text' => 'We have one waterproof boot. Which size do you wear?', 'citation_indexes' => [] }],
                   'product_handles' => %w[trail-boot],
                   'suggested_replies' => [{ 'label' => 'EU 42', 'message' => 'I wear EU 42.' }] },
+      kinds: [%w[answer], %w[product_cards], %w[question]],
       expected: [{ content: 'We have one waterproof boot.',
                    content_type: 'text',
                    additional_attributes: { :agent_name => 'Acme',
@@ -359,6 +382,7 @@ RSpec.describe 'Captain reply golden payloads' do # rubocop:disable RSpec/Descri
       state: :order,
       response: { 'response_parts' => [{ 'text' => 'Your order is paid. Anything else?', 'citation_indexes' => [] }],
                   'suggested_replies' => ['Track order'] },
+      kinds: [%w[answer], %w[order_card], %w[question]],
       expected: [{ content: 'Your order is paid.',
                    content_type: 'text',
                    additional_attributes: { 'captain_v2_response_parts' => [{ 'text' => 'Your order is paid.', 'citation_indexes' => [] }] } },
@@ -375,6 +399,7 @@ RSpec.describe 'Captain reply golden payloads' do # rubocop:disable RSpec/Descri
       response: { 'response_parts' => [{ 'text' => 'A specialist can walk you through pricing. What is your email?',
                                          'citation_indexes' => [] }],
                   'suggested_replies' => ['Later'] },
+      kinds: [%w[answer], %w[form]],
       expected: [{ content: 'A specialist can walk you through pricing.',
                    content_type: 'text',
                    additional_attributes: { 'captain_v2_response_parts' => [{ 'text' => 'A specialist can walk you through pricing.',
@@ -394,6 +419,7 @@ RSpec.describe 'Captain reply golden payloads' do # rubocop:disable RSpec/Descri
     followup_form_question_only: {
       state: :followup_form,
       response: { 'response_parts' => [{ 'text' => 'Could you share your email?', 'citation_indexes' => [] }] },
+      kinds: [%w[form]],
       expected: [{ content: 'Where should our team send your follow-up?',
                    content_type: 'form',
                    content_attributes: { 'type' => 'contact_capture',
@@ -409,6 +435,7 @@ RSpec.describe 'Captain reply golden payloads' do # rubocop:disable RSpec/Descri
     action_confirmation: {
       state: :action_confirmation,
       response: { 'response' => 'Sure.', 'suggested_replies' => ['Track order'] },
+      kinds: [%w[answer], %w[confirmation]],
       expected: [{ content: 'Sure.',
                    content_type: 'text',
                    additional_attributes: { 'captain_v2_response_parts' => [{ 'text' => 'Sure.', 'citation_indexes' => [] }] } },
@@ -421,6 +448,7 @@ RSpec.describe 'Captain reply golden payloads' do # rubocop:disable RSpec/Descri
       suppress: true, stub_citations: true, state: :knowledge_media,
       response: { 'handoff_requested' => true, 'response_parts' => [{ 'text' => :steps, 'citation_indexes' => [1] }],
                   'suggested_replies' => ['Sync now'] },
+      kinds: [%w[answer]],
       expected: [{ content: :steps,
                    content_type: 'text',
                    additional_attributes: { 'captain_v2_response_parts' => [{ 'text' => :steps,
@@ -429,6 +457,7 @@ RSpec.describe 'Captain reply golden payloads' do # rubocop:disable RSpec/Descri
     empty_catalog: {
       state: :empty_catalog,
       response: { 'response' => '', 'response_parts' => [] },
+      kinds: [%w[answer]],
       expected: [{ content: "I couldn't find a matching product in our current catalog.",
                    content_type: 'text',
                    additional_attributes: { 'captain_v2_response_parts' =>
@@ -438,6 +467,7 @@ RSpec.describe 'Captain reply golden payloads' do # rubocop:disable RSpec/Descri
     empty_with_attachments: {
       attachments: true,
       response: { 'response' => '', 'response_parts' => [] },
+      kinds: [%w[answer]],
       expected: [{ content: 'Please send a short message explaining what to check.',
                    content_type: 'text',
                    additional_attributes: { 'captain_v2_response_parts' => [{ 'text' => 'Please send a short message explaining what to check.',
@@ -445,6 +475,7 @@ RSpec.describe 'Captain reply golden payloads' do # rubocop:disable RSpec/Descri
     },
     empty_unusable: {
       response: { 'response' => 'Sync runs every five minutes.', 'response_parts' => [{ 'text' => '[1]', 'citation_indexes' => [] }] },
+      kinds: [%w[answer]],
       expected: [{ content: 'Sorry, I did not catch that. Could you rephrase?',
                    content_type: 'text',
                    additional_attributes: { 'captain_v2_response_parts' => [{ 'text' => 'Sorry, I did not catch that. Could you rephrase?',
@@ -452,6 +483,7 @@ RSpec.describe 'Captain reply golden payloads' do # rubocop:disable RSpec/Descri
     },
     empty_handoff: {
       response: { 'response' => '', 'response_parts' => [] },
+      kinds: [%w[answer]],
       expected: [{ content: "I couldn't complete that request. A colleague will continue with you in this chat.",
                    content_type: 'text',
                    additional_attributes: {
@@ -498,6 +530,10 @@ RSpec.describe 'Captain reply golden payloads' do # rubocop:disable RSpec/Descri
       messages = composer.messages(suppress_suggestions: input.fetch(:suppress, false))
 
       expect(messages).to eq(input[:expected].map { |payload| resolve(payload) })
+
+      kinds = composer.messages(suppress_suggestions: input.fetch(:suppress, false), segment_kinds: true)
+                      .map { |payload| payload[:additional_attributes][Captain::Reply::Plan::SEGMENT_KINDS_KEY] }
+      expect(kinds).to eq(input[:kinds])
     end
   end
 end

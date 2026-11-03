@@ -38,7 +38,7 @@ class Captain::Leads::QuestionBudget
   def remove_last_question(parts)
     parts.reverse_each do |part|
       text = part.fetch('text')
-      question = text[Captain::Conversation::ReplyComposer::TRAILING_QUESTION, 1] || (text if text.end_with?('?'))
+      question = Captain::Reply::Policies::FollowUp.question_in(text)
       next unless question
 
       part['text'] = text.sub(question, '').strip
