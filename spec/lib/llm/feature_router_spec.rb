@@ -101,6 +101,33 @@ RSpec.describe Llm::FeatureRouter do
       expect(account.reload.captain_models).to be_nil
     end
 
+    it 'uses CAPTAIN_DEFAULT_ASSISTANT_MODEL as the Captain V2 assistant default' do
+      account.enable_features!('captain_integration_v2')
+
+      resolved = with_modified_env(CAPTAIN_DEFAULT_ASSISTANT_MODEL: 'gpt-6-luna') { described_class.resolve(feature: 'assistant', account: account) }
+
+      expect(resolved).to include(model: 'gpt-6-luna', provider: 'openai', source: :default)
+    end
+
+    it 'prefers the installation config of CAPTAIN_DEFAULT_ASSISTANT_MODEL to the environment' do
+      account.enable_features!('captain_integration_v2')
+      create(:installation_config, name: 'CAPTAIN_DEFAULT_ASSISTANT_MODEL', value: 'gpt-6-luna')
+
+      resolved = with_modified_env(CAPTAIN_DEFAULT_ASSISTANT_MODEL: 'gpt-5.1') { described_class.resolve(feature: 'assistant', account: account) }
+
+      expect(resolved[:model]).to eq('gpt-6-luna')
+      expect(described_class.default_assistant_model).to eq('gpt-6-luna')
+    end
+
+    it 'keeps account model overrides ahead of CAPTAIN_DEFAULT_ASSISTANT_MODEL' do
+      account.enable_features!('captain_integration_v2')
+      account.update!(captain_models: { 'assistant' => 'gpt-5.1' })
+
+      resolved = with_modified_env(CAPTAIN_DEFAULT_ASSISTANT_MODEL: 'gpt-6-luna') { described_class.resolve(feature: 'assistant', account: account) }
+
+      expect(resolved).to include(model: 'gpt-5.1', source: :account_override)
+    end
+
     it 'keeps account model overrides ahead of the Captain V2 default' do
       account.enable_features!('captain_integration_v2')
       account.update!(captain_models: { 'assistant' => 'gpt-5.1' })

@@ -31,7 +31,8 @@ RSpec.describe Captain::Evals::CaseRunner do
     expect(seen).to include(source: 'eval', history: [{ role: 'user', content: 'How do I clear my cache on Chrome?' }], dify_enabled: true)
     expect(seen[:conversation].inbox.channel_type).to eq('Channel::WebWidget')
     expect(seen[:assistant].config).to include('agent_role' => 'adaptive', 'greeting_mode' => 'ai', 'product_name' => 'Acme')
-    expect(observation[:messages].pluck('content')).to eq(["Hello and welcome to Acme!\n\nOpen the three-dot menu and choose Delete browsing data."])
+    # Since the early welcome the welcome is its own widget bubble (it opened the answer bubble before).
+    expect(observation[:messages].pluck('content')).to eq(['Hello and welcome to Acme!', 'Open the three-dot menu and choose Delete browsing data.'])
     expect(observation).to include(handoff: false, llm_calls: 0)
     expect(observation[:fixture_urls]).to include('https://help.acme-streaming.test/clear-cache', 'https://fast.wistia.net/embed/iframe/acme0clear1')
   end
@@ -89,5 +90,30 @@ RSpec.describe Captain::Evals::CaseRunner do
     allow(runner).to receive(:generate_response).and_return({ 'error' => 'boom' })
 
     expect(described_class.new(suite: suite, test_case: test_case).run).to include(error: 'boom', messages: [])
+  end
+
+  it 'puts the early welcome the runner posted first and names the resolved setup' do
+    allow(runner).to receive(:generate_response) do
+      seen[:conversation].messages.create!(message_type: :outgoing, account: seen[:assistant].account, inbox: seen[:conversation].inbox,
+                                           sender: seen[:assistant], content: 'Hi, welcome to Acme!',
+                                           additional_attributes: { 'captain_segment_kinds' => ['greeting'] })
+      response.except('welcome')
+    end
+
+    observation = with_modified_env CAPTAIN_ACTION_MODEL: 'gpt-6-luna', CAPTAIN_REPLY_SCHEMA_V2: 'on' do
+      described_class.new(suite: suite, test_case: test_case).run
+    end
+
+    expect(observation[:messages].pluck('content')).to eq(['Hi, welcome to Acme!', 'Open the three-dot menu and choose Delete browsing data.'])
+    expect(Captain::Evals::Checks.run('greeting_first', observation)[:pass]).to be(true)
+    expect(observation).to include(schema_v2: true, action_model: 'gpt-6-luna')
+  end
+
+  it 'records the error class and message of a failed run' do
+    allow(runner).to receive(:generate_response).and_return(
+      { 'error' => true, 'error_reason' => 'faraday_timeout_error', 'reasoning' => 'Error occurred: execution expired' }
+    )
+
+    expect(described_class.new(suite: suite, test_case: test_case).run[:error]).to eq('faraday_timeout_error: execution expired')
   end
 end

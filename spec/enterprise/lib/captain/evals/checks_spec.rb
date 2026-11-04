@@ -181,6 +181,57 @@ RSpec.describe Captain::Evals::Checks do
     expect(check({ 'language' => 'en' })[:pass]).to be(false)
   end
 
+  it 'detects German in a short reply' do
+    messages.replace(['Willkommen bei Acme! Dazu habe ich keine verlässliche Information vorliegen.'])
+
+    expect(check({ 'language' => 'de' })).to include(pass: true, detail: 'detected de')
+  end
+
+  it 'reports an unknown language instead of guessing' do
+    messages.replace(['OK!'])
+
+    expect(check({ 'language' => 'en' })).to include(pass: false, detail: 'detected unknown')
+  end
+
+  describe 'greeting_first' do
+    def with_kinds(*kinds)
+      messages.replace(['Hello and welcome to Acme!', 'Open the three-dot menu.'])
+      observation[:messages].zip(kinds).each do |message, message_kinds|
+        message['additional_attributes'] = { 'captain_segment_kinds' => message_kinds }
+      end
+      check('greeting_first')
+    end
+
+    it 'passes the greeting as the first message, once' do
+      expect(with_kinds(%w[greeting], %w[answer])[:pass]).to be(true)
+    end
+
+    it 'fails a greeting that opens the answer bubble' do
+      expect(with_kinds(%w[greeting answer], %w[question])[:pass]).to be(false)
+    end
+
+    it 'fails a second greeting' do
+      expect(with_kinds(%w[greeting], %w[greeting])).to include(pass: false, detail: 'greeting at [0, 1] of 2 messages')
+    end
+
+    it 'fails a reply without a greeting first' do
+      expect(with_kinds(%w[answer], %w[greeting])[:pass]).to be(false)
+    end
+  end
+
+  describe 'max_questions' do
+    it 'counts question sentences across bubbles, also when worded differently' do
+      messages.replace(['We carry two versions. Which one are you looking for?', 'Which version are you looking for?'])
+
+      expect(check({ 'max_questions' => 1 })[:pass]).to be(false)
+      expect(check({ 'max_questions' => 2 })[:pass]).to be(true)
+    end
+
+    it 'passes a reply without a question' do
+      expect(check({ 'max_questions' => 1 })).to include(pass: true, detail: 'no question')
+    end
+  end
+
   it 'compares handoff and route with the run' do
     expect(check({ 'handoff' => false })[:pass]).to be(true)
     expect(check({ 'handoff' => true })[:pass]).to be(false)

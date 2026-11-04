@@ -41,4 +41,27 @@ RSpec.describe Captain::Reply::Pacing do
 
     expect(offsets(payloads)).to eq([0, 0, 1100, 1100])
   end
+
+  context 'when the reply follows the early welcome' do
+    let(:welcome) do
+      instance_double(Message, created_at: now - 0.5.seconds,
+                               additional_attributes: { 'captain_reply_id' => 'welcome-reply', 'captain_reveal_offset_ms' => 400 })
+    end
+
+    it 'continues the welcome reply a bubble pause after the welcome' do
+      stamped = described_class.stamp([{ content: 'Answer' }, { content: 'More?' }], responding_to: message, after: welcome, now: now)
+
+      expect(stamped.map { |payload| payload[:additional_attributes]['captain_reply_id'] }).to eq(%w[welcome-reply welcome-reply])
+      # The welcome arrived 500 ms ago and showed after 400 ms; the answer follows 800 ms (the minimum pause) after it.
+      expect(stamped.map { |payload| payload[:additional_attributes]['captain_reveal_offset_ms'] }).to eq([1200, 2000])
+    end
+
+    it 'shows the answer at once when generation took longer than the pause' do
+      slow = instance_double(Message, created_at: now - 6.seconds,
+                                      additional_attributes: { 'captain_reply_id' => 'welcome-reply', 'captain_reveal_offset_ms' => 0 })
+
+      expect(described_class.stamp([{ content: 'Answer' }], responding_to: message, after: slow, now: now)
+                            .first[:additional_attributes]['captain_reveal_offset_ms']).to eq(6000)
+    end
+  end
 end

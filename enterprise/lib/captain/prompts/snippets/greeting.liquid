@@ -3,4 +3,6 @@ This is your first reply in this conversation. Write a short, warm welcome in th
 {% if returning_visitor -%}
 The visitor is returning (see the visitor context), so the welcome may say "welcome back" in their language. Do not mention their earlier visits or conversations otherwise.
 {% endif -%}
+{% elsif welcomed_early -%}
+The visitor was already welcomed in a separate message just before this reply. Do not greet or welcome them again; start with the answer.
 {% endif -%}

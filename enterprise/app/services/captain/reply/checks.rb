@@ -36,13 +36,13 @@ class Captain::Reply::Checks
     end
   end
 
-  # The run says this is not the first reply, or an earlier reply carried a greeting.
+  # The run says this is not the first reply, or an earlier message carried a greeting (an earlier reply or this
+  # reply's early welcome, which is then the conversation's only greeting).
   def already_greeted?
     return true if @context.first_ai_reply == false
     return false unless @context.conversation
 
-    @context.conversation.messages.where(message_type: :outgoing, sender_type: 'Captain::Assistant')
-            .exists?(['additional_attributes -> ? @> ?::jsonb', Captain::Reply::Plan::SEGMENT_KINDS_KEY, %w[greeting].to_json])
+    Captain::Reply::EarlyWelcome.sent?(@context.conversation)
   end
 
   # An attached greeting is the start of the next bubble's text.
@@ -110,13 +110,37 @@ class Captain::Reply::Checks
     false
   end
 
-  # One closing question per reply.
+  # One question per reply, and it is the last thing asked: a second question bubble goes, and a bubble before the one
+  # that asks loses the question sentences it ends with, also when they are worded differently.
   def single_question(plan)
     questions = plan.segments.select { |segment| segment.kind == 'question' }
-    return if questions.size <= 1
+    if questions.size > 1
+      plan.segments -= questions.drop(1)
+      record(:single_question, 'dropped')
+    end
+    strip_earlier_questions(plan)
+  end
 
-    plan.segments -= questions.drop(1)
-    record(:single_question, 'dropped')
+  def strip_earlier_questions(plan)
+    bubbles = plan.segments.select { |segment| prose_bubble?(segment) }
+    asking = bubbles.rindex { |segment| asks?(segment) }
+    earlier = asking ? bubbles.first(asking).select { |segment| Captain::Reply::Question.trailing?(segment.text) } : []
+    return if earlier.empty?
+
+    plan.segments = plan.segments.map { |segment| earlier.include?(segment) ? without_question(segment) : segment }
+    record(:single_question, 'stripped')
+  end
+
+  def prose_bubble?(segment) = segment.attach.nil? && PROSE_KINDS.include?(segment.kind) && segment.text.present?
+
+  def asks?(segment) = segment.kind == 'question' || Captain::Reply::Question.trailing?(segment.text)
+
+  # Also out of the stored parts the model reads back as history.
+  def without_question(segment)
+    *parts, last = segment.parts.to_a
+    last_text = Captain::Reply::Question.without_trailing(last.text) if last
+    parts << last.with(text: last_text) if last_text.present?
+    segment.with(text: Captain::Reply::Question.without_trailing(segment.text), parts: segment.prose? ? parts : nil)
   end
 
   def no_empty_segments(plan)

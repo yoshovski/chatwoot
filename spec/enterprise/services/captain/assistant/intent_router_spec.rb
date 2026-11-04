@@ -23,4 +23,41 @@ RSpec.describe Captain::Assistant::IntentRouter do
       expect(route).not_to have_key('canned_response')
     end
   end
+
+  describe 'early welcome' do
+    let(:chat) { instance_double(RubyLLM::Chat) }
+    let(:instructions) { [] }
+    let(:classified) { { 'intent' => 'faq_kb', 'queries' => ['free trial'], 'welcome' => '  Hi, welcome to Acme!  ' } }
+
+    before do
+      allow(Captain::Assistant::TieredLlmClient).to receive(:chat).and_return(chat)
+      allow(chat).to receive(:with_params).and_return(chat)
+      allow(chat).to receive(:with_instructions) { |text| instructions << text and chat }
+      allow(Captain::Assistant::TieredLlmClient).to receive(:generate)
+        .and_return(instance_double(RubyLLM::Message, content: classified))
+    end
+
+    it 'asks for the welcome and returns it on the first widget reply' do
+      route = described_class.new(assistant: assistant, welcome: true).classify(message: 'Is there a free trial?', context: context)
+
+      expect(route).to include('intent' => 'faq_kb', 'welcome' => 'Hi, welcome to Acme!')
+      expect(instructions.first).to include('Also return "welcome"')
+    end
+
+    it 'neither asks for nor returns a welcome otherwise' do
+      route = router.classify(message: 'Is there a free trial?', context: context)
+
+      expect(route).not_to have_key('welcome')
+      expect(instructions.first).not_to include('"welcome"')
+    end
+
+    it 'drops a welcome that is not one short line' do
+      classified['welcome'] = "Hi!\nWelcome to Acme."
+
+      route = described_class.new(assistant: assistant, welcome: true).classify(message: 'Is there a free trial?', context: context)
+
+      expect(route).to include('intent' => 'faq_kb')
+      expect(route).not_to have_key('welcome')
+    end
+  end
 end

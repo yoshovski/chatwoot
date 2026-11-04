@@ -69,8 +69,8 @@ class Captain::Evals::CaseRunner
 
   def observation_for(assistant, conversation, response, run_result)
     base = { route: Thread.current[ROUTE_THREAD_KEY], llm_calls: Thread.current[CALLS_THREAD_KEY], response: response,
-             fixture_urls: fixture_urls, link_allowlist: assistant.link_allowlist }
-    return base.merge(messages: [], handoff: false, error: response['error']) if response['error']
+             fixture_urls: fixture_urls, link_allowlist: assistant.link_allowlist, **setup(assistant) }
+    return base.merge(messages: [], handoff: false, error: run_error(response)) if response['error']
 
     composer = Captain::Conversation::ReplyComposer.new(
       assistant: assistant, conversation: conversation, response: response, run_result: run_result, customer_message: @case.fetch('message')
@@ -78,9 +78,32 @@ class Captain::Evals::CaseRunner
     handoff = Captain::Conversation::HandoffDetector.new(
       assistant: assistant, response: response, customer_message: @case.fetch('message'), composer: composer
     ).source
-    messages = composer.messages(suppress_suggestions: handoff.present?)
+    messages = early_welcome(conversation) + composer.messages(suppress_suggestions: handoff.present?, segment_kinds: true)
     sources = messages.flat_map { |message| Array(message.dig(:content_attributes, Captain::Assistant::ResponseParts::SOURCES_ATTRIBUTE_KEY)) }
     base.merge(messages: messages.map(&:deep_stringify_keys), handoff: handoff.present?, handoff_source: handoff, sources: sources)
+  end
+
+  # The welcome the runner posted before the answer on the first widget reply (Captain::Reply::EarlyWelcome).
+  def early_welcome(conversation)
+    conversation.messages.outgoing.where(sender_type: 'Captain::Assistant').order(:id).map do |message|
+      { content: message.content, content_type: message.content_type, additional_attributes: message.additional_attributes }
+    end
+  end
+
+  # What the report names in its header: whether schema v2 was on and which model the action agent used, resolved
+  # for the eval account like a real one (CAPTAIN_ACTION_MODEL while routing is on, else Llm::FeatureRouter).
+  def setup(assistant)
+    routed_model = ENV['CAPTAIN_ACTION_MODEL'].presence if Captain::Assistant::TieredRoutingHelper.mode_for(assistant.account_id) == 'on'
+    { schema_v2: Captain::ResponseSchema.v2?(assistant.account_id),
+      action_model: routed_model || Llm::FeatureRouter.resolve(feature: 'assistant', account: assistant.account)[:model] }
+  end
+
+  # The runner returns its errors as a handoff response with error: true; the class and message say why the repeat is
+  # blocked.
+  def run_error(response)
+    return response['error'] if response['error'].is_a?(String)
+
+    "#{response['error_reason']}: #{response['reasoning'].to_s.delete_prefix('Error occurred: ')}"
   end
 
   def build_records

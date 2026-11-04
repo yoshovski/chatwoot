@@ -1,8 +1,8 @@
 # Deterministic rules for one observed reply. Each check returns { name:, pass:, detail: }.
 # A check in a suite is a name (`welcome_once`) or a one-key hash with its argument (`{ bubbles: { min: 1, max: 2 } }`).
 module Captain::Evals::Checks # rubocop:disable Metrics/ModuleLength
-  NAMES = %w[welcome_once starts_with_greeting no_repeated_sentences no_empty_bubbles bubbles question_bubble no_click_paths
-             links_from_knowledge contains_video mentions_all language handoff route max_chars judge any_of].freeze
+  NAMES = %w[welcome_once starts_with_greeting greeting_first no_repeated_sentences no_empty_bubbles bubbles question_bubble max_questions
+             no_click_paths links_from_knowledge contains_video mentions_all language handoff route max_chars judge any_of].freeze
   NON_TEXT_TYPES = %w[form cards].freeze
   MARKDOWN_LINK = /!?\[([^\]]*)\]\(([^)\s]+)\)/
   URL = %r{https?://[^\s)\]>"']+}
@@ -10,14 +10,17 @@ module Captain::Evals::Checks # rubocop:disable Metrics/ModuleLength
   # Numbered steps that walk an admin through settings screens instead of answering.
   ADMIN_STEP = /^\s*\d+[.)]\s+(?:go to|open|navigate to|click)\s+(?:the\s+)?(?:admin|settings|dashboard)\b/i
   STOPWORDS = {
-    'en' => %w[the and you your is are to of for with this that can how it in on what],
-    'de' => %w[der die das und sie ihr ist sind zu von mit für ein eine wie nicht auf können],
+    'en' => %w[the and you your is are to of for with this that can how it in on what i we have no about],
+    'de' => %w[der die das und sie ihr ist sind zu von mit für ein eine wie nicht auf können ich wir bei habe haben keine dazu gerne],
     'es' => %w[el la los las y que es de para con por un una cómo puede su en],
     'fr' => %w[le la les et vous est sont de pour avec un une comment pouvez votre dans],
     'it' => %w[il lo la gli le e che di per con un una come può sono nel],
     'nl' => %w[de het een en je u is zijn van voor met hoe niet op kunt],
     'pt' => %w[o a os as e que de para com um uma como pode seu em não]
   }.freeze
+  # Letters only one of the languages uses; each counts like a stopword, so a short reply still has a language.
+  LETTERS = { 'de' => 'äöüß', 'es' => 'ñ¿¡', 'fr' => 'çèêœ', 'pt' => 'ãõ' }.freeze
+  QUESTION = /[?？؟]\z/
 
   module_function
 
@@ -53,6 +56,19 @@ module Captain::Evals::Checks # rubocop:disable Metrics/ModuleLength
     first = sentences_of(text_messages(observation).first.to_s).first.to_s
     actual = greeting?(normalize(first))
     [actual == expected, "first sentence: #{first.strip.truncate(80)}"]
+  end
+
+  # The greeting is the first message and the only one (the early welcome or the welcome bubble of the reply).
+  def greeting_first(observation, _argument = nil)
+    kinds = observation[:messages].map { |message| Array(message.dig('additional_attributes', Captain::Reply::Plan::SEGMENT_KINDS_KEY)) }
+    greetings = kinds.each_index.select { |index| kinds[index].include?('greeting') }
+    [greetings == [0] && kinds.first == ['greeting'], "greeting at #{greetings.inspect} of #{kinds.size} messages"]
+  end
+
+  # Question sentences in the whole reply, e.g. at most one.
+  def max_questions(observation, limit)
+    questions = text_messages(observation).flat_map { |text| sentences_of(text) }.grep(QUESTION)
+    [questions.size <= limit, questions.join(' | ').presence || 'no question']
   end
 
   def no_repeated_sentences(observation, _argument = nil)
@@ -113,9 +129,12 @@ module Captain::Evals::Checks # rubocop:disable Metrics/ModuleLength
   end
 
   def language(observation, expected)
-    words = normalize(full_text(observation)).split
-    scores = STOPWORDS.transform_values { |stopwords| words.count { |word| stopwords.include?(word) } }
-    detected = scores.max_by { |_code, score| score }&.first
+    text = full_text(observation).downcase
+    words = normalize(text).split
+    scores = STOPWORDS.to_h do |code, stopwords|
+      [code, words.count { |word| stopwords.include?(word) } + text.count(LETTERS.fetch(code, ''))]
+    end
+    detected = scores.values.max.positive? ? scores.max_by { |_code, score| score }.first : 'unknown'
     [detected == expected.to_s, "detected #{detected}"]
   end
 

@@ -158,12 +158,13 @@ RSpec.describe 'Captain reply schema v2' do # rubocop:disable RSpec/DescribeClas
       expect(payloads(v2).pluck(:content)).to eq(["Hi there!\n\nHow can I help?"])
     end
 
-    it 'keep the welcome and a lone follow_up question in one bubble' do
+    # Until the early welcome both were one bubble; the welcome is now its own bubble on the widget.
+    it 'send the welcome alone and then the lone follow_up question' do
       v2 = { 'welcome' => 'Hello and welcome to Lumen Notes!',
              'response_parts' => [{ 'text' => 'How can I help you today?', 'citation_indexes' => [] }],
              'follow_up' => { 'text' => 'How can I help you today?', 'kind' => 'clarification' } }
 
-      expect(payloads(v2).pluck(:content)).to eq(["Hello and welcome to Lumen Notes!\n\nHow can I help you today?"])
+      expect(payloads(v2).pluck(:content)).to eq(['Hello and welcome to Lumen Notes!', 'How can I help you today?'])
     end
 
     # The reply eval's R12 with v2: a scenario step asked the question "in a separate message" and the model also
@@ -173,7 +174,7 @@ RSpec.describe 'Captain reply schema v2' do # rubocop:disable RSpec/DescribeClas
              'response_parts' => [{ 'text' => 'Our trial lasts 14 days. How large is your team?', 'citation_indexes' => [] }],
              'separate_parts' => [1], 'follow_up' => { 'text' => 'How large is your team?', 'kind' => 'qualification' } }
 
-      expect(payloads(v2).pluck(:content)).to eq(["Welcome, happy to help with that.\n\nOur trial lasts 14 days.", 'How large is your team?'])
+      expect(payloads(v2).pluck(:content)).to eq(['Welcome, happy to help with that.', 'Our trial lasts 14 days.', 'How large is your team?'])
     end
 
     it 'read a normalized response once more without adding the question twice' do

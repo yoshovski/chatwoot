@@ -28,7 +28,8 @@ RSpec.describe Captain::Reply::Builder do
                                       { 'text' => 'Offline works too.', 'citation_indexes' => [] }])
 
     expect(plan.kinds).to eq(%w[greeting answer answer])
-    expect(plan.payloads.pluck(:content)).to eq(["Hi there!\n\nSync runs hourly.", 'Offline works too.'])
+    # Since the early welcome the welcome is its own bubble on the widget (it opened the first answer bubble before).
+    expect(plan.payloads.pluck(:content)).to eq(['Hi there!', 'Sync runs hourly.', 'Offline works too.'])
   end
 
   it 'reports an empty answer only when nothing explains it' do
@@ -36,5 +37,16 @@ RSpec.describe Captain::Reply::Builder do
 
     expect(empty.call({ 'response' => '', 'response_parts' => [] })).to be(true)
     expect(empty.call({ 'welcome' => 'Hi there!', 'response_parts' => [] })).to be(false)
+  end
+
+  context 'when the visitor was welcomed early' do
+    let(:run_result) { instance_double(Agents::RunResult, context: { state: { first_ai_reply: false, welcomed_early: true } }) }
+
+    it 'adds no greeting to the reply' do
+      plan = build('welcome' => 'Hi there!', 'response_parts' => [{ 'text' => 'Sync runs hourly.', 'citation_indexes' => [] }])
+
+      expect(plan.kinds).to eq(%w[answer])
+      expect(plan.payloads.pluck(:content)).to eq(['Sync runs hourly.'])
+    end
   end
 end

@@ -45,7 +45,7 @@ class Captain::Evals::Run
 
   def run_repeat(test_case, index)
     observation = Captain::Evals::CaseRunner.new(suite: suite, test_case: test_case).run
-    return blocked(observation[:error], observation) if observation[:error]
+    return blocked(observation[:error], observation).merge(repeat: index + 1) if observation[:error]
 
     observation[:judgements] = judgements(test_case, observation) if @judge
     checks = suite.checks_for(test_case).map { |check| Captain::Evals::Checks.run(check, observation) }

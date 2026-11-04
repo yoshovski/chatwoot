@@ -17,7 +17,7 @@ class Captain::Evals::Report
   def header
     {
       suite: @run.suite.name, suite_sha256: @run.suite.sha256, revision: revision, started_at: @run.started_at.utc.iso8601,
-      models: models, repeats: @run.repeat, llm_calls: @run.llm_calls, passed: @run.passed?
+      models: models, schema_v2: run_setup[:schema_v2], repeats: @run.repeat, llm_calls: @run.llm_calls, passed: @run.passed?
     }
   end
 
@@ -39,6 +39,7 @@ class Captain::Evals::Report
     [
       "- Suite: `#{@run.suite.name}` (sha256 `#{@run.suite.sha256[0, 12]}`)", "- Revision: `#{revision}`",
       "- Models: #{models.map { |stage, model| "#{stage} `#{model}`" }.join(', ')}",
+      "- Reply schema v2: #{{ true => 'on', false => 'off' }.fetch(run_setup[:schema_v2], 'unknown')}",
       "- Repeats: #{@run.repeat}, LLM calls: #{@run.llm_calls}",
       "- Result: **#{@run.passed? ? 'PASS' : 'FAIL'}** (#{@run.results.count { |result| result[:passed] == @run.repeat }}/#{@run.results.size} cases)"
     ]
@@ -92,8 +93,14 @@ class Captain::Evals::Report
     {
       router: ENV.fetch('CAPTAIN_INTENT_ROUTER_MODEL', 'intent-router'),
       direct: ENV.fetch('CAPTAIN_KNOWLEDGE_ANSWER_MODEL', 'knowledge-answer'),
-      action: ENV['CAPTAIN_ACTION_MODEL'].presence || InstallationConfig.find_by(name: 'CAPTAIN_OPEN_AI_MODEL')&.value || 'default'
+      action: run_setup[:action_model] || 'unknown'
     }
+  end
+
+  # The case runner resolves these for the eval account, so the header shows what the run really used.
+  def run_setup
+    @run_setup ||= @run.results.flat_map { |result| result[:repeats] }.find { |item| item.key?(:action_model) }.to_h
+                       .slice(:schema_v2, :action_model)
   end
 
   # IMAGE_TAG when the run passes it (docker exec -e IMAGE_TAG=...), else the commit: GIT_HASH reads the image's

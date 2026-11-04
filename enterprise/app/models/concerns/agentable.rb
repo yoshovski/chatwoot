@@ -62,6 +62,7 @@ module Concerns::Agentable
   def conditional_context_state_attrs(state, config)
     attrs = {}
     attrs[:commerce_enabled] = state[:commerce_enabled] if state.key?(:commerce_enabled)
+    attrs[:welcomed_early] = true if state[:welcomed_early]
     attrs[:feature_citation] = ActiveModel::Type::Boolean.new.cast(config['feature_citation']) == true
     attrs
   end
