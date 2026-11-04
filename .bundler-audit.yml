@@ -34,3 +34,37 @@ ignore:
   # think-tag parsing of model responses, and Mistral capability matching (we don't use Mistral).
   - CVE-2026-67987
   - CVE-2026-67989
+  # Rails advisories of 2026-11-04. Fixed only in 8.0.5.2 / 8.1.4.1; there is no
+  # Rails 7.2 release. Remove all of these with the Rails 8 upgrade.
+  # Backported locally in config/initializers/monkey_patches/rails_security_backports.rb:
+  - GHSA-8474-xrp6-wh69 # safe_constantize regexp DoS (reachable via anonymous /cable subscribe)
+  - GHSA-wm3x-v3qw-4jh3 # Parameters#each_key strong-params bypass (no caller, patched anyway)
+  # Not reachable with our Active Storage setup: variant_processor is :vips, so the
+  # ImageMagick analyzer never runs; previewers are disabled; the runtime image has
+  # no ffmpeg/ffprobe; vips runs with VIPS_BLOCK_UNTRUSTED=1.
+  - GHSA-f3w6-w445-fwh9 # ImageMagick analyzer file write/read (Critical, needs :mini_magick)
+  - GHSA-v924-7rp8-4mxh # extension-chosen decoder in ffmpeg/ImageMagick (High)
+  - GHSA-3f4q-8x5m-76v8 # ffmpeg HLS local file disclosure
+  # PostgreSQL rejects NUL bytes in filenames.
+  - GHSA-p2pm-g2h6-7j5j
+  # Only for the GCS service (cache_control / direct uploads); we use local or S3.
+  - GHSA-3w93-6hmw-whh4
+  - GHSA-hfr4-8rjc-97m2
+  # We use cookie_store with same_site: :lax, :json cookies without rotations,
+  # no Active Storage proxy mode and no ActionController::Live.
+  - GHSA-2586-8ghr-69fj # CacheStore session restore
+  - GHSA-gmj8-hvj3-49mw # SameSite missing on non-cookie session stores
+  - GHSA-x6mj-8jx9-qhqv # session cookie on proxy-mode responses
+  - GHSA-rwvh-fw6r-pwvp # Live streaming thread exhaustion
+  # Needs a shared cache in front of Rails that stores dynamic responses and
+  # honours Vary; the attacker cannot choose the content of the poisoned entry.
+  - GHSA-r9jg-fmfx-2gv6
+  # Action View helpers we don't use with untrusted input: no highlight or
+  # simple_format, strip_tags output only goes into JSON text, no user-chosen
+  # attribute names. nokogiri is already 1.19.7 (>= 1.19.5).
+  - GHSA-2p2f-4rq4-gjwc
+  - GHSA-68p9-83h6-5wpj
+  - GHSA-rq8q-p985-fjq7
+  - GHSA-v6rj-xm57-3p59
+  # Only for the Mailgun Action Mailbox ingress (RAILS_INBOUND_EMAIL_SERVICE=mailgun).
+  - GHSA-5957-c7qm-m469
