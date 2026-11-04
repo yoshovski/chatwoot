@@ -31,7 +31,8 @@ RSpec.describe Captain::Evals::CaseRunner do
     expect(seen).to include(source: 'eval', history: [{ role: 'user', content: 'How do I clear my cache on Chrome?' }], dify_enabled: true)
     expect(seen[:conversation].inbox.channel_type).to eq('Channel::WebWidget')
     expect(seen[:assistant].config).to include('agent_role' => 'adaptive', 'greeting_mode' => 'ai', 'product_name' => 'Acme')
-    expect(observation[:messages].pluck('content')).to eq(["Hello and welcome to Acme!\n\nOpen the three-dot menu and choose Delete browsing data."])
+    # Since the early welcome the welcome is its own widget bubble (it opened the answer bubble before).
+    expect(observation[:messages].pluck('content')).to eq(['Hello and welcome to Acme!', 'Open the three-dot menu and choose Delete browsing data.'])
     expect(observation).to include(handoff: false, llm_calls: 0)
     expect(observation[:fixture_urls]).to include('https://help.acme-streaming.test/clear-cache', 'https://fast.wistia.net/embed/iframe/acme0clear1')
   end

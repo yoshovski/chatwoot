@@ -309,11 +309,13 @@ RSpec.describe Captain::Conversation::ReplyComposer do
                                            citation_titles: { 1 => 'Trial', 2 => 'Teams' })
     end
 
-    it 'opens the first bubble with the AI welcome and still splits at the listed parts' do
+    # Until the early welcome the AI welcome opened the first bubble; on the widget it is its own bubble now, and it counts
+    # toward the three text bubbles, so the last answer parts share one.
+    it 'sends the AI welcome as its own bubble and still splits at the listed parts' do
       response['welcome'] = 'Hi there, thanks for asking!'
 
-      expect(composer.messages.map { |message| message[:content] }.first(2))
-        .to eq(["Hi there, thanks for asking!\n\nOur trial lasts 14 days.", 'You can add teammates at any time.'])
+      expect(composer.messages.map { |message| message[:content] }.first(3))
+        .to eq(['Hi there, thanks for asking!', 'Our trial lasts 14 days.', "You can add teammates at any time.\n\nExports work on every plan."])
     end
 
     it 'starts a new bubble at each listed part, at most three, and asks the closing question in its own bubble' do
@@ -332,7 +334,7 @@ RSpec.describe Captain::Conversation::ReplyComposer do
       response['separate_parts'] = [2]
       contents = composer.messages.map { |message| message[:content] }
 
-      expect(contents).to eq(["Hi there, thanks for asking!\n\nOur trial lasts 14 days.",
+      expect(contents).to eq(['Hi there, thanks for asking!', 'Our trial lasts 14 days.',
                               "You can add teammates at any time.\n\nExports work on every plan.", 'How large is your team?'])
       expect(contents.join.scan('thanks for asking').size).to eq(1)
     end

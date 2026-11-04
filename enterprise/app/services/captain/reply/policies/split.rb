@@ -1,7 +1,8 @@
 # Parts the model listed in separate_parts start a new bubble, at most MAX_BUBBLES per reply. Email and the follow-up
 # form keep one message. The indexes are the model's own part indexes, so a welcome before them changes nothing, and the
-# welcome always opens the first answer bubble: a start at the first answer part (the model counting from the welcome,
-# or listing the part after a repeated welcome the draft dropped) splits nothing.
+# welcome always stays with the first answer bubble here (Channel gives it its own bubble on the widget): a start at
+# the first answer part (the model counting from the welcome, or listing the part after a repeated welcome the draft
+# dropped) splits nothing.
 class Captain::Reply::Policies::Split < Captain::Reply::Policies::Base
   MAX_BUBBLES = 3
 

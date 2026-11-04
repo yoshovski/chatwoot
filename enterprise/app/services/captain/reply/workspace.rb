@@ -2,7 +2,7 @@
 # media, cards) that every policy formats with. Writes nothing.
 class Captain::Reply::Workspace
   attr_reader :context, :draft
-  # greeting: the welcome part opening the first bubble. question: { text:, part_index: } of the closing question.
+  # greeting: the welcome part before the answer (own widget bubble, see Channel). question: { text:, part_index: } of the closing question.
   # closing: the last segment is the closing bubble (the question and the buttons after the answer).
   attr_accessor :segments, :greeting, :question, :has_closing_question, :buttons, :closing
 

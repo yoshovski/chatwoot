@@ -1,6 +1,7 @@
 # The ordered segments of one reply. payloads turns them into the message payloads the chat job posts: a segment
-# with attach: :next becomes part of the next bubble (the AI welcome opens the answer bubble). The next segment's text
-# already holds the attached prose, so merging adds the attached parts and kinds.
+# with attach: :next becomes part of the next bubble (the AI welcome opens the answer bubble on email and other
+# channels; on the widget it is a bubble of its own). The next segment's text already holds the attached prose, so
+# merging adds the attached parts and kinds.
 class Captain::Reply::Plan
   SEGMENT_KINDS_KEY = 'captain_segment_kinds'.freeze
 
