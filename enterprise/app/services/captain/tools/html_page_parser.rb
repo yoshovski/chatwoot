@@ -99,7 +99,7 @@ class Captain::Tools::HtmlPageParser
 
       anchor = Nokogiri::XML::Node.new('a', node.document)
       anchor['href'] = url
-      anchor.content = Captain::Knowledge::VideoLink.label(element['title'])
+      anchor.content = Captain::Knowledge::VideoLink.label(element['title'], page_title: title)
       paragraph = Nokogiri::XML::Node.new('p', node.document)
       paragraph.add_child(anchor)
       element.replace(paragraph)
