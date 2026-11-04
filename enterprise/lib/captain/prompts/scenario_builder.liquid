@@ -6,6 +6,21 @@ The assistant supports the following tools:
 - {{ tool.title }} (ID: {{ tool.id }}): {{ tool.description }}
 {% endfor %}
 
+{% if action_catalog.actions.size > 0 -%}
+Built-in actions take fixed values in the link's query string, and the AI agent fills only the rest:
+[@Save Company size](tool://update_contact_attribute?key=company_size). Use them only with values from these lists:
+{% for action in action_catalog.actions %}
+- {{ action.title }} (ID: {{ action.id }}), fixed values: {{ action.fixed_params | join: ', ' }}
+{% endfor %}
+- Contact attributes (key): {% for attribute in action_catalog.contact_attributes %}{{ attribute.key }} ({{ attribute.label }}){% unless forloop.last %}, {% endunless %}{% else %}none{% endfor %}
+- Conversation attributes (key): {% for attribute in action_catalog.conversation_attributes %}{{ attribute.key }} ({{ attribute.label }}){% unless forloop.last %}, {% endunless %}{% else %}none{% endfor %}
+- Teams (team_id, or recipient=team:<id> for email_team): {% for team in action_catalog.teams %}{{ team.id }} ({{ team.name }}){% unless forloop.last %}, {% endunless %}{% else %}none{% endfor %}
+- Email templates (template): {% for template in action_catalog.templates %}{{ template.key }} ({{ template.name }}){% unless forloop.last %}, {% endunless %}{% else %}none{% endfor %}
+- assign_agent: agent_id=round_robin, optionally with team_id. email_team: recipient=assignee or team:<id>.
+- schedule_follow_up: after=<minutes 15-10080>&kind=message|email, plus template=<key> or instructions=<URL-encoded text> (email needs a template).
+If a needed attribute, team or template doesn't exist, describe that step in words and mention it in notes instead of linking the action.
+
+{% endif -%}
 User description of the desired scenario:
 "{{ user_prompt }}"
 

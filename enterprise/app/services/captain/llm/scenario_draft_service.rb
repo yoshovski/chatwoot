@@ -43,6 +43,7 @@ class Captain::Llm::ScenarioDraftService < Llm::BaseAiService
     Captain::PromptRenderer.render(
       'scenario_builder',
       tools: available_tools,
+      action_catalog: Captain::Llm::ActionCatalog.new(@assistant).prompt_context,
       user_prompt: @user_prompt,
       language: @language
     )
@@ -94,11 +95,20 @@ class Captain::Llm::ScenarioDraftService < Llm::BaseAiService
   end
 
   def sanitize_tool_links(instruction)
-    instruction.gsub(%r{\[([^\]]+)\]\(tool://([^/)]+)\)}) do |match|
+    instruction.gsub(%r{\[([^\]]+)\]\(tool://([^/)?]+)(?:\?[^/)]*)?\)}) do |match|
       tool_title = Regexp.last_match(1)
       tool_id = Regexp.last_match(2)
-      available_tool_ids.include?(tool_id) ? match : tool_title
+      available_tool_ids.include?(tool_id) && valid_fixed_params?(match) ? match : tool_title
     end
+  end
+
+  # A built-in action whose fixed values don't exist (an attribute, team or template) becomes plain text.
+  def valid_fixed_params?(link)
+    reference = Captain::Scenario.new.extract_tool_references(link).first
+    tool_class = Captain::Assistant.resolve_tool_class(reference[:id])
+    return reference[:params].blank? unless tool_class.is_a?(Class) && tool_class < Captain::Tools::BuiltInActionTool
+
+    tool_class.fixed_param_errors(@assistant, reference[:params]).empty?
   end
 
   def extract_notes(notes)

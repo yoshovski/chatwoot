@@ -164,6 +164,7 @@ class Api::V1::Accounts::Captain::AssistantsController < Api::V1::Accounts::Base
 
     permit_audience_config(permitted)
     permit_reply_label_keywords(permitted)
+    permit_email_templates(permitted)
 
     permitted
   end
@@ -176,6 +177,15 @@ class Api::V1::Accounts::Captain::AssistantsController < Api::V1::Accounts::Base
 
     audience = config[:audience]
     permitted[:config][:audience] = audience.respond_to?(:permit!) ? audience.permit!.to_h : audience
+  end
+
+  # Email templates are keyed by the merchant's template key; the shape is checked by Captain::EmailTemplates.
+  def permit_email_templates(permitted)
+    config = params[:assistant][:config]
+    return unless config.try(:key?, :email_templates)
+
+    templates = config[:email_templates]
+    permitted[:config][:email_templates] = templates.respond_to?(:permit!) ? templates.permit!.to_h : templates
   end
 
   def permit_reply_label_keywords(permitted)

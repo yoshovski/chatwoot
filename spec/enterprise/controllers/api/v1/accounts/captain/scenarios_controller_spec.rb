@@ -316,4 +316,28 @@ RSpec.describe 'Api::V1::Accounts::Captain::Scenarios', type: :request do
       end
     end
   end
+
+  describe 'POST /api/v1/accounts/{account.id}/captain/assistants/{assistant.id}/scenarios/suggest_action' do
+    let(:path) { "/api/v1/accounts/#{account.id}/captain/assistants/#{assistant.id}/scenarios/suggest_action" }
+
+    it 'returns the suggestion for an admin' do
+      suggestion = { tool_id: 'assign_team', params: { 'team_id' => '3' }, missing: {} }
+      service = instance_double(Captain::Llm::ActionSuggestionService, perform: suggestion)
+      allow(Captain::Llm::ActionSuggestionService).to receive(:new)
+        .with(assistant: assistant, description: 'send it to sales').and_return(service)
+
+      post path, params: { description: 'send it to sales' }, headers: admin.create_new_auth_token, as: :json
+
+      expect(response).to have_http_status(:success)
+      expect(json_response[:suggestion]).to eq(tool_id: 'assign_team', params: { team_id: '3' }, missing: {})
+    end
+
+    it 'rejects agents and too-short descriptions' do
+      post path, params: { description: 'send it to sales' }, headers: agent.create_new_auth_token, as: :json
+      expect(response).to have_http_status(:unauthorized)
+
+      post path, params: { description: 'x' }, headers: admin.create_new_auth_token, as: :json
+      expect(response).to have_http_status(:unprocessable_entity)
+    end
+  end
 end

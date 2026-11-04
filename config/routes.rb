@@ -132,6 +132,7 @@ Rails.application.routes.draw do
               resources :inboxes, only: [:index, :create, :destroy], param: :inbox_id
               resources :scenarios do
                 post :draft, on: :collection
+                post :suggest_action, on: :collection
               end
               resources :document_sections, only: [:index, :create]
               resources :website_sources, only: [:index, :show, :create, :update] do
@@ -146,6 +147,8 @@ Rails.application.routes.draw do
             end
             resources :agent_sessions, only: [:show]
             post 'conversations/:conversation_id/takeover', to: 'conversation_takeovers#create'
+            get 'conversations/:conversation_id/scheduled_actions', to: 'conversation_scheduled_actions#index'
+            delete 'conversations/:conversation_id/scheduled_actions/:id', to: 'conversation_scheduled_actions#destroy'
             resources :assistant_responses do
               get :drilldown, on: :member
             end

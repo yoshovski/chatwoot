@@ -115,4 +115,41 @@ RSpec.describe Concerns::CaptainToolsHelpers, type: :concern do
       expect(result).to eq(%w[add_contact_note update_priority add_private_note])
     end
   end
+
+  describe 'references with fixed parameters' do
+    it 'keeps returning only ids from TOOL_REFERENCE_REGEX' do
+      text = 'Save [@Company size](tool://update_contact_attribute?key=company_size) then [@Note](tool://add_private_note)'
+
+      expect(text.scan(Concerns::CaptainToolsHelpers::TOOL_REFERENCE_REGEX).flatten).to eq(%w[update_contact_attribute add_private_note])
+      expect(test_instance.extract_tool_ids_from_text(text)).to eq(%w[update_contact_attribute add_private_note])
+    end
+
+    it 'returns each reference with its params' do
+      text = <<~TEXT
+        Save [@Company size](tool://update_contact_attribute?key=company_size).
+        Save [@Plan](tool://update_contact_attribute?key=interested_plan) and [@Note](tool://add_private_note).
+        Again [@Company size](tool://update_contact_attribute?key=company_size).
+      TEXT
+
+      expect(test_instance.extract_tool_references(text)).to eq(
+        [
+          { id: 'update_contact_attribute', params: { 'key' => 'company_size' } },
+          { id: 'update_contact_attribute', params: { 'key' => 'interested_plan' } },
+          { id: 'add_private_note', params: {} }
+        ]
+      )
+    end
+
+    it 'decodes encoded values and several params' do
+      text = '[@Follow up](tool://schedule_follow_up?after=60&kind=message&instructions=Ask%20if%20it%20helped%3F)'
+
+      expect(test_instance.extract_tool_references(text).first[:params]).to eq(
+        'after' => '60', 'kind' => 'message', 'instructions' => 'Ask if it helped?'
+      )
+    end
+
+    it 'does not match a query without an id or with a slash' do
+      expect(test_instance.extract_tool_references('[@X](tool://?key=a) [@Y](tool://a?key=b/c)')).to eq([])
+    end
+  end
 end

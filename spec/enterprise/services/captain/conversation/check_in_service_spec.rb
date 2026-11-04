@@ -48,4 +48,13 @@ RSpec.describe Captain::Conversation::CheckInService do
 
     expect([service.perform, service.perform]).to all(eq('Is there anything else I can help you with?'))
   end
+
+  it 'writes a scheduled follow-up from its brief' do
+    allow(Captain::Assistant::TieredLlmClient).to receive(:generate).and_return(reply({ 'text' => 'Did the plan comparison help?' }))
+
+    result = described_class.new(conversation: conversation, assistant: assistant, brief: 'Ask if the plan comparison helped').perform
+
+    expect(result).to eq('Did the plan comparison help?')
+    expect(chat).to have_received(:with_instructions).with(include('that does this: Ask if the plan comparison helped'))
+  end
 end

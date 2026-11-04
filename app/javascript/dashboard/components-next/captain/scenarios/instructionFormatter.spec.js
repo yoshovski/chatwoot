@@ -70,4 +70,26 @@ describe('formatInstructionWithToolChips', () => {
     expect(formatInstructionWithToolChips('', mockTools)).toBe('');
     expect(formatInstructionWithToolChips(null, mockTools)).toBe('');
   });
+
+  it('shows a built-in action with fixed values by its own text', () => {
+    const instruction =
+      'Save it with [@Save Company size](tool://update_contact_attribute?key=company_size).';
+
+    const result = formatInstructionWithToolChips(
+      instruction,
+      [
+        {
+          id: 'update_contact_attribute',
+          title: 'Update contact attribute',
+          emoji: '🪪',
+        },
+      ],
+      { formatMessage }
+    );
+
+    expect(result).toContain('data-tool-id="update_contact_attribute"');
+    expect(result).toContain(
+      '<span class="tool-title">Save Company size</span>'
+    );
+  });
 });

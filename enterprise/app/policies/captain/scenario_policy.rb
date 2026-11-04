@@ -15,6 +15,10 @@ class Captain::ScenarioPolicy < ApplicationPolicy
     @account_user.administrator?
   end
 
+  def suggest_action?
+    @account_user.administrator?
+  end
+
   def update?
     @account_user.administrator?
   end

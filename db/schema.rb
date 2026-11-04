@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_11_01_120000) do
+ActiveRecord::Schema[7.2].define(version: 2026_11_04_120000) do
   # These extensions should be enabled to support this database
   enable_extension "pg_stat_statements"
   enable_extension "pg_trgm"
@@ -766,6 +766,30 @@ ActiveRecord::Schema[7.2].define(version: 2026_11_01_120000) do
     t.index ["assistant_id", "enabled"], name: "index_captain_scenarios_on_assistant_id_and_enabled"
     t.index ["assistant_id"], name: "index_captain_scenarios_on_assistant_id"
     t.index ["enabled"], name: "index_captain_scenarios_on_enabled"
+  end
+
+  create_table "captain_scheduled_actions", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.bigint "conversation_id", null: false
+    t.bigint "assistant_id", null: false
+    t.string "kind", null: false
+    t.string "status", default: "pending", null: false
+    t.datetime "due_at", null: false
+    t.jsonb "payload", default: {}, null: false
+    t.jsonb "cancel_on", default: ["visitor_message", "human_message", "resolved", "handoff"], null: false
+    t.string "dedupe_key"
+    t.integer "attempts", default: 0, null: false
+    t.text "last_error"
+    t.datetime "executed_at"
+    t.datetime "cancelled_at"
+    t.string "cancel_reason"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id"], name: "index_captain_scheduled_actions_on_account_id"
+    t.index ["assistant_id"], name: "index_captain_scheduled_actions_on_assistant_id"
+    t.index ["conversation_id", "kind", "dedupe_key"], name: "idx_captain_scheduled_actions_pending_dedupe", unique: true, where: "((status)::text = 'pending'::text)"
+    t.index ["conversation_id"], name: "index_captain_scheduled_actions_on_conversation_id"
+    t.index ["status", "due_at"], name: "index_captain_scheduled_actions_on_status_and_due_at"
   end
 
   create_table "captain_website_sources", force: :cascade do |t|
@@ -1894,6 +1918,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_11_01_120000) do
   add_foreign_key "captain_knowledge_analysis_runs", "captain_assistants", column: "assistant_id", on_delete: :cascade
   add_foreign_key "captain_knowledge_briefs", "accounts", on_delete: :cascade
   add_foreign_key "captain_knowledge_briefs", "captain_assistants", column: "assistant_id", on_delete: :cascade
+  add_foreign_key "captain_scheduled_actions", "conversations", on_delete: :cascade
   add_foreign_key "captain_website_sources", "accounts", on_delete: :cascade
   add_foreign_key "captain_website_sources", "captain_assistants", column: "assistant_id", on_delete: :cascade
   add_foreign_key "conversation_usage_windows", "accounts"

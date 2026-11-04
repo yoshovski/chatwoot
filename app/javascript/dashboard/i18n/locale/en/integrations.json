@@ -1724,9 +1724,25 @@
         },
         "PALETTE": {
           "TITLE": "Add a tool:",
-          "MORE": "More tools",
-          "SEARCH": "Search tools...",
-          "NO_RESULTS": "No tools found"
+          "MORE": "More tools and actions",
+          "SEARCH": "Search tools, actions and properties...",
+          "NO_RESULTS": "No tools found",
+          "GROUPS": {
+            "BUILT_IN": "Built-in actions",
+            "CUSTOM": "Your actions",
+            "MCP": "MCP tools",
+            "CONTACT_PROPERTIES": "Contact properties",
+            "REPLY_SHAPE": "Reply shape"
+          },
+          "PROPERTY": {
+            "READ": "Read {name}",
+            "UPDATE": "Update {name}",
+            "READ_TEXT": "the contact's {name} ({key})"
+          },
+          "REPLY_SHAPE": {
+            "SEPARATE": "Send as a separate message",
+            "SEPARATE_DESCRIPTION": "The reply puts this part in its own chat bubble"
+          }
         },
         "TEMPLATES": {
           "GALLERY_TITLE": "Start from a template",
@@ -2092,6 +2108,66 @@
           "LABEL": "Scenario actions",
           "EDIT": "Edit",
           "DELETE": "Delete"
+        },
+        "ACTIONS": {
+          "INSERT": "Insert",
+          "CANCEL": "Cancel",
+          "NEW_TEMPLATE": "New template…",
+          "DELAY": {
+            "MINUTES": "{count} minute | {count} minutes",
+            "HOURS": "{count} hour | {count} hours",
+            "DAYS": "{count} day | {count} days"
+          },
+          "CHIP": {
+            "SAVE": "Save {name}",
+            "ASSIGN": "Assign {name}",
+            "ASSIGN_NEXT": "Assign next available agent",
+            "ASSIGN_NEXT_IN": "Assign next available in {name}",
+            "EMAIL_VISITOR": "Email visitor: {name}",
+            "EMAIL_TEAM": "Email team: {name}",
+            "FOLLOW_UP": "Follow up after {time}"
+          },
+          "FIELDS": {
+            "ATTRIBUTE": "Attribute",
+            "PICK_ATTRIBUTE": "Pick an attribute",
+            "TEAM": "Team",
+            "AGENT": "Agent",
+            "NEXT_AVAILABLE": "Next available agent (round robin)",
+            "FROM_TEAM": "From team",
+            "ANY_TEAM": "Any agent in the inbox",
+            "RECIPIENT": "Send to",
+            "ASSIGNEE": "The assigned agent",
+            "TEMPLATE": "Email template",
+            "PICK": "Pick one",
+            "AI_WRITES": "None: the AI writes it",
+            "AFTER": "After the visitor is quiet for",
+            "KIND": "Follow up by",
+            "KIND_MESSAGE": "Chat message",
+            "KIND_EMAIL": "Email",
+            "INSTRUCTIONS": "What the follow-up should do",
+            "INSTRUCTIONS_HINT": "Ask if they found the plan comparison useful"
+          },
+          "CREATE_ATTRIBUTE": {
+            "OPEN": "Create attribute…",
+            "NAME": "Name",
+            "KEY": "Key",
+            "TYPE": "Type",
+            "SAVE": "Create",
+            "ERROR": "Couldn't create the attribute. Try again."
+          }
+        },
+        "DESCRIBE": {
+          "ITEM": "Describe an action…",
+          "ITEM_DESCRIPTION": "Say what should happen; we pick the matching action",
+          "TITLE": "Describe an action",
+          "DESCRIPTION": "For example: store the visitor's company size, or send the chat to Sales.",
+          "PLACEHOLDER": "Remember which plan they're interested in",
+          "SUGGEST": "Suggest",
+          "PREVIEW": "Suggested:",
+          "NO_MATCH": "No built-in action fits. Create a custom action on the Tools & MCP page instead.",
+          "CREATE_ATTRIBUTE": "Create attribute {key} ({type})?",
+          "CREATE": "Create and insert",
+          "ERROR": "Couldn't suggest an action. Try again."
         }
       },
       "AI_AGENT_CHIP": "AI agent"
@@ -3037,6 +3113,79 @@
     },
     "BULK_SELECT": {
       "CLEAR": "Clear selection"
+    },
+    "SCHEDULED_ACTIONS": {
+      "KIND": {
+        "FOLLOW_UP_MESSAGE": "Follow-up scheduled · {time}",
+        "FOLLOW_UP_EMAIL": "Follow-up email scheduled · {time}"
+      },
+      "CANCEL": "Cancel",
+      "CANCEL_ERROR": "Couldn't cancel the follow-up. Try again."
+    },
+    "BUILT_IN_ACTIONS": {
+      "TITLE": "Built-in actions",
+      "DESCRIPTION": "Actions are things your agent can do. Built-in actions work right away; add a custom action to call your own systems.",
+      "USE_IN_SCENARIO": "Use in a scenario",
+      "CUSTOM_EMPTY": "No custom actions yet. Add one to call your own systems.",
+      "HELP": {
+        "TOGGLE": "When to use what",
+        "USE": "Use…",
+        "WHEN": "when…",
+        "EXAMPLE": "Example",
+        "ROWS": {
+          "BEHAVIOUR": {
+            "USE": "A Behaviour setting",
+            "WHEN": "it should apply to every conversation",
+            "EXAMPLE": "Greet first-time visitors"
+          },
+          "LIMIT": {
+            "USE": "A Limit",
+            "WHEN": "there's something the agent must never do or promise, plus what to offer instead",
+            "EXAMPLE": "Can't issue refunds → offer handoff"
+          },
+          "SCENARIO": {
+            "USE": "A Scenario",
+            "WHEN": "one situation needs several steps, questions or actions in order",
+            "EXAMPLE": "Demo request: ask company size, save it, then offer the booking link"
+          },
+          "ACTION": {
+            "USE": "An Action",
+            "WHEN": "the AI must change something or fetch live data",
+            "EXAMPLE": "Save company size to the contact"
+          },
+          "AUTOMATION": {
+            "USE": "An Automation rule",
+            "WHEN": "the trigger is exact and needs no understanding",
+            "EXAMPLE": "New conversation from the pricing page → label pricing"
+          },
+          "KNOWLEDGE": {
+            "USE": "Knowledge",
+            "WHEN": "it's a fact the agent should be able to explain",
+            "EXAMPLE": "Our trial is 14 days"
+          }
+        }
+      }
+    },
+    "EMAIL_TEMPLATES": {
+      "TITLE": "Email templates",
+      "DESCRIPTION": "Used by Email the visitor, Email the team and email follow-ups. Up to 10 per agent.",
+      "ADD": "New template",
+      "EDIT": "Edit template",
+      "DELETE": "Delete template",
+      "EMPTY": "No email templates yet.",
+      "SAVE": "Save template",
+      "SAVED": "Template saved",
+      "ERROR": "Couldn't save the template. Try again.",
+      "VARIABLES": "Insert:",
+      "PREVIEW": "Preview with sample values",
+      "FIELDS": {
+        "NAME": "Name",
+        "NAME_PLACEHOLDER": "New demo request",
+        "KEY": "Key",
+        "KEY_HELP": "Lowercase letters, numbers and _. Scenarios refer to the template by this key.",
+        "SUBJECT": "Subject",
+        "BODY": "Body"
+      }
     }
   }
 }

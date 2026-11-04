@@ -9,7 +9,8 @@ import { usePolicy } from 'dashboard/composables/usePolicy';
 
 import PageLayout from 'dashboard/components-next/captain/PageLayout.vue';
 import CaptainPaywall from 'dashboard/components-next/captain/pageComponents/Paywall.vue';
-import CustomToolsPageEmptyState from 'dashboard/components-next/captain/pageComponents/emptyStates/CustomToolsPageEmptyState.vue';
+import BuiltInActionsSection from 'dashboard/components-next/captain/pageComponents/builtInActions/BuiltInActionsSection.vue';
+import EmailTemplatesSection from 'dashboard/components-next/captain/pageComponents/builtInActions/EmailTemplatesSection.vue';
 import CustomToolCard from 'dashboard/components-next/captain/pageComponents/customTool/CustomToolCard.vue';
 import DeleteDialog from 'dashboard/components-next/captain/pageComponents/DeleteDialog.vue';
 import Dialog from 'dashboard/components-next/dialog/Dialog.vue';
@@ -47,9 +48,6 @@ const mcpToDelete = ref(null);
 const mcpDeleteDialogRef = ref(null);
 
 const isPageFetching = computed(() => isFetching.value || mcp.isFetching.value);
-const isPageEmpty = computed(
-  () => !customTools.value.length && !mcpServers.value.length
-);
 
 const mcpError = error =>
   useAlert(parseAPIErrorResponse(error) || t('CAPTAIN.MCP_SERVERS.ERROR'));
@@ -263,7 +261,7 @@ onMounted(() => {
     :current-page="customToolsMeta.page"
     :show-pagination-footer="!isFetching && !!customTools.length"
     :is-fetching="isPageFetching"
-    :is-empty="isPageEmpty"
+    :is-empty="false"
     :show-know-more="false"
     @update:current-page="onPageChange"
     @click="openCreateDialog"
@@ -285,13 +283,6 @@ onMounted(() => {
       <CaptainPaywall feature-prefix="CAPTAIN.CUSTOM_TOOLS" />
     </template>
 
-    <template #emptyState>
-      <CustomToolsPageEmptyState
-        @click="openCreateDialog"
-        @connect-mcp="openMcpDialog()"
-      />
-    </template>
-
     <template #body>
       <div class="flex flex-col gap-4">
         <div
@@ -301,12 +292,18 @@ onMounted(() => {
           <span class="i-lucide-triangle-alert size-4 shrink-0" />
           {{ $t('CAPTAIN.CUSTOM_TOOLS.SOFT_LIMIT_WARNING') }}
         </div>
-        <h2
-          v-if="mcpServers.length && customTools.length"
-          class="mb-0 text-sm font-medium text-n-slate-11"
-        >
+        <BuiltInActionsSection />
+        <EmailTemplatesSection />
+        <h2 class="mt-4 mb-0 text-sm font-medium text-n-slate-11">
           {{ $t('CAPTAIN.CUSTOM_TOOLS.SECTION_TITLE') }}
         </h2>
+        <p
+          v-if="!customTools.length"
+          class="mb-0 text-sm text-n-slate-10"
+          data-test="custom-actions-empty"
+        >
+          {{ $t('CAPTAIN.BUILT_IN_ACTIONS.CUSTOM_EMPTY') }}
+        </p>
         <CustomToolCard
           v-for="tool in customTools"
           :id="tool.id"
@@ -325,10 +322,7 @@ onMounted(() => {
           @toggle="toggleCustomTool"
         />
         <template v-if="mcpServers.length">
-          <h2
-            class="mt-4 mb-0 text-sm font-medium text-n-slate-11"
-            :class="{ 'mt-0': !customTools.length }"
-          >
+          <h2 class="mt-4 mb-0 text-sm font-medium text-n-slate-11">
             {{ $t('CAPTAIN.MCP_SERVERS.TITLE') }}
           </h2>
           <McpServerCard

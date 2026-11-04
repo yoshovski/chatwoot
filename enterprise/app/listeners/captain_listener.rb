@@ -9,6 +9,7 @@ class CaptainListener < BaseListener
 
     return unless message.human_response? && !message.private?
 
+    cancel_scheduled_actions(message.conversation, 'human_message')
     ownership_service(message.conversation).record_human_takeover!
   end
 
@@ -45,6 +46,7 @@ class CaptainListener < BaseListener
 
   def conversation_resolved(event)
     conversation = extract_conversation_and_account(event)[0]
+    cancel_scheduled_actions(conversation, 'resolved')
     Captain::ConversationMemory.invalidate_for_conversation!(conversation)
     ownership_service(conversation).handle_resolved! if conversation.present?
 
@@ -62,6 +64,8 @@ class CaptainListener < BaseListener
   def conversation_bot_handoff(event)
     conversation = extract_conversation_and_account(event)[0]
     return if conversation.blank? || conversation.inbox.blank?
+
+    cancel_scheduled_actions(conversation, 'handoff')
     return unless conversation.account.feature_enabled?('captain_integration_v2')
 
     assistant = conversation.inbox.captain_assistant
@@ -69,6 +73,11 @@ class CaptainListener < BaseListener
     return if assistant.handoff_fallback_agent_id.blank? && assistant.handoff_fallback_team_id.blank?
 
     Captain::Conversation::HandoffFallbackAssignmentJob.set(wait: 10.seconds).perform_later(conversation, assistant)
+  end
+
+  # Captain's own handoff can skip the bot handoff event (HandoffTool dispatches it later), so listen to both.
+  def captain_conversation_handed_off(event)
+    cancel_scheduled_actions(event.data[:conversation], 'handoff')
   end
 
   private
@@ -165,7 +174,13 @@ class CaptainListener < BaseListener
     Captain::Conversation::ContactCaptureService.new(conversation: conversation)
   end
 
+  # A follow-up the AI agent scheduled stops when the visitor writes, a human replies, or the chat is resolved or handed off.
+  def cancel_scheduled_actions(conversation, reason)
+    Captain::ScheduledActions.cancel!(conversation: conversation, reason: reason) if conversation.present?
+  end
+
   def handle_incoming_message(message)
+    cancel_scheduled_actions(message.conversation, 'visitor_message')
     return unless captain_active_for_conversation?(message.conversation)
 
     contact_capture_service(message.conversation).capture_typed_email!(message)
