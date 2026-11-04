@@ -2,6 +2,7 @@ module Llm::FeatureRouter
   class UnknownFeatureError < StandardError; end
 
   CAPTAIN_V2_ASSISTANT_MODEL = 'gpt-5.2'.freeze
+  DEFAULT_ASSISTANT_MODEL_KEY = 'CAPTAIN_DEFAULT_ASSISTANT_MODEL'.freeze
 
   class << self
     def resolve(feature:, account: nil)
@@ -16,6 +17,13 @@ module Llm::FeatureRouter
         model: model,
         source: source
       }
+    end
+
+    # The assistant model of Captain V2 accounts without their own setting: CAPTAIN_DEFAULT_ASSISTANT_MODEL from the
+    # installation config or the environment, else CAPTAIN_V2_ASSISTANT_MODEL.
+    def default_assistant_model
+      InstallationConfig.find_by(name: DEFAULT_ASSISTANT_MODEL_KEY)&.value.presence || ENV[DEFAULT_ASSISTANT_MODEL_KEY].presence ||
+        CAPTAIN_V2_ASSISTANT_MODEL
     end
 
     private
@@ -51,7 +59,7 @@ module Llm::FeatureRouter
       return unless feature_key == 'assistant'
       return unless account&.feature_enabled?('captain_integration_v2')
 
-      CAPTAIN_V2_ASSISTANT_MODEL
+      default_assistant_model
     end
   end
 end
