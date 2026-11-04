@@ -22,11 +22,15 @@ export const formatInstructionWithToolChips = (
   const html = formatMessage ? formatMessage(instruction, false) : instruction;
 
   return html.replace(
-    /<a\b[^>]*href="tool:\/\/([^"/?#]+)"[^>]*>[\s\S]*?<\/a>/gi,
-    (match, toolId) => {
+    /<a\b[^>]*href="tool:\/\/([^"/?#]+)(\?[^"#]*)?"[^>]*>([\s\S]*?)<\/a>/gi,
+    (match, toolId, query, linkText) => {
       const tool = (tools || []).find(t => t.id === toolId);
       const isAvailable = Boolean(tool);
-      const title = tool?.title || toolId;
+      // A built-in action with fixed values keeps its own text, e.g. "Save Company size".
+      const fixedTitle = query
+        ? linkText.replace(/<[^>]*>/g, '').replace(/^@/, '')
+        : '';
+      const title = fixedTitle || tool?.title || toolId;
       const emoji = tool?.emoji || '';
       const tooltip = isAvailable ? tool?.description || '' : unavailableText;
 

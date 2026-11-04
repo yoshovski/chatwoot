@@ -62,23 +62,29 @@ watch(
         @input="handleSearch"
       />
     </div>
-    <div
-      v-for="(tool, idx) in items"
-      :id="`tool-item-${idx}`"
-      :key="tool.id || idx"
-      :class="{ 'bg-n-alpha-black2': idx === selectedIndex }"
-      class="flex flex-col gap-0.5 rounded-md py-1.5 px-2 cursor-pointer hover:bg-n-alpha-black2"
-      @click="onItemClick(idx)"
-    >
-      <div class="flex items-center gap-1.5">
-        <span v-if="tool.emoji" class="text-sm leading-none">{{
-          tool.emoji
-        }}</span>
-        <span class="text-n-slate-12 font-medium text-sm">{{
-          tool.title
-        }}</span>
+    <template v-for="(tool, idx) in items" :key="tool.id || idx">
+      <span
+        v-if="tool.groupLabel"
+        class="px-2 pt-1.5 text-xs font-medium text-n-slate-10"
+      >
+        {{ tool.groupLabel }}
+      </span>
+      <div
+        :id="`tool-item-${idx}`"
+        :class="{ 'bg-n-alpha-black2': idx === selectedIndex }"
+        class="flex flex-col gap-0.5 rounded-md py-1.5 px-2 cursor-pointer hover:bg-n-alpha-black2"
+        @click="onItemClick(idx)"
+      >
+        <div class="flex items-center gap-1.5">
+          <span v-if="tool.emoji" class="text-sm leading-none">{{
+            tool.emoji
+          }}</span>
+          <span class="text-n-slate-12 font-medium text-sm">{{
+            tool.title
+          }}</span>
+        </div>
+        <span class="text-n-slate-11 text-xs">{{ tool.description }}</span>
       </div>
-      <span class="text-n-slate-11 text-xs">{{ tool.description }}</span>
-    </div>
+    </template>
   </div>
 </template>

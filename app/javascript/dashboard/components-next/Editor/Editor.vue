@@ -36,6 +36,7 @@ const slots = useSlots();
 
 const isFocused = ref(false);
 const wootEditor = ref(null);
+const toolPalette = ref(null);
 
 const characterCount = computed(() => props.modelValue.length);
 
@@ -72,6 +73,15 @@ const insertTool = tool => {
   wootEditor.value?.insertTool(tool);
 };
 
+const insertMarkdown = content => {
+  wootEditor.value?.insertMarkdown(content);
+};
+
+// A built-in action picked with @ or / asks for its fixed values in the palette's dialog.
+const configureTool = tool => {
+  toolPalette.value?.configure(tool);
+};
+
 defineExpose({
   insertTool,
 });
@@ -95,8 +105,10 @@ watch(
     </label>
     <ToolPalette
       v-if="enableCaptainTools && showToolPalette"
+      ref="toolPalette"
       class="mb-1"
       @insert-tool="insertTool"
+      @insert-text="insertMarkdown"
     />
     <div
       class="flex flex-col w-full gap-2 px-3 py-3 transition-all duration-500 ease-in-out border rounded-lg editor-wrapper bg-n-alpha-black2"
@@ -128,6 +140,7 @@ watch(
         :channel-type="channelType"
         :medium="medium"
         @input="handleInput"
+        @configure-tool="configureTool"
         @focus="handleFocus"
         @blur="handleBlur"
         @execute-copilot-action="

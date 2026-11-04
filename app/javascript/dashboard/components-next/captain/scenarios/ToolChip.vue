@@ -20,6 +20,11 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  // Overrides the tool's title, e.g. "Save Company size" for a built-in action with fixed values.
+  label: {
+    type: String,
+    default: '',
+  },
 });
 
 const emit = defineEmits(['click', 'remove']);
@@ -37,7 +42,7 @@ const matchedTool = computed(() => {
 const isAvailable = computed(() => Boolean(matchedTool.value));
 
 const title = computed(() => {
-  return matchedTool.value?.title || effectiveId.value;
+  return props.label || matchedTool.value?.title || effectiveId.value;
 });
 
 const emoji = computed(() => {

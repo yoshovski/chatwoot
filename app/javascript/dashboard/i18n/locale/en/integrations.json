@@ -1724,9 +1724,25 @@
         },
         "PALETTE": {
           "TITLE": "Add a tool:",
-          "MORE": "More tools",
-          "SEARCH": "Search tools...",
-          "NO_RESULTS": "No tools found"
+          "MORE": "More tools and actions",
+          "SEARCH": "Search tools, actions and properties...",
+          "NO_RESULTS": "No tools found",
+          "GROUPS": {
+            "BUILT_IN": "Built-in actions",
+            "CUSTOM": "Your actions",
+            "MCP": "MCP tools",
+            "CONTACT_PROPERTIES": "Contact properties",
+            "REPLY_SHAPE": "Reply shape"
+          },
+          "PROPERTY": {
+            "READ": "Read {name}",
+            "UPDATE": "Update {name}",
+            "READ_TEXT": "the contact's {name} ({key})"
+          },
+          "REPLY_SHAPE": {
+            "SEPARATE": "Send as a separate message",
+            "SEPARATE_DESCRIPTION": "The reply puts this part in its own chat bubble"
+          }
         },
         "TEMPLATES": {
           "GALLERY_TITLE": "Start from a template",
@@ -2092,6 +2108,53 @@
           "LABEL": "Scenario actions",
           "EDIT": "Edit",
           "DELETE": "Delete"
+        },
+        "ACTIONS": {
+          "INSERT": "Insert",
+          "CANCEL": "Cancel",
+          "NEW_TEMPLATE": "New template…",
+          "DELAY": {
+            "MINUTES": "{count} minute | {count} minutes",
+            "HOURS": "{count} hour | {count} hours",
+            "DAYS": "{count} day | {count} days"
+          },
+          "CHIP": {
+            "SAVE": "Save {name}",
+            "ASSIGN": "Assign {name}",
+            "ASSIGN_NEXT": "Assign next available agent",
+            "ASSIGN_NEXT_IN": "Assign next available in {name}",
+            "EMAIL_VISITOR": "Email visitor: {name}",
+            "EMAIL_TEAM": "Email team: {name}",
+            "FOLLOW_UP": "Follow up after {time}"
+          },
+          "FIELDS": {
+            "ATTRIBUTE": "Attribute",
+            "PICK_ATTRIBUTE": "Pick an attribute",
+            "TEAM": "Team",
+            "AGENT": "Agent",
+            "NEXT_AVAILABLE": "Next available agent (round robin)",
+            "FROM_TEAM": "From team",
+            "ANY_TEAM": "Any agent in the inbox",
+            "RECIPIENT": "Send to",
+            "ASSIGNEE": "The assigned agent",
+            "TEMPLATE": "Email template",
+            "PICK": "Pick one",
+            "AI_WRITES": "None: the AI writes it",
+            "AFTER": "After the visitor is quiet for",
+            "KIND": "Follow up by",
+            "KIND_MESSAGE": "Chat message",
+            "KIND_EMAIL": "Email",
+            "INSTRUCTIONS": "What the follow-up should do",
+            "INSTRUCTIONS_HINT": "Ask if they found the plan comparison useful"
+          },
+          "CREATE_ATTRIBUTE": {
+            "OPEN": "Create attribute…",
+            "NAME": "Name",
+            "KEY": "Key",
+            "TYPE": "Type",
+            "SAVE": "Create",
+            "ERROR": "Couldn't create the attribute. Try again."
+          }
         }
       },
       "AI_AGENT_CHIP": "AI agent"

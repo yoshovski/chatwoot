@@ -110,6 +110,7 @@ const emit = defineEmits([
   'toggleCannedMenu',
   'toggleVariablesMenu',
   'toggleToolsMenu',
+  'configureTool',
   'toggleMacrosMenu',
   'executeMacro',
   'clearSelection',
@@ -373,16 +374,17 @@ const plugins = computed(() => {
     return [];
   }
 
+  // In scenario steps both @ and / open the tool menu (there are no canned responses there).
   const atPlugins = props.enableCaptainTools
-    ? [
+    ? ['@', '/'].map(trigger =>
         createSuggestionPlugin({
-          trigger: '@',
+          trigger,
           showMenu: showToolsMenu,
           searchTerm: toolSearchKey,
           isAllowed: () => props.enableCaptainTools,
           interceptEnter: true,
-        }),
-      ]
+        })
+      )
     : [
         createSuggestionPlugin({
           trigger: '@',
@@ -398,7 +400,7 @@ const plugins = computed(() => {
       trigger: '/',
       showMenu: showCannedMenu,
       searchTerm: cannedSearchKey,
-      isAllowed: () => !props.isPrivate,
+      isAllowed: () => !props.isPrivate && !props.enableCaptainTools,
     }),
     createSuggestionPlugin({
       trigger: '{{',
@@ -827,6 +829,23 @@ function insertSpecialContent(type, content) {
   useTrack(event_map[type]);
 }
 
+// A built-in action needs its fixed values (which attribute, which team) before it can be inserted.
+function onSelectTool(tool) {
+  if (tool?.built_in_action) {
+    removeSuggestionTrigger();
+    showToolsMenu.value = false;
+    emit('configureTool', tool);
+    return;
+  }
+  insertSpecialContent('tool', tool);
+}
+
+function insertMarkdown(content) {
+  if (!editorView) return;
+  insertContentIntoEditor(content);
+  editorView.focus();
+}
+
 function insertTool(tool) {
   if (!editorView || !tool) {
     return;
@@ -1018,7 +1037,7 @@ onMounted(() => {
   }
 });
 
-defineExpose({ focusEditorInputField, insertTool });
+defineExpose({ focusEditorInputField, insertTool, insertMarkdown });
 
 // BUS Event to insert text or markdown into the editor at the
 // current cursor position.
@@ -1085,7 +1104,7 @@ useEmitter(BUS_EVENTS.INSERT_INTO_RICH_EDITOR, content => {
       v-if="showToolsMenu"
       :search-key="toolSearchKey"
       :menu-position="toolsMenuPosition"
-      @select-tool="content => insertSpecialContent('tool', content)"
+      @select-tool="onSelectTool"
     />
     <CopilotMenuBar
       v-if="showSelectionMenu"

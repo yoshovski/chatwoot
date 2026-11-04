@@ -7,7 +7,12 @@ import Input from 'dashboard/components-next/input/Input.vue';
 import TextArea from 'dashboard/components-next/textarea/TextArea.vue';
 import Editor from 'dashboard/components-next/Editor/Editor.vue';
 import ToolChip from './ToolChip.vue';
-import { getToolIdsFromInstruction, unlinkTool } from './scenarioTools';
+import {
+  getToolIdsFromInstruction,
+  getToolTitlesFromInstruction,
+  unlinkTool,
+} from './scenarioTools';
+import { parseToolReference } from './builtInActions';
 
 const title = defineModel('title', { type: String, default: '' });
 const description = defineModel('description', { type: String, default: '' });
@@ -41,6 +46,13 @@ const instructionError = computed(() => errorFor('instruction', 'INSTRUCTION'));
 const linkedToolIds = computed(() =>
   getToolIdsFromInstruction(instruction.value)
 );
+const linkedToolTitles = computed(() =>
+  getToolTitlesFromInstruction(instruction.value)
+);
+
+// A built-in action with fixed values shows its own text ("Save Company size").
+const chipLabel = reference =>
+  reference.includes('?') ? linkedToolTitles.value[reference] : '';
 
 const removeTool = toolId => {
   instruction.value = unlinkTool(instruction.value, toolId);
@@ -111,7 +123,8 @@ defineExpose({ validate, reset });
           <ToolChip
             v-for="toolId in linkedToolIds"
             :key="toolId"
-            :tool-id="toolId"
+            :tool-id="parseToolReference(toolId).id"
+            :label="chipLabel(toolId)"
             removable
             @remove="removeTool(toolId)"
           />
