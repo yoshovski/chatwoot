@@ -4,6 +4,10 @@
 composer) with the real models through LiteLLM and checks every reply with deterministic rules. Specs stub the LLM,
 so they can't see what the model writes; this is the check that does.
 
+The report header names the action model resolved for the eval account (`CAPTAIN_ACTION_MODEL` while routing is
+on, else `Llm::FeatureRouter`, so `CAPTAIN_DEFAULT_ASSISTANT_MODEL` and account settings apply) and whether reply
+schema v2 was on. On the widget the router's early welcome is part of the observed reply, as its first message.
+
 A run writes nothing: each case builds its account, inbox, agent, contact and conversation inside one transaction that
 is rolled back, jobs go to the ActiveJob test adapter, and knowledge searches are answered from the suite's fixture
 documents instead of Dify. Only the LLM calls leave the process.
@@ -72,8 +76,9 @@ Cases live in `suites/*.yml`. Use invented businesses only (no client names, URL
     checks: [welcome_once, { bubbles: { min: 1, max: 2 } }]
 ```
 
-Checks (`checks.rb`): `welcome_once`, `starts_with_greeting`, `no_repeated_sentences`, `no_empty_bubbles`, `bubbles`,
-`question_bubble`, `no_click_paths`, `links_from_knowledge`, `contains_video`, `mentions_all` (a list of terms the reply
+Checks (`checks.rb`): `welcome_once`, `starts_with_greeting`, `greeting_first` (the greeting is the first message and
+appears once), `no_repeated_sentences`, `no_empty_bubbles`, `bubbles`, `question_bubble`, `max_questions` (question
+sentences in the whole reply), `no_click_paths`, `links_from_knowledge`, `contains_video`, `mentions_all` (a list of terms the reply
 names), `language`, `handoff`, `route`, `max_chars`, `judge` (a rubric, graded only with `JUDGE=1`) and `any_of` (a list
 of checks, one of which must pass). The suite's SHA-256 in the report names exactly which
 cases ran.

@@ -41,6 +41,26 @@ RSpec.describe Captain::Evals::Report do
     expect(described_class.new(run, out_dir: out_dir).record[:results].first).to include(status: 'blocked', failure_stage: 'generation')
   end
 
+  it 'records why a repeat was blocked when the runner returned an error' do
+    allow(case_runner).to receive(:run) { observation.merge(messages: [], error: 'faraday_timeout_error: execution expired') }
+
+    run = Captain::Evals::Run.new(suite: suite, repeat: 1, only: ['R01']).perform
+    report = described_class.new(run, out_dir: out_dir)
+
+    expect(report.record[:results].first[:checks].first).to include(repeat: 1, error: 'faraday_timeout_error: execution expired')
+    expect(report.markdown).to include('- blocked: faraday_timeout_error: execution expired')
+  end
+
+  it 'names the action model and the reply schema the case runner resolved' do
+    allow(case_runner).to receive(:run) { observation.merge(schema_v2: true, action_model: 'gpt-6-luna') }
+
+    report = described_class.new(Captain::Evals::Run.new(suite: suite, repeat: 1, only: ['R01']).perform, out_dir: out_dir)
+
+    expect(report.header).to include(schema_v2: true)
+    expect(report.header[:models]).to include(action: 'gpt-6-luna')
+    expect(report.markdown).to include('action `gpt-6-luna`', '- Reply schema v2: on')
+  end
+
   it 'raises a setup error without the Captain API key' do
     InstallationConfig.find_by(name: 'CAPTAIN_OPEN_AI_API_KEY').destroy!
 
