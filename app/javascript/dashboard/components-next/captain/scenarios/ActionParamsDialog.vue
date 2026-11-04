@@ -166,6 +166,15 @@ const open = (selectedTool, preset = {}) => {
   Object.assign(params, DEFAULTS[selectedTool.id] || {}, preset);
   newAttribute.open = false;
   loadLookups();
+  // Templates may have been added in another tab since the agent was loaded.
+  if (
+    route.params.assistantId &&
+    ['email_visitor', 'email_team', 'schedule_follow_up'].includes(
+      selectedTool.id
+    )
+  ) {
+    store.dispatch('captainAssistants/show', Number(route.params.assistantId));
+  }
   dialogRef.value?.open();
 };
 

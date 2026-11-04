@@ -2,6 +2,8 @@
 import { ref, computed, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useStore } from 'vuex';
+import { useRoute } from 'vue-router';
+import { frontendURL } from 'dashboard/helper/URLHelper';
 import { vOnClickOutside } from '@vueuse/components';
 import { useMapGetter } from 'dashboard/composables/store';
 import ToolChip from './ToolChip.vue';
@@ -22,10 +24,11 @@ const props = defineProps({
   },
 });
 
-const emit = defineEmits(['insertTool', 'insertText', 'newTemplate']);
+const emit = defineEmits(['insertTool', 'insertText']);
 
 const { t } = useI18n();
 const store = useStore();
+const route = useRoute();
 const storeCaptainTools = useMapGetter('captainTools/getRecords');
 const contactAttributes = useMapGetter('attributes/getContactAttributes');
 
@@ -143,6 +146,16 @@ const filteredDropdownTools = computed(() => {
   ];
 });
 
+// Templates are edited on the Tools & MCP page; it opens next to the scenario so the step isn't lost.
+const openTemplates = () => {
+  const { accountId, assistantId } = route.params;
+  window.open(
+    frontendURL(`accounts/${accountId}/captain/${assistantId}/tools`),
+    '_blank',
+    'noopener'
+  );
+};
+
 const configure = (tool, preset = {}) => {
   paramsDialog.value?.open(tool, preset);
 };
@@ -229,7 +242,7 @@ defineExpose({ configure });
     <ActionParamsDialog
       ref="paramsDialog"
       @insert="tool => emit('insertTool', tool)"
-      @new-template="emit('newTemplate')"
+      @new-template="openTemplates"
     />
   </div>
 </template>

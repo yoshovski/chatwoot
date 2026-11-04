@@ -931,4 +931,36 @@ RSpec.describe 'Api::V1::Accounts::Captain::Assistants', type: :request do
       end
     end
   end
+
+  describe 'email templates' do
+    let(:assistant) { create(:captain_assistant, account: account) }
+    let(:path) { "/api/v1/accounts/#{account.id}/captain/assistants/#{assistant.id}" }
+    let(:templates) { { 'demo' => { 'name' => 'New demo request', 'subject' => 'Demo for {{ contact.name }}', 'body' => '{{ summary }}' } } }
+
+    it 'saves and replaces the templates' do
+      patch path, params: { assistant: { config: { email_templates: templates } } }, headers: admin.create_new_auth_token, as: :json
+      expect(response).to have_http_status(:success)
+      expect(assistant.reload.config['email_templates']).to eq(templates)
+
+      patch path, params: { assistant: { config: { email_templates: {} } } }, headers: admin.create_new_auth_token, as: :json
+      expect(assistant.reload.config['email_templates']).to eq({})
+    end
+
+    it 'rejects an invalid template' do
+      patch path, params: { assistant: { config: { email_templates: { 'Bad Key' => { 'subject' => 'x', 'body' => 'y' } } } } },
+                  headers: admin.create_new_auth_token, as: :json
+
+      expect(response).to have_http_status(:unprocessable_entity)
+    end
+  end
+
+  describe 'GET tools' do
+    it 'marks built-in actions with their fixed parameters' do
+      get "/api/v1/accounts/#{account.id}/captain/assistants/tools", headers: admin.create_new_auth_token, as: :json
+
+      assign_team = response.parsed_body.find { |tool| tool['id'] == 'assign_team' }
+      expect(assign_team).to include('built_in_action' => true, 'fixed_params' => [{ 'key' => 'team_id', 'required' => true }])
+      expect(response.parsed_body.find { |tool| tool['id'] == 'faq_lookup' }).not_to have_key('built_in_action')
+    end
+  end
 end

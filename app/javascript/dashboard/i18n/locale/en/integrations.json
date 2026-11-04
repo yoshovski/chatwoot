@@ -3121,6 +3121,71 @@
       },
       "CANCEL": "Cancel",
       "CANCEL_ERROR": "Couldn't cancel the follow-up. Try again."
+    },
+    "BUILT_IN_ACTIONS": {
+      "TITLE": "Built-in actions",
+      "DESCRIPTION": "Actions are things your agent can do. Built-in actions work right away; add a custom action to call your own systems.",
+      "USE_IN_SCENARIO": "Use in a scenario",
+      "CUSTOM_EMPTY": "No custom actions yet. Add one to call your own systems.",
+      "HELP": {
+        "TOGGLE": "When to use what",
+        "USE": "Use…",
+        "WHEN": "when…",
+        "EXAMPLE": "Example",
+        "ROWS": {
+          "BEHAVIOUR": {
+            "USE": "A Behaviour setting",
+            "WHEN": "it should apply to every conversation",
+            "EXAMPLE": "Greet first-time visitors"
+          },
+          "LIMIT": {
+            "USE": "A Limit",
+            "WHEN": "there's something the agent must never do or promise, plus what to offer instead",
+            "EXAMPLE": "Can't issue refunds → offer handoff"
+          },
+          "SCENARIO": {
+            "USE": "A Scenario",
+            "WHEN": "one situation needs several steps, questions or actions in order",
+            "EXAMPLE": "Demo request: ask company size, save it, then offer the booking link"
+          },
+          "ACTION": {
+            "USE": "An Action",
+            "WHEN": "the AI must change something or fetch live data",
+            "EXAMPLE": "Save company size to the contact"
+          },
+          "AUTOMATION": {
+            "USE": "An Automation rule",
+            "WHEN": "the trigger is exact and needs no understanding",
+            "EXAMPLE": "New conversation from the pricing page → label pricing"
+          },
+          "KNOWLEDGE": {
+            "USE": "Knowledge",
+            "WHEN": "it's a fact the agent should be able to explain",
+            "EXAMPLE": "Our trial is 14 days"
+          }
+        }
+      }
+    },
+    "EMAIL_TEMPLATES": {
+      "TITLE": "Email templates",
+      "DESCRIPTION": "Used by Email the visitor, Email the team and email follow-ups. Up to 10 per agent.",
+      "ADD": "New template",
+      "EDIT": "Edit template",
+      "DELETE": "Delete template",
+      "EMPTY": "No email templates yet.",
+      "SAVE": "Save template",
+      "SAVED": "Template saved",
+      "ERROR": "Couldn't save the template. Try again.",
+      "VARIABLES": "Insert:",
+      "PREVIEW": "Preview with sample values",
+      "FIELDS": {
+        "NAME": "Name",
+        "NAME_PLACEHOLDER": "New demo request",
+        "KEY": "Key",
+        "KEY_HELP": "Lowercase letters, numbers and _. Scenarios refer to the template by this key.",
+        "SUBJECT": "Subject",
+        "BODY": "Body"
+      }
     }
   }
 }
