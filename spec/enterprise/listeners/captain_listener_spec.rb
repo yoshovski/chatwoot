@@ -332,4 +332,51 @@ describe CaptainListener do
       listener.conversation_bot_handoff(event)
     end
   end
+
+  describe 'scheduled follow-up cancellation' do
+    let(:conversation) { create(:conversation, account: account, inbox: inbox) }
+    let!(:follow_up) { create(:captain_scheduled_action, conversation: conversation, assistant: assistant) }
+
+    it 'cancels when the visitor writes' do
+      message = create(:message, account: account, inbox: inbox, conversation: conversation, message_type: :incoming)
+
+      listener.message_created(Events::Base.new(:message_created, Time.current, message: message))
+
+      expect(follow_up.reload).to have_attributes(status: 'cancelled', cancel_reason: 'visitor_message')
+    end
+
+    it 'cancels when a human replies publicly, not on a private note' do
+      note = create(:message, account: account, inbox: inbox, conversation: conversation, message_type: :outgoing, private: true, sender: user)
+      listener.message_created(Events::Base.new(:message_created, Time.current, message: note))
+      expect(follow_up.reload.status).to eq('pending')
+
+      reply = create(:message, account: account, inbox: inbox, conversation: conversation, message_type: :outgoing, sender: user)
+      listener.message_created(Events::Base.new(:message_created, Time.current, message: reply))
+
+      expect(follow_up.reload).to have_attributes(status: 'cancelled', cancel_reason: 'human_message')
+    end
+
+    it 'keeps the follow-up when the AI agent itself replies' do
+      reply = create(:message, account: account, inbox: inbox, conversation: conversation, message_type: :outgoing, sender: assistant)
+
+      listener.message_created(Events::Base.new(:message_created, Time.current, message: reply))
+
+      expect(follow_up.reload.status).to eq('pending')
+    end
+
+    it 'cancels when the conversation is resolved' do
+      listener.conversation_resolved(Events::Base.new(:conversation_resolved, Time.current, conversation: conversation))
+
+      expect(follow_up.reload).to have_attributes(status: 'cancelled', cancel_reason: 'resolved')
+    end
+
+    it 'cancels on a bot handoff and on a Captain handoff' do
+      other = create(:captain_scheduled_action, conversation: create(:conversation, account: account, inbox: inbox), assistant: assistant)
+
+      listener.conversation_bot_handoff(Events::Base.new(:conversation_bot_handoff, Time.current, conversation: conversation))
+      listener.captain_conversation_handed_off(Events::Base.new(:captain_conversation_handed_off, Time.current, conversation: other.conversation))
+
+      expect([follow_up, other].map { |action| action.reload.cancel_reason }).to eq(%w[handoff handoff])
+    end
+  end
 end

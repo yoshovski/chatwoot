@@ -3037,6 +3037,14 @@
     },
     "BULK_SELECT": {
       "CLEAR": "Clear selection"
+    },
+    "SCHEDULED_ACTIONS": {
+      "KIND": {
+        "FOLLOW_UP_MESSAGE": "Follow-up scheduled · {time}",
+        "FOLLOW_UP_EMAIL": "Follow-up email scheduled · {time}"
+      },
+      "CANCEL": "Cancel",
+      "CANCEL_ERROR": "Couldn't cancel the follow-up. Try again."
     }
   }
 }

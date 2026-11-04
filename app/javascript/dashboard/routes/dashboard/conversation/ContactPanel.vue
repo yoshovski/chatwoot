@@ -12,6 +12,7 @@ import { FEATURE_FLAGS } from 'dashboard/featureFlags';
 import AccordionItem from 'dashboard/components/Accordion/AccordionItem.vue';
 import ContactConversations from './ContactConversations.vue';
 import ConversationAction from './ConversationAction.vue';
+import ScheduledFollowUpChip from 'dashboard/components-next/captain/ScheduledFollowUpChip.vue';
 import ConversationParticipant from './ConversationParticipant.vue';
 import ContactInfo from './contact/ContactInfo.vue';
 import ContactNotes from './contact/ContactNotes.vue';
@@ -91,6 +92,8 @@ const isLinearConnected = computed(
 
 const store = useStore();
 const currentChat = useMapGetter('getSelectedChat');
+// A new message can cancel the AI agent's scheduled follow-ups, so the chip refreshes on it.
+const lastMessageId = computed(() => currentChat.value?.messages?.at(-1)?.id);
 const conversationId = computed(() => props.conversationId);
 const conversationMetadataGetter = useMapGetter(
   'conversationMetadata/getConversationMetadata'
@@ -184,6 +187,10 @@ onMounted(() => {
                 value => toggleSidebarUIState('is_conv_actions_open', value)
               "
             >
+              <ScheduledFollowUpChip
+                :conversation-id="conversationId"
+                :last-message-id="lastMessageId"
+              />
               <ConversationAction
                 :conversation-id="conversationId"
                 :inbox-id="inboxId"

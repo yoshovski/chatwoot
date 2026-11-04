@@ -146,6 +146,8 @@ Rails.application.routes.draw do
             end
             resources :agent_sessions, only: [:show]
             post 'conversations/:conversation_id/takeover', to: 'conversation_takeovers#create'
+            get 'conversations/:conversation_id/scheduled_actions', to: 'conversation_scheduled_actions#index'
+            delete 'conversations/:conversation_id/scheduled_actions/:id', to: 'conversation_scheduled_actions#destroy'
             resources :assistant_responses do
               get :drilldown, on: :member
             end
