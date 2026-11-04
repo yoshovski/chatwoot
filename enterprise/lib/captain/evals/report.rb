@@ -96,7 +96,9 @@ class Captain::Evals::Report
     }
   end
 
+  # IMAGE_TAG when the run passes it (docker exec -e IMAGE_TAG=...), else the commit: GIT_HASH reads the image's
+  # /app/.git_sha (production images have no .git) or git in a checkout.
   def revision
-    @revision ||= ENV['IMAGE_TAG'].presence || `git -C #{Rails.root} rev-parse --short HEAD 2>/dev/null`.strip.presence || 'unknown'
+    @revision ||= ENV['IMAGE_TAG'].presence || (GIT_HASH == 'unknown' ? GIT_HASH : GIT_HASH[0, 12])
   end
 end

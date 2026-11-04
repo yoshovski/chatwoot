@@ -126,6 +126,23 @@ RSpec.describe Captain::PromptRenderer do
                                        'Offer an email follow-up from the team.')
     end
 
+    # The reply eval's R08: the action model explained the refund policy and promised a colleague without handing off.
+    it 'hands off at once for a handoff limit, without policy details, and never promises a colleague otherwise' do
+      expect(assistant_prompt).to include(
+        "say plainly in one sentence that you can't, without the policy or other details behind it, then take the next step listed:",
+        'This limit requires the transfer: call `captain--tools--handoff` right away, without asking first, ' \
+        'and say a colleague will continue in this chat.',
+        'Never say a colleague will reply or continue in this chat unless you call `captain--tools--handoff` in this reply.'
+      )
+      expect(direct_prompt).to include('Never say a colleague will reply or continue in this chat without setting handoff_requested to true.')
+    end
+
+    it 'adds no colleague rule without a handoff limit' do
+      assistant.update!(config: config.merge('limits' => config['limits'].reject { |limit| limit['offer'] == 'handoff' }))
+
+      expect([assistant_prompt, direct_prompt]).to all(satisfy { |prompt| prompt.exclude?('Never say a colleague will reply') })
+    end
+
     it 'adds nothing without limits' do
       assistant.update!(config: config.merge('limits' => []))
 
@@ -140,6 +157,13 @@ RSpec.describe Captain::PromptRenderer do
 
     it 'knows what the agent cannot do' do
       expect(scenario_prompt).to include("You can't issue refunds. Bring in a colleague with `captain--tools--handoff`")
+    end
+
+    it 'hands off at once for a handoff limit' do
+      expect(scenario_prompt).to include(
+        'Bring in a colleague with `captain--tools--handoff` right away, without asking first, and say they will continue in this chat.',
+        'Never say a colleague will reply or continue in this chat unless you call `captain--tools--handoff` in this reply.'
+      )
     end
   end
 

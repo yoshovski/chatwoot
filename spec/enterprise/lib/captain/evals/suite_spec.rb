@@ -19,6 +19,29 @@ RSpec.describe Captain::Evals::Suite do
     expect(suite.defaults).to include('greeting_mode' => 'ai')
   end
 
+  # R06 was blocked: in a YAML flow mapping the comma in "10,000" cut its lead type rule short.
+  it 'gives every reply_basics case settings that make a valid assistant' do
+    suite = described_class.load('reply_basics')
+    account = create(:account)
+
+    suite.cases.each do |test_case|
+      settings = test_case.fetch('settings', {})
+      assistant = Captain::Assistant.new(account: account, name: 'Eval', description: 'Eval',
+                                         config: suite.defaults.merge(settings.except('response_guidelines', 'guardrails')))
+      expect(assistant).to be_valid, "#{test_case['id']}: #{assistant.errors.full_messages.to_sentence}"
+    end
+  end
+
+  it 'accepts any_of with valid checks and rejects it otherwise' do
+    data['cases'].first['expect']['checks'] << { 'any_of' => [{ 'question_bubble' => true }, { 'mentions_all' => %w[Chrome Safari] }] }
+    expect { described_class.new('northwind', data) }.not_to raise_error
+
+    data['cases'].first['expect']['checks'] << { 'any_of' => ['sounds_nice'] }
+    expect { described_class.new('northwind', data) }.to raise_error(described_class::Invalid, /unknown check sounds_nice/)
+    data['cases'].first['expect']['checks'][-1] = { 'any_of' => [] }
+    expect { described_class.new('northwind', data) }.to raise_error(described_class::Invalid, /any_of takes a list/)
+  end
+
   it 'adds the expected route to the checks' do
     suite = described_class.new('northwind', data)
 

@@ -1,7 +1,8 @@
 # The model's reply as typed data. The only code that reads the model's Hash: everything after works on the draft.
 # The welcome stays its own field; parts keep the index the model gave them (separate_parts counts these indexes).
 # Schema v2 replies carry the closing question in `follow_up`: it becomes the last part (unless a normalized response
-# already ends with it) and `follow_up` points at that part, so policies never search the prose for it.
+# already ends with it, and taken out of a last part that also asks it) and `follow_up` points at that part, so policies
+# never search the prose for it.
 Captain::Reply::Draft = Data.define(:welcome, :welcome_guard, :parts, :separate_part_indexes, :follow_up, :suggestions,
                                     :product_handles, :handoff_requested, :qualification_question, :agent_name, :raw) do
   # A first sentence this short that opens with a greeting word is a greeting, not part of the answer.
@@ -31,10 +32,21 @@ Captain::Reply::Draft = Data.define(:welcome, :welcome_guard, :parts, :separate_
 
     part = parts.last
     unless part&.text == text
+      parts = without_trailing_question(parts, text)
       part = Captain::Reply::Part.new(text: text, model_index: parts.empty? ? 0 : parts.last.model_index + 1)
       parts = [*parts, part]
     end
     [parts, Captain::Reply::FollowUp.new(text: text, kind: value['kind'], model_index: part.model_index)]
+  end
+
+  # The model may also end its last part with the follow_up question (a scenario step asking it "in a separate
+  # message"); the question then stays only in follow_up, so it can't stay behind in the answer bubble.
+  def self.without_trailing_question(parts, question)
+    *earlier, last = parts
+    return parts unless last&.text&.end_with?(question)
+
+    rest = normalize([{ text: last.text.delete_suffix(question) }]).first
+    rest ? [*earlier, last.with(text: rest.text)] : parts
   end
 
   def self.model_parts(response)
@@ -115,7 +127,7 @@ Captain::Reply::Draft = Data.define(:welcome, :welcome_guard, :parts, :separate_
     words(text).map { |word| self::GREETING_WORDS.include?(word) ? 'hello' : word }
   end
 
-  private_class_method :with_follow_up, :model_parts, :welcome_text, :normalize,
+  private_class_method :with_follow_up, :without_trailing_question, :model_parts, :welcome_text, :normalize,
                        :without_repeated_welcome, :repeated_welcome_remainder, :welcome_prefix_remainder,
                        :greeting_sentence?, :words, :greeting_words
 

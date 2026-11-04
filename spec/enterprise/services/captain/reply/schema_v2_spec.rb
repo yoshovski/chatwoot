@@ -84,6 +84,25 @@ RSpec.describe 'Captain reply schema v2' do # rubocop:disable RSpec/DescribeClas
     end
   end
 
+  describe 'a scenario step that asks something in a separate message' do
+    let(:scenario) do
+      create(:captain_scenario, assistant: assistant, title: 'Team size', instruction: 'Answer, then in a separate message ask the team size.')
+    end
+
+    it 'puts the question in its own part without the switch' do
+      expect(Captain::PromptRenderer.render('scenario', scenario.prompt_context.with_indifferent_access))
+        .to include('When a step says to send something as a separate message, put it in its own response part and list that part in ' \
+                    '`separate_parts`.')
+    end
+
+    it 'puts the question in follow_up with the switch on' do
+      with_modified_env(CAPTAIN_REPLY_SCHEMA_V2: 'on') do
+        expect(Captain::PromptRenderer.render('scenario', scenario.prompt_context.with_indifferent_access))
+          .to include('put a question in `follow_up` (it gets its own message) and anything else in its own response part')
+      end
+    end
+  end
+
   describe 'payloads' do
     let(:answer) { 'You can pause a plan for up to three months.' }
     let(:suggestions) { ['Monthly'] }
@@ -137,6 +156,24 @@ RSpec.describe 'Captain reply schema v2' do # rubocop:disable RSpec/DescribeClas
              'follow_up' => { 'text' => 'How can I help?', 'kind' => 'clarification' } }
 
       expect(payloads(v2).pluck(:content)).to eq(["Hi there!\n\nHow can I help?"])
+    end
+
+    it 'keep the welcome and a lone follow_up question in one bubble' do
+      v2 = { 'welcome' => 'Hello and welcome to Lumen Notes!',
+             'response_parts' => [{ 'text' => 'How can I help you today?', 'citation_indexes' => [] }],
+             'follow_up' => { 'text' => 'How can I help you today?', 'kind' => 'clarification' } }
+
+      expect(payloads(v2).pluck(:content)).to eq(["Hello and welcome to Lumen Notes!\n\nHow can I help you today?"])
+    end
+
+    # The reply eval's R12 with v2: a scenario step asked the question "in a separate message" and the model also
+    # ended its answer part with it.
+    it 'take a follow_up question the answer part also ends with out of the answer bubble' do
+      v2 = { 'welcome' => 'Welcome, happy to help with that.',
+             'response_parts' => [{ 'text' => 'Our trial lasts 14 days. How large is your team?', 'citation_indexes' => [] }],
+             'separate_parts' => [1], 'follow_up' => { 'text' => 'How large is your team?', 'kind' => 'qualification' } }
+
+      expect(payloads(v2).pluck(:content)).to eq(["Welcome, happy to help with that.\n\nOur trial lasts 14 days.", 'How large is your team?'])
     end
 
     it 'read a normalized response once more without adding the question twice' do

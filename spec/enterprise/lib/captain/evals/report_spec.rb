@@ -47,6 +47,23 @@ RSpec.describe Captain::Evals::Report do
     expect { Captain::Evals::Run.new(suite: suite, repeat: 1).perform }.to raise_error(Captain::Evals::Run::SetupError)
   end
 
+  describe 'revision' do
+    let(:run) { Captain::Evals::Run.new(suite: suite, repeat: 1, only: ['R01']).perform }
+
+    it 'names the IMAGE_TAG when the run passes one' do
+      with_modified_env(IMAGE_TAG: 'v4.18.0-internal-v6.0.12') do
+        expect(described_class.new(run, out_dir: out_dir).header[:revision]).to eq('v4.18.0-internal-v6.0.12')
+      end
+    end
+
+    # Production images have no .git; GIT_HASH reads their /app/.git_sha.
+    it 'names the commit without one' do
+      stub_const('GIT_HASH', '3eee45283081a95732d1b23cd5942647b4abbfac')
+
+      expect(described_class.new(run, out_dir: out_dir).markdown).to include('- Revision: `3eee45283081`')
+    end
+  end
+
   it 'estimates the calls of a full run' do
     expect(Captain::Evals::Run.new(suite: suite, repeat: 3).estimated_calls).to eq(126)
   end

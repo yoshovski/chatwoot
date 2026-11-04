@@ -82,7 +82,10 @@ cases:
       checks:
         - welcome_once
         - no_empty_bubbles
-        - question_bubble: true
+        # Asking which browser and covering each browser both answer it.
+        - any_of:
+            - question_bubble: true
+            - mentions_all: [Chrome, Safari, Firefox]
   - id: R03
     title: Conversation started by a campaign opener
     campaign: Hi there! Want to see how Acme cuts churn for streaming services?
@@ -125,7 +128,8 @@ cases:
       lead_fields:
         - { key: company_size, label: Number of subscribers }
       lead_types:
-        - { name: Qualified prospect, rule: A streaming service with more than 10,000 subscribers }
+        # Quoted: in a flow mapping the comma in "10,000" would end the rule.
+        - { name: Qualified prospect, rule: 'A streaming service with more than 10,000 subscribers' }
     message: We run a streaming service with about 50k subscribers. Would Acme fit us?
     expect:
       checks:

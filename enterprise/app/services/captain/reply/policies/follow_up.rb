@@ -1,7 +1,8 @@
 # The closing question: the draft's follow_up (schema v2), else the last sentence of the answer when it is a question
 # (any part's, for a qualification question). On the widget it gets its own bubble (Captain::Behaviour::SEPARATE_FOLLOW_UP_ON_WIDGET), and a
-# qualification question always does. A short greeting such as "Hi! How can I help?" stays one bubble, and so does the
-# empty-answer fallback. With cards the question keeps its place (see Cards); the follow-up form takes it (see LeadForm).
+# qualification question always does. A short greeting such as "Hi! How can I help?" stays one bubble, the AI welcome
+# with only a question too, and so does the empty-answer fallback. With cards the question keeps its place (see Cards);
+# the follow-up form takes it (see LeadForm).
 class Captain::Reply::Policies::FollowUp < Captain::Reply::Policies::Base
   # The last sentence of the prose when it is a question that follows at least one other sentence.
   TRAILING_QUESTION = /(?:\n\s*\n|(?<=[.!?])\s+)([^\n.!?]+\?)\s*\z/
@@ -44,7 +45,9 @@ class Captain::Reply::Policies::FollowUp < Captain::Reply::Policies::Base
       (draft.qualification_question || (Captain::Behaviour::SEPARATE_FOLLOW_UP_ON_WIDGET && !workspace.contains_cards? && answer_before?(question)))
   end
 
+  # Only the answer counts: the welcome before a lone question ("Hello and welcome to Acme! How can I help?") is no answer.
   def answer_before?(question)
-    workspace.formatted_prose.sub(question, '').scan(draft.follow_up ? V2_WORD : WORD).size >= MIN_SEPARATED_ANSWER_WORDS
+    answer = workspace.format(workspace.answer_parts.reject { |part| part.kind == :greeting })
+    answer.sub(question, '').scan(draft.follow_up ? V2_WORD : WORD).size >= MIN_SEPARATED_ANSWER_WORDS
   end
 end
