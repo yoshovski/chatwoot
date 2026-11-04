@@ -214,7 +214,10 @@ const createAttribute = async () => {
 const insert = () => {
   if (!isValid.value) return;
   const fixed = { ...params };
-  if (fixed.agent_id !== ROUND_ROBIN) delete fixed.team_id;
+  // A fixed agent needs no team; the team only narrows round robin.
+  if (toolId.value === 'assign_agent' && fixed.agent_id !== ROUND_ROBIN) {
+    delete fixed.team_id;
+  }
   if (fixed.template) delete fixed.instructions;
   const lookups = {
     attributes: attributes.value,

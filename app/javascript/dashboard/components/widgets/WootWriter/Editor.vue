@@ -829,9 +829,13 @@ function insertSpecialContent(type, content) {
   useTrack(event_map[type]);
 }
 
+let configuredToolPos = null;
+
 // A built-in action needs its fixed values (which attribute, which team) before it can be inserted.
 function onSelectTool(tool) {
   if (tool?.built_in_action) {
+    // The chip goes where the trigger was once the values are picked; by then the suggestion range is stale.
+    configuredToolPos = range.value?.from ?? null;
     removeSuggestionTrigger();
     showToolsMenu.value = false;
     emit('configureTool', tool);
@@ -864,7 +868,13 @@ function insertTool(tool) {
   let insertPos;
   let tr = editorState.tr;
 
-  if (range.value) {
+  if (configuredToolPos !== null) {
+    const from = Math.min(configuredToolPos, tr.doc.content.size);
+    tr = tr.insert(from, toolNode);
+    insertPos = from + toolNode.nodeSize;
+    configuredToolPos = null;
+    range.value = null;
+  } else if (range.value) {
     const { from, to } = range.value;
     tr = tr.replaceWith(from, to, toolNode);
     insertPos = from + toolNode.nodeSize;

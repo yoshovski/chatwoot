@@ -98,13 +98,13 @@ onMounted(() => {
       <table class="w-full text-sm text-start">
         <thead class="text-n-slate-11">
           <tr>
-            <th class="px-3 py-2 font-medium">
+            <th class="px-3 py-2 font-medium text-start">
               {{ t('CAPTAIN.BUILT_IN_ACTIONS.HELP.USE') }}
             </th>
-            <th class="px-3 py-2 font-medium">
+            <th class="px-3 py-2 font-medium text-start">
               {{ t('CAPTAIN.BUILT_IN_ACTIONS.HELP.WHEN') }}
             </th>
-            <th class="px-3 py-2 font-medium">
+            <th class="px-3 py-2 font-medium text-start">
               {{ t('CAPTAIN.BUILT_IN_ACTIONS.HELP.EXAMPLE') }}
             </th>
           </tr>

@@ -130,4 +130,18 @@ describe('ActionParamsDialog', () => {
       title: 'Follow up after 1 hour',
     });
   });
+
+  it('keeps the team of Assign team', async () => {
+    const wrapper = mountDialog();
+    wrapper.vm.open({ id: 'assign_team', built_in_action: true });
+    await flushPromises();
+
+    await wrapper.find('select').setValue('3');
+    await wrapper.find('[data-test="confirm"]').trigger('click');
+
+    expect(wrapper.emitted('insert')[0][0]).toMatchObject({
+      id: 'assign_team?team_id=3',
+      title: 'Assign Sales',
+    });
+  });
 });
