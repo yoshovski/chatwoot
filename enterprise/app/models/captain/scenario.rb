@@ -116,17 +116,50 @@ class Captain::Scenario < ApplicationRecord
     (assistant.agent_tools + named_tools).uniq(&:name)
   end
 
+  # A reference with fixed parameters names its own tool and says what it's fixed to:
+  # "`update_contact_attribute__company_size` tool (saves the contact's Company size)".
   def resolved_instructions
-    instruction.gsub(TOOL_REFERENCE_REGEX, '`\1` tool')
+    instruction.gsub(TOOL_REFERENCE_WITH_PARAMS_REGEX) do
+      match = Regexp.last_match
+      reference = extract_tool_references(match[0]).first
+      fixed_tool_class = fixed_params_tool_class(reference[:id]) if reference[:params].present?
+      next "`#{match[:id]}` tool" unless fixed_tool_class
+
+      summary = fixed_tool_class.fixed_summary(assistant, reference[:params])
+      "`#{fixed_tool_class.reference_key(reference[:params])}` tool#{" (#{summary})" if summary}"
+    end
   end
 
+  # Tool metadata for the prompt and the agent. A built-in named with fixed parameters appears once per reference.
   def resolved_tools
     return [] if tools.blank?
 
     available_tools = assistant.available_agent_tools
-    tools.filter_map do |tool_id|
-      available_tools.find { |tool| tool[:id] == tool_id }
+    references = extract_tool_references(instruction)
+    resolved = tools.flat_map do |tool_id|
+      metadata = available_tools.find { |tool| tool[:id] == tool_id }
+      metadata ? tool_reference_metadata(metadata, references) : []
     end
+    resolved.uniq { |tool| tool[:id] }
+  end
+
+  def tool_reference_metadata(metadata, references)
+    tool_references = references.select { |reference| reference[:id] == metadata[:id] }
+    tool_references.map { |reference| fixed_params_metadata(metadata, reference[:params]) }.presence || [metadata]
+  end
+
+  def fixed_params_metadata(metadata, params)
+    tool_class = fixed_params_tool_class(metadata[:id]) if params.present?
+    return metadata unless tool_class
+
+    summary = tool_class.fixed_summary(assistant, params)
+    metadata.merge(id: tool_class.reference_key(params), tool_id: metadata[:id], fixed_params: params,
+                   description: [metadata[:description], summary].compact.join(': '))
+  end
+
+  def fixed_params_tool_class(tool_id)
+    tool_class = self.class.resolve_tool_class(tool_id)
+    tool_class if tool_class.is_a?(Class) && tool_class < Captain::Tools::BuiltInActionTool
   end
 
   def resolve_tool_instance(tool_metadata)
@@ -138,9 +171,15 @@ class Captain::Scenario < ApplicationRecord
     elsif tool_metadata[:mcp]
       assistant.account.captain_mcp_servers.lazy.filter_map { |server| server.agent_tool(tool_id, assistant) }.first
     else
-      tool_class = self.class.resolve_tool_class(tool_id)
-      tool_class&.new(assistant)
+      built_in_tool_instance(tool_metadata)
     end
+  end
+
+  def built_in_tool_instance(tool_metadata)
+    fixed_params = tool_metadata[:fixed_params]
+    return fixed_params_tool_class(tool_metadata[:tool_id])&.new(assistant, fixed_params: fixed_params) if fixed_params
+
+    self.class.resolve_tool_class(tool_metadata[:id])&.new(assistant)
   end
 
   # Validates that all tool references in the instruction are valid.
@@ -165,9 +204,21 @@ class Captain::Scenario < ApplicationRecord
 
     invalid_tools = tool_ids - assistant.known_tool_ids
 
-    return unless invalid_tools.any?
+    errors.add(:instruction, "contains invalid tools: #{invalid_tools.join(', ')}") if invalid_tools.any?
+    validate_fixed_tool_params(tool_ids - invalid_tools)
+  end
 
-    errors.add(:instruction, "contains invalid tools: #{invalid_tools.join(', ')}")
+  # Built-in actions need their fixed parameters to point at things that exist: an attribute, a team, a template.
+  def validate_fixed_tool_params(tool_ids)
+    extract_tool_references(instruction).each do |reference|
+      next unless tool_ids.include?(reference[:id])
+
+      tool_class = fixed_params_tool_class(reference[:id])
+      next if tool_class.nil? && reference[:params].blank?
+      next errors.add(:instruction, "#{reference[:id]} doesn't take fixed parameters") if tool_class.nil?
+
+      tool_class.fixed_param_errors(assistant, reference[:params]).each { |message| errors.add(:instruction, message) }
+    end
   end
 
   # Resolves tool references from the instruction text into the tools field.

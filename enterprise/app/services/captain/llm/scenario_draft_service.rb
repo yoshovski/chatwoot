@@ -94,7 +94,7 @@ class Captain::Llm::ScenarioDraftService < Llm::BaseAiService
   end
 
   def sanitize_tool_links(instruction)
-    instruction.gsub(%r{\[([^\]]+)\]\(tool://([^/)]+)\)}) do |match|
+    instruction.gsub(%r{\[([^\]]+)\]\(tool://([^/)?]+)(?:\?[^/)]*)?\)}) do |match|
       tool_title = Regexp.last_match(1)
       tool_id = Regexp.last_match(2)
       available_tool_ids.include?(tool_id) ? match : tool_title

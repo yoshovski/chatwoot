@@ -350,6 +350,94 @@ RSpec.describe Captain::Scenario, type: :model do
     end
   end
 
+  describe 'built-in actions with fixed parameters' do
+    let(:account) { create(:account) }
+    let(:assistant) { create(:captain_assistant, account: account) }
+    let(:fixed_tool_class) do
+      Class.new(Captain::Tools::BuiltInActionTool) do
+        description 'Saves a value on the contact'
+        fixed_param :key
+        param :value, type: 'string', desc: 'The value to save'
+
+        def self.fixed_summary(_assistant, params) = "saves the contact's #{params['key'].humanize}"
+
+        def self.validate_fixed_params(_assistant, params)
+          params['key'] == 'missing_key' ? ['no contact attribute missing_key'] : []
+        end
+
+        def perform(_tool_context, value:) = "saved #{fixed(:key)}=#{value}"
+      end
+    end
+
+    before do
+      stub_const('Captain::Tools::SaveThingTool', fixed_tool_class)
+      [described_class, Captain::Assistant].each do |klass|
+        allow(klass).to receive(:built_in_tool_ids).and_return(%w[save_thing add_contact_note])
+        allow(klass).to receive(:built_in_agent_tools).and_return(
+          [{ id: 'save_thing', title: 'Save a value', description: 'Saves a value' },
+           { id: 'add_contact_note', title: 'Add Contact Note', description: 'Add a note' }]
+        )
+      end
+    end
+
+    it 'stores the tool id once and gives each reference its own named tool' do
+      scenario = create(:captain_scenario, assistant: assistant, account: account,
+                                           instruction: 'Save [@Size](tool://save_thing?key=company_size) and [@Plan](tool://save_thing?key=plan)')
+
+      expect(scenario.tools).to eq(['save_thing'])
+      expect(scenario.send(:resolved_tools).pluck(:id)).to eq(%w[save_thing__company_size save_thing__plan])
+      expect(scenario.send(:agent_tools).map(&:name)).to include(
+        'captain--tools--save_thing__company_size', 'captain--tools--save_thing__plan'
+      )
+    end
+
+    it 'keeps fixed params out of the schema the model fills' do
+      scenario = create(:captain_scenario, assistant: assistant, account: account,
+                                           instruction: 'Save [@Size](tool://save_thing?key=company_size)')
+      tool = scenario.send(:agent_tools).find { |item| item.name == 'captain--tools--save_thing__company_size' }
+
+      expect(tool.parameters.keys).to eq([:value])
+      expect(tool.description).to eq("Saves a value on the contact. Saves the contact's Company size")
+      expect(tool.perform(nil, value: '40')).to eq('saved company_size=40')
+    end
+
+    it 'names the parameterised tool in the instruction' do
+      scenario = create(:captain_scenario, assistant: assistant, account: account,
+                                           instruction: 'Save [@Size](tool://save_thing?key=company_size), then [@Note](tool://add_contact_note).')
+
+      expect(scenario.send(:resolved_instructions)).to eq(
+        "Save `save_thing__company_size` tool (saves the contact's Company size), then `add_contact_note` tool."
+      )
+    end
+
+    it 'caps long tool names and keeps them unique' do
+      long_a = 'a' * 80
+      long_b = "#{'a' * 79}b"
+
+      names = [long_a, long_b].map { |key| fixed_tool_class.reference_key('key' => key) }
+
+      expect(names.uniq.size).to eq(2)
+      expect(names.map { |name| "captain--tools--#{name}".length }).to all(be <= 60)
+    end
+
+    it 'rejects an unknown fixed value, a missing param and an unknown param' do
+      scenario = build(:captain_scenario, assistant: assistant, account: account,
+                                          instruction: '[@A](tool://save_thing?key=missing_key) [@B](tool://save_thing) [@C](tool://save_thing?x=1)')
+
+      expect(scenario).not_to be_valid
+      expect(scenario.errors[:instruction]).to contain_exactly(
+        'no contact attribute missing_key', 'save_thing needs key', 'save_thing has no parameter x'
+      )
+    end
+
+    it 'rejects fixed params on a tool that takes none' do
+      scenario = build(:captain_scenario, assistant: assistant, account: account, instruction: '[@Note](tool://add_contact_note?key=a)')
+
+      expect(scenario).not_to be_valid
+      expect(scenario.errors[:instruction]).to include("add_contact_note doesn't take fixed parameters")
+    end
+  end
+
   describe 'factory' do
     it 'creates a valid scenario with associations' do
       account = create(:account)

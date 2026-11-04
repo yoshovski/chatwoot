@@ -4,8 +4,11 @@ module Concerns::CaptainToolsHelpers
   extend ActiveSupport::Concern
 
   # Regular expression pattern for matching tool references in text.
-  # Matches patterns like [Tool name](tool://tool_id) following markdown link syntax.
-  TOOL_REFERENCE_REGEX = %r{\[[^\]]+\]\(tool://([^/)]+)\)}
+  # Matches patterns like [Tool name](tool://tool_id) following markdown link syntax. A reference may fix some of the
+  # tool's parameters in a query string: [Save Company size](tool://update_contact_attribute?key=company_size).
+  # The first capture group is the tool id.
+  TOOL_REFERENCE_REGEX = %r{\[[^\]]+\]\(tool://([^/)?]+)(?:\?[^/)]*)?\)}
+  TOOL_REFERENCE_WITH_PARAMS_REGEX = %r{\[[^\]]+\]\(tool://(?<id>[^/)?]+)(?:\?(?<query>[^/)]*))?\)}
 
   class_methods do
     # Returns all built-in agent tools with their metadata.
@@ -73,5 +76,18 @@ module Concerns::CaptainToolsHelpers
 
     tool_matches = text.scan(TOOL_REFERENCE_REGEX)
     tool_matches.flatten.uniq
+  end
+
+  # Like extract_tool_ids_from_text, but keeps each reference's fixed parameters.
+  #
+  # @param text [String] Text to parse for tool references
+  # @return [Array<Hash>] Unique { id:, params: } pairs; params is a Hash of strings ({} without a query string)
+  def extract_tool_references(text)
+    return [] if text.blank?
+
+    text.to_enum(:scan, TOOL_REFERENCE_WITH_PARAMS_REGEX).map do
+      match = Regexp.last_match
+      { id: match[:id], params: Rack::Utils.parse_query(match[:query].to_s).transform_values(&:to_s) }
+    end.uniq
   end
 end
