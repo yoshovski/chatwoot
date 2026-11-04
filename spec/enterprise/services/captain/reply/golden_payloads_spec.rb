@@ -162,18 +162,46 @@ RSpec.describe 'Captain reply golden payloads' do # rubocop:disable RSpec/Descri
                   'response_parts' => [{ 'text' => 'Our trial lasts 14 days.', 'citation_indexes' => [] },
                                        { 'text' => 'You can add teammates at any time.', 'citation_indexes' => [] }],
                   'separate_parts' => [0, 1] },
-      kinds: [%w[greeting], %w[answer], %w[answer]],
-      expected: [{ content: 'Hi there, thanks for asking!',
+      # Until the reply eval fixes (R12) the welcome was a bubble of its own here; it always opens the first answer bubble.
+      kinds: [%w[greeting answer], %w[answer]],
+      expected: [{ content: "Hi there, thanks for asking!\n\nOur trial lasts 14 days.",
                    content_type: 'text',
-                   additional_attributes:
-                   { 'captain_v2_response_parts' => [{ 'text' => 'Hi there, thanks for asking!', 'citation_indexes' => [] }] } },
-                 { content: 'Our trial lasts 14 days.',
-                   content_type: 'text',
-                   additional_attributes: { 'captain_v2_response_parts' => [{ 'text' => 'Our trial lasts 14 days.', 'citation_indexes' => [] }] } },
+                   additional_attributes: { 'captain_v2_response_parts' => [{ 'text' => 'Hi there, thanks for asking!', 'citation_indexes' => [] },
+                                                                            { 'text' => 'Our trial lasts 14 days.', 'citation_indexes' => [] }] } },
                  { content: 'You can add teammates at any time.',
                    content_type: 'text',
                    additional_attributes: { 'captain_v2_response_parts' => [{ 'text' => 'You can add teammates at any time.',
                                                                               'citation_indexes' => [] }] } }]
+    },
+    # The reply eval's R12: the model repeated the welcome as part 0 and listed the answer after it (1) as a separate
+    # message. The welcome still opens the answer bubble.
+    separate_parts_after_repeated_welcome: {
+      response: { 'welcome' => 'Welcome, happy to help with that.',
+                  'response_parts' => [{ 'text' => 'Welcome, happy to help with that.', 'citation_indexes' => [] },
+                                       { 'text' => 'Our trial lasts 14 days.', 'citation_indexes' => [] },
+                                       { 'text' => 'How large is your team?', 'citation_indexes' => [] }],
+                  'separate_parts' => [1, 2] },
+      kinds: [%w[greeting answer], %w[question]],
+      repairs: %w[duplicate_welcome],
+      expected: [{ content: "Welcome, happy to help with that.\n\nOur trial lasts 14 days.",
+                   content_type: 'text',
+                   additional_attributes: { 'captain_v2_response_parts' => [{ 'text' => 'Welcome, happy to help with that.',
+                                                                              'citation_indexes' => [] },
+                                                                            { 'text' => 'Our trial lasts 14 days.', 'citation_indexes' => [] }] } },
+                 { content: 'How large is your team?',
+                   content_type: 'text',
+                   additional_attributes: { 'captain_v2_response_parts' => [{ 'text' => 'How large is your team?', 'citation_indexes' => [] }] } }]
+    },
+    # The reply eval's R04: the welcome and a lone question are one bubble, as "Hi there! How can I help?" is.
+    welcome_with_only_a_question: {
+      response: { 'welcome' => 'Hello and welcome to Lumen Notes!',
+                  'response_parts' => [{ 'text' => 'How can I help you today?', 'citation_indexes' => [] }] },
+      kinds: [%w[greeting answer]],
+      expected: [{ content: "Hello and welcome to Lumen Notes!\n\nHow can I help you today?",
+                   content_type: 'text',
+                   additional_attributes: { 'captain_v2_response_parts' => [{ 'text' => 'Hello and welcome to Lumen Notes!',
+                                                                              'citation_indexes' => [] },
+                                                                            { 'text' => 'How can I help you today?', 'citation_indexes' => [] }] } }]
     },
     separate_parts_email: {
       channel: :email,
