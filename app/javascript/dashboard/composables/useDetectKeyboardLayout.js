@@ -1,45 +1,4 @@
-import {
-  LAYOUT_QWERTY,
-  LAYOUT_QWERTZ,
-  LAYOUT_AZERTY,
-} from 'shared/helpers/KeyboardHelpers';
-
-/**
- * Detects the keyboard layout using a legacy method by creating a hidden input and dispatching a key event.
- * @returns {Promise<string>} A promise that resolves to the detected keyboard layout.
- */
-async function detectLegacy() {
-  const input = document.createElement('input');
-  input.style.position = 'fixed';
-  input.style.top = '-100px';
-  document.body.appendChild(input);
-  input.focus();
-
-  return new Promise(resolve => {
-    const keyboardEvent = new KeyboardEvent('keypress', {
-      key: 'y',
-      keyCode: 89,
-      which: 89,
-      bubbles: true,
-      cancelable: true,
-    });
-
-    const handler = e => {
-      document.body.removeChild(input);
-      document.removeEventListener('keypress', handler);
-      if (e.key === 'z') {
-        resolve(LAYOUT_QWERTY);
-      } else if (e.key === 'y') {
-        resolve(LAYOUT_QWERTZ);
-      } else {
-        resolve(LAYOUT_AZERTY);
-      }
-    };
-
-    document.addEventListener('keypress', handler);
-    input.dispatchEvent(keyboardEvent);
-  });
-}
+import { LAYOUT_QWERTY } from 'shared/helpers/KeyboardHelpers';
 
 /**
  * Detects the keyboard layout using the modern navigator.keyboard API.
@@ -58,7 +17,8 @@ async function detect() {
 }
 
 /**
- * Uses either the modern or legacy method to detect the keyboard layout, caching the result.
+ * Uses the keyboard layout API when available, otherwise defaults to QWERTY.
+ * Never focus a temporary input: it can trigger password AutoFill during page load.
  * @returns {Promise<string>} A promise that resolves to the detected keyboard layout.
  */
 export async function useDetectKeyboardLayout() {
@@ -67,7 +27,9 @@ export async function useDetectKeyboardLayout() {
     return cachedLayout;
   }
 
-  const layout = navigator.keyboard ? await detect() : await detectLegacy();
+  const layout = navigator.keyboard?.getLayoutMap
+    ? await detect()
+    : LAYOUT_QWERTY;
   window.cw_keyboard_layout = layout;
   return layout;
 }
