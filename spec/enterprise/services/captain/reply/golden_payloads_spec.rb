@@ -215,6 +215,57 @@ RSpec.describe 'Captain reply golden payloads' do # rubocop:disable RSpec/Descri
                    content_type: 'text',
                    additional_attributes: { 'captain_v2_response_parts' => [{ 'text' => 'How can I help you today?', 'citation_indexes' => [] }] } }]
     },
+    # The reply eval's R04 ("hi") with schema v2: the model also asked a reworded question in its part. The welcome comes
+    # alone, then the one question.
+    hi_with_reworded_follow_up: {
+      response: { 'welcome' => 'Hello and welcome to Lumen Notes!',
+                  'response_parts' => [{ 'text' => 'How can I help you today?', 'citation_indexes' => [] }],
+                  'follow_up' => { 'text' => 'What can I help you with today?', 'kind' => 'clarification' } },
+      kinds: [%w[greeting], %w[answer]],
+      expected: [{ content: 'Hello and welcome to Lumen Notes!',
+                   content_type: 'text',
+                   additional_attributes: { 'captain_v2_response_parts' => [{ 'text' => 'Hello and welcome to Lumen Notes!',
+                                                                              'citation_indexes' => [] }] } },
+                 { content: 'What can I help you with today?',
+                   content_type: 'text',
+                   additional_attributes: { 'captain_v2_response_parts' => [{ 'text' => 'What can I help you with today?',
+                                                                              'citation_indexes' => [] }] } }]
+    },
+    # A shop reply with product cards (the Scanixx shape, with an invented shop): the welcome, the answer without the
+    # reworded question it ended with, the cards, then the one question with the buttons.
+    shop_answer_cards_question: {
+      state: :products,
+      response: { 'agent_name' => 'Acme', 'welcome' => 'Hi! Welcome to Acme Outdoor.',
+                  'response_parts' => [{ 'text' => 'Yes, we carry the Trail Boot in two versions. Which one are you looking for?',
+                                         'citation_indexes' => [] }],
+                  'product_handles' => %w[trail-boot],
+                  'follow_up' => { 'text' => 'Which Trail Boot version are you looking for?', 'kind' => 'clarification' },
+                  'suggested_replies' => [{ 'label' => 'Waterproof', 'message' => 'The waterproof one.' }] },
+      kinds: [%w[greeting], %w[answer], %w[product_cards], %w[question]],
+      expected: [{ content: 'Hi! Welcome to Acme Outdoor.',
+                   content_type: 'text',
+                   additional_attributes: { :agent_name => 'Acme',
+                                            'captain_v2_response_parts' => [{ 'text' => 'Hi! Welcome to Acme Outdoor.',
+                                                                              'citation_indexes' => [] }] } },
+                 { content: 'Yes, we carry the Trail Boot in two versions.',
+                   content_type: 'text',
+                   additional_attributes: { :agent_name => 'Acme',
+                                            'captain_v2_response_parts' => [{ 'text' => 'Yes, we carry the Trail Boot in two versions.',
+                                                                              'citation_indexes' => [] }] } },
+                 { content: 'Trail Boot',
+                   content_type: 'cards',
+                   content_attributes: { items: [{ 'title' => 'Trail Boot',
+                                                   'description' => '129.00 EUR',
+                                                   'media_url' => 'https://cdn.shopify.com/boot.jpg',
+                                                   'actions' => [{ 'type' => 'link',
+                                                                   'text' => 'View product',
+                                                                   'uri' => 'https://acme-outdoor.test/products/trail-boot' }] }] },
+                   additional_attributes: { agent_name: 'Acme', product_handles: ['trail-boot'] } },
+                 { content: 'Which Trail Boot version are you looking for?',
+                   additional_attributes: { agent_name: 'Acme' },
+                   content_type: 'input_select',
+                   content_attributes: { items: [{ 'title' => 'Waterproof', 'value' => 'The waterproof one.' }], submit_value: true } }]
+    },
     separate_parts_email: {
       channel: :email,
       response: { 'response_parts' => [{ 'text' => 'Our trial lasts 14 days.', 'citation_indexes' => [] },

@@ -89,6 +89,36 @@ RSpec.describe Captain::Reply::Checks do
       .to eq(['Pausing is free.', 'Which plan are you on?'])
   end
 
+  describe 'single_question with reworded questions' do
+    let(:question) { Captain::Reply::Segment.new(kind: 'question', text: 'Which Mavic 3 version are you looking for?') }
+
+    it 'takes a differently worded question out of the answer before the question bubble' do
+      plan = repaired(answer('Yes, we carry the Mavic 3 Enterprise. Which one are you looking for?'), question)
+
+      expect(plan.segments.map(&:text)).to eq(['Yes, we carry the Mavic 3 Enterprise.', 'Which Mavic 3 version are you looking for?'])
+      expect(plan.segments.first.parts.map(&:text)).to eq(['Yes, we carry the Mavic 3 Enterprise.'])
+      expect(Rails.logger).to have_received(:info).with("[Captain][ReplyGuard] rule=single_question action=stripped #{log_suffix}")
+    end
+
+    it 'keeps only the last of two answer bubbles that end with a question' do
+      plan = repaired(answer('The Pro has 4K video. Do you film?'), answer('The Air folds small. Which matters more to you?'))
+
+      expect(plan.segments.map(&:text)).to eq(['The Pro has 4K video.', 'The Air folds small. Which matters more to you?'])
+    end
+
+    it 'drops a bubble that only asked an earlier question' do
+      plan = repaired(answer('Pausing is free.'), answer('Which plan are you on?'), question)
+
+      expect(plan.segments.map(&:text)).to eq(['Pausing is free.', 'Which Mavic 3 version are you looking for?'])
+    end
+
+    it 'leaves questions inside the text alone' do
+      plan = repaired(answer('Need more storage? The Pro plan has 1 TB.'), question)
+
+      expect(plan.segments.first.text).to eq('Need more storage? The Pro plan has 1 TB.')
+    end
+  end
+
   it 'drops empty bubbles and lets a greeting attached to one stand alone' do
     buttons = Captain::Reply::Segment.new(kind: 'question', content_type: 'input_select', content_attributes: { items: [] })
 

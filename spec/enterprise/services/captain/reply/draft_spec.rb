@@ -47,4 +47,19 @@ RSpec.describe Captain::Reply::Draft do
     expect(draft(welcome, rest: [])).to have_attributes(welcome_guard: nil)
     expect(draft('Hello and welcome to Lumen Notes, open Settings.')).to have_attributes(welcome_guard: nil)
   end
+
+  it 'takes a reworded question out of the last part when follow_up asks it (v2)' do
+    draft = described_class.from_response('response_parts' => [{ 'text' => 'We carry two versions. Which one are you looking for?' }],
+                                          'follow_up' => { 'text' => 'Which version are you looking for?', 'kind' => 'clarification' })
+
+    expect(draft.parts.map(&:text)).to eq(['We carry two versions.', 'Which version are you looking for?'])
+    expect(draft.follow_up.model_index).to eq(1)
+  end
+
+  it 'drops a last part that only asks another question (v2)' do
+    draft = described_class.from_response('response_parts' => [{ 'text' => 'Sync runs hourly.' }, { 'text' => 'Anything else?' }],
+                                          'follow_up' => { 'text' => 'Which device do you use?', 'kind' => 'clarification' })
+
+    expect(draft.parts.map(&:text)).to eq(['Sync runs hourly.', 'Which device do you use?'])
+  end
 end
