@@ -41,6 +41,7 @@ bundle exec rails captain:eval SUITE=reply_basics ONLY=R01,R04 REPEAT=1
 | `OUT` | `tmp/evals` | where the `.md` report and `.json` run record go |
 | `JUDGE` | off | `1` lets a cheap model grade the `judge` rubrics; without it they are skipped |
 | `CONFIRM` | off | required when a run needs more than 100 LLM calls |
+| `IMAGE_TAG` | the commit | the revision the report names; without it the image's commit (`/app/.git_sha`) |
 
 Exit code 0 when every case passes, 1 when one fails, 2 on a setup error. Routing is forced on for the run
 (`CAPTAIN_INTENT_ROUTING_MODE=on`, no account filter) unless a case sets `routing: off`.
@@ -72,6 +73,7 @@ Cases live in `suites/*.yml`. Use invented businesses only (no client names, URL
 ```
 
 Checks (`checks.rb`): `welcome_once`, `starts_with_greeting`, `no_repeated_sentences`, `no_empty_bubbles`, `bubbles`,
-`question_bubble`, `no_click_paths`, `links_from_knowledge`, `contains_video`, `language`, `handoff`, `route`,
-`max_chars` and `judge` (a rubric, graded only with `JUDGE=1`). The suite's SHA-256 in the report names exactly which
+`question_bubble`, `no_click_paths`, `links_from_knowledge`, `contains_video`, `mentions_all` (a list of terms the reply
+names), `language`, `handoff`, `route`, `max_chars`, `judge` (a rubric, graded only with `JUDGE=1`) and `any_of` (a list
+of checks, one of which must pass). The suite's SHA-256 in the report names exactly which
 cases ran.

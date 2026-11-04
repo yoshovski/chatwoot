@@ -86,5 +86,13 @@ class Captain::Evals::Suite
     name = check.is_a?(Hash) ? check.keys.first.to_s : check.to_s
     raise Invalid, "#{id}: unknown check #{name}" unless Captain::Evals::Checks::NAMES.include?(name)
     raise Invalid, "#{id}: #{name} takes one argument" if check.is_a?(Hash) && check.size != 1
+
+    validate_any_of!(id, check.is_a?(Hash) ? check.values.first : nil) if name == 'any_of'
+  end
+
+  def validate_any_of!(id, options)
+    raise Invalid, "#{id}: any_of takes a list of checks" unless options.is_a?(Array) && options.any?
+
+    options.each { |option| validate_check!(id, option) }
   end
 end

@@ -2,7 +2,7 @@
 # A check in a suite is a name (`welcome_once`) or a one-key hash with its argument (`{ bubbles: { min: 1, max: 2 } }`).
 module Captain::Evals::Checks # rubocop:disable Metrics/ModuleLength
   NAMES = %w[welcome_once starts_with_greeting no_repeated_sentences no_empty_bubbles bubbles question_bubble no_click_paths
-             links_from_knowledge contains_video language handoff route max_chars judge].freeze
+             links_from_knowledge contains_video mentions_all language handoff route max_chars judge any_of].freeze
   NON_TEXT_TYPES = %w[form cards].freeze
   MARKDOWN_LINK = /!?\[([^\]]*)\]\(([^)\s]+)\)/
   URL = %r{https?://[^\s)\]>"']+}
@@ -97,6 +97,19 @@ module Captain::Evals::Checks # rubocop:disable Metrics/ModuleLength
   def contains_video(observation, expected)
     actual = full_text(observation).lines.any? { |line| Captain::Knowledge::VideoLink.line?(line.strip) }
     [actual == expected, actual ? 'video present' : 'no video']
+  end
+
+  # Every term appears in the reply (case-insensitive), e.g. each browser a how-to covers.
+  def mentions_all(observation, terms)
+    text = full_text(observation).downcase
+    missing = Array(terms).reject { |term| text.include?(term.to_s.downcase) }
+    [missing.empty?, missing.any? ? "missing: #{missing.join(', ')}" : nil]
+  end
+
+  # Passes when one of the checks passes: a reply may solve the case in more than one acceptable way.
+  def any_of(observation, specs)
+    results = specs.map { |spec| run(spec, observation) }
+    [results.any? { |result| result[:pass] }, results.map { |result| "#{result[:name]}: #{result[:detail]}" }.join('; ')]
   end
 
   def language(observation, expected)

@@ -105,6 +105,29 @@ RSpec.describe Captain::Evals::Checks do
     end
   end
 
+  # R02 accepts asking which browser or covering each browser.
+  describe 'any_of and mentions_all' do
+    let(:browsers) { { 'mentions_all' => %w[Chrome Safari Firefox] } }
+    let(:either) { { 'any_of' => [{ 'question_bubble' => true }, browsers] } }
+
+    it 'passes a reply that covers each browser' do
+      messages.replace(["In Chrome open the three-dot menu.\nIn Safari choose Empty Caches.\nIn firefox click Clear Data."])
+      expect(check(browsers)[:pass]).to be(true)
+      expect(check(either)[:pass]).to be(true)
+    end
+
+    it 'passes a reply that asks which browser' do
+      messages.replace(['Happy to help with that.', 'Which browser do you use?'])
+      expect(check(browsers)).to include(pass: false, detail: 'missing: Chrome, Safari, Firefox')
+      expect(check(either)[:pass]).to be(true)
+    end
+
+    it 'fails a reply that does neither' do
+      messages.replace(['In Chrome open the three-dot menu and choose Delete browsing data.'])
+      expect(check(either)).to include(pass: false, name: 'any_of', detail: include('mentions_all: missing: Safari, Firefox'))
+    end
+  end
+
   describe 'no_click_paths' do
     it 'fails admin click paths' do
       messages.replace(['Go to Settings > Billing > Plans to upgrade.'])
