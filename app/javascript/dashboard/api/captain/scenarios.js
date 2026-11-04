@@ -32,6 +32,12 @@ class CaptainScenarios extends ApiClient {
     return axios.delete(`${this.url}/${assistantId}/scenarios/${id}`);
   }
 
+  suggestAction({ assistantId, description }) {
+    return axios.post(`${this.url}/${assistantId}/scenarios/suggest_action`, {
+      description,
+    });
+  }
+
   draft({ assistantId, description }) {
     return axios.post(`${this.url}/${assistantId}/scenarios/draft`, {
       description,

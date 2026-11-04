@@ -46,6 +46,16 @@ class Api::V1::Accounts::Captain::ScenariosController < Api::V1::Accounts::BaseC
     end
   end
 
+  # "Describe an action": one sentence in, one suggested action reference out. Nothing is created here.
+  def suggest_action
+    description = params[:description].to_s.strip
+    if description.length < 3 || description.length > 500
+      return render json: { error: 'Description must be between 3 and 500 characters' }, status: :unprocessable_entity
+    end
+
+    render json: { suggestion: Captain::Llm::ActionSuggestionService.new(assistant: @assistant, description: description).perform }
+  end
+
   private
 
   def set_assistant

@@ -132,6 +132,7 @@ Rails.application.routes.draw do
               resources :inboxes, only: [:index, :create, :destroy], param: :inbox_id
               resources :scenarios do
                 post :draft, on: :collection
+                post :suggest_action, on: :collection
               end
               resources :document_sections, only: [:index, :create]
               resources :website_sources, only: [:index, :show, :create, :update] do

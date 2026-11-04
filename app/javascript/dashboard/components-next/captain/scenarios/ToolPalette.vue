@@ -6,6 +6,7 @@ import { vOnClickOutside } from '@vueuse/components';
 import { useMapGetter } from 'dashboard/composables/store';
 import ToolChip from './ToolChip.vue';
 import ActionParamsDialog from './ActionParamsDialog.vue';
+import DescribeActionDialog from './DescribeActionDialog.vue';
 import ToolsDropdown from 'dashboard/components-next/captain/assistant/ToolsDropdown.vue';
 import Button from 'dashboard/components-next/button/Button.vue';
 import {
@@ -43,6 +44,7 @@ const groupLabels = {
 };
 
 const paramsDialog = ref(null);
+const describeDialog = ref(null);
 
 const availableTools = computed(() => {
   return props.tools || storeCaptainTools.value || [];
@@ -120,7 +122,15 @@ const matches = (item, query) =>
 const filteredDropdownTools = computed(() => {
   const query = searchQuery.value.trim().toLowerCase();
   const tools = availableTools.value.filter(tool => matches(tool, query));
+  const describe = {
+    id: 'describe_action',
+    kind: 'describe',
+    emoji: '✨',
+    title: t('CAPTAIN.ASSISTANTS.SCENARIOS.DESCRIBE.ITEM'),
+    description: t('CAPTAIN.ASSISTANTS.SCENARIOS.DESCRIBE.ITEM_DESCRIPTION'),
+  };
   return [
+    ...(query ? [] : [describe]),
     ...groupTools(tools, group => groupLabels[group]()),
     ...withGroupLabel(
       contactPropertyItems.value.filter(item => matches(item, query)),
@@ -138,7 +148,9 @@ const configure = (tool, preset = {}) => {
 };
 
 const select = item => {
-  if (item.kind === 'text') {
+  if (item.kind === 'describe') {
+    describeDialog.value?.open();
+  } else if (item.kind === 'text') {
     emit('insertText', item.text);
   } else if (item.kind === 'property') {
     configure(updateContactAttributeTool.value, { key: item.key });
@@ -210,6 +222,10 @@ defineExpose({ configure });
       />
     </div>
 
+    <DescribeActionDialog
+      ref="describeDialog"
+      @insert="tool => emit('insertTool', tool)"
+    />
     <ActionParamsDialog
       ref="paramsDialog"
       @insert="tool => emit('insertTool', tool)"

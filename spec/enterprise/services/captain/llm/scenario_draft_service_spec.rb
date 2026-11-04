@@ -76,4 +76,28 @@ RSpec.describe Captain::Llm::ScenarioDraftService do
       end
     end
   end
+
+  describe 'built-in actions with fixed values' do
+    let(:team) { create(:team, account: account, name: 'Sales') }
+    let(:llm_response_content) do
+      {
+        title: 'Demo request', description: 'Use when the customer asks for a demo.',
+        instruction: "1. [@Assign Sales](tool://assign_team?team_id=#{team.id})\n2. [@Save size](tool://update_contact_attribute?key=company_size)",
+        notes: []
+      }.to_json
+    end
+
+    it 'keeps links whose values exist and unlinks the rest' do
+      result = service.perform
+
+      expect(result[:instruction]).to eq("1. [@Assign Sales](tool://assign_team?team_id=#{team.id})\n2. @Save size")
+      expect(result[:tools]).to eq(['assign_team'])
+    end
+
+    it 'gives the builder the catalog with the param syntax' do
+      service.perform
+
+      expect(mock_chat).to have_received(:with_instructions).with(include('tool://update_contact_attribute?key=company_size'))
+    end
+  end
 end

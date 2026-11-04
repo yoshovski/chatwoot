@@ -2155,6 +2155,19 @@
             "SAVE": "Create",
             "ERROR": "Couldn't create the attribute. Try again."
           }
+        },
+        "DESCRIBE": {
+          "ITEM": "Describe an action…",
+          "ITEM_DESCRIPTION": "Say what should happen; we pick the matching action",
+          "TITLE": "Describe an action",
+          "DESCRIPTION": "For example: store the visitor's company size, or send the chat to Sales.",
+          "PLACEHOLDER": "Remember which plan they're interested in",
+          "SUGGEST": "Suggest",
+          "PREVIEW": "Suggested:",
+          "NO_MATCH": "No built-in action fits. Create a custom action on the Tools & MCP page instead.",
+          "CREATE_ATTRIBUTE": "Create attribute {key} ({type})?",
+          "CREATE": "Create and insert",
+          "ERROR": "Couldn't suggest an action. Try again."
         }
       },
       "AI_AGENT_CHIP": "AI agent"
