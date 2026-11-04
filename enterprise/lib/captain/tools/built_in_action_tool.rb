@@ -18,7 +18,7 @@ class Captain::Tools::BuiltInActionTool < Captain::Tools::BasePublicTool
     end
 
     def fixed_params_spec
-      @fixed_params_spec ||= {}
+      @fixed_params_spec ||= superclass.respond_to?(:fixed_params_spec) ? superclass.fixed_params_spec.dup : {}
     end
 
     # Validation messages for a reference's fixed parameters; empty when the reference is usable.
@@ -45,6 +45,11 @@ class Captain::Tools::BuiltInActionTool < Captain::Tools::BasePublicTool
       # Long values (a follow-up's instructions) keep a readable start plus a digest of the whole reference.
       digest = Digest::SHA256.hexdigest(sorted.to_s).first(DIGEST_LENGTH)
       "#{tool_id}__#{slug.first(budget - DIGEST_LENGTH - 1).sub(/_+\z/, '')}_#{digest}"
+    end
+
+    # For the tools list: the UI asks for these values when a scenario names the action.
+    def built_in_action_metadata
+      { built_in_action: true, fixed_params: fixed_params_spec.map { |key, spec| { key: key, required: spec[:required] } } }
     end
 
     # A short phrase for the instruction and prompt ("saves the contact's Company size"). Subclasses override.

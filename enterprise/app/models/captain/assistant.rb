@@ -179,6 +179,7 @@ class Captain::Assistant < ApplicationRecord
   validates :offline_handoff_message, :no_handoff_message, :handoff_form_message, length: { maximum: HANDOFF_MESSAGE_LENGTH_LIMIT }
   validate :validate_handoff_rules
   validate :validate_limits
+  validate :validate_email_templates
   validates :max_suggested_replies,
             numericality: {
               only_integer: true,
@@ -512,6 +513,10 @@ class Captain::Assistant < ApplicationRecord
 
   def set_knowledge_processing_version
     self.config = { 'knowledge_processing_version' => 3 }.merge(config)
+  end
+
+  def validate_email_templates
+    Captain::EmailTemplates.errors(config['email_templates']).each { |message| errors.add(:email_templates, message) }
   end
 
   def validate_limits

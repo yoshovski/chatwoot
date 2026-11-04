@@ -501,6 +501,28 @@ en:
   captain:
     check_in:
       default: 'Is there anything else I can help you with?'
+    built_in_actions:
+      update_contact_attribute:
+        title: 'Update contact attribute'
+        description: 'Saves a value on the visitor''s profile'
+      update_conversation_attribute:
+        title: 'Update conversation attribute'
+        description: 'Saves a value on this conversation'
+      assign_team:
+        title: 'Assign team'
+        description: 'Assigns the conversation to a team'
+      assign_agent:
+        title: 'Assign agent'
+        description: 'Assigns the conversation to a person or the next available one'
+      email_visitor:
+        title: 'Email the visitor'
+        description: 'Sends the visitor one of your email templates'
+      email_team:
+        title: 'Email the team'
+        description: 'Emails the assignee or a team with a short summary'
+      schedule_follow_up:
+        title: 'Schedule a follow-up'
+        description: 'Follows up by message or email if the visitor goes quiet'
     leads:
       scenario_title: 'Business lead follow-up'
       followup_tool:

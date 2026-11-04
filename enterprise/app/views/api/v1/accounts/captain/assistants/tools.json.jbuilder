@@ -4,4 +4,6 @@ json.array! @tools do |tool|
   json.description tool[:description]
   json.icon tool[:icon]
   json.emoji tool[:emoji]
+  json.built_in_action tool[:built_in_action] if tool[:built_in_action]
+  json.fixed_params tool[:fixed_params] if tool[:fixed_params]
 end

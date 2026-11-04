@@ -56,7 +56,8 @@ module Concerns::CaptainToolsHelpers
             title: tool_config['i18n_key'] ? I18n.t("#{tool_config['i18n_key']}.title") : tool_config['title'],
             description: tool_config['i18n_key'] ? I18n.t("#{tool_config['i18n_key']}.description") : tool_config['description'],
             icon: tool_config['icon'],
-            emoji: tool_config['emoji']
+            emoji: tool_config['emoji'],
+            **(tool_class.try(:built_in_action_metadata) || {})
           }
         else
           Rails.logger.warn "Tool class not found for ID: #{tool_config['id']}"

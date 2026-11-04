@@ -75,3 +75,39 @@
   i18n_key: captain.leads.followup_tool
   icon: 'user-add'
   emoji: '📋'
+
+# Built-in actions: scenario-only, named with fixed parameters, e.g. tool://update_contact_attribute?key=company_size
+- id: update_contact_attribute
+  i18n_key: captain.built_in_actions.update_contact_attribute
+  icon: 'user'
+  emoji: '🪪'
+
+- id: update_conversation_attribute
+  i18n_key: captain.built_in_actions.update_conversation_attribute
+  icon: 'chat'
+  emoji: '🗒️'
+
+- id: assign_team
+  i18n_key: captain.built_in_actions.assign_team
+  icon: 'people-team'
+  emoji: '👥'
+
+- id: assign_agent
+  i18n_key: captain.built_in_actions.assign_agent
+  icon: 'person'
+  emoji: '🧑‍💼'
+
+- id: email_visitor
+  i18n_key: captain.built_in_actions.email_visitor
+  icon: 'mail'
+  emoji: '✉️'
+
+- id: email_team
+  i18n_key: captain.built_in_actions.email_team
+  icon: 'mail-inbox'
+  emoji: '📨'
+
+- id: schedule_follow_up
+  i18n_key: captain.built_in_actions.schedule_follow_up
+  icon: 'alarm'
+  emoji: '⏰'
