@@ -90,13 +90,30 @@ module Captain::Assistant::TieredRoutingHelper
                       "history_messages=#{history.size} history_tokens=#{Captain::Conversation::ContextBudget.tokens(history)}"
   end
 
+  # Only on the web widget: other channels keep one message. Playground runs have no conversation.
+  def early_welcome_wanted? = ai_welcome? && @conversation&.inbox&.web_widget? == true
+
+  # The router's welcome goes out as its own message while retrieval, the catalog and the action agent work. The main
+  # reply then knows the visitor was welcomed: no welcome field in its schema, no greeting in its prompt or its plan.
+  # Without a welcome (routing skipped, a bypass, the router left it out) the main reply welcomes as before.
+  def post_early_welcome(route, context)
+    return unless route['welcome'] && Captain::Reply::EarlyWelcome.post(
+      assistant: @assistant, conversation: @conversation, text: route['welcome'], responding_to_message_id: @responding_to_message_id
+    )
+
+    @first_ai_reply = false
+    context[:state].merge!(first_ai_reply: false, welcomed_early: true)
+  end
+
   def routed_response(message, context)
     mode = routing_mode
     return unless mode.in?(%w[shadow on])
 
-    route = Captain::Assistant::IntentRouter.new(assistant: @assistant, conversation: @conversation, runtime_configuration: @runtime_configuration)
+    route = Captain::Assistant::IntentRouter.new(assistant: @assistant, conversation: @conversation, runtime_configuration: @runtime_configuration,
+                                                 welcome: mode == 'on' && early_welcome_wanted?)
                                             .classify(message: message, context: context)
     log_route(route, mode, context)
+    post_early_welcome(route, context)
     return if mode == 'shadow' || route['intent'] == 'action_agent'
 
     schema = response_schema_for_runner

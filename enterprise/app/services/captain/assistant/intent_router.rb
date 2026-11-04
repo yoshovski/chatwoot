@@ -1,7 +1,8 @@
-class Captain::Assistant::IntentRouter
+class Captain::Assistant::IntentRouter # rubocop:disable Metrics/ClassLength
   INTENTS = %w[smalltalk faq_kb action_agent business_overview].freeze
   MAX_QUERIES = 2
   MAX_QUERY_CHARS = 250
+  MAX_WELCOME_CHARS = 200
   ACTION = { 'intent' => 'action_agent', 'queries' => [] }.freeze
   GREETINGS = ['hi', 'hello', 'hey', 'thanks', 'thank you', 'hola', 'gracias', 'bonjour', 'merci', 'hallo', 'danke', 'ciao', 'grazie'].freeze
 
@@ -13,10 +14,13 @@ class Captain::Assistant::IntentRouter
     boundary ? history.drop(boundary + 1) : history
   end
 
-  def initialize(assistant:, conversation: nil, runtime_configuration: nil)
+  # welcome: the reply is the first AI reply on the widget, so the router also writes the welcome the chat job posts
+  # right away (see TieredRoutingHelper#post_early_welcome).
+  def initialize(assistant:, conversation: nil, runtime_configuration: nil, welcome: false)
     @assistant = assistant
     @conversation = conversation
     @runtime_configuration = runtime_configuration
+    @welcome = welcome
   end
 
   def classify(message:, context:)
@@ -43,7 +47,7 @@ class Captain::Assistant::IntentRouter
   private
 
   def chat
-    params = { max_tokens: 200, response_format: { type: 'json_object' } }
+    params = { max_tokens: @welcome ? 260 : 200, response_format: { type: 'json_object' } }
     effort = ENV['CAPTAIN_INTENT_ROUTER_REASONING_EFFORT'].presence
     params[:reasoning_effort] = effort if effort
     Captain::Assistant::TieredLlmClient.chat(
@@ -104,7 +108,7 @@ class Captain::Assistant::IntentRouter
       visitor_context: Captain::Assistant::VisitorContext.from_state(context[:state] || {}) }
   end
 
-  def instructions
+  def routing_instructions
     <<~PROMPT
       Classify a customer support message and prepare retrieval queries. Return only a JSON object with
       "intent" (smalltalk, faq_kb, action_agent) and "queries" (an array of strings).
@@ -147,6 +151,17 @@ class Captain::Assistant::IntentRouter
     PROMPT
   end
 
+  def instructions
+    @welcome ? "#{routing_instructions}#{welcome_instruction}\n" : routing_instructions
+  end
+
+  def welcome_instruction
+    'This is the first reply to this visitor. Also return "welcome": one short, warm welcome sentence in the customer\'s ' \
+      "language, sent right away while the answer is prepared. You may name #{@assistant.product_name || @assistant.name}. " \
+      'Use the customer\'s name only when they gave it. Do not answer, promise or ask anything in it. When visitor_context marks a ' \
+      'returning visitor, it may say welcome back.'
+  end
+
   def routing_policy
     context = @assistant.prompt_context
     context = @runtime_configuration.prompt_context_for(@assistant, context) if @runtime_configuration
@@ -165,7 +180,12 @@ class Captain::Assistant::IntentRouter
 
     result = parsed.slice('intent', 'queries').merge('queries' => parsed['queries'].map(&:strip).uniq, 'reason' => 'classified')
     result['mode'] = parsed['mode'] if valid_overview_mode?(parsed)
+    result['welcome'] = parsed['welcome'].strip if valid_welcome?(parsed['welcome'])
     result
+  end
+
+  def valid_welcome?(welcome)
+    @welcome && welcome.is_a?(String) && welcome.strip.present? && welcome.length <= MAX_WELCOME_CHARS && welcome.exclude?("\n")
   end
 
   def valid_classified_route?(parsed)

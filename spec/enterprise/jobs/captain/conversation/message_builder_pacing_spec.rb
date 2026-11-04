@@ -43,6 +43,17 @@ RSpec.describe Captain::Conversation::MessageBuilder do
       expect(replies.pluck('captain_reveal_offset_ms')).to eq([0, Captain::Behaviour.bubble_pause_ms('Anything else?')])
       expect(replies.first).to include('captain_segment_kinds' => ['answer'])
     end
+
+    it 'continues the pacing of the early welcome posted for this message' do
+      welcome = create(:message, conversation: conversation, message_type: :outgoing, sender: assistant, content: 'Hi, welcome!',
+                                 additional_attributes: { 'captain_segment_kinds' => ['greeting'], 'captain_reply_id' => 'welcome-reply',
+                                                          'captain_reveal_offset_ms' => 0 })
+
+      builder.create_messages
+      replies = conversation.messages.outgoing.where.not(id: welcome.id).order(:id).map(&:additional_attributes)
+
+      expect(replies.pluck('captain_reply_id')).to eq(%w[welcome-reply welcome-reply])
+    end
   end
 
   context 'with an email inbox' do

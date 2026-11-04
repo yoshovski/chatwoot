@@ -36,13 +36,13 @@ class Captain::Reply::Checks
     end
   end
 
-  # The run says this is not the first reply, or an earlier reply carried a greeting.
+  # The run says this is not the first reply, or an earlier message carried a greeting (an earlier reply or this
+  # reply's early welcome, which is then the conversation's only greeting).
   def already_greeted?
     return true if @context.first_ai_reply == false
     return false unless @context.conversation
 
-    @context.conversation.messages.where(message_type: :outgoing, sender_type: 'Captain::Assistant')
-            .exists?(['additional_attributes -> ? @> ?::jsonb', Captain::Reply::Plan::SEGMENT_KINDS_KEY, %w[greeting].to_json])
+    Captain::Reply::EarlyWelcome.sent?(@context.conversation)
   end
 
   # An attached greeting is the start of the next bubble's text.

@@ -8,7 +8,7 @@ Route wording stays as flags: direct_answer (no tools this turn), scenario_agent
 {% unless scenario_agent -%}
 {% render 'role', name: behaviour.name, product_name: behaviour.product_name -%}
 {% endunless -%}
-{% render 'greeting', first_ai_reply: first_ai_reply, returning_visitor: returning_visitor -%}
+{% render 'greeting', first_ai_reply: first_ai_reply, welcomed_early: welcomed_early, returning_visitor: returning_visitor -%}
 {% when 'limits' -%}
 {% render 'limits', limits: behaviour.limits, direct_answer: direct_answer, scenario_agent: scenario_agent -%}
 {% endcase -%}
