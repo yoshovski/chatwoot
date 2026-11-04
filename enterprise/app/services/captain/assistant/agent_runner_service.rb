@@ -196,7 +196,8 @@ class Captain::Assistant::AgentRunnerService # rubocop:disable Metrics/ClassLeng
       product_cards: product_cards_enabled?,
       lead_capture: @assistant.leads_enabled?,
       separate_parts: !reply_suggestion? && @assistant.separate_parts_requested?,
-      welcome: ai_welcome?
+      welcome: ai_welcome?,
+      follow_up: Captain::ResponseSchema.v2?(@assistant.account_id)
     )
   end
 

@@ -28,7 +28,7 @@ module Captain::Assistant::AgentRunResponse
     return unless message
 
     response.merge!('response_parts' => [{ 'text' => message, 'citation_indexes' => [] }], 'response' => message,
-                    'suggested_replies' => [], 'lead_qualification_question' => false)
+                    'suggested_replies' => [], 'lead_qualification_question' => false, 'follow_up' => nil)
   end
 
   # The reply text and tool results are customer data: keep them out of production (info) logs.

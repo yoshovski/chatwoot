@@ -23,14 +23,18 @@ module Captain::Knowledge::VideoLink
     nil
   end
 
-  # A "[Video…](url)" line from the page reader.
+  # A "[Video…](url)" or "[Watch: …](url)" line from the page reader.
   def self.line?(block)
-    match = block.strip.match(/\A\[(Video[^\]]*)\]\((\S+)\)\z/)
+    match = block.strip.match(/\A\[((?:Video|Watch:)[^\]]*)\]\((\S+)\)\z/)
     match.present? && (match[2].match?(WATCH_URL) || match[2].match?(VIDEO_FILE))
   end
 
-  def self.label(title)
+  # Without a useful player title the video is named after the page it is on ("Watch: <page title>"), else "Video".
+  def self.label(title, page_title: nil)
     title = title.to_s.squish
-    title.blank? || title.match?(GENERIC_TITLE) ? 'Video' : "Video: #{title.truncate(80)}"
+    return "Video: #{title.truncate(80)}" unless title.blank? || title.match?(GENERIC_TITLE)
+
+    page_title = page_title.to_s.squish
+    page_title.present? ? "Watch: #{page_title.truncate(60)}" : 'Video'
   end
 end

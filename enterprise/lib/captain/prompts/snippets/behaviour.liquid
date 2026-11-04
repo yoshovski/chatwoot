@@ -1,0 +1,14 @@
+{% comment %}
+ChatOctave's fixed behaviour (Captain::Behaviour), the same in every reply prompt. Pass `behaviour` from the prompt context.
+section 'identity': the adaptive role and the first-reply welcome. section 'limits': what the agent can't do.
+Route wording stays as flags: direct_answer (no tools this turn), scenario_agent (has its own role; offers through tools).
+{% endcomment -%}
+{% case section -%}
+{% when 'identity' -%}
+{% unless scenario_agent -%}
+{% render 'role', name: behaviour.name, product_name: behaviour.product_name -%}
+{% endunless -%}
+{% render 'greeting', first_ai_reply: first_ai_reply, returning_visitor: returning_visitor -%}
+{% when 'limits' -%}
+{% render 'limits', limits: behaviour.limits, direct_answer: direct_answer, scenario_agent: scenario_agent -%}
+{% endcase -%}

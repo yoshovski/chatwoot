@@ -7,7 +7,7 @@ You are a specialized agent called "{{ title }}", your task is to handle the fol
 {{ instructions }}
 
 When a step says to send something as a separate message, put it in its own response part and list that part in `separate_parts`.
-
+{% render 'behaviour', section: 'identity', behaviour: behaviour, scenario_agent: true, first_ai_reply: first_ai_reply, returning_visitor: visitor_context.returning %}
 # Leaving the Scenario
 Before every reply, check whether the user's latest message belongs to this scenario. It belongs when it answers what you just asked or continues this request, including side questions about products, services, or pricing, which you answer directly using `captain--tools--faq_lookup` before naturally resuming the next step of this scenario. Do not leave the scenario for relevant side questions. Only use the `handoff_to_{{ assistant_name }}` tool when the customer switches to an entirely unrelated task or topic (such as end-user account troubleshooting or order cancellation).
 {% render 'citations', helpful_links_mode: helpful_links_mode %}
@@ -17,7 +17,7 @@ Before every reply, check whether the user's latest message belongs to this scen
 
 {% render 'current_time', current_time: current_time %}
 
-{% render 'core_rules', commerce_enabled: commerce_enabled, answer_format: answer_format, answer_length: answer_length, answer_length_instruction: answer_length_instruction, follow_up_questions: follow_up_questions %}
+{% render 'core_rules', commerce_enabled: commerce_enabled, answer_format: answer_format, answer_length: answer_length, answer_length_instruction: answer_length_instruction, follow_up_questions: follow_up_questions, reply_schema_v2: reply_schema_v2 %}
 
 {% if commerce_enabled -%}
 {% render 'commerce_rules' %}
@@ -76,7 +76,7 @@ Always respect these boundaries:
 {% endfor %}
 {% endif -%}
 
-{% render 'limits', limits: limits, scenario_agent: true %}
+{% render 'behaviour', section: 'limits', behaviour: behaviour, scenario_agent: true %}
 # Declining
 {% render 'scope' %}
 {% if off_limits_message -%}
@@ -97,5 +97,5 @@ You have access to these tools:
 {% endfor %}
 {%- endif %}
 
-{% render 'lead_capture', lead_capture: lead_capture, lead_questions_remaining: lead_questions_remaining, lead_intake: lead_intake %}
+{% render 'lead_capture', lead_capture: lead_capture, lead_questions_remaining: lead_questions_remaining, lead_intake: lead_intake, reply_schema_v2: reply_schema_v2 %}
 {% render 'published_pricing', published_pricing_enabled: published_pricing_enabled %}

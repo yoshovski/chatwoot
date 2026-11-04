@@ -1,5 +1,7 @@
 # The model's reply as typed data. The only code that reads the model's Hash: everything after works on the draft.
 # The welcome stays its own field; parts keep the index the model gave them (separate_parts counts these indexes).
+# Schema v2 replies carry the closing question in `follow_up`: it becomes the last part (unless a normalized response
+# already ends with it) and `follow_up` points at that part, so policies never search the prose for it.
 Captain::Reply::Draft = Data.define(:welcome, :welcome_guard, :parts, :separate_part_indexes, :follow_up, :suggestions,
                                     :product_handles, :handoff_requested, :qualification_question, :agent_name, :raw) do
   # A first sentence this short that opens with a greeting word is a greeting, not part of the answer.
@@ -15,10 +17,24 @@ Captain::Reply::Draft = Data.define(:welcome, :welcome_guard, :parts, :separate_
     hash = response.is_a?(Hash) ? response : {}
     welcome = welcome_text(response)
     parts, welcome_guard = without_repeated_welcome(model_parts(response), welcome)
+    parts, follow_up = with_follow_up(parts, hash['follow_up'])
+    qualification = follow_up ? follow_up.kind == 'qualification' : hash['lead_qualification_question'] == true
     new(welcome: welcome, welcome_guard: welcome_guard, parts: parts, separate_part_indexes: Array(hash['separate_parts']).grep(Integer),
-        follow_up: nil, suggestions: hash['suggested_replies'], product_handles: hash['product_handles'],
-        handoff_requested: hash['handoff_requested'] == true, qualification_question: hash['lead_qualification_question'] == true,
+        follow_up: follow_up, suggestions: hash['suggested_replies'], product_handles: hash['product_handles'],
+        handoff_requested: hash['handoff_requested'] == true, qualification_question: qualification,
         agent_name: hash['agent_name'], raw: response)
+  end
+
+  def self.with_follow_up(parts, value)
+    text = normalize([{ text: value['text'] }]).first&.text if value.is_a?(Hash)
+    return [parts, nil] unless text
+
+    part = parts.last
+    unless part&.text == text
+      part = Captain::Reply::Part.new(text: text, model_index: parts.empty? ? 0 : parts.last.model_index + 1)
+      parts = [*parts, part]
+    end
+    [parts, Captain::Reply::FollowUp.new(text: text, kind: value['kind'], model_index: part.model_index)]
   end
 
   def self.model_parts(response)
@@ -99,7 +115,8 @@ Captain::Reply::Draft = Data.define(:welcome, :welcome_guard, :parts, :separate_
     words(text).map { |word| self::GREETING_WORDS.include?(word) ? 'hello' : word }
   end
 
-  private_class_method :model_parts, :welcome_text, :normalize, :without_repeated_welcome, :repeated_welcome_remainder, :welcome_prefix_remainder,
+  private_class_method :with_follow_up, :model_parts, :welcome_text, :normalize,
+                       :without_repeated_welcome, :repeated_welcome_remainder, :welcome_prefix_remainder,
                        :greeting_sentence?, :words, :greeting_words
 
   def welcome_part = welcome.present? ? Captain::Reply::Part.new(text: welcome, kind: :greeting) : nil

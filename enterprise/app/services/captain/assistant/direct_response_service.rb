@@ -145,7 +145,13 @@ class Captain::Assistant::DirectResponseService
       context[:state][:unsupported_answer_endpoint] = true if unsupported_endpoint?(part['text'], sanitizer)
       part['text'] = sanitizer.sanitize_prose(part['text'])
     end
+    sanitize_follow_up(output['follow_up'], sanitizer)
     output
+  end
+
+  # Schema v2 keeps the closing question out of the parts; it gets the same link checks.
+  def sanitize_follow_up(follow_up, sanitizer)
+    follow_up['text'] = sanitizer.sanitize_prose(follow_up['text'].to_s) if follow_up.is_a?(Hash)
   end
 
   def reply_sanitizer(knowledge)

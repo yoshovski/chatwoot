@@ -49,8 +49,11 @@ module Captain::Behaviour
     def business_type = assistant.effective_business_type
 
     # The behaviour part of the reply prompt: answer shape, business add-on, limits and lead capture.
+    # `behaviour` feeds snippets/behaviour.liquid (role, first-reply welcome, limits) in every reply prompt.
     def prompt_context
-      { **assistant.business_prompt_context, limits: limits, **assistant.lead_prompt_context }
+      identity = { name: assistant.name, product_name: assistant.product_name || 'this product', limits: limits }
+      schema_v2 = Captain::ResponseSchema.v2?(assistant.account_id)
+      { **assistant.business_prompt_context, limits: limits, **assistant.lead_prompt_context, behaviour: identity, reply_schema_v2: schema_v2 }
     end
   end
 
