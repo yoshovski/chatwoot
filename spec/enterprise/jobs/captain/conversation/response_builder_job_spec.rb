@@ -1182,6 +1182,31 @@ RSpec.describe Captain::Conversation::ResponseBuilderJob, type: :job do
       end
     end
 
+    context 'when the captain_v2 answer promises a colleague without declaring the handoff' do
+      # The reply eval's R08: the action model wrote that a colleague will reply but left handoff_requested false.
+      let(:promise) { "I can't issue refunds. A billing colleague will reply to you here." }
+
+      before do
+        allow(account).to receive(:feature_enabled?).and_return(false)
+        allow(account).to receive(:feature_enabled?).with('captain_integration_v2').and_return(true)
+        allow(mock_agent_runner_service).to receive(:generate_response)
+          .and_return({ 'response_parts' => [{ 'text' => promise, 'citation_indexes' => [] }], 'response' => promise, 'handoff_requested' => false })
+        allow(Redis::Alfred).to receive(:set).and_return(true)
+        allow(Captain::Conversation::HandoffNoteService).to receive(:new)
+          .and_return(instance_double(Captain::Conversation::HandoffNoteService, generate_note_content: 'Note', post_note!: nil))
+      end
+
+      it 'hands off so the promise is kept' do
+        expect(Captain::ConversationEvents).to receive(:handed_off)
+          .with(conversation: conversation, assistant: assistant, source: 'declared', reason_category: nil, at: kind_of(Time))
+
+        described_class.perform_now(conversation, assistant)
+
+        expect(conversation.reload.status).to eq('open')
+        expect(conversation.messages.outgoing.where(private: false).order(:id).first.content).to eq(promise)
+      end
+    end
+
     context 'when captain_v2 handoff safety net triggers' do
       let(:dead_end_answer) { 'I cannot find that product in our catalog.' }
 
