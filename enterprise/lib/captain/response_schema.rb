@@ -21,6 +21,14 @@ class Captain::ResponseSchema < RubyLLM::Schema
   # with the same greeting it then copies into welcome.
   RESPONSE_PARTS_AFTER_WELCOME = 'Start with the answer itself; the welcome is sent separately.'.freeze
 
+  # Schema v2 (CAPTAIN_REPLY_SCHEMA_V2): the closing question travels in its own field instead of being found in the prose.
+  FOLLOW_UP_KINDS = %w[clarification next_step qualification].freeze
+  FOLLOW_UP_DESCRIPTION = 'The one short question this reply ends with, kept out of response_parts. null when the reply ends ' \
+                          'without a question.'.freeze
+  FOLLOW_UP_KIND_DESCRIPTION = 'clarification: a detail that changes the answer. next_step: the next stage or option. ' \
+                               'qualification: an optional business qualification question (use case, scale, company or ' \
+                               'country); not an offer of email follow-up or collecting name and email.'.freeze
+
   SUGGESTION_LABEL_MAX_LENGTH = 50
   SUGGESTION_MESSAGE_MAX_LENGTH = 120
 
@@ -37,11 +45,12 @@ class Captain::ResponseSchema < RubyLLM::Schema
   end
   boolean :handoff_requested, description: HANDOFF_REQUESTED_DESCRIPTION
 
-  SCHEMA_OPTIONS = %i[suggested_replies product_cards lead_capture separate_parts welcome].freeze
+  SCHEMA_OPTIONS = %i[suggested_replies product_cards lead_capture separate_parts welcome follow_up].freeze
 
   # Options (all false by default): suggested_replies, product_cards, lead_capture,
-  # separate_parts (an instruction or scenario asks to send something as a separate message) and
-  # welcome (the first AI reply with the AI greeting on; a required field so the model can't skip it).
+  # separate_parts (an instruction or scenario asks to send something as a separate message),
+  # welcome (the first AI reply with the AI greeting on; a required field so the model can't skip it) and
+  # follow_up (schema v2: the closing question as a field; replaces lead_qualification_question).
   def self.for(max_suggested_replies: 3, **options)
     flags = SCHEMA_OPTIONS.index_with { |key| options[key] == true }
     return self if flags.values.none?
@@ -78,13 +87,34 @@ class Captain::ResponseSchema < RubyLLM::Schema
     welcome ? "#{RESPONSE_PARTS_DESCRIPTION} #{RESPONSE_PARTS_AFTER_WELCOME}" : RESPONSE_PARTS_DESCRIPTION
   end
 
-  def self.define_reply_shape(builder, lead_capture:, separate_parts: false)
+  # On when CAPTAIN_REPLY_SCHEMA_V2 is 'on'; CAPTAIN_REPLY_SCHEMA_V2_ACCOUNT_IDS, when set, limits it to (and turns it on
+  # for) those accounts, as CAPTAIN_INTENT_ROUTING_ACCOUNT_IDS does for routing. Off by default.
+  def self.v2?(account_id)
+    accounts = ENV.fetch('CAPTAIN_REPLY_SCHEMA_V2_ACCOUNT_IDS', '').split(',').map(&:strip).reject(&:empty?)
+    return accounts.include?(account_id.to_s) if accounts.any?
+
+    ENV.fetch('CAPTAIN_REPLY_SCHEMA_V2', 'off') == 'on'
+  end
+
+  def self.define_reply_shape(builder, lead_capture:, separate_parts: false, follow_up: false)
     if separate_parts
       builder.array :separate_parts, description: SEPARATE_PARTS_DESCRIPTION do
         integer minimum: 1
       end
     end
+    return define_follow_up(builder) if follow_up
+
     define_lead_question(builder) if lead_capture
+  end
+
+  # Nullable rather than left out, so strict structured output still accepts it.
+  def self.define_follow_up(builder)
+    builder.optional :follow_up, description: FOLLOW_UP_DESCRIPTION do
+      object do
+        string :text, description: 'The question, in the customer\'s language.', min_length: 1
+        string :kind, enum: Captain::ResponseSchema::FOLLOW_UP_KINDS, description: Captain::ResponseSchema::FOLLOW_UP_KIND_DESCRIPTION
+      end
+    end
   end
 
   def self.define_lead_question(builder)

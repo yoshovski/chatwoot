@@ -22,11 +22,12 @@ class Captain::Leads::QuestionBudget
     state = run_result.context.to_h.fetch(:state, {})
     return if state.fetch(:lead_intake, {}).values_at(:captured, :form_pending).any?
 
-    return unless run_result.output['lead_qualification_question'] == true && remaining.zero?
-
     output = run_result.output
-    parts = Captain::Assistant::ResponseParts.from_response(output).to_a.map(&:dup)
-    remove_last_question(parts)
+    return unless qualification_question?(output) && remaining.zero?
+
+    parts = Captain::Assistant::ResponseParts.from_response(output.except('follow_up')).to_a.map(&:dup)
+    # A schema v2 question is its own field: dropping it leaves the answer as written.
+    remove_last_question(parts) unless output.delete('follow_up')
     parts << { 'text' => I18n.t('captain.leads.question_limit_reply'), 'citation_indexes' => [] } if parts.empty?
     output['response_parts'] = parts
     output['lead_qualification_question'] = false
@@ -34,6 +35,10 @@ class Captain::Leads::QuestionBudget
   end
 
   private
+
+  def qualification_question?(output)
+    output['lead_qualification_question'] == true || output.dig('follow_up', 'kind') == 'qualification'
+  end
 
   def remove_last_question(parts)
     parts.reverse_each do |part|

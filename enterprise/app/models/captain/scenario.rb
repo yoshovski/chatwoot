@@ -64,7 +64,7 @@ class Captain::Scenario < ApplicationRecord
   def prompt_context
     behaviour = Captain::Behaviour.for(assistant).prompt_context
     {
-      **behaviour.slice(:lead_capture, :behaviour),
+      **behaviour.slice(:lead_capture, :behaviour, :reply_schema_v2),
       title: title,
       instructions: resolved_instructions,
       tools: resolved_tools,

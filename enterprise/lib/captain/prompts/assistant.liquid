@@ -16,7 +16,7 @@ Don't digress away from your instructions, and use the available tools to solve 
 
 {% render 'current_time', current_time: current_time %}
 
-{% render 'core_rules', commerce_enabled: commerce_enabled, answer_format: answer_format, answer_length: answer_length, answer_length_instruction: answer_length_instruction, follow_up_questions: follow_up_questions %}
+{% render 'core_rules', commerce_enabled: commerce_enabled, answer_format: answer_format, answer_length: answer_length, answer_length_instruction: answer_length_instruction, follow_up_questions: follow_up_questions, reply_schema_v2: reply_schema_v2 %}
 
 {% render 'business_type', business_type: business_type, commerce_enabled: commerce_enabled -%}
 {% if commerce_enabled -%}
@@ -182,5 +182,5 @@ Handoff rules from the business; follow each one when it matches:
 {% endfor -%}
 {% endif -%}
 
-{% render 'lead_capture', lead_capture: lead_capture, lead_questions_remaining: lead_questions_remaining, lead_intake: lead_intake %}
+{% render 'lead_capture', lead_capture: lead_capture, lead_questions_remaining: lead_questions_remaining, lead_intake: lead_intake, reply_schema_v2: reply_schema_v2 %}
 {% render 'published_pricing', published_pricing_enabled: published_pricing_enabled %}
