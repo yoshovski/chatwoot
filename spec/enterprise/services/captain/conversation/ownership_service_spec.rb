@@ -74,7 +74,7 @@ RSpec.describe Captain::Conversation::OwnershipService do
       conversation.update!(status: :open)
       conversation.contact.update!(email: nil)
       create(:message, conversation: conversation, account: account, inbox: inbox,
-                       content_type: :form, message_type: :outgoing,
+                       content_type: :form, message_type: :outgoing, sender: assistant,
                        content_attributes: {
                          'type' => 'contact_capture',
                          'items' => [{ 'name' => 'email', 'type' => 'email', 'label' => 'Email' }]
