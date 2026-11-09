@@ -63,8 +63,14 @@ module Concerns::Agentable
     attrs = {}
     attrs[:commerce_enabled] = state[:commerce_enabled] if state.key?(:commerce_enabled)
     attrs[:welcomed_early] = true if state[:welcomed_early]
+    attrs[:handoff_tool_disabled] = true if state[:handoff_tool_disabled]
+    attrs[:tools] = without_handoff_tool if state[:handoff_tool_disabled] && respond_to?(:resolved_tools)
     attrs[:feature_citation] = ActiveModel::Type::Boolean.new.cast(config['feature_citation']) == true
     attrs
+  end
+
+  def without_handoff_tool
+    Array(resolved_tools).reject { |tool| (tool[:id] || tool['id']) == 'handoff' }
   end
 
   def agent_name

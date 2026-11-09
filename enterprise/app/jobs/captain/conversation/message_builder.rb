@@ -24,6 +24,7 @@ module Captain::Conversation::MessageBuilder
   end
 
   def create_messages(preserve_waiting_since: false)
+    normalize_handoff_agent_name!
     return create_v1_message(preserve_waiting_since: preserve_waiting_since) unless captain_v2_enabled?
 
     payloads = reply_composer.messages(suppress_suggestions: waiting_for_human? || handoff_active_or_requested?, segment_kinds: true)
@@ -84,5 +85,11 @@ module Captain::Conversation::MessageBuilder
 
   def waiting_for_human?
     delegate_ownership_service.waiting?
+  end
+
+  def normalize_handoff_agent_name!
+    return unless @response.is_a?(Hash) && (waiting_for_human? || handoff_active_or_requested?)
+
+    @response['agent_name'] = nil
   end
 end

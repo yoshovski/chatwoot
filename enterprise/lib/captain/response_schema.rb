@@ -146,7 +146,7 @@ class Captain::ResponseSchema < RubyLLM::Schema
   def self.define_product_handles(builder)
     builder.array :product_handles,
                   description: 'Up to 5 product handles to display as product cards, ordered best fit first. ' \
-                               'Include only products returned by product tools in this turn. Empty array if none apply.',
+                               'Include only products returned by product or knowledge tools in this turn. Empty array if none apply.',
                   max_items: 5 do
       string
     end
