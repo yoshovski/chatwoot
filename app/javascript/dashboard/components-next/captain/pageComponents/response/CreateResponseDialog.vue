@@ -5,7 +5,7 @@ import { useAlert } from 'dashboard/composables';
 import { useI18n } from 'vue-i18n';
 import { useRoute } from 'vue-router';
 
-import Dialog from 'dashboard/components-next/dialog/Dialog.vue';
+import SidePanel from 'dashboard/components-next/side-panel/SidePanel.vue';
 import ResponseForm from './ResponseForm.vue';
 
 const props = defineProps({
@@ -72,12 +72,11 @@ defineExpose({ dialogRef });
 </script>
 
 <template>
-  <Dialog
+  <SidePanel
     ref="dialogRef"
+    width="2xl"
     :title="$t(`${i18nKey}.TITLE`)"
     :description="$t('CAPTAIN.RESPONSES.FORM_DESCRIPTION')"
-    :show-cancel-button="false"
-    :show-confirm-button="false"
     @close="handleClose"
   >
     <ResponseForm
@@ -87,6 +86,5 @@ defineExpose({ dialogRef });
       @submit="handleSubmit"
       @cancel="handleCancel"
     />
-    <template #footer />
-  </Dialog>
+  </SidePanel>
 </template>

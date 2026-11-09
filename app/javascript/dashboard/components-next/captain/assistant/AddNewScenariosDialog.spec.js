@@ -192,7 +192,9 @@ describe('AddNewScenariosDialog', () => {
 
     wrapper.vm.setChoice('manual');
     await wrapper.vm.$nextTick();
-    expect(wrapper.find('.woot-editor').exists()).toBe(true);
+    expect(
+      wrapper.find('[data-test="scenario-instruction-editor"]').exists()
+    ).toBe(true);
 
     // Try submit empty
     await wrapper.vm.onClickAddManual();

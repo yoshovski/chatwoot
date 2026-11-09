@@ -1,7 +1,6 @@
 <script setup>
 import { computed, reactive, ref, toRef, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { breakpointsTailwind, useBreakpoints } from '@vueuse/core';
 import NextButton from 'dashboard/components-next/button/Button.vue';
 import SidePanel from 'dashboard/components-next/side-panel/SidePanel.vue';
 import { FEATURE_FLAGS } from 'dashboard/featureFlags';
@@ -26,7 +25,6 @@ const props = defineProps({
 const { t } = useI18n();
 const { isFeatureFlagEnabled } = usePolicy();
 const isV2 = computed(() => isFeatureFlagEnabled(FEATURE_FLAGS.CAPTAIN_V2));
-const isBelowXL = useBreakpoints(breakpointsTailwind).smaller('xl');
 
 const messages = ref([]);
 const newMessage = ref('');
@@ -97,11 +95,13 @@ const resetTestSetup = async () => {
 };
 
 const toggleSetup = () => {
-  if (isBelowXL.value) {
-    setupPanelRef.value?.open();
-  } else {
-    isSetupOpen.value = !isSetupOpen.value;
-  }
+  setupPanelRef.value?.open?.();
+  isSetupOpen.value = true;
+};
+
+const closeSetup = () => {
+  setupPanelRef.value?.close?.();
+  isSetupOpen.value = false;
 };
 
 watch(
@@ -240,13 +240,14 @@ const handleEnterKey = event => {
           />
           <NextButton
             v-if="isV2"
-            v-tooltip.bottom="t('CAPTAIN.PLAYGROUND.SETUP.TOGGLE')"
-            ghost
             sm
-            :slate="!isSetupOpen"
+            :faded="session.hasOverrides"
+            :ghost="!session.hasOverrides"
+            :color="session.hasOverrides ? 'iris' : 'slate'"
             icon="i-lucide-settings-2"
-            :aria-label="t('CAPTAIN.PLAYGROUND.SETUP.TOGGLE')"
-            :aria-pressed="isSetupOpen"
+            :label="t('CAPTAIN.PLAYGROUND.SETUP.TITLE')"
+            :aria-label="t('CAPTAIN.PLAYGROUND.SETUP.TITLE')"
+            data-test="playground-test-setup-button"
             @click="toggleSetup"
           />
         </div>
@@ -323,64 +324,29 @@ const handleEnterKey = event => {
       </div>
     </div>
 
-    <aside
-      v-if="isV2 && isSetupOpen && !isBelowXL"
-      aria-labelledby="playground-test-setup-title"
-      class="flex w-[24rem] flex-none flex-col border-s border-n-weak bg-n-surface-1 text-n-slate-12"
-    >
-      <div
-        class="flex items-center justify-between gap-3 px-4 py-2.5 border-b border-n-weak"
-      >
-        <h3 id="playground-test-setup-title" class="m-0 text-sm font-medium">
-          {{ t('CAPTAIN.PLAYGROUND.SETUP.TITLE') }}
-        </h3>
-        <NextButton
-          ghost
-          sm
-          slate
-          icon="i-lucide-x"
-          :aria-label="t('CAPTAIN.PLAYGROUND.SETUP.CLOSE')"
-          @click="isSetupOpen = false"
-        />
-      </div>
-      <PlaygroundTestSetup
-        :key="setupInstanceKey"
-        :session="session"
-        class="flex-1 min-h-0"
-      />
-      <div class="p-3 border-t border-n-weak bg-n-solid-1">
-        <NextButton
-          ghost
-          sm
-          slate
-          :label="t('CAPTAIN.PLAYGROUND.SETUP.RESET')"
-          icon="i-lucide-refresh-cw"
-          :disabled="session.isInitializing"
-          :is-loading="session.isInitializing"
-          @click="resetTestSetup"
-        />
-      </div>
-    </aside>
-
     <SidePanel
-      v-if="isV2 && isBelowXL"
+      v-if="isV2"
       ref="setupPanelRef"
       width="lg"
       :title="t('CAPTAIN.PLAYGROUND.SETUP.TITLE')"
       :description="t('CAPTAIN.PLAYGROUND.SETUP.DESCRIPTION')"
+      @close="isSetupOpen = false"
     >
       <PlaygroundTestSetup :key="setupInstanceKey" :session="session" />
       <template #footer>
-        <NextButton
-          ghost
-          sm
-          slate
-          :label="t('CAPTAIN.PLAYGROUND.SETUP.RESET')"
-          icon="i-lucide-refresh-cw"
-          :disabled="session.isInitializing"
-          :is-loading="session.isInitializing"
-          @click="resetTestSetup"
-        />
+        <div class="flex items-center justify-between w-full">
+          <NextButton
+            ghost
+            sm
+            slate
+            :label="t('CAPTAIN.PLAYGROUND.SETUP.RESET')"
+            icon="i-lucide-refresh-cw"
+            :disabled="session.isInitializing"
+            :is-loading="session.isInitializing"
+            @click="resetTestSetup"
+          />
+          <NextButton sm faded slate label="Done" @click="closeSetup" />
+        </div>
       </template>
     </SidePanel>
   </div>

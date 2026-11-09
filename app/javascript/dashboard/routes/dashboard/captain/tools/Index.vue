@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onMounted, ref, nextTick } from 'vue';
+import { computed, onMounted, ref, nextTick, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRoute, useRouter } from 'vue-router';
 import { useMapGetter, useStore } from 'dashboard/composables/store';
@@ -256,6 +256,16 @@ const VIEWS = {
   captain_tools_connections: 'MCP',
 };
 const view = computed(() => VIEWS[route.name] || 'BUILT_IN');
+watch(
+  view,
+  currentView => {
+    if (currentView === 'MCP' && isAdmin.value) {
+      mcp.fetch().catch(mcpError);
+    }
+  },
+  { immediate: true }
+);
+
 const emailTemplatesRef = ref(null);
 const headerButtonLabel = computed(
   () =>

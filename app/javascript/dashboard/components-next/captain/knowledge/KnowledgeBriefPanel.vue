@@ -525,9 +525,10 @@ const disable = async () => {
                 }}
               </span>
               <div
-                class="flex items-center opacity-0 shrink-0 group-hover:opacity-100 focus-within:opacity-100"
+                class="flex items-center opacity-100 sm:opacity-0 sm:group-hover:opacity-100 focus-within:opacity-100 shrink-0"
               >
                 <Button
+                  type="button"
                   size="xs"
                   variant="ghost"
                   color="slate"
@@ -536,6 +537,7 @@ const disable = async () => {
                   @click="editingOffering = offering.id"
                 />
                 <Button
+                  type="button"
                   size="xs"
                   variant="ghost"
                   color="slate"
@@ -610,9 +612,10 @@ const disable = async () => {
                 }}
               </span>
               <div
-                class="flex items-center opacity-0 shrink-0 group-hover:opacity-100 focus-within:opacity-100"
+                class="flex items-center opacity-100 sm:opacity-0 sm:group-hover:opacity-100 focus-within:opacity-100 shrink-0"
               >
                 <Button
+                  type="button"
                   size="xs"
                   variant="ghost"
                   color="slate"
@@ -621,6 +624,7 @@ const disable = async () => {
                   @click="editingTopic = index"
                 />
                 <Button
+                  type="button"
                   size="xs"
                   variant="ghost"
                   color="slate"
@@ -671,7 +675,12 @@ const disable = async () => {
               : 'CAPTAIN.KNOWLEDGE_BRIEF.PUBLISH'
           )
         "
-        :disabled="saving || generating || !brief?.draft_usable"
+        :disabled="
+          saving ||
+          generating ||
+          !brief?.draft_usable ||
+          (active && draftIsPublished)
+        "
         :is-loading="saving"
         @click="publish"
       />

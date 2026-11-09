@@ -102,7 +102,7 @@ describe('KnowledgeSourceBrowser', () => {
         {
           id: 8,
           url: 'https://docs.example.org',
-          status: 'discovering',
+          status: 'ready',
           selected_urls: [],
         },
       ],

@@ -31,13 +31,12 @@ const mountCard = () =>
   });
 
 describe('McpServerCard', () => {
-  it('summarises enabled tools and lists them on request', async () => {
+  it('summarises enabled tools and lists them directly', async () => {
     const wrapper = mountCard();
 
     expect(wrapper.text()).toContain('{"enabled":1,"total":2}');
-    expect(wrapper.findAllComponents(Switch)).toHaveLength(0);
+    expect(wrapper.findAllComponents(Switch)).toHaveLength(2);
 
-    await wrapper.find('button[aria-expanded]').trigger('click');
     wrapper.findAllComponents(Switch)[1].vm.$emit('update:modelValue', true);
 
     expect(wrapper.emitted('toggleTool')[0][0]).toMatchObject({

@@ -37,6 +37,8 @@ watch(open, value => {
       <div class="flex justify-end">
         <Button
           type="button"
+          variant="faded"
+          color="slate"
           :label="t('CAPTAIN.AGENT_UX.DONE')"
           @click="open = false"
         />

@@ -150,7 +150,7 @@ const setDescription = text => {
         <div class="flex flex-col gap-4 sm:flex-row sm:items-start">
           <div
             v-tooltip.bottom="t('CAPTAIN.ASSISTANTS.FORM.AVATAR.HELP_TEXT')"
-            class="shrink-0"
+            class="relative w-fit shrink-0 cursor-pointer"
           >
             <Avatar
               :src="state.avatarUrl"
@@ -162,6 +162,12 @@ const setDescription = text => {
               @upload="handleImageUpload"
               @delete="handleAvatarDelete"
             />
+            <span
+              class="absolute -bottom-0.5 -end-0.5 flex items-center justify-center size-5 rounded-full bg-n-solid-1 border border-n-weak text-n-slate-11 shadow-sm pointer-events-none"
+              aria-hidden="true"
+            >
+              <span class="i-lucide-camera size-3" />
+            </span>
           </div>
           <div class="grid flex-1 min-w-0 gap-4 sm:grid-cols-2">
             <Input
@@ -216,7 +222,15 @@ const setDescription = text => {
     />
 
     <template #preview>
-      <AssistantChatPreview :name="state.name" :avatar-url="state.avatarUrl">
+      <AssistantChatPreview
+        :name="state.name"
+        :avatar-url="state.avatarUrl"
+        :subtitle="
+          state.productName
+            ? `${t('CAPTAIN.ASSISTANTS.SETTINGS.PREVIEW.AI_AGENT')} · ${state.productName}`
+            : t('CAPTAIN.ASSISTANTS.SETTINGS.PREVIEW.AI_AGENT')
+        "
+      >
         <p class="preview-bubble preview-bubble--agent">
           {{
             t('CAPTAIN.ASSISTANTS.SETTINGS.IDENTITY.PREVIEW_GREETING', {

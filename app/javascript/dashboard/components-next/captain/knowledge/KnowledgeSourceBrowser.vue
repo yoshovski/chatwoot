@@ -14,7 +14,7 @@ const props = defineProps({
   // Administrators can choose which discovered pages become knowledge.
   canManage: { type: Boolean, default: false },
 });
-const emit = defineEmits(['loaded', 'manage']);
+const emit = defineEmits(['loaded', 'manage', 'websitesLoaded']);
 // 'all', 'pdf', 'text', or a website host.
 const source = defineModel('source', { type: String, default: 'all' });
 const { t } = useI18n();
@@ -65,6 +65,11 @@ const websites = computed(() => {
 
 const activeSite = computed(() =>
   websites.value.find(site => site.host === source.value)
+);
+const discoveringWebsites = computed(() =>
+  websiteSources.value.filter(item =>
+    ['pending', 'discovering'].includes(item.status)
+  )
 );
 const selectedLabel = computed(() => {
   const file = FILE_SOURCES.find(item => item.value === source.value);
@@ -151,9 +156,13 @@ const loadSources = async () => {
     const response = await sourcesRequest.run(signal =>
       api.list(props.assistantId, signal)
     );
-    if (response) websiteSources.value = response.data;
+    if (response) {
+      websiteSources.value = response.data;
+      emit('websitesLoaded', response.data);
+    }
   } catch {
     websiteSources.value = [];
+    emit('websitesLoaded', []);
   }
 };
 const load = async () => {
@@ -207,14 +216,14 @@ defineExpose({ load });
       </div>
       <slot name="filters" />
       <div
-        v-if="canManage && websiteSources.length"
+        v-if="canManage && websiteSources.length && !discoveringWebsites.length"
         v-on-click-outside="() => (websitesOpen = false)"
         class="relative ms-auto"
       >
         <Button
           icon="i-lucide-list-checks"
           :label="t('PLATFORM_NAV.MANAGE_WEBSITES')"
-          variant="outline"
+          variant="ghost"
           color="slate"
           size="sm"
           @click="openWebsites"

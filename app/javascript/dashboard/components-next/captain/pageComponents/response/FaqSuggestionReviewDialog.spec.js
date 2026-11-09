@@ -34,7 +34,7 @@ vi.mock('vue-router', () => ({
   useRouter: () => ({ push }),
 }));
 
-const DialogStub = {
+const SidePanelStub = {
   methods: { close: vi.fn() },
   template: `
     <div>
@@ -68,7 +68,7 @@ describe('FaqSuggestionReviewDialog', () => {
       },
       global: {
         mocks: { $t: key => key },
-        stubs: { Dialog: DialogStub },
+        stubs: { SidePanel: SidePanelStub },
       },
     });
 
@@ -109,7 +109,7 @@ describe('FaqSuggestionReviewDialog', () => {
       },
       global: {
         mocks: { $t: key => key },
-        stubs: { Dialog: DialogStub },
+        stubs: { SidePanel: SidePanelStub },
       },
     });
 
@@ -138,7 +138,7 @@ describe('FaqSuggestionReviewDialog', () => {
       },
       global: {
         mocks: { $t: key => key },
-        stubs: { Dialog: DialogStub },
+        stubs: { SidePanel: SidePanelStub },
       },
     });
 
@@ -149,7 +149,6 @@ describe('FaqSuggestionReviewDialog', () => {
     ).toEqual(
       expect.arrayContaining([
         'CAPTAIN.FAQ_SUGGESTIONS.DISMISS',
-        'CAPTAIN.FAQ_SUGGESTIONS.SAVE',
         'CAPTAIN.FAQ_SUGGESTIONS.APPROVE_FAQ',
       ])
     );
@@ -176,7 +175,7 @@ describe('FaqSuggestionReviewDialog', () => {
       },
       global: {
         mocks: { $t: key => key },
-        stubs: { Dialog: DialogStub },
+        stubs: { SidePanel: SidePanelStub },
       },
     });
     await flushPromises();
@@ -186,12 +185,11 @@ describe('FaqSuggestionReviewDialog', () => {
       .filter(button =>
         [
           'CAPTAIN.FAQ_SUGGESTIONS.DISMISS',
-          'CAPTAIN.FAQ_SUGGESTIONS.SAVE',
           'CAPTAIN.FAQ_SUGGESTIONS.APPROVE_FAQ',
         ].includes(button.props('label'))
       );
 
-    expect(actionButtons).toHaveLength(3);
+    expect(actionButtons).toHaveLength(2);
     expect(
       actionButtons.map(button => ({
         label: button.props('label'),
@@ -200,10 +198,6 @@ describe('FaqSuggestionReviewDialog', () => {
     ).toEqual([
       {
         label: 'CAPTAIN.FAQ_SUGGESTIONS.DISMISS',
-        disabled: 'true',
-      },
-      {
-        label: 'CAPTAIN.FAQ_SUGGESTIONS.SAVE',
         disabled: 'true',
       },
       {
@@ -227,6 +221,6 @@ describe('FaqSuggestionReviewDialog', () => {
 
     expect(
       enabledActionButtons.map(button => button.attributes('disabled'))
-    ).toEqual(['false', 'false', 'false']);
+    ).toEqual(['false', 'false']);
   });
 });

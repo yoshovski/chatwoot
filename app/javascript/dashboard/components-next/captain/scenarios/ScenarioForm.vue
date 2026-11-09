@@ -5,7 +5,7 @@ import { useVuelidate } from '@vuelidate/core';
 import { required } from '@vuelidate/validators';
 import Input from 'dashboard/components-next/input/Input.vue';
 import TextArea from 'dashboard/components-next/textarea/TextArea.vue';
-import Editor from 'dashboard/components-next/Editor/Editor.vue';
+import ActionInstructionEditor from './ActionInstructionEditor.vue';
 import ToolChip from './ToolChip.vue';
 import {
   getToolIdsFromInstruction,
@@ -19,9 +19,6 @@ const description = defineModel('description', { type: String, default: '' });
 const instruction = defineModel('instruction', { type: String, default: '' });
 
 const DESCRIPTION_MAX_LENGTH = 500;
-// Saved steps come back as plain tool:// links; show them like the chips the palette inserts.
-const TOOL_LINK_CHIP_CLASS =
-  '[&_a[href^="tool://"]]:rounded-full [&_a[href^="tool://"]]:bg-n-iris-3 [&_a[href^="tool://"]]:px-1.5 [&_a[href^="tool://"]]:py-0.5 [&_a[href^="tool://"]]:text-n-iris-11 [&_a[href^="tool://"]]:no-underline [&_a[href^="tool://"]]:font-medium';
 
 const { t } = useI18n();
 
@@ -95,7 +92,7 @@ defineExpose({ validate, reset });
     />
 
     <div class="flex flex-col gap-2">
-      <Editor
+      <ActionInstructionEditor
         v-model="instruction"
         :label="t('CAPTAIN.ASSISTANTS.SCENARIOS.FORM.INSTRUCTION.LABEL')"
         :placeholder="
@@ -106,9 +103,6 @@ defineExpose({ validate, reset });
           t('CAPTAIN.ASSISTANTS.SCENARIOS.FORM.INSTRUCTION.HELP')
         "
         :message-type="instructionError ? 'error' : 'info'"
-        :show-character-count="false"
-        :class="TOOL_LINK_CHIP_CLASS"
-        enable-captain-tools
         show-tool-palette
       />
 

@@ -1,7 +1,7 @@
 <script setup>
-import { ref, watch } from 'vue';
+import { ref, computed, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
-import Button from 'dashboard/components-next/button/Button.vue';
+import SettingsSaveBar from './SettingsSaveBar.vue';
 import RadioCard from 'dashboard/components-next/radioCard/RadioCard.vue';
 import WorkingHoursChart from './WorkingHoursChart.vue';
 
@@ -9,6 +9,10 @@ const props = defineProps({
   assistant: {
     type: Object,
     default: () => ({}),
+  },
+  save: {
+    type: Function,
+    default: null,
   },
 });
 
@@ -24,13 +28,12 @@ const RESPONSE_WINDOW = {
 
 const OPTIONS = Object.values(RESPONSE_WINDOW);
 
+const isSaving = ref(false);
 const selected = ref(RESPONSE_WINDOW.ALWAYS);
 
-const handleSubmit = () => {
-  emit('submit', {
-    config: { ...props.assistant.config, response_window: selected.value },
-  });
-};
+const savedResponseWindow = computed(
+  () => props.assistant?.config?.response_window || RESPONSE_WINDOW.ALWAYS
+);
 
 watch(
   () => props.assistant,
@@ -42,10 +45,31 @@ watch(
   },
   { immediate: true }
 );
+
+const isDirty = computed(() => selected.value !== savedResponseWindow.value);
+
+const discard = () => {
+  selected.value = savedResponseWindow.value;
+};
+
+const handleSubmit = async () => {
+  const payload = {
+    config: { ...props.assistant.config, response_window: selected.value },
+  };
+  emit('submit', payload);
+  if (props.save) {
+    isSaving.value = true;
+    try {
+      await props.save(payload);
+    } finally {
+      isSaving.value = false;
+    }
+  }
+};
 </script>
 
 <template>
-  <div class="flex flex-col gap-4">
+  <div class="flex flex-col gap-6">
     <div class="grid gap-3 lg:grid-cols-3">
       <RadioCard
         v-for="option in OPTIONS"
@@ -63,12 +87,14 @@ watch(
         @select="selected = $event"
       />
     </div>
+
     <WorkingHoursChart :response-window="selected" :name="assistant.name" />
-    <div>
-      <Button
-        :label="t('CAPTAIN.ASSISTANTS.SETTINGS.SAVE')"
-        @click="handleSubmit"
-      />
-    </div>
+
+    <SettingsSaveBar
+      :is-dirty="isDirty"
+      :is-saving="isSaving"
+      @save="handleSubmit"
+      @discard="discard"
+    />
   </div>
 </template>

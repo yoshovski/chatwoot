@@ -29,7 +29,34 @@ const props = defineProps({
     required: true,
   },
 });
-const emit = defineEmits(['close']);
+const emit = defineEmits(['close', 'sync', 'toggle', 'delete']);
+const STATUS_BADGES = {
+  finding_pages: {
+    label: 'CAPTAIN.DOCUMENTS.KNOWLEDGE_STATE.FINDING_PAGES',
+    chip: 'bg-n-blue-3 text-n-blue-11 dark:bg-n-blue-3/20',
+    icon: 'i-lucide-loader-circle animate-spin',
+  },
+  searchable: {
+    label: 'CAPTAIN.DOCUMENTS.KNOWLEDGE_STATE.SEARCHABLE',
+    chip: 'bg-n-teal-3 text-n-teal-11 dark:bg-n-teal-3/20',
+    icon: 'i-lucide-check',
+  },
+  indexing: {
+    label: 'CAPTAIN.DOCUMENTS.KNOWLEDGE_STATE.INDEXING',
+    chip: 'bg-n-amber-3 text-n-amber-11 dark:bg-n-amber-3/20',
+    icon: 'i-lucide-loader-circle animate-spin',
+  },
+  not_searchable: {
+    label: 'CAPTAIN.DOCUMENTS.KNOWLEDGE_STATE.NOT_SEARCHABLE',
+    chip: 'bg-n-ruby-3 text-n-ruby-11 dark:bg-n-ruby-3/20',
+    icon: 'i-lucide-circle-alert',
+  },
+  paused: {
+    label: 'CAPTAIN.DOCUMENTS.KNOWLEDGE_STATE.PAUSED',
+    chip: 'bg-n-slate-3 text-n-slate-11',
+    icon: 'i-lucide-eye-off',
+  },
+};
 const TAB_KEYS = {
   CONTENT: 'content',
   FAQS: 'faqs',
@@ -58,6 +85,32 @@ const showPaginationFooter = computed(
 const documentContent = computed(() => documentDetails.value?.content?.trim());
 const isPdf = computed(() => documentDetails.value?.pdf_document);
 const isMarkdown = computed(() => documentDetails.value?.markdown_document);
+const isEnabled = computed(() => documentDetails.value?.enabled !== false);
+const isFailed = computed(
+  () => documentDetails.value?.sync_status === 'failed'
+);
+const isSyncing = computed(
+  () =>
+    documentDetails.value?.status === 'in_progress' ||
+    (documentDetails.value?.sync_status === 'syncing' &&
+      documentDetails.value?.sync_in_progress)
+);
+const canSyncDocument = computed(
+  () =>
+    canManage.value &&
+    !isPdf.value &&
+    !isMarkdown.value &&
+    (documentDetails.value?.syncable !== false || isFailed.value)
+);
+const statusBadge = computed(() => {
+  if (!isEnabled.value) return STATUS_BADGES.paused;
+  if (documentDetails.value?.knowledge_state) {
+    return STATUS_BADGES[documentDetails.value.knowledge_state];
+  }
+  if (isFailed.value) return STATUS_BADGES.not_searchable;
+  if (isSyncing.value) return STATUS_BADGES.indexing;
+  return STATUS_BADGES.searchable;
+});
 const showRelatedFaqs = computed(
   () =>
     documentDetails.value.responses_count > 0 ||
@@ -70,7 +123,8 @@ const hasSafeLink = computed(() => isSafeHttpLink(sourceHref.value));
 const displayLink = computed(() => {
   if (isPdf.value) return formatDocumentLink(externalLink.value);
   if (isMarkdown.value) return documentDetails.value?.name;
-  return getDocumentDisplayPath(displayUrl.value || externalLink.value);
+  const raw = displayUrl.value || externalLink.value || '';
+  return raw.replace(/^https?:\/\//i, '') || getDocumentDisplayPath(raw);
 });
 const contentTabLabel = computed(() =>
   isPdf.value
@@ -231,7 +285,66 @@ onUnmounted(closeUsage);
     </div>
     <div v-else class="flex flex-col gap-6 min-h-48">
       <section class="flex flex-col gap-3">
-        <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <div
+          class="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-n-weak"
+        >
+          <span
+            v-if="statusBadge"
+            class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium"
+            :class="statusBadge.chip"
+          >
+            <span
+              class="size-3.5"
+              :class="statusBadge.icon"
+              aria-hidden="true"
+            />
+            <span>{{ t(statusBadge.label) }}</span>
+          </span>
+          <div v-if="canManage" class="flex flex-wrap items-center gap-2">
+            <Button
+              v-if="canSyncDocument"
+              type="button"
+              size="xs"
+              variant="outline"
+              color="slate"
+              icon="i-lucide-refresh-cw"
+              :label="
+                isFailed
+                  ? t('CAPTAIN.DOCUMENTS.OPTIONS.RETRY_SYNC')
+                  : t('CAPTAIN.DOCUMENTS.OPTIONS.SYNC_NOW')
+              "
+              @click="emit('sync', documentDetails.id)"
+            />
+            <Button
+              type="button"
+              size="xs"
+              variant="outline"
+              color="slate"
+              :icon="isEnabled ? 'i-lucide-eye-off' : 'i-lucide-eye'"
+              :label="
+                isEnabled
+                  ? t('CAPTAIN.DOCUMENTS.OPTIONS.EXCLUDE')
+                  : t('CAPTAIN.DOCUMENTS.OPTIONS.INCLUDE')
+              "
+              @click="
+                emit('toggle', {
+                  id: documentDetails.id,
+                  enabled: !isEnabled,
+                })
+              "
+            />
+            <Button
+              type="button"
+              size="xs"
+              variant="ghost"
+              color="ruby"
+              icon="i-lucide-trash"
+              :label="t('CAPTAIN.DOCUMENTS.OPTIONS.DELETE_DOCUMENT')"
+              @click="emit('delete', documentDetails.id)"
+            />
+          </div>
+        </div>
+        <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <div class="flex flex-col gap-1">
             <span class="text-xs font-medium uppercase text-n-slate-10">
               {{ t('CAPTAIN.DOCUMENTS.DETAILS.SOURCE') }}
@@ -249,14 +362,6 @@ onUnmounted(closeUsage);
             </a>
             <span v-else class="text-sm truncate text-n-slate-12">
               {{ displayLink }}
-            </span>
-          </div>
-          <div v-if="showRelatedFaqs" class="flex flex-col gap-1">
-            <span class="text-xs font-medium uppercase text-n-slate-10">
-              {{ t('CAPTAIN.DOCUMENTS.RELATED_RESPONSES.TITLE') }}
-            </span>
-            <span class="text-sm text-n-slate-12">
-              {{ totalCount }}
             </span>
           </div>
           <div class="flex flex-col gap-1">
@@ -285,29 +390,18 @@ onUnmounted(closeUsage);
           v-if="activeTabKey === TAB_KEYS.CONTENT"
           class="flex flex-col gap-3"
         >
-          <div class="flex flex-wrap items-start justify-between gap-3">
-            <div class="flex flex-col gap-1">
-              <h4 class="text-sm font-medium text-n-slate-12">
-                {{
-                  isPdf
-                    ? t('CAPTAIN.DOCUMENTS.DETAILS.PDF_TITLE')
-                    : t('CAPTAIN.DOCUMENTS.DETAILS.CONTENT_TITLE')
-                }}
-              </h4>
-            </div>
-            <div
-              v-if="documentContent && !isPdf"
-              class="flex flex-wrap items-center justify-end gap-4"
-            >
-              <Button
-                :label="t('CAPTAIN.DOCUMENTS.DETAILS.COPY_CONTENT')"
-                icon="i-lucide-copy"
-                sm
-                slate
-                link
-                @click="handleCopyContent"
-              />
-            </div>
+          <div
+            v-if="documentContent && !isPdf"
+            class="flex items-center justify-end"
+          >
+            <Button
+              :label="t('CAPTAIN.DOCUMENTS.DETAILS.COPY_CONTENT')"
+              icon="i-lucide-copy"
+              sm
+              slate
+              link
+              @click="handleCopyContent"
+            />
           </div>
           <div
             v-if="isPdf"

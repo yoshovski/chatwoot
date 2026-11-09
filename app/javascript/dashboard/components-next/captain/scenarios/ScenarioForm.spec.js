@@ -2,15 +2,6 @@ import { mount } from '@vue/test-utils';
 import { createStore } from 'vuex';
 import ScenarioForm from './ScenarioForm.vue';
 
-vi.mock('dashboard/components/widgets/WootWriter/Editor.vue', () => ({
-  default: {
-    props: ['modelValue'],
-    emits: ['input'],
-    template:
-      '<textarea class="woot-editor" :value="modelValue" @input="$emit(\'input\', $event.target.value)" />',
-  },
-}));
-
 const tools = [
   { id: 'faq_lookup', title: 'Search knowledge', emoji: '📚' },
   { id: 'handoff', title: 'Hand off to a person', emoji: '🙋' },
@@ -41,10 +32,12 @@ describe('ScenarioForm', () => {
     const wrapper = mountForm();
 
     expect(wrapper.find('input').element.value).toBe('Request a quote');
-    expect(wrapper.find('textarea:not(.woot-editor)').element.value).toBe(
+    expect(wrapper.find('textarea').element.value).toBe(
       'Use when the customer asks for a quote.'
     );
-    expect(wrapper.find('.woot-editor').exists()).toBe(true);
+    expect(
+      wrapper.find('[data-test="scenario-instruction-editor"]').exists()
+    ).toBe(true);
     expect(wrapper.text()).toContain(
       'CAPTAIN.ASSISTANTS.SCENARIOS.PALETTE.TITLE'
     );

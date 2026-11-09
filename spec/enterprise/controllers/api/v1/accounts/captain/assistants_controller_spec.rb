@@ -532,7 +532,10 @@ RSpec.describe 'Api::V1::Accounts::Captain::Assistants', type: :request do
           as: :json
 
       expect(response).to have_http_status(:success)
-      expect(json_response).to eq(approved: 3, faqs: 3, suggestions: 1, documents: 2, coverage: 75)
+      expect(json_response).to eq(
+        approved: 3, faqs: 3, suggestions: 1, documents: 2, coverage: 75,
+        failed_sources: 0, unanswered_questions: 0, paused_actions: 0, tested: false
+      )
     end
 
     it 'returns zero coverage when there are no FAQs or suggestions' do

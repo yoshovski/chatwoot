@@ -16,6 +16,7 @@ import DocumentCard from 'dashboard/components-next/captain/assistant/DocumentCa
 import DocumentFilter from 'dashboard/components-next/captain/assistant/DocumentFilter.vue';
 import KnowledgeBulkActions from 'dashboard/components-next/captain/list/KnowledgeBulkActions.vue';
 import ListHeader from 'dashboard/components-next/captain/list/ListHeader.vue';
+import { hostOf } from 'dashboard/components-next/captain/knowledge/websiteSourceHosts';
 import { useListSelection } from 'dashboard/components-next/captain/list/useListSelection';
 import Input from 'dashboard/components-next/input/Input.vue';
 import Button from 'next/button/Button.vue';
@@ -25,7 +26,6 @@ import CaptainPaywall from 'dashboard/components-next/captain/pageComponents/Pay
 import DocumentDetails from 'dashboard/components-next/captain/pageComponents/document/DocumentDetails.vue';
 import CreateDocumentDialog from 'dashboard/components-next/captain/pageComponents/document/CreateDocumentDialog.vue';
 import DocumentPageEmptyState from 'dashboard/components-next/captain/pageComponents/emptyStates/DocumentPageEmptyState.vue';
-import FeatureSpotlightPopover from 'dashboard/components-next/feature-spotlight/FeatureSpotlightPopover.vue';
 import LimitBanner from 'dashboard/components-next/captain/pageComponents/document/LimitBanner.vue';
 import CaptainDocumentAPI from 'dashboard/api/captain/document';
 import shopifyAPI from 'dashboard/api/integrations/shopify';
@@ -39,7 +39,7 @@ const { checkPermissions } = usePolicy();
 const SYNC_POLL_INTERVAL_MS = 5000;
 const SYNC_POLL_MAX_DURATION_MS = 15 * 60 * 1000;
 
-const { isOnChatwootCloud, currentAccount } = useAccount();
+const { currentAccount } = useAccount();
 const uiFlags = useMapGetter('captainDocuments/getUIFlags');
 const documents = useMapGetter('captainDocuments/getRecords');
 const isFetching = computed(() => uiFlags.value.fetchingList);
@@ -82,6 +82,12 @@ const searchQuery = ref('');
 // 'all', 'pdf', 'text', or a website host.
 const sourceFilter = ref('all');
 const documentSectionsPanel = ref(null);
+const websiteSources = ref([]);
+const discoveringWebsites = computed(() =>
+  websiteSources.value.filter(item =>
+    ['pending', 'discovering'].includes(item.status)
+  )
+);
 
 const currentAssistantId = () =>
   Number.isFinite(selectedAssistantId.value) ? selectedAssistantId.value : null;
@@ -90,6 +96,7 @@ const buildDocumentFilterParams = (page = 1) => {
   const filterParams = documentFilter.value?.buildParams(page) ?? {
     page,
     sort: 'recently_updated',
+    ...(route.query.filter ? { filter: route.query.filter } : {}),
   };
   const assistantId = currentAssistantId();
   if (assistantId) filterParams.assistantId = assistantId;
@@ -243,9 +250,21 @@ const handleSync = async id => {
 const handleToggleDocument = async ({ id, enabled }) => {
   try {
     await store.dispatch('captainDocuments/update', { id, enabled });
+    if (selectedDocument.value?.id === id) {
+      selectedDocument.value = { ...selectedDocument.value, enabled };
+    }
   } catch {
     useAlert(t('CAPTAIN.DOCUMENTS.TOGGLE_ERROR'));
   }
+};
+
+const handleDeleteFromDetails = id => {
+  selectedDocument.value =
+    documents.value.find(doc => doc.id === id) || selectedDocument.value;
+  showDocumentDetails.value = false;
+  nextTick(() => {
+    handleDelete();
+  });
 };
 
 const handleGenerateFaqs = async id => {
@@ -303,10 +322,6 @@ const onCreateSuccess = () => {
   documentSectionsPanel.value?.load();
 };
 
-const isFileSource = computed(() =>
-  ['pdf', 'text'].includes(sourceFilter.value)
-);
-
 const clearFilters = () => {
   documentFilter.value?.reset();
   searchQuery.value = '';
@@ -360,7 +375,7 @@ onMounted(() => {
 watch(
   selectedAssistantId,
   async () => {
-    documentFilter.value?.reset();
+    documentFilter.value?.reset(route.query.filter || null);
     searchQuery.value = '';
     sourceFilter.value = 'all';
     selection.clear();
@@ -383,28 +398,22 @@ onUnmounted(() => {
     :header-title="$t('CAPTAIN.AGENT_UX.SECTIONS.KNOWLEDGE')"
     :button-label="$t('CAPTAIN.DOCUMENTS.ADD_NEW')"
     :button-policy="['administrator']"
+    :show-know-more="false"
     :total-count="documentsMeta.totalCount"
     :current-page="documentsMeta.page"
-    :show-pagination-footer="!isFetching && !!documents.length"
+    :show-pagination-footer="!isFetching && documentsMeta.totalCount > 25"
     :is-fetching="isFetching"
-    :is-empty="!documents.length && !hasActiveDocumentFilters"
+    :is-empty="
+      !documents.length &&
+      !discoveringWebsites.length &&
+      !hasActiveDocumentFilters
+    "
     :feature-flag="FEATURE_FLAGS.CAPTAIN"
     @update:current-page="onPageChange"
     @click="handleCreateDocument"
   >
     <template #headerActions>
       <TestAgentButton :assistant-id="selectedAssistantId" />
-    </template>
-    <template #knowMore>
-      <FeatureSpotlightPopover
-        :button-label="$t('CAPTAIN.HEADER_KNOW_MORE')"
-        :title="$t('CAPTAIN.DOCUMENTS.EMPTY_STATE.FEATURE_SPOTLIGHT.TITLE')"
-        :note="$t('CAPTAIN.DOCUMENTS.EMPTY_STATE.FEATURE_SPOTLIGHT.NOTE')"
-        :hide-actions="!isOnChatwootCloud"
-        fallback-thumbnail="/assets/images/dashboard/captain/document-popover-light.svg"
-        fallback-thumbnail-dark="/assets/images/dashboard/captain/document-popover-dark.svg"
-        learn-more-url="https://chwt.app/captain-document"
-      />
     </template>
 
     <template #emptyState>
@@ -423,6 +432,7 @@ onUnmounted(() => {
         :assistant-id="selectedAssistantId"
         :can-manage="canManageDocuments"
         @manage="websitePagesDialog.open($event)"
+        @websites-loaded="websiteSources = $event"
       >
         <Input
           v-model="searchQuery"
@@ -435,7 +445,7 @@ onUnmounted(() => {
         <template #filters>
           <DocumentFilter
             ref="documentFilter"
-            :show-status="!isFileSource"
+            :initial-status="route.query.filter || null"
             @change="onFiltersChanged"
           />
         </template>
@@ -464,6 +474,44 @@ onUnmounted(() => {
       </div>
 
       <template v-else>
+        <div
+          v-if="sourceFilter === 'all' && discoveringWebsites.length"
+          class="flex flex-col gap-2 mb-4"
+        >
+          <div
+            v-for="site in discoveringWebsites"
+            :key="`discovering-${site.id}`"
+            class="flex items-center justify-between p-3.5 rounded-xl border border-n-weak bg-n-alpha-1 gap-3"
+          >
+            <div class="flex items-center gap-3 min-w-0">
+              <div
+                class="flex items-center justify-center size-8 rounded-lg shrink-0 bg-n-blue-3 text-n-blue-11 dark:bg-n-blue-3/20"
+              >
+                <span
+                  class="i-lucide-loader-circle size-4 animate-spin"
+                  aria-hidden="true"
+                />
+              </div>
+              <div class="flex flex-col min-w-0">
+                <span class="text-sm font-medium text-n-slate-12 truncate">
+                  {{ hostOf(site.url) }}
+                </span>
+                <span class="text-xs text-n-slate-11">
+                  {{ $t('CAPTAIN.DOCUMENTS.KNOWLEDGE_STATE.FINDING_PAGES') }}
+                </span>
+              </div>
+            </div>
+            <Button
+              v-if="canManageDocuments"
+              size="xs"
+              variant="faded"
+              color="slate"
+              :label="$t('PLATFORM_NAV.MANAGE_PAGES')"
+              @click="websitePagesDialog.open(site)"
+            />
+          </div>
+        </div>
+
         <section
           :aria-label="$t('PLATFORM_NAV.DATA_SOURCES')"
           class="border rounded-xl border-n-weak bg-n-solid-1"
@@ -472,7 +520,7 @@ onUnmounted(() => {
             :selection="selection"
             :selectable="canManageDocuments"
             :label="$t('KNOWLEDGE_LIST.COLUMNS.NAME')"
-            :columns="['status', 'updated', 'inUse', 'actions']"
+            :columns="['status', 'updated', 'actions']"
           >
             <Button
               v-if="hasActiveDocumentFilters"
@@ -525,6 +573,9 @@ onUnmounted(() => {
       v-if="showDocumentDetails"
       :captain-document="selectedDocument"
       @close="handleDocumentDetailsClose"
+      @sync="handleSync"
+      @toggle="handleToggleDocument"
+      @delete="handleDeleteFromDetails"
     />
     <CreateDocumentDialog
       v-if="showCreateDialog"

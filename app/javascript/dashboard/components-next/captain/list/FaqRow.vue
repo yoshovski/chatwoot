@@ -34,9 +34,8 @@ const emit = defineEmits([
 ]);
 
 const { t } = useI18n();
-const { formatMessage, getPlainText } = useMessageFormatter();
+const { getPlainText } = useMessageFormatter();
 const exactTimestamp = useExactTimestamp();
-const expanded = ref(false);
 
 const selected = computed({
   get: () => props.isSelected,
@@ -131,35 +130,30 @@ const origin = computed(() => {
 
 <template>
   <div
-    class="group flex items-start gap-3 px-4 py-3 border-b border-n-weak last:border-b-0 last:rounded-b-xl transition-colors hover:bg-n-alpha-1"
+    class="group flex items-center gap-3 px-4 py-3 border-b border-n-weak last:border-b-0 last:rounded-b-xl transition-colors hover:bg-n-alpha-1"
     :class="{ 'bg-n-brand/5': isSelected }"
   >
-    <Checkbox
+    <div
       v-if="canManage"
-      v-model="selected"
-      class="mt-0.5"
-      :aria-label="question"
-    />
-    <div class="flex flex-col flex-1 min-w-0 gap-1">
+      class="transition-opacity"
+      :class="
+        isSelected
+          ? 'opacity-100'
+          : 'opacity-40 group-hover:opacity-100 focus-within:opacity-100'
+      "
+    >
+      <Checkbox v-model="selected" :aria-label="question" />
+    </div>
+    <div class="flex flex-col flex-1 min-w-0 gap-0.5">
       <button
         type="button"
-        class="flex items-center gap-1.5 p-0 text-sm font-medium text-start bg-transparent border-0 hover:text-n-blue-11"
+        class="p-0 text-sm font-medium text-start bg-transparent border-0 outline-transparent line-clamp-2 underline-offset-2 hover:underline focus-visible:underline"
         :class="enabled ? 'text-n-slate-12' : 'text-n-slate-11'"
-        :aria-expanded="expanded"
-        @click="expanded = !expanded"
+        @click="emit('action', { action: 'edit', id: props.id })"
       >
-        <span class="truncate">{{ question }}</span>
-        <Icon
-          :icon="expanded ? 'i-lucide-chevron-up' : 'i-lucide-chevron-down'"
-          class="size-3.5 shrink-0 text-n-slate-10"
-        />
+        {{ question }}
       </button>
-      <div
-        v-if="expanded"
-        v-dompurify-html="formatMessage(answer)"
-        class="text-sm leading-relaxed text-n-slate-12 [&_p]:mb-2 [&_p:last-child]:mb-0 [&_ul]:ps-5 [&_ul]:list-disc [&_ol]:ps-5 [&_ol]:list-decimal [&_a]:text-n-blue-11 [&_a]:underline"
-      />
-      <span v-else class="text-xs truncate text-n-slate-11">
+      <span class="text-xs truncate text-n-slate-11">
         {{ getPlainText(answer) }}
       </span>
     </div>
@@ -206,9 +200,18 @@ const origin = computed(() => {
     </div>
     <div
       v-on-clickaway="() => (showMenu = false)"
-      class="relative"
+      class="relative flex items-center justify-end gap-0.5"
       :class="LIST_COLUMNS.actions"
     >
+      <Button
+        v-if="canManage"
+        :aria-label="$t('KNOWLEDGE_LIST.EDIT')"
+        icon="i-lucide-pencil"
+        color="slate"
+        variant="ghost"
+        size="xs"
+        @click="emit('action', { action: 'edit', id: props.id })"
+      />
       <Button
         v-if="canManage"
         :aria-label="$t('KNOWLEDGE_LIST.MORE_ACTIONS')"

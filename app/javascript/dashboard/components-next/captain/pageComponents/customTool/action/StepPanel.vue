@@ -3,6 +3,7 @@ import { computed, nextTick, onMounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import SidePanel from 'dashboard/components-next/side-panel/SidePanel.vue';
 import Button from 'dashboard/components-next/button/Button.vue';
+import EditorSection from './EditorSection.vue';
 import StepCard from './StepCard.vue';
 import TestPanel from './TestPanel.vue';
 import OutputsTable from './OutputsTable.vue';
@@ -97,19 +98,30 @@ onMounted(() => panel.value.open());
     </template>
 
     <div class="grid gap-8 lg:grid-cols-2">
-      <StepCard
-        v-model:step="form.steps[index]"
-        :variables="variablesBefore(form, index)"
-        :same-as-options="sameAsOptions(form.steps, index)"
-        :errors="errors[`steps.${step.key}`] || []"
-      />
+      <EditorSection
+        :number="1"
+        :title="
+          step.type === 'request'
+            ? t('CAPTAIN.CUSTOM_TOOLS.ACTION.STEPS.REQUEST')
+            : t('CAPTAIN.CUSTOM_TOOLS.ACTION.STEPS.VERIFY')
+        "
+        :done="Boolean(step.type === 'request' ? step.url : step.compare)"
+      >
+        <StepCard
+          v-model:step="form.steps[index]"
+          :variables="variablesBefore(form, index)"
+          :same-as-options="sameAsOptions(form.steps, index)"
+          :errors="errors[`steps.${step.key}`] || []"
+        />
+      </EditorSection>
       <div
         class="flex flex-col gap-6 lg:ps-8 lg:border-s lg:border-n-weak min-w-0"
       >
-        <section class="flex flex-col gap-3">
-          <h4 class="mb-0 text-sm font-medium text-n-slate-12">
-            {{ t('CAPTAIN.CUSTOM_TOOLS.ACTION.TEST.TITLE') }}
-          </h4>
+        <EditorSection
+          :number="2"
+          :title="t('CAPTAIN.CUSTOM_TOOLS.ACTION.TEST.TITLE')"
+          :done="Boolean(result)"
+        >
           <TestPanel
             v-model:form="form"
             v-model:result="result"
@@ -118,11 +130,14 @@ onMounted(() => panel.value.open());
             @add-output="addOutput"
             @focus-output="focusOutput"
           />
-        </section>
-        <section v-if="step.type === 'request'" class="flex flex-col gap-3">
-          <h4 class="mb-0 text-sm font-medium text-n-slate-12">
-            {{ t('CAPTAIN.CUSTOM_TOOLS.ACTION.OUTPUTS.TITLE') }}
-          </h4>
+        </EditorSection>
+        <EditorSection
+          v-if="step.type === 'request'"
+          :number="3"
+          :title="t('CAPTAIN.CUSTOM_TOOLS.ACTION.OUTPUTS.TITLE')"
+          :done="form.outputs.some(o => o.step_key === step.key)"
+          optional
+        >
           <OutputsTable
             v-model:outputs="form.outputs"
             :step-key="step.key"
@@ -131,7 +146,7 @@ onMounted(() => panel.value.open());
             :focused-key="focusedOutputKey"
             :errors="errors"
           />
-        </section>
+        </EditorSection>
       </div>
     </div>
 

@@ -5,7 +5,6 @@ import { dynamicTime } from 'shared/helpers/timeHelper';
 import { useExactTimestamp } from 'shared/composables/useExactTimestamp';
 
 import Button from 'dashboard/components-next/button/Button.vue';
-import CardLayout from 'dashboard/components-next/CardLayout.vue';
 import Icon from 'dashboard/components-next/icon/Icon.vue';
 
 const props = defineProps({
@@ -41,87 +40,92 @@ const language = computed(() =>
 </script>
 
 <template>
-  <CardLayout>
+  <div
+    class="group flex items-center gap-3 px-4 py-3 border-b border-n-weak last:border-b-0 transition-colors hover:bg-n-alpha-1"
+  >
     <div
-      class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between"
+      class="flex items-center justify-center size-6 rounded shrink-0 bg-n-purple-3 text-n-purple-11 dark:bg-n-purple-3/20"
     >
-      <div class="min-w-0">
-        <div class="mb-2 flex flex-wrap items-center gap-2">
-          <span
-            class="inline-flex items-center gap-1.5 rounded-full bg-n-brand/10 px-2.5 py-1 text-xs font-medium text-n-blue-11"
-          >
-            <Icon icon="i-lucide-messages-square" class="size-3.5" />
-            {{ sourceLabel }}
-          </span>
-          <span
-            v-if="language"
-            class="rounded-full bg-n-alpha-2 px-2.5 py-1 text-xs font-medium text-n-slate-11"
-          >
-            {{ language }}
-          </span>
-        </div>
-        <h3 class="text-base font-medium leading-6 text-n-slate-12">
-          {{ suggestion.question }}
-        </h3>
+      <Icon icon="i-lucide-sparkles" class="size-3.5" />
+    </div>
+    <div class="flex flex-col flex-1 min-w-0 gap-0.5">
+      <button
+        type="button"
+        class="p-0 text-sm font-medium text-start bg-transparent border-0 outline-transparent line-clamp-2 text-n-slate-12 underline-offset-2 hover:underline focus-visible:underline"
+        @click="emit('review', suggestion)"
+      >
+        {{ suggestion.question }}
+      </button>
+      <span class="text-xs text-n-slate-11 truncate">
+        {{ suggestion.answer }}
+      </span>
+      <div class="flex sm:hidden items-center gap-2 mt-0.5">
+        <span
+          class="inline-flex items-center gap-1 rounded-full bg-n-brand/10 px-1.5 py-0.5 text-[11px] font-medium text-n-blue-11 dark:bg-n-brand/20"
+        >
+          <Icon icon="i-lucide-messages-square" class="size-3" />
+          {{ sourceLabel }}
+        </span>
       </div>
+    </div>
+    <div class="hidden sm:flex items-center w-36 shrink-0">
+      <span
+        class="inline-flex items-center gap-1.5 rounded-full bg-n-brand/10 px-2 py-0.5 text-xs font-medium text-n-blue-11 dark:bg-n-brand/20"
+      >
+        <Icon icon="i-lucide-messages-square" class="size-3" />
+        {{ sourceLabel }}
+      </span>
+    </div>
+    <div
+      class="hidden md:flex items-center gap-1.5 w-36 shrink-0 text-xs text-n-slate-10"
+    >
+      <span
+        v-if="language"
+        class="rounded bg-n-alpha-2 px-1 py-0.5 text-[10px] font-medium text-n-slate-11 shrink-0"
+      >
+        {{ language }}
+      </span>
+      <span
+        v-tooltip.top="{
+          content: exactTimestamp(
+            suggestion.updated_at || suggestion.created_at
+          ),
+          delay: { show: 500, hide: 0 },
+        }"
+        class="whitespace-nowrap"
+      >
+        {{ updatedAt }}
+      </span>
+    </div>
+    <div class="flex items-center justify-end sm:w-64 shrink-0 gap-1.5">
       <Button
+        type="button"
+        :label="$t('CAPTAIN.FAQ_SUGGESTIONS.DISMISS')"
+        size="xs"
+        variant="ghost"
+        color="slate"
+        class="hidden sm:inline-flex"
+        :disabled="isLoading"
+        @click="emit('dismiss', suggestion)"
+      />
+      <Button
+        type="button"
         :label="$t('CAPTAIN.FAQ_SUGGESTIONS.REVIEW')"
         icon="i-lucide-list-collapse"
-        size="sm"
+        size="xs"
         variant="faded"
         color="slate"
-        class="shrink-0"
         @click="emit('review', suggestion)"
       />
+      <Button
+        type="button"
+        :label="$t('CAPTAIN.FAQ_SUGGESTIONS.APPROVE')"
+        icon="i-lucide-circle-check-big"
+        size="xs"
+        :is-loading="isLoading"
+        :disabled="isLoading"
+        @click="emit('approve', suggestion)"
+      />
     </div>
-
-    <p class="line-clamp-2 text-sm leading-5 text-n-slate-11">
-      {{ suggestion.answer }}
-    </p>
-
-    <div
-      class="flex flex-col gap-3 border-t border-n-weak pt-2.5 sm:flex-row sm:items-center sm:justify-between"
-    >
-      <div
-        class="flex min-w-0 flex-wrap items-center gap-x-4 gap-y-2 text-xs text-n-slate-10"
-      >
-        <span class="inline-flex min-w-0 items-center gap-1.5">
-          <Icon icon="i-woot-captain" class="size-3.5 shrink-0" />
-          <span class="truncate">{{ suggestion.assistant?.name }}</span>
-        </span>
-        <span
-          v-tooltip.top="{
-            content: exactTimestamp(
-              suggestion.updated_at || suggestion.created_at
-            ),
-            delay: { show: 500, hide: 0 },
-          }"
-          class="inline-flex items-center gap-1.5"
-        >
-          <Icon icon="i-lucide-clock-3" class="size-3.5" />
-          {{ updatedAt }}
-        </span>
-      </div>
-
-      <div class="flex items-center gap-2">
-        <Button
-          :label="$t('CAPTAIN.FAQ_SUGGESTIONS.DISMISS')"
-          icon="i-lucide-circle-x"
-          size="sm"
-          variant="ghost"
-          color="slate"
-          :disabled="isLoading"
-          @click="emit('dismiss', suggestion)"
-        />
-        <Button
-          :label="$t('CAPTAIN.FAQ_SUGGESTIONS.APPROVE')"
-          icon="i-lucide-circle-check-big"
-          size="sm"
-          :is-loading="isLoading"
-          :disabled="isLoading"
-          @click="emit('approve', suggestion)"
-        />
-      </div>
-    </div>
-  </CardLayout>
+  </div>
 </template>

@@ -6,10 +6,11 @@ import DocumentFiltersBar from 'dashboard/components-next/captain/assistant/Docu
 const props = defineProps({
   // Website sync states do not apply to uploaded files or text.
   showStatus: { type: Boolean, default: true },
+  initialStatus: { type: String, default: null },
 });
 const emit = defineEmits(['change']);
 
-const status = ref(null);
+const status = ref(props.initialStatus || null);
 const sort = ref('recently_updated');
 
 const hasActiveFilters = computed(() => Boolean(status.value));
@@ -31,8 +32,8 @@ const handleSortSelect = sortKey => {
   emit('change');
 };
 
-const reset = () => {
-  status.value = null;
+const reset = (nextStatus = null) => {
+  status.value = nextStatus;
   sort.value = 'recently_updated';
 };
 

@@ -528,30 +528,107 @@
       "METRICS": {
         "HANDLED": {
           "LABEL": "Conversations handled",
-          "HINT": "Conversations where Captain replied to the customer or handed the conversation to your team."
+          "HINT": "Conversations where the AI agent replied to the customer or handed the conversation to your team."
         },
         "AUTO_RESOLUTION": {
           "LABEL": "Auto-resolution rate",
-          "HINT": "The share of handled conversations Captain resolved without help from your team. Higher means Captain resolved more on its own."
+          "HINT": "The share of handled conversations the AI agent resolved without help from your team."
         },
         "HANDOFF": {
           "LABEL": "Handoff rate",
-          "HINT": "The share of handled conversations Captain passed to your team. Lower means fewer conversations needed an agent."
+          "HINT": "The share of handled conversations the AI agent passed to your team."
         },
         "HOURS_SAVED": {
           "LABEL": "Time saved",
-          "HINT": "An estimate of how much agent reply time Captain saved.",
-          "NOTE": "Based on two minutes saved for each public Captain reply."
+          "HINT": "An estimate of how much team reply time the AI agent saved.",
+          "NOTE": "Based on two minutes saved for each public AI agent reply."
         },
         "REOPEN": {
           "LABEL": "Reopen rate",
-          "HINT": "The share of Captain-resolved conversations that customers returned to later.",
+          "HINT": "The share of AI agent resolutions that customers returned to later.",
           "NOTE": "Lower means more resolutions stayed resolved."
         },
         "DEPTH": {
           "LABEL": "Messages / conversation",
-          "HINT": "The average number of replies Captain sent in each conversation it handled.",
+          "HINT": "The average number of replies the AI agent sent in each conversation it handled.",
           "NOTE": "A lower number can mean quicker answers, but complex questions may need more replies."
+        }
+      },
+      "VIEW_REPORT": "View report",
+      "REPORT_PANEL": {
+        "TITLE": "Performance report",
+        "DESCRIPTION": "Detailed outcomes, resolution trends, and knowledge coverage for this AI agent.",
+        "OUTCOMES_TITLE": "Additional outcomes"
+      },
+      "STATUS_LINE": {
+        "LIVE_SINGLE": "Live on {channel}",
+        "LIVE_MULTIPLE": "Live on {channel} +{extra}",
+        "NOT_LIVE": "Not live on any channel",
+        "AUDIENCE_ALL": "All visitors",
+        "AUDIENCE_FILTERED": "Selected audience",
+        "SCHEDULE_ALWAYS": "Always available",
+        "SCHEDULE_BUSINESS_HOURS": "During working hours",
+        "SCHEDULE_OUTSIDE_HOURS": "Outside working hours",
+        "EDIT_CHANNELS": "Edit in Channels",
+        "EDIT_AUDIENCE": "Audience",
+        "EDIT_SCHEDULE": "Working hours"
+      },
+      "READINESS": {
+        "TITLE": "Get your AI agent ready",
+        "DESCRIPTION": "Finish these setup steps before going live with customers.",
+        "PROGRESS": "{completed} of {total} complete",
+        "STEPS": {
+          "KNOWLEDGE": {
+            "TITLE": "Knowledge ready",
+            "DONE_BOTH": "{sources} · {faqs}",
+            "SOURCES_COUNT": "{count} source | {count} sources",
+            "FAQS_COUNT": "{count} FAQ | {count} FAQs",
+            "TODO": "Add your website, files, or FAQs so the AI agent can answer questions.",
+            "ACTION": "Add knowledge",
+            "EDIT": "Edit"
+          },
+          "HANDOFF": {
+            "TITLE": "Handoff set",
+            "DONE_TRANSFER": "Transfers to your team when a person is needed",
+            "DONE_EMAIL": "Collects email for a team follow-up",
+            "DONE_NEVER": "Replies on its own without transferring",
+            "TODO": "Choose how conversations reach your team when a person is needed.",
+            "ACTION": "Set up handoff",
+            "EDIT": "Edit"
+          },
+          "TESTED": {
+            "TITLE": "Tested",
+            "DONE": "Tested in the playground",
+            "TODO": "Ask a few sample questions to check how the AI agent replies.",
+            "ACTION": "Test AI agent",
+            "EDIT": "Test again"
+          },
+          "CHANNEL": {
+            "TITLE": "Channel live",
+            "DONE": "Live on {channel}",
+            "TODO": "Choose which connected channels this AI agent replies on.",
+            "ACTION": "Choose channels",
+            "EDIT": "Edit"
+          }
+        }
+      },
+      "NEEDS_ATTENTION": {
+        "TITLE": "Needs attention",
+        "ALL_CLEAR": "Everything looks good — no failed sources, unanswered questions, or paused actions.",
+        "FAILED_SOURCES": {
+          "TITLE": "{count} source failed to sync | {count} sources failed to sync",
+          "DESCRIPTION": "The AI agent cannot use failed sources until they are fixed or removed.",
+          "ACTION": "Review sources"
+        },
+        "UNANSWERED_QUESTIONS": {
+          "TITLE": "{count} unanswered question | {count} unanswered questions",
+          "DESCRIPTION": "Questions customers asked that the AI agent could not answer from your knowledge.",
+          "ACTION": "Answer questions"
+        },
+        "PAUSED_ACTIONS": {
+          "TITLE": "{count} paused or disconnected action | {count} paused or disconnected actions",
+          "DESCRIPTION": "Paused API actions and disconnected MCP servers are skipped during conversations.",
+          "ACTION": "Review actions"
         }
       },
       "DRILLDOWN": {
@@ -565,15 +642,15 @@
         "COVERAGE": "{pct}% approved",
         "APPROVED": "Approved FAQs",
         "SUGGESTIONS": "FAQ suggestions",
-        "DOCUMENTS": "Documents"
+        "DOCUMENTS": "Sources"
       },
       "LINKS": {
         "DOCS": {
-          "TITLE": "Captain docs",
-          "DESCRIPTION": "Guides and how-tos for Captain"
+          "TITLE": "AI agent docs",
+          "DESCRIPTION": "Guides and how-tos"
         },
         "PLAYGROUND": {
-          "TITLE": "Playground",
+          "TITLE": "Test AI agent",
           "DESCRIPTION": "Test this AI agent's replies"
         },
         "BILLING": {
@@ -586,7 +663,7 @@
         "SUMMARY": {
           "GREETING": "Hello, {name}!",
           "DEFAULT_NAME": "there",
-          "EMPTY": "Captain's performance summary will appear here when enough activity is available.",
+          "EMPTY": "The AI agent's performance summary will appear here when enough activity is available.",
           "PREVIOUS": "Previous summary point",
           "NEXT": "Next summary point"
         },
@@ -597,17 +674,17 @@
         },
         "METRICS": {
           "TIME_SAVED": {
-            "LABEL": "Saved in agent effort and time"
+            "LABEL": "Saved in team effort and time"
           },
           "DURABLE": {
-            "LABEL": "Captain resolutions remained closed",
+            "LABEL": "AI agent resolutions remained closed",
             "NOT_APPLICABLE_HINT": "No resolutions in this period have seven days of follow-up yet. Durability is unavailable.",
-            "HINT": "The share of Captain-resolved conversations that were still closed seven days later.",
+            "HINT": "The share of AI agent resolutions that were still closed seven days later.",
             "NOTE": "Only resolutions old enough to observe for seven days are included."
           },
           "MEDIAN_RESOLUTION": {
             "LABEL": "Median resolution time",
-            "HINT": "The typical time from when a conversation reached Captain until it was resolved.",
+            "HINT": "The typical time from when a conversation reached the AI agent until it was resolved.",
             "NOTE": "Lower means customers generally got resolved sooner."
           },
           "DEPTH": {
@@ -616,10 +693,10 @@
           "OF_TOTAL": "of {total}"
         },
         "RESOLUTION_FLOW": {
-          "ARIA_LABEL": "Flow of handled conversations through Captain and team outcomes",
+          "ARIA_LABEL": "Flow of handled conversations through AI agent and team outcomes",
           "NODES": {
             "HANDLED": "Handled",
-            "RESOLVED_BY_CAPTAIN": "Resolved by Captain",
+            "RESOLVED_BY_CAPTAIN": "Auto-resolved",
             "HANDED_OFF": "Handed off",
             "CLOSED_WITH_TEAM": "Closed with team",
             "REOPENED": "Reopened in 7d",
@@ -649,16 +726,16 @@
           "CURRENT_PERIOD": "Current period",
           "PREVIOUS_PERIOD": "Previous period",
           "HANDLED": "Handled",
-          "RESOLVED": "Resolved by Captain",
-          "ARIA_LABEL": "Handled and Captain-resolved conversations by reporting period",
-          "RATE_ARIA_LABEL": "Current and previous Captain resolution rates"
+          "RESOLVED": "Auto-resolved",
+          "ARIA_LABEL": "Handled and auto-resolved conversations by reporting period",
+          "RATE_ARIA_LABEL": "Current and previous AI agent resolution rates"
         },
         "CSAT": {
-          "TITLE": "Captain CSAT",
-          "AUTONOMOUS": "Captain-resolved conversations",
-          "AUTONOMOUS_HINT": "The average customer rating for conversations Captain resolved without help from your team.",
-          "ASSISTED": "Captain-assisted conversations",
-          "ASSISTED_HINT": "The average customer rating when Captain helped before your team resolved the conversation.",
+          "TITLE": "Customer satisfaction (CSAT)",
+          "AUTONOMOUS": "Auto-resolved conversations",
+          "AUTONOMOUS_HINT": "The average customer rating for conversations the AI agent resolved without help from your team.",
+          "ASSISTED": "AI-assisted conversations",
+          "ASSISTED_HINT": "The average customer rating when the AI agent helped before your team resolved the conversation.",
           "VS_HUMANS": "{value} vs humans"
         },
         "USAGE": {
@@ -965,7 +1042,7 @@
         "AUDIENCE": {
           "EVERYONE": {
             "LABEL": "Everyone",
-            "DESC": "{name} helps every customer in connected inboxes."
+            "DESC": "{name} helps every customer in connected channels."
           },
           "SPECIFIC": {
             "LABEL": "Only some customers",
@@ -996,11 +1073,11 @@
           },
           "BUSINESS_HOURS": {
             "LABEL": "During business hours",
-            "DESC": "{name} works alongside your team, within each inbox's business hours."
+            "DESC": "{name} works alongside your team, within each channel's business hours."
           },
           "OUTSIDE_BUSINESS_HOURS": {
             "LABEL": "When your team is off",
-            "DESC": "{name} covers the hours when each inbox is closed."
+            "DESC": "{name} covers the hours when each channel is closed."
           }
         }
       },
@@ -1042,8 +1119,8 @@
           }
         },
         "IDENTITY": {
-          "TITLE": "Who {name} is",
-          "DESCRIPTION": "The name and photo customers see, and who {name} works for.",
+          "TITLE": "Public identity",
+          "DESCRIPTION": "The name, photo, and company customers see in the chat widget.",
           "WORKS_FOR": "Works for",
           "WORKS_FOR_PLACEHOLDER": "Your shop or product name",
           "ABOUT": "About your business",
@@ -1051,8 +1128,9 @@
           "PREVIEW_LABEL": "Preview in the chat window",
           "PREVIEW_GREETING": "Hi! I'm {name}. How can I help?",
           "PREVIEW_QUESTION": "Do you ship to Germany?",
-          "REMOVE_TITLE": "Remove {name}",
-          "REMOVE_DESCRIPTION": "Disconnects {name} from every inbox and deletes the knowledge it learned."
+          "DANGER_ZONE_TITLE": "Danger zone",
+          "REMOVE_TITLE": "Delete AI agent",
+          "REMOVE_DESCRIPTION": "Permanently deletes {name}, disconnects it from all inboxes, and erases its learned knowledge."
         },
         "BEHAVIOR": {
           "TITLE": "How {name} replies",
@@ -1169,13 +1247,23 @@
         "WORKING_HOURS": {
           "TITLE": "When {name} works",
           "DESCRIPTION": "Outside these hours, conversations go straight to your team.",
+          "SUMMARY_TITLE": "Working hours",
+          "PANEL_TITLE": "Edit working hours",
+          "PANEL_DESC": "Choose when {name} responds to incoming conversations.",
           "WEEK": "A typical week",
           "LEGEND_TEAM": "Your team",
-          "NOTE": "The chart assumes 09:00 to 17:00 on weekdays. {name} follows the business hours set on each inbox; inboxes without business hours are always covered."
+          "NOTE": "Assumes 09:00 to 17:00 on weekdays, following the business hours configured on each connected channel."
         },
         "AUDIENCE_PAGE": {
           "TITLE": "Who {name} helps",
-          "DESCRIPTION": "Everyone else goes straight to your team."
+          "DESCRIPTION": "Everyone else goes straight to your team.",
+          "SUMMARY_TITLE": "Audience",
+          "SUMMARY_EVERYONE": "All visitors — {name} helps every customer across connected channels.",
+          "SUMMARY_SPECIFIC": "Specific visitors — {count} filter condition configured | Specific visitors — {count} filter conditions configured",
+          "PANEL_TITLE": "Edit audience",
+          "PANEL_DESC": "Choose who receives AI agent replies on connected channels.",
+          "ACTIVE_RULES": "Active filter rules",
+          "MATCHING_VISITORS": "Only visitors matching these conditions receive AI agent replies."
         },
         "BOUNDARIES": {
           "TITLE": "What {name} won't do",
@@ -2235,12 +2323,12 @@
     },
     "DOCUMENTS": {
       "HEADER": "Sources",
-      "ADD_NEW": "Add source",
+      "ADD_NEW": "Add knowledge",
       "STATUS": {
-        "PAUSED": "Paused"
+        "PAUSED": "Excluded"
       },
-      "PAUSE": "Disable for AI",
-      "RESUME": "Enable for AI",
+      "PAUSE": "Exclude from answers",
+      "RESUME": "Include in answers",
       "TOGGLE_ERROR": "Could not update source status. Please try again.",
       "GENERATE_FAQS": {
         "SUCCESS_MESSAGE": "FAQs are being generated",
@@ -2260,55 +2348,56 @@
       },
       "FAQ_COUNT": "{n} FAQ | {n} FAQs",
       "KNOWLEDGE_STATE": {
-        "SEARCHABLE": "Searchable",
-        "INDEXING": "Indexing…",
-        "NOT_SEARCHABLE": "Not searchable",
-        "PAUSED": "Paused",
-        "TOOLTIP": "Your AI agent searches this page's text directly. FAQ sections found on the page are imported as separate FAQs."
+        "FINDING_PAGES": "Finding pages",
+        "SEARCHABLE": "Ready",
+        "INDEXING": "Importing",
+        "NOT_SEARCHABLE": "Failed",
+        "PAUSED": "Excluded",
+        "TOOLTIP": "Your AI agent searches this source directly. FAQ sections found on the page are imported as separate FAQs."
       },
       "USED_IN_CONVERSATIONS": "Used in {n} conversation | Used in {n} conversations",
-      "NO_USED_CONVERSATIONS": "No conversations found for this document.",
+      "NO_USED_CONVERSATIONS": "No conversations found for this source.",
       "BULK_DELETE": {
-        "TITLE": "Delete documents?",
-        "DESCRIPTION": "Are you sure you want to delete the selected documents? This action cannot be undone.",
+        "TITLE": "Delete sources?",
+        "DESCRIPTION": "Are you sure you want to delete the selected sources? This action cannot be undone.",
         "CONFIRM": "Yes, delete all",
-        "SUCCESS_MESSAGE": "Documents deleted successfully",
-        "ERROR_MESSAGE": "There was an error deleting the documents, please try again."
+        "SUCCESS_MESSAGE": "Sources deleted successfully",
+        "ERROR_MESSAGE": "There was an error deleting the sources, please try again."
       },
       "BULK_SYNC": {
-        "SUCCESS_MESSAGE_ONE": "Refresh queued for 1 document",
-        "SUCCESS_MESSAGE": "Refresh queued for {count} documents",
-        "ZERO_MESSAGE": "No documents marked for refresh.",
+        "SUCCESS_MESSAGE_ONE": "Refresh queued for 1 source",
+        "SUCCESS_MESSAGE": "Refresh queued for {count} sources",
+        "ZERO_MESSAGE": "No sources marked for refresh.",
         "ERROR_MESSAGE": "There was an error queuing the refresh, please try again."
       },
       "SYNC": {
-        "QUEUED_MESSAGE": "Refresh queued. We'll update the document shortly.",
+        "QUEUED_MESSAGE": "Refresh queued. We'll update the source shortly.",
         "ERROR_MESSAGE": "Could not queue refresh, please try again."
       },
       "FILTERS": {
         "STATUS": {
-          "ANY": "Any status",
-          "ON": "On",
-          "OFF": "Off",
-          "UPDATED": "Updated",
-          "NEEDS_UPDATE": "Needs update",
-          "UPDATING": "Updating",
+          "ANY": "All statuses",
+          "ON": "Included",
+          "OFF": "Excluded",
+          "UPDATED": "Ready",
+          "NEEDS_UPDATE": "Needs refresh",
+          "UPDATING": "Importing",
           "FAILED": "Failed"
         },
         "SORT": {
           "RECENTLY_UPDATED": "Recently updated",
-          "RECENTLY_CREATED": "Recently created",
+          "RECENTLY_CREATED": "Recently added",
           "MOST_USED": "Most used in conversations"
         },
-        "SEARCH_PLACEHOLDER": "Search..."
+        "SEARCH_PLACEHOLDER": "Search sources..."
       },
       "SYNC_STATUS": {
-        "SYNCED": "last updated {time}",
-        "SYNCING": "updating...",
-        "STALE_SYNC": "update stalled",
-        "FAILED": "Failed to sync",
-        "FAILED_REASON": "Failed to sync: {error}",
-        "NEVER_SYNCED": "not updated yet"
+        "SYNCED": "Updated {time}",
+        "SYNCING": "Importing",
+        "STALE_SYNC": "Failed",
+        "FAILED": "Failed",
+        "FAILED_REASON": "Failed: {error}",
+        "NEVER_SYNCED": "Not imported yet"
       },
       "SYNC_ERRORS": {
         "NOT_FOUND": "Page not found",
@@ -2317,11 +2406,11 @@
         "CONTENT_EMPTY": "Page returned empty content",
         "FETCH_FAILED": "Could not fetch page",
         "SYNC_ERROR": "Unexpected error",
-        "DEFAULT": "Sync error",
+        "DEFAULT": "Import error",
         "RENDERING_REQUIRED": "This page needs JavaScript rendering. Configure the website renderer and retry.",
         "ROBOTS_DISALLOWED": "This page is excluded by the website’s robots.txt.",
         "THIN_CONTENT": "Too little text to be useful knowledge",
-        "DUPLICATE_CONTENT": "Same text as another page of this agent",
+        "DUPLICATE_CONTENT": "Same text as another page of this AI agent",
         "INDEXING_TIMEOUT": "The knowledge base took too long to index this page. It is checked again automatically.",
         "INDEXING_FAILED": "The knowledge base could not index this content",
         "KNOWLEDGE_NOT_CONFIGURED": "The knowledge base is not configured for this account",
@@ -2329,10 +2418,11 @@
       },
       "RELATED_RESPONSES": {
         "TITLE": "Related FAQs",
-        "EMPTY": "No FAQs have been generated from this document yet."
+        "EMPTY": "No FAQs have been generated from this source yet."
       },
       "DETAILS": {
-        "DESCRIPTION": "Review the source content and where it has been used.",
+        "DESCRIPTION": "Review the source content, status, and where it has been used.",
+        "STATUS": "Status",
         "SOURCE": "Source",
         "GENERATED_FAQS": "Generated FAQs",
         "USED_IN_CONVERSATIONS": "Used in conversations",
@@ -2350,26 +2440,33 @@
         "VIEW_RAW": "View raw",
         "VIEW_PREVIEW": "View preview",
         "UNREADABLE_CONTENT": "This content is not available in a readable format. Open the original source to review it.",
-        "EMPTY_CONTENT": "No content is available for this document yet.",
+        "EMPTY_CONTENT": "No content is available for this source yet.",
         "VISIBILITY_SAVED": "Visibility updated",
         "VISIBILITY_ERROR": "Could not update the visibility. Please try again."
       },
-      "FORM_DESCRIPTION": "Enter the URL of the document to add it as a knowledge source and choose the AI agent to associate it with.",
+      "FORM_DESCRIPTION": "Add a website, upload a file, or paste text for your AI agent to answer from.",
       "CREATE": {
-        "TITLE": "Add a document",
-        "SUCCESS_MESSAGE": "The document has been successfully created",
-        "ERROR_MESSAGE": "There was an error creating the document, please try again."
+        "TITLE": "Add knowledge",
+        "SUCCESS_MESSAGE": "Knowledge source added",
+        "ERROR_MESSAGE": "Could not add knowledge source. Please try again."
       },
       "FORM": {
         "TYPE": {
-          "LABEL": "Document Type",
+          "LABEL": "Source type",
+          "WEBSITE": "Website",
           "URL": "Single page",
-          "PDF": "PDF File"
+          "PDF": "File",
+          "FILE": "File",
+          "TEXT": "Text"
+        },
+        "WEBSITE_MODE": {
+          "SCAN_LABEL": "Find and pick pages from this website",
+          "SCAN_HELP": "Scans the site so you can choose which pages to import, or uncheck to import only this URL."
         },
         "URL": {
-          "LABEL": "URL",
-          "PLACEHOLDER": "Enter the URL of the document",
-          "ERROR": "Please provide a valid URL for the document"
+          "LABEL": "Website or page URL",
+          "PLACEHOLDER": "https://example.com or https://example.com/shipping",
+          "ERROR": "Enter a valid URL starting with http:// or https://"
         },
         "LINKED_PAGES": {
           "LABEL": "Also add pages linked from this page",
@@ -2378,44 +2475,59 @@
         },
         "AGENTS_ONLY": {
           "LABEL": "Agents only",
-          "HELP": "Captain won't use this document, or the FAQs made from it, to answer customers. Copilot and reply suggestions still can. Use it for internal notes and personal data."
+          "HELP": "Your AI agent won't use this source, or the FAQs made from it, to answer customers. Copilot and reply suggestions still can."
         },
         "PDF_FILE": {
-          "LABEL": "PDF File",
-          "CHOOSE_FILE": "Choose PDF file",
-          "ERROR": "Please select a PDF file",
-          "HELP_TEXT": "Maximum file size: 10MB",
-          "INVALID_TYPE": "Please select a valid PDF file",
-          "TOO_LARGE": "File size exceeds 10MB limit"
+          "LABEL": "File",
+          "CHOOSE_FILE": "Choose PDF or Markdown file",
+          "ERROR": "Select a file to upload",
+          "HELP_TEXT": "PDF (.pdf) up to 10 MB, or Markdown (.md) up to 10 KB",
+          "INVALID_TYPE": "Select a valid PDF (.pdf) or Markdown (.md) file",
+          "TOO_LARGE": "File exceeds the size limit"
+        },
+        "TEXT": {
+          "LABEL": "Text content",
+          "PLACEHOLDER": "Paste policy text, internal notes, or reference information for your AI agent...",
+          "ERROR": "Enter the text content for this source"
         },
         "NAME": {
-          "LABEL": "Document Name (Optional)",
-          "PLACEHOLDER": "Enter a name for the document"
+          "LABEL": "Title (optional)",
+          "REQUIRED_LABEL": "Title",
+          "PLACEHOLDER": "e.g. Return policy, Holiday hours",
+          "ERROR": "Enter a title for this text source"
+        },
+        "SUBMIT": {
+          "FIND_PAGES": "Find pages",
+          "ADD_PAGE": "Add page",
+          "ADD_FILE": "Add file",
+          "ADD_TEXT": "Add text"
         }
       },
       "DELETE": {
-        "TITLE": "Are you sure to delete the document?",
-        "DESCRIPTION": "This action is permanent. Deleting this document will permanently erase all generated knowledge.",
+        "TITLE": "Delete this source?",
+        "DESCRIPTION": "This action is permanent. Deleting this source will also remove any FAQs generated from it.",
         "CONFIRM": "Yes, delete",
-        "SUCCESS_MESSAGE": "The document has been successfully deleted",
-        "ERROR_MESSAGE": "There was an error deleting the document, please try again."
+        "SUCCESS_MESSAGE": "Source deleted",
+        "ERROR_MESSAGE": "Could not delete the source. Please try again."
       },
       "OPTIONS": {
         "VIEW_DETAILS": "View details",
         "SYNC_NOW": "Refresh now",
-        "RETRY_SYNC": "Retry refresh",
+        "RETRY_SYNC": "Retry",
         "GENERATE_FAQS": "Suggest FAQs",
-        "DELETE_DOCUMENT": "Delete Document",
+        "EXCLUDE": "Exclude from answers",
+        "INCLUDE": "Include in answers",
+        "DELETE_DOCUMENT": "Delete source",
         "MORE": "More actions"
       },
       "EMPTY_STATE": {
-        "TITLE": "No documents available",
-        "SUBTITLE": "Documents are used by your AI agent to generate FAQs. You can import documents to provide context for your AI agent.",
-        "FILTERED_TITLE": "No matching documents",
+        "TITLE": "No knowledge sources yet",
+        "SUBTITLE": "Add your website, help articles, files, or text notes so your AI agent can answer customer questions accurately.",
+        "FILTERED_TITLE": "No matching sources",
         "FILTERED_SUBTITLE": "Try changing the source, status, or search term.",
         "FEATURE_SPOTLIGHT": {
-          "TITLE": "Captain Document",
-          "NOTE": "A document in Captain serves as a knowledge resource for the AI agent. By connecting your help center or guides, Captain can analyze the content and provide accurate responses for customer inquiries."
+          "TITLE": "Knowledge sources",
+          "NOTE": "Add your website, files, or text notes so your AI agent can answer customer inquiries from your real policies and guides."
         }
       }
     },
@@ -2785,10 +2897,10 @@
         "ERROR_MESSAGE": "There was an error deleting the FAQ, please try again."
       },
       "SUGGESTIONS_BANNER": {
-        "TITLE": "Captain grouped recurring customer questions into FAQ suggestions.",
+        "TITLE": "New FAQ suggestions are ready to review from customer conversations.",
         "ACTION": "Review suggestions"
       },
-      "FORM_DESCRIPTION": "Add a question and its corresponding answer to the knowledge base and select the AI agent it should be associated with.",
+      "FORM_DESCRIPTION": "Give your AI agent a clear, accurate answer to use in conversations.",
       "CREATE": {
         "TITLE": "Add an FAQ",
         "SUCCESS_MESSAGE": "The response has been added successfully.",
@@ -2837,14 +2949,14 @@
       "QUEUE_COUNT": "{count} suggestion to review | {count} suggestions to review",
       "QUEUE_HINT": "Ranked by customer demand",
       "SOURCE_COUNT": "{count} conversation | {count} conversations",
-      "REVIEW": "Review sources",
+      "REVIEW": "Review",
       "APPROVE": "Approve",
-      "APPROVE_FAQ": "Approve FAQ",
+      "APPROVE_FAQ": "Approve as FAQ",
       "DISMISS": "Dismiss",
-      "SAVE": "Save changes",
+      "SAVE": "Save draft",
       "DETAILS": {
         "TITLE": "Review FAQ suggestion",
-        "DESCRIPTION": "Captain grouped {count} conversation into this suggestion. Review the evidence and refine the FAQ before approval. | Captain grouped {count} conversations into this suggestion. Review the evidence and refine the FAQ before approval.",
+        "DESCRIPTION": "Review customer evidence and refine the FAQ before approval.",
         "SOURCES": "Source conversations",
         "SOURCE_PROGRESS": "{visible} of {total}",
         "NO_SOURCES": "No accessible source conversations were found.",
@@ -2871,9 +2983,9 @@
     "KNOWLEDGE_GAPS": {
       "TABS": {
         "UNANSWERED": "Unanswered",
-        "ANSWERED": "Answered by agents"
+        "ANSWERED": "Solved by team"
       },
-      "QUEUE_HINT": "Questions your AI agent couldn't answer, most asked first. Add an answer once and it's used from then on.",
+      "QUEUE_HINT": "Questions your AI agent couldn't answer, ranked by customer demand.",
       "CONVERSATIONS": "{count} conversation | {count} conversations",
       "LAST_SEEN": "Last seen {time}",
       "REASON": {
@@ -2884,7 +2996,7 @@
       "DISMISS": "Dismiss",
       "DIALOG": {
         "TITLE": "Add an answer",
-        "DESCRIPTION": "Customers asked this in {count} conversation. Your answer is saved as an FAQ and used by the AI agent. | Customers asked this in {count} conversations. Your answer is saved as an FAQ and used by the AI agent.",
+        "DESCRIPTION": "Answer once to save this as an FAQ used by the AI agent.",
         "ANSWER_PLACEHOLDER": "Write the answer the AI agent should give",
         "SEEN_IN": "Asked in",
         "NO_CONVERSATIONS": "No conversations you can open.",
@@ -2905,34 +3017,53 @@
       }
     },
     "INBOXES": {
-      "HEADER": "Connected Inboxes",
-      "ADD_NEW": "Connect a new inbox",
+      "HEADER": "Channels",
+      "ADD_NEW": "Connect a channel",
+      "SUBHEADER": "Connected channels receive customer conversations in Chatwoot. Turn on the AI agent on a channel to automatically reply to visitors according to your working hours and audience rules.",
+      "REPLIES_FOLLOW": "Replies follow:",
+      "STATUS": {
+        "ACTIVE": "AI agent live",
+        "INACTIVE": "AI agent off"
+      },
+      "TYPES": {
+        "WEB": "Website live chat",
+        "EMAIL": "Email",
+        "WHATSAPP": "WhatsApp",
+        "SMS": "SMS",
+        "CHANNEL": "Channel"
+      },
       "OPTIONS": {
-        "DISCONNECT": "Disconnect"
+        "DISCONNECT": "Turn off AI agent",
+        "SETTINGS": "Channel settings"
       },
       "DELETE": {
-        "TITLE": "Are you sure to disconnect the inbox?",
-        "DESCRIPTION": "",
-        "CONFIRM": "Yes, delete",
-        "SUCCESS_MESSAGE": "The inbox was successfully disconnected.",
-        "ERROR_MESSAGE": "There was an error disconnecting the inbox, please try again."
+        "TITLE": "Turn off AI agent on this channel?",
+        "DESCRIPTION": "This AI agent will stop answering conversations here. New messages will go directly to your human team.",
+        "CONFIRM": "Turn off AI agent",
+        "SUCCESS_MESSAGE": "The AI agent was turned off on this channel.",
+        "ERROR_MESSAGE": "There was an error updating the channel. Please try again."
       },
-      "FORM_DESCRIPTION": "Choose an inbox to connect with the AI agent.",
+      "FORM_DESCRIPTION": "Choose an existing channel in your workspace to enable this AI agent.",
       "CREATE": {
-        "TITLE": "Connect an Inbox",
-        "SUCCESS_MESSAGE": "The inbox was successfully connected.",
-        "ERROR_MESSAGE": "An error occurred while connecting the inbox. Please try again."
+        "TITLE": "Connect a channel",
+        "DESCRIPTION": "Choose which communication channels {name} replies on.",
+        "ALL_CONNECTED_TITLE": "All channels connected",
+        "ALL_CONNECTED_DESC": "All communication channels in your workspace are already connected to {name}.",
+        "CREATE_NEW_INBOX": "Create a new channel in Channel Settings",
+        "CONNECT_BUTTON": "Turn on AI agent",
+        "SUCCESS_MESSAGE": "The AI agent was turned on for this channel.",
+        "ERROR_MESSAGE": "An error occurred while enabling the channel. Please try again."
       },
       "FORM": {
         "INBOX": {
-          "LABEL": "Inbox",
-          "PLACEHOLDER": "Choose the inbox to deploy the AI agent.",
-          "ERROR": "An inbox selection is required."
+          "LABEL": "Channel",
+          "PLACEHOLDER": "Choose a channel to enable the AI agent.",
+          "ERROR": "A channel selection is required."
         }
       },
       "EMPTY_STATE": {
-        "TITLE": "No Connected Inboxes",
-        "SUBTITLE": "Connecting an inbox allows the AI agent to handle initial questions from your customers before transferring them to you."
+        "TITLE": "No channels connected",
+        "SUBTITLE": "Connect a website, email, or WhatsApp channel so this AI agent can reply to customer conversations."
       }
     },
     "DOCUMENT_SECTIONS": {
@@ -3054,8 +3185,8 @@
       "PAGES_FROM": "Pages from {host}"
     },
     "KNOWLEDGE_BRIEF": {
-      "TITLE": "Topics customers ask about",
-      "HELP": "Written from your knowledge. The AI agent uses them, with “About your business”, for broad questions like “What do you do?”.",
+      "TITLE": "Generated business brief",
+      "HELP": "Extracted from your knowledge to help your AI agent answer broad questions about what you do, sell, and offer.",
       "STATUS": {
         "DISABLED": "Off. Generate a draft from your knowledge to get started.",
         "DRAFT": "Draft ready. Review it and publish to turn it on.",
@@ -3066,7 +3197,7 @@
         "FAILED": "Topics could not be refreshed. Your saved text is unchanged. Choose Refresh topics to try again."
       },
       "GENERATE": "Generate from knowledge",
-      "REGENERATE": "Refresh topics",
+      "REGENERATE": "Refresh brief",
       "CHOOSE_SOURCES": "Pick sources by hand",
       "SOURCES_HELP": "{count} of up to {max} sources selected. Pick pages that explain what the business does, its products, pricing and policies. Pages still being indexed are skipped.",
       "GENERATE_SELECTED": "Generate from selected sources",

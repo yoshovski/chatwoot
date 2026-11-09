@@ -67,29 +67,37 @@ const handleDeleteSuccess = () => {
           :summary-max-length="descriptionMaxLength"
           @use-overview="setDescription"
         />
-        <div
-          class="flex flex-wrap items-center justify-between gap-3 px-1 pt-2 text-xs text-n-slate-11"
+        <section
+          class="flex flex-col gap-3 p-5 rounded-xl border border-n-ruby-6/40 bg-n-ruby-2/20"
         >
-          <span class="min-w-0">
-            {{
-              t('CAPTAIN.ASSISTANTS.SETTINGS.IDENTITY.REMOVE_DESCRIPTION', {
-                name: assistant.name,
-              })
-            }}
-          </span>
-          <Button
-            :label="
-              t('CAPTAIN.ASSISTANTS.SETTINGS.IDENTITY.REMOVE_TITLE', {
-                name: assistant.name,
-              })
-            "
-            color="ruby"
-            variant="ghost"
-            size="xs"
-            icon="i-lucide-trash-2"
-            @click="handleDelete"
-          />
-        </div>
+          <div class="flex flex-col gap-0.5">
+            <h3 class="m-0 text-sm font-semibold text-n-ruby-11">
+              {{ t('CAPTAIN.ASSISTANTS.SETTINGS.IDENTITY.DANGER_ZONE_TITLE') }}
+            </h3>
+            <p class="m-0 text-sm text-n-slate-11">
+              {{
+                t('CAPTAIN.ASSISTANTS.SETTINGS.IDENTITY.REMOVE_DESCRIPTION', {
+                  name: assistant.name,
+                })
+              }}
+            </p>
+          </div>
+          <div>
+            <Button
+              type="button"
+              :label="
+                t('CAPTAIN.ASSISTANTS.SETTINGS.IDENTITY.REMOVE_TITLE', {
+                  name: assistant.name,
+                })
+              "
+              color="ruby"
+              variant="solid"
+              size="sm"
+              icon="i-lucide-trash-2"
+              @click="handleDelete"
+            />
+          </div>
+        </section>
       </template>
     </AssistantBasicSettingsForm>
     <DeleteDialog

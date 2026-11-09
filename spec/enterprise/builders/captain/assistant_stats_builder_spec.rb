@@ -239,10 +239,13 @@ RSpec.describe Captain::AssistantStatsBuilder do
       create_list(:captain_document, 2, assistant: assistant, account: account)
     end
 
-    it 'returns approved FAQ, open suggestion, document counts and coverage' do
+    it 'returns approved FAQ, open suggestion, document, attention counts and coverage' do
       stats = described_class.new(assistant).faq_stats
 
-      expect(stats).to eq(approved: 3, faqs: 3, suggestions: 1, documents: 2, coverage: 75)
+      expect(stats).to eq(
+        approved: 3, faqs: 3, suggestions: 1, documents: 2, coverage: 75,
+        failed_sources: 0, unanswered_questions: 0, paused_actions: 0, tested: false
+      )
     end
 
     it 'does not count document-generated responses as FAQs' do
@@ -256,7 +259,10 @@ RSpec.describe Captain::AssistantStatsBuilder do
 
       stats = described_class.new(assistant).faq_stats
 
-      expect(stats).to eq(approved: 4, faqs: 3, suggestions: 1, documents: 2, coverage: 80)
+      expect(stats).to eq(
+        approved: 4, faqs: 3, suggestions: 1, documents: 2, coverage: 80,
+        failed_sources: 0, unanswered_questions: 0, paused_actions: 0, tested: false
+      )
     end
 
     it 'reports zero coverage when there are no FAQs or suggestions' do
@@ -265,7 +271,31 @@ RSpec.describe Captain::AssistantStatsBuilder do
 
       stats = described_class.new(assistant).faq_stats
 
-      expect(stats).to eq(approved: 0, faqs: 0, suggestions: 0, documents: 2, coverage: 0)
+      expect(stats).to eq(
+        approved: 0, faqs: 0, suggestions: 0, documents: 2, coverage: 0,
+        failed_sources: 0, unanswered_questions: 0, paused_actions: 0, tested: false
+      )
+    end
+
+    it 'counts failed sources, open unanswered questions, paused actions, and tested status' do
+      create(:captain_document, assistant: assistant, account: account, sync_status: :failed)
+      assistant.knowledge_gaps.create!(
+        question: 'Do you ship to Iceland?',
+        normalized_question: 'do you ship to iceland?',
+        last_seen_at: Time.current,
+        status: :open
+      )
+      create(:captain_custom_tool, account: account, enabled: false)
+      assistant.update!(config: assistant.config.merge('tested' => true))
+
+      stats = described_class.new(assistant).faq_stats
+
+      expect(stats).to include(
+        failed_sources: 1,
+        unanswered_questions: 1,
+        paused_actions: 1,
+        tested: true
+      )
     end
   end
 

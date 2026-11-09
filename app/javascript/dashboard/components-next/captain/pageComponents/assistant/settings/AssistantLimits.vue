@@ -126,14 +126,7 @@ const save = () => {
 </script>
 
 <template>
-  <SettingsCard
-    :title="
-      t('CAPTAIN.ASSISTANTS.SETTINGS.BOUNDARIES.LIMITS.TITLE', {
-        name: assistant.name,
-      })
-    "
-    :description="t('CAPTAIN.ASSISTANTS.SETTINGS.BOUNDARIES.LIMITS.DESC')"
-  >
+  <SettingsCard>
     <div class="flex flex-col gap-3 pt-2">
       <p v-if="!rows.length" class="m-0 text-sm text-n-slate-11">
         {{ t('CAPTAIN.ASSISTANTS.SETTINGS.BOUNDARIES.LIMITS.EMPTY') }}

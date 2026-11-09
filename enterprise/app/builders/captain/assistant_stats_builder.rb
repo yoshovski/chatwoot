@@ -38,24 +38,16 @@ class Captain::AssistantStatsBuilder
     build_metrics(current, previous)
   end
 
-  # Approved knowledge entry, standalone FAQ, open suggestion, and document counts in a single round trip.
+  # Approved knowledge entry, standalone FAQ, open suggestion, document, and attention counts in a single round trip.
   def faq_stats
-    approved_status = Captain::AssistantResponse.statuses['approved']
-    approved, faqs, suggestions, documents = Captain::AssistantResponse.by_assistant(assistant.id).reorder(nil).pick(
-      Arel.sql("COUNT(*) FILTER (WHERE status = #{approved_status})"),
-      Arel.sql(
-        "COUNT(*) FILTER (WHERE status = #{approved_status} AND documentable_type IS DISTINCT FROM 'Captain::Document')"
-      ),
-      Arel.sql("(#{open_suggestion_count_sql})"),
-      Arel.sql("(SELECT COUNT(*) FROM captain_documents WHERE assistant_id = #{assistant.id.to_i})")
-    )
+    approved, faqs, suggestions, documents, failed_sources, unanswered_questions, paused_actions, tested =
+      Captain::AssistantResponse.by_assistant(assistant.id).reorder(nil).pick(*faq_stats_projections)
     total = approved + suggestions
 
     {
-      approved: approved,
-      faqs: faqs,
-      suggestions: suggestions,
-      documents: documents,
+      approved: approved, faqs: faqs, suggestions: suggestions, documents: documents,
+      failed_sources: failed_sources, unanswered_questions: unanswered_questions, paused_actions: paused_actions,
+      tested: ActiveModel::Type::Boolean.new.cast(assistant.config['tested'] || tested),
       coverage: total.zero? ? 0 : (approved.to_f / total * 100).round
     }
   end
@@ -203,6 +195,36 @@ class Captain::AssistantStatsBuilder
                              'AND reporting_events.event_end_time >= resolves.event_end_time')
                       .distinct.count('reporting_events.conversation_id')
     rate(reopened, resolved_count)
+  end
+
+  def faq_stats_projections
+    approved_status = Captain::AssistantResponse.statuses['approved']
+    assistant_id = assistant.id.to_i
+
+    [
+      Arel.sql("COUNT(*) FILTER (WHERE status = #{approved_status})"),
+      Arel.sql(
+        "COUNT(*) FILTER (WHERE status = #{approved_status} AND documentable_type IS DISTINCT FROM 'Captain::Document')"
+      ),
+      Arel.sql("(#{open_suggestion_count_sql})"),
+      Arel.sql("(SELECT COUNT(*) FROM captain_documents WHERE assistant_id = #{assistant_id})"),
+      *attention_stats_projections(assistant_id, assistant.account_id.to_i)
+    ]
+  end
+
+  def attention_stats_projections(assistant_id, account_id)
+    failed_sync = Captain::Document.sync_statuses['failed']
+    open_gap = Captain::KnowledgeGap.statuses['open']
+
+    [
+      Arel.sql("((SELECT COUNT(*) FROM captain_documents WHERE assistant_id = #{assistant_id} AND sync_status = #{failed_sync}) + " \
+               "(SELECT COUNT(*) FROM captain_website_sources WHERE assistant_id = #{assistant_id} AND status = 'failed'))"),
+      Arel.sql("(SELECT COUNT(*) FROM captain_knowledge_gaps WHERE assistant_id = #{assistant_id} AND status = #{open_gap})"),
+      Arel.sql("((SELECT COUNT(*) FROM captain_custom_tools WHERE account_id = #{account_id} AND enabled = FALSE) + " \
+               "(SELECT COUNT(*) FROM captain_mcp_servers WHERE account_id = #{account_id} AND status = 'failed'))"),
+      Arel.sql("(EXISTS(SELECT 1 FROM agent_sessions WHERE assistant_id = #{assistant_id}) OR " \
+               "EXISTS(SELECT 1 FROM messages WHERE sender_type = 'Captain::Assistant' AND sender_id = #{assistant_id}))")
+    ]
   end
 
   def open_suggestion_count_sql

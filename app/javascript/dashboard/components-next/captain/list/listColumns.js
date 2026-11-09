@@ -4,5 +4,5 @@ export const LIST_COLUMNS = {
   from: 'hidden md:flex w-56',
   updated: 'hidden lg:block w-28',
   inUse: 'flex justify-end w-14',
-  actions: 'flex justify-end w-7',
+  actions: 'flex justify-end w-16',
 };
