@@ -1,6 +1,5 @@
 import { nextTick } from 'vue';
 import { shallowMount } from '@vue/test-utils';
-import Accordion from 'dashboard/components-next/Accordion/Accordion.vue';
 import AddNewRulesInput from 'dashboard/components-next/captain/assistant/AddNewRulesInput.vue';
 import Button from 'dashboard/components-next/button/Button.vue';
 import InlineInput from 'dashboard/components-next/inline-input/InlineInput.vue';
@@ -61,9 +60,6 @@ const buildSession = overrides => ({
 const mountSetup = (overrides = {}) =>
   shallowMount(PlaygroundTestSetup, {
     props: { session: buildSession(overrides) },
-    global: {
-      stubs: { Accordion: false },
-    },
   });
 
 const selectTab = async (wrapper, id) => {
@@ -87,23 +83,17 @@ describe('PlaygroundTestSetup', () => {
       wrapper.get('[data-testid="playground-setup-tabs"]').classes()
     ).not.toContain('overflow-x-auto');
     expect(wrapper.findComponent(TabBar).classes()).toContain('!w-full');
-    expect(wrapper.findAllComponents(Accordion)).toHaveLength(0);
     expect(wrapper.text()).not.toContain('Be concise');
     expect(wrapper.text()).not.toContain('Protect secrets');
   });
 
-  it('keeps saved scenarios collapsed until requested', async () => {
+  it('displays saved scenarios with their header count', async () => {
     const wrapper = mountSetup();
     await selectTab(wrapper, 'scenarios');
-    const savedScenarios = wrapper.findComponent(Accordion);
 
-    expect(savedScenarios.props('title')).toBe(
+    expect(wrapper.text()).toContain(
       'CAPTAIN.PLAYGROUND.SETUP.SCENARIOS.SAVED_SUMMARY (2)'
     );
-    expect(wrapper.text()).not.toContain('Disabled scenario');
-
-    await savedScenarios.get('button').trigger('click');
-
     expect(wrapper.text()).toContain('Disabled scenario');
   });
 
@@ -111,12 +101,12 @@ describe('PlaygroundTestSetup', () => {
     const wrapper = mountSetup();
 
     await selectTab(wrapper, 'guidelines');
-    expect(wrapper.findComponent(Accordion).props('title')).toBe(
+    expect(wrapper.text()).toContain(
       'CAPTAIN.PLAYGROUND.SETUP.GUIDELINES.SAVED_SUMMARY (1)'
     );
 
     await selectTab(wrapper, 'guardrails');
-    expect(wrapper.findComponent(Accordion).props('title')).toBe(
+    expect(wrapper.text()).toContain(
       'CAPTAIN.PLAYGROUND.SETUP.GUARDRAILS.SAVED_SUMMARY (1)'
     );
   });
@@ -360,7 +350,6 @@ describe('PlaygroundTestSetup', () => {
     expect(wrapper.text()).toContain('48');
     expect(wrapper.findComponent(TextArea).exists()).toBe(true);
     expect(wrapper.findComponent(AddNewRulesInput).exists()).toBe(false);
-    expect(wrapper.findAllComponents(Accordion)).toHaveLength(0);
     expect(wrapper.text()).not.toContain('Enabled scenario');
   });
 

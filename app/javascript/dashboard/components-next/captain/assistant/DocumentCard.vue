@@ -98,30 +98,39 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  showInUse: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 const emit = defineEmits(['action', 'select', 'toggle']);
 
 const KNOWLEDGE_STATE_CHIPS = {
+  finding_pages: {
+    label: 'CAPTAIN.DOCUMENTS.KNOWLEDGE_STATE.FINDING_PAGES',
+    chip: 'bg-n-blue-3 text-n-blue-11 dark:bg-n-blue-3/20',
+    icon: 'i-lucide-loader-circle animate-spin',
+  },
   searchable: {
     label: 'CAPTAIN.DOCUMENTS.KNOWLEDGE_STATE.SEARCHABLE',
-    chip: 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400',
-    icon: 'i-lucide-search-check',
+    chip: 'bg-n-teal-3 text-n-teal-11 dark:bg-n-teal-3/20',
+    icon: 'i-lucide-check',
   },
   indexing: {
     label: 'CAPTAIN.DOCUMENTS.KNOWLEDGE_STATE.INDEXING',
-    chip: 'bg-amber-500/10 text-amber-700 dark:text-amber-400',
+    chip: 'bg-n-amber-3 text-n-amber-11 dark:bg-n-amber-3/20',
     icon: 'i-lucide-loader-circle animate-spin',
   },
   not_searchable: {
     label: 'CAPTAIN.DOCUMENTS.KNOWLEDGE_STATE.NOT_SEARCHABLE',
-    chip: 'bg-ruby-500/10 text-ruby-700 dark:text-ruby-400',
-    icon: 'i-lucide-search-x',
+    chip: 'bg-n-ruby-3 text-n-ruby-11 dark:bg-n-ruby-3/20',
+    icon: 'i-lucide-circle-alert',
   },
   paused: {
     label: 'CAPTAIN.DOCUMENTS.KNOWLEDGE_STATE.PAUSED',
     chip: 'bg-n-slate-3 text-n-slate-11',
-    icon: 'i-lucide-pause',
+    icon: 'i-lucide-eye-off',
   },
 };
 
@@ -164,13 +173,25 @@ const canSync = computed(
 const showSyncStatus = computed(
   () => props.syncable && (isFailed.value || isSyncing.value)
 );
+const effectiveKnowledgeState = computed(() => {
+  if (!props.enabled || props.knowledgeState === 'paused') return 'paused';
+  if (props.knowledgeState) return props.knowledgeState;
+  if (isFailed.value || (isSyncing.value && !props.syncInProgress)) {
+    return 'not_searchable';
+  }
+  if (
+    props.status === 'in_progress' ||
+    (isSyncing.value && props.syncInProgress)
+  ) {
+    return 'indexing';
+  }
+  if (isAvailable.value) return 'searchable';
+  return null;
+});
 const knowledgeChip = computed(
-  () => KNOWLEDGE_STATE_CHIPS[props.knowledgeState]
+  () => KNOWLEDGE_STATE_CHIPS[effectiveKnowledgeState.value]
 );
-// With Dify the page text is searched directly, so a page without FAQs is normal.
-const showFaqPill = computed(
-  () => props.responsesCount > 0 || (!isPdf.value && !props.knowledgeState)
-);
+const showFaqPill = computed(() => props.responsesCount > 0);
 
 const typeIcon = computed(() => {
   if (isPdf.value) return 'i-lucide-file-text';
@@ -224,6 +245,14 @@ const menuItems = computed(() => {
 
   if (canManage.value) {
     allOptions.push({
+      label: props.enabled
+        ? t('CAPTAIN.DOCUMENTS.OPTIONS.EXCLUDE')
+        : t('CAPTAIN.DOCUMENTS.OPTIONS.INCLUDE'),
+      value: 'toggle',
+      action: 'toggle',
+      icon: props.enabled ? 'i-lucide-eye-off' : 'i-lucide-eye',
+    });
+    allOptions.push({
       label: t('CAPTAIN.DOCUMENTS.OPTIONS.DELETE_DOCUMENT'),
       value: 'delete',
       action: 'delete',
@@ -247,6 +276,10 @@ const showMenu = ref(false);
 
 const handleAction = ({ action }) => {
   showMenu.value = false;
+  if (action === 'toggle') {
+    emit('toggle', { id: props.id, enabled: !props.enabled });
+    return;
+  }
   emit('action', { action, id: props.id });
 };
 
@@ -264,7 +297,17 @@ const handleRetry = () => {
     class="group flex items-center gap-3 px-4 py-2.5 border-b border-n-weak last:border-b-0 last:rounded-b-xl transition-colors hover:bg-n-alpha-1"
     :class="{ 'bg-n-brand/5': isSelected }"
   >
-    <Checkbox v-if="selectable" v-model="modelValue" :aria-label="name" />
+    <div
+      v-if="selectable"
+      class="transition-opacity"
+      :class="
+        isSelected
+          ? 'opacity-100'
+          : 'opacity-40 group-hover:opacity-100 focus-within:opacity-100'
+      "
+    >
+      <Checkbox v-model="modelValue" :aria-label="name" />
+    </div>
     <div class="flex items-center flex-1 min-w-0 gap-3">
       <div
         class="flex items-center justify-center size-6 rounded shrink-0"
@@ -315,8 +358,9 @@ const handleRetry = () => {
       />
       <span
         v-else-if="!enabled"
-        class="inline-flex items-center px-1.5 py-0.5 text-xs font-medium rounded-full bg-n-slate-3 text-n-slate-11"
+        class="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full bg-n-slate-3 text-n-slate-11"
       >
+        <span class="i-lucide-eye-off size-3" aria-hidden="true" />
         {{ $t('KNOWLEDGE_LIST.OFF') }}
       </span>
       <span
@@ -325,7 +369,7 @@ const handleRetry = () => {
           content: t('CAPTAIN.DOCUMENTS.KNOWLEDGE_STATE.TOOLTIP'),
           delay: { show: 500, hide: 0 },
         }"
-        class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-xs font-medium"
+        class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium"
         :class="knowledgeChip.chip"
       >
         <span
@@ -347,7 +391,7 @@ const handleRetry = () => {
     >
       {{ dynamicTime(timestamp) }}
     </span>
-    <div :class="LIST_COLUMNS.inUse">
+    <div v-if="showInUse" :class="LIST_COLUMNS.inUse">
       <Policy v-if="canManage" :permissions="['administrator']">
         <Switch
           v-model="enabledState"

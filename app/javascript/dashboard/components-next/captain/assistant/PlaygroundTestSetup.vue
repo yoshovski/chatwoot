@@ -1,7 +1,6 @@
 <script setup>
 import { computed, reactive, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
-import Accordion from 'dashboard/components-next/Accordion/Accordion.vue';
 import Button from 'dashboard/components-next/button/Button.vue';
 import Checkbox from 'dashboard/components-next/checkbox/Checkbox.vue';
 import Editor from 'dashboard/components-next/Editor/Editor.vue';
@@ -298,7 +297,12 @@ const selectTab = tab => {
             </div>
           </div>
 
-          <Accordion :title="savedScenarioTitle" class="bg-n-solid-1">
+          <div class="flex flex-col gap-2 pt-2 border-t border-n-weak">
+            <span
+              class="text-xs font-semibold uppercase tracking-wider text-n-slate-11"
+            >
+              {{ savedScenarioTitle }}
+            </span>
             <div
               v-if="session.savedScenarios.length"
               class="flex max-h-72 flex-col gap-0.5 overflow-y-auto rounded-lg border border-n-weak bg-n-solid-1 p-1"
@@ -339,7 +343,7 @@ const selectTab = tab => {
             >
               {{ t('CAPTAIN.PLAYGROUND.SETUP.SCENARIOS.EMPTY') }}
             </p>
-          </Accordion>
+          </div>
         </section>
 
         <section
@@ -417,7 +421,12 @@ const selectTab = tab => {
             </div>
           </div>
 
-          <Accordion :title="savedRuleTitle" class="bg-n-solid-1">
+          <div class="flex flex-col gap-2 pt-2 border-t border-n-weak">
+            <span
+              class="text-xs font-semibold uppercase tracking-wider text-n-slate-11"
+            >
+              {{ savedRuleTitle }}
+            </span>
             <div
               v-if="savedRules.length"
               class="flex max-h-72 flex-col gap-0.5 overflow-y-auto rounded-lg border border-n-weak bg-n-solid-1 p-1"
@@ -441,7 +450,7 @@ const selectTab = tab => {
             >
               {{ t(activeRuleTab.empty) }}
             </p>
-          </Accordion>
+          </div>
         </section>
 
         <section v-else class="flex flex-col gap-5">

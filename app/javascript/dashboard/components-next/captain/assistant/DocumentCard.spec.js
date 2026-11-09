@@ -151,6 +151,7 @@ describe('DocumentCard', () => {
     expect(menu.props('menuItems').map(item => item.action)).toEqual([
       'sync',
       'generateFaqs',
+      'toggle',
       'delete',
     ]);
     menu.vm.$emit('action', { action: 'delete' });
@@ -166,12 +167,14 @@ describe('DocumentCard', () => {
     expect(wrapper.text()).toContain('KNOWLEDGE_LIST.OFF');
   });
 
-  it('emits toggle event when switch is toggled', async () => {
+  it('emits toggle event when toggle is chosen from the row menu', async () => {
     const wrapper = mountCard({ enabled: true });
-    const switchComp = wrapper.findComponent({ name: 'Switch' });
 
-    expect(switchComp.exists()).toBe(true);
-    await switchComp.vm.$emit('update:modelValue', false);
+    await wrapper
+      .get('[aria-label="KNOWLEDGE_LIST.MORE_ACTIONS"]')
+      .trigger('click');
+    const menu = wrapper.getComponent(DropdownMenu);
+    menu.vm.$emit('action', { action: 'toggle' });
 
     expect(wrapper.emitted('toggle')).toEqual([[{ id: 42, enabled: false }]]);
   });
@@ -216,11 +219,13 @@ describe('DocumentCard', () => {
   });
 
   describe('without a Dify knowledge index', () => {
-    it('keeps the FAQ pill, including 0 FAQs, and shows no chip', () => {
+    it('hides 0 FAQs pill and shows the derived status chip', () => {
       const wrapper = mountCard({ responsesCount: 0 });
 
-      expect(wrapper.find('[data-test="faq-pill"]').text()).toBe('0 FAQs');
-      expect(wrapper.text()).not.toContain('CAPTAIN.DOCUMENTS.KNOWLEDGE_STATE');
+      expect(wrapper.find('[data-test="faq-pill"]').exists()).toBe(false);
+      expect(wrapper.text()).toContain(
+        'CAPTAIN.DOCUMENTS.KNOWLEDGE_STATE.SEARCHABLE'
+      );
     });
   });
 });

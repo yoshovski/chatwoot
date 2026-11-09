@@ -3,18 +3,21 @@ import { computed, watch, ref, nextTick } from 'vue';
 import { useMapGetter, useStore } from 'dashboard/composables/store';
 import { useRoute } from 'vue-router';
 import { FEATURE_FLAGS } from 'dashboard/featureFlags';
+import { useAssistantSettings } from 'dashboard/routes/dashboard/captain/assistants/settings/useAssistantSettings';
 
 import DeleteDialog from 'dashboard/components-next/captain/pageComponents/DeleteDialog.vue';
 import PageLayout from 'dashboard/components-next/captain/PageLayout.vue';
-import ConnectInboxDialog from 'dashboard/components-next/captain/pageComponents/inbox/ConnectInboxDialog.vue';
+import ConnectInboxPanel from 'dashboard/components-next/captain/pageComponents/inbox/ConnectInboxPanel.vue';
 import InboxCard from 'dashboard/components-next/captain/assistant/InboxCard.vue';
 import InboxPageEmptyState from 'dashboard/components-next/captain/pageComponents/emptyStates/InboxPageEmptyState.vue';
 
 const store = useStore();
-const dialogType = ref('');
 const route = useRoute();
+const isConnectPanelOpen = ref(false);
 
-const assistantId = computed(() => route.params.assistantId);
+const assistantId = computed(() => Number(route.params.assistantId));
+const { assistant } = useAssistantSettings();
+
 const assistantUiFlags = useMapGetter('captainAssistants/getUIFlags');
 const uiFlags = useMapGetter('captainInboxes/getUIFlags');
 const isFetchingAssistant = computed(() => assistantUiFlags.value.fetchingItem);
@@ -26,15 +29,13 @@ const selectedInbox = ref(null);
 const disconnectInboxDialog = ref(null);
 
 const handleDelete = () => {
-  disconnectInboxDialog.value.dialogRef.open();
+  disconnectInboxDialog.value?.dialogRef.open();
 };
-
-const connectInboxDialog = ref(null);
 
 const handleCreate = () => {
-  dialogType.value = 'create';
-  nextTick(() => connectInboxDialog.value.dialogRef.open());
+  isConnectPanelOpen.value = true;
 };
+
 const handleAction = ({ action, id }) => {
   selectedInbox.value = captainInboxes.value.find(inbox => id === inbox.id);
   nextTick(() => {
@@ -44,17 +45,15 @@ const handleAction = ({ action, id }) => {
   });
 };
 
-const handleCreateClose = () => {
-  dialogType.value = '';
-  selectedInbox.value = null;
-};
-
 watch(
   assistantId,
   newId => {
-    store.dispatch('captainInboxes/get', {
-      assistantId: newId,
-    });
+    if (newId) {
+      store.dispatch('captainInboxes/get', {
+        assistantId: newId,
+      });
+      store.dispatch('inboxes/get');
+    }
   },
   { immediate: true }
 );
@@ -72,6 +71,12 @@ watch(
     :feature-flag="FEATURE_FLAGS.CAPTAIN"
     @click="handleCreate"
   >
+    <template #subHeader>
+      <p class="mt-1 text-sm text-n-slate-11">
+        {{ $t('CAPTAIN.INBOXES.SUBHEADER') }}
+      </p>
+    </template>
+
     <template #emptyState>
       <InboxPageEmptyState @click="handleCreate" />
     </template>
@@ -83,6 +88,7 @@ watch(
           :id="captainInbox.id"
           :key="captainInbox.id"
           :inbox="captainInbox"
+          :assistant="assistant"
           @action="handleAction"
         />
       </div>
@@ -97,14 +103,14 @@ watch(
         inboxId: selectedInbox.id,
       }"
       type="Inboxes"
+      translation-key="INBOXES"
+      @delete-success="selectedInbox = null"
     />
 
-    <ConnectInboxDialog
-      v-if="dialogType"
-      ref="connectInboxDialog"
+    <ConnectInboxPanel
+      v-model:open="isConnectPanelOpen"
       :assistant-id="assistantId"
-      :type="dialogType"
-      @close="handleCreateClose"
+      :assistant-name="assistant?.name"
     />
   </PageLayout>
 </template>

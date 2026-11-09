@@ -381,7 +381,9 @@ onUnmounted(() => {
     :button-label="$t('CAPTAIN.RESPONSES.ADD_NEW')"
     :is-fetching="isFetching"
     :is-empty="!responses.length && !hasActiveFilters"
-    :show-pagination-footer="!isFetching && !!responses.length"
+    :show-pagination-footer="
+      !isFetching && (responseMeta?.totalCount || 0) > 25
+    "
     :feature-flag="FEATURE_FLAGS.CAPTAIN"
     @update:current-page="onPageChange"
     @click="handleCreate"

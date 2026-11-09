@@ -1,8 +1,8 @@
 <script setup>
-import { ref, watch, useTemplateRef } from 'vue';
+import { ref, computed, watch, useTemplateRef } from 'vue';
 import { useI18n } from 'vue-i18n';
-import Button from 'dashboard/components-next/button/Button.vue';
 import RadioCard from 'dashboard/components-next/radioCard/RadioCard.vue';
+import SettingsSaveBar from './SettingsSaveBar.vue';
 import AudienceGroup from './audience/AudienceGroup.vue';
 import { useAudienceFilterTypes } from './audience/useAudienceFilterTypes.js';
 
@@ -10,6 +10,10 @@ const props = defineProps({
   assistant: {
     type: Object,
     default: () => ({}),
+  },
+  save: {
+    type: Function,
+    default: null,
   },
 });
 
@@ -34,9 +38,11 @@ const hasConditions = node =>
 
 const defaultRoot = () => ({ id: nextId(), operator: 'and', conditions: [] });
 
+const isSaving = ref(false);
 const root = ref(defaultRoot());
 const mode = ref(MODE.EVERYONE);
 const showEmptyAudienceError = ref(false);
+const savedSnapshot = ref('');
 
 const findOption = (filterType, value) =>
   filterType?.options?.find(option => String(option.id) === String(value));
@@ -111,9 +117,28 @@ const serializeNode = node => {
   };
 };
 
+const getAudiencePayload = () => {
+  const isSpecific = mode.value === MODE.SPECIFIC;
+  return isSpecific && root.value.conditions.length
+    ? serializeNode(root.value)
+    : null;
+};
+
+const isDirty = computed(() => {
+  const current = JSON.stringify(getAudiencePayload());
+  return current !== savedSnapshot.value;
+});
+
+const discard = () => {
+  const audience = props.assistant?.config?.audience;
+  root.value = hydrateRoot(audience);
+  mode.value = audience ? MODE.SPECIFIC : MODE.EVERYONE;
+  showEmptyAudienceError.value = false;
+};
+
 const groupRef = useTemplateRef('groupRef');
 
-const handleSubmit = () => {
+const handleSubmit = async () => {
   const isSpecific = mode.value === MODE.SPECIFIC;
   if (isSpecific && !root.value.conditions.length) {
     showEmptyAudienceError.value = true;
@@ -121,19 +146,30 @@ const handleSubmit = () => {
   }
 
   showEmptyAudienceError.value = false;
-  if (isSpecific && !groupRef.value.validate()) return;
+  if (isSpecific && groupRef.value && !groupRef.value.validate()) {
+    return;
+  }
 
-  const audience =
-    isSpecific && root.value.conditions.length
-      ? serializeNode(root.value)
-      : null;
-
-  emit('submit', {
+  const audience = getAudiencePayload();
+  const payload = {
     config: {
       ...props.assistant.config,
       audience,
     },
-  });
+  };
+
+  emit('submit', payload);
+  if (props.save) {
+    isSaving.value = true;
+    try {
+      const ok = await props.save(payload);
+      if (ok) {
+        savedSnapshot.value = JSON.stringify(audience);
+      }
+    } finally {
+      isSaving.value = false;
+    }
+  }
 };
 
 watch(
@@ -143,6 +179,7 @@ watch(
     const audience = newAssistant.config?.audience;
     root.value = hydrateRoot(audience);
     mode.value = audience ? MODE.SPECIFIC : MODE.EVERYONE;
+    savedSnapshot.value = JSON.stringify(audience || null);
   },
   { immediate: true }
 );
@@ -156,7 +193,7 @@ watch(
 </script>
 
 <template>
-  <div class="flex flex-col gap-4">
+  <div class="flex flex-col gap-6">
     <div class="flex flex-col gap-3">
       <RadioCard
         :id="MODE.EVERYONE"
@@ -193,11 +230,12 @@ watch(
         </p>
       </RadioCard>
     </div>
-    <div>
-      <Button
-        :label="t('CAPTAIN.ASSISTANTS.SETTINGS.SAVE')"
-        @click="handleSubmit"
-      />
-    </div>
+
+    <SettingsSaveBar
+      :is-dirty="isDirty"
+      :is-saving="isSaving"
+      @save="handleSubmit"
+      @discard="discard"
+    />
   </div>
 </template>

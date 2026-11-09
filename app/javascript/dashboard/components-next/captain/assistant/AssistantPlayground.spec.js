@@ -90,6 +90,15 @@ const mountPlayground = (assistantId = 7) =>
         NextButton: ButtonStub,
         MessageList: MessageListStub,
         PlaygroundTestSetup: true,
+        SidePanel: {
+          props: ['title', 'description'],
+          methods: {
+            open: vi.fn(),
+            close: vi.fn(),
+          },
+          template:
+            '<div data-test="side-panel"><slot /><slot name="footer" /></div>',
+        },
       },
     },
   });
@@ -225,15 +234,10 @@ describe('AssistantPlayground', () => {
     });
   });
 
-  it('constrains the setup panel wrapper on desktop', async () => {
+  it('constrains the setup panel wrapper in a side panel', async () => {
     const wrapper = mountPlayground();
     await wrapper.get('[data-icon="i-lucide-settings-2"]').trigger('click');
-    const setupWrapper = wrapper.getComponent({ name: 'PlaygroundTestSetup' })
-      .element.parentElement;
-
-    expect(setupWrapper.tagName).toBe('ASIDE');
-    expect(setupWrapper.className).toMatch(/w-\[\d+rem\]/);
-    expect(setupWrapper.className).toContain('flex-none');
+    expect(wrapper.find('[data-test="side-panel"]').exists()).toBe(true);
   });
 
   it('resets the test setup and remounts the panel to clear its drafts', async () => {

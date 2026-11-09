@@ -37,9 +37,9 @@ class Captain::Documents::ListFilter
   def apply_status(scope)
     case @params[:filter]
     when 'stale' then stale(scope.syncable)
-    when 'synced' then up_to_date(scope.syncable)
-    when 'syncing' then scope.syncable.sync_in_progress
-    when 'failed' then scope.syncable.sync_failed
+    when 'synced' then scope.available.where(enabled: true).where.not(sync_status: :failed)
+    when 'syncing' then scope.sync_in_progress.or(scope.in_progress.where.not(sync_status: :failed))
+    when 'failed' then scope.sync_failed
     when 'enabled' then scope.where(enabled: true)
     when 'disabled' then scope.where(enabled: false)
     else scope

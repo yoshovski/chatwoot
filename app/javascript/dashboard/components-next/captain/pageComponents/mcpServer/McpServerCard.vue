@@ -21,7 +21,7 @@ const emit = defineEmits(['action', 'toggleTool']);
 const { t } = useI18n();
 
 const [showActionsDropdown, toggleDropdown] = useToggle();
-const showTools = ref(false);
+const showTools = ref(true);
 
 const enabledCount = computed(
   () => props.server.tools.filter(tool => tool.enabled).length

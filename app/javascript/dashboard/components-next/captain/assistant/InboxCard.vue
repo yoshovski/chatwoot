@@ -1,10 +1,8 @@
 <script setup>
 import { computed } from 'vue';
-import { useToggle } from '@vueuse/core';
 import { useI18n } from 'vue-i18n';
 
 import CardLayout from 'dashboard/components-next/CardLayout.vue';
-import DropdownMenu from 'dashboard/components-next/dropdown-menu/DropdownMenu.vue';
 import Button from 'dashboard/components-next/button/Button.vue';
 import Policy from 'dashboard/components/policy.vue';
 import { INBOX_TYPES, getInboxIconByType } from 'dashboard/helper/inbox';
@@ -18,13 +16,15 @@ const props = defineProps({
     type: Object,
     required: true,
   },
+  assistant: {
+    type: Object,
+    default: () => ({}),
+  },
 });
 
 const emit = defineEmits(['action']);
 
 const { t } = useI18n();
-
-const [showActionsDropdown, toggleDropdown] = useToggle();
 
 const inboxName = computed(() => {
   const inbox = props.inbox;
@@ -48,14 +48,28 @@ const inboxName = computed(() => {
   return inbox.name;
 });
 
-const menuItems = computed(() => [
-  {
-    label: t('CAPTAIN.INBOXES.OPTIONS.DISCONNECT'),
-    value: 'delete',
-    action: 'delete',
-    icon: 'i-lucide-trash',
-  },
-]);
+const channelLabel = computed(() => {
+  const type = props.inbox?.channel_type;
+  if (type === 'Channel::WebWidget') return t('CAPTAIN.INBOXES.TYPES.WEB');
+  if (type === 'Channel::Email') return t('CAPTAIN.INBOXES.TYPES.EMAIL');
+  if (type === 'Channel::Whatsapp') return t('CAPTAIN.INBOXES.TYPES.WHATSAPP');
+  if (type === 'Channel::TwilioSms') return t('CAPTAIN.INBOXES.TYPES.SMS');
+  return type?.replace('Channel::', '') || t('CAPTAIN.INBOXES.TYPES.CHANNEL');
+});
+
+const scheduleSummary = computed(() => {
+  const windowType = props.assistant?.config?.response_window || 'always';
+  return t(
+    `CAPTAIN.ASSISTANTS.FORM.SCHEDULE.${windowType.toUpperCase()}.LABEL`
+  );
+});
+
+const audienceSummary = computed(() => {
+  const hasAudience = !!props.assistant?.config?.audience;
+  return hasAudience
+    ? t('CAPTAIN.ASSISTANTS.FORM.AUDIENCE.SPECIFIC.LABEL')
+    : t('CAPTAIN.ASSISTANTS.FORM.AUDIENCE.EVERYONE.LABEL');
+});
 
 const icon = computed(() => {
   const {
@@ -66,39 +80,64 @@ const icon = computed(() => {
   return getInboxIconByType(type, medium, 'outline', voiceEnabled);
 });
 
-const handleAction = ({ action, value }) => {
-  toggleDropdown(false);
-  emit('action', { action, value, id: props.id });
+const handleDisconnect = () => {
+  emit('action', { action: 'delete', id: props.id });
 };
 </script>
 
 <template>
-  <CardLayout>
-    <div class="flex justify-between w-full gap-1">
-      <span
-        class="text-base text-n-slate-12 line-clamp-1 flex items-center gap-2"
-      >
-        <span :class="icon" />
-        {{ inboxName }}
-      </span>
-      <div class="flex items-center gap-2">
-        <Policy
-          v-on-clickaway="() => toggleDropdown(false)"
-          :permissions="['administrator']"
-          class="relative flex items-center group"
+  <CardLayout class="p-4 sm:p-5">
+    <div
+      class="flex flex-col sm:flex-row sm:items-center justify-between w-full gap-3 sm:gap-4"
+    >
+      <div class="flex items-start gap-3 min-w-0">
+        <span
+          class="flex items-center justify-center rounded-lg size-10 shrink-0 bg-n-alpha-2 text-n-slate-11 mt-0.5 sm:mt-0"
+          aria-hidden="true"
         >
+          <span :class="icon" class="size-5" />
+        </span>
+        <div class="flex flex-col min-w-0 gap-1">
+          <div class="flex flex-wrap items-center gap-2">
+            <span class="text-base font-medium text-n-slate-12 truncate">
+              {{ inboxName }}
+            </span>
+            <span
+              class="px-2 py-0.5 text-xs rounded-md bg-n-alpha-2 text-n-slate-11 font-medium"
+            >
+              {{ channelLabel }}
+            </span>
+            <span
+              class="inline-flex items-center gap-1.5 px-2 py-0.5 text-xs rounded-full font-medium bg-n-teal-3 text-n-teal-11 dark:bg-n-teal-11/20 dark:text-n-teal-7"
+            >
+              <span class="size-1.5 rounded-full bg-n-teal-9 animate-pulse" />
+              {{ t('CAPTAIN.INBOXES.STATUS.ACTIVE') }}
+            </span>
+          </div>
+          <p
+            class="m-0 text-xs text-n-slate-11 flex flex-wrap items-center gap-x-1.5 gap-y-0.5"
+          >
+            <span>{{ t('CAPTAIN.INBOXES.REPLIES_FOLLOW') }}</span>
+            <span class="font-medium text-n-slate-12">{{
+              scheduleSummary
+            }}</span>
+            <span>·</span>
+            <span class="font-medium text-n-slate-12">{{
+              audienceSummary
+            }}</span>
+          </p>
+        </div>
+      </div>
+      <div class="flex items-center gap-2 shrink-0 self-end sm:self-center">
+        <Policy :permissions="['administrator']">
           <Button
-            icon="i-lucide-ellipsis-vertical"
+            type="button"
+            icon="i-lucide-power"
+            variant="faded"
             color="slate"
-            size="xs"
-            class="rounded-md group-hover:bg-n-alpha-2"
-            @click="toggleDropdown()"
-          />
-          <DropdownMenu
-            v-if="showActionsDropdown"
-            :menu-items="menuItems"
-            class="mt-1 ltr:right-0 rtl:left-0 top-full"
-            @action="handleAction($event)"
+            size="sm"
+            :label="t('CAPTAIN.INBOXES.OPTIONS.DISCONNECT')"
+            @click="handleDisconnect"
           />
         </Policy>
       </div>

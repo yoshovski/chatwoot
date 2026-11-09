@@ -31,7 +31,7 @@ const isFetching = computed(() => uiFlags.value.fetchingItem);
       <slot name="headerActions" />
     </template>
     <template #body>
-      <div class="flex flex-col w-full gap-6 pb-8">
+      <div class="flex flex-col w-full gap-6 pb-24 sm:pb-8">
         <p v-if="description" class="m-0 text-sm text-n-slate-11">
           {{ description }}
         </p>

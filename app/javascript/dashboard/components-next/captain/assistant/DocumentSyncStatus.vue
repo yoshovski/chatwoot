@@ -137,10 +137,14 @@ const tone = computed(() => {
   return 'slate';
 });
 
-const textClass = computed(() => {
-  if (tone.value === 'amber') return 'text-n-amber-11';
-  if (tone.value === 'ruby') return 'text-n-ruby-11';
-  return 'text-n-slate-11';
+const badgeClass = computed(() => {
+  if (tone.value === 'amber') {
+    return 'bg-n-amber-3 text-n-amber-11 dark:bg-n-amber-3/20';
+  }
+  if (tone.value === 'ruby') {
+    return 'bg-n-ruby-3 text-n-ruby-11 dark:bg-n-ruby-3/20';
+  }
+  return 'bg-n-slate-3 text-n-slate-11';
 });
 
 const statusIcon = computed(() => {
@@ -154,12 +158,16 @@ const statusIcon = computed(() => {
 <template>
   <span
     v-tooltip.top="{ content: fullLabel, delay: { show: 500, hide: 0 } }"
-    class="flex gap-1.5 items-center text-sm truncate shrink-0 tabular-nums"
-    :class="textClass"
+    class="inline-flex gap-1.5 items-center text-xs truncate shrink-0 tabular-nums"
   >
-    <Spinner v-if="isSyncing" class="text-n-amber-11 size-3" />
-    <Icon v-else :icon="statusIcon" class="shrink-0 size-3.5" />
-    <span class="truncate">{{ label }}</span>
+    <span
+      class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full font-medium"
+      :class="badgeClass"
+    >
+      <Spinner v-if="isSyncing" class="text-n-amber-11 size-3" />
+      <Icon v-else :icon="statusIcon" class="shrink-0 size-3" />
+      <span class="truncate">{{ label }}</span>
+    </span>
     <Button
       v-if="showRetry && canRetry"
       :label="t('CAPTAIN.DOCUMENTS.OPTIONS.RETRY_SYNC')"
@@ -167,7 +175,7 @@ const statusIcon = computed(() => {
       link
       ruby
       icon="i-lucide-refresh-cw"
-      class="hover:!no-underline !gap-1 ms-1"
+      class="hover:!no-underline !gap-1"
       @click.stop="emit('retry')"
     />
   </span>

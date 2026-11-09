@@ -10,7 +10,7 @@ import { useExactTimestamp } from 'shared/composables/useExactTimestamp';
 import CaptainFaqSuggestionsAPI from 'dashboard/api/captain/faqSuggestions';
 
 import Button from 'dashboard/components-next/button/Button.vue';
-import Dialog from 'dashboard/components-next/dialog/Dialog.vue';
+import SidePanel from 'dashboard/components-next/side-panel/SidePanel.vue';
 import Icon from 'dashboard/components-next/icon/Icon.vue';
 import Input from 'dashboard/components-next/input/Input.vue';
 import TextArea from 'dashboard/components-next/textarea/TextArea.vue';
@@ -69,23 +69,6 @@ const loadDetails = async () => {
 
 const close = () => dialogRef.value.close();
 
-const handleSave = async () => {
-  try {
-    const updatedSuggestion = await store.dispatch(
-      'captainFaqSuggestions/update',
-      {
-        id: props.suggestion.id,
-        question: state.question.trim(),
-        answer: state.answer.trim(),
-      }
-    );
-    details.value = { ...details.value, ...updatedSuggestion };
-    useAlert(t('CAPTAIN.FAQ_SUGGESTIONS.SUCCESS.SAVED'));
-  } catch (error) {
-    useAlert(error?.message || t('CAPTAIN.FAQ_SUGGESTIONS.ERRORS.SAVE'));
-  }
-};
-
 const handleApprove = async () => {
   try {
     await store.dispatch('captainFaqSuggestions/approve', {
@@ -126,71 +109,45 @@ defineExpose({ dialogRef });
 </script>
 
 <template>
-  <Dialog
+  <SidePanel
     ref="dialogRef"
-    width="3xl"
-    position="top"
-    overflow-y-auto
-    :show-cancel-button="false"
-    :show-confirm-button="false"
+    width="2xl"
+    :title="$t('CAPTAIN.FAQ_SUGGESTIONS.DETAILS.TITLE')"
+    :description="
+      $t('CAPTAIN.FAQ_SUGGESTIONS.DETAILS.DESCRIPTION', {
+        count: suggestion.source_count,
+      })
+    "
     @close="emit('close')"
   >
-    <div class="flex items-start justify-between gap-4">
-      <div class="flex flex-col gap-1">
-        <h3 class="text-base font-medium leading-6 text-n-slate-12">
-          {{ $t('CAPTAIN.FAQ_SUGGESTIONS.DETAILS.TITLE') }}
-        </h3>
-        <p class="mb-0 text-sm text-n-slate-11">
-          {{
-            $t('CAPTAIN.FAQ_SUGGESTIONS.DETAILS.DESCRIPTION', {
-              count: suggestion.source_count,
-            })
-          }}
-        </p>
-      </div>
-      <Button
-        icon="i-lucide-x"
-        variant="ghost"
-        color="slate"
-        size="sm"
-        class="-me-1.5 -mt-1.5 shrink-0"
-        :aria-label="$t('DIALOG.BUTTONS.CANCEL')"
-        @click="close"
+    <div class="flex flex-col gap-5">
+      <Input
+        v-model="state.question"
+        :label="$t('CAPTAIN.RESPONSES.FORM.QUESTION.LABEL')"
+        :placeholder="$t('CAPTAIN.RESPONSES.FORM.QUESTION.PLACEHOLDER')"
       />
-    </div>
-
-    <div
-      class="grid min-h-0 grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_18rem]"
-    >
-      <div class="flex min-w-0 flex-col gap-4">
-        <Input
-          v-model="state.question"
-          :label="$t('CAPTAIN.RESPONSES.FORM.QUESTION.LABEL')"
-          :placeholder="$t('CAPTAIN.RESPONSES.FORM.QUESTION.PLACEHOLDER')"
-        />
-        <TextArea
-          v-model="state.answer"
-          :label="$t('CAPTAIN.RESPONSES.FORM.ANSWER.LABEL')"
-          :placeholder="$t('CAPTAIN.RESPONSES.FORM.ANSWER.PLACEHOLDER')"
-          auto-height
-          resize
-          min-height="10rem"
-          max-height="20rem"
-        />
-        <div class="flex flex-wrap items-center gap-2 text-xs text-n-slate-10">
-          <span
-            class="inline-flex items-center gap-1.5 rounded-full bg-n-alpha-2 px-2.5 py-1"
-          >
-            <Icon icon="i-lucide-languages" class="size-3.5" />
-            {{ suggestion.language?.replace('_', '-').toUpperCase() }}
-          </span>
-          <span
-            class="inline-flex items-center gap-1.5 rounded-full bg-n-alpha-2 px-2.5 py-1"
-          >
-            <Icon icon="i-woot-captain" class="size-3.5" />
-            {{ suggestion.assistant?.name }}
-          </span>
-        </div>
+      <TextArea
+        v-model="state.answer"
+        :label="$t('CAPTAIN.RESPONSES.FORM.ANSWER.LABEL')"
+        :placeholder="$t('CAPTAIN.RESPONSES.FORM.ANSWER.PLACEHOLDER')"
+        auto-height
+        resize
+        min-height="8rem"
+        max-height="16rem"
+      />
+      <div class="flex flex-wrap items-center gap-2 text-xs text-n-slate-10">
+        <span
+          class="inline-flex items-center gap-1.5 rounded-full bg-n-alpha-2 px-2.5 py-1"
+        >
+          <Icon icon="i-lucide-languages" class="size-3.5" />
+          {{ suggestion.language?.replace('_', '-').toUpperCase() }}
+        </span>
+        <span
+          class="inline-flex items-center gap-1.5 rounded-full bg-n-alpha-2 px-2.5 py-1"
+        >
+          <Icon icon="i-woot-captain" class="size-3.5" />
+          {{ suggestion.assistant?.name }}
+        </span>
       </div>
 
       <section class="min-h-0 rounded-xl border border-n-weak bg-n-alpha-2 p-3">
@@ -306,6 +263,7 @@ defineExpose({ dialogRef });
         class="flex w-full flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between"
       >
         <Button
+          type="button"
           :label="$t('CAPTAIN.FAQ_SUGGESTIONS.DISMISS')"
           icon="i-lucide-circle-x"
           variant="ghost"
@@ -314,24 +272,15 @@ defineExpose({ dialogRef });
           :disabled="isFetching || isSaving || isDismissing"
           @click="handleDismiss"
         />
-        <div class="flex items-center justify-end gap-2">
-          <Button
-            :label="$t('CAPTAIN.FAQ_SUGGESTIONS.SAVE')"
-            variant="faded"
-            color="slate"
-            :is-loading="isSaving"
-            :disabled="isFetching || isInvalid || isSaving || isDismissing"
-            @click="handleSave"
-          />
-          <Button
-            :label="$t('CAPTAIN.FAQ_SUGGESTIONS.APPROVE_FAQ')"
-            icon="i-lucide-circle-check-big"
-            :is-loading="isSaving"
-            :disabled="isFetching || isInvalid || isSaving || isDismissing"
-            @click="handleApprove"
-          />
-        </div>
+        <Button
+          type="button"
+          :label="$t('CAPTAIN.FAQ_SUGGESTIONS.APPROVE_FAQ')"
+          icon="i-lucide-circle-check-big"
+          :is-loading="isSaving"
+          :disabled="isFetching || isInvalid || isSaving || isDismissing"
+          @click="handleApprove"
+        />
       </div>
     </template>
-  </Dialog>
+  </SidePanel>
 </template>

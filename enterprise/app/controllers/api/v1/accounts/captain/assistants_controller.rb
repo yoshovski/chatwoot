@@ -37,10 +37,12 @@ class Api::V1::Accounts::Captain::AssistantsController < Api::V1::Accounts::Base
     return enqueue_v2_playground_run if captain_v2_enabled?
 
     Captain::Playground::Configuration.reject_v1! if playground_configuration_supplied?
-    render json: Captain::Llm::AssistantChatService.new(assistant: @assistant, source: 'playground').generate_response(
+    response = Captain::Llm::AssistantChatService.new(assistant: @assistant, source: 'playground').generate_response(
       additional_message: playground_params[:message_content],
       message_history: message_history
     )
+    mark_assistant_tested
+    render json: response
   rescue Captain::Playground::Configuration::Invalid => e
     render json: { error: e.message, errors: e.errors }, status: :unprocessable_entity
   end
@@ -215,9 +217,16 @@ class Api::V1::Accounts::Captain::AssistantsController < Api::V1::Accounts::Base
       Captain::Playground::Configuration.new(assistant: @assistant, params: configuration_params)
       configuration_params = configuration_params.to_unsafe_h
     end
+    mark_assistant_tested
     run_id = SecureRandom.uuid
     Captain::PlaygroundRunJob.perform_later(@assistant, run_id, configuration_params, playground_message_history)
     render json: { run_id: run_id }, status: :accepted
+  end
+
+  def mark_assistant_tested
+    return if @assistant.config['tested'] == true
+
+    @assistant.update_column(:config, @assistant.config.merge('tested' => true)) # rubocop:disable Rails/SkipsModelValidations
   end
 
   def playground_configuration_params

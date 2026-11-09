@@ -19,7 +19,6 @@ import Input from 'dashboard/components-next/input/Input.vue';
 import KnowledgeGapAnswerDialog from 'dashboard/components-next/captain/pageComponents/response/KnowledgeGapAnswerDialog.vue';
 import KnowledgeGapCard from 'dashboard/components-next/captain/assistant/KnowledgeGapCard.vue';
 import PageLayout from 'dashboard/components-next/captain/PageLayout.vue';
-import LearnFromChatsSwitch from 'dashboard/components-next/captain/pageComponents/response/LearnFromChatsSwitch.vue';
 import TabBar from 'dashboard/components-next/tabbar/TabBar.vue';
 
 const TABS = { UNANSWERED: 'unanswered', ANSWERED: 'answered' };
@@ -285,7 +284,7 @@ onUnmounted(() => {
     :header-title="$t('CAPTAIN.AGENT_UX.SECTIONS.KNOWLEDGE')"
     :is-fetching="isFetching"
     :is-empty="isListEmpty"
-    :show-pagination-footer="!isFetching && !isListEmpty"
+    :show-pagination-footer="!isFetching && (listMeta?.totalCount || 0) > 25"
     :show-know-more="false"
     :feature-flag="FEATURE_FLAGS.CAPTAIN"
     @update:current-page="fetchActivePage"
@@ -362,12 +361,26 @@ onUnmounted(() => {
     <template #paywall>
       <CaptainPaywall />
     </template>
-
-    <template #controls>
-      <LearnFromChatsSwitch />
-    </template>
     <template #body>
-      <div v-if="isUnanswered" class="flex flex-col gap-3 pb-6">
+      <section
+        v-if="isUnanswered"
+        :aria-label="$t('CAPTAIN.KNOWLEDGE_GAPS.TABS.UNANSWERED')"
+        class="border rounded-xl border-n-weak bg-n-solid-1 overflow-hidden mb-6"
+      >
+        <div
+          class="flex items-center gap-3 px-4 py-2.5 text-xs font-medium border-b border-n-weak text-n-slate-11 bg-n-alpha-1"
+        >
+          <span class="flex-1 min-w-0">
+            {{ $t('KNOWLEDGE_LIST.COLUMNS.QUESTION') }}
+          </span>
+          <span class="hidden sm:block w-36">
+            {{ $t('KNOWLEDGE_LIST.COLUMNS.DEMAND') }}
+          </span>
+          <span class="hidden md:block w-28">
+            {{ $t('KNOWLEDGE_LIST.COLUMNS.UPDATED') }}
+          </span>
+          <span class="sm:w-44 shrink-0 text-end" />
+        </div>
         <KnowledgeGapCard
           v-for="gap in gaps"
           :key="gap.id"
@@ -376,8 +389,26 @@ onUnmounted(() => {
           @answer="handleGapAnswer"
           @dismiss="handleGapDismiss"
         />
-      </div>
-      <div v-else class="flex flex-col gap-4 pb-6">
+      </section>
+      <section
+        v-else
+        :aria-label="$t('CAPTAIN.KNOWLEDGE_GAPS.TABS.ANSWERED')"
+        class="border rounded-xl border-n-weak bg-n-solid-1 overflow-hidden mb-6"
+      >
+        <div
+          class="flex items-center gap-3 px-4 py-2.5 text-xs font-medium border-b border-n-weak text-n-slate-11 bg-n-alpha-1"
+        >
+          <span class="flex-1 min-w-0">
+            {{ $t('KNOWLEDGE_LIST.COLUMNS.QUESTION') }}
+          </span>
+          <span class="hidden sm:block w-36">
+            {{ $t('KNOWLEDGE_LIST.COLUMNS.DEMAND') }}
+          </span>
+          <span class="hidden md:block w-28">
+            {{ $t('KNOWLEDGE_LIST.COLUMNS.UPDATED') }}
+          </span>
+          <span class="sm:w-64 shrink-0 text-end" />
+        </div>
         <FaqSuggestionCard
           v-for="suggestion in suggestions"
           :key="suggestion.id"
@@ -387,7 +418,7 @@ onUnmounted(() => {
           @dismiss="handleDismiss"
           @review="handleReview"
         />
-      </div>
+      </section>
     </template>
 
     <FaqSuggestionReviewDialog

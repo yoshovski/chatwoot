@@ -31,24 +31,9 @@ const MENU_CONFIG = [
     options: [
       { labelKey: 'STATUS.ANY', value: null, icon: 'i-lucide-circle-dashed' },
       {
-        labelKey: 'STATUS.ON',
-        value: 'enabled',
-        icon: 'i-lucide-toggle-right',
-      },
-      {
-        labelKey: 'STATUS.OFF',
-        value: 'disabled',
-        icon: 'i-lucide-toggle-left',
-      },
-      {
         labelKey: 'STATUS.UPDATED',
         value: 'synced',
         icon: 'i-lucide-check-circle',
-      },
-      {
-        labelKey: 'STATUS.NEEDS_UPDATE',
-        value: 'stale',
-        icon: 'i-lucide-clock',
       },
       {
         labelKey: 'STATUS.UPDATING',
@@ -59,6 +44,11 @@ const MENU_CONFIG = [
         labelKey: 'STATUS.FAILED',
         value: 'failed',
         icon: 'i-lucide-circle-x',
+      },
+      {
+        labelKey: 'STATUS.OFF',
+        value: 'disabled',
+        icon: 'i-lucide-eye-off',
       },
     ],
   },

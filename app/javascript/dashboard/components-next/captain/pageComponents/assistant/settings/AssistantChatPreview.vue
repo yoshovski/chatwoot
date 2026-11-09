@@ -17,6 +17,10 @@ defineProps({
     type: String,
     default: '',
   },
+  subtitle: {
+    type: String,
+    default: '',
+  },
 });
 
 const { t } = useI18n();
@@ -56,8 +60,8 @@ useMutationObserver(body, scrollToEnd, {
           <span class="text-sm font-semibold text-white truncate">
             {{ name }}
           </span>
-          <span class="text-xs text-white/80">
-            {{ t('CAPTAIN.ASSISTANTS.SETTINGS.PREVIEW.AI_AGENT') }}
+          <span class="text-xs text-white/80 truncate">
+            {{ subtitle || t('CAPTAIN.ASSISTANTS.SETTINGS.PREVIEW.AI_AGENT') }}
           </span>
         </div>
       </div>

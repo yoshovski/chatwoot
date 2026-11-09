@@ -8,7 +8,7 @@ import { dynamicTime } from 'shared/helpers/timeHelper';
 import CaptainKnowledgeGapsAPI from 'dashboard/api/captain/knowledgeGaps';
 
 import Button from 'dashboard/components-next/button/Button.vue';
-import Dialog from 'dashboard/components-next/dialog/Dialog.vue';
+import SidePanel from 'dashboard/components-next/side-panel/SidePanel.vue';
 import Input from 'dashboard/components-next/input/Input.vue';
 import TextArea from 'dashboard/components-next/textarea/TextArea.vue';
 
@@ -95,18 +95,15 @@ defineExpose({ dialogRef });
 </script>
 
 <template>
-  <Dialog
+  <SidePanel
     ref="dialogRef"
     width="2xl"
-    position="top"
     :title="$t('CAPTAIN.KNOWLEDGE_GAPS.DIALOG.TITLE')"
     :description="
       $t('CAPTAIN.KNOWLEDGE_GAPS.DIALOG.DESCRIPTION', {
         count: gap.occurrences_count,
       })
     "
-    :show-cancel-button="false"
-    :show-confirm-button="false"
     @close="emit('close')"
   >
     <div class="flex flex-col gap-4">
@@ -163,6 +160,7 @@ defineExpose({ dialogRef });
     <template #footer>
       <div class="flex w-full items-center justify-between gap-3">
         <Button
+          type="button"
           :label="$t('CAPTAIN.KNOWLEDGE_GAPS.DISMISS')"
           variant="ghost"
           color="slate"
@@ -171,6 +169,7 @@ defineExpose({ dialogRef });
           @click="handleDismiss"
         />
         <Button
+          type="button"
           :label="$t('CAPTAIN.KNOWLEDGE_GAPS.DIALOG.SAVE')"
           icon="i-lucide-circle-check-big"
           :is-loading="isSaving"
@@ -179,5 +178,5 @@ defineExpose({ dialogRef });
         />
       </div>
     </template>
-  </Dialog>
+  </SidePanel>
 </template>
