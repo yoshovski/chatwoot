@@ -8,6 +8,7 @@ import { useAttachments } from '../composables/useAttachments';
 import FluentIcon from 'shared/components/FluentIcon/Index.vue';
 import ResizableTextArea from 'shared/components/ResizableTextArea.vue';
 import { isPreviewMode } from 'widget/helpers/previewMode';
+import { emitter } from 'shared/helpers/mitt';
 
 const EmojiPicker = defineAsyncComponent(
   () => import('shared/components/emoji/EmojiPicker.vue')
@@ -50,6 +51,7 @@ export default {
       userInput: '',
       showEmojiPicker: false,
       attachedFile: null,
+      isNudged: false,
     };
   },
 
@@ -78,9 +80,11 @@ export default {
   },
   unmounted() {
     document.removeEventListener('keypress', this.handleEnterKeyPress);
+    emitter.off('ON_CONVERSATION_NUDGE', this.handleNudge);
   },
   mounted() {
     document.addEventListener('keypress', this.handleEnterKeyPress);
+    emitter.on('ON_CONVERSATION_NUDGE', this.handleNudge);
     if (this.isWidgetOpen) {
       this.focusInput();
     }
@@ -142,12 +146,25 @@ export default {
     focusInput() {
       this.$refs.chatInput.focus();
     },
+    handleNudge() {
+      this.isNudged = true;
+      this.focusInput();
+      setTimeout(() => {
+        this.isNudged = false;
+      }, 3000);
+    },
   },
 };
 </script>
 
 <template>
-  <div class="flex flex-col pt-3" @keydown.esc="hideEmojiPicker">
+  <div
+    class="flex flex-col pt-3 transition-all"
+    :class="{
+      'ring-2 ring-n-brand ring-offset-2 rounded-xl animate-pulse': isNudged,
+    }"
+    @keydown.esc="hideEmojiPicker"
+  >
     <div
       v-if="attachedFile"
       class="mb-2 rounded-[7px] bg-n-slate-3 px-2 py-1.5 text-sm text-n-slate-11 flex items-center gap-2"

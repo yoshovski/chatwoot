@@ -4,6 +4,7 @@ import { IFrameHelper } from 'widget/helpers/utils';
 import { shouldTriggerMessageUpdateEvent } from './IframeEventHelper';
 import { CHATWOOT_ON_MESSAGE } from '../constants/sdkEvents';
 import { isPreviewMode } from './previewMode';
+import { emitter } from 'shared/helpers/mitt';
 
 const isMessageInActiveConversation = (getters, message) => {
   const { conversation_id: conversationId } = message;
@@ -26,8 +27,19 @@ class ActionCableConnector extends BaseActionCableConnector {
       'conversation.created': this.onConversationCreated,
       'presence.update': this.onPresenceUpdate,
       'contact.merged': this.onContactMerge,
+      'conversation.nudge': this.onConversationNudge,
     };
   }
+
+  // eslint-disable-next-line class-methods-use-this
+  onConversationNudge = data => {
+    playNewMessageNotificationInWidget();
+    IFrameHelper.sendMessage({
+      event: 'onConversationNudge',
+      data,
+    });
+    emitter.emit('ON_CONVERSATION_NUDGE', data);
+  };
 
   onDisconnected = () => {
     this.setLastMessageId();

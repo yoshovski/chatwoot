@@ -22,18 +22,28 @@ module Captain::Behaviour
   end
 
   # Web widget proactive check-in timing (seconds):
+  # Web widget proactive check-in timing (seconds):
   # Fast, opinionated defaults for live website visitors on the widget.
-  # 90 seconds when the assistant asked a clarifying / qualification / options question and awaits an answer.
-  # 150 seconds (2.5 minutes) when the assistant gave a complete answer and no question is pending.
-  WIDGET_CHECK_IN_AWAITING_ANSWER_SECONDS = 90
-  WIDGET_CHECK_IN_COMPLETED_ANSWER_SECONDS = 150
+  # 40 seconds when the assistant asked a clarifying / qualification / options question and awaits an answer.
+  # 60 seconds (1 minute) when the assistant gave a complete answer and no question is pending.
+  WIDGET_CHECK_IN_AWAITING_ANSWER_SECONDS = 40
+  WIDGET_CHECK_IN_COMPLETED_ANSWER_SECONDS = 60
 
   def self.widget_check_in_awaiting_seconds(assistant)
-    assistant.config&.dig('widget_check_in_awaiting_seconds').presence&.to_i || WIDGET_CHECK_IN_AWAITING_ANSWER_SECONDS
+    resolve_widget_delay(assistant&.config&.dig('widget_check_in_awaiting_seconds'),
+                         'CAPTAIN_WIDGET_CHECK_IN_AWAITING_SECONDS',
+                         WIDGET_CHECK_IN_AWAITING_ANSWER_SECONDS)
   end
 
   def self.widget_check_in_completed_seconds(assistant)
-    assistant.config&.dig('widget_check_in_completed_seconds').presence&.to_i || WIDGET_CHECK_IN_COMPLETED_ANSWER_SECONDS
+    resolve_widget_delay(assistant&.config&.dig('widget_check_in_completed_seconds'),
+                         'CAPTAIN_WIDGET_CHECK_IN_COMPLETED_SECONDS',
+                         WIDGET_CHECK_IN_COMPLETED_ANSWER_SECONDS)
+  end
+
+  def self.resolve_widget_delay(configured, config_key, default_seconds)
+    candidates = [configured, GlobalConfig.get_value(config_key), ENV.fetch(config_key, nil)]
+    candidates.lazy.map { |v| v.presence&.to_i }.find { |v| v&.positive? } || default_seconds
   end
 
   # After a quiet period the agent sends one short check-in (a lead offer for prospects), then auto-resolve applies.

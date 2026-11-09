@@ -135,7 +135,13 @@ class Api::V1::Accounts::Captain::AssistantsController < Api::V1::Accounts::Base
   end
 
   def assistant_config_attributes
-    attributes = [
+    attributes = base_assistant_config_attributes
+    attributes += captain_v2_config_attributes if Current.account.feature_enabled?('captain_integration_v2')
+    attributes
+  end
+
+  def base_assistant_config_attributes
+    [
       :product_name, :feature_faq, :feature_memory, :feature_citation, :lead_notification_team_id, :lead_trigger, :lead_instructions,
       :feature_contact_attributes, :handoff_message, :resolution_message, :instructions, :temperature, :auto_resolve_mode, :handoff_collect_name,
       :handoff_collect_phone, :response_window, :published_pricing_enabled, :continue_while_waiting, :suggested_replies, :handoff_form_message,
@@ -145,15 +151,16 @@ class Api::V1::Accounts::Captain::AssistantsController < Api::V1::Accounts::Base
       { link_allowlist: [], image_allowlist: [], handoff_rules: [], lead_fields: %i[key label], lead_types: %i[name rule],
         limits: %i[cannot offer value] }
     ]
-    if Current.account.feature_enabled?('captain_integration_v2')
-      attributes += [
-        :auto_resolve_after, :send_inactivity_resolution_message,
-        :handoff_safety_net, { handoff_safety_net_keywords: [] },
-        :reply_labels, :outcome_labels,
-        :handoff_fallback_agent_id, :handoff_fallback_team_id
-      ]
-    end
-    attributes
+  end
+
+  def captain_v2_config_attributes
+    [
+      :auto_resolve_after, :send_inactivity_resolution_message,
+      :handoff_safety_net, { handoff_safety_net_keywords: [] },
+      :reply_labels, :outcome_labels,
+      :handoff_fallback_agent_id, :handoff_fallback_team_id,
+      :widget_check_in_awaiting_seconds, :widget_check_in_completed_seconds
+    ]
   end
 
   def assistant_params
