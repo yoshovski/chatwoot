@@ -21,7 +21,7 @@ watch(
 </script>
 
 <template>
-  <SettingsPageLayout :heading="t('PLATFORM_NAV.AFTER_CHAT')">
+  <SettingsPageLayout :heading="t('CAPTAIN.AGENT_UX.SECTIONS.HANDOFF')">
     <AssistantAfterChatForm
       :assistant="assistant"
       :save="updateAssistant"

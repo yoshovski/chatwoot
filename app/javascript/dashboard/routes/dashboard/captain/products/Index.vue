@@ -100,7 +100,7 @@ onMounted(() => fetchProducts(1));
 
 <template>
   <PageLayout
-    :header-title="$t('CAPTAIN.PRODUCTS.HEADER')"
+    :header-title="$t('CAPTAIN.AGENT_UX.SECTIONS.KNOWLEDGE')"
     :feature-flag="FEATURE_FLAGS.CAPTAIN"
     :total-count="total"
     :items-per-page="PAGE_SIZE"

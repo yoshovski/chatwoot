@@ -10,7 +10,10 @@ import PageLayout from 'dashboard/components-next/captain/PageLayout.vue';
 import Input from 'dashboard/components-next/input/Input.vue';
 import TextArea from 'dashboard/components-next/textarea/TextArea.vue';
 import Button from 'dashboard/components-next/button/Button.vue';
-import Accordion from 'dashboard/components-next/Accordion/Accordion.vue';
+import EditorSection from 'dashboard/components-next/captain/pageComponents/customTool/action/EditorSection.vue';
+import SummaryRow from 'dashboard/components-next/captain/pageComponents/assistant/settings/SummaryRow.vue';
+import SettingsPanel from 'dashboard/components-next/captain/pageComponents/assistant/settings/SettingsPanel.vue';
+import SettingsCard from 'dashboard/components-next/captain/pageComponents/assistant/settings/SettingsCard.vue';
 import ParamRow from 'dashboard/components-next/captain/pageComponents/customTool/ParamRow.vue';
 import StepRow from 'dashboard/components-next/captain/pageComponents/customTool/action/StepRow.vue';
 import StepPanel from 'dashboard/components-next/captain/pageComponents/customTool/action/StepPanel.vue';
@@ -42,6 +45,8 @@ const titleError = ref('');
 const openStepIndex = ref(null);
 const testResult = ref(null);
 const showMessages = ref(false);
+const replyPanelOpen = ref(false);
+const A = 'CAPTAIN.AGENT_UX.API';
 const modeTouched = ref(!!toolId.value);
 
 // Copy names the AI agent this action belongs to, e.g. "Visible to Store Bot".
@@ -62,7 +67,7 @@ const contactAttributes = computed(() =>
 );
 
 const backUrl = computed(() => ({
-  name: 'captain_tools_index',
+  name: 'captain_tools_api',
   params: {
     accountId: route.params.accountId,
     assistantId: route.params.assistantId,
@@ -218,6 +223,19 @@ onMounted(async () => {
   savedSnapshot.value = toolId.value ? snapshot() : '';
   isLoading.value = false;
 });
+
+// Step ticks: filled in enough to move on.
+const isAboutDone = computed(() =>
+  Boolean(form.title.trim() && form.description.trim())
+);
+const isCallDone = computed(() => form.steps.some(step => step.url?.trim()));
+const isResponseDone = computed(() => form.outputs.length > 0);
+const confirmMessagesSummary = computed(
+  () => form.messages.confirm_prompt?.trim() || t(`${A}.DEFAULT_MESSAGES`)
+);
+const replySummary = computed(
+  () => form.response_template?.trim() || t(`${A}.AUTO_REPLY`)
+);
 </script>
 
 <template>
@@ -244,8 +262,13 @@ onMounted(async () => {
     </template>
 
     <template #body>
-      <form class="flex flex-col gap-10 pb-16" @submit.prevent="save">
-        <section class="flex flex-col gap-4">
+      <form class="flex flex-col pt-2 pb-16" @submit.prevent="save">
+        <EditorSection
+          :number="1"
+          :title="t(`${A}.ABOUT_TITLE`)"
+          :description="t(`${A}.ABOUT_DESC`, { agent: agentName })"
+          :done="isAboutDone"
+        >
           <Input
             v-model="form.title"
             :label="t('CAPTAIN.CUSTOM_TOOLS.ACTION.NAME.LABEL')"
@@ -262,23 +285,26 @@ onMounted(async () => {
             :rows="2"
             auto-height
           />
-        </section>
+        </EditorSection>
 
-        <section class="flex flex-col gap-3">
-          <div class="flex items-center justify-between gap-2">
-            <h2 class="mb-0 text-sm font-medium text-n-slate-12">
-              {{ t('CAPTAIN.CUSTOM_TOOLS.ACTION.INPUTS.TITLE') }}
-            </h2>
+        <EditorSection
+          :number="2"
+          :title="t(`${A}.ASK_TITLE`)"
+          :description="t(`${A}.ASK_DESC`, { agent: agentName })"
+          :done="form.param_schema.length > 0"
+          optional
+        >
+          <template #actions>
             <Button
               type="button"
-              size="xs"
-              variant="ghost"
+              size="sm"
+              variant="faded"
               color="slate"
               icon="i-lucide-plus"
               :label="t('CAPTAIN.CUSTOM_TOOLS.ACTION.INPUTS.ADD')"
               @click="addParam"
             />
-          </div>
+          </template>
           <ul v-if="form.param_schema.length" class="flex flex-col gap-3 mb-0">
             <ParamRow
               v-for="(param, index) in form.param_schema"
@@ -293,18 +319,20 @@ onMounted(async () => {
           <p v-else class="mb-0 text-sm text-n-slate-10">
             {{ t('CAPTAIN.CUSTOM_TOOLS.ACTION.INPUTS.EMPTY') }}
           </p>
-        </section>
+        </EditorSection>
 
-        <section class="flex flex-col gap-3">
-          <div class="flex items-center justify-between gap-2">
-            <h2 class="mb-0 text-sm font-medium text-n-slate-12">
-              {{ t('CAPTAIN.CUSTOM_TOOLS.ACTION.STEPS.TITLE') }}
-            </h2>
+        <EditorSection
+          :number="3"
+          :title="t(`${A}.CALL_TITLE`)"
+          :description="t(`${A}.CALL_DESC`)"
+          :done="isCallDone"
+        >
+          <template #actions>
             <div class="flex gap-1">
               <Button
                 type="button"
-                size="xs"
-                variant="ghost"
+                size="sm"
+                variant="faded"
                 color="slate"
                 icon="i-lucide-plus"
                 :label="t('CAPTAIN.CUSTOM_TOOLS.ACTION.STEPS.ADD_REQUEST')"
@@ -313,8 +341,8 @@ onMounted(async () => {
               />
               <Button
                 type="button"
-                size="xs"
-                variant="ghost"
+                size="sm"
+                variant="faded"
                 color="slate"
                 icon="i-lucide-plus"
                 :label="t('CAPTAIN.CUSTOM_TOOLS.ACTION.STEPS.ADD_VERIFY')"
@@ -322,7 +350,7 @@ onMounted(async () => {
                 @click="addStep('verify')"
               />
             </div>
-          </div>
+          </template>
           <ul
             class="flex flex-col p-1 mb-0 rounded-xl outline outline-1 outline-n-weak"
           >
@@ -336,18 +364,23 @@ onMounted(async () => {
               @open="openStepIndex = index"
             />
           </ul>
+          <p class="m-0 text-xs text-n-slate-11">
+            {{ t(`${A}.CALL_HINT`) }}
+          </p>
           <ul
             v-if="generalErrors.length"
             class="mb-0 text-sm list-none text-n-ruby-11"
           >
             <li v-for="error in generalErrors" :key="error">{{ error }}</li>
           </ul>
-        </section>
+        </EditorSection>
 
-        <section class="flex flex-col gap-3">
-          <h2 class="mb-0 text-sm font-medium text-n-slate-12">
-            {{ t('CAPTAIN.CUSTOM_TOOLS.ACTION.OUTPUTS.SUMMARY_TITLE') }}
-          </h2>
+        <EditorSection
+          :number="4"
+          :title="t(`${A}.RESPONSE_TITLE`)"
+          :description="t(`${A}.RESPONSE_DESC`, { agent: agentName })"
+          :done="isResponseDone"
+        >
           <dl v-if="form.outputs.length" class="grid gap-2 mb-0">
             <div
               v-for="group in outputGroups"
@@ -387,15 +420,20 @@ onMounted(async () => {
               </dd>
             </div>
           </dl>
-          <p v-else class="mb-0 text-sm text-n-slate-10">
+          <p
+            v-else
+            class="px-4 py-3 mb-0 text-sm border border-dashed rounded-xl border-n-strong text-n-slate-11"
+          >
             {{ t('CAPTAIN.CUSTOM_TOOLS.ACTION.OUTPUTS.SUMMARY_EMPTY') }}
           </p>
-        </section>
+        </EditorSection>
 
-        <section class="flex flex-col gap-3">
-          <h2 class="mb-0 text-sm font-medium text-n-slate-12">
-            {{ t('CAPTAIN.CUSTOM_TOOLS.ACTION.MODE.TITLE') }}
-          </h2>
+        <EditorSection
+          :number="5"
+          :title="t(`${A}.RUN_TITLE`)"
+          :description="t(`${A}.RUN_DESC`, { agent: agentName })"
+          done
+        >
           <div
             class="grid grid-cols-2 p-1 rounded-lg bg-n-alpha-1 sm:self-start"
             role="radiogroup"
@@ -425,52 +463,27 @@ onMounted(async () => {
               )
             }}
           </p>
-          <template v-if="form.execution_mode === 'confirm'">
-            <div class="flex flex-col gap-2 p-4 rounded-xl bg-n-alpha-1">
-              <p
-                class="self-start px-3 py-2 mb-0 text-sm rounded-xl bg-n-solid-3 text-n-slate-12"
+          <div
+            v-if="form.execution_mode === 'confirm'"
+            class="flex flex-col gap-2 p-4 rounded-xl bg-n-alpha-1"
+          >
+            <p
+              class="self-start px-3 py-2 mb-0 text-sm rounded-xl bg-n-solid-3 text-n-slate-12"
+            >
+              {{ confirmPreview }}
+            </p>
+            <div class="flex gap-2">
+              <span
+                class="px-3 py-1 text-sm rounded-lg bg-n-solid-3 text-n-blue-11"
               >
-                {{ confirmPreview }}
-              </p>
-              <div class="flex gap-2">
-                <span
-                  class="px-3 py-1 text-sm rounded-lg bg-n-solid-3 text-n-blue-11"
-                >
-                  {{ t('CAPTAIN.CUSTOM_TOOLS.ACTION.MODE.CONFIRM_BUTTON') }}
-                </span>
-                <span
-                  class="px-3 py-1 text-sm rounded-lg bg-n-solid-3 text-n-slate-11"
-                >
-                  {{ t('CAPTAIN.CUSTOM_TOOLS.ACTION.MODE.CANCEL_BUTTON') }}
-                </span>
-              </div>
+                {{ t('CAPTAIN.CUSTOM_TOOLS.ACTION.MODE.CONFIRM_BUTTON') }}
+              </span>
+              <span
+                class="px-3 py-1 text-sm rounded-lg bg-n-solid-3 text-n-slate-11"
+              >
+                {{ t('CAPTAIN.CUSTOM_TOOLS.ACTION.MODE.CANCEL_BUTTON') }}
+              </span>
             </div>
-            <Button
-              v-if="!showMessages"
-              type="button"
-              size="xs"
-              variant="link"
-              color="blue"
-              class="self-start"
-              :label="t('CAPTAIN.CUSTOM_TOOLS.ACTION.MODE.CUSTOMIZE')"
-              @click="showMessages = true"
-            />
-            <template v-else>
-              <TemplateField
-                v-for="key in ['confirm_prompt', 'success', 'failure']"
-                :key="key"
-                v-model="form.messages[key]"
-                :variables="allOutputs"
-                :label="
-                  t(`CAPTAIN.CUSTOM_TOOLS.ACTION.MODE.${key.toUpperCase()}`)
-                "
-                :placeholder="
-                  t(
-                    `CAPTAIN.CUSTOM_TOOLS.ACTION.MODE.${key.toUpperCase()}_PLACEHOLDER`
-                  )
-                "
-              />
-            </template>
             <p class="mb-0 text-xs text-n-slate-10">
               {{
                 t('CAPTAIN.CUSTOM_TOOLS.ACTION.MODE.CHANNEL_NOTE', {
@@ -478,21 +491,61 @@ onMounted(async () => {
                 })
               }}
             </p>
-          </template>
-        </section>
-
-        <Accordion :title="t('CAPTAIN.CUSTOM_TOOLS.ACTION.ADVANCED')">
-          <TemplateField
-            v-model="form.response_template"
-            :variables="allOutputs"
-            :label="t('CAPTAIN.CUSTOM_TOOLS.ACTION.OUTPUTS.TEMPLATE')"
-            :placeholder="
-              t('CAPTAIN.CUSTOM_TOOLS.ACTION.OUTPUTS.TEMPLATE_PLACEHOLDER')
-            "
-            multiline
-          />
-        </Accordion>
+          </div>
+          <SettingsCard>
+            <SummaryRow
+              v-if="form.execution_mode === 'confirm'"
+              icon="i-lucide-message-square-text"
+              :title="t('CAPTAIN.CUSTOM_TOOLS.ACTION.MODE.CUSTOMIZE')"
+              :summary="confirmMessagesSummary"
+              @edit="showMessages = true"
+            />
+            <SummaryRow
+              icon="i-lucide-reply"
+              :title="t(`${A}.REPLY_TITLE`)"
+              :summary="replySummary"
+              @edit="replyPanelOpen = true"
+            />
+          </SettingsCard>
+        </EditorSection>
       </form>
+
+      <SettingsPanel
+        v-model:open="showMessages"
+        :title="t('CAPTAIN.CUSTOM_TOOLS.ACTION.MODE.CUSTOMIZE')"
+        :description="t(`${A}.MESSAGES_DESC`, { agent: agentName })"
+        width="xl"
+      >
+        <TemplateField
+          v-for="key in ['confirm_prompt', 'success', 'failure']"
+          :key="key"
+          v-model="form.messages[key]"
+          :variables="allOutputs"
+          :label="t(`CAPTAIN.CUSTOM_TOOLS.ACTION.MODE.${key.toUpperCase()}`)"
+          :placeholder="
+            t(
+              `CAPTAIN.CUSTOM_TOOLS.ACTION.MODE.${key.toUpperCase()}_PLACEHOLDER`
+            )
+          "
+        />
+      </SettingsPanel>
+
+      <SettingsPanel
+        v-model:open="replyPanelOpen"
+        :title="t(`${A}.REPLY_TITLE`)"
+        :description="t(`${A}.REPLY_DESC`, { agent: agentName })"
+        width="xl"
+      >
+        <TemplateField
+          v-model="form.response_template"
+          :variables="allOutputs"
+          :label="t('CAPTAIN.CUSTOM_TOOLS.ACTION.OUTPUTS.TEMPLATE')"
+          :placeholder="
+            t('CAPTAIN.CUSTOM_TOOLS.ACTION.OUTPUTS.TEMPLATE_PLACEHOLDER')
+          "
+          multiline
+        />
+      </SettingsPanel>
 
       <StepPanel
         v-if="openStepIndex !== null"

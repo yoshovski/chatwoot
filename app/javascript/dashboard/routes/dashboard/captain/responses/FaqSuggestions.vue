@@ -19,6 +19,7 @@ import Input from 'dashboard/components-next/input/Input.vue';
 import KnowledgeGapAnswerDialog from 'dashboard/components-next/captain/pageComponents/response/KnowledgeGapAnswerDialog.vue';
 import KnowledgeGapCard from 'dashboard/components-next/captain/assistant/KnowledgeGapCard.vue';
 import PageLayout from 'dashboard/components-next/captain/PageLayout.vue';
+import LearnFromChatsSwitch from 'dashboard/components-next/captain/pageComponents/response/LearnFromChatsSwitch.vue';
 import TabBar from 'dashboard/components-next/tabbar/TabBar.vue';
 
 const TABS = { UNANSWERED: 'unanswered', ANSWERED: 'answered' };
@@ -54,14 +55,6 @@ const isMutating = computed(
   () => uiFlags.value.updatingItem || uiFlags.value.deletingItem
 );
 const hasActiveFilters = computed(() => Boolean(searchQuery.value));
-
-const backUrl = computed(() => ({
-  name: 'captain_assistants_responses_index',
-  params: {
-    accountId: route.params.accountId,
-    assistantId: selectedAssistantId.value,
-  },
-}));
 
 const tabs = computed(() => [
   {
@@ -289,13 +282,12 @@ onUnmounted(() => {
   <PageLayout
     :total-count="listMeta.totalCount"
     :current-page="listMeta.page"
-    :header-title="$t('CAPTAIN.FAQ_SUGGESTIONS.HEADER')"
+    :header-title="$t('CAPTAIN.AGENT_UX.SECTIONS.KNOWLEDGE')"
     :is-fetching="isFetching"
     :is-empty="isListEmpty"
     :show-pagination-footer="!isFetching && !isListEmpty"
     :show-know-more="false"
     :feature-flag="FEATURE_FLAGS.CAPTAIN"
-    :back-url="backUrl"
     @update:current-page="fetchActivePage"
   >
     <template #search>
@@ -371,6 +363,9 @@ onUnmounted(() => {
       <CaptainPaywall />
     </template>
 
+    <template #controls>
+      <LearnFromChatsSwitch />
+    </template>
     <template #body>
       <div v-if="isUnanswered" class="flex flex-col gap-3 pb-6">
         <KnowledgeGapCard

@@ -32,7 +32,7 @@ describe('builtInActions', () => {
     expect(buildToolReference('handoff')).toBe('handoff');
   });
 
-  it('groups built-in, custom and MCP tools with one label per group', () => {
+  it('groups built-in tools by category, then custom and MCP, with one label per group', () => {
     const grouped = groupTools(
       [
         { id: 'custom_quote', custom: true },
@@ -50,8 +50,8 @@ describe('builtInActions', () => {
       'crm_lookup',
     ]);
     expect(grouped.map(tool => tool.groupLabel)).toEqual([
-      'BUILT_IN',
-      undefined,
+      'ANSWERS',
+      'CONVERSATION',
       'CUSTOM',
       'MCP',
     ]);

@@ -50,7 +50,7 @@ const handleDeleteSuccess = () => {
 </script>
 
 <template>
-  <SettingsPageLayout :heading="t('PLATFORM_NAV.IDENTITY')">
+  <SettingsPageLayout :heading="t('CAPTAIN.AGENT_UX.SECTIONS.PROFILE')">
     <AssistantBasicSettingsForm
       :assistant="assistant"
       :save="updateAssistant"

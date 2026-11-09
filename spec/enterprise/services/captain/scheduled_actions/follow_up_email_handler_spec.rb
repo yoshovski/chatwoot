@@ -12,7 +12,7 @@ RSpec.describe Captain::ScheduledActions::FollowUpEmailHandler do
                                                payload: { 'template' => 'nudge' })
 
     expect { described_class.new(action).perform }
-      .to have_enqueued_mail(Captain::ActionsMailer, :visitor_email).with(conversation, 'Still deciding?', 'Hi Jamie, any questions?')
+      .to have_enqueued_mail(Captain::ActionsMailer, :visitor_email).with(conversation, 'Still deciding?', 'Hi Jamie, any questions?', nil)
 
     contact.update!(email: nil)
     expect { described_class.new(action).perform }.to raise_error(/no_email/)

@@ -13,7 +13,7 @@ module Captain::ActionEmails
     return :already_sent unless claim_once(conversation, once_key.to_s)
 
     email = Captain::EmailTemplates.new(assistant).render(template_key, conversation)
-    Captain::ActionsMailer.visitor_email(conversation, email[:subject], email[:body]).deliver_later
+    Captain::ActionsMailer.visitor_email(conversation, email[:subject], email[:body], email[:html]).deliver_later
     conversation.account.increment_email_sent_count
     :sent
   end
@@ -25,7 +25,7 @@ module Captain::ActionEmails
     return :rate_limited unless conversation.account.within_email_rate_limit?
 
     email = Captain::EmailTemplates.new(assistant).render(template_key, conversation, summary: summary.to_s.truncate(SUMMARY_LIMIT))
-    Captain::ActionsMailer.team_email(conversation, emails, email[:subject], email[:body]).deliver_later
+    Captain::ActionsMailer.team_email(conversation, emails, email[:subject], email[:body], email[:html]).deliver_later
     conversation.account.increment_email_sent_count
     :sent
   end

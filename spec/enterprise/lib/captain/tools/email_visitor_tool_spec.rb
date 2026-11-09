@@ -13,7 +13,7 @@ RSpec.describe Captain::Tools::EmailVisitorTool do
 
   it 'sends the rendered template once per conversation' do
     expect { tool.perform(tool_context) }.to have_enqueued_mail(Captain::ActionsMailer, :visitor_email)
-      .with(conversation, 'Plans for Jamie', 'Hi! — Ada')
+      .with(conversation, 'Plans for Jamie', 'Hi! — Ada', nil)
     expect(tool.perform(tool_context)).to include('already sent')
   end
 

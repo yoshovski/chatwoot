@@ -12,7 +12,7 @@ const { assistant, updateAssistant } = useAssistantSettings();
 
 <template>
   <SettingsPageLayout
-    :heading="t('CAPTAIN.ASSISTANTS.SETTINGS.LEADS.TITLE')"
+    :heading="t('CAPTAIN.AGENT_UX.SECTIONS.SCENARIOS')"
     :description="t('CAPTAIN.ASSISTANTS.SETTINGS.LEADS.DESCRIPTION')"
   >
     <AssistantLeadsForm

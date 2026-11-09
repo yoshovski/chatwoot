@@ -1,8 +1,7 @@
 <script setup>
-import { computed, ref, watch } from 'vue';
+import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useBusinessExamples } from 'dashboard/components-next/captain/assistant/useBusinessExamples';
-import MessageSources from 'shared/components/MessageSources.vue';
 import AssistantChatPreview from './AssistantChatPreview.vue';
 
 const props = defineProps({
@@ -20,29 +19,21 @@ const { t } = useI18n();
 const examples = useBusinessExamples(computed(() => props.assistant.id));
 
 const config = computed(() => props.assistant.config || {});
-const previewType = ref('howTo');
-const previewTypes = ['simple', 'howTo'];
-const question = computed(() =>
-  previewType.value === 'simple'
-    ? examples.question.value
-    : examples.howToQuestion.value
-);
-const reply = computed(() =>
-  previewType.value === 'simple'
-    ? examples.reply(config.value.tone)
-    : examples.howToReply(config.value.answer_length || 'balanced')
-);
-watch(
-  () => config.value.tone,
-  () => {
-    previewType.value = 'simple';
-  }
-);
-watch(
-  () => config.value.answer_length,
-  () => {
-    previewType.value = 'howTo';
-  }
+// One question and one answer. The opening words follow the tone, the body follows
+// the answer length, and the extras appear around it.
+const TONE_OPENERS = ['friendly', 'professional'];
+const answer = computed(() => {
+  const body = examples.howToReply(config.value.answer_length || 'balanced');
+  const tone = config.value.tone || 'friendly';
+  return TONE_OPENERS.includes(tone)
+    ? `${t(`CAPTAIN.AGENT_UX.STYLE.OPENER.${tone.toUpperCase()}`)} ${body}`
+    : body;
+});
+const showFollowUp = computed(
+  () =>
+    config.value.follow_up_questions !== false &&
+    (config.value.business_type || props.assistant.detected_business_type) !==
+      'commerce'
 );
 const quickReplies = computed(() =>
   config.value.suggested_replies
@@ -54,9 +45,7 @@ const quickReplies = computed(() =>
 );
 const previewSources = computed(() => {
   const source =
-    examples.sources.value[
-      previewType.value === 'simple' ? 'question' : 'how_to'
-    ];
+    examples.sources.value.how_to || examples.sources.value.question;
   return source ? [source] : [];
 });
 const helpfulLink = computed(() =>
@@ -70,43 +59,22 @@ const showProductCard = computed(
 </script>
 
 <template>
-  <div
-    class="flex gap-1 p-1 rounded-lg bg-n-alpha-1"
-    role="group"
-    :aria-label="t('CAPTAIN.ASSISTANTS.SETTINGS.PREVIEW.EXAMPLE_TYPE')"
-  >
-    <button
-      v-for="type in previewTypes"
-      :key="type"
-      type="button"
-      :aria-pressed="previewType === type"
-      class="flex-1 rounded-md px-3 py-1.5 text-xs font-medium transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-n-brand"
-      :class="
-        previewType === type
-          ? 'bg-n-solid-1 text-n-slate-12 shadow-sm'
-          : 'text-n-slate-11 hover:text-n-slate-12'
-      "
-      @click="previewType = type"
-    >
-      {{ t(`CAPTAIN.ASSISTANTS.SETTINGS.PREVIEW.EXAMPLE_TYPES.${type}`) }}
-    </button>
-  </div>
   <AssistantChatPreview
     :name="assistant.name"
     :avatar-url="assistant.avatar_url"
   >
     <p class="preview-bubble preview-bubble--customer">
-      {{ question }}
+      {{ examples.howToQuestion.value }}
     </p>
     <div class="flex flex-col self-start gap-2 max-w-[88%]">
       <p class="preview-bubble preview-bubble--agent !max-w-full">
-        {{ reply }}
+        {{ answer }}
         <a
           v-if="helpfulLink"
           :href="helpfulLink.url"
           target="_blank"
           rel="noopener noreferrer"
-          class="mt-2 block text-n-blue-11 underline underline-offset-2"
+          class="block mt-2 underline text-n-blue-11 underline-offset-2"
         >
           {{
             t('CAPTAIN.ASSISTANTS.SETTINGS.PREVIEW.READ_MORE', {
@@ -114,11 +82,12 @@ const showProductCard = computed(
             })
           }}
         </a>
-        <MessageSources
-          v-if="config.feature_citation && previewSources.length"
-          :sources="previewSources"
-          :label="t('CONVERSATION.CAPTAIN_SOURCES')"
-        />
+      </p>
+      <p
+        v-if="showFollowUp"
+        class="preview-bubble preview-bubble--agent !max-w-full"
+      >
+        {{ t('CAPTAIN.AGENT_UX.STYLE.FOLLOW_UP_EXAMPLE') }}
       </p>
       <div
         v-if="showProductCard"

@@ -119,7 +119,7 @@ describe('AssistantAfterChatForm', () => {
     });
   });
 
-  it('saves the label and learning switches with the other settings', async () => {
+  it('saves the label switches and keeps learning settings that moved elsewhere', async () => {
     const wrapper = mountComponent();
     const rows = wrapper
       .findAllComponents(SettingsSwitchRow)
@@ -134,9 +134,9 @@ describe('AssistantAfterChatForm', () => {
         .findAllComponents(SettingsSwitchRow)
         .find(row => row.props('title').endsWith(suffix));
 
-    expect(rows).toHaveLength(4);
+    // FAQ suggestions moved to Knowledge and memories to Customer data.
+    expect(rows).toHaveLength(2);
     byTitle('OUTCOME_LABELS.TITLE').vm.$emit('update:modelValue', true);
-    byTitle('MEMORIES.TITLE').vm.$emit('update:modelValue', true);
     await nextTick();
     await submitForm(wrapper);
 
@@ -144,7 +144,6 @@ describe('AssistantAfterChatForm', () => {
       config: {
         ...assistant.config,
         outcome_labels: true,
-        feature_memory: true,
       },
     });
   });

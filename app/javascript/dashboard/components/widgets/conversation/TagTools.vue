@@ -4,7 +4,10 @@ import ToolsDropdown from 'dashboard/components-next/captain/assistant/ToolsDrop
 import { useKeyboardNavigableList } from 'dashboard/composables/useKeyboardNavigableList';
 import { useI18n } from 'vue-i18n';
 import { useMapGetter } from 'dashboard/composables/store.js';
-import { groupTools } from 'dashboard/components-next/captain/scenarios/builtInActions';
+import {
+  groupTools,
+  toolGroupLabel,
+} from 'dashboard/components-next/captain/scenarios/builtInActions';
 
 const props = defineProps({
   searchKey: {
@@ -22,12 +25,6 @@ const emit = defineEmits(['selectTool']);
 const { t } = useI18n();
 const tools = useMapGetter('captainTools/getRecords');
 
-const groupLabels = {
-  BUILT_IN: () => t('CAPTAIN.ASSISTANTS.SCENARIOS.PALETTE.GROUPS.BUILT_IN'),
-  CUSTOM: () => t('CAPTAIN.ASSISTANTS.SCENARIOS.PALETTE.GROUPS.CUSTOM'),
-  MCP: () => t('CAPTAIN.ASSISTANTS.SCENARIOS.PALETTE.GROUPS.MCP'),
-};
-
 const selectedIndex = ref(0);
 
 const filteredTools = computed(() => {
@@ -37,7 +34,7 @@ const filteredTools = computed(() => {
     tool.title.toLowerCase().includes(search)
   );
   // Built-in actions, your actions, MCP tools: the same groups as the palette.
-  return groupTools(matches, group => groupLabels[group]());
+  return groupTools(matches, group => toolGroupLabel(group, t));
 });
 
 const adjustScroll = () => {};

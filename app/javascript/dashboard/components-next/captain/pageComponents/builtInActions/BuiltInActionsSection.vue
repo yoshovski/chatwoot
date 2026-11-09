@@ -4,6 +4,11 @@ import { useI18n } from 'vue-i18n';
 import { useRoute, useRouter } from 'vue-router';
 import { useMapGetter, useStore } from 'dashboard/composables/store';
 import Button from 'dashboard/components-next/button/Button.vue';
+import SidePanel from 'dashboard/components-next/side-panel/SidePanel.vue';
+import {
+  TOOL_CATEGORIES,
+  toolGroup,
+} from 'dashboard/components-next/captain/scenarios/builtInActions';
 
 // Read-only list of what the AI agent can do without setup. Behaviour is fixed by ChatOctave; scenarios name the
 // actions and their values, so there are no per-agent switches here.
@@ -13,7 +18,7 @@ const route = useRoute();
 const router = useRouter();
 
 const tools = useMapGetter('captainTools/getRecords');
-const showHelp = ref(false);
+const helpPanel = ref(null);
 
 const builtInTools = computed(() =>
   (tools.value || []).filter(tool => !tool.custom && !tool.mcp)
@@ -59,6 +64,13 @@ const helpRows = computed(() => [
   },
 ]);
 
+const categorized = computed(() =>
+  TOOL_CATEGORIES.map(category => ({
+    ...category,
+    tools: builtInTools.value.filter(tool => toolGroup(tool) === category.key),
+  })).filter(category => category.tools.length)
+);
+
 const useInScenario = () =>
   router.push({
     name: 'captain_assistants_scenarios_index',
@@ -71,82 +83,89 @@ onMounted(() => {
 </script>
 
 <template>
-  <section class="flex flex-col gap-3" data-test="built-in-actions">
-    <div class="flex items-center justify-between gap-2">
-      <div class="flex flex-col gap-0.5">
-        <h2 class="mb-0 text-sm font-medium text-n-slate-12">
-          {{ t('CAPTAIN.BUILT_IN_ACTIONS.TITLE') }}
-        </h2>
-        <p class="mb-0 text-sm text-n-slate-11">
-          {{ t('CAPTAIN.BUILT_IN_ACTIONS.DESCRIPTION') }}
-        </p>
-      </div>
-      <Button
-        xs
-        link
-        :label="t('CAPTAIN.BUILT_IN_ACTIONS.HELP.TOGGLE')"
-        data-test="built-in-help-toggle"
-        @click="showHelp = !showHelp"
-      />
-    </div>
-
-    <div
-      v-if="showHelp"
-      class="overflow-x-auto border rounded-lg border-n-weak"
-      data-test="built-in-help"
-    >
-      <table class="w-full text-sm text-start">
-        <thead class="text-n-slate-11">
-          <tr>
-            <th class="px-3 py-2 font-medium text-start">
-              {{ t('CAPTAIN.BUILT_IN_ACTIONS.HELP.USE') }}
-            </th>
-            <th class="px-3 py-2 font-medium text-start">
-              {{ t('CAPTAIN.BUILT_IN_ACTIONS.HELP.WHEN') }}
-            </th>
-            <th class="px-3 py-2 font-medium text-start">
-              {{ t('CAPTAIN.BUILT_IN_ACTIONS.HELP.EXAMPLE') }}
-            </th>
-          </tr>
-        </thead>
-        <tbody class="text-n-slate-12">
-          <tr
-            v-for="row in helpRows"
-            :key="row.key"
-            class="border-t border-n-weak"
-          >
-            <td class="px-3 py-2 font-medium">{{ row.use }}</td>
-            <td class="px-3 py-2">{{ row.when }}</td>
-            <td class="px-3 py-2 text-n-slate-11">{{ row.example }}</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-
-    <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-      <div
-        v-for="tool in builtInTools"
-        :key="tool.id"
-        class="flex flex-col gap-2 p-3 border rounded-xl border-n-weak bg-n-solid-1"
-        data-test="built-in-action-card"
-      >
-        <div class="flex items-center gap-2">
-          <span v-if="tool.emoji" class="text-base leading-none">
-            {{ tool.emoji }}
-          </span>
-          <span class="text-sm font-medium text-n-slate-12">
-            {{ tool.title }}
-          </span>
-        </div>
-        <p class="mb-0 text-xs text-n-slate-11">{{ tool.description }}</p>
+  <section class="flex flex-col gap-6" data-test="built-in-actions">
+    <div class="flex flex-wrap items-center justify-between gap-3">
+      <p class="max-w-3xl m-0 text-sm text-n-slate-11">
+        {{
+          t('CAPTAIN.AGENT_UX.TOOLS.INTRO.BUILT_IN', {
+            count: builtInTools.length,
+          })
+        }}
+      </p>
+      <div class="flex gap-2 shrink-0">
         <Button
-          xs
-          link
-          class="self-start"
+          sm
+          faded
+          slate
+          icon="i-lucide-circle-help"
+          :label="t('CAPTAIN.BUILT_IN_ACTIONS.HELP.TOGGLE')"
+          data-test="built-in-help-toggle"
+          @click="helpPanel.open()"
+        />
+        <Button
+          sm
+          faded
+          slate
+          icon="i-lucide-git-branch"
           :label="t('CAPTAIN.BUILT_IN_ACTIONS.USE_IN_SCENARIO')"
           @click="useInScenario"
         />
       </div>
     </div>
+
+    <div
+      v-for="category in categorized"
+      :key="category.key"
+      class="flex flex-col gap-2"
+    >
+      <h3
+        class="flex items-center gap-1.5 m-0 text-sm font-semibold text-n-slate-12"
+      >
+        <span
+          :class="category.icon"
+          class="size-4 text-n-slate-10"
+          aria-hidden="true"
+        />
+        {{ t(`CAPTAIN.AGENT_UX.TOOLS.CATEGORIES.${category.key}`) }}
+      </h3>
+      <ul class="grid gap-2 p-0 m-0 list-none sm:grid-cols-2 xl:grid-cols-3">
+        <li
+          v-for="tool in category.tools"
+          :key="tool.id"
+          class="flex items-start gap-3 px-3 py-2.5 rounded-xl bg-n-alpha-1"
+          data-test="built-in-action-card"
+        >
+          <span class="w-5 text-base leading-5 text-center shrink-0">
+            {{ tool.emoji }}
+          </span>
+          <span class="flex flex-col min-w-0">
+            <span class="text-sm font-medium text-n-slate-12">
+              {{ tool.title }}
+            </span>
+            <span class="text-xs text-n-slate-11 line-clamp-2">
+              {{ tool.description }}
+            </span>
+          </span>
+        </li>
+      </ul>
+    </div>
+
+    <SidePanel
+      ref="helpPanel"
+      :title="t('CAPTAIN.BUILT_IN_ACTIONS.HELP.TOGGLE')"
+      width="3xl"
+    >
+      <div class="flex flex-col gap-3" data-test="built-in-help">
+        <div
+          v-for="row in helpRows"
+          :key="row.key"
+          class="flex flex-col gap-1 p-4 rounded-xl bg-n-alpha-1"
+        >
+          <span class="text-sm font-medium text-n-slate-12">{{ row.use }}</span>
+          <span class="text-sm text-n-slate-11">{{ row.when }}</span>
+          <span class="text-xs italic text-n-slate-10">{{ row.example }}</span>
+        </div>
+      </div>
+    </SidePanel>
   </section>
 </template>

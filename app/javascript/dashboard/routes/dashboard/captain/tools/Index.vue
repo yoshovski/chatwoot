@@ -17,8 +17,6 @@ import Dialog from 'dashboard/components-next/dialog/Dialog.vue';
 import McpServerCard from 'dashboard/components-next/captain/pageComponents/mcpServer/McpServerCard.vue';
 import ConnectMcpServerDialog from 'dashboard/components-next/captain/pageComponents/mcpServer/ConnectMcpServerDialog.vue';
 import { useMcpServers } from 'dashboard/components-next/captain/pageComponents/mcpServer/useMcpServers';
-import Button from 'dashboard/components-next/button/Button.vue';
-import Policy from 'dashboard/components/policy.vue';
 import { useAdmin } from 'dashboard/composables/useAdmin';
 import { parseAPIErrorResponse } from 'dashboard/store/utils/api';
 
@@ -249,82 +247,115 @@ onMounted(() => {
     if (isAdmin.value) mcp.fetch().catch(mcpError);
   }
 });
+
+// One route per tab: built-in tools, email templates, API calls and MCP servers.
+const VIEWS = {
+  captain_tools_index: 'BUILT_IN',
+  captain_tools_email_templates: 'EMAIL_TEMPLATES',
+  captain_tools_api: 'API_CALLS',
+  captain_tools_connections: 'MCP',
+};
+const view = computed(() => VIEWS[route.name] || 'BUILT_IN');
+const emailTemplatesRef = ref(null);
+const headerButtonLabel = computed(
+  () =>
+    ({
+      EMAIL_TEMPLATES: t('CAPTAIN.AGENT_UX.TOOLS.NEW_TEMPLATE'),
+      API_CALLS: t('CAPTAIN.CUSTOM_TOOLS.ADD_NEW'),
+      MCP: t('CAPTAIN.MCP_SERVERS.ADD'),
+    })[view.value] || ''
+);
+const onHeaderButton = () => {
+  if (view.value === 'MCP') openMcpDialog();
+  else if (view.value === 'EMAIL_TEMPLATES') emailTemplatesRef.value?.open();
+  else openCreateDialog();
+};
 </script>
 
 <template>
   <PageLayout
-    :header-title="$t('CAPTAIN.CUSTOM_TOOLS.HEADER')"
-    :button-label="$t('CAPTAIN.CUSTOM_TOOLS.ADD_NEW')"
+    :header-title="$t('CAPTAIN.AGENT_UX.SECTIONS.ACTIONS')"
+    :button-label="headerButtonLabel"
     :button-policy="['administrator']"
     :feature-flag="FEATURE_FLAGS.CAPTAIN_CUSTOM_TOOLS"
     :total-count="customToolsMeta.totalCount"
     :current-page="customToolsMeta.page"
-    :show-pagination-footer="!isFetching && !!customTools.length"
+    :show-pagination-footer="
+      view === 'API_CALLS' && !isFetching && customToolsMeta.totalCount > 25
+    "
     :is-fetching="isPageFetching"
     :is-empty="false"
     :show-know-more="false"
     @update:current-page="onPageChange"
-    @click="openCreateDialog"
+    @click="onHeaderButton"
   >
-    <template #headerActions>
-      <Policy :permissions="['administrator']">
-        <Button
-          :label="$t('CAPTAIN.MCP_SERVERS.ADD')"
-          icon="i-lucide-plug"
-          size="sm"
-          variant="faded"
-          color="slate"
-          @click="openMcpDialog()"
-        />
-      </Policy>
-    </template>
-
     <template #paywall>
       <CaptainPaywall feature-prefix="CAPTAIN.CUSTOM_TOOLS" />
     </template>
 
     <template #body>
-      <div class="flex flex-col gap-4">
+      <div class="flex flex-col gap-5 pb-8">
         <div
-          v-if="showSoftLimitWarning"
+          v-if="view === 'API_CALLS' && showSoftLimitWarning"
           class="flex items-center gap-2 px-4 py-3 text-sm rounded-lg bg-n-amber-2 text-n-amber-11"
         >
           <span class="i-lucide-triangle-alert size-4 shrink-0" />
           {{ $t('CAPTAIN.CUSTOM_TOOLS.SOFT_LIMIT_WARNING') }}
         </div>
-        <BuiltInActionsSection />
-        <EmailTemplatesSection />
-        <h2 class="mt-4 mb-0 text-sm font-medium text-n-slate-11">
-          {{ $t('CAPTAIN.CUSTOM_TOOLS.SECTION_TITLE') }}
-        </h2>
-        <p
-          v-if="!customTools.length"
-          class="mb-0 text-sm text-n-slate-10"
-          data-test="custom-actions-empty"
-        >
-          {{ $t('CAPTAIN.BUILT_IN_ACTIONS.CUSTOM_EMPTY') }}
-        </p>
-        <CustomToolCard
-          v-for="tool in customTools"
-          :id="tool.id"
-          :key="tool.id"
-          :title="tool.title"
-          :description="tool.description"
-          :endpoint-url="tool.endpoint_url"
-          :http-method="tool.http_method"
-          :auth-type="tool.auth_type"
-          :param-schema="tool.param_schema"
-          :enabled="tool.enabled"
-          :is-updating="pendingToggleIds.has(tool.id)"
-          :created-at="tool.created_at"
-          :updated-at="tool.updated_at"
-          @action="handleAction"
-          @toggle="toggleCustomTool"
+
+        <BuiltInActionsSection v-if="view === 'BUILT_IN'" />
+
+        <EmailTemplatesSection
+          v-else-if="view === 'EMAIL_TEMPLATES'"
+          ref="emailTemplatesRef"
         />
-        <template v-if="mcpServers.length">
-          <h2 class="mt-4 mb-0 text-sm font-medium text-n-slate-11">
-            {{ $t('CAPTAIN.MCP_SERVERS.TITLE') }}
-          </h2>
+
+        <template v-else-if="view === 'API_CALLS'">
+          <p class="max-w-3xl m-0 text-sm text-n-slate-11">
+            {{ $t('CAPTAIN.AGENT_UX.TOOLS.INTRO.API_CALLS') }}
+          </p>
+          <div
+            v-if="!customTools.length"
+            class="flex flex-col items-center gap-3 px-6 py-10 text-center border border-dashed rounded-xl border-n-strong"
+            data-test="custom-actions-empty"
+          >
+            <span class="i-lucide-webhook size-6 text-n-slate-10" />
+            <p class="m-0 text-sm text-n-slate-11">
+              {{ $t('CAPTAIN.AGENT_UX.TOOLS.API_EMPTY') }}
+            </p>
+          </div>
+          <CustomToolCard
+            v-for="tool in customTools"
+            :id="tool.id"
+            :key="tool.id"
+            :title="tool.title"
+            :description="tool.description"
+            :endpoint-url="tool.endpoint_url"
+            :http-method="tool.http_method"
+            :auth-type="tool.auth_type"
+            :param-schema="tool.param_schema"
+            :enabled="tool.enabled"
+            :is-updating="pendingToggleIds.has(tool.id)"
+            :created-at="tool.created_at"
+            :updated-at="tool.updated_at"
+            @action="handleAction"
+            @toggle="toggleCustomTool"
+          />
+        </template>
+
+        <template v-else>
+          <p class="max-w-3xl m-0 text-sm text-n-slate-11">
+            {{ $t('CAPTAIN.AGENT_UX.TOOLS.INTRO.MCP') }}
+          </p>
+          <div
+            v-if="!mcpServers.length"
+            class="flex flex-col items-center gap-3 px-6 py-10 text-center border border-dashed rounded-xl border-n-strong"
+          >
+            <span class="i-lucide-plug size-6 text-n-slate-10" />
+            <p class="m-0 text-sm text-n-slate-11">
+              {{ $t('CAPTAIN.AGENT_UX.TOOLS.MCP_EMPTY') }}
+            </p>
+          </div>
           <McpServerCard
             v-for="server in mcpServers"
             :key="server.id"

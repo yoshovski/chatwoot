@@ -71,16 +71,12 @@ describe('TemplateGallery', () => {
     expect(wrapper.emitted('describe')).toHaveLength(1);
   });
 
-  it('starts collapsed once the assistant has scenarios', () => {
+  it('always shows the templates, also next to existing scenarios', () => {
     const wrapper = mountGallery({ hasScenarios: true });
 
-    expect(wrapper.find('[data-test^="template-"]').exists()).toBe(false);
-  });
-
-  it('respects the saved choice over the default', () => {
-    uiSettings.value = { show_scenarios_suggestions: true };
-    const wrapper = mountGallery({ hasScenarios: true });
-
-    expect(wrapper.find('[data-test^="template-"]').exists()).toBe(true);
+    expect(wrapper.find('[data-test="template-describe"]').exists()).toBe(true);
+    expect(wrapper.findAll('[data-test^="template-"]').length).toBeGreaterThan(
+      1
+    );
   });
 });

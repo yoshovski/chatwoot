@@ -1,11 +1,10 @@
 <script setup>
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { useUISettings } from 'dashboard/composables/useUISettings';
-import Button from 'dashboard/components-next/button/Button.vue';
 import TemplateCard from './TemplateCard.vue';
 import { SCENARIO_TEMPLATES, isTemplateAvailable } from './scenarioTemplates';
 
+// Always visible. Next to existing scenarios it is a compact rail; with none it is the page.
 const props = defineProps({
   tools: {
     type: Array,
@@ -20,12 +19,6 @@ const props = defineProps({
 const emit = defineEmits(['useTemplate', 'describe']);
 
 const { t } = useI18n();
-const { uiSettings, updateUISettings } = useUISettings();
-
-// Until the user toggles it, show the gallery only while there is nothing to manage yet.
-const isExpanded = computed(
-  () => uiSettings.value?.show_scenarios_suggestions ?? !props.hasScenarios
-);
 
 // Templates that need an integration this account doesn't have only add noise.
 const availableTemplates = computed(() =>
@@ -33,41 +26,22 @@ const availableTemplates = computed(() =>
     isTemplateAvailable(template, props.tools)
   )
 );
-
-const toggleExpanded = () => {
-  updateUISettings({ show_scenarios_suggestions: !isExpanded.value });
-};
 </script>
 
 <template>
-  <section class="flex flex-col gap-3 w-full">
-    <div class="flex items-center justify-between gap-4">
-      <div class="flex flex-col gap-0.5">
-        <h2 class="text-sm font-medium text-n-slate-12 m-0">
-          {{ t('CAPTAIN.ASSISTANTS.SCENARIOS.TEMPLATES.GALLERY_TITLE') }}
-        </h2>
-        <p class="text-sm text-n-slate-11 m-0">
-          {{ t('CAPTAIN.ASSISTANTS.SCENARIOS.TEMPLATES.GALLERY_DESCRIPTION') }}
-        </p>
-      </div>
-      <Button
-        xs
-        ghost
-        slate
-        :icon="isExpanded ? 'i-lucide-chevron-up' : 'i-lucide-chevron-down'"
-        trailing-icon
-        :label="
-          isExpanded
-            ? t('CAPTAIN.ASSISTANTS.SCENARIOS.TEMPLATES.COLLAPSE')
-            : t('CAPTAIN.ASSISTANTS.SCENARIOS.TEMPLATES.EXPAND')
-        "
-        @click="toggleExpanded"
-      />
+  <section class="flex flex-col w-full gap-3">
+    <div class="flex flex-col gap-0.5">
+      <h2 class="m-0 text-sm font-semibold text-n-slate-12">
+        {{ t('CAPTAIN.ASSISTANTS.SCENARIOS.TEMPLATES.GALLERY_TITLE') }}
+      </h2>
+      <p class="m-0 text-sm text-n-slate-11">
+        {{ t('CAPTAIN.ASSISTANTS.SCENARIOS.TEMPLATES.GALLERY_DESCRIPTION') }}
+      </p>
     </div>
 
     <div
-      v-if="isExpanded"
-      class="grid grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-3"
+      class="grid grid-cols-1 gap-2"
+      :class="hasScenarios ? '' : 'sm:grid-cols-2 xl:grid-cols-3'"
     >
       <button
         type="button"

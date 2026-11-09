@@ -44,6 +44,16 @@ vi.mock('dashboard/composables/store', async () => {
 
 vi.mock('dashboard/composables', () => ({ useAlert: mocks.alerts }));
 
+// Custom API actions are listed on the "Your API" tab.
+vi.mock('vue-router', async importOriginal => ({
+  ...(await importOriginal()),
+  useRoute: () => ({
+    name: 'captain_tools_api',
+    params: { accountId: '1', assistantId: '2' },
+  }),
+  useRouter: () => ({ push: vi.fn() }),
+}));
+
 vi.mock('dashboard/composables/useAdmin', () => ({
   useAdmin: () => ({ isAdmin: { value: false } }),
 }));

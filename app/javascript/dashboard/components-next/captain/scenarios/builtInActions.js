@@ -7,13 +7,56 @@ export const SEPARATE_MESSAGE_PHRASE = 'Send this as a separate message.';
 // Minutes; the server accepts 15 minutes to 7 days.
 export const FOLLOW_UP_DELAYS = [15, 30, 60, 120, 240, 1440, 2880, 4320, 10080];
 
-export const TOOL_GROUPS = ['BUILT_IN', 'CUSTOM', 'MCP'];
+// Built-in tools are shown by what they do; custom API calls and MCP tools follow.
+// Unlisted built-in tools fall into CONVERSATION.
+export const TOOL_CATEGORIES = [
+  {
+    key: 'ANSWERS',
+    icon: 'i-lucide-search',
+    ids: [
+      'faq_lookup',
+      'catalog_product_search',
+      'browse_catalog',
+      'track_order',
+    ],
+  },
+  {
+    key: 'CUSTOMER',
+    icon: 'i-lucide-user-round',
+    ids: [
+      'add_contact_note',
+      'update_contact_attribute',
+      'update_conversation_attribute',
+      'save_lead_details',
+      'request_lead_followup',
+    ],
+  },
+  {
+    key: 'EMAIL',
+    icon: 'i-lucide-mail',
+    ids: ['email_visitor', 'email_team', 'schedule_follow_up'],
+  },
+  { key: 'CONVERSATION', icon: 'i-lucide-messages-square', ids: [] },
+];
+
+export const TOOL_GROUPS = [
+  ...TOOL_CATEGORIES.map(category => category.key),
+  'CUSTOM',
+  'MCP',
+];
 
 export const toolGroup = tool => {
   if (tool.mcp) return 'MCP';
   if (tool.custom) return 'CUSTOM';
-  return 'BUILT_IN';
+  const category = TOOL_CATEGORIES.find(item => item.ids.includes(tool.id));
+  return category ? category.key : 'CONVERSATION';
 };
+
+// Menu heading for a group from groupTools; shared by the palette and the @ menu in the editor.
+export const toolGroupLabel = (group, t) =>
+  ['CUSTOM', 'MCP'].includes(group)
+    ? t(`CAPTAIN.ASSISTANTS.SCENARIOS.PALETTE.GROUPS.${group}`)
+    : t(`CAPTAIN.AGENT_UX.TOOLS.CATEGORIES.${group}`);
 
 export const needsFixedParams = tool => Boolean(tool?.built_in_action);
 

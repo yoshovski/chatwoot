@@ -380,7 +380,7 @@ onUnmounted(() => {
 
 <template>
   <PageLayout
-    :header-title="$t('PLATFORM_NAV.DATA_SOURCES')"
+    :header-title="$t('CAPTAIN.AGENT_UX.SECTIONS.KNOWLEDGE')"
     :button-label="$t('CAPTAIN.DOCUMENTS.ADD_NEW')"
     :button-policy="['administrator']"
     :total-count="documentsMeta.totalCount"
