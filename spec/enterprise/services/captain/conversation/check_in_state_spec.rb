@@ -85,4 +85,32 @@ RSpec.describe Captain::Conversation::CheckInState do
       expect(state.unanswered_check_in?).to be(false)
     end
   end
+
+  describe '#awaiting_customer_answer?' do
+    it 'returns true when the assistant message ends with a question mark' do
+      agent_message(content: 'Which charger model do you use?')
+      expect(state.awaiting_customer_answer?).to be(true)
+    end
+
+    it 'returns true when the message has input_select content_type' do
+      agent_message(content: 'Choose an option', content_type: :input_select,
+                    content_attributes: { 'items' => [{ 'title' => 'Yes', 'value' => 'yes' }] })
+      expect(state.awaiting_customer_answer?).to be(true)
+    end
+
+    it 'returns true when the message has a question segment kind' do
+      agent_message(content: 'Let me know', additional_attributes: { 'captain_segment_kinds' => ['question'] })
+      expect(state.awaiting_customer_answer?).to be(true)
+    end
+
+    it 'returns true when the message has business_lead_question attribute' do
+      agent_message(content: 'Tell me your needs', additional_attributes: { 'business_lead_question' => true })
+      expect(state.awaiting_customer_answer?).to be(true)
+    end
+
+    it 'returns false when the message is a completed statement without questions' do
+      agent_message(content: 'The D12000iE provides 12000W output.')
+      expect(state.awaiting_customer_answer?).to be(false)
+    end
+  end
 end

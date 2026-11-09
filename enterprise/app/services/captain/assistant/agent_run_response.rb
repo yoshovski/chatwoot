@@ -13,14 +13,20 @@ module Captain::Assistant::AgentRunResponse
     response_parts = Captain::Assistant::ResponseParts.from_response(structured_response)
     structured_response['response_parts'] = response_parts.to_a
     structured_response['response'] = response_parts.plain_text
-    structured_response['agent_name'] = run_result.context&.dig(:current_agent)
     structured_response['handoff_tool_called'] = run_result.context&.dig(:captain_v2_handoff_tool_called) || false
     apply_lead_recovery_response(structured_response, run_result)
     if run_result.context&.dig(:state, :lead_failure_handoff)
       structured_response['handoff_requested'] = true
       structured_response['suggested_replies'] = []
     end
+    structured_response['agent_name'] = resolved_agent_name(structured_response, run_result)
     structured_response
+  end
+
+  def resolved_agent_name(response, run_result)
+    return nil if response['handoff_tool_called'] || response['handoff_requested']
+
+    run_result.context&.dig(:current_agent)
   end
 
   def apply_lead_recovery_response(response, run_result)

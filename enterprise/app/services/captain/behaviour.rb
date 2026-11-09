@@ -21,6 +21,21 @@ module Captain::Behaviour
     (REPLY_PAUSE_BASE_MS + (REPLY_PAUSE_PER_CHAR_MS * text.to_s.length)).clamp(REPLY_PAUSE_MIN_MS, REPLY_PAUSE_MAX_MS)
   end
 
+  # Web widget proactive check-in timing (seconds):
+  # Fast, opinionated defaults for live website visitors on the widget.
+  # 90 seconds when the assistant asked a clarifying / qualification / options question and awaits an answer.
+  # 150 seconds (2.5 minutes) when the assistant gave a complete answer and no question is pending.
+  WIDGET_CHECK_IN_AWAITING_ANSWER_SECONDS = 90
+  WIDGET_CHECK_IN_COMPLETED_ANSWER_SECONDS = 150
+
+  def self.widget_check_in_awaiting_seconds(assistant)
+    assistant.config&.dig('widget_check_in_awaiting_seconds').presence&.to_i || WIDGET_CHECK_IN_AWAITING_ANSWER_SECONDS
+  end
+
+  def self.widget_check_in_completed_seconds(assistant)
+    assistant.config&.dig('widget_check_in_completed_seconds').presence&.to_i || WIDGET_CHECK_IN_COMPLETED_ANSWER_SECONDS
+  end
+
   # After a quiet period the agent sends one short check-in (a lead offer for prospects), then auto-resolve applies.
   # It comes after half of auto_resolve_after, rounded down to 5 minutes and kept between 5 and 30 minutes.
   CHECK_IN_STEP_MINUTES = 5

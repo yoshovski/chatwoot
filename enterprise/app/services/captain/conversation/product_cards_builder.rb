@@ -262,12 +262,20 @@ class Captain::Conversation::ProductCardsBuilder
   end
 
   def fetch_live_product(client, handle)
-    return fallback_product(handle) unless client
-
-    client.get_product(handle: handle) || fallback_product(handle)
+    product = client&.get_product(handle: handle) || fallback_product(handle)
+    cache_fetched_product(handle, product)
+    product
   rescue StandardError => e
     Rails.logger.warn("[Captain] Failed to fetch product #{handle}: #{e.message}") if defined?(Rails) && Rails.respond_to?(:logger)
     fallback_product(handle)
+  end
+
+  def cache_fetched_product(handle, product)
+    state = @run_result&.context&.dig(:state)
+    return unless state.is_a?(Hash) && product.is_a?(Hash)
+
+    cache = state[Captain::Assistant::PRODUCT_CACHE_STATE_KEY] ||= {}
+    cache[handle.to_s.downcase] ||= product
   end
 
   def fallback_product(handle)

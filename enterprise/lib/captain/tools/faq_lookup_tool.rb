@@ -155,9 +155,7 @@ class Captain::Tools::FaqLookupTool < Captain::Tools::BasePublicTool # rubocop:d
   end
 
   def record_catalog_handles(tool_context, passages)
-    catalog_handles = passages.select { |p| %w[catalog product].include?(p.kind) }.filter_map do |p|
-      p.handle.presence || p.content.to_s.match(/^\s*(?:-\s*)?Product handle:\s*([a-z0-9][a-z0-9_-]*)\s*$/i)&.captures&.first
-    end
+    catalog_handles = passages.filter_map { |p| extract_passage_handle(p) }
     return if catalog_handles.blank?
 
     tool_context.state[:product_handles] = (Array(tool_context.state[:product_handles]) | catalog_handles)
@@ -166,11 +164,21 @@ class Captain::Tools::FaqLookupTool < Captain::Tools::BasePublicTool # rubocop:d
     )
   end
 
+  def extract_passage_handle(passage)
+    explicit = passage.content.to_s[/^\s*(?:-\s*)?Product handle:\s*([a-z0-9][a-z0-9_-]*)\s*$/i, 1]
+    return explicit if explicit.present?
+    return unless %w[catalog product].include?(passage.kind)
+
+    passage.handle.to_s[/\A[a-z0-9][a-z0-9_-]*\z/i]
+  end
+
   def format_passage(tool_context, passage)
     index = source_index_for(tool_context, passage.source_reference, {})
     content = Captain::Knowledge::ScreenshotLink.normalize(passage.content, page_url: passage.source_url)
     register_passage_media(tool_context, index, content)
-    "\nKnowledge result:\nSource index: #{index}\nTitle: #{passage.title}\nSource URL: #{passage.source_url}\n#{content}\n"
+    handle = extract_passage_handle(passage)
+    handle_line = handle.present? && !content.match?(/^\s*(?:-\s*)?Product handle:/i) ? "Product handle: #{handle}\n" : ''
+    "\nKnowledge result:\nSource index: #{index}\nTitle: #{passage.title}\nSource URL: #{passage.source_url}\n#{handle_line}#{content}\n"
   end
 
   def register_passage_media(tool_context, index, content)

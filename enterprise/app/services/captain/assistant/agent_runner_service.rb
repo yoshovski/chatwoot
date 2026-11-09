@@ -84,6 +84,11 @@ class Captain::Assistant::AgentRunnerService # rubocop:disable Metrics/ClassLeng
   end
 
   def reset_resolved_scenario_attribution!(history)
+    if waiting_for_human?
+      history.each { |message| message[:agent_name] = nil }
+      return
+    end
+
     boundary_index = history.rindex do |message|
       message[:role] == :assistant && message[:content] == Captain::Conversation::MessageHistoryBuilderService::RESOLUTION_MARKER
     end

@@ -42,6 +42,7 @@ module Captain::Assistant::RunnerStateHelper
     state[:message_length_limit] = Captain::MessageLengthLimit.for(@conversation)
     enrich_associated_state!(state)
     state[:ownership_instruction] = ownership_instruction
+    state[:handoff_tool_disabled] = handoff_tool_disabled?
   end
 
   def enrich_associated_state!(state)
@@ -74,6 +75,11 @@ module Captain::Assistant::RunnerStateHelper
     # While a handoff already waits for a colleague, only the ownership state applies.
     policy = handoff_policy.prompt_instruction unless ownership_service.waiting?
     [ownership_service.prompt_instruction, policy].compact.join("\n").presence
+  end
+
+  def handoff_tool_disabled?
+    (respond_to?(:waiting_for_human?, true) && waiting_for_human?) ||
+      (respond_to?(:handoff_kept?, true) && handoff_kept?)
   end
 
   def slice_attrs(record, keys)

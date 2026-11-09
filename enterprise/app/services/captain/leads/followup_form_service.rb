@@ -20,6 +20,8 @@ class Captain::Leads::FollowupFormService
     return false unless @conversation
 
     capture = Captain::Conversation::ContactCaptureService.new(conversation: @conversation, assistant: @assistant)
+    return false if capture.unsubmitted_turns_count >= 4
+
     @conversation.messages.where(content_type: :form, created_at: Captain::Conversation::ContactCaptureService::GUARD_TTL.seconds.ago..)
                  .any? { |message| message.content_attributes['purpose'] == 'business_followup' && capture.form_active?(message) }
   end

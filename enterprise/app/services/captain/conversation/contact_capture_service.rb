@@ -116,6 +116,8 @@ class Captain::Conversation::ContactCaptureService # rubocop:disable Metrics/Cla
     missing_fields = missing_contact_fields(contact, triggering_message)
 
     return nil if missing_fields.empty?
+
+    reset_form_guard! if unsubmitted_turns_count >= 4
     return nil unless guard_form_posting!(missing_fields)
 
     post_form_message!(missing_fields)
@@ -159,6 +161,25 @@ class Captain::Conversation::ContactCaptureService # rubocop:disable Metrics/Cla
     return false unless message.form? || message.content_type == 'form'
 
     message.content_attributes&.dig('type') == 'contact_capture' || message.content == FORM_TEXT
+  end
+
+  # Number of customer messages sent since the last unsubmitted contact/follow-up form.
+  def unsubmitted_turns_count
+    return 0 unless conversation
+
+    last_form = conversation.messages.where(content_type: :form).reorder(id: :desc).first
+    return 0 if last_form.blank?
+    return 0 if form_inactive_or_submitted?(last_form)
+
+    conversation.messages.incoming.where('id > ?', last_form.id).count
+  end
+
+  def form_inactive_or_submitted?(message)
+    return true if message_expired?(message)
+    return true if message.content_attributes&.dig('submitted_values').present?
+    return true if message.content_attributes.to_h.values_at('contact_details_saved', 'followup_needs_review').include?(true)
+
+    false
   end
 
   # The guard only stops one handoff from posting the form twice. Clearing it when

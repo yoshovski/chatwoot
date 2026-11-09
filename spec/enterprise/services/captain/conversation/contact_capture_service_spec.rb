@@ -275,4 +275,50 @@ RSpec.describe Captain::Conversation::ContactCaptureService, type: :service do
       end.not_to change(conversation.messages, :count)
     end
   end
+
+  describe '#unsubmitted_turns_count' do
+    let!(:form_msg) do
+      create(:message, conversation: conversation, account: account, inbox: inbox,
+                       content_type: :form, message_type: :outgoing,
+                       content_attributes: {
+                         'type' => 'contact_capture',
+                         'items' => [{ 'name' => 'email', 'type' => 'email', 'label' => 'Email' }]
+                       })
+    end
+
+    it 'returns 0 when no customer messages have arrived since the form' do
+      expect(service.unsubmitted_turns_count).to eq(0)
+    end
+
+    it 'counts incoming customer messages sent after the form' do
+      create(:message, conversation: conversation, account: account, inbox: inbox,
+                       message_type: :incoming, content: 'Can you help?')
+      create(:message, conversation: conversation, account: account, inbox: inbox,
+                       message_type: :incoming, content: 'Also shipping price?')
+
+      expect(service.unsubmitted_turns_count).to eq(2)
+    end
+
+    it 'returns 0 if the form was already submitted' do
+      form_msg.update!(content_attributes: form_msg.content_attributes.merge(
+        'submitted_values' => [{ 'name' => 'email', 'value' => 'test@example.com' }]
+      ))
+      create(:message, conversation: conversation, account: account, inbox: inbox,
+                       message_type: :incoming, content: 'Can you help?')
+
+      expect(service.unsubmitted_turns_count).to eq(0)
+    end
+
+    it 'resets form guard and reposts form when unsubmitted_turns_count >= 4' do
+      4.times do |i|
+        create(:message, conversation: conversation, account: account, inbox: inbox,
+                         message_type: :incoming, content: "Question #{i}")
+      end
+
+      expect(service).to receive(:reset_form_guard!).and_call_original
+      allow(Redis::Alfred).to receive(:set).and_return('OK')
+
+      expect { service.post_form_if_needed! }.to change(conversation.messages, :count).by(1)
+    end
+  end
 end

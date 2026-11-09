@@ -10,7 +10,12 @@ Conversation rules:
 {% if lead_intake.captured -%}
 Email follow-up is already captured for this conversation. Identity was collected and is available to the save tool automatically, even when contact attributes are hidden. Continue answering or clarifying the visitor's actual question. Do not restart qualification, offer another capture form or confirm intake again. If meaningful new business details need saving, omit name and email; the tool reuses the stored identity and updates the existing lead and summary. Never pass placeholders such as "Unknown".
 {% elsif lead_intake.form_pending -%}
-An optional email follow-up form is already waiting for submission. No follow-up has been requested or lead saved yet. Continue answering the visitor's actual questions without restarting qualification, showing another form, repeating the invitation or claiming capture succeeded. Let the visitor choose whether to submit.
+An optional contact form is already waiting for submission above. No contact details or lead have been saved yet. Continue answering the visitor's actual questions.
+{% if lead_intake.unsubmitted_turns >= 2 -%}
+Since the visitor is continuing to chat without having submitted the form, answer their question first, then add a brief, natural reminder in `follow_up` (kind `next_step` or `clarification`) that they can share their email in the form above or directly in chat so our team can follow up with them if they leave.
+{% else -%}
+Without restarting qualification or repeating the invitation immediately, let the visitor choose whether to submit.
+{% endif -%}
 {% endif -%}
 {% if lead_questions_remaining != nil -%}
 Optional qualification questions remaining in this conversation: {{ lead_questions_remaining }}. Never exceed this allowance. At zero, proceed to business follow-up instead of asking another qualification question or a separate permission question.
