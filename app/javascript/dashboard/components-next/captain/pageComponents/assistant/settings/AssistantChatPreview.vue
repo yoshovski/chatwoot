@@ -1,5 +1,7 @@
 <script setup>
+import { nextTick, onMounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { useMutationObserver } from '@vueuse/core';
 import Avatar from 'dashboard/components-next/avatar/Avatar.vue';
 
 defineProps({
@@ -18,6 +20,19 @@ defineProps({
 });
 
 const { t } = useI18n();
+
+// Keep the newest message in view, so a change to the reply shows up without scrolling.
+const body = ref(null);
+const scrollToEnd = () =>
+  nextTick(() => {
+    if (body.value) body.value.scrollTop = body.value.scrollHeight;
+  });
+onMounted(scrollToEnd);
+useMutationObserver(body, scrollToEnd, {
+  childList: true,
+  subtree: true,
+  characterData: true,
+});
 </script>
 
 <template>
@@ -47,7 +62,8 @@ const { t } = useI18n();
         </div>
       </div>
       <div
-        class="flex flex-col gap-2.5 p-4 bg-n-slate-2 min-h-40 max-h-96 overflow-y-auto overscroll-contain"
+        ref="body"
+        class="flex flex-col gap-2.5 p-4 bg-n-slate-2 min-h-40 max-h-[28rem] overflow-y-auto overscroll-contain"
       >
         <slot>
           <p class="preview-bubble preview-bubble--agent">

@@ -2,6 +2,7 @@ import { mount, flushPromises } from '@vue/test-utils';
 import { createI18n } from 'vue-i18n';
 import en from 'dashboard/i18n/locale/en';
 import EmailTemplatesSection from './EmailTemplatesSection.vue';
+import VariableEditor from './VariableEditor.vue';
 
 const dispatch = vi.fn();
 const templates = {
@@ -12,16 +13,20 @@ vi.mock('dashboard/composables', () => ({ useAlert: vi.fn() }));
 vi.mock('vue-router', () => ({
   useRoute: () => ({ params: { assistantId: '4' } }),
 }));
-vi.mock('dashboard/composables/store', () => ({
-  useStore: () => ({
-    dispatch,
-    getters: {
-      'captainAssistants/getRecord': () => ({
-        config: { email_templates: templates },
-      }),
-    },
-  }),
-}));
+vi.mock('dashboard/composables/store', async () => {
+  const { ref } = await import('vue');
+  return {
+    useMapGetter: () => ref([]),
+    useStore: () => ({
+      dispatch,
+      getters: {
+        'captainAssistants/getRecord': () => ({
+          config: { email_templates: templates },
+        }),
+      },
+    }),
+  };
+});
 vi.mock('dashboard/components-next/side-panel/SidePanel.vue', () => ({
   default: {
     methods: { open() {}, close() {} },
@@ -43,16 +48,28 @@ describe('EmailTemplatesSection', () => {
     expect(wrapper.text()).toContain('New demo request');
   });
 
-  it('adds a template with a key from its name and previews variables', async () => {
+  it('shows variables as named chips instead of {{ }}', () => {
+    const wrapper = mountSection();
+    const subject = wrapper.findAllComponents(VariableEditor)[0];
+
+    subject.vm.$emit('update:modelValue', 'Plans for {{ contact.first_name }}');
+    return wrapper.vm.$nextTick().then(() => {
+      const chip = subject.find('[data-var="contact.first_name"]');
+      expect(chip.text()).toBe('First name');
+      expect(subject.text()).not.toContain('{{');
+    });
+  });
+
+  it('adds a template with an automatic reference and previews variables', async () => {
     const wrapper = mountSection();
     const form = wrapper.find('[data-test="email-template-form"]');
-    const inputs = form.findAll('input');
+    const [subject, body] = form.findAllComponents(VariableEditor);
 
-    await inputs[0].setValue('Pricing sheet');
-    await inputs[2].setValue('Plans for {{ contact.first_name }}');
-    await form.find('textarea').setValue('Hi {{ contact.first_name }}');
+    await form.find('input').setValue('New demo request');
+    subject.vm.$emit('update:modelValue', 'Plans for {{ contact.first_name }}');
+    body.vm.$emit('update:modelValue', 'Hi {{ contact.first_name }}');
+    await wrapper.vm.$nextTick();
 
-    expect(inputs[1].element.value).toBe('pricing_sheet');
     expect(
       wrapper.find('[data-test="email-template-preview"]').text()
     ).toContain('Plans for Jamie');
@@ -65,10 +82,11 @@ describe('EmailTemplatesSection', () => {
       config: {
         email_templates: {
           ...templates,
-          pricing_sheet: {
-            name: 'Pricing sheet',
+          new_demo_request: {
+            name: 'New demo request',
             subject: 'Plans for {{ contact.first_name }}',
             body: 'Hi {{ contact.first_name }}',
+            format: 'text',
           },
         },
       },

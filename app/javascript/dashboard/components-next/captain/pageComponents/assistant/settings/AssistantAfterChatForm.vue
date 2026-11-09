@@ -335,20 +335,10 @@ watch(
       />
     </SettingsCard>
 
-    <SettingsCard :title="t('CAPTAIN.ASSISTANTS.SETTINGS.AFTER_CHAT.LEARN')">
-      <SettingsSwitchRow
-        v-model="state.conversationFaqs"
-        :title="t('CAPTAIN.ASSISTANTS.SETTINGS.AFTER_CHAT.FAQS.TITLE')"
-        :description="t('CAPTAIN.ASSISTANTS.SETTINGS.AFTER_CHAT.FAQS.DESC')"
-      />
-      <SettingsSwitchRow
-        v-model="state.memories"
-        :title="t('CAPTAIN.ASSISTANTS.SETTINGS.AFTER_CHAT.MEMORIES.TITLE')"
-        :description="
-          t('CAPTAIN.ASSISTANTS.SETTINGS.AFTER_CHAT.MEMORIES.DESC', { name })
-        "
-      />
-    </SettingsCard>
+    <p class="m-0 text-sm text-n-slate-11">
+      <span class="i-lucide-arrow-right-left size-3.5 me-1 align-[-2px]" />
+      {{ t('CAPTAIN.AGENT_UX.AFTER_CHAT.MOVED_DESC') }}
+    </p>
 
     <SettingsSaveBar
       :is-dirty="isDirty"

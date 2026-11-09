@@ -6,6 +6,7 @@ import BackButton from 'dashboard/components/widgets/BackButton.vue';
 import PaginationFooter from 'dashboard/components-next/pagination/PaginationFooter.vue';
 import Spinner from 'dashboard/components-next/spinner/Spinner.vue';
 import Policy from 'dashboard/components/policy.vue';
+import AgentSectionTabs from './AgentSectionTabs.vue';
 
 const props = defineProps({
   currentPage: {
@@ -129,6 +130,7 @@ const handlePageChange = event => {
             </div>
           </div>
         </div>
+        <AgentSectionTabs class="mb-4" />
         <slot name="subHeader" />
       </div>
     </header>

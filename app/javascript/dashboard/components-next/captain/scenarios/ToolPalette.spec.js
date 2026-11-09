@@ -58,13 +58,14 @@ const openMenu = async () => {
 };
 
 describe('ToolPalette', () => {
-  it('groups the menu into built-in, your actions, MCP, contact properties and reply shape', async () => {
+  it('groups the menu into built-in categories, your API, MCP, contact properties and reply shape', async () => {
     const wrapper = await openMenu();
 
     expect(wrapper.text()).toContain('Describe an action…');
-    expect(wrapper.text()).toContain('Built-in actions');
-    expect(wrapper.text()).toContain('Your actions');
-    expect(wrapper.text()).toContain('MCP tools');
+    expect(wrapper.text()).toContain('Find answers');
+    expect(wrapper.text()).toContain('Customer details');
+    expect(wrapper.text()).toContain('Your API');
+    expect(wrapper.text()).toContain('From MCP servers');
     expect(wrapper.text()).toContain('Contact properties');
     expect(wrapper.text()).toContain('Read Company size');
     expect(wrapper.text()).toContain('Update Company size');

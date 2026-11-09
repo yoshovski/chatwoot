@@ -1,5 +1,13 @@
 <script setup>
-import { computed, nextTick, onMounted, ref, toRaw, watch } from 'vue';
+import {
+  computed,
+  nextTick,
+  onMounted,
+  reactive,
+  ref,
+  toRaw,
+  watch,
+} from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
 import { useStore, useMapGetter } from 'dashboard/composables/store';
@@ -9,6 +17,9 @@ import Input from 'dashboard/components-next/input/Input.vue';
 import Dialog from 'dashboard/components-next/dialog/Dialog.vue';
 import SettingsSwitchRow from './SettingsSwitchRow.vue';
 import SettingsSaveBar from './SettingsSaveBar.vue';
+import SettingsPanel from './SettingsPanel.vue';
+import SummaryRow from './SummaryRow.vue';
+import SettingsCard from './SettingsCard.vue';
 import SettingsSplit from './SettingsSplit.vue';
 import LeadCapturePreview from './LeadCapturePreview.vue';
 import { useLeadSetup } from './useLeadSetup';
@@ -440,6 +451,45 @@ const manageNotificationTeam = async () => {
 const isHubspotConnected = computed(
   () => !['not_connected', 'loading'].includes(hubspotState.value)
 );
+
+// Redesign: the page is four summary rows; each opens its editor in a side panel.
+const leadPanels = reactive({
+  trigger: false,
+  questions: false,
+  types: false,
+  delivery: false,
+});
+const U = 'CAPTAIN.AGENT_UX.LEADS';
+const triggerSummary = computed(() =>
+  guidedSetup.value
+    ? settings.value.lead_trigger || label('GUIDED.DEFAULT_TRIGGER')
+    : t(`${U}.CUSTOM_SCENARIO`)
+);
+const questionsSummary = computed(() => {
+  const fields = settings.value.lead_fields.map(
+    field => field.label || field.key
+  );
+  return [t(`${U}.NAME_EMAIL`), ...fields].join(', ');
+});
+const typesSummary = computed(() =>
+  settings.value.lead_types.length
+    ? settings.value.lead_types
+        .map(type => type.name)
+        .filter(Boolean)
+        .join(', ')
+    : label('NO_TYPES')
+);
+const deliverySummary = computed(() => {
+  const team = teams.value.find(
+    item => item.id === settings.value.lead_notification_team_id
+  );
+  return [
+    team ? t(`${U}.EMAIL_TO`, { team: team.name }) : label('NOTIFICATION_OFF'),
+    isHubspotConnected.value && t(`${U}.HUBSPOT_ON`),
+  ]
+    .filter(Boolean)
+    .join(' · ');
+});
 </script>
 
 <template>
@@ -487,479 +537,522 @@ const isHubspotConnected = computed(
           class="flex flex-col gap-5 transition-opacity"
           :class="{ 'opacity-60': !settings.leads_enabled }"
         >
-          <section
-            class="flex flex-col gap-4 rounded-2xl bg-n-solid-1 p-5 outline outline-1 outline-n-weak"
+          <SettingsCard>
+            <SummaryRow
+              icon="i-lucide-target"
+              :title="label('GUIDED.TITLE')"
+              :summary="triggerSummary"
+              @edit="leadPanels.trigger = true"
+            />
+            <SummaryRow
+              icon="i-lucide-list-checks"
+              :title="label('FIELDS')"
+              :summary="questionsSummary"
+              @edit="leadPanels.questions = true"
+            />
+            <SummaryRow
+              icon="i-lucide-tags"
+              :title="label('TYPES')"
+              :summary="typesSummary"
+              @edit="leadPanels.types = true"
+            />
+            <SummaryRow
+              icon="i-lucide-send"
+              :title="label('FOLLOW_UP')"
+              :summary="deliverySummary"
+              @edit="leadPanels.delivery = true"
+            />
+          </SettingsCard>
+          <SettingsPanel
+            v-model:open="leadPanels.trigger"
+            :title="label('GUIDED.TITLE')"
+            width="xl"
           >
-            <h3 class="m-0 text-sm font-semibold text-n-slate-12">
-              {{ label('GUIDED.TITLE') }}
-            </h3>
-            <template v-if="guidedSetup">
-              <label
-                class="m-0 flex flex-col gap-1.5 text-sm font-medium text-n-slate-12"
-              >
-                {{ label('GUIDED.TRIGGER') }}
-                <textarea
-                  v-model="settings.lead_trigger"
-                  rows="3"
-                  maxlength="500"
-                  :placeholder="label('GUIDED.DEFAULT_TRIGGER')"
-                  class="m-0 w-full resize-y rounded-lg border border-n-weak bg-n-alpha-black2 px-3 py-2 text-sm font-normal text-n-slate-12 placeholder:text-n-slate-10 focus:border-n-brand focus:outline-none"
-                />
-              </label>
-              <label
-                class="m-0 flex flex-col gap-1.5 text-sm font-medium text-n-slate-12"
-              >
-                {{ label('GUIDED.NOTES') }}
-                <textarea
-                  v-model="settings.lead_instructions"
-                  rows="3"
-                  maxlength="2000"
-                  :placeholder="label('GUIDED.NOTES_PLACEHOLDER')"
-                  class="m-0 w-full resize-y rounded-lg border border-n-weak bg-n-alpha-black2 px-3 py-2 text-sm font-normal text-n-slate-12 placeholder:text-n-slate-10 focus:border-n-brand focus:outline-none"
-                />
-              </label>
-              <p class="m-0 text-xs text-n-slate-11">
-                {{ label('GUIDED.HELP') }}
-              </p>
-              <div
-                class="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-n-alpha-1 px-3 py-2.5"
-                role="status"
-              >
-                <span class="text-xs text-n-slate-12">
-                  {{
-                    label(
-                      captureScenario && !isDirty
-                        ? 'GUIDED.CONVERSATION_READY'
-                        : 'GUIDED.CONVERSATION_ON_SAVE'
-                    )
-                  }}
-                </span>
-                <Button
-                  v-if="captureScenario"
-                  type="button"
-                  size="xs"
-                  variant="ghost"
-                  :label="label('GUIDED.VIEW_CONVERSATION')"
-                  @click="openScenarios"
-                />
-              </div>
-            </template>
-            <template v-else>
-              <p class="m-0 text-xs text-n-slate-11">
-                {{ label('GUIDED.CUSTOM_HELP') }}
-              </p>
-              <Button
-                type="button"
-                size="sm"
-                variant="faded"
-                :label="label('GUIDED.SWITCH')"
-                :disabled="loading || scenarioError"
-                @click="guidedDialogRef?.open()"
-              />
-            </template>
-          </section>
-
-          <!-- BENTO CARD 1: WHAT TO COLLECT & PACING -->
-          <section
-            class="flex flex-col gap-4 rounded-2xl bg-n-solid-1 p-5 outline outline-1 outline-n-weak"
-          >
-            <div class="flex items-start justify-between gap-3">
-              <div>
-                <h3 class="m-0 text-sm font-semibold text-n-slate-12">
-                  {{ label('FIELDS') }}
-                </h3>
-                <p class="mb-0 mt-0.5 text-xs text-n-slate-11">
-                  {{ label('FIELDS_HELP') }}
+            <section class="flex flex-col gap-4">
+              <h3 class="m-0 text-sm font-semibold text-n-slate-12">
+                {{ label('GUIDED.TITLE') }}
+              </h3>
+              <template v-if="guidedSetup">
+                <label
+                  class="m-0 flex flex-col gap-1.5 text-sm font-medium text-n-slate-12"
+                >
+                  {{ label('GUIDED.TRIGGER') }}
+                  <textarea
+                    v-model="settings.lead_trigger"
+                    rows="3"
+                    maxlength="500"
+                    :placeholder="label('GUIDED.DEFAULT_TRIGGER')"
+                    class="m-0 w-full resize-y rounded-lg border border-n-weak bg-n-alpha-black2 px-3 py-2 text-sm font-normal text-n-slate-12 placeholder:text-n-slate-10 focus:border-n-brand focus:outline-none"
+                  />
+                </label>
+                <label
+                  class="m-0 flex flex-col gap-1.5 text-sm font-medium text-n-slate-12"
+                >
+                  {{ label('GUIDED.NOTES') }}
+                  <textarea
+                    v-model="settings.lead_instructions"
+                    rows="3"
+                    maxlength="2000"
+                    :placeholder="label('GUIDED.NOTES_PLACEHOLDER')"
+                    class="m-0 w-full resize-y rounded-lg border border-n-weak bg-n-alpha-black2 px-3 py-2 text-sm font-normal text-n-slate-12 placeholder:text-n-slate-10 focus:border-n-brand focus:outline-none"
+                  />
+                </label>
+                <p class="m-0 text-xs text-n-slate-11">
+                  {{ label('GUIDED.HELP') }}
                 </p>
-              </div>
-              <span
-                class="shrink-0 rounded-full bg-n-alpha-1 px-2.5 py-0.5 text-xs font-medium text-n-slate-11 outline outline-1 outline-n-weak"
-              >
-                {{ settings.lead_fields.length }} / {{ MAX_ENTRIES }}
-              </span>
-            </div>
-
-            <!-- Check-Chips Grid (Always Included + Common Presets + Custom Fields) -->
-            <div class="flex flex-wrap gap-2">
-              <span
-                class="inline-flex items-center gap-1.5 rounded-xl bg-n-slate-2 px-3 py-1.5 text-xs font-medium text-n-slate-11"
-              >
-                <span class="i-lucide-check size-3.5 text-n-teal-10" />
-                {{ label('ALWAYS_NAME_EMAIL') }}
-              </span>
-              <span
-                class="inline-flex items-center gap-1.5 rounded-xl bg-n-slate-2 px-3 py-1.5 text-xs font-medium text-n-slate-11"
-              >
-                <span class="i-lucide-check size-3.5 text-n-teal-10" />
-                {{ label('ALWAYS_SUMMARY') }}
-              </span>
-              <span
-                class="inline-flex items-center gap-1.5 rounded-xl bg-n-slate-2 px-3 py-1.5 text-xs font-medium text-n-slate-11"
-              >
-                <span class="i-lucide-map-pin size-3.5 text-n-teal-10" />
-                {{ label('GUIDED.LOCATION_INCLUDED') }}
-              </span>
-
-              <!-- Common Field Toggle Chips -->
-              <button
-                v-for="key in COMMON_FIELDS"
-                :key="key"
-                type="button"
-                :aria-pressed="isFieldSelected(key)"
-                class="inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-medium transition-colors"
-                :class="
-                  isFieldSelected(key)
-                    ? 'bg-n-blue-1 text-n-blue-11 outline outline-2 outline-n-blue-9'
-                    : 'bg-n-alpha-1 text-n-slate-12 outline outline-1 outline-n-weak hover:outline-n-strong'
-                "
-                @click="togglePresetField(key, label(`COMMON_FIELDS.${key}`))"
-              >
-                <span
-                  :class="
-                    isFieldSelected(key) ? 'i-lucide-check' : 'i-lucide-plus'
-                  "
-                  class="size-3.5"
-                />
-                {{ label(`COMMON_FIELDS.${key}`) }}
-              </button>
-
-              <!-- Existing Account Contact Custom Attribute Suggestions -->
-              <button
-                v-for="attr in existingAttributeSuggestions"
-                :key="attr.key"
-                type="button"
-                class="inline-flex items-center gap-1.5 rounded-xl bg-n-alpha-1 px-3 py-1.5 text-xs font-medium text-n-slate-11 outline outline-1 outline-n-weak transition-colors hover:text-n-slate-12 hover:outline-n-strong"
-                @click="togglePresetField(attr.key, attr.label)"
-              >
-                <span class="i-lucide-plus size-3.5" />
-                {{ attr.label }}
-              </button>
-
-              <!-- Custom Field Chips (Click to Edit) -->
-              <button
-                v-for="field in customFieldChips"
-                :key="field.key || field.label"
-                type="button"
-                :aria-invalid="attempted && !!fieldError(field)"
-                class="inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-medium transition-colors"
-                :class="
-                  attempted && fieldError(field)
-                    ? 'bg-n-ruby-2 text-n-ruby-11 outline outline-2 outline-n-ruby-9'
-                    : 'bg-n-blue-1 text-n-blue-11 outline outline-2 outline-n-blue-9'
-                "
-                @click="openFieldDialog(settings.lead_fields.indexOf(field))"
-              >
-                <span class="i-lucide-sliders-horizontal size-3" />
-                <span>{{ field.label || field.key }}</span>
-              </button>
-
-              <button
-                v-if="settings.lead_fields.length < MAX_ENTRIES"
-                type="button"
-                class="inline-flex items-center gap-1.5 rounded-xl border border-dashed border-n-strong bg-transparent px-3 py-1.5 text-xs font-medium text-n-slate-11 transition-colors hover:border-n-brand hover:text-n-slate-12"
-                @click="openFieldDialog(-1)"
-              >
-                <span class="i-lucide-plus size-3.5" />
-                {{ label('ADD_FIELD') }}
-              </button>
-            </div>
-
-            <p class="m-0 text-xs text-n-slate-11">
-              {{ label('GUIDED.LOCATION_HELP') }}
-            </p>
-            <details class="group">
-              <summary
-                class="cursor-pointer text-xs font-medium text-n-slate-11"
-              >
-                {{ label('GUIDED.PACING') }}
-              </summary>
-              <div
-                class="flex flex-col gap-2.5 border-t border-n-weak pt-3.5 sm:flex-row sm:items-center sm:justify-between"
-              >
-                <div class="flex flex-col gap-0.5">
-                  <span class="text-xs font-medium text-n-slate-12">
-                    {{ label('MAX_QUESTIONS') }}
-                  </span>
-                  <span class="text-xs text-n-slate-11">
-                    {{ label('QUESTIONS_HELP') }}
-                  </span>
-                </div>
                 <div
-                  class="flex shrink-0 self-start rounded-xl bg-n-alpha-1 p-1 outline outline-1 outline-n-weak"
-                  role="radiogroup"
-                  :aria-label="label('MAX_QUESTIONS')"
+                  class="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-n-alpha-1 px-3 py-2.5"
+                  role="status"
+                >
+                  <span class="text-xs text-n-slate-12">
+                    {{
+                      label(
+                        captureScenario && !isDirty
+                          ? 'GUIDED.CONVERSATION_READY'
+                          : 'GUIDED.CONVERSATION_ON_SAVE'
+                      )
+                    }}
+                  </span>
+                  <Button
+                    v-if="captureScenario"
+                    type="button"
+                    size="xs"
+                    variant="ghost"
+                    :label="label('GUIDED.VIEW_CONVERSATION')"
+                    @click="openScenarios"
+                  />
+                </div>
+              </template>
+              <template v-else>
+                <p class="m-0 text-xs text-n-slate-11">
+                  {{ label('GUIDED.CUSTOM_HELP') }}
+                </p>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="faded"
+                  :label="label('GUIDED.SWITCH')"
+                  :disabled="loading || scenarioError"
+                  @click="guidedDialogRef?.open()"
+                />
+              </template>
+            </section>
+          </SettingsPanel>
+          <SettingsPanel
+            v-model:open="leadPanels.questions"
+            :title="label('FIELDS')"
+            width="xl"
+          >
+            <!-- BENTO CARD 1: WHAT TO COLLECT & PACING -->
+            <section class="flex flex-col gap-4">
+              <div class="flex items-start justify-between gap-3">
+                <div>
+                  <h3 class="m-0 text-sm font-semibold text-n-slate-12">
+                    {{ label('FIELDS') }}
+                  </h3>
+                  <p class="mb-0 mt-0.5 text-xs text-n-slate-11">
+                    {{ label('FIELDS_HELP') }}
+                  </p>
+                </div>
+                <span
+                  class="shrink-0 rounded-full bg-n-alpha-1 px-2.5 py-0.5 text-xs font-medium text-n-slate-11 outline outline-1 outline-n-weak"
+                >
+                  {{ settings.lead_fields.length }} / {{ MAX_ENTRIES }}
+                </span>
+              </div>
+
+              <!-- Check-Chips Grid (Always Included + Common Presets + Custom Fields) -->
+              <div class="flex flex-wrap gap-2">
+                <span
+                  class="inline-flex items-center gap-1.5 rounded-xl bg-n-slate-2 px-3 py-1.5 text-xs font-medium text-n-slate-11"
+                >
+                  <span class="i-lucide-check size-3.5 text-n-teal-10" />
+                  {{ label('ALWAYS_NAME_EMAIL') }}
+                </span>
+                <span
+                  class="inline-flex items-center gap-1.5 rounded-xl bg-n-slate-2 px-3 py-1.5 text-xs font-medium text-n-slate-11"
+                >
+                  <span class="i-lucide-check size-3.5 text-n-teal-10" />
+                  {{ label('ALWAYS_SUMMARY') }}
+                </span>
+                <span
+                  class="inline-flex items-center gap-1.5 rounded-xl bg-n-slate-2 px-3 py-1.5 text-xs font-medium text-n-slate-11"
+                >
+                  <span class="i-lucide-map-pin size-3.5 text-n-teal-10" />
+                  {{ label('GUIDED.LOCATION_INCLUDED') }}
+                </span>
+
+                <!-- Common Field Toggle Chips -->
+                <button
+                  v-for="key in COMMON_FIELDS"
+                  :key="key"
+                  type="button"
+                  :aria-pressed="isFieldSelected(key)"
+                  class="inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-medium transition-colors"
+                  :class="
+                    isFieldSelected(key)
+                      ? 'bg-n-blue-1 text-n-blue-11 outline outline-2 outline-n-blue-9'
+                      : 'bg-n-alpha-1 text-n-slate-12 outline outline-1 outline-n-weak hover:outline-n-strong'
+                  "
+                  @click="togglePresetField(key, label(`COMMON_FIELDS.${key}`))"
+                >
+                  <span
+                    :class="
+                      isFieldSelected(key) ? 'i-lucide-check' : 'i-lucide-plus'
+                    "
+                    class="size-3.5"
+                  />
+                  {{ label(`COMMON_FIELDS.${key}`) }}
+                </button>
+
+                <!-- Existing Account Contact Custom Attribute Suggestions -->
+                <button
+                  v-for="attr in existingAttributeSuggestions"
+                  :key="attr.key"
+                  type="button"
+                  class="inline-flex items-center gap-1.5 rounded-xl bg-n-alpha-1 px-3 py-1.5 text-xs font-medium text-n-slate-11 outline outline-1 outline-n-weak transition-colors hover:text-n-slate-12 hover:outline-n-strong"
+                  @click="togglePresetField(attr.key, attr.label)"
+                >
+                  <span class="i-lucide-plus size-3.5" />
+                  {{ attr.label }}
+                </button>
+
+                <!-- Custom Field Chips (Click to Edit) -->
+                <button
+                  v-for="field in customFieldChips"
+                  :key="field.key || field.label"
+                  type="button"
+                  :aria-invalid="attempted && !!fieldError(field)"
+                  class="inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-medium transition-colors"
+                  :class="
+                    attempted && fieldError(field)
+                      ? 'bg-n-ruby-2 text-n-ruby-11 outline outline-2 outline-n-ruby-9'
+                      : 'bg-n-blue-1 text-n-blue-11 outline outline-2 outline-n-blue-9'
+                  "
+                  @click="openFieldDialog(settings.lead_fields.indexOf(field))"
+                >
+                  <span class="i-lucide-sliders-horizontal size-3" />
+                  <span>{{ field.label || field.key }}</span>
+                </button>
+
+                <button
+                  v-if="settings.lead_fields.length < MAX_ENTRIES"
+                  type="button"
+                  class="inline-flex items-center gap-1.5 rounded-xl border border-dashed border-n-strong bg-transparent px-3 py-1.5 text-xs font-medium text-n-slate-11 transition-colors hover:border-n-brand hover:text-n-slate-12"
+                  @click="openFieldDialog(-1)"
+                >
+                  <span class="i-lucide-plus size-3.5" />
+                  {{ label('ADD_FIELD') }}
+                </button>
+              </div>
+
+              <p class="m-0 text-xs text-n-slate-11">
+                {{ label('GUIDED.LOCATION_HELP') }}
+              </p>
+              <div class="group">
+                <p class="text-xs font-medium text-n-slate-11">
+                  {{ label('GUIDED.PACING') }}
+                </p>
+                <div
+                  class="flex flex-col gap-2.5 border-t border-n-weak pt-3.5 sm:flex-row sm:items-center sm:justify-between"
+                >
+                  <div class="flex flex-col gap-0.5">
+                    <span class="text-xs font-medium text-n-slate-12">
+                      {{ label('MAX_QUESTIONS') }}
+                    </span>
+                    <span class="text-xs text-n-slate-11">
+                      {{ label('QUESTIONS_HELP') }}
+                    </span>
+                  </div>
+                  <div
+                    class="flex shrink-0 self-start rounded-xl bg-n-alpha-1 p-1 outline outline-1 outline-n-weak"
+                    role="radiogroup"
+                    :aria-label="label('MAX_QUESTIONS')"
+                  >
+                    <button
+                      v-for="count in QUESTION_OPTIONS"
+                      :key="count"
+                      type="button"
+                      role="radio"
+                      :aria-checked="settings.lead_max_questions === count"
+                      class="rounded-lg px-2.5 py-1 text-xs font-semibold transition-colors"
+                      :class="
+                        settings.lead_max_questions === count
+                          ? 'bg-n-solid-1 text-n-slate-12 shadow-sm'
+                          : 'text-n-slate-11 hover:text-n-slate-12'
+                      "
+                      @click="settings.lead_max_questions = count"
+                    >
+                      {{ count === 0 ? label('NONE_QUESTIONS') : count }}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </section>
+          </SettingsPanel>
+          <SettingsPanel
+            v-model:open="leadPanels.types"
+            :title="label('TYPES')"
+            width="xl"
+          >
+            <!-- Optional business-specific categorization. -->
+            <div class="flex flex-col gap-3">
+              <p class="text-sm font-semibold text-n-slate-12">
+                {{ label('GUIDED.CATEGORIES') }}
+              </p>
+              <div class="flex items-start justify-between gap-3">
+                <div>
+                  <div class="flex items-center gap-2">
+                    <h3 class="m-0 text-sm font-semibold text-n-slate-12">
+                      {{ label('TYPES') }}
+                    </h3>
+                    <span
+                      class="rounded-md bg-n-blue-2 px-2 py-0.5 text-xs font-medium text-n-blue-11"
+                    >
+                      {{ label('LIST_ATTRIBUTE_BADGE') }}
+                    </span>
+                  </div>
+                  <p class="mb-0 mt-0.5 text-xs text-n-slate-11">
+                    {{ label('TYPES_HELP') }}
+                  </p>
+                </div>
+                <Button
+                  v-if="settings.lead_types.length < MAX_ENTRIES"
+                  type="button"
+                  variant="faded"
+                  size="xs"
+                  icon="i-lucide-plus"
+                  :label="label('ADD_TYPE')"
+                  @click="openTypeDialog(-1)"
+                />
+              </div>
+
+              <div
+                v-if="settings.lead_types.length"
+                class="flex flex-col divide-y divide-n-weak -mx-2"
+              >
+                <div
+                  v-for="(type, index) in settings.lead_types"
+                  :key="index"
+                  class="flex items-center justify-between gap-3 rounded-xl px-2.5 py-2.5 transition-colors hover:bg-n-alpha-1"
                 >
                   <button
-                    v-for="count in QUESTION_OPTIONS"
-                    :key="count"
                     type="button"
-                    role="radio"
-                    :aria-checked="settings.lead_max_questions === count"
-                    class="rounded-lg px-2.5 py-1 text-xs font-semibold transition-colors"
-                    :class="
-                      settings.lead_max_questions === count
-                        ? 'bg-n-solid-1 text-n-slate-12 shadow-sm'
-                        : 'text-n-slate-11 hover:text-n-slate-12'
-                    "
-                    @click="settings.lead_max_questions = count"
-                  >
-                    {{ count === 0 ? label('NONE_QUESTIONS') : count }}
-                  </button>
-                </div>
-              </div>
-            </details>
-          </section>
-
-          <!-- Optional business-specific categorization. -->
-          <details
-            class="flex flex-col gap-3 rounded-2xl bg-n-solid-1 p-5 outline outline-1 outline-n-weak"
-          >
-            <summary
-              class="cursor-pointer text-sm font-semibold text-n-slate-12"
-            >
-              {{ label('GUIDED.CATEGORIES') }}
-            </summary>
-            <div class="flex items-start justify-between gap-3">
-              <div>
-                <div class="flex items-center gap-2">
-                  <h3 class="m-0 text-sm font-semibold text-n-slate-12">
-                    {{ label('TYPES') }}
-                  </h3>
-                  <span
-                    class="rounded-md bg-n-blue-2 px-2 py-0.5 text-xs font-medium text-n-blue-11"
-                  >
-                    {{ label('LIST_ATTRIBUTE_BADGE') }}
-                  </span>
-                </div>
-                <p class="mb-0 mt-0.5 text-xs text-n-slate-11">
-                  {{ label('TYPES_HELP') }}
-                </p>
-              </div>
-              <Button
-                v-if="settings.lead_types.length < MAX_ENTRIES"
-                type="button"
-                variant="faded"
-                size="xs"
-                icon="i-lucide-plus"
-                :label="label('ADD_TYPE')"
-                @click="openTypeDialog(-1)"
-              />
-            </div>
-
-            <div
-              v-if="settings.lead_types.length"
-              class="flex flex-col divide-y divide-n-weak -mx-2"
-            >
-              <div
-                v-for="(type, index) in settings.lead_types"
-                :key="index"
-                class="flex items-center justify-between gap-3 rounded-xl px-2.5 py-2.5 transition-colors hover:bg-n-alpha-1"
-              >
-                <button
-                  type="button"
-                  :aria-invalid="attempted && !!typeError(type)"
-                  class="flex min-w-0 flex-1 flex-col items-start gap-0.5 text-start"
-                  @click="openTypeDialog(index)"
-                >
-                  <span class="flex items-center gap-2">
-                    <code
-                      class="rounded-md bg-n-alpha-2 px-2 py-0.5 font-mono text-xs font-semibold text-n-slate-12"
-                    >
-                      {{ type.name || label('TYPE_NAME') }}
-                    </code>
-                    <span
-                      v-if="attempted && typeError(type)"
-                      class="text-xs text-n-ruby-11"
-                    >
-                      {{ typeError(type) }}
-                    </span>
-                  </span>
-                  <span class="w-full truncate text-xs text-n-slate-11">
-                    {{ type.rule || label('RULE_PLACEHOLDER') }}
-                  </span>
-                </button>
-                <div class="flex shrink-0 items-center gap-1">
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    color="slate"
-                    size="xs"
-                    icon="i-lucide-pencil"
-                    :aria-label="type.name || label('TYPE_NAME')"
+                    :aria-invalid="attempted && !!typeError(type)"
+                    class="flex min-w-0 flex-1 flex-col items-start gap-0.5 text-start"
                     @click="openTypeDialog(index)"
-                  />
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    color="slate"
-                    size="xs"
-                    icon="i-lucide-trash-2"
-                    :aria-label="
-                      label('REMOVE_TYPE', {
-                        name: type.name || label('TYPE_NAME'),
-                      })
-                    "
-                    @click="settings.lead_types.splice(index, 1)"
-                  />
+                  >
+                    <span class="flex items-center gap-2">
+                      <code
+                        class="rounded-md bg-n-alpha-2 px-2 py-0.5 font-mono text-xs font-semibold text-n-slate-12"
+                      >
+                        {{ type.name || label('TYPE_NAME') }}
+                      </code>
+                      <span
+                        v-if="attempted && typeError(type)"
+                        class="text-xs text-n-ruby-11"
+                      >
+                        {{ typeError(type) }}
+                      </span>
+                    </span>
+                    <span class="w-full truncate text-xs text-n-slate-11">
+                      {{ type.rule || label('RULE_PLACEHOLDER') }}
+                    </span>
+                  </button>
+                  <div class="flex shrink-0 items-center gap-1">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      color="slate"
+                      size="xs"
+                      icon="i-lucide-pencil"
+                      :aria-label="type.name || label('TYPE_NAME')"
+                      @click="openTypeDialog(index)"
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      color="slate"
+                      size="xs"
+                      icon="i-lucide-trash-2"
+                      :aria-label="
+                        label('REMOVE_TYPE', {
+                          name: type.name || label('TYPE_NAME'),
+                        })
+                      "
+                      @click="settings.lead_types.splice(index, 1)"
+                    />
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <p
-              v-else
-              class="m-0 rounded-xl bg-n-alpha-1 px-3.5 py-3 text-xs"
-              :class="
-                attempted && settings.leads_enabled
-                  ? 'text-n-ruby-11 outline outline-1 outline-n-ruby-8'
-                  : 'text-n-slate-11'
-              "
-            >
-              {{ label('NO_TYPES') }}
-            </p>
-          </details>
-
-          <!-- BENTO CARD 3: DELIVERY & SMART BEHAVIORS -->
-          <section
-            class="flex flex-col divide-y divide-n-weak rounded-2xl bg-n-solid-1 px-5 py-4 outline outline-1 outline-n-weak"
-          >
-            <header class="pb-3">
-              <h3 class="m-0 text-sm font-semibold text-n-slate-12">
-                {{ label('FOLLOW_UP') }}
-              </h3>
-              <p class="mb-0 mt-0.5 text-xs text-n-slate-11">
-                {{ label('FOLLOW_UP_HELP') }}
-              </p>
-            </header>
-
-            <div class="grid gap-3 py-3.5 sm:grid-cols-[minmax(0,1fr)_11rem]">
-              <div class="flex min-w-0 flex-col gap-1">
-                <label
-                  for="lead-notification-team"
-                  class="text-sm font-medium text-n-slate-12"
-                >
-                  {{ label('NOTIFICATION_TITLE') }}
-                </label>
-                <span class="text-xs text-n-slate-11">
-                  {{ label('NOTIFICATION_HELP') }}
-                </span>
-              </div>
-              <div class="relative min-w-0 self-start">
-                <select
-                  id="lead-notification-team"
-                  v-model="settings.lead_notification_team_id"
-                  :disabled="teamsError"
-                  class="m-0 w-full appearance-none bg-none rounded-xl border border-n-weak bg-n-alpha-1 py-2 ps-3 pe-8 text-xs font-medium text-n-slate-12"
-                >
-                  <option :value="null">{{ label('NOTIFICATION_OFF') }}</option>
-                  <option v-for="team in teams" :key="team.id" :value="team.id">
-                    {{ team.name }}
-                  </option>
-                </select>
-                <span
-                  class="i-lucide-chevron-down pointer-events-none absolute end-2.5 top-2.5 size-3.5 text-n-slate-11"
-                  aria-hidden="true"
-                />
-              </div>
-              <div
-                class="flex flex-wrap items-center gap-2 sm:col-span-2"
-                role="status"
+              <p
+                v-else
+                class="m-0 rounded-xl bg-n-alpha-1 px-3.5 py-3 text-xs"
+                :class="
+                  attempted && settings.leads_enabled
+                    ? 'text-n-ruby-11 outline outline-1 outline-n-ruby-8'
+                    : 'text-n-slate-11'
+                "
               >
-                <span
-                  class="text-xs"
-                  :class="
-                    notificationStatus === 'ready'
-                      ? 'text-n-teal-11'
-                      : ['off', 'save_to_check'].includes(notificationStatus)
-                        ? 'text-n-slate-11'
-                        : 'text-n-amber-11'
-                  "
-                >
-                  {{
-                    label(
-                      `NOTIFICATION_STATUS.${notificationStatus.toUpperCase()}`
-                    )
-                  }}
-                </span>
-                <Button
-                  v-if="
-                    canManageIntegrations &&
-                    (notificationStatus === 'empty_team' ||
-                      (!teamsError && !teams.length))
-                  "
-                  type="button"
-                  variant="ghost"
-                  size="xs"
-                  :label="
-                    label(
-                      notificationStatus === 'empty_team'
-                        ? 'MANAGE_TEAM'
-                        : 'CREATE_TEAM'
-                    )
-                  "
-                  @click="manageNotificationTeam"
-                />
-              </div>
+                {{ label('NO_TYPES') }}
+              </p>
             </div>
+          </SettingsPanel>
+          <SettingsPanel
+            v-model:open="leadPanels.delivery"
+            :title="label('FOLLOW_UP')"
+            width="xl"
+          >
+            <!-- BENTO CARD 3: DELIVERY & SMART BEHAVIORS -->
+            <section class="flex flex-col divide-y divide-n-weak">
+              <header class="pb-3">
+                <h3 class="m-0 text-sm font-semibold text-n-slate-12">
+                  {{ label('FOLLOW_UP') }}
+                </h3>
+                <p class="mb-0 mt-0.5 text-xs text-n-slate-11">
+                  {{ label('FOLLOW_UP_HELP') }}
+                </p>
+              </header>
 
-            <!-- Row 2: Optional HubSpot CRM Row (Action Row -> Modal) -->
-            <div class="flex items-center justify-between gap-3 py-3.5">
-              <div class="flex min-w-0 flex-col gap-0.5">
-                <div class="flex items-center gap-2">
-                  <span class="text-sm font-medium text-n-slate-12">
-                    {{ label('HUBSPOT_TITLE') }}
+              <div class="grid gap-3 py-3.5 sm:grid-cols-[minmax(0,1fr)_11rem]">
+                <div class="flex min-w-0 flex-col gap-1">
+                  <label
+                    for="lead-notification-team"
+                    class="text-sm font-medium text-n-slate-12"
+                  >
+                    {{ label('NOTIFICATION_TITLE') }}
+                  </label>
+                  <span class="text-xs text-n-slate-11">
+                    {{ label('NOTIFICATION_HELP') }}
                   </span>
+                </div>
+                <div class="relative min-w-0 self-start">
+                  <select
+                    id="lead-notification-team"
+                    v-model="settings.lead_notification_team_id"
+                    :disabled="teamsError"
+                    class="m-0 w-full appearance-none bg-none rounded-xl border border-n-weak bg-n-alpha-1 py-2 ps-3 pe-8 text-xs font-medium text-n-slate-12"
+                  >
+                    <option :value="null">
+                      {{ label('NOTIFICATION_OFF') }}
+                    </option>
+                    <option
+                      v-for="team in teams"
+                      :key="team.id"
+                      :value="team.id"
+                    >
+                      {{ team.name }}
+                    </option>
+                  </select>
                   <span
-                    class="rounded-full px-2 py-0.5 text-xs font-medium"
+                    class="i-lucide-chevron-down pointer-events-none absolute end-2.5 top-2.5 size-3.5 text-n-slate-11"
+                    aria-hidden="true"
+                  />
+                </div>
+                <div
+                  class="flex flex-wrap items-center gap-2 sm:col-span-2"
+                  role="status"
+                >
+                  <span
+                    class="text-xs"
                     :class="
-                      hubspotState === 'mapped'
-                        ? 'bg-n-teal-3 text-n-teal-11'
-                        : isHubspotConnected
-                          ? 'bg-n-amber-3 text-n-amber-11'
-                          : 'bg-n-slate-3 text-n-slate-11'
+                      notificationStatus === 'ready'
+                        ? 'text-n-teal-11'
+                        : ['off', 'save_to_check'].includes(notificationStatus)
+                          ? 'text-n-slate-11'
+                          : 'text-n-amber-11'
                     "
                   >
                     {{
-                      unmappedKeys.length
-                        ? label('UNMAPPED_COUNT', {
-                            count: unmappedKeys.length,
-                          })
-                        : label('OPTIONAL_BADGE')
+                      label(
+                        `NOTIFICATION_STATUS.${notificationStatus.toUpperCase()}`
+                      )
                     }}
                   </span>
+                  <Button
+                    v-if="
+                      canManageIntegrations &&
+                      (notificationStatus === 'empty_team' ||
+                        (!teamsError && !teams.length))
+                    "
+                    type="button"
+                    variant="ghost"
+                    size="xs"
+                    :label="
+                      label(
+                        notificationStatus === 'empty_team'
+                          ? 'MANAGE_TEAM'
+                          : 'CREATE_TEAM'
+                      )
+                    "
+                    @click="manageNotificationTeam"
+                  />
                 </div>
-                <span class="text-xs text-n-slate-11" role="status">
-                  {{ hubspotLabel }}
-                </span>
               </div>
-              <Button
-                type="button"
-                variant="faded"
-                color="slate"
-                size="xs"
-                icon="i-lucide-sliders-horizontal"
-                :label="label('HUBSPOT_DETAILS')"
-                @click="hubspotDialogRef?.open()"
+
+              <!-- Row 2: Optional HubSpot CRM Row (Action Row -> Modal) -->
+              <div class="flex items-center justify-between gap-3 py-3.5">
+                <div class="flex min-w-0 flex-col gap-0.5">
+                  <div class="flex items-center gap-2">
+                    <span class="text-sm font-medium text-n-slate-12">
+                      {{ label('HUBSPOT_TITLE') }}
+                    </span>
+                    <span
+                      class="rounded-full px-2 py-0.5 text-xs font-medium"
+                      :class="
+                        hubspotState === 'mapped'
+                          ? 'bg-n-teal-3 text-n-teal-11'
+                          : isHubspotConnected
+                            ? 'bg-n-amber-3 text-n-amber-11'
+                            : 'bg-n-slate-3 text-n-slate-11'
+                      "
+                    >
+                      {{
+                        unmappedKeys.length
+                          ? label('UNMAPPED_COUNT', {
+                              count: unmappedKeys.length,
+                            })
+                          : label('OPTIONAL_BADGE')
+                      }}
+                    </span>
+                  </div>
+                  <span class="text-xs text-n-slate-11" role="status">
+                    {{ hubspotLabel }}
+                  </span>
+                </div>
+                <Button
+                  type="button"
+                  variant="faded"
+                  color="slate"
+                  size="xs"
+                  icon="i-lucide-sliders-horizontal"
+                  :label="label('HUBSPOT_DETAILS')"
+                  @click="hubspotDialogRef?.open()"
+                />
+              </div>
+
+              <!-- Row 3: Capture Across Human Handoff -->
+              <SettingsSwitchRow
+                :model-value="settings.lead_handoff_capture_enabled"
+                :title="label('HANDOFF_TITLE')"
+                :description="label('HANDOFF_HELP')"
+                @update:model-value="
+                  settings.lead_handoff_capture_enabled = $event
+                "
               />
-            </div>
 
-            <!-- Row 3: Capture Across Human Handoff -->
-            <SettingsSwitchRow
-              :model-value="settings.lead_handoff_capture_enabled"
-              :title="label('HANDOFF_TITLE')"
-              :description="label('HANDOFF_HELP')"
-              @update:model-value="
-                settings.lead_handoff_capture_enabled = $event
-              "
-            />
-
-            <!-- Row 4: Published Service Pricing -->
-            <SettingsSwitchRow
-              :model-value="settings.published_pricing_enabled"
-              :title="label('PRICING_TITLE')"
-              :description="label('PRICING_HELP')"
-              @update:model-value="settings.published_pricing_enabled = $event"
-            />
-          </section>
+              <!-- Row 4: Published Service Pricing -->
+              <SettingsSwitchRow
+                :model-value="settings.published_pricing_enabled"
+                :title="label('PRICING_TITLE')"
+                :description="label('PRICING_HELP')"
+                @update:model-value="
+                  settings.published_pricing_enabled = $event
+                "
+              />
+            </section>
+          </SettingsPanel>
         </div>
 
         <template #preview>
@@ -1020,10 +1113,10 @@ const isHubspotConnected = computed(
           autofocus
           @blur="suggestDraftKey"
         />
-        <details>
-          <summary class="cursor-pointer text-xs font-medium text-n-slate-11">
+        <div>
+          <p class="text-xs font-medium text-n-slate-11">
             {{ label('GUIDED.ATTRIBUTE_SETTINGS') }}
-          </summary>
+          </p>
           <Input
             v-model="fieldDraft.key"
             :label="label('FIELD_KEY')"
@@ -1034,7 +1127,7 @@ const isHubspotConnected = computed(
           <p class="m-0 text-xs text-n-slate-11">
             {{ label(fieldDraft.locked ? 'KEY_LOCKED' : 'KEY_HELP') }}
           </p>
-        </details>
+        </div>
         <p
           v-if="fieldDraftAttempted && fieldDraftError"
           class="m-0 text-xs text-n-ruby-11"

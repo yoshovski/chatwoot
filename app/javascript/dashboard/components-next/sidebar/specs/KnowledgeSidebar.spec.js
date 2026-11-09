@@ -78,7 +78,7 @@ vi.mock('../provider', () => ({
 }));
 
 describe('Sidebar Knowledge Navigation', () => {
-  it('configures Knowledge item to be active on all four knowledge routes', () => {
+  it('shows one entry per agent section with Knowledge active on its tabs', () => {
     const wrapper = shallowMount(Sidebar, {
       global: {
         stubs: {
@@ -95,26 +95,30 @@ describe('Sidebar Knowledge Navigation', () => {
     const captainItem = vm.menuItems.find(item => item.name === 'Captain');
     expect(captainItem).toBeDefined();
 
+    // One flat entry per section; Actions needs the custom tools feature.
+    expect(captainItem.children.map(child => child.name)).toEqual([
+      'captain_section_overview',
+      'captain_section_profile',
+      'captain_section_knowledge',
+      'captain_section_behavior',
+      'captain_section_handoff',
+      'captain_section_scenarios',
+      'captain_section_channels',
+    ]);
+
     const knowledgeItem = captainItem.children.find(
-      child => child.name === 'Knowledge'
+      child => child.name === 'captain_section_knowledge'
     );
-    expect(knowledgeItem).toBeDefined();
-    const actions = captainItem.children.find(
-      child => child.name === 'Actions'
-    );
-    expect(actions.children.find(child => child.name === 'Tools').to).toEqual({
+    expect(knowledgeItem.to).toEqual({
       name: 'captain_assistants_index',
-      params: { navigationPath: 'captain_tools_index' },
+      params: { navigationPath: 'captain_assistants_documents_index' },
       query: undefined,
     });
-
-    const expectedActiveRoutes = [
+    // Products only appears with a connected Shopify store.
+    expect(knowledgeItem.activeOn).toEqual([
       'captain_assistants_documents_index',
       'captain_assistants_responses_index',
       'captain_assistants_faq_suggestions',
-      'captain_assistants_products_index',
-    ];
-
-    expect(knowledgeItem.activeOn).toEqual(expectedActiveRoutes);
+    ]);
   });
 });

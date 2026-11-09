@@ -17,7 +17,7 @@ RSpec.describe Captain::Tools::EmailTeamTool do
 
     expect(tool.parameters.keys).to eq([:summary])
     expect { tool.perform(tool_context, summary: '40 people, wants SSO') }.to have_enqueued_mail(Captain::ActionsMailer, :team_email)
-      .with(conversation, ['sam@harbor-bikes.test'], 'New demo request', "Jamie wants a demo.\n40 people, wants SSO")
+      .with(conversation, ['sam@harbor-bikes.test'], 'New demo request', "Jamie wants a demo.\n40 people, wants SSO", nil)
   end
 
   it 'says so when the conversation has no assignee' do

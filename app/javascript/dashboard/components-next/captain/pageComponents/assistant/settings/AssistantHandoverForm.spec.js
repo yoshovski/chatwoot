@@ -4,7 +4,7 @@ import AssistantHandoverForm from './AssistantHandoverForm.vue';
 import SettingsSwitchRow from './SettingsSwitchRow.vue';
 import SettingsSaveBar from './SettingsSaveBar.vue';
 import HandoffFlow from './HandoffFlow.vue';
-import Select from 'dashboard/components-next/select/Select.vue';
+import ChoiceCard from './ChoiceCard.vue';
 import Editor from 'dashboard/components-next/Editor/Editor.vue';
 import Input from 'dashboard/components-next/input/Input.vue';
 
@@ -37,10 +37,23 @@ const assistant = {
   },
 };
 
+const choose = (wrapper, model) =>
+  wrapper
+    .findAllComponents(ChoiceCard)
+    .find(card => card.props('value') === model)
+    .vm.$emit('select');
+
 const mountForm = () =>
   shallowMount(AssistantHandoverForm, {
     props: { assistant, save: vi.fn().mockResolvedValue() },
-    global: { stubs: { SettingsCard: false, SettingsSplit: false } },
+    global: {
+      stubs: {
+        SettingsCard: false,
+        SettingsSplit: false,
+        // Panels render their editor inline so the fields can be reached.
+        SettingsPanel: { template: '<div><slot /></div>' },
+      },
+    },
   });
 
 describe('AssistantHandoverForm', () => {
@@ -115,8 +128,13 @@ describe('AssistantHandoverForm', () => {
   it('keeps every conversation and points to email when there is no live team', async () => {
     const wrapper = mountForm();
 
+    choose(wrapper, 'email');
+    await nextTick();
     wrapper
-      .findComponent(Input)
+      .findAllComponents(Input)
+      .find(input =>
+        input.props('placeholder')?.endsWith('EMAIL_ONLY.PLACEHOLDER')
+      )
       .vm.$emit('update:modelValue', 'help@acme.test');
     await nextTick();
     await wrapper.find('form').trigger('submit');
@@ -141,7 +159,7 @@ describe('AssistantHandoverForm', () => {
     expect(editorLabels()).not.toContain(
       'CAPTAIN.ASSISTANTS.SETTINGS.HANDOVER.KEEP_MESSAGE.LABEL'
     );
-    wrapper.findAllComponents(Select)[1].vm.$emit('update:modelValue', 'keep');
+    choose(wrapper, 'teamHours');
     await nextTick();
 
     expect(editorLabels()).toContain(

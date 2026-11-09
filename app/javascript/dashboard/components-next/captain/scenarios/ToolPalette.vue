@@ -14,6 +14,7 @@ import Button from 'dashboard/components-next/button/Button.vue';
 import {
   SEPARATE_MESSAGE_PHRASE,
   groupTools,
+  toolGroupLabel,
   needsFixedParams,
 } from './builtInActions';
 
@@ -40,11 +41,7 @@ const PRIMARY_TOOL_IDS = [
   'add_label_to_conversation',
 ];
 
-const groupLabels = {
-  BUILT_IN: () => t('CAPTAIN.ASSISTANTS.SCENARIOS.PALETTE.GROUPS.BUILT_IN'),
-  CUSTOM: () => t('CAPTAIN.ASSISTANTS.SCENARIOS.PALETTE.GROUPS.CUSTOM'),
-  MCP: () => t('CAPTAIN.ASSISTANTS.SCENARIOS.PALETTE.GROUPS.MCP'),
-};
+const groupLabel = group => toolGroupLabel(group, t);
 
 const paramsDialog = ref(null);
 const describeDialog = ref(null);
@@ -134,7 +131,7 @@ const filteredDropdownTools = computed(() => {
   };
   return [
     ...(query ? [] : [describe]),
-    ...groupTools(tools, group => groupLabels[group]()),
+    ...groupTools(tools, groupLabel),
     ...withGroupLabel(
       contactPropertyItems.value.filter(item => matches(item, query)),
       t('CAPTAIN.ASSISTANTS.SCENARIOS.PALETTE.GROUPS.CONTACT_PROPERTIES')

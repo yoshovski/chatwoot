@@ -11,6 +11,7 @@ import { useI18n } from 'vue-i18n';
 import { useSidebarKeyboardShortcuts } from './useSidebarKeyboardShortcuts';
 import { vOnClickOutside } from '@vueuse/components';
 import { FEATURE_FLAGS } from 'dashboard/featureFlags';
+import { AGENT_SECTIONS } from 'dashboard/components-next/captain/agentSections';
 import { useWindowSize } from '@vueuse/core';
 
 import Button from 'dashboard/components-next/button/Button.vue';
@@ -162,6 +163,26 @@ provideSidebarContext({
 });
 
 const { isConnected: isShopifyConnected } = useShopifyIntegration();
+
+// One flat entry per agent section; tabs inside each page cover the rest.
+const agentNavItems = computed(() =>
+  AGENT_SECTIONS.map(section => {
+    const tabs = section.tabs.filter(
+      tab =>
+        (tab.requires !== 'shopify' || isShopifyConnected.value) &&
+        (!tab.featureFlag ||
+          isFeatureEnabledonAccount.value(accountId.value, tab.featureFlag))
+    );
+    if (!tabs.length) return null;
+    return {
+      name: `captain_section_${section.key}`,
+      label: t(`CAPTAIN.AGENT_UX.SECTIONS.${section.key.toUpperCase()}`),
+      icon: section.icon,
+      to: captainAssistantRoute(tabs[0].route),
+      activeOn: tabs.flatMap(tab => [tab.route, ...(tab.alsoActiveOn || [])]),
+    };
+  }).filter(Boolean)
+);
 
 const inboxes = useMapGetter('inboxes/getInboxes');
 const labels = useMapGetter('labels/getLabelsOnSidebar');
@@ -475,177 +496,7 @@ const menuItems = computed(() => {
       icon: 'i-lucide-bot-message-square',
       // The branded product name ("Octave AI Agents") is too long for the panel title.
       label: t('PLATFORM_NAV.AI_AGENTS'),
-      children: [
-        {
-          name: 'Knowledge',
-          label: t('PLATFORM_NAV.KNOWLEDGE'),
-          icon: 'i-lucide-database',
-          activeOn: [
-            'captain_assistants_documents_index',
-            'captain_assistants_responses_index',
-            'captain_assistants_faq_suggestions',
-            'captain_assistants_products_index',
-          ],
-          children: [
-            {
-              name: 'captain_assistants_documents_index',
-              label: t('PLATFORM_NAV.DATA_SOURCES'),
-              icon: 'i-lucide-files',
-              to: captainAssistantRoute('captain_assistants_documents_index'),
-              activeOn: ['captain_assistants_documents_index'],
-            },
-            {
-              name: 'captain_assistants_responses_index',
-              label: t('PLATFORM_NAV.FAQS'),
-              icon: 'i-lucide-messages-square',
-              to: captainAssistantRoute('captain_assistants_responses_index'),
-              activeOn: ['captain_assistants_responses_index'],
-            },
-            {
-              name: 'captain_assistants_faq_suggestions',
-              label: t('PLATFORM_NAV.SUGGESTIONS'),
-              icon: 'i-lucide-lightbulb',
-              to: captainAssistantRoute('captain_assistants_faq_suggestions'),
-              activeOn: ['captain_assistants_faq_suggestions'],
-            },
-            ...(isShopifyConnected.value
-              ? [
-                  {
-                    name: 'captain_assistants_products_index',
-                    label: t('CAPTAIN.KNOWLEDGE.TABS.PRODUCTS'),
-                    icon: 'i-lucide-shopping-bag',
-                    to: captainAssistantRoute(
-                      'captain_assistants_products_index'
-                    ),
-                    activeOn: ['captain_assistants_products_index'],
-                  },
-                ]
-              : []),
-          ],
-        },
-        {
-          name: 'Behavior',
-          label: t('PLATFORM_NAV.BEHAVIOR'),
-          icon: 'i-lucide-sliders-horizontal',
-          children: [
-            {
-              name: 'captain_assistants_guidelines_index',
-              label: t('PLATFORM_NAV.INSTRUCTIONS'),
-              icon: 'i-lucide-scan-text',
-              to: captainAssistantRoute('captain_assistants_guidelines_index'),
-              activeOn: ['captain_assistants_guidelines_index'],
-            },
-            {
-              name: 'captain_assistants_guardrails_index',
-              label: t('PLATFORM_NAV.BOUNDARIES'),
-              icon: 'i-lucide-shield-check',
-              to: captainAssistantRoute('captain_assistants_guardrails_index'),
-              activeOn: ['captain_assistants_guardrails_index'],
-            },
-            {
-              name: 'captain_assistants_settings_system_index',
-              label: t('PLATFORM_NAV.HANDOFF'),
-              icon: 'i-lucide-user-round-check',
-              to: captainAssistantRoute(
-                'captain_assistants_settings_system_index'
-              ),
-              activeOn: ['captain_assistants_settings_system_index'],
-            },
-            {
-              name: 'captain_assistants_settings_after_chat_index',
-              label: t('PLATFORM_NAV.AFTER_CHAT'),
-              icon: 'i-lucide-circle-check',
-              to: captainAssistantRoute(
-                'captain_assistants_settings_after_chat_index'
-              ),
-              activeOn: ['captain_assistants_settings_after_chat_index'],
-            },
-          ],
-        },
-        {
-          name: 'Actions',
-          label: t('PLATFORM_NAV.ACTIONS'),
-          icon: 'i-lucide-workflow',
-          children: [
-            {
-              name: 'captain_assistants_settings_leads_index',
-              label: t('CAPTAIN.ASSISTANTS.SETTINGS.LEADS.TITLE'),
-              icon: 'i-lucide-contact-round',
-              to: captainAssistantRoute(
-                'captain_assistants_settings_leads_index'
-              ),
-              activeOn: ['captain_assistants_settings_leads_index'],
-            },
-            {
-              name: 'captain_assistants_scenarios_index',
-              label: t('SIDEBAR.CAPTAIN_SCENARIOS'),
-              icon: 'i-lucide-git-branch',
-              to: captainAssistantRoute('captain_assistants_scenarios_index'),
-              activeOn: ['captain_assistants_scenarios_index'],
-            },
-            {
-              name: 'Tools',
-              label: t('SIDEBAR.CAPTAIN_TOOLS'),
-              icon: 'i-lucide-wrench',
-              to: captainAssistantRoute('captain_tools_index'),
-              activeOn: ['captain_tools_index'],
-            },
-          ],
-        },
-        {
-          name: 'Configure',
-          label: t('PLATFORM_NAV.CONFIGURE'),
-          icon: 'i-lucide-settings-2',
-          children: [
-            {
-              name: 'captain_assistants_settings_index',
-              label: t('PLATFORM_NAV.IDENTITY'),
-              icon: 'i-lucide-contact',
-              to: captainAssistantRoute('captain_assistants_settings_index'),
-              activeOn: ['captain_assistants_settings_index'],
-            },
-          ],
-        },
-        {
-          name: 'Manage',
-          label: t('PLATFORM_NAV.MANAGE'),
-          icon: 'i-lucide-sliders',
-          children: [
-            {
-              name: 'captain_assistants_overview_index',
-              label: t('SIDEBAR.CAPTAIN_OVERVIEW'),
-              icon: 'i-lucide-circle-gauge',
-              to: captainAssistantRoute('captain_assistants_overview_index'),
-              activeOn: ['captain_assistants_overview_index'],
-            },
-            {
-              name: 'captain_assistants_inboxes_index',
-              label: t('PLATFORM_NAV.CHANNELS'),
-              icon: 'i-lucide-radio',
-              to: captainAssistantRoute('captain_assistants_inboxes_index'),
-              activeOn: ['captain_assistants_inboxes_index'],
-            },
-            {
-              name: 'captain_assistants_settings_schedule_index',
-              label: t('CAPTAIN.ASSISTANTS.SETTINGS.TABS.WORKING_HOURS'),
-              icon: 'i-lucide-clock',
-              to: captainAssistantRoute(
-                'captain_assistants_settings_schedule_index'
-              ),
-              activeOn: ['captain_assistants_settings_schedule_index'],
-            },
-            {
-              name: 'captain_assistants_settings_audience_index',
-              label: t('PLATFORM_NAV.AUDIENCE'),
-              icon: 'i-lucide-users',
-              to: captainAssistantRoute(
-                'captain_assistants_settings_audience_index'
-              ),
-              activeOn: ['captain_assistants_settings_audience_index'],
-            },
-          ],
-        },
-      ],
+      children: agentNavItems.value,
     },
     ...(isFeatureEnabledonAccount.value(
       accountId.value,

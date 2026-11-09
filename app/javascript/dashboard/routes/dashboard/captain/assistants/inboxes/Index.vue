@@ -62,7 +62,7 @@ watch(
 
 <template>
   <PageLayout
-    :header-title="$t('CAPTAIN.INBOXES.HEADER')"
+    :header-title="$t('CAPTAIN.AGENT_UX.SECTIONS.CHANNELS')"
     :button-label="$t('CAPTAIN.INBOXES.ADD_NEW')"
     :button-policy="['administrator']"
     :is-fetching="isFetchingAssistant || isFetching"

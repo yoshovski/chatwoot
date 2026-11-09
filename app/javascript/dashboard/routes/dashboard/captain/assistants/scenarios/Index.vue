@@ -199,7 +199,7 @@ onMounted(async () => {
 
 <template>
   <PageLayout
-    :header-title="$t('CAPTAIN.ASSISTANTS.SCENARIOS.TITLE')"
+    :header-title="$t('CAPTAIN.AGENT_UX.SECTIONS.SCENARIOS')"
     :is-fetching="isFetching"
     :show-know-more="false"
     :show-pagination-footer="false"
@@ -212,99 +212,105 @@ onMounted(async () => {
     <template #body>
       <div class="flex w-full flex-col gap-6 pb-8">
         <!-- If scenarios exist, lead with the scenario list -->
-        <div v-if="scenarios.length > 0" class="flex flex-col gap-4">
-          <div class="flex flex-wrap items-center justify-between gap-3">
-            <div
-              v-if="bulkSelectedIds.size === 0"
-              class="flex items-center gap-1 p-0.5 rounded-lg bg-n-alpha-1"
-              role="group"
-              :aria-label="t('CAPTAIN.ASSISTANTS.SCENARIOS.FILTER.LABEL')"
-            >
-              <button
-                v-for="filter in STATUS_FILTERS"
-                :key="filter"
-                type="button"
-                class="px-3 py-1 text-sm rounded-md transition-colors"
-                :class="
-                  statusFilter === filter
-                    ? 'bg-n-solid-1 text-n-slate-12 font-medium shadow-sm'
-                    : 'text-n-slate-11 hover:text-n-slate-12'
-                "
-                :aria-pressed="statusFilter === filter"
-                @click="statusFilter = filter"
+        <div
+          v-if="scenarios.length > 0"
+          class="grid items-start gap-8 xl:grid-cols-[minmax(0,1fr)_20rem]"
+        >
+          <div class="flex flex-col min-w-0 gap-4">
+            <div class="flex flex-wrap items-center justify-between gap-3">
+              <div
+                v-if="bulkSelectedIds.size === 0"
+                class="flex items-center gap-1 p-0.5 rounded-lg bg-n-alpha-1"
+                role="group"
+                :aria-label="t('CAPTAIN.ASSISTANTS.SCENARIOS.FILTER.LABEL')"
               >
-                {{
-                  t(
-                    `CAPTAIN.ASSISTANTS.SCENARIOS.FILTER.${filter.toUpperCase()}`,
-                    { count: statusCounts[filter] }
+                <button
+                  v-for="filter in STATUS_FILTERS"
+                  :key="filter"
+                  type="button"
+                  class="px-3 py-1 text-sm rounded-md transition-colors"
+                  :class="
+                    statusFilter === filter
+                      ? 'bg-n-solid-1 text-n-slate-12 font-medium shadow-sm'
+                      : 'text-n-slate-11 hover:text-n-slate-12'
+                  "
+                  :aria-pressed="statusFilter === filter"
+                  @click="statusFilter = filter"
+                >
+                  {{
+                    t(
+                      `CAPTAIN.ASSISTANTS.SCENARIOS.FILTER.${filter.toUpperCase()}`,
+                      { count: statusCounts[filter] }
+                    )
+                  }}
+                </button>
+              </div>
+              <BulkSelectBar
+                v-model="bulkSelectedIds"
+                compact
+                :all-items="scenarios"
+                :select-all-label="buildSelectedCountLabel"
+                :selected-count-label="selectedCountLabel"
+                :delete-label="
+                  $t(
+                    'CAPTAIN.ASSISTANTS.SCENARIOS.BULK_ACTION.BULK_DELETE_BUTTON'
                   )
-                }}
-              </button>
-            </div>
-            <BulkSelectBar
-              v-model="bulkSelectedIds"
-              compact
-              :all-items="scenarios"
-              :select-all-label="buildSelectedCountLabel"
-              :selected-count-label="selectedCountLabel"
-              :delete-label="
-                $t(
-                  'CAPTAIN.ASSISTANTS.SCENARIOS.BULK_ACTION.BULK_DELETE_BUTTON'
-                )
-              "
-              @bulk-delete="bulkDeleteScenarios"
-            />
-            <div
-              v-if="bulkSelectedIds.size === 0"
-              class="w-full min-w-0 ms-auto max-w-64"
-            >
-              <Input
-                v-model="searchQuery"
-                size="sm"
-                type="search"
-                :placeholder="
-                  t('CAPTAIN.ASSISTANTS.SCENARIOS.LIST.SEARCH_PLACEHOLDER')
                 "
+                @bulk-delete="bulkDeleteScenarios"
+              />
+              <div
+                v-if="bulkSelectedIds.size === 0"
+                class="w-full min-w-0 ms-auto max-w-64"
+              >
+                <Input
+                  v-model="searchQuery"
+                  size="sm"
+                  type="search"
+                  :placeholder="
+                    t('CAPTAIN.ASSISTANTS.SCENARIOS.LIST.SEARCH_PLACEHOLDER')
+                  "
+                />
+              </div>
+            </div>
+
+            <div v-if="filteredScenarios.length === 0" class="mt-1 mb-2">
+              <span class="text-n-slate-11 text-sm">
+                {{ t('CAPTAIN.ASSISTANTS.SCENARIOS.SEARCH_EMPTY_MESSAGE') }}
+              </span>
+            </div>
+            <div v-else class="flex flex-col gap-2">
+              <ScenariosCard
+                v-for="scenario in filteredScenarios"
+                :id="scenario.id"
+                :key="scenario.id"
+                :title="scenario.title"
+                :description="scenario.description"
+                :instruction="scenario.instruction"
+                :tools="scenario.tools"
+                :enabled="scenario.enabled"
+                :is-updating="pendingToggleIds.has(scenario.id)"
+                :is-selected="bulkSelectedIds.has(scenario.id)"
+                :selectable="
+                  hoveredCard === scenario.id || bulkSelectedIds.size > 0
+                "
+                @select="handleRuleSelect"
+                @delete="deleteScenario(scenario.id)"
+                @update="updateScenario"
+                @toggle="toggleScenario"
+                @hover="isHovered => handleRuleHover(isHovered, scenario.id)"
               />
             </div>
           </div>
-
-          <div v-if="filteredScenarios.length === 0" class="mt-1 mb-2">
-            <span class="text-n-slate-11 text-sm">
-              {{ t('CAPTAIN.ASSISTANTS.SCENARIOS.SEARCH_EMPTY_MESSAGE') }}
-            </span>
-          </div>
-          <div v-else class="flex flex-col gap-2">
-            <ScenariosCard
-              v-for="scenario in filteredScenarios"
-              :id="scenario.id"
-              :key="scenario.id"
-              :title="scenario.title"
-              :description="scenario.description"
-              :instruction="scenario.instruction"
-              :tools="scenario.tools"
-              :enabled="scenario.enabled"
-              :is-updating="pendingToggleIds.has(scenario.id)"
-              :is-selected="bulkSelectedIds.has(scenario.id)"
-              :selectable="
-                hoveredCard === scenario.id || bulkSelectedIds.size > 0
-              "
-              @select="handleRuleSelect"
-              @delete="deleteScenario(scenario.id)"
-              @update="updateScenario"
-              @toggle="toggleScenario"
-              @hover="isHovered => handleRuleHover(isHovered, scenario.id)"
-            />
-          </div>
-
-          <div class="pt-6 mt-2 border-t border-n-weak">
+          <aside
+            class="xl:sticky xl:top-2 p-4 rounded-2xl bg-n-alpha-1 xl:max-h-[calc(100vh-12rem)] xl:overflow-y-auto"
+          >
             <TemplateGallery
               :tools="captainTools"
               has-scenarios
               @use-template="onUseTemplate"
               @describe="onDescribe"
             />
-          </div>
+          </aside>
         </div>
 
         <!-- Empty state: Lead with templates and creation action -->

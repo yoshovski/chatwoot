@@ -18,6 +18,9 @@ import SettingsSaveBar from './SettingsSaveBar.vue';
 import SettingsSplit from './SettingsSplit.vue';
 import HandoffFlow from './HandoffFlow.vue';
 import HandoffRules from './HandoffRules.vue';
+import ChoiceCard from './ChoiceCard.vue';
+import SettingsPanel from './SettingsPanel.vue';
+import SummaryRow from './SummaryRow.vue';
 
 const props = defineProps({
   assistant: {
@@ -247,18 +250,159 @@ watch(
   },
   { immediate: true }
 );
+
+// Redesign: the support model is the first decision; details are summaries with side-panel editors.
+const U = 'CAPTAIN.AGENT_UX.HANDOFF';
+const MODELS = {
+  team: ['transfer', 'transfer'],
+  teamHours: ['transfer', 'keep'],
+  email: ['keep', 'keep'],
+};
+const supportModel = computed(() => {
+  const pair = [state.handoffWhenOnline, state.handoffWhenOffline].join();
+  const match = Object.entries(MODELS).find(
+    ([, value]) => value.join() === pair
+  );
+  return match ? match[0] : 'custom';
+});
+const chooseModel = key => {
+  [state.handoffWhenOnline, state.handoffWhenOffline] = MODELS[key];
+};
+const modelOptions = computed(() => [
+  {
+    value: 'team',
+    icon: 'i-lucide-users',
+    label: t(`${U}.MODEL_TEAM`),
+    description: t(`${U}.MODEL_TEAM_DESC`, { name: name.value }),
+  },
+  {
+    value: 'teamHours',
+    icon: 'i-lucide-clock',
+    label: t(`${U}.MODEL_TEAM_HOURS`),
+    description: t(`${U}.MODEL_TEAM_HOURS_DESC`, { name: name.value }),
+  },
+  {
+    value: 'email',
+    icon: 'i-lucide-mail',
+    label: t(`${U}.MODEL_EMAIL`),
+    description: t(`${U}.MODEL_EMAIL_DESC`, { name: name.value }),
+  },
+]);
+const actionLabel = action =>
+  actionOptions.value.find(option => option.value === action)?.label || action;
+
+const panels = reactive({
+  triggers: false,
+  messages: false,
+  contact: false,
+  waiting: false,
+});
+const plain = html =>
+  (html || '')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+const triggersSummary = computed(() =>
+  state.handoffRules.length
+    ? t(
+        `${U}.TRIGGERS_SUMMARY`,
+        { count: state.handoffRules.length },
+        state.handoffRules.length
+      )
+    : t(`${U}.TRIGGERS_NONE`, { name: name.value })
+);
+const messagesSummary = computed(
+  () =>
+    plain(
+      supportModel.value === 'email'
+        ? state.noHandoffMessage
+        : state.handoffMessage
+    ) || t('CAPTAIN.AGENT_UX.NOT_SET')
+);
+const waitingSummary = computed(() =>
+  [
+    t(
+      state.continueWhileWaiting ? `${U}.WAITING_HELPS` : `${U}.WAITING_QUIET`,
+      { name: name.value }
+    ),
+    state.handoffSafetyNet && t(`${U}.SAFETY_ON`),
+  ]
+    .filter(Boolean)
+    .join(' · ')
+);
+const handsOver = computed(() => supportModel.value !== 'email');
 </script>
 
 <template>
   <SettingsSplit>
-    <SettingsCard
-      :title="t('CAPTAIN.ASSISTANTS.SETTINGS.HANDOVER.EMAIL_ONLY.TITLE')"
-      :description="
-        t('CAPTAIN.ASSISTANTS.SETTINGS.HANDOVER.EMAIL_ONLY.DESC', { name })
-      "
-    >
+    <section class="flex flex-col gap-3">
+      <h3 class="m-0 text-base font-semibold text-n-slate-12">
+        {{ t(`${U}.MODEL_TITLE`, { name }) }}
+      </h3>
+      <div
+        class="flex flex-col gap-2"
+        role="radiogroup"
+        :aria-label="t(`${U}.MODEL_TITLE`, { name })"
+      >
+        <ChoiceCard
+          v-for="option in modelOptions"
+          :key="option.value"
+          name="support-model"
+          :value="option.value"
+          :icon="option.icon"
+          :label="option.label"
+          :description="option.description"
+          :is-active="supportModel === option.value"
+          @select="chooseModel(option.value)"
+        />
+        <ChoiceCard
+          v-if="supportModel === 'custom'"
+          name="support-model"
+          value="custom"
+          icon="i-lucide-shuffle"
+          :label="t(`${U}.MODEL_CUSTOM`)"
+          :description="
+            t(`${U}.MODEL_CUSTOM_DESC`, {
+              online: actionLabel(state.handoffWhenOnline),
+              offline: actionLabel(state.handoffWhenOffline),
+            })
+          "
+          is-active
+        />
+      </div>
+      <div
+        v-if="handsOver && isAdmin"
+        class="grid gap-3 p-4 rounded-xl bg-n-alpha-1 sm:grid-cols-2"
+      >
+        <div class="flex flex-col gap-1.5">
+          <span class="text-sm font-medium text-n-slate-12">
+            {{ t(`${U}.TEAM_LABEL`) }}
+          </span>
+          <Select
+            v-model="state.handoffFallbackTeamId"
+            :options="teamOptions"
+            :aria-label="t(`${U}.TEAM_LABEL`)"
+            class="w-full [&>select]:w-full"
+          />
+        </div>
+        <div class="flex flex-col gap-1.5">
+          <span class="text-sm font-medium text-n-slate-12">
+            {{ t(`${U}.PERSON_LABEL`) }}
+          </span>
+          <Select
+            v-model="state.handoffFallbackAgentId"
+            :options="agentOptions"
+            :aria-label="t(`${U}.PERSON_LABEL`)"
+            class="w-full [&>select]:w-full"
+          />
+        </div>
+        <p class="m-0 text-xs text-n-slate-11 sm:col-span-2">
+          {{ t(`${U}.TEAM_HINT`) }}
+        </p>
+      </div>
       <form
-        class="flex flex-col gap-2 pt-3 pb-1 sm:flex-row sm:items-start"
+        v-if="supportModel === 'email'"
+        class="flex flex-col gap-2 sm:flex-row sm:items-start"
         @submit.prevent="sendToEmail"
       >
         <Input
@@ -267,193 +411,53 @@ watch(
           :placeholder="
             t('CAPTAIN.ASSISTANTS.SETTINGS.HANDOVER.EMAIL_ONLY.PLACEHOLDER')
           "
-          :aria-label="
-            t('CAPTAIN.ASSISTANTS.SETTINGS.HANDOVER.EMAIL_ONLY.PLACEHOLDER')
-          "
+          :aria-label="t(`${U}.EMAIL_LABEL`)"
           class="flex-1"
         />
         <Button
           type="submit"
           :label="t('CAPTAIN.ASSISTANTS.SETTINGS.HANDOVER.EMAIL_ONLY.APPLY')"
           icon="i-lucide-mail"
+          variant="faded"
           :disabled="!isValidSupportEmail"
         />
       </form>
-    </SettingsCard>
+    </section>
 
-    <SettingsCard
-      :title="t('CAPTAIN.ASSISTANTS.SETTINGS.HANDOVER.WHEN.TITLE')"
-      :description="
-        t('CAPTAIN.ASSISTANTS.SETTINGS.HANDOVER.WHEN.DESC', { name })
-      "
-    >
-      <div class="grid gap-3 pt-3 pb-1 sm:grid-cols-2">
-        <div class="flex flex-col gap-1.5">
-          <span class="text-xs font-medium text-n-slate-11">
-            {{ t('CAPTAIN.ASSISTANTS.SETTINGS.HANDOVER.WHEN.ONLINE') }}
-          </span>
-          <Select
-            v-model="state.handoffWhenOnline"
-            :options="actionOptions"
-            :aria-label="t('CAPTAIN.ASSISTANTS.SETTINGS.HANDOVER.WHEN.ONLINE')"
-            class="w-full [&>select]:w-full"
-          />
-        </div>
-        <div class="flex flex-col gap-1.5">
-          <span class="text-xs font-medium text-n-slate-11">
-            {{ t('CAPTAIN.ASSISTANTS.SETTINGS.HANDOVER.WHEN.OFFLINE') }}
-          </span>
-          <Select
-            v-model="state.handoffWhenOffline"
-            :options="actionOptions"
-            :aria-label="t('CAPTAIN.ASSISTANTS.SETTINGS.HANDOVER.WHEN.OFFLINE')"
-            class="w-full [&>select]:w-full"
-          />
-        </div>
-      </div>
-    </SettingsCard>
-
-    <SettingsCard
-      :title="t('CAPTAIN.ASSISTANTS.SETTINGS.HANDOVER.MESSAGE_TITLE', { name })"
-    >
-      <Editor
-        v-model="state.handoffMessage"
-        :placeholder="t('CAPTAIN.ASSISTANTS.FORM.HANDOFF_MESSAGE.PLACEHOLDER')"
-        :message="formErrors.handoffMessage"
-        :message-type="formErrors.handoffMessage ? 'error' : 'info'"
-        class="z-0 pt-2"
-      />
-      <Editor
-        v-if="transfersOffline"
-        v-model="state.offlineHandoffMessage"
-        :label="t('CAPTAIN.ASSISTANTS.SETTINGS.HANDOVER.OFFLINE_MESSAGE.LABEL')"
-        :placeholder="
-          t('CAPTAIN.ASSISTANTS.SETTINGS.HANDOVER.OFFLINE_MESSAGE.PLACEHOLDER')
-        "
-        :max-length="500"
-        class="z-0 pt-4"
-      />
-      <Editor
-        v-if="keepsSometimes"
-        v-model="state.noHandoffMessage"
-        :label="
-          t('CAPTAIN.ASSISTANTS.SETTINGS.HANDOVER.KEEP_MESSAGE.LABEL', { name })
-        "
-        :placeholder="
-          t('CAPTAIN.ASSISTANTS.SETTINGS.HANDOVER.KEEP_MESSAGE.PLACEHOLDER')
-        "
-        :max-length="500"
-        class="z-0 pt-4"
-      />
-    </SettingsCard>
-
-    <SettingsCard
-      :title="t('CAPTAIN.ASSISTANTS.SETTINGS.HANDOVER.CONTACT_FORM.TITLE')"
-      :description="t('CAPTAIN.ASSISTANTS.SETTINGS.HANDOVER.CONTACT_FORM.DESC')"
-    >
-      <label class="flex flex-col gap-2 pt-3 text-sm text-n-slate-12">
-        {{
-          t('CAPTAIN.ASSISTANTS.SETTINGS.HANDOVER.CONTACT_FORM.MESSAGE_LABEL')
-        }}
-        <textarea
-          v-model="state.handoffFormMessage"
-          :placeholder="
-            t(
-              'CAPTAIN.ASSISTANTS.SETTINGS.HANDOVER.CONTACT_FORM.DEFAULT_MESSAGE'
-            )
-          "
-          maxlength="500"
-          rows="3"
-          class="w-full rounded-lg border border-n-weak bg-n-alpha-1 p-3 text-sm text-n-slate-12 focus:border-n-brand focus:outline-none"
+    <section class="flex flex-col gap-3">
+      <h3 class="m-0 text-base font-semibold text-n-slate-12">
+        {{ t(`${U}.DETAILS_TITLE`) }}
+      </h3>
+      <SettingsCard>
+        <SummaryRow
+          v-if="handsOver"
+          icon="i-lucide-git-fork"
+          :title="t(`${U}.TRIGGERS`)"
+          :summary="triggersSummary"
+          @edit="panels.triggers = true"
         />
-      </label>
-      <SettingsSwitchRow
-        v-model="state.handoffCollectName"
-        :title="t('CAPTAIN.ASSISTANTS.SETTINGS.HANDOVER.CONTACT_FORM.NAME')"
-        :description="
-          t('CAPTAIN.ASSISTANTS.SETTINGS.HANDOVER.CONTACT_FORM.FIELD_DESC')
-        "
-      />
-      <SettingsSwitchRow
-        model-value
-        disabled
-        :title="t('CAPTAIN.ASSISTANTS.SETTINGS.HANDOVER.CONTACT_FORM.EMAIL')"
-        :description="
-          t('CAPTAIN.ASSISTANTS.SETTINGS.HANDOVER.CONTACT_FORM.EMAIL_REQUIRED')
-        "
-      />
-      <SettingsSwitchRow
-        v-model="state.handoffCollectPhone"
-        :title="t('CAPTAIN.ASSISTANTS.SETTINGS.HANDOVER.CONTACT_FORM.PHONE')"
-        :description="
-          t('CAPTAIN.ASSISTANTS.SETTINGS.HANDOVER.CONTACT_FORM.PHONE_DESC')
-        "
-      />
-    </SettingsCard>
-
-    <SettingsCard
-      :title="t('CAPTAIN.ASSISTANTS.SETTINGS.HANDOVER.RULES.TITLE')"
-      :description="
-        t('CAPTAIN.ASSISTANTS.SETTINGS.HANDOVER.RULES.DESC', { name })
-      "
-    >
-      <HandoffRules v-model="state.handoffRules" />
-    </SettingsCard>
-
-    <SettingsCard
-      v-if="isAdmin"
-      :title="t('CAPTAIN.ASSISTANTS.SETTINGS.HANDOVER.FALLBACK_TITLE')"
-      :description="t('CAPTAIN.ASSISTANTS.SETTINGS.HANDOVER.FALLBACK_PREFIX')"
-    >
-      <div class="grid gap-3 pt-3 pb-1 sm:grid-cols-2">
-        <div class="flex flex-col gap-1.5">
-          <span class="text-xs font-medium text-n-slate-11">
-            {{ t('CAPTAIN.ASSISTANTS.FORM.FALLBACK_ASSIGNMENTS.TEAM_LABEL') }}
-          </span>
-          <Select
-            v-model="state.handoffFallbackTeamId"
-            :options="teamOptions"
-            :aria-label="
-              t('CAPTAIN.ASSISTANTS.FORM.FALLBACK_ASSIGNMENTS.TEAM_LABEL')
-            "
-            class="w-full [&>select]:w-full"
-          />
-        </div>
-        <div class="flex flex-col gap-1.5">
-          <span class="text-xs font-medium text-n-slate-11">
-            {{ t('CAPTAIN.ASSISTANTS.FORM.FALLBACK_ASSIGNMENTS.AGENT_LABEL') }}
-          </span>
-          <Select
-            v-model="state.handoffFallbackAgentId"
-            :options="agentOptions"
-            :aria-label="
-              t('CAPTAIN.ASSISTANTS.FORM.FALLBACK_ASSIGNMENTS.AGENT_LABEL')
-            "
-            class="w-full [&>select]:w-full"
-          />
-        </div>
-      </div>
-    </SettingsCard>
-
-    <SettingsCard>
-      <SettingsSwitchRow
-        v-model="state.continueWhileWaiting"
-        :title="t('CAPTAIN.ASSISTANTS.SETTINGS.HANDOVER.KEEP_HELPING.TITLE')"
-        :description="
-          t('CAPTAIN.ASSISTANTS.SETTINGS.HANDOVER.KEEP_HELPING.DESC', { name })
-        "
-      />
-      <SettingsSwitchRow
-        v-if="isAdmin"
-        v-model="state.handoffSafetyNet"
-        :title="
-          t('CAPTAIN.ASSISTANTS.SETTINGS.HANDOVER.SAFETY_NET.TITLE', { name })
-        "
-        :description="
-          t('CAPTAIN.ASSISTANTS.SETTINGS.HANDOVER.SAFETY_NET.DESC', { name })
-        "
-      />
-    </SettingsCard>
+        <SummaryRow
+          icon="i-lucide-message-square-text"
+          :title="t(`${U}.MESSAGES`, { name })"
+          :summary="messagesSummary"
+          @edit="panels.messages = true"
+        />
+        <SummaryRow
+          v-if="handsOver"
+          icon="i-lucide-contact-round"
+          :title="t(`${U}.CONTACT`)"
+          :summary="contactFields.join(', ')"
+          @edit="panels.contact = true"
+        />
+        <SummaryRow
+          v-if="handsOver"
+          icon="i-lucide-hourglass"
+          :title="t(`${U}.WAITING`)"
+          :summary="waitingSummary"
+          @edit="panels.waiting = true"
+        />
+      </SettingsCard>
+    </section>
 
     <template v-if="!isCaptainV2Enabled">
       <Editor
@@ -484,6 +488,152 @@ watch(
       @discard="discard"
     />
 
+    <SettingsPanel
+      v-model:open="panels.triggers"
+      :title="t(`${U}.TRIGGERS`)"
+      :description="t(`${U}.TRIGGERS_PANEL_DESC`, { name })"
+    >
+      <HandoffRules v-model="state.handoffRules" />
+    </SettingsPanel>
+
+    <SettingsPanel
+      v-model:open="panels.messages"
+      :title="t(`${U}.MESSAGES`, { name })"
+      :description="t(`${U}.MESSAGES_PANEL_DESC`)"
+      width="xl"
+    >
+      <Editor
+        v-if="handsOver"
+        v-model="state.handoffMessage"
+        :label="
+          t('CAPTAIN.ASSISTANTS.SETTINGS.HANDOVER.MESSAGE_TITLE', { name })
+        "
+        :placeholder="t('CAPTAIN.ASSISTANTS.FORM.HANDOFF_MESSAGE.PLACEHOLDER')"
+        :message="formErrors.handoffMessage"
+        :message-type="formErrors.handoffMessage ? 'error' : 'info'"
+        class="z-0"
+      />
+      <Editor
+        v-if="transfersOffline"
+        v-model="state.offlineHandoffMessage"
+        :label="t('CAPTAIN.ASSISTANTS.SETTINGS.HANDOVER.OFFLINE_MESSAGE.LABEL')"
+        :placeholder="
+          t('CAPTAIN.ASSISTANTS.SETTINGS.HANDOVER.OFFLINE_MESSAGE.PLACEHOLDER')
+        "
+        :max-length="500"
+        class="z-0"
+      />
+      <Editor
+        v-if="keepsSometimes"
+        v-model="state.noHandoffMessage"
+        :label="
+          t('CAPTAIN.ASSISTANTS.SETTINGS.HANDOVER.KEEP_MESSAGE.LABEL', { name })
+        "
+        :placeholder="
+          t('CAPTAIN.ASSISTANTS.SETTINGS.HANDOVER.KEEP_MESSAGE.PLACEHOLDER')
+        "
+        :max-length="500"
+        class="z-0"
+      />
+    </SettingsPanel>
+
+    <SettingsPanel
+      v-model:open="panels.contact"
+      :title="t(`${U}.CONTACT`)"
+      :description="t(`${U}.CONTACT_PANEL_DESC`)"
+      width="xl"
+    >
+      <label class="flex flex-col gap-2 text-sm text-n-slate-12">
+        {{
+          t('CAPTAIN.ASSISTANTS.SETTINGS.HANDOVER.CONTACT_FORM.MESSAGE_LABEL')
+        }}
+        <textarea
+          v-model="state.handoffFormMessage"
+          :placeholder="
+            t(
+              'CAPTAIN.ASSISTANTS.SETTINGS.HANDOVER.CONTACT_FORM.DEFAULT_MESSAGE'
+            )
+          "
+          maxlength="500"
+          rows="3"
+          class="w-full p-3 text-sm border rounded-lg border-n-weak bg-n-alpha-1 text-n-slate-12 focus:border-n-brand focus:outline-none"
+        />
+      </label>
+      <div class="flex flex-col divide-y divide-n-weak">
+        <SettingsSwitchRow
+          v-model="state.handoffCollectName"
+          :title="t('CAPTAIN.ASSISTANTS.SETTINGS.HANDOVER.CONTACT_FORM.NAME')"
+        />
+        <SettingsSwitchRow
+          model-value
+          disabled
+          :title="t('CAPTAIN.ASSISTANTS.SETTINGS.HANDOVER.CONTACT_FORM.EMAIL')"
+          :description="
+            t(
+              'CAPTAIN.ASSISTANTS.SETTINGS.HANDOVER.CONTACT_FORM.EMAIL_REQUIRED'
+            )
+          "
+        />
+        <SettingsSwitchRow
+          v-model="state.handoffCollectPhone"
+          :title="t('CAPTAIN.ASSISTANTS.SETTINGS.HANDOVER.CONTACT_FORM.PHONE')"
+          :description="
+            t('CAPTAIN.ASSISTANTS.SETTINGS.HANDOVER.CONTACT_FORM.PHONE_DESC')
+          "
+        />
+      </div>
+      <div class="p-4 text-sm rounded-2xl bg-n-slate-3 text-n-slate-12">
+        <p class="mt-0 mb-3 break-words whitespace-pre-wrap">
+          {{
+            state.handoffFormMessage.trim() ||
+            t(
+              'CAPTAIN.ASSISTANTS.SETTINGS.HANDOVER.CONTACT_FORM.DEFAULT_MESSAGE'
+            )
+          }}
+        </p>
+        <Input
+          v-for="field in contactFields"
+          :key="field"
+          :label="field"
+          disabled
+          class="mb-3"
+        />
+        <Button
+          :label="t('CAPTAIN.ASSISTANTS.SETTINGS.HANDOVER.CONTACT_FORM.SUBMIT')"
+          disabled
+          class="w-full"
+        />
+      </div>
+    </SettingsPanel>
+
+    <SettingsPanel
+      v-model:open="panels.waiting"
+      :title="t(`${U}.WAITING`)"
+      :description="t(`${U}.WAITING_PANEL_DESC`)"
+    >
+      <div class="flex flex-col divide-y divide-n-weak">
+        <SettingsSwitchRow
+          v-model="state.continueWhileWaiting"
+          :title="t('CAPTAIN.ASSISTANTS.SETTINGS.HANDOVER.KEEP_HELPING.TITLE')"
+          :description="
+            t('CAPTAIN.ASSISTANTS.SETTINGS.HANDOVER.KEEP_HELPING.DESC', {
+              name,
+            })
+          "
+        />
+        <SettingsSwitchRow
+          v-if="isAdmin"
+          v-model="state.handoffSafetyNet"
+          :title="
+            t('CAPTAIN.ASSISTANTS.SETTINGS.HANDOVER.SAFETY_NET.TITLE', { name })
+          "
+          :description="
+            t('CAPTAIN.ASSISTANTS.SETTINGS.HANDOVER.SAFETY_NET.DESC', { name })
+          "
+        />
+      </div>
+    </SettingsPanel>
+
     <template #preview>
       <HandoffFlow
         :name="name"
@@ -499,34 +649,6 @@ watch(
         :when-online="state.handoffWhenOnline"
         :when-offline="state.handoffWhenOffline"
       />
-      <SettingsCard
-        :title="t('CAPTAIN.ASSISTANTS.SETTINGS.HANDOVER.CONTACT_FORM.PREVIEW')"
-      >
-        <div class="mt-3 rounded-2xl bg-n-slate-3 p-4 text-sm text-n-slate-12">
-          <p class="mb-3 mt-0 whitespace-pre-wrap break-words">
-            {{
-              state.handoffFormMessage.trim() ||
-              t(
-                'CAPTAIN.ASSISTANTS.SETTINGS.HANDOVER.CONTACT_FORM.DEFAULT_MESSAGE'
-              )
-            }}
-          </p>
-          <Input
-            v-for="field in contactFields"
-            :key="field"
-            :label="field"
-            disabled
-            class="mb-3"
-          />
-          <Button
-            :label="
-              t('CAPTAIN.ASSISTANTS.SETTINGS.HANDOVER.CONTACT_FORM.SUBMIT')
-            "
-            disabled
-            class="w-full"
-          />
-        </div>
-      </SettingsCard>
     </template>
   </SettingsSplit>
 </template>

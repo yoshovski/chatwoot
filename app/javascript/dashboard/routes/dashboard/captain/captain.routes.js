@@ -17,6 +17,7 @@ import AssistantSystemSettingsIndex from './assistants/settings/System.vue';
 import AssistantAudienceSettingsIndex from './assistants/settings/Audience.vue';
 import AssistantScheduleSettingsIndex from './assistants/settings/Schedule.vue';
 import AssistantAfterChatSettingsIndex from './assistants/settings/AfterChat.vue';
+import AssistantCustomerDataIndex from './assistants/settings/CustomerData.vue';
 import AssistantInboxesIndex from './assistants/inboxes/Index.vue';
 import AssistantPlaygroundIndex from './assistants/playground/Index.vue';
 import AssistantGuardrailsIndex from './assistants/guardrails/Index.vue';
@@ -81,6 +82,28 @@ const assistantRoutes = [
     path: frontendURL('accounts/:accountId/captain/:assistantId/tools'),
     component: CustomToolsIndex,
     name: 'captain_tools_index',
+    meta: metaCustomTools,
+  },
+  {
+    path: frontendURL(
+      'accounts/:accountId/captain/:assistantId/tools/email-templates'
+    ),
+    component: CustomToolsIndex,
+    name: 'captain_tools_email_templates',
+    meta: metaCustomTools,
+  },
+  {
+    path: frontendURL('accounts/:accountId/captain/:assistantId/tools/api'),
+    component: CustomToolsIndex,
+    name: 'captain_tools_api',
+    meta: metaCustomTools,
+  },
+  {
+    path: frontendURL(
+      'accounts/:accountId/captain/:assistantId/tools/connections'
+    ),
+    component: CustomToolsIndex,
+    name: 'captain_tools_connections',
     meta: metaCustomTools,
   },
   {
@@ -176,6 +199,14 @@ const assistantRoutes = [
     ),
     component: AssistantAfterChatSettingsIndex,
     name: 'captain_assistants_settings_after_chat_index',
+    meta,
+  },
+  {
+    path: frontendURL(
+      'accounts/:accountId/captain/:assistantId/settings/customer-data'
+    ),
+    component: AssistantCustomerDataIndex,
+    name: 'captain_assistants_settings_customer_data_index',
     meta,
   },
   {
