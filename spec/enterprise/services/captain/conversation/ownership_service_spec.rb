@@ -70,6 +70,25 @@ RSpec.describe Captain::Conversation::OwnershipService do
       expect(service.prompt_instruction).to eq(described_class::WAITING_INSTRUCTION)
     end
 
+    it 'includes contact details reminder when details are missing and unsubmitted_turns >= 2' do
+      conversation.update!(status: :open)
+      conversation.contact.update!(email: nil)
+      create(:message, conversation: conversation, account: account, inbox: inbox,
+                       content_type: :form, message_type: :outgoing,
+                       content_attributes: {
+                         'type' => 'contact_capture',
+                         'items' => [{ 'name' => 'email', 'type' => 'email', 'label' => 'Email' }]
+                       })
+      2.times do |i|
+        create(:message, conversation: conversation, account: account, inbox: inbox,
+                         message_type: :incoming, content: "Still here #{i}")
+      end
+
+      instruction = service.prompt_instruction
+      expect(instruction).to include(described_class::WAITING_INSTRUCTION)
+      expect(instruction).to include('The visitor has not yet provided their email or contact details')
+    end
+
     it 'returns returned to ai instruction when returned to ai flag is set' do
       conversation.update!(status: :pending, custom_attributes: { 'captain_returned_to_ai' => true })
       expect(service.prompt_instruction).to eq(described_class::RETURNED_TO_AI_INSTRUCTION)

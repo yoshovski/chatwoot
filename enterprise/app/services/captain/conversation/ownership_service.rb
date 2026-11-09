@@ -29,10 +29,28 @@ class Captain::Conversation::OwnershipService
 
   def prompt_instruction
     if waiting?
-      WAITING_INSTRUCTION
+      instruction = WAITING_INSTRUCTION
+      if contact_details_missing? && unsubmitted_turns_count >= 2
+        instruction += ' The visitor has not yet provided their email or contact details. ' \
+                       'If they keep chatting, gently remind them in follow_up (kind next_step) ' \
+                       'that they can share their contact details in the form above or right here in chat so our team can follow up.'
+      end
+      instruction
     elsif returned_to_ai?
       RETURNED_TO_AI_INSTRUCTION
     end
+  end
+
+  def contact_details_missing?
+    contact = conversation&.contact
+    contact.blank? || contact.email.blank?
+  end
+
+  def unsubmitted_turns_count
+    Captain::Conversation::ContactCaptureService.new(
+      conversation: conversation,
+      assistant: assistant
+    ).unsubmitted_turns_count
   end
 
   def human_taken_over?

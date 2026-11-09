@@ -189,6 +189,7 @@ class Captain::Conversation::ResponseBuilderJob < ApplicationJob # rubocop:disab
     capture_assistant_session(result_message: message, credits_consumed: 1.0)
     record_v2_response_completed(message) if captain_v2_enabled?
     apply_v2_reply_labels(handed_off: false, answer: message.content)
+    schedule_proactive_check_in_if_applicable
   end
 
   def process_v2_handoff_response
@@ -452,5 +453,13 @@ class Captain::Conversation::ResponseBuilderJob < ApplicationJob # rubocop:disab
     return @conversation.messages.where(id: @responding_to_message_id).first if @responding_to_message_id.present?
 
     @conversation.messages.incoming.last
+  end
+
+  def schedule_proactive_check_in_if_applicable
+    return unless inbox.web_widget? && captain_v2_enabled?
+    return unless @conversation.pending?
+
+    delay = Captain::Conversation::CheckInRunner.proactive_check_in_delay(@assistant, @conversation)
+    Captain::Conversation::CheckInJob.set(wait: delay).perform_later(@conversation.id, @assistant.id)
   end
 end

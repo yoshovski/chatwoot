@@ -22,6 +22,15 @@ class Captain::Conversation::CheckInState
     message.present? && message.outgoing? && message.sender == @assistant && public_messages.incoming.exists?
   end
 
+  # Returns true if the agent's outgoing messages in the current quiet period asked a question
+  # or offered options that the customer hasn't answered yet.
+  def awaiting_customer_answer?
+    recent = recent_quiet_period_agent_messages
+    return false if recent.empty?
+
+    recent.any? { |msg| message_awaits_answer?(msg) }
+  end
+
   def checked_in_this_quiet_period?
     initiated = initiated_messages
     last_incoming_id = public_messages.incoming.maximum(:id)
@@ -82,5 +91,20 @@ class Captain::Conversation::CheckInState
     return true unless @conversation.pending?
 
     Captain::Conversation::OwnershipService.new(conversation: @conversation, assistant: @assistant).waiting?
+  end
+
+  def recent_quiet_period_agent_messages
+    last_incoming = public_messages.incoming.reorder(id: :desc).first
+    scope = public_messages.outgoing.where(sender: @assistant)
+    scope = scope.where('id > ?', last_incoming.id) if last_incoming.present?
+    scope.reorder(id: :asc).to_a
+  end
+
+  def message_awaits_answer?(msg)
+    return true if msg.content_type == 'input_select'
+    return true if msg.additional_attributes.to_h[Captain::Leads::QuestionBudget::ATTRIBUTE_KEY].present?
+    return true if Array(msg.additional_attributes.to_h[Captain::Reply::Plan::SEGMENT_KINDS_KEY]).include?('question')
+
+    msg.content_type.in?([nil, 'text']) && msg.content.to_s.strip.end_with?('?')
   end
 end

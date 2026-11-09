@@ -29,6 +29,47 @@ RSpec.describe Captain::Conversation::CheckInRunner do
 
   def check_ins = conversation.messages.where("additional_attributes->>'captain_initiated' = 'check_in'")
 
+  describe '.proactive_check_in_delay' do
+    it 'returns 90 seconds for widget conversation when awaiting customer answer' do
+      message(:incoming, at: 2.minutes.ago, content: 'Can I charge with this?')
+      message(:outgoing, at: 100.seconds.ago, content: 'Which charger model do you use?')
+
+      expect(described_class.proactive_check_in_delay(assistant, conversation)).to eq(90.seconds)
+    end
+
+    it 'returns 150 seconds for widget conversation when answer was complete' do
+      message(:incoming, at: 3.minutes.ago, content: 'What is the warranty?')
+      message(:outgoing, at: 160.seconds.ago, content: 'The warranty is 12 months.')
+
+      expect(described_class.proactive_check_in_delay(assistant, conversation)).to eq(150.seconds)
+    end
+
+    it 'falls back to check_in_after for non-widget inboxes' do
+      email_inbox = create(:inbox, :with_email, account: account)
+      email_conversation = create(:conversation, account: account, inbox: email_inbox, status: :pending)
+
+      expect(described_class.proactive_check_in_delay(assistant, email_conversation)).to eq(30.minutes)
+    end
+  end
+
+  describe '#check_in with proactive: true' do
+    it 'delivers proactive check-in once delay elapsed' do
+      message(:incoming, at: 3.minutes.ago, content: 'What is the warranty?')
+      message(:outgoing, at: 160.seconds.ago, content: 'The warranty is 12 months.')
+
+      expect(runner.check_in(conversation, proactive: true)).to be(true)
+      expect(check_ins.count).to eq(1)
+    end
+
+    it 'does not deliver if the conversation is not yet quiet enough' do
+      message(:incoming, at: 2.minutes.ago, content: 'What is the warranty?')
+      message(:outgoing, at: 30.seconds.ago, content: 'The warranty is 12 months.')
+
+      expect(runner.check_in(conversation, proactive: true)).to be(false)
+      expect(check_ins).to be_empty
+    end
+  end
+
   describe '.check_in_after' do
     it 'waits half of auto-resolve, rounded down to 5 minutes and kept between 5 and 30 minutes' do
       { 60 => 30, 15 => 5, 5 => 5, 25 => 10, 45 => 20, 240 => 30 }.each do |after, expected|
