@@ -30,18 +30,39 @@ RSpec.describe Captain::Conversation::CheckInRunner do
   def check_ins = conversation.messages.where("additional_attributes->>'captain_initiated' = 'check_in'")
 
   describe '.proactive_check_in_delay' do
-    it 'returns 90 seconds for widget conversation when awaiting customer answer' do
+    it 'returns 40 seconds for widget conversation when awaiting customer answer' do
       message(:incoming, at: 2.minutes.ago, content: 'Can I charge with this?')
       message(:outgoing, at: 100.seconds.ago, content: 'Which charger model do you use?')
 
-      expect(described_class.proactive_check_in_delay(assistant, conversation)).to eq(90.seconds)
+      expect(described_class.proactive_check_in_delay(assistant, conversation)).to eq(40.seconds)
     end
 
-    it 'returns 150 seconds for widget conversation when answer was complete' do
+    it 'returns 60 seconds for widget conversation when answer was complete' do
       message(:incoming, at: 3.minutes.ago, content: 'What is the warranty?')
       message(:outgoing, at: 160.seconds.ago, content: 'The warranty is 12 months.')
 
-      expect(described_class.proactive_check_in_delay(assistant, conversation)).to eq(150.seconds)
+      expect(described_class.proactive_check_in_delay(assistant, conversation)).to eq(60.seconds)
+    end
+
+    it 'honors global installation config override' do
+      create(:installation_config, name: 'CAPTAIN_WIDGET_CHECK_IN_COMPLETED_SECONDS', value: 75)
+      GlobalConfig.clear_cache
+
+      message(:incoming, at: 3.minutes.ago, content: 'What is the warranty?')
+      message(:outgoing, at: 160.seconds.ago, content: 'The warranty is 12 months.')
+
+      expect(described_class.proactive_check_in_delay(assistant, conversation)).to eq(75.seconds)
+    end
+
+    it 'prefers assistant config override over global config' do
+      create(:installation_config, name: 'CAPTAIN_WIDGET_CHECK_IN_COMPLETED_SECONDS', value: 75)
+      GlobalConfig.clear_cache
+      assistant.update!(config: config.merge('widget_check_in_completed_seconds' => 50))
+
+      message(:incoming, at: 3.minutes.ago, content: 'What is the warranty?')
+      message(:outgoing, at: 160.seconds.ago, content: 'The warranty is 12 months.')
+
+      expect(described_class.proactive_check_in_delay(assistant, conversation)).to eq(50.seconds)
     end
 
     it 'falls back to check_in_after for non-widget inboxes' do
@@ -59,6 +80,41 @@ RSpec.describe Captain::Conversation::CheckInRunner do
 
       expect(runner.check_in(conversation, proactive: true)).to be(true)
       expect(check_ins.count).to eq(1)
+    end
+
+    it 'broadcasts conversation.nudge and creates no message when awaiting customer answer' do
+      message(:incoming, at: 2.minutes.ago, content: 'Can I charge with this?')
+      message(:outgoing, at: 100.seconds.ago, content: 'Which charger model do you use?')
+
+      expect(ActionCable.server).to receive(:broadcast).with(
+        conversation.contact_inbox.pubsub_token,
+        hash_including(event: 'conversation.nudge')
+      )
+
+      expect(runner.check_in(conversation, proactive: true)).to be(true)
+      expect(check_ins).to be_empty
+      expect(conversation.reload.additional_attributes['captain_last_nudge_at']).to be_present
+    end
+
+    it 'attaches suggested replies as input_select when suggested_replies is enabled' do
+      assistant.update!(config: config.merge('suggested_replies' => true, 'max_suggested_replies' => 2))
+      allow(Captain::Conversation::CheckInService).to receive(:new).and_return(
+        instance_double(
+          Captain::Conversation::CheckInService,
+          payload: {
+            text: 'Is there anything else I can help with?',
+            suggested_replies: [{ 'label' => 'Shipping info', 'message' => 'What are your shipping times?' }]
+          }
+        )
+      )
+
+      message(:incoming, at: 3.minutes.ago, content: 'What is the warranty?')
+      message(:outgoing, at: 160.seconds.ago, content: 'The warranty is 12 months.')
+
+      expect(runner.check_in(conversation, proactive: true)).to be(true)
+      check_in_msg = check_ins.sole
+      expect(check_in_msg.content_type).to eq('input_select')
+      expect(check_in_msg.content_attributes['items']).to be_present
     end
 
     it 'does not deliver if the conversation is not yet quiet enough' do

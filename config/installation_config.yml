@@ -208,6 +208,14 @@
   description: 'The FireCrawl API key for the Captain AI service'
   locked: false
   type: secret
+- name: CAPTAIN_WIDGET_CHECK_IN_AWAITING_SECONDS
+  display_title: 'Widget Check-in Delay - Awaiting Answer (seconds)'
+  description: 'Seconds of silence before proactively following up when the assistant asked a question. Default: 40'
+  locked: false
+- name: CAPTAIN_WIDGET_CHECK_IN_COMPLETED_SECONDS
+  display_title: 'Widget Check-in Delay - Completed Answer (seconds)'
+  description: 'Seconds of silence before asking if the visitor needs anything else after a complete answer. Default: 60'
+  locked: false
 - name: CAPTAIN_CLOUD_PLAN_LIMITS
   display_title: 'Captain Cloud Plan Limits'
   description: 'The limits for the Captain AI service for different plans'

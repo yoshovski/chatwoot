@@ -32,10 +32,24 @@ class Captain::Conversation::CheckInState
   end
 
   def checked_in_this_quiet_period?
+    return true if nudged_this_quiet_period?
+
     initiated = initiated_messages
     last_incoming_id = public_messages.incoming.maximum(:id)
     initiated = initiated.where('messages.id > ?', last_incoming_id) if last_incoming_id
     initiated.exists?
+  end
+
+  def nudged_this_quiet_period?
+    nudge_at = @conversation.additional_attributes.to_h['captain_last_nudge_at']
+    return false if nudge_at.blank?
+
+    last_incoming = public_messages.incoming.reorder(id: :desc).first
+    return true if last_incoming.blank?
+
+    Time.zone.parse(nudge_at.to_s) > last_incoming.created_at
+  rescue ArgumentError
+    false
   end
 
   # The latest public message is a check-in or lead offer the visitor hasn't answered.

@@ -54,8 +54,11 @@ class SuperAdmin::AppConfigsController < SuperAdmin::ApplicationController
 
   def allowed_configs
     general_configs = GENERAL_CONFIGS + (ChatwootApp.chatwoot_cloud? ? META_INCIDENT_CONFIGS : [])
+    @allowed_configs = config_mapping.fetch(@config, general_configs)
+  end
 
-    mapping = {
+  def config_mapping
+    {
       'facebook' => %w[FB_APP_ID FB_VERIFY_TOKEN FB_APP_SECRET IG_VERIFY_TOKEN FACEBOOK_API_VERSION ENABLE_MESSENGER_CHANNEL_HUMAN_AGENT],
       'shopify' => SHOPIFY_CONFIGS,
       'microsoft' => %w[AZURE_APP_ID AZURE_APP_SECRET],
@@ -70,10 +73,9 @@ class SuperAdmin::AppConfigsController < SuperAdmin::ApplicationController
       'google' => %w[GOOGLE_OAUTH_CLIENT_ID GOOGLE_OAUTH_CLIENT_SECRET GOOGLE_OAUTH_REDIRECT_URI ENABLE_GOOGLE_OAUTH_LOGIN],
       'observability' => %w[LANGFUSE_TRACING_ENABLED LANGFUSE_CAPTURE_CONTENT OTEL_PROVIDER
                             LANGFUSE_BASE_URL LANGFUSE_PUBLIC_KEY LANGFUSE_SECRET_KEY],
-      'captain' => %w[CAPTAIN_OPEN_AI_API_KEY CAPTAIN_OPEN_AI_MODEL CAPTAIN_OPEN_AI_ENDPOINT]
+      'captain' => %w[CAPTAIN_OPEN_AI_API_KEY CAPTAIN_OPEN_AI_MODEL CAPTAIN_OPEN_AI_ENDPOINT
+                      CAPTAIN_WIDGET_CHECK_IN_AWAITING_SECONDS CAPTAIN_WIDGET_CHECK_IN_COMPLETED_SECONDS]
     }
-
-    @allowed_configs = mapping.fetch(@config, general_configs)
   end
 
   def shopify_partner_config_errors

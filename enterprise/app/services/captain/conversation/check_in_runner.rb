@@ -42,8 +42,14 @@ class Captain::Conversation::CheckInRunner
   def check_in(conversation, proactive: false)
     return false unless eligible?(conversation, proactive: proactive)
 
+    state = check_in_state(conversation)
+
+    # When waiting on customer answer, capture attention via UI/sound nudge broadcast
+    # instead of sending repetitive duplicate questions.
+    return trigger_nudge(conversation, proactive: proactive) if state.awaiting_customer_answer?
+
     # A prospect's first check-in is a lead offer; when follow-up isn't appropriate, a plain check-in marks the offer skipped.
-    if check_in_state(conversation).lead_guard?
+    if state.lead_guard?
       return emitted(conversation, Captain::Conversation::CheckInState::LEAD_OFFER) if offer_lead(conversation, proactive: proactive)
 
       lead_offer_skipped = true
@@ -90,18 +96,62 @@ class Captain::Conversation::CheckInRunner
     post_locked(conversation, proactive: proactive) { service.deliver!(proposal) if check_in_state(conversation).lead_guard? }.present?
   end
 
+  def trigger_nudge(conversation, proactive: false)
+    delivered = post_locked(conversation, proactive: proactive) do
+      broadcast_nudge(conversation)
+      conversation.update!(
+        additional_attributes: conversation.additional_attributes.to_h.merge('captain_last_nudge_at' => Time.current.iso8601)
+      )
+      true
+    end
+    delivered ? emitted(conversation, 'nudge') : false
+  end
+
+  def broadcast_nudge(conversation)
+    pubsub_token = conversation.contact_inbox&.pubsub_token
+    return if pubsub_token.blank?
+
+    ActionCable.server.broadcast(
+      pubsub_token,
+      { event: 'conversation.nudge', data: { conversation_id: conversation.id, message_id: check_in_state(conversation).last_public_message&.id } }
+    )
+  end
+
   def post_check_in(conversation, lead_offer_skipped:, proactive: false)
-    content = Captain::Conversation::CheckInService.new(conversation: conversation, assistant: @assistant).perform
+    payload = check_in_message_payload(conversation, lead_offer_skipped: lead_offer_skipped)
+    message = post_locked(conversation, proactive: proactive) do
+      conversation.messages.create!(payload.merge(account_id: conversation.account_id, inbox_id: conversation.inbox_id,
+                                                  sender: @assistant, preserve_waiting_since: true))
+    end
+    message ? emitted(conversation, Captain::Conversation::CheckInState::CHECK_IN) : false
+  end
+
+  def check_in_message_payload(conversation, lead_offer_skipped:)
+    service = Captain::Conversation::CheckInService.new(conversation: conversation, assistant: @assistant)
+    data = service.respond_to?(:payload) ? service.payload : { text: service.perform, suggested_replies: [] }
+    attributes = check_in_attributes(lead_offer_skipped)
+    content_type, content_attributes = check_in_type_and_attributes(data[:suggested_replies])
+
+    { content: data[:text], content_type: content_type, content_attributes: content_attributes,
+      message_type: :outgoing, additional_attributes: attributes }
+  end
+
+  def check_in_attributes(lead_offer_skipped)
     attributes = { 'agent_name' => @assistant.agent_name,
                    Captain::Conversation::CheckInState::ATTRIBUTE_KEY => Captain::Conversation::CheckInState::CHECK_IN }
     attributes[Captain::Conversation::CheckInState::LEAD_OFFER_SKIPPED_KEY] = true if lead_offer_skipped
-    message = post_locked(conversation, proactive: proactive) do
-      conversation.messages.create!(
-        content: content, content_type: 'text', message_type: :outgoing, account_id: conversation.account_id,
-        inbox_id: conversation.inbox_id, sender: @assistant, preserve_waiting_since: true, additional_attributes: attributes
-      )
-    end
-    message ? emitted(conversation, Captain::Conversation::CheckInState::CHECK_IN) : false
+    attributes
+  end
+
+  def check_in_type_and_attributes(raw_suggestions)
+    return ['text', {}] unless @assistant.suggested_replies? && raw_suggestions.present?
+
+    suggestions = Captain::Conversation::SuggestionFinalizer.new(
+      assistant: @assistant, response: { 'suggested_replies' => raw_suggestions }, has_closing_question: false
+    ).perform
+    return ['text', {}] if suggestions.blank?
+
+    ['input_select', { 'items' => suggestions, 'submit_value' => true }]
   end
 
   # Model calls happen outside the lock; inside it the conversation is reloaded and checked again,

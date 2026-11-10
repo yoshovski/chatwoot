@@ -49,6 +49,43 @@ const updateCampaignReadStatus = baseDomain => {
   });
 };
 
+let titleNotificationInterval = null;
+let originalDocumentTitle = null;
+
+const flashDocumentTitle = (text = 'Waiting for your reply...') => {
+  if (!document.hidden && document.hasFocus()) {
+    return;
+  }
+  if (titleNotificationInterval) {
+    return;
+  }
+
+  originalDocumentTitle = document.title;
+  let isOriginal = false;
+  titleNotificationInterval = setInterval(() => {
+    document.title = isOriginal ? originalDocumentTitle : `🔴 (1) ${text}`;
+    isOriginal = !isOriginal;
+  }, 1000);
+
+  const clearNotification = () => {
+    if (titleNotificationInterval) {
+      clearInterval(titleNotificationInterval);
+      titleNotificationInterval = null;
+      if (originalDocumentTitle !== null) {
+        document.title = originalDocumentTitle;
+        originalDocumentTitle = null;
+      }
+    }
+    window.removeEventListener('focus', clearNotification);
+    document.removeEventListener('visibilitychange', clearNotification);
+  };
+
+  window.addEventListener('focus', clearNotification, { once: true });
+  document.addEventListener('visibilitychange', clearNotification, {
+    once: true,
+  });
+};
+
 export const IFrameHelper = {
   getUrl({ baseUrl, websiteToken }) {
     return `${baseUrl}/widget?website_token=${websiteToken}`;
@@ -313,6 +350,14 @@ export const IFrameHelper = {
 
     playAudio: () => {
       window.playAudioAlert();
+    },
+
+    onConversationNudge: message => {
+      if (typeof window.playAudioAlert === 'function') {
+        window.playAudioAlert();
+      }
+      flashDocumentTitle(message?.data?.title || 'Waiting for your reply...');
+      IFrameHelper.events.handleNotificationDot({ unreadMessageCount: 1 });
     },
   },
   pushEvent: eventName => {
