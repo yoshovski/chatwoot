@@ -588,7 +588,20 @@ RSpec.describe Captain::Conversation::ResponseBuilderJob, type: :job do
 
       it 'schedules a proactive check-in job for web widget conversations' do
         expect(Captain::Conversation::CheckInJob).to receive(:set)
-          .with(wait: 150.seconds)
+          .with(wait: 60.seconds)
+          .and_call_original
+
+        expect do
+          described_class.perform_now(conversation, assistant)
+        end.to have_enqueued_job(Captain::Conversation::CheckInJob).with(conversation.id, assistant.id)
+      end
+
+      it 'schedules a proactive check-in job using assistant-configured delay when present' do
+        assistant.config['widget_check_in_completed_seconds'] = 45
+        assistant.save!
+
+        expect(Captain::Conversation::CheckInJob).to receive(:set)
+          .with(wait: 45.seconds)
           .and_call_original
 
         expect do
