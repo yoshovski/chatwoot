@@ -1,4 +1,5 @@
 import { createApp } from 'vue';
+import '@fontsource-variable/plus-jakarta-sans';
 import { createI18n } from 'vue-i18n';
 
 import axios from 'axios';

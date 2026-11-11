@@ -34,7 +34,7 @@ const render = props =>
         $t: (key, params) =>
           params ? `${key} ${JSON.stringify(params)}` : key,
       },
-      stubs: { HomeCard: { template: '<div><slot /></div>' }, Icon: true },
+      stubs: { SectionCard: { template: '<div><slot /></div>' }, Icon: true },
     },
   });
 

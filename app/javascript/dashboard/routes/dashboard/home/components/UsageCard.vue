@@ -2,8 +2,8 @@
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import Icon from 'dashboard/components-next/icon/Icon.vue';
-import HomeCard from './HomeCard.vue';
-import UsageMeter from './UsageMeter.vue';
+import SectionCard from 'dashboard/components-next/kit/SectionCard.vue';
+import UsageMeter from 'dashboard/components-next/kit/UsageMeter.vue';
 
 const props = defineProps({
   usage: { type: Object, default: null },
@@ -31,36 +31,46 @@ const planBadge = computed(() => {
   });
 });
 
+// null means no limit was set in Super Admin; 0 is a real limit.
+const meter = (key, label, counts, hint = '') => {
+  const { used = 0, limit = null } = counts || {};
+  const hasLimit = limit !== null;
+  return {
+    key,
+    label,
+    used,
+    limit,
+    valueLabel: hasLimit
+      ? t('HOME.USAGE.OF_LIMIT', { used, limit })
+      : String(used),
+    hint: hasLimit ? hint : t('HOME.USAGE.NO_LIMIT_SET'),
+  };
+};
+
 const meters = computed(() => {
   if (!props.usage) return [];
   const { ai_conversations: ai, agents, inboxes, documents } = props.usage;
   return [
-    {
-      key: 'ai',
-      label: t('HOME.USAGE.AI_CONVERSATIONS'),
-      ...ai,
-      hint: t('HOME.USAGE.RESETS', {
-        date: formatDate(plan.value.quota_resets_at),
-      }),
-    },
-    { key: 'agents', label: t('HOME.USAGE.SEATS'), ...agents },
-    { key: 'inboxes', label: t('HOME.USAGE.INBOXES'), ...inboxes },
-    { key: 'documents', label: t('HOME.USAGE.DOCUMENTS'), ...documents },
+    meter(
+      'ai',
+      t('HOME.USAGE.AI_CONVERSATIONS'),
+      ai,
+      t('HOME.USAGE.RESETS', { date: formatDate(plan.value.quota_resets_at) })
+    ),
+    meter('agents', t('HOME.USAGE.SEATS'), agents),
+    meter('inboxes', t('HOME.USAGE.INBOXES'), inboxes),
+    meter('documents', t('HOME.USAGE.DOCUMENTS'), documents),
   ];
 });
 </script>
 
 <template>
-  <HomeCard
+  <SectionCard
     :title="$t('HOME.USAGE.TITLE')"
     :link-label="billingRoute ? $t('HOME.USAGE.LINK') : ''"
     :to="billingRoute"
   >
-    <div
-      v-if="isLoading"
-      class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4"
-      aria-busy="true"
-    >
+    <div v-if="isLoading" class="flex flex-col gap-4" aria-busy="true">
       <span
         v-for="n in 4"
         :key="n"
@@ -91,16 +101,17 @@ const meters = computed(() => {
           {{ $t('HOME.USAGE.PAUSED') }}
         </span>
       </div>
-      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div class="flex flex-col gap-4">
         <UsageMeter
-          v-for="meter in meters"
-          :key="meter.key"
-          :label="meter.label"
-          :used="meter.used"
-          :limit="meter.limit"
-          :hint="meter.hint"
+          v-for="item in meters"
+          :key="item.key"
+          :label="item.label"
+          :used="item.used"
+          :limit="item.limit"
+          :value-label="item.valueLabel"
+          :hint="item.hint"
         />
       </div>
     </template>
-  </HomeCard>
+  </SectionCard>
 </template>

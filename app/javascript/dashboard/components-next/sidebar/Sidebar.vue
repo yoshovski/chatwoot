@@ -164,6 +164,17 @@ provideSidebarContext({
 
 const { isConnected: isShopifyConnected } = useShopifyIntegration();
 
+const agentSectionLabels = computed(() => ({
+  overview: t('CAPTAIN.AGENT_UX.SECTIONS.OVERVIEW'),
+  profile: t('CAPTAIN.AGENT_UX.SECTIONS.PROFILE'),
+  knowledge: t('CAPTAIN.AGENT_UX.SECTIONS.KNOWLEDGE'),
+  behavior: t('CAPTAIN.AGENT_UX.SECTIONS.BEHAVIOR'),
+  handoff: t('CAPTAIN.AGENT_UX.SECTIONS.HANDOFF'),
+  scenarios: t('CAPTAIN.AGENT_UX.SECTIONS.SCENARIOS'),
+  actions: t('CAPTAIN.AGENT_UX.SECTIONS.ACTIONS'),
+  channels: t('CAPTAIN.AGENT_UX.SECTIONS.CHANNELS'),
+}));
+
 // One flat entry per agent section; tabs inside each page cover the rest.
 const agentNavItems = computed(() =>
   AGENT_SECTIONS.map(section => {
@@ -176,7 +187,7 @@ const agentNavItems = computed(() =>
     if (!tabs.length) return null;
     return {
       name: `captain_section_${section.key}`,
-      label: t(`CAPTAIN.AGENT_UX.SECTIONS.${section.key.toUpperCase()}`),
+      label: agentSectionLabels.value[section.key],
       icon: section.icon,
       to: captainAssistantRoute(tabs[0].route),
       activeOn: tabs.flatMap(tab => [tab.route, ...(tab.alsoActiveOn || [])]),
@@ -893,6 +904,7 @@ const menuItems = computed(() => {
         ],
       },
     ]"
+    data-co-shell
     class="fixed top-0 z-40 flex h-full w-fit max-w-full shrink-0 border-e border-n-weak bg-n-background transition-transform start-0 md:relative md:translate-x-0"
     :class="{
       'ltr:-translate-x-full rtl:translate-x-full':
@@ -900,10 +912,11 @@ const menuItems = computed(() => {
     }"
   >
     <SidebarNavigation :items="menuItems" @navigate="closeMobileSidebar">
-      <template #brand><Logo class="size-6 text-n-blue-text" /></template>
+      <template #brand>
+        <Logo class="size-6 shrink-0 text-n-blue-text" />
+      </template>
       <template #profile>
         <SidebarProfileMenu
-          is-collapsed
           @open-key-shortcut-modal="emit('openKeyShortcutModal')"
         />
       </template>
@@ -912,14 +925,17 @@ const menuItems = computed(() => {
           @show-create-account-modal="emit('showCreateAccountModal')"
         />
       </template>
-      <template #actions>
+      <template #search>
         <RouterLink
           :to="{ name: 'search' }"
           :aria-label="t('COMBOBOX.SEARCH_PLACEHOLDER')"
-          class="grid size-8 place-items-center rounded-lg text-n-slate-11 hover:bg-n-alpha-2"
+          class="flex h-8 min-w-0 flex-1 items-center gap-2 rounded-lg bg-n-alpha-1 px-3 text-sm text-n-slate-11 hover:bg-n-alpha-2"
         >
-          <span class="i-lucide-search size-4" />
+          <span class="i-lucide-search size-4 shrink-0" />
+          <span class="truncate">{{ t('COMBOBOX.SEARCH_PLACEHOLDER') }}</span>
         </RouterLink>
+      </template>
+      <template #compose>
         <ComposeConversation align="end">
           <template #trigger>
             <Button

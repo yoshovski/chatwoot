@@ -50,13 +50,31 @@ const panelItems = computed(() => {
   const item = activeModule.value;
   return item?.children || (item ? [item] : []);
 });
-// A module without sub-pages (Home) is the page itself; a panel listing just that page adds nothing.
-const showPanel = computed(() => Boolean(activeModule.value?.children));
 const mainModules = computed(() =>
   modules.value.filter(item => item.name !== 'Settings')
 );
 const settingsModule = computed(() =>
   modules.value.find(item => item.name === 'Settings')
+);
+const GROW_MODULES = ['Reports', 'Campaigns', 'Portals'];
+const moduleGroups = computed(() =>
+  [
+    {
+      name: 'work',
+      items: mainModules.value.filter(
+        item => !GROW_MODULES.includes(item.name)
+      ),
+    },
+    {
+      name: 'grow',
+      label: t('PLATFORM_NAV.GROW'),
+      items: mainModules.value.filter(item => GROW_MODULES.includes(item.name)),
+    },
+    {
+      name: 'settings',
+      items: settingsModule.value ? [settingsModule.value] : [],
+    },
+  ].filter(group => group.items.length)
 );
 const selectModule = item => {
   if (item.name === activeModule.value?.name) return;
@@ -85,102 +103,98 @@ watch(
 </script>
 
 <template>
-  <nav
-    :aria-label="t('PLATFORM_NAV.PRODUCT_AREAS')"
-    class="flex w-[3.75rem] shrink-0 flex-col items-center gap-3 border-n-weak bg-n-background py-3"
-    :class="{ 'border-e': showPanel }"
-  >
-    <slot name="brand" />
-    <div class="flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto px-2 pt-1">
-      <button
-        v-for="item in mainModules"
-        :key="item.name"
-        v-tooltip.right="item.label"
-        type="button"
-        :aria-label="item.label"
-        :aria-current="activeModule?.name === item.name ? 'true' : undefined"
-        class="relative flex size-10 shrink-0 items-center justify-center rounded-lg transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-n-brand"
-        :class="
-          activeModule?.name === item.name
-            ? 'bg-n-brand/10 text-n-blue-text'
-            : 'text-n-slate-11 hover:bg-n-alpha-2 hover:text-n-slate-12'
-        "
-        @click="selectModule(item)"
-      >
-        <Icon :icon="item.icon" class="size-5" />
-        <SidebarUnreadBadge
-          v-if="item.badgeCount"
-          :count="item.badgeCount"
-          class="absolute -end-0.5 -top-0.5 ring-2 ring-n-background"
-        />
-      </button>
-    </div>
-    <button
-      v-if="settingsModule"
-      v-tooltip.right="settingsModule.label"
-      type="button"
-      :aria-label="settingsModule.label"
-      :aria-current="activeModule?.name === 'Settings' ? 'true' : undefined"
-      class="flex size-10 shrink-0 items-center justify-center rounded-lg transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-n-brand"
-      :class="
-        activeModule?.name === 'Settings'
-          ? 'bg-n-brand/10 text-n-blue-text'
-          : 'text-n-slate-11 hover:bg-n-alpha-2 hover:text-n-slate-12'
-      "
-      @click="selectModule(settingsModule)"
-    >
-      <Icon :icon="settingsModule.icon" class="size-5" />
-    </button>
-    <slot name="profile" />
-  </nav>
-  <section
-    v-if="showPanel"
-    class="flex w-[14.75rem] min-w-0 flex-col bg-n-background"
-  >
-    <div class="border-b border-n-weak px-3 py-3">
-      <slot name="account" />
-    </div>
-    <div class="flex items-center justify-between gap-2 px-4 pb-2 pt-4">
-      <h2
-        class="m-0 min-w-0 truncate text-base font-semibold text-n-slate-12"
-        :title="activeModule?.label"
-      >
-        {{ activeModule?.label }}
-      </h2>
-      <div class="flex shrink-0 items-center gap-0.5">
-        <slot name="actions" />
+  <div class="flex w-[16rem] min-w-0 flex-col gap-1 bg-n-background py-3">
+    <div class="flex items-center gap-2 px-4 pb-2">
+      <slot name="brand" />
+      <div class="min-w-0 flex-1">
+        <slot name="account" />
       </div>
+    </div>
+    <div class="flex items-center gap-1 px-3 pb-2">
+      <slot name="search" />
+      <slot name="compose" />
     </div>
     <AssistantNavigation v-if="activeModule?.name === 'Captain'" />
     <nav
-      :aria-label="t('PLATFORM_NAV.SECTION_NAVIGATION')"
-      class="min-h-0 flex-1 overflow-y-auto px-2 pb-5"
+      :aria-label="t('PLATFORM_NAV.PRODUCT_AREAS')"
+      class="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-3 pb-4"
     >
-      <ul class="m-0 flex list-none flex-col gap-1 p-0">
-        <template v-for="item in panelItems" :key="item.name">
-          <SidebarSubGroup
-            v-if="item.children"
-            :name="`${activeModule.name}:${item.name}`"
-            :label="item.label"
-            :icon="item.icon || 'i-lucide-folder'"
-            :children="item.children"
-            :active-child="
-              item.children.includes(activeLeaf) ? activeLeaf : undefined
+      <ul
+        v-for="group in moduleGroups"
+        :key="group.name"
+        class="m-0 flex list-none flex-col gap-0.5 p-0"
+      >
+        <li
+          v-if="group.label"
+          class="px-3 pb-1 text-xs font-medium uppercase tracking-wider text-n-slate-10"
+        >
+          {{ group.label }}
+        </li>
+        <li v-for="item in group.items" :key="item.name" class="min-w-0">
+          <button
+            type="button"
+            :aria-current="
+              activeModule?.name === item.name ? 'true' : undefined
             "
-            is-expanded
-            collapsible
-            :sort-options="item.sortOptions"
-            :active-sort="item.activeSort"
-            @update-sort="item.onSortChange?.($event)"
-          />
-          <SidebarGroupLeaf
-            v-else
-            v-bind="item"
-            :active="activeLeaf === item"
-            hide-tree-line
-          />
-        </template>
+            class="flex h-9 w-full items-center gap-2.5 rounded-xl px-3 text-start text-sm transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-n-brand"
+            :class="
+              activeModule?.name === item.name
+                ? item.children
+                  ? 'font-semibold text-n-slate-12'
+                  : 'bg-n-brand/10 font-semibold text-n-blue-11'
+                : 'text-n-slate-11 hover:bg-n-alpha-2 hover:text-n-slate-12'
+            "
+            @click="selectModule(item)"
+          >
+            <Icon :icon="item.icon" class="size-[1.125rem] shrink-0" />
+            <span class="min-w-0 flex-1 truncate">{{ item.label }}</span>
+            <SidebarUnreadBadge
+              v-if="item.badgeCount"
+              :count="item.badgeCount"
+            />
+            <Icon
+              v-else-if="item.children"
+              :icon="
+                activeModule?.name === item.name
+                  ? 'i-lucide-chevron-down'
+                  : 'i-lucide-chevron-right'
+              "
+              class="size-3.5 shrink-0 text-n-slate-10"
+            />
+          </button>
+          <ul
+            v-if="activeModule?.name === item.name && item.children"
+            class="m-0 flex list-none flex-col gap-0.5 py-1 ps-4"
+          >
+            <template v-for="child in panelItems" :key="child.name">
+              <SidebarSubGroup
+                v-if="child.children"
+                :name="`${activeModule.name}:${child.name}`"
+                :label="child.label"
+                :icon="child.icon || 'i-lucide-folder'"
+                :children="child.children"
+                :active-child="
+                  child.children.includes(activeLeaf) ? activeLeaf : undefined
+                "
+                is-expanded
+                collapsible
+                :sort-options="child.sortOptions"
+                :active-sort="child.activeSort"
+                @update-sort="child.onSortChange?.($event)"
+              />
+              <SidebarGroupLeaf
+                v-else
+                v-bind="child"
+                :active="activeLeaf === child"
+                hide-tree-line
+              />
+            </template>
+          </ul>
+        </li>
       </ul>
     </nav>
-  </section>
+    <div class="px-3">
+      <slot name="profile" />
+    </div>
+  </div>
 </template>

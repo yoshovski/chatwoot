@@ -8,6 +8,7 @@
 
 // Next Colors
 @import 'next-colors';
+@import 'co-theme';
 
 // Base styles for elements
 @import 'base';
@@ -18,7 +19,7 @@
 html,
 body {
   font-family:
-    'Inter',
+    'Plus Jakarta Sans Variable',
     -apple-system,
     system-ui,
     BlinkMacSystemFont,
