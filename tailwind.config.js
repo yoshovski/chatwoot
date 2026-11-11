@@ -43,7 +43,11 @@ const tailwindConfig = {
         sans: defaultSansFonts,
         inter: ['Inter', ...defaultSansFonts],
         interDisplay: ['InterDisplay', ...defaultSansFonts],
+        display: ['var(--co-font-display)', ...defaultSansFonts],
       },
+      borderRadius: { card: 'var(--co-radius-card)' },
+      boxShadow: { card: 'var(--co-shadow-card)' },
+      letterSpacing: { display: 'var(--co-display-tracking)' },
       fontWeight: {
         420: '420',
         440: '440',

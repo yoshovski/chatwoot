@@ -1,0 +1,76 @@
+// scss-lint:disable PropertySortOrder
+// ChatOctave look: Bright. Tinted page, borderless white cards on soft shadows, large corners, a blue gradient
+// welcome band, Plus Jakarta Sans.
+//
+// Only the dashboard imports this file (through `_woot.scss`). `_next-colors.scss` is shared with the help-centre
+// portal, the survey page and the login screens, so the Bright colour values live here, after it, and those
+// entry points keep the upstream look. Names stay the upstream `n-*` names; only values change.
+//
+// `.dark` sits on `<body>`, so it wins over `:root` for every variable set in both.
+@layer base {
+  :root {
+    --co-font-body: 'Plus Jakarta Sans Variable';
+    --co-font-display: 'Plus Jakarta Sans Variable';
+    --co-radius-card: 1.25rem;
+    --co-shadow-card:
+      0 1px 2px 0 rgb(16 24 64 / 0.04), 0 12px 28px -12px rgb(16 24 64 / 0.14);
+    // White text stays at 4.5:1 or more over the whole band (the end stop is darkened for that).
+    --co-hero-bg: linear-gradient(120deg, #205cf0 0%, #2459e6 50%, #0b6aa8 100%);
+    --co-display-tracking: -0.02em;
+    --co-brand: 32 92 240;
+
+    --background-color: 241 245 253;
+    --slate-11: 84 92 120;
+    --slate-12: 20 24 45;
+    --border-weak: 232 237 248;
+    --border-container: 255 255 255;
+    --border-strong: 222 229 244;
+    --alpha-1: 32, 92, 240, 0.05;
+    --alpha-2: 32, 92, 240, 0.09;
+
+    --blue-2: 243 247 255;
+    --blue-3: 230 239 255;
+    --blue-9: 32 92 240;
+    --blue-10: 24 78 214;
+    --blue-11: 24 72 196;
+    --solid-blue: 222 233 255;
+
+    [data-co-shell] {
+      --background-color: 255 255 255;
+      --border-weak: 255 255 255;
+    }
+  }
+
+  // Bright on dark: a deep navy page, cards one step lighter with a hairline, shadows that read on dark,
+  // a darker welcome band. Body text (slate-11 on a card) is 8:1, headings 14:1.
+  .dark {
+    --co-shadow-card:
+      inset 0 1px 0 0 rgb(255 255 255 / 0.04), 0 12px 28px -12px rgb(0 0 0 / 0.6);
+    --co-hero-bg: linear-gradient(120deg, #1a3fae 0%, #1f4fc8 50%, #0b5a8c 100%);
+
+    --background-color: 14 17 28;
+    --slate-11: 176 180 186;
+    --slate-12: 237 238 240;
+    --border-weak: 34 39 56;
+    --border-container: 255, 255, 255, 0.06;
+    --border-strong: 44 50 70;
+    --alpha-1: 32, 38, 60, 0.8;
+    --alpha-2: 120, 140, 200, 0.12;
+
+    --solid-1: 20 23 36;
+    --solid-2: 24 28 43;
+    --solid-3: 34 39 58;
+
+    --blue-2: 15 24 44;
+    --blue-3: 18 38 80;
+    --blue-9: 32 92 240;
+    --blue-10: 48 108 245;
+    --blue-11: 126 182 255;
+    --solid-blue: 20 52 110;
+
+    [data-co-shell] {
+      --background-color: 20 23 36;
+      --border-weak: 20 23 36;
+    }
+  }
+}

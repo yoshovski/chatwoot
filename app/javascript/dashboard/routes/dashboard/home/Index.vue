@@ -1,6 +1,7 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { useRouter } from 'vue-router';
 import { useMapGetter } from 'dashboard/composables/store';
 import { useAdmin } from 'dashboard/composables/useAdmin';
 import { useUISettings } from 'dashboard/composables/useUISettings';
@@ -13,14 +14,20 @@ import {
 } from './homeSetup';
 
 import Button from 'dashboard/components-next/button/Button.vue';
-import Icon from 'dashboard/components-next/icon/Icon.vue';
-import HomeCard from './components/HomeCard.vue';
+import EmptyState from 'dashboard/components-next/kit/EmptyState.vue';
+import ListRow from 'dashboard/components-next/kit/ListRow.vue';
+import MetricTile from 'dashboard/components-next/kit/MetricTile.vue';
+import PageFrame from 'dashboard/components-next/kit/PageFrame.vue';
+import PageHeader from 'dashboard/components-next/kit/PageHeader.vue';
+import SectionCard from 'dashboard/components-next/kit/SectionCard.vue';
+import StatusPill from 'dashboard/components-next/kit/StatusPill.vue';
 import SetupProgressCard from './components/SetupProgressCard.vue';
-import StatTile from './components/StatTile.vue';
-import StatusRow from './components/StatusRow.vue';
 import UsageCard from './components/UsageCard.vue';
 
+const STATUS_DONE = 'done';
+
 const { t } = useI18n();
+const router = useRouter();
 const { isAdmin } = useAdmin();
 const { uiSettings, updateUISettings } = useUISettings();
 const currentUser = useMapGetter('getCurrentUser');
@@ -62,57 +69,81 @@ const unskipStep = key =>
 const value = path =>
   path.split('.').reduce((obj, key) => obj?.[key], summary.value) ?? 0;
 
-const quickActions = computed(() => [
-  {
-    key: 'unassigned',
-    icon: 'i-lucide-inbox',
-    label: t('HOME.QUICK_ACTIONS.UNASSIGNED'),
-    value: value('quick_actions.unassigned_conversations'),
-    to: { name: 'home' },
-  },
-  {
-    key: 'unanswered',
-    icon: 'i-lucide-circle-help',
-    label: t('HOME.QUICK_ACTIONS.UNANSWERED'),
-    value: value('quick_actions.unanswered_questions'),
-    to: captainRoute('captain_assistants_faq_suggestions'),
-  },
-  {
-    key: 'visitors',
-    icon: 'i-lucide-radio',
-    label: t('HOME.QUICK_ACTIONS.LIVE_VISITORS'),
-    value: value('quick_actions.live_visitors'),
-    to: { name: 'contacts_dashboard_active' },
-  },
-]);
+const agentStatus = computed(() => {
+  if (summary.value?.usage?.plan?.ai_replies_paused) {
+    return { status: 'paused', label: t('HOME.V2.STATUS_PILL.PAUSED') };
+  }
+  return summary.value?.setup?.agent_inbox
+    ? { status: 'live', label: t('HOME.V2.STATUS_PILL.LIVE') }
+    : { status: 'attention', label: t('HOME.V2.STATUS_PILL.SETUP') };
+});
 
-const performance = computed(() => [
+const metrics = computed(() => [
   {
-    key: 'resolution',
-    label: t('HOME.PERFORMANCE.AI_RESOLUTION'),
+    key: 'ai_conversations',
+    icon: 'i-lucide-bot',
+    tone: 'blue',
+    label: t('HOME.V2.METRICS.AI_CONVERSATIONS'),
+    value: value('usage.ai_conversations.used'),
+  },
+  {
+    key: 'resolved',
+    icon: 'i-lucide-circle-check-big',
+    tone: 'teal',
+    label: t('HOME.V2.METRICS.RESOLVED'),
     value: `${value('performance.ai_resolution_rate')}%`,
   },
   {
-    key: 'sales',
-    label: t('HOME.PERFORMANCE.SALES_ASSISTED'),
+    key: 'product_answers',
+    icon: 'i-lucide-shopping-bag',
+    tone: 'amber',
+    label: t('HOME.V2.METRICS.PRODUCT_ANSWERS'),
     value: value('performance.sales_assisted'),
   },
   {
     key: 'leads',
-    label: t('HOME.PERFORMANCE.LEADS'),
+    icon: 'i-lucide-user-round-plus',
+    tone: 'violet',
+    label: t('HOME.V2.METRICS.LEADS'),
     value: value('performance.leads_captured'),
   },
 ]);
 
+const needs = computed(() => {
+  const unassigned = value('quick_actions.unassigned_conversations');
+  const unanswered = value('quick_actions.unanswered_questions');
+  return [
+    unassigned > 0 && {
+      key: 'unassigned',
+      tone: 'amber',
+      title: t('HOME.V2.NEEDS.UNASSIGNED', { count: unassigned }, unassigned),
+      hint: t('HOME.V2.NEEDS.UNASSIGNED_HINT'),
+      action: t('HOME.V2.NEEDS.UNASSIGNED_ACTION'),
+      to: { name: 'home' },
+      primary: true,
+    },
+    unanswered > 0 && {
+      key: 'unanswered',
+      tone: 'teal',
+      title: t('HOME.V2.NEEDS.UNANSWERED', { count: unanswered }, unanswered),
+      hint: t('HOME.V2.NEEDS.UNANSWERED_HINT'),
+      action: t('HOME.V2.NEEDS.UNANSWERED_ACTION'),
+      to: captainRoute('captain_assistants_faq_suggestions'),
+    },
+  ].filter(Boolean);
+});
+
 const projectStatus = computed(() => {
-  const status = summary.value?.project_status || {};
-  const domainState = { verified: 'done', pending: 'pending' }[status.domain];
+  const project = summary.value?.project_status || {};
+  const domainState = { verified: STATUS_DONE, pending: 'pending' }[
+    project.domain
+  ];
   return [
     {
       key: 'widget',
       label: t('HOME.STATUS.WIDGET'),
-      state: status.widget_installed ? 'done' : 'missing',
-      stateLabel: status.widget_installed
+      state: project.widget_installed ? STATUS_DONE : 'missing',
+      stateLabel: project.widget_installed
         ? t('HOME.STATUS.INSTALLED')
         : t('HOME.STATUS.INSTALL'),
       to: { name: 'settings_inbox_list' },
@@ -120,8 +151,8 @@ const projectStatus = computed(() => {
     {
       key: 'mailbox',
       label: t('HOME.STATUS.MAILBOX'),
-      state: status.mailbox_connected ? 'done' : 'missing',
-      stateLabel: status.mailbox_connected
+      state: project.mailbox_connected ? STATUS_DONE : 'missing',
+      stateLabel: project.mailbox_connected
         ? t('HOME.STATUS.CONNECTED')
         : t('HOME.STATUS.CONNECT'),
       to: { name: 'settings_inbox_new' },
@@ -134,13 +165,17 @@ const projectStatus = computed(() => {
         {
           verified: t('HOME.STATUS.DOMAIN_VERIFIED'),
           pending: t('HOME.STATUS.DOMAIN_PENDING'),
-        }[status.domain] || t('HOME.STATUS.DOMAIN_NONE'),
+        }[project.domain] || t('HOME.STATUS.DOMAIN_NONE'),
       to: {
         name: 'portals_index',
         params: { navigationPath: 'portals_settings_index' },
       },
     },
-  ];
+  ].map(item => ({
+    ...item,
+    tone: { done: 'teal', pending: 'amber', missing: 'slate' }[item.state],
+    canAct: isAdmin.value && item.state !== STATUS_DONE,
+  }));
 });
 
 const loadSummary = async () => {
@@ -157,28 +192,33 @@ onMounted(loadSummary);
 </script>
 
 <template>
-  <section class="flex h-full w-full flex-col overflow-y-auto bg-n-background">
-    <div
-      class="mx-auto flex w-full max-w-[64rem] flex-col gap-6 px-4 py-6 sm:px-6 sm:py-8"
-    >
-      <header class="flex flex-col gap-1">
-        <h1 class="text-xl font-medium text-n-slate-12">
-          {{
-            $t('HOME.TITLE', {
-              name: currentUser.available_name || currentUser.name,
-            })
-          }}
-        </h1>
-        <p class="mb-0 text-sm text-n-slate-11">{{ $t('HOME.SUBTITLE') }}</p>
-      </header>
-
-      <div
-        v-if="hasError"
-        role="alert"
-        class="flex flex-col items-center gap-3 rounded-xl bg-n-solid-2 p-8 text-center outline outline-1 -outline-offset-1 outline-n-container"
+  <PageFrame>
+    <template #header>
+      <PageHeader
+        band
+        :title="
+          $t('HOME.TITLE', {
+            name: currentUser.available_name || currentUser.name,
+          })
+        "
+        :description="$t('HOME.V2.SUBTITLE')"
       >
-        <Icon icon="i-lucide-circle-alert" class="size-5 text-n-ruby-10" />
-        <p class="mb-0 text-sm text-n-slate-11">{{ $t('HOME.ERROR') }}</p>
+        <template v-if="summary" #action>
+          <StatusPill
+            inverted
+            :status="agentStatus.status"
+            :label="agentStatus.label"
+          />
+        </template>
+      </PageHeader>
+    </template>
+
+    <SectionCard v-if="hasError">
+      <EmptyState
+        tone="error"
+        icon="i-lucide-circle-alert"
+        :title="$t('HOME.ERROR')"
+      >
         <Button
           :label="$t('HOME.RETRY')"
           size="sm"
@@ -186,91 +226,84 @@ onMounted(loadSummary);
           color="slate"
           @click="loadSummary"
         />
+      </EmptyState>
+    </SectionCard>
+
+    <template v-else>
+      <SetupProgressCard
+        v-if="showSetup"
+        :progress="setupProgress"
+        :step-route="stepRoute"
+        @skip="skipStep"
+        @unskip="unskipStep"
+      />
+
+      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <MetricTile
+          v-for="metric in metrics"
+          :key="metric.key"
+          :label="metric.label"
+          :value="metric.value"
+          :icon="metric.icon"
+          :tone="metric.tone"
+          :is-loading="isLoading"
+        />
       </div>
 
-      <div v-else class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-        <SetupProgressCard
-          v-if="showSetup"
-          class="md:col-span-2"
-          :progress="setupProgress"
-          :step-route="stepRoute"
-          @skip="skipStep"
-          @unskip="unskipStep"
-        />
+      <div class="grid grid-cols-1 gap-4 lg:grid-cols-3">
+        <div class="flex flex-col gap-4 lg:col-span-2">
+          <SectionCard :title="$t('HOME.V2.NEEDS.TITLE')">
+            <div v-if="isLoading" class="flex flex-col gap-3" aria-busy="true">
+              <span
+                v-for="n in 2"
+                :key="n"
+                class="h-10 w-full animate-pulse rounded bg-n-alpha-2"
+              />
+            </div>
+            <ul
+              v-else-if="needs.length"
+              class="m-0 flex list-none flex-col divide-y divide-n-weak p-0"
+            >
+              <ListRow
+                v-for="item in needs"
+                :key="item.key"
+                :title="item.title"
+                :hint="item.hint"
+                :tone="item.tone"
+                :action-label="item.action"
+                :primary="item.primary"
+                @action="router.push(item.to)"
+              />
+            </ul>
+            <EmptyState
+              v-else
+              tone="success"
+              icon="i-lucide-circle-check-big"
+              :title="$t('HOME.V2.NEEDS.EMPTY')"
+            />
+          </SectionCard>
 
-        <HomeCard
-          :title="$t('HOME.QUICK_ACTIONS.TITLE')"
-          :class="
-            showSetup
-              ? 'md:col-span-2 xl:col-span-1'
-              : 'md:col-span-2 xl:col-span-3'
-          "
-        >
-          <div
-            class="grid grid-cols-1 gap-2"
-            :class="
-              showSetup ? 'sm:grid-cols-3 xl:grid-cols-1' : 'sm:grid-cols-3'
-            "
-          >
-            <StatTile
-              v-for="action in quickActions"
-              :key="action.key"
-              :icon="action.icon"
-              :label="action.label"
-              :value="action.value"
-              :to="action.to"
-              :is-loading="isLoading"
-            />
-          </div>
-        </HomeCard>
-
-        <HomeCard
-          class="md:col-span-2"
-          :title="$t('HOME.PERFORMANCE.TITLE')"
-          :link-label="$t('HOME.PERFORMANCE.LINK')"
-          :to="captainRoute('captain_assistants_overview_index')"
-        >
-          <div class="grid grid-cols-1 gap-2 sm:grid-cols-3">
-            <StatTile
-              v-for="metric in performance"
-              :key="metric.key"
-              :label="metric.label"
-              :value="metric.value"
-              :is-loading="isLoading"
-            />
-          </div>
-          <p class="mb-0 text-xs text-n-slate-10">
-            {{ $t('HOME.PERFORMANCE.WINDOW') }}
-          </p>
-        </HomeCard>
-
-        <HomeCard :title="$t('HOME.STATUS.TITLE')">
-          <div v-if="isLoading" class="flex flex-col gap-3" aria-busy="true">
-            <span
-              v-for="n in 3"
-              :key="n"
-              class="h-4 w-full animate-pulse rounded bg-n-alpha-2"
-            />
-          </div>
-          <ul v-else class="flex flex-col divide-y divide-n-weak">
-            <StatusRow
-              v-for="item in projectStatus"
-              :key="item.key"
-              :label="item.label"
-              :state="item.state"
-              :state-label="item.stateLabel"
-              :to="isAdmin ? item.to : null"
-            />
-          </ul>
-        </HomeCard>
+          <SectionCard :title="$t('HOME.STATUS.TITLE')">
+            <ul class="m-0 flex list-none flex-col divide-y divide-n-weak p-0">
+              <ListRow
+                v-for="item in projectStatus"
+                :key="item.key"
+                :title="item.label"
+                :tone="item.tone"
+                :meta="item.stateLabel"
+                :action-label="item.canAct ? item.stateLabel : ''"
+                @action="router.push(item.to)"
+              />
+            </ul>
+          </SectionCard>
+        </div>
 
         <UsageCard
-          class="md:col-span-2 xl:col-span-3"
           :usage="summary?.usage"
           :is-loading="isLoading"
           :billing-route="isAdmin ? { name: 'billing_settings_index' } : null"
         />
       </div>
-    </div>
-  </section>
+    </template>
+  </PageFrame>
 </template>

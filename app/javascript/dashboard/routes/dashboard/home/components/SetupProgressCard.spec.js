@@ -10,7 +10,7 @@ const render = progress =>
     global: {
       mocks: { $t: key => key },
       stubs: {
-        HomeCard: { template: '<div><slot /></div>' },
+        SectionCard: { template: '<div><slot /></div>' },
         Icon: { props: ['icon'], template: '<i :data-icon="icon" />' },
         RouterLink: { template: '<a><slot /></a>' },
         Button: {

@@ -153,6 +153,30 @@
           "ERROR": "The check didn't finish. Try again."
         }
       }
+    },
+    "V2": {
+      "SUBTITLE": "Here is how your AI agent did in the last 7 days.",
+      "STATUS_PILL": {
+        "LIVE": "AI agent is live",
+        "PAUSED": "AI agent is paused",
+        "SETUP": "AI agent is not live yet"
+      },
+      "METRICS": {
+        "AI_CONVERSATIONS": "AI conversations",
+        "RESOLVED": "Solved by AI",
+        "PRODUCT_ANSWERS": "Product answers",
+        "LEADS": "New leads"
+      },
+      "NEEDS": {
+        "TITLE": "Needs you",
+        "EMPTY": "Nothing needs you right now.",
+        "UNASSIGNED": "{count} chat is waiting for a person | {count} chats are waiting for a person",
+        "UNASSIGNED_HINT": "Nobody is assigned yet",
+        "UNASSIGNED_ACTION": "Open",
+        "UNANSWERED": "{count} question your agent couldn't answer | {count} questions your agent couldn't answer",
+        "UNANSWERED_HINT": "Add an answer once and it's used from then on",
+        "UNANSWERED_ACTION": "Review"
+      }
     }
   }
 }
