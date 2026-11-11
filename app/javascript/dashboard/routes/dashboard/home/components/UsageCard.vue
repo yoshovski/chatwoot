@@ -4,6 +4,7 @@ import { useI18n } from 'vue-i18n';
 import Icon from 'dashboard/components-next/icon/Icon.vue';
 import SectionCard from 'dashboard/components-next/kit/SectionCard.vue';
 import UsageMeter from 'dashboard/components-next/kit/UsageMeter.vue';
+import { aiPauseReasonText } from '../../settings/billing/aiPauseReason';
 
 const props = defineProps({
   usage: { type: Object, default: null },
@@ -22,6 +23,9 @@ const formatDate = seconds =>
 const plan = computed(() => props.usage?.plan || {});
 const trialEnded = computed(
   () => plan.value.trial && plan.value.trial_ends_at * 1000 <= Date.now()
+);
+const pauseReason = computed(() =>
+  aiPauseReasonText(t, plan.value.ai_pause_reason)
 );
 const planBadge = computed(() => {
   if (!plan.value.trial) return '';
@@ -99,6 +103,12 @@ const meters = computed(() => {
         >
           <Icon icon="i-lucide-circle-pause" class="size-3.5" />
           {{ $t('HOME.USAGE.PAUSED') }}
+        </span>
+        <span
+          v-if="plan.ai_replies_paused && pauseReason"
+          class="text-n-slate-11"
+        >
+          {{ pauseReason }}
         </span>
       </div>
       <div class="flex flex-col gap-4">

@@ -9,6 +9,7 @@ module Enterprise::MessageTemplates::HookExecutionService
     # otherwise the coverage denominator only ever contains conversations
     # Captain was already about to answer.
     track_captain_eligibility
+    return perform_ai_paused_handoff if ai_paused_for_conversation?
     return unless captain_may_reply?
     return perform_handoff unless inbox.captain_active?
 
@@ -67,12 +68,28 @@ module Enterprise::MessageTemplates::HookExecutionService
     send_out_of_office_message_after_handoff
   end
 
+  # The plan, trial or payment state stops the AI (AccountSubscription#ai_pause_reason). The agent would stay silent, so
+  # the conversation goes to the team once: it is pending only while the agent holds it, and the handoff opens it.
+  def ai_paused_for_conversation?
+    conversation.pending? && !conversation.account.ai_reply_allowed?(conversation)
+  end
+
+  # No summary note and no contact form: both are AI-agent messages, and the AI is paused for this account.
+  def perform_ai_paused_handoff
+    Rails.logger.info("AI replies paused (#{conversation.account.subscription_settings.ai_pause_reason}), handing off #{conversation.id}")
+    create_usage_limit_transfer_message
+    conversation.bot_handoff!
+    Captain::Conversation::OwnershipService.new(conversation: conversation, assistant: inbox.captain_assistant).add_needs_human_label!
+    emit_usage_limit_handoff_event
+    send_out_of_office_message_after_handoff
+  end
+
   def create_usage_limit_transfer_message
     conversation.messages.create!(
       message_type: :outgoing,
       account_id: conversation.account.id,
       inbox_id: conversation.inbox.id,
-      content: 'Transferring to another agent for further assistance.'
+      content: Captain::Conversation::HandoffPolicy.new(assistant: inbox.captain_assistant, conversation: conversation).handoff_message
     )
   end
 

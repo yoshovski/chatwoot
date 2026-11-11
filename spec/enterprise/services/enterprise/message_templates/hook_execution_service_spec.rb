@@ -159,6 +159,31 @@ RSpec.describe MessageTemplates::HookExecutionService do
       end
     end
 
+    context 'when AI replies are paused by the subscription' do
+      before do
+        assistant.update!(config: assistant.config.merge('handoff_message' => 'A colleague will take it from here.'))
+        account.account_subscription.update!(manual_ai_access: false)
+      end
+
+      it 'hands the conversation to the team once with the configured handoff message' do
+        expect(Captain::Conversation::ResponseBuilderJob).not_to receive(:perform_later)
+
+        create(:message, conversation: conversation, message_type: :incoming, account: account)
+        create(:message, conversation: conversation, message_type: :incoming, account: account)
+
+        expect(conversation.reload.status).to eq('open')
+        expect(conversation.label_list).to include('needs-human')
+        expect(conversation.messages.outgoing.where(private: false).pluck(:content)).to eq(['A colleague will take it from here.'])
+      end
+
+      it 'emits a usage limit handoff event' do
+        expect(Captain::ConversationEvents).to receive(:handed_off)
+          .with(conversation: conversation, assistant: assistant, source: 'usage_limit', reason_category: :usage_limit, at: kind_of(Time))
+
+        create(:message, conversation: conversation, message_type: :incoming, account: account)
+      end
+    end
+
     context 'when captain quota is exceeded within business hours' do
       before do
         inbox.update!(working_hours_enabled: true)

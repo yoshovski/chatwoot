@@ -9,7 +9,14 @@
     "SUBSCRIPTION_ENDED": "Subscription ended",
     "MANAGED_PLAN": "Your subscription is managed by your account team.",
     "PAID_WARNING": "You are close to your monthly conversation allowance. AI and agent replies continue as usual.",
-    "PAUSED_NOTICE": "Trial AI replies are paused. Agent replies remain available.",
+    "AI_PAUSED": {
+      "TITLE": "AI paused",
+      "LIMIT_REACHED": "Your AI conversation allowance for this period is used up. New conversations go to your team.",
+      "TRIAL_ENDED": "Your trial has ended. Choose a plan to turn the AI agent back on.",
+      "PAYMENT_FAILED": "Your last payment failed. Update your payment method to turn the AI agent back on.",
+      "PAUSED": "Your subscription is paused. Resume it to turn the AI agent back on.",
+      "NO_PLAN": "Your account has no plan with AI conversations. Choose a plan to turn the AI agent on."
+    },
     "VIEW_USAGE": "View usage",
     "TRIAL_END_DATE": "Trial ends",
     "TRIAL_ENDED_ON": "Trial ended on",

@@ -22,6 +22,27 @@ describe AgentBotListener do
       end
     end
 
+    context 'when AI replies are paused for the account' do
+      let(:pending_conversation) { create(:conversation, account: account, inbox: inbox, status: :pending) }
+      let(:incoming) { create(:message, message_type: 'incoming', account: account, inbox: inbox, conversation: pending_conversation) }
+
+      before do
+        create(:agent_bot_inbox, inbox: inbox, agent_bot: agent_bot)
+        account.account_subscription.update!(manual_ai_access: false)
+      end
+
+      it 'hands the conversation to the team once and does not call the bot' do
+        expect(AgentBots::WebhookJob).not_to receive(:perform_later)
+
+        listener.message_created(Events::Base.new(event_name, Time.zone.now, message: incoming))
+        second = create(:message, message_type: 'incoming', account: account, inbox: inbox, conversation: pending_conversation)
+        listener.message_created(Events::Base.new(event_name, Time.zone.now, message: second))
+
+        expect(pending_conversation.reload.status).to eq('open')
+        expect(pending_conversation.messages.outgoing.pluck(:content)).to eq([I18n.t('conversations.captain.handoff')])
+      end
+    end
+
     context 'when agent bot is configured' do
       it 'sends message to agent bot' do
         create(:agent_bot_inbox, inbox: inbox, agent_bot: agent_bot)

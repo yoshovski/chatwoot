@@ -5,6 +5,7 @@ import { useRoute } from 'vue-router';
 import { useAccount } from 'dashboard/composables/useAccount';
 import { usePolicy } from 'dashboard/composables/usePolicy';
 import { useAccountSubscription } from 'dashboard/composables/useAccountSubscription';
+import { aiPauseReasonText } from './aiPauseReason';
 
 const { t } = useI18n();
 const route = useRoute();
@@ -14,8 +15,8 @@ const { billing } = useAccountSubscription();
 const canManage = computed(() => checkPermissions(['administrator']));
 const notice = computed(() => {
   if (billing.value?.ai_replies_paused)
-    return t('ACCOUNT_SUBSCRIPTION.PAUSED_NOTICE');
-  if (!billing.value?.warning) return '';
+    return `${t('ACCOUNT_SUBSCRIPTION.AI_PAUSED.TITLE')}: ${aiPauseReasonText(t, billing.value.ai_pause_reason)}`;
+  if (!billing.value?.enabled || !billing.value?.warning) return '';
   if (billing.value.consumed >= billing.value.monthly_limit)
     return t('ACCOUNT_SUBSCRIPTION.LIMIT_REACHED_NOTICE');
   return t('ACCOUNT_SUBSCRIPTION.LIMIT_NEAR_NOTICE');
@@ -24,7 +25,7 @@ const notice = computed(() => {
 
 <template>
   <div
-    v-if="billing?.enabled && notice && route.name !== 'billing_settings_index'"
+    v-if="notice && route.name !== 'billing_settings_index'"
     class="flex shrink-0 flex-wrap items-center gap-x-3 gap-y-1 border-b border-n-amber-6 bg-n-amber-2 px-6 py-2 text-sm text-n-amber-11"
     role="status"
   >

@@ -38,6 +38,7 @@ class AgentBotListener < BaseListener
     inbox = message.inbox
     return unless message.webhook_sendable?
 
+    hand_off_ai_paused_conversation(message)
     method_name = __method__.to_s
     agent_bots_for(inbox, message.conversation).each { |agent_bot| process_message_event(method_name, agent_bot, message, event) }
   end
@@ -69,6 +70,18 @@ class AgentBotListener < BaseListener
     bots << conversation.ai_assignee if conversation&.assignee_type == 'AgentBot'
 
     bots.compact.uniq
+  end
+
+  # The bot gets no events while AI replies are paused, so the customer's conversation goes to the team once
+  # (it is pending only while the bot holds it) instead of waiting for a bot that will not answer.
+  def hand_off_ai_paused_conversation(message)
+    conversation = message.conversation
+    return unless message.incoming? && conversation.pending? && active_inbox_agent_bot(message.inbox)
+    return if message.account.ai_reply_allowed?(conversation)
+
+    conversation.messages.create!(message_type: :outgoing, account_id: conversation.account_id, inbox_id: conversation.inbox_id,
+                                  content: I18n.t('conversations.captain.handoff'))
+    conversation.bot_handoff!
   end
 
   def active_inbox_agent_bot(inbox)

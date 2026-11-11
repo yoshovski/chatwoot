@@ -1,6 +1,7 @@
 <script setup>
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { aiPauseReasonText } from '../aiPauseReason';
 
 const props = defineProps({
   billing: { type: Object, required: true },
@@ -25,6 +26,9 @@ const status = computed(() => {
     return t('ACCOUNT_SUBSCRIPTION.PLAN.STATUS_ACTIVE');
   return t('ACCOUNT_SUBSCRIPTION.PLAN.STATUS_MANAGED');
 });
+const pauseReason = computed(() =>
+  aiPauseReasonText(t, props.billing.ai_pause_reason)
+);
 // Plan feature keys are the fixed list Super Admin plans govern.
 // eslint-disable-next-line @intlify/vue-i18n/no-dynamic-keys
 const featureLabel = key => t(`ACCOUNT_SUBSCRIPTION.PLAN_FEATURES.${key}`);
@@ -34,6 +38,22 @@ const featureLabel = key => t(`ACCOUNT_SUBSCRIPTION.PLAN_FEATURES.${key}`);
   <section
     class="flex flex-col gap-4 rounded-xl border border-n-weak bg-n-solid-1 p-4 sm:p-5"
   >
+    <p
+      v-if="billing.ai_replies_paused"
+      class="m-0 flex items-start gap-2 text-sm text-n-ruby-11"
+      role="status"
+    >
+      <span
+        class="i-lucide-circle-pause mt-0.5 size-4 shrink-0"
+        aria-hidden="true"
+      />
+      <span>
+        <strong class="font-medium">
+          {{ t('ACCOUNT_SUBSCRIPTION.AI_PAUSED.TITLE') }}
+        </strong>
+        {{ pauseReason }}
+      </span>
+    </p>
     <div
       v-if="plan"
       class="flex flex-wrap items-start justify-between gap-x-6 gap-y-3"
