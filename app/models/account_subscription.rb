@@ -63,6 +63,11 @@ class AccountSubscription < ApplicationRecord
   end
 
   def ai_reply_allowed?(conversation = nil)
+    # ai_paused_at is set by a Stripe dispute (Enterprise::Billing::StripeEventFactsService); Super Admin clears it.
+    ai_paused_at.nil? && trial_reply_allowed?(conversation)
+  end
+
+  def trial_reply_allowed?(conversation = nil)
     return true unless trial_active?
     return false unless trial_ends_at && trial_ends_at > Time.current
 

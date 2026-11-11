@@ -8,8 +8,19 @@ class Enterprise::Billing::HandleStripeEventService
   BUSINESS_PLAN_FEATURES = Enterprise::Billing::ReconcilePlanFeaturesService::BUSINESS_PLAN_FEATURES
   ENTERPRISE_PLAN_FEATURES = Enterprise::Billing::ReconcilePlanFeaturesService::ENTERPRISE_PLAN_FEATURES
 
-  def perform(event:)
+  LEGACY_EVENT_TYPES = %w[customer.subscription.updated customer.subscription.deleted].freeze
+
+  def self.handled_type?(type)
+    sync = Enterprise::Billing::AccountSubscriptionSyncService
+    [sync::EVENT_TYPES, sync::INVOICE_EVENTS, sync::PAYMENT_EVENTS, LEGACY_EVENT_TYPES,
+     Enterprise::Billing::StripeEventFactsService::EVENT_TYPES].any? { |types| types.include?(type) }
+  end
+
+  # replay: true skips the legacy custom_attributes path, which adds plan credits on every run.
+  def perform(event:, replay: false)
+    Enterprise::Billing::StripeEventFactsService.new(event).perform
     return if Enterprise::Billing::AccountSubscriptionSyncService.handle(event)
+    return if replay
 
     @event = event
 
