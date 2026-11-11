@@ -109,6 +109,8 @@ class Captain::Evals::CaseRunner
   def build_records
     account = Account.create!(name: "Eval #{@suite.business.fetch('name')}", locale: @case.fetch('locale', 'en'))
     account.enable_features!('captain_integration', 'captain_integration_v2')
+    # A new account has no AI until it has a plan; the eval account gets AI like a manual account set in Super Admin.
+    account.create_account_subscription!(quota_anchor: Time.current, manual_ai_access: true)
     inbox = build_inbox(account)
     assistant = build_assistant(account)
     CaptainInbox.create!(captain_assistant: assistant, inbox: inbox)

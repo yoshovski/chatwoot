@@ -63,7 +63,7 @@ class Message < ApplicationRecord
     }
   }.to_json.freeze
 
-  validate :validate_trial_ai_reply, on: :create
+  validate :validate_ai_reply_allowed, on: :create
   before_validation :ensure_content_type
   before_validation :prevent_message_flooding
   before_save :ensure_processed_message_content
@@ -340,11 +340,11 @@ class Message < ApplicationRecord
     self.content_type ||= Message.content_types[:text]
   end
 
-  def validate_trial_ai_reply
+  def validate_ai_reply_allowed
     return unless outgoing? && %w[AgentBot Captain::Assistant].include?(sender_type)
     return if account.ai_reply_allowed?(conversation)
 
-    errors.add(:base, I18n.t('errors.account_subscription.trial_exhausted'))
+    errors.add(:base, I18n.t('errors.account_subscription.ai_replies_paused'))
   end
 
   def execute_after_create_commit_callbacks

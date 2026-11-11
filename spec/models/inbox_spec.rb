@@ -43,7 +43,7 @@ RSpec.describe Inbox do
 
   describe 'account teardown' do
     it 'destroys an orphaned inbox after its account has been deleted' do
-      account = create(:account)
+      account = create(:account, manual_ai_access: false)
       inbox = create(:inbox, account: account)
       account.delete
 

@@ -70,4 +70,16 @@ describe('UsageCard', () => {
     expect(text).toContain('HOME.USAGE.TRIAL_ENDED');
     expect(text).toContain('HOME.USAGE.PAUSED');
   });
+
+  it('says why AI is paused', () => {
+    const text = render({
+      usage: usage({
+        ai_replies_paused: true,
+        ai_pause_reason: 'payment_failed',
+      }),
+    }).text();
+
+    expect(text).toContain('HOME.USAGE.PAUSED');
+    expect(text).toContain('ACCOUNT_SUBSCRIPTION.AI_PAUSED.PAYMENT_FAILED');
+  });
 });

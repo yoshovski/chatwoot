@@ -1,7 +1,7 @@
 require 'rails_helper'
 
 RSpec.describe Enterprise::Billing::StripeEventFactsService do
-  let(:account) { create(:account) }
+  let(:account) { create(:account, manual_ai_access: false) }
   let!(:subscription) do
     account.create_account_subscription!(quota_anchor: Time.current, enabled: true, stripe_customer_id: 'cus_facts',
                                          stripe_subscription_id: 'sub_facts', payment_status: 'active')

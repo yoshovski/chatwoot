@@ -67,11 +67,13 @@ class Captain::HomeSummaryBuilder
   end
 
   def plan_status(subscription)
+    pause_reason = subscription.ai_pause_reason
     {
       billing_enabled: subscription.enabled?,
       trial: subscription.trial_active?,
       trial_ends_at: (subscription.trial_ends_at&.to_i if subscription.trial_active?),
-      ai_replies_paused: !subscription.ai_reply_allowed?,
+      ai_replies_paused: !pause_reason.nil?,
+      ai_pause_reason: pause_reason,
       quota_resets_at: subscription.quota_period.last.to_i
     }
   end

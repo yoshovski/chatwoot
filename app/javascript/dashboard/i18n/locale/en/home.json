@@ -78,7 +78,7 @@
       "NO_LIMIT_SET": "No limit set",
       "TRIAL_ENDS": "Trial · ends {date}",
       "TRIAL_ENDED": "Trial ended",
-      "PAUSED": "AI replies paused"
+      "PAUSED": "AI paused"
     },
     "GUIDED": {
       "TITLE": "Set up your AI agent",
