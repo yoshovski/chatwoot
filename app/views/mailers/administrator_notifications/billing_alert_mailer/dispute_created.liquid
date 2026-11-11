@@ -1,0 +1,12 @@
+<p>Hello,</p>
+
+<p>A customer opened a payment dispute in Stripe. The AI agent for this account is paused until someone resumes it.</p>
+
+<p>
+  <strong>Account:</strong> {{ meta.account_name }} (ID {{ meta.account_id }})<br>
+  <strong>Dispute:</strong> {{ meta.dispute_id }}<br>
+  <strong>Amount:</strong> {{ meta.amount }}<br>
+  <strong>Reason:</strong> {{ meta.reason }}
+</p>
+
+<p><a href="{{ meta.super_admin_url }}">Open the account in Super Admin</a></p>

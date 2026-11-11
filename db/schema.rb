@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_11_04_120000) do
+ActiveRecord::Schema[7.2].define(version: 2026_11_11_130000) do
   # These extensions should be enabled to support this database
   enable_extension "pg_stat_statements"
   enable_extension "pg_trgm"
@@ -83,6 +83,12 @@ ActiveRecord::Schema[7.2].define(version: 2026_11_04_120000) do
     t.boolean "founder_plan", default: false, null: false
     t.bigint "billing_plan_id"
     t.jsonb "add_ons", default: [], null: false
+    t.datetime "payment_failed_at"
+    t.datetime "payment_action_required_at"
+    t.datetime "trial_will_end_notified_at"
+    t.datetime "upcoming_invoice_at"
+    t.datetime "ai_paused_at"
+    t.string "ai_paused_reason"
     t.index ["account_id"], name: "index_account_subscriptions_on_account_id", unique: true
     t.index ["billing_plan_id"], name: "index_account_subscriptions_on_billing_plan_id"
     t.index ["stripe_customer_id"], name: "index_account_subscriptions_on_stripe_customer_id", unique: true
@@ -1758,6 +1764,23 @@ ActiveRecord::Schema[7.2].define(version: 2026_11_04_120000) do
     t.string "description"
     t.float "resolution_time_threshold"
     t.index ["account_id"], name: "index_sla_policies_on_account_id"
+  end
+
+  create_table "stripe_events", force: :cascade do |t|
+    t.string "stripe_id", null: false
+    t.string "event_type", null: false
+    t.string "status", default: "received", null: false
+    t.text "error"
+    t.integer "attempts", default: 0, null: false
+    t.datetime "processed_at"
+    t.datetime "stripe_created_at"
+    t.string "stripe_customer_id"
+    t.jsonb "payload", default: {}, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["status", "created_at"], name: "index_stripe_events_on_status_and_created_at"
+    t.index ["stripe_customer_id", "created_at"], name: "index_stripe_events_on_stripe_customer_id_and_created_at"
+    t.index ["stripe_id"], name: "index_stripe_events_on_stripe_id", unique: true
   end
 
   create_table "taggings", id: :serial, force: :cascade do |t|
