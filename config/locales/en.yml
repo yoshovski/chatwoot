@@ -87,6 +87,7 @@ en:
         documents_limit: 'Knowledge documents (blank = unlimited)'
         features: 'Features and add-ons'
         account_subscriptions: 'Accounts'
+        stripe_product_id: 'Stripe prices'
   helpers:
     label:
       billing_plan:
@@ -871,6 +872,11 @@ en:
       add_on: "Paid add-on"
       add_on_price: "Add-on price per month"
       accounts: "%{count} accounts"
+      stripe_prices_missing: "Not in Stripe yet. Accounts can't buy this plan until its prices exist."
+      stripe_prices_ready: "Monthly %{monthly} · Yearly %{annual} (2 months free)"
+      create_stripe_prices: "Create in Stripe (monthly and yearly price)"
+      stripe_prices_created: "Stripe prices created. Accounts can now buy this plan."
+      stripe_prices_failed: "Stripe refused the prices: %{error}"
       features:
         captain_integration: "AI agent"
         captain_integration_v2: "Scenarios and actions"

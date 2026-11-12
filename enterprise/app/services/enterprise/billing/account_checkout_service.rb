@@ -5,19 +5,21 @@ class Enterprise::Billing::AccountCheckoutService
     @account = account
   end
 
-  def checkout(interval:)
+  # With a plan, Checkout sells that plan's Stripe price. Without one, it sells the price Super Admin saved on the account
+  # (an explicit override for custom deals).
+  def checkout(interval:, plan: nil)
     @account.with_lock do
       Enterprise::Billing::AccountSubscriptionSyncService.refresh(@account)
       subscription = @account.subscription_settings
       subscription.reload if subscription.persisted?
-      validate_checkout(subscription)
+      validate_checkout(subscription, plan)
       ensure_customer(subscription)
-      pending = pending_checkout(subscription, interval)
+      pending = pending_checkout(subscription, interval, plan)
       return { url: pending.url } if pending
 
       session = Stripe::Checkout::Session.create(
-        checkout_parameters(subscription, interval),
-        { idempotency_key: checkout_key(subscription, interval) }
+        checkout_parameters(subscription, interval, plan),
+        { idempotency_key: checkout_key(subscription, interval, plan) }
       )
       subscription.update!(stripe_checkout_session_id: session.id)
       { url: session.url }
@@ -76,23 +78,24 @@ class Enterprise::Billing::AccountCheckoutService
 
   private
 
-  def validate_checkout(subscription)
-    raise Unavailable unless subscription.checkout_available?
+  def validate_checkout(subscription, plan)
+    raise Unavailable unless subscription.checkout_available?(plan: plan)
 
     subscription.save! if subscription.new_record?
   end
 
-  def checkout_key(subscription, interval)
-    ['account-checkout', subscription.id, interval, subscription.updated_at.to_i,
+  def checkout_key(subscription, interval, plan)
+    ['account-checkout', subscription.id, plan&.id, interval, subscription.updated_at.to_i,
      subscription.stripe_checkout_session_id, Time.current.to_i / 1800].join('-')
   end
 
-  def offer_signature(subscription)
+  def offer_signature(subscription, plan)
     Digest::SHA256.hexdigest([subscription.currency, subscription.monthly_price_cents, subscription.annual_amount_cents,
-                              subscription.setup_fee_cents, subscription.trial_active?, subscription.trial_ends_at].join(':'))
+                              subscription.setup_fee_cents, subscription.trial_active?, subscription.trial_ends_at,
+                              plan&.stripe_monthly_price_id, plan&.stripe_annual_price_id].join(':'))
   end
 
-  def pending_checkout(subscription, interval)
+  def pending_checkout(subscription, interval, plan)
     return if subscription.stripe_checkout_session_id.blank?
 
     session = Stripe::Checkout::Session.retrieve(subscription.stripe_checkout_session_id)
@@ -102,7 +105,7 @@ class Enterprise::Billing::AccountCheckoutService
       raise Unavailable
     end
     return unless session.status == 'open'
-    return session if session.metadata['billing_interval'] == interval && session.metadata['offer_signature'] == offer_signature(subscription)
+    return session if session.metadata['billing_interval'] == interval && session.metadata['offer_signature'] == offer_signature(subscription, plan)
 
     Stripe::Checkout::Session.expire(session.id)
     nil
@@ -112,19 +115,23 @@ class Enterprise::Billing::AccountCheckoutService
     session.subscription == subscription.stripe_subscription_id && %w[canceled incomplete_expired].include?(subscription.payment_status)
   end
 
-  def checkout_parameters(subscription, interval)
+  # EU invoices: Stripe Tax adds VAT from the billing address, or reverse charge for a business with a valid VAT ID.
+  def checkout_parameters(subscription, interval, plan)
     data = { metadata: { chatoctave_account_id: @account.id.to_s } }
     data[:trial_end] = subscription.trial_ends_at.to_i if subscription.trial_active? && subscription.trial_ends_at > 48.hours.from_now
-    { customer: subscription.stripe_customer_id, mode: 'subscription', line_items: checkout_items(subscription, interval), subscription_data: data,
-      metadata: { billing_interval: interval, offer_signature: offer_signature(subscription) },
+    { customer: subscription.stripe_customer_id, mode: 'subscription', line_items: checkout_items(subscription, interval, plan),
+      subscription_data: data, metadata: { billing_interval: interval, offer_signature: offer_signature(subscription, plan) },
+      automatic_tax: { enabled: true }, tax_id_collection: { enabled: true }, billing_address_collection: 'required',
+      customer_update: { address: 'auto', name: 'auto' }, allow_promotion_codes: true,
       client_reference_id: @account.id.to_s, success_url: return_url, cancel_url: return_url }
   end
 
-  def checkout_items(subscription, interval)
-    items = [{ price_data: price_data(subscription, interval: interval), quantity: 1 }]
+  def checkout_items(subscription, interval, plan)
+    item = plan ? { price: plan.stripe_price_id(interval) } : { price_data: price_data(subscription, interval: interval) }
+    items = [item.merge(quantity: 1)]
     return items unless subscription.setup_fee_cents.positive?
 
-    items + [{ price_data: { currency: subscription.currency, unit_amount: subscription.setup_fee_cents,
+    items + [{ price_data: { currency: plan&.currency || subscription.currency, unit_amount: subscription.setup_fee_cents, tax_behavior: 'exclusive',
                              product_data: { name: I18n.t('account_subscription.setup_fee') } }, quantity: 1 }]
   end
 
@@ -140,7 +147,7 @@ class Enterprise::Billing::AccountCheckoutService
 
   def price_data(subscription, interval:)
     { currency: subscription.currency, unit_amount: interval == 'year' ? subscription.annual_amount_cents : subscription.monthly_price_cents,
-      recurring: { interval: interval }, product_data: { name: @account.name } }
+      recurring: { interval: interval }, tax_behavior: 'exclusive', product_data: { name: @account.name } }
   end
 
   def return_url

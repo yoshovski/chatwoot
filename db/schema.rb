@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_11_12_090000) do
+ActiveRecord::Schema[7.2].define(version: 2026_11_12_160000) do
   # These extensions should be enabled to support this database
   enable_extension "pg_stat_statements"
   enable_extension "pg_trgm"
@@ -401,9 +401,14 @@ ActiveRecord::Schema[7.2].define(version: 2026_11_12_090000) do
     t.boolean "signup_default", default: false, null: false
     t.integer "conversations_limit"
     t.bigint "after_trial_plan_id"
+    t.string "stripe_product_id"
+    t.string "stripe_monthly_price_id"
+    t.string "stripe_annual_price_id"
     t.index ["after_trial_plan_id"], name: "index_billing_plans_on_after_trial_plan_id"
     t.index ["name"], name: "index_billing_plans_on_name", unique: true
     t.index ["signup_default"], name: "index_billing_plans_on_signup_default", unique: true, where: "signup_default"
+    t.index ["stripe_annual_price_id"], name: "index_billing_plans_on_stripe_annual_price_id", unique: true
+    t.index ["stripe_monthly_price_id"], name: "index_billing_plans_on_stripe_monthly_price_id", unique: true
   end
 
   create_table "calls", force: :cascade do |t|

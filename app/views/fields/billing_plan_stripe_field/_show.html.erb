@@ -1,0 +1,9 @@
+<% plan = field.resource %>
+<% if plan.stripe_monthly_price_id.present? && plan.stripe_annual_price_id.present? %>
+  <p><%= t('super_admin.billing_plan.stripe_prices_ready', monthly: plan.stripe_monthly_price_id, annual: plan.stripe_annual_price_id) %></p>
+<% else %>
+  <p><%= t('super_admin.billing_plan.stripe_prices_missing') %></p>
+  <% if ChatwootApp.enterprise? %>
+    <%= button_to t('super_admin.billing_plan.create_stripe_prices'), create_stripe_prices_super_admin_billing_plan_path(plan), method: :post %>
+  <% end %>
+<% end %>
