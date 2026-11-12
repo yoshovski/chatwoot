@@ -15,6 +15,14 @@ module Enterprise::Account::PlanUsageAndLimits # rubocop:disable Metrics/ModuleL
     }
   end
 
+  # Whether Captain may spend a model call on this conversation (handoff summary, outcome label). ChatOctave accounts
+  # ask the AI-conversation gate; the captain_responses credits only decide on Chatwoot Cloud.
+  def captain_ai_allowed?(conversation)
+    return ai_reply_allowed?(conversation) if chatoctave_billing?
+
+    usage_limits[:captain][:responses][:current_available].positive?
+  end
+
   def increment_response_usage
     return unless ChatwootApp.chatwoot_cloud?
 

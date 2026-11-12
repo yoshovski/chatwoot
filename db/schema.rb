@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_11_11_140000) do
+ActiveRecord::Schema[7.2].define(version: 2026_11_11_150000) do
   # These extensions should be enabled to support this database
   enable_extension "pg_stat_statements"
   enable_extension "pg_trgm"
@@ -1145,6 +1145,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_11_11_140000) do
     t.datetime "quota_period_start", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.boolean "extra", default: false, null: false
     t.index ["account_id", "quota_period_start"], name: "idx_usage_account_period"
     t.index ["account_id"], name: "index_conversation_usage_windows_on_account_id"
     t.index ["conversation_id", "started_at"], name: "idx_usage_conversation_start"
@@ -1404,6 +1405,26 @@ ActiveRecord::Schema[7.2].define(version: 2026_11_11_140000) do
     t.index ["inbox_id", "name", "template_type", "locale"], name: "index_email_templates_on_inbox_scope", unique: true, where: "(inbox_id IS NOT NULL)"
     t.index ["inbox_id"], name: "index_email_templates_on_inbox_id"
     t.index ["name", "template_type", "locale"], name: "index_email_templates_on_installation_scope", unique: true, where: "((account_id IS NULL) AND (inbox_id IS NULL))"
+  end
+
+  create_table "extra_ai_conversation_entries", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.string "reason", null: false
+    t.integer "amount", null: false
+    t.integer "remaining"
+    t.datetime "expires_at"
+    t.bigint "lot_id"
+    t.bigint "conversation_usage_window_id"
+    t.string "stripe_reference"
+    t.bigint "user_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id", "expires_at"], name: "index_extra_ai_conversation_open_lots", where: "(remaining > 0)"
+    t.index ["account_id"], name: "index_extra_ai_conversation_entries_on_account_id"
+    t.index ["conversation_usage_window_id"], name: "idx_on_conversation_usage_window_id_dd986b4514"
+    t.index ["lot_id"], name: "index_extra_ai_conversation_entries_on_lot_id"
+    t.index ["stripe_reference"], name: "index_extra_ai_conversation_entries_on_stripe_reference", unique: true, where: "(stripe_reference IS NOT NULL)"
+    t.index ["user_id"], name: "index_extra_ai_conversation_entries_on_user_id"
   end
 
   create_table "folders", force: :cascade do |t|

@@ -18,7 +18,10 @@ module Enterprise::Inbox
 
   private
 
+  # ChatOctave accounts: the AI-conversation gate decides per reply (Account#ai_reply_allowed?), not the credits.
   def more_responses?
+    return true if account.chatoctave_billing?
+
     account.usage_limits[:captain][:responses][:current_available].positive?
   end
 

@@ -185,8 +185,10 @@ class Enterprise::Billing::HandleStripeEventService
     @account ||= Account.where("custom_attributes->>'stripe_customer_id' = ?", subscription.customer).first
   end
 
+  # The legacy plan and captain_responses credits path is upstream Chatwoot Cloud's. ChatOctave accounts are billed
+  # through AccountSubscription, so it leaves them alone.
   def stripe_billed_account?
-    account&.billing_provider == Account::DEFAULT_BILLING_PROVIDER
+    account&.billing_provider == Account::DEFAULT_BILLING_PROVIDER && !account.chatoctave_billing?
   end
 
   def find_plan(product_id)

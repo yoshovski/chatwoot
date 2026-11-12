@@ -50,8 +50,9 @@ class AccountSubscription < ApplicationRecord
   end
 
   # AI conversations counted against the limit: lifetime during a capped trial, otherwise the current monthly quota.
+  # Conversations paid from the extra balance are not part of the allowance.
   def counted_windows(at: Time.current)
-    windows = account.conversation_usage_windows
+    windows = account.conversation_usage_windows.where(extra: false)
     trial_capped? ? windows : windows.where(quota_period_start: quota_period(at: at).first)
   end
 
@@ -110,14 +111,19 @@ class AccountSubscription < ApplicationRecord
     pause_reason = ai_pause_reason
     {
       enabled: enabled, monthly_limit: limit, consumed: usage, quota_started_at: start_at, quota_resets_at: end_at,
+      # One meter: the plan allowance for the period, what was used of it, and the extra AI conversations left.
+      included: limit, used: usage, extra_left: extra_ai_conversations,
       trial_enabled: trial_active?, trial_ends_at: (trial_ends_at if trial_active?),
       plan: plan_summary, products: product_usage,
       ai_replies_paused: !pause_reason.nil?, ai_pause_reason: pause_reason, warning: !limit.nil? && (limit.zero? || usage >= limit * 0.8),
-      daily_usage: daily_usage,
-      history: account.conversation_usage_windows.group(:quota_period_start).order(quota_period_start: :desc).limit(12).count.map do |period, count|
-        { period_started_at: period, consumed: count }
-      end
+      daily_usage: daily_usage, history: usage_history
     }
+  end
+
+  def usage_history
+    account.conversation_usage_windows.group(:quota_period_start).order(quota_period_start: :desc).limit(12).count.map do |period, count|
+      { period_started_at: period, consumed: count }
+    end
   end
 
   private

@@ -409,8 +409,22 @@ RSpec.describe 'Enterprise Billing APIs', type: :request do
       expect(response).to have_http_status(:unauthorized)
     end
 
+    it 'does not add captain_responses credits for a ChatOctave account' do
+      account.update!(custom_attributes: { plan_name: 'Business', stripe_customer_id: stripe_customer_id }, limits: { 'captain_responses' => 1000 })
+      allow(ChatwootApp).to receive(:chatwoot_cloud?).and_return(false)
+
+      post "/enterprise/api/v1/accounts/#{account.id}/topup_checkout",
+           headers: admin.create_new_auth_token,
+           params: { credits: 1000 },
+           as: :json
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(account.reload.limits['captain_responses']).to eq(1000)
+    end
+
     context 'when it is an admin' do
       before do
+        allow(ChatwootApp).to receive(:chatwoot_cloud?).and_return(true)
         account.update!(
           custom_attributes: { plan_name: 'Business', stripe_customer_id: stripe_customer_id },
           limits: { 'captain_responses' => 1000 }

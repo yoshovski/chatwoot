@@ -34,11 +34,11 @@ RSpec.describe AccountSubscriptionAiAccess do
       expect(subscription.usage_summary).to include(ai_replies_paused: true, ai_pause_reason: 'no_plan')
     end
 
-    it 'keeps no AI once the first conversation creates the subscription row' do
+    it 'keeps no AI when the first customer message arrives' do
       create(:message, account: account, inbox: inbox, conversation: create(:conversation, account: account, inbox: inbox),
                        message_type: :incoming)
 
-      expect(account.reload.account_subscription).to have_attributes(payment_status: 'manual', manual_ai_access: false)
+      expect(account.reload.conversation_usage_windows).to be_empty
       expect(account.ai_reply_allowed?).to be(false)
     end
   end
@@ -130,6 +130,21 @@ RSpec.describe AccountSubscriptionAiAccess do
       subscription.update!(quota_anchor: 40.days.ago)
       open_windows(3, started_at: 35.days.ago)
 
+      expect(subscription.ai_pause_reason).to be_nil
+    end
+
+    it 'lets new conversations use the extra balance once the allowance is used' do
+      open_windows(3)
+      ExtraAiConversationEntry.credit!(account: account, amount: 1, stripe_reference: 'pi_extra')
+
+      expect(subscription.ai_pause_reason).to be_nil
+      expect(subscription.usage_summary).to include(included: 3, used: 3, extra_left: 1)
+    end
+
+    it 'does not count extra conversations against the allowance' do
+      open_windows(3).last.update!(extra: true)
+
+      expect(subscription.consumed).to eq(2)
       expect(subscription.ai_pause_reason).to be_nil
     end
 

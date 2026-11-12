@@ -87,6 +87,22 @@ describe Enterprise::Billing::HandleStripeEventService do
     end
   end
 
+  describe 'ChatOctave account' do
+    it 'does not change plan attributes or captain_responses credits' do
+      allow(ChatwootApp).to receive(:chatwoot_cloud?).and_return(false)
+      account.update!(limits: { 'captain_responses' => 100 })
+      allow(subscription).to receive(:[]).with('plan')
+                                         .and_return({ 'id' => 'test', 'product' => 'plan_id_business', 'name' => 'Business' })
+      allow(subscription).to receive(:[]).with('current_period_start').and_return(1_686_567_520)
+      allow(data).to receive(:previous_attributes).and_return({ 'current_period_start' => 1_683_975_520 })
+
+      stripe_event_service.new.perform(event: event)
+
+      expect(account.reload.limits['captain_responses']).to eq(100)
+      expect(account.custom_attributes).not_to include('plan_name')
+    end
+  end
+
   describe 'subscription quantity update' do
     before do
       allow(subscription).to receive(:[]).with('plan')

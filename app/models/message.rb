@@ -302,6 +302,11 @@ class Message < ApplicationRecord
     outgoing? && (sender.is_a?(AgentBot) || sender_type == 'Captain::Assistant')
   end
 
+  # A reply the customer sees from the AI agent. This is what opens an AI conversation (ConversationUsageWindow).
+  def ai_reply?
+    outgoing? && !private? && %w[AgentBot Captain::Assistant].include?(sender_type)
+  end
+
   private
 
   def prevent_message_flooding

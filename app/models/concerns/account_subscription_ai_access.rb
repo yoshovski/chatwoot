@@ -28,6 +28,18 @@ module AccountSubscriptionAiAccess
     end
   end
 
+  # Extra AI conversations bought and not yet used or expired (ExtraAiConversationEntry).
+  def extra_ai_conversations
+    ExtraAiConversationEntry.balance(account)
+  end
+
+  # Whether a new AI conversation still fits the plan allowance. When it does not, it takes an extra one.
+  # Manual accounts and accounts without a limit have no allowance to run out of.
+  def allowance_left?
+    limit = effective_limit
+    limit.nil? || payment_status == 'manual' || consumed < limit
+  end
+
   private
 
   def running_pause_reason(conversation)
@@ -46,11 +58,13 @@ module AccountSubscriptionAiAccess
     'limit_reached' unless within_limit?(conversation, limit)
   end
 
+  # Allowance first, then the extra balance. An open window keeps replying for its 24 hours: an extra one always, an
+  # included one while it is within the allowance.
   def within_limit?(conversation, limit)
     window = conversation && account.conversation_usage_windows.where(conversation: conversation).where('ends_at > ?', Time.current).last
-    return consumed < limit unless window
+    return consumed < limit || extra_ai_conversations.positive? unless window
+    return true if window.extra?
 
-    # The last admitted conversation may finish its 24-hour window. A new window beyond the quota cannot reply.
     counted_windows.where('(started_at, id) <= (?, ?)', window.started_at, window.id).count <= limit
   end
 

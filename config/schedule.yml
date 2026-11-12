@@ -74,3 +74,10 @@ remove_orphan_conversations_job:
   cron: '0 */12 * * *'
   class: 'Internal::RemoveOrphanConversationsJob'
   queue: housekeeping
+
+# executed daily at 0315 UTC
+# writes a ledger row for extra AI conversations that expired 12 months after purchase
+expire_extra_ai_conversations_job:
+  cron: '15 3 * * *'
+  class: 'ExpireExtraAiConversationsJob'
+  queue: scheduled_jobs

@@ -63,7 +63,7 @@ class Captain::HomeSummaryBuilder
   def usage
     subscription = account.subscription_settings
     products = subscription.product_usage
-    products.merge(plan: plan_status(subscription), ai_conversations: products[:ai_conversations].slice(:used, :limit))
+    products.merge(plan: plan_status(subscription), ai_conversations: products[:ai_conversations].slice(:used, :limit, :extra_left))
   end
 
   def plan_status(subscription)

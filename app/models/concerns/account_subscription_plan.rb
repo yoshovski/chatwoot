@@ -33,7 +33,8 @@ module AccountSubscriptionPlan
   def product_usage
     limits = account.usage_limits
     {
-      ai_conversations: { used: consumed, limit: (effective_limit if enabled?), period: trial_capped? ? 'trial' : 'month' },
+      ai_conversations: { used: consumed, limit: (effective_limit if enabled?), period: trial_capped? ? 'trial' : 'month',
+                          extra_left: extra_ai_conversations },
       agents: { used: account.account_users.count, limit: finite_limit(limits[:agents]) },
       inboxes: { used: account.inboxes.count, limit: finite_limit(limits[:inboxes]) },
       documents: { used: account.try(:captain_documents)&.count || 0, limit: finite_limit(limits.dig(:captain, :documents, :total_count)) }
