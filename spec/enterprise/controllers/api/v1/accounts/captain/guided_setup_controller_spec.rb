@@ -5,16 +5,8 @@ RSpec.describe 'Api::V1::Accounts::Captain::GuidedSetup', type: :request do
   let(:admin) { create(:user, account: account, role: :administrator) }
   let(:agent) { create(:user, account: account, role: :agent) }
   let(:base_url) { "/api/v1/accounts/#{account.id}/captain/guided_setup" }
-  let(:analyzer) { instance_double(Captain::Onboarding::WebsiteAnalyzerService) }
 
   def json_response = JSON.parse(response.body)
-
-  before do
-    allow(Captain::Onboarding::WebsiteAnalyzerService).to receive(:new).and_return(analyzer)
-    allow(analyzer).to receive(:analyze).and_return(
-      success: true, data: { business_name: 'Example', suggested_assistant_name: 'Example Helper', description: 'You help Example customers.' }
-    )
-  end
 
   it 'is for administrators only' do
     get base_url, headers: agent.create_new_auth_token, as: :json
@@ -26,29 +18,43 @@ RSpec.describe 'Api::V1::Accounts::Captain::GuidedSetup', type: :request do
     get base_url, headers: admin.create_new_auth_token, as: :json
 
     expect(json_response).to eq('assistant_id' => nil, 'website_source' => nil, 'widget_inbox' => nil, 'agent_live' => false,
-                                'readiness' => 'no_agent')
+                                'readiness' => 'no_agent', 'instant_agent' => nil, 'quick_ready' => false, 'learned' => 0, 'total' => 0)
   end
 
   describe 'POST website' do
-    it 'creates the AI agent from the website and starts discovery' do
+    it 'creates the AI agent, starts the instant agent and starts discovery' do
       expect do
         post "#{base_url}/website", params: { url: 'www.example.com' }, headers: admin.create_new_auth_token, as: :json
       end.to have_enqueued_job(Captain::Websites::DiscoverJob)
+        .and have_enqueued_job(Captain::Onboarding::InstantAgentJob).with(kind_of(Integer), name_agent: true)
 
       expect(response).to have_http_status(:accepted)
       assistant = account.captain_assistants.sole
-      expect(assistant).to have_attributes(name: 'Example Helper', description: 'You help Example customers.')
-      expect(json_response).to include('assistant_id' => assistant.id, 'readiness' => 'no_knowledge')
+      expect(assistant).to have_attributes(name: 'AI agent', description: include('example.com'))
+      expect(json_response).to include('assistant_id' => assistant.id, 'readiness' => 'no_knowledge', 'quick_ready' => false,
+                                       'instant_agent' => { 'status' => 'running' })
       expect(json_response['website_source']).to include('url' => 'https://www.example.com', 'status' => 'pending')
       expect(account.reload.custom_attributes['website']).to eq('https://www.example.com')
     end
 
-    it 'names the agent after the host when the analyzer fails' do
-      allow(analyzer).to receive(:analyze).and_return(success: false, data: {})
+    it 'keeps the name of an existing agent when it adds a website' do
+      create(:captain_assistant, account: account)
 
-      post "#{base_url}/website", params: { url: 'https://shop.example.com' }, headers: admin.create_new_auth_token, as: :json
+      expect do
+        post "#{base_url}/website", params: { url: 'https://www.example.com' }, headers: admin.create_new_auth_token, as: :json
+      end.to have_enqueued_job(Captain::Onboarding::InstantAgentJob).with(kind_of(Integer), name_agent: false)
+    end
 
-      expect(account.captain_assistants.sole).to have_attributes(name: 'AI agent', description: include('shop.example.com'))
+    it 'shows what the instant agent learned' do
+      assistant = create(:captain_assistant, account: account, config: { 'instant_agent' => { 'status' => 'ready', 'starter_questions' => ['Hi?'] } })
+      source = Captain::WebsiteSource.create!(assistant: assistant, url: 'https://www.example.com')
+      create(:captain_document, assistant: assistant, account: account, status: :available, external_link: 'https://www.example.com',
+                                metadata: { 'website_source_id' => source.id, 'quick_start' => true })
+
+      get base_url, headers: admin.create_new_auth_token, as: :json
+
+      expect(json_response).to include('quick_ready' => true, 'learned' => 1, 'total' => 1, 'readiness' => 'ready',
+                                       'instant_agent' => { 'status' => 'ready', 'starter_questions' => ['Hi?'] })
     end
 
     it 'reuses the existing agent and website source' do
@@ -61,7 +67,6 @@ RSpec.describe 'Api::V1::Accounts::Captain::GuidedSetup', type: :request do
 
       expect(account.captain_assistants.count).to eq(1)
       expect(json_response['website_source']['id']).to eq(source.id)
-      expect(analyzer).not_to have_received(:analyze)
     end
 
     it 'rejects an address that is not a website' do

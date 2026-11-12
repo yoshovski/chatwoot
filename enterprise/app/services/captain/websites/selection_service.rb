@@ -44,8 +44,11 @@ class Captain::Websites::SelectionService
     return if !@resume_existing && !document.enabled?
 
     document.update!(enabled: true) unless document.enabled?
-    Captain::Websites::ImportPageJob.set(wait: wait).perform_later(document.id) if document.content.blank?
+    Captain::Websites::ImportPageJob.set(wait: wait).perform_later(document.id) if import_needed?(document)
   end
+
+  # A quick-start page from the instant agent is imported again in full.
+  def import_needed?(document) = document.content.blank? || document.metadata['quick_start'] == true
 
   def deselect_documents(urls)
     removed = @source.selected_urls - urls
