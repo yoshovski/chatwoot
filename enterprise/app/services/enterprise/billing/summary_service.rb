@@ -104,6 +104,8 @@ class Enterprise::Billing::SummaryService
   end
 
   def stripe_topup_available?
+    return false if account.chatoctave_billing?
+
     attributes = account.custom_attributes
     return false if attributes['stripe_customer_id'].blank? || attributes['plan_name'].blank?
 

@@ -65,7 +65,7 @@ class Captain::Conversation::HandoffNoteService
   end
 
   def generate_summary
-    return FALLBACK_NOTE unless captain_responses_left?
+    return FALLBACK_NOTE unless conversation.account.captain_ai_allowed?(conversation)
 
     transcript = build_transcript
     return FALLBACK_NOTE if transcript.blank?
@@ -88,11 +88,6 @@ class Captain::Conversation::HandoffNoteService
   end
 
   private
-
-  # A handoff because the account ran out of Captain responses gets no LLM summary either.
-  def captain_responses_left?
-    conversation.account.usage_limits[:captain][:responses][:current_available].positive?
-  end
 
   def request_summary(transcript)
     summary = call_llm(model: configured_model, prompt: system_prompt, input: transcript)

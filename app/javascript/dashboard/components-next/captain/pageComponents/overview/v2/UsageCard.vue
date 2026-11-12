@@ -34,30 +34,33 @@ const valueLabel = limits =>
     total: Number(limits?.totalCount || 0).toLocaleString(),
   });
 
-const meters = computed(() => [
-  {
-    key: 'responses',
-    label: t('CAPTAIN.OVERVIEW.V2.USAGE.CREDITS'),
-    used: Number(props.responseLimits?.consumed || 0),
-    total: Number(props.responseLimits?.totalCount || 0),
-    usageLabel: t('CAPTAIN.OVERVIEW.V2.USAGE.USED', {
-      percentage: formatPercentage(percentage(props.responseLimits)),
-    }),
-    valueLabel: valueLabel(props.responseLimits),
-    color: 'rgb(var(--blue-9))',
-  },
-  {
-    key: 'documents',
-    label: t('CAPTAIN.OVERVIEW.V2.USAGE.DOCUMENTS'),
-    used: Number(props.documentLimits?.consumed || 0),
-    total: Number(props.documentLimits?.totalCount || 0),
-    usageLabel: t('CAPTAIN.OVERVIEW.V2.USAGE.USED', {
-      percentage: formatPercentage(percentage(props.documentLimits)),
-    }),
-    valueLabel: valueLabel(props.documentLimits),
-    color: 'rgb(var(--blue-9))',
-  },
-]);
+// Captain credits are Chatwoot Cloud's meter. ChatOctave counts AI conversations on Billing instead.
+const meters = computed(() =>
+  [
+    isOnChatwootCloud.value && {
+      key: 'responses',
+      label: t('CAPTAIN.OVERVIEW.V2.USAGE.CREDITS'),
+      used: Number(props.responseLimits?.consumed || 0),
+      total: Number(props.responseLimits?.totalCount || 0),
+      usageLabel: t('CAPTAIN.OVERVIEW.V2.USAGE.USED', {
+        percentage: formatPercentage(percentage(props.responseLimits)),
+      }),
+      valueLabel: valueLabel(props.responseLimits),
+      color: 'rgb(var(--blue-9))',
+    },
+    {
+      key: 'documents',
+      label: t('CAPTAIN.OVERVIEW.V2.USAGE.DOCUMENTS'),
+      used: Number(props.documentLimits?.consumed || 0),
+      total: Number(props.documentLimits?.totalCount || 0),
+      usageLabel: t('CAPTAIN.OVERVIEW.V2.USAGE.USED', {
+        percentage: formatPercentage(percentage(props.documentLimits)),
+      }),
+      valueLabel: valueLabel(props.documentLimits),
+      color: 'rgb(var(--blue-9))',
+    },
+  ].filter(Boolean)
+);
 </script>
 
 <template>

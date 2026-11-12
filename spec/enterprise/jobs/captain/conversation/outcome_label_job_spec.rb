@@ -18,6 +18,14 @@ RSpec.describe Captain::Conversation::OutcomeLabelJob, type: :job do
   end
 
   describe '#perform' do
+    it 'skips the model call when the AI limit stops the conversation' do
+      allow(account).to receive(:ai_reply_allowed?).with(conversation).and_return(false)
+
+      described_class.perform_now(conversation, assistant)
+
+      expect(Captain::Llm::OutcomeClassifierService).not_to have_received(:new)
+    end
+
     it 'picks a valid outcome label' do
       allow(classifier).to receive(:classify).and_return('bot-resolved')
 
@@ -67,7 +75,8 @@ RSpec.describe Captain::Conversation::OutcomeLabelJob, type: :job do
       expect(conversation.label_list).to eq(['purchase-intent'])
     end
 
-    it 'skips when account has no captain responses left' do
+    it 'skips when account has no captain responses left on Chatwoot Cloud' do
+      allow(ChatwootApp).to receive(:chatwoot_cloud?).and_return(true)
       allow(account).to receive(:usage_limits).and_return(
         { captain: { responses: { current_available: 0 } } }
       )

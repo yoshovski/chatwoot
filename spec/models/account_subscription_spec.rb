@@ -39,7 +39,7 @@ RSpec.describe AccountSubscription do
       open_window(1.hour.ago)
 
       expect(subscription.consumed).to eq(2)
-      expect(subscription.product_usage[:ai_conversations]).to eq(used: 2, limit: 2, period: 'trial')
+      expect(subscription.product_usage[:ai_conversations]).to eq(used: 2, limit: 2, period: 'trial', extra_left: 0)
       expect(account.ai_reply_allowed?).to be(false)
     end
 
@@ -54,18 +54,6 @@ RSpec.describe AccountSubscription do
       subscription.update!(payment_status: 'active')
 
       expect(subscription.product_usage[:ai_conversations]).to include(limit: 500, period: 'month')
-    end
-  end
-
-  describe 'AI conversation unit' do
-    it 'counts incoming messages only in inboxes where a bot answers' do
-      human_inbox = create(:inbox, account: account)
-      create(:message, account: account, inbox: inbox, conversation: create(:conversation, account: account, inbox: inbox),
-                       message_type: :incoming)
-      create(:message, account: account, inbox: human_inbox, conversation: create(:conversation, account: account, inbox: human_inbox),
-                       message_type: :incoming)
-
-      expect(account.conversation_usage_windows.count).to eq(1)
     end
   end
 

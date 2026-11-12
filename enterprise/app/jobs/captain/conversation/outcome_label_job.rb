@@ -27,13 +27,9 @@ class Captain::Conversation::OutcomeLabelJob < ApplicationJob
     return false if @conversation.blank? || @assistant.blank?
     return false unless @account.feature_enabled?('captain_integration_v2')
     return false unless @assistant.outcome_labels?
-    return false unless captain_responses_left?
+    return false unless @account.captain_ai_allowed?(@conversation)
 
     true
-  end
-
-  def captain_responses_left?
-    @account.usage_limits.dig(:captain, :responses, :current_available).to_i.positive?
   end
 
   def apply_outcome_label(chosen_outcome)

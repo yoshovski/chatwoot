@@ -32,7 +32,16 @@ RSpec.describe Captain::Conversation::HandoffNoteService do
     expect(service.generate_note_content).to eq("#{described_class::NOTE_HEADER}\nWants: help with streaming\nNext: troubleshoot")
   end
 
-  it 'skips the LLM when the account has no Captain responses left' do
+  it 'skips the LLM when the AI limit stops the conversation' do
+    allow(account).to receive(:ai_reply_allowed?).with(conversation).and_return(false)
+    allow(conversation).to receive(:account).and_return(account)
+
+    expect(service.generate_note_content).to eq("#{described_class::NOTE_HEADER}\n#{described_class::FALLBACK_NOTE}")
+    expect(WebMock).not_to have_requested(:post, %r{/chat/completions})
+  end
+
+  it 'skips the LLM when the account has no Captain responses left on Chatwoot Cloud' do
+    allow(ChatwootApp).to receive(:chatwoot_cloud?).and_return(true)
     allow(account).to receive(:usage_limits).and_return(captain: { responses: { current_available: 0 } })
     allow(conversation).to receive(:account).and_return(account)
 

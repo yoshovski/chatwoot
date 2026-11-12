@@ -9,6 +9,7 @@ class Enterprise::Api::V1::AccountsController < Api::BaseController
   before_action :check_cloud_env, only: [:limits, :toggle_deletion, :topup_options]
   before_action :ensure_shopify_billing_available, only: SHOPIFY_BILLING_ACTIONS
   before_action :ensure_stripe_billing_action, only: STRIPE_ONLY_BILLING_ACTIONS
+  before_action :ensure_legacy_credits, only: %i[topup_checkout topup_options]
 
   def billing_summary
     render json: Enterprise::Billing::SummaryService.new(account: @account).perform(refresh: ActiveModel::Type::Boolean.new.cast(params[:refresh]))
@@ -101,6 +102,11 @@ class Enterprise::Api::V1::AccountsController < Api::BaseController
   end
 
   private
+
+  # Credit top-ups add upstream captain_responses credits, which ChatOctave accounts do not use (T03).
+  def ensure_legacy_credits
+    render_could_not_create_error(I18n.t('errors.topup.credits_unavailable')) if @account.chatoctave_billing?
+  end
 
   def ensure_stripe_billing_action
     return if @account.billing_provider == Account::DEFAULT_BILLING_PROVIDER

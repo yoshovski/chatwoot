@@ -107,6 +107,8 @@ RSpec.describe MessageTemplates::HookExecutionService do
       end
 
       it 'performs captain handoff when quota is exceeded (OOO template will kick in after handoff)' do
+        # Captain credits are the Chatwoot Cloud meter; ChatOctave accounts use the AI conversation limit.
+        allow(ChatwootApp).to receive(:chatwoot_cloud?).and_return(true)
         account.update!(
           limits: { 'captain_responses' => 100 },
           custom_attributes: account.custom_attributes.merge('captain_responses_usage' => 100)
@@ -186,6 +188,7 @@ RSpec.describe MessageTemplates::HookExecutionService do
 
     context 'when captain quota is exceeded within business hours' do
       before do
+        allow(ChatwootApp).to receive(:chatwoot_cloud?).and_return(true)
         inbox.update!(working_hours_enabled: true)
         inbox.working_hours.find_by(day_of_week: Time.current.in_time_zone(inbox.timezone).wday).update!(
           open_all_day: true,
@@ -568,6 +571,7 @@ RSpec.describe MessageTemplates::HookExecutionService do
 
   context 'when Captain quota is exceeded and handoff happens' do
     before do
+      allow(ChatwootApp).to receive(:chatwoot_cloud?).and_return(true)
       account.update!(
         limits: { 'captain_responses' => 100 },
         custom_attributes: account.custom_attributes.merge('captain_responses_usage' => 100)

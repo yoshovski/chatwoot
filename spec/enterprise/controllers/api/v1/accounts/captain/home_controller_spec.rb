@@ -52,7 +52,7 @@ RSpec.describe 'Api::V1::Accounts::Captain::Home', type: :request do
       get url, headers: admin.create_new_auth_token, as: :json
 
       usage = response.parsed_body['usage']
-      expect(usage['ai_conversations']).to eq('used' => 0, 'limit' => nil)
+      expect(usage['ai_conversations']).to eq('used' => 0, 'limit' => nil, 'extra_left' => 0)
       expect(usage['agents']).to include('used' => 1, 'limit' => nil)
       expect(usage['plan']).to include('billing_enabled' => false, 'trial' => false, 'ai_replies_paused' => false)
     end
@@ -64,7 +64,7 @@ RSpec.describe 'Api::V1::Accounts::Captain::Home', type: :request do
       get url, headers: admin.create_new_auth_token, as: :json
 
       usage = response.parsed_body['usage']
-      expect(usage['ai_conversations']).to eq('used' => 0, 'limit' => 50)
+      expect(usage['ai_conversations']).to eq('used' => 0, 'limit' => 50, 'extra_left' => 0)
       expect(usage['agents']).to include('limit' => 3)
       expect(usage['inboxes']).to include('used' => 0, 'limit' => 2)
       expect(usage['plan']).to include('billing_enabled' => true, 'trial' => true, 'ai_replies_paused' => false)
