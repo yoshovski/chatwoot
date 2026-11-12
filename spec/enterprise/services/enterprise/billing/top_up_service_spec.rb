@@ -9,6 +9,8 @@ RSpec.describe Enterprise::Billing::TopUpService do
   let(:draft) { Stripe::Invoice.construct_from(id: 'in_pack', status: 'draft') }
   let(:payment_method) { 'pm_card' }
 
+  around { |example| with_modified_env(FRONTEND_URL: 'https://app.example.com') { example.run } }
+
   before do
     account.update!(subscription_settings: { billing_plan_id: plan.id, enabled: true })
     subscription.update!(stripe_customer_id: 'cus_top', stripe_subscription_id: 'sub_top', payment_status: 'active')
