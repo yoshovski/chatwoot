@@ -84,4 +84,66 @@ RSpec.describe 'Account subscription API', type: :request do
       expect(plan_change).not_to have_received(:perform)
     end
   end
+
+  describe 'top-ups (T07)' do
+    let(:admin) { create(:user, account: account, role: :administrator) }
+    let(:top_up) { instance_double(Enterprise::Billing::TopUpService, buy: { status: 'paid' }) }
+    let(:subscription) { account.account_subscription }
+
+    before do
+      account.update!(subscription_settings: { billing_plan_id: plan.id, enabled: true })
+      subscription.update!(stripe_customer_id: 'cus_top', stripe_subscription_id: 'sub_top', payment_status: 'active')
+      allow(Enterprise::Billing::TopUpService).to receive(:new).and_return(top_up)
+    end
+
+    it 'starts a pack payment with the click id' do
+      post "/api/v1/accounts/#{account.id}/account_subscription/top_up", params: { request_id: 'click-0001' },
+                                                                         headers: admin.create_new_auth_token, as: :json
+
+      expect(response.parsed_body).to eq('status' => 'paid')
+      expect(top_up).to have_received(:buy).with(request_id: 'click-0001')
+    end
+
+    it 'says when the card is declined' do
+      allow(top_up).to receive(:buy).and_raise(Enterprise::Billing::TopUpService::PaymentFailed)
+
+      post "/api/v1/accounts/#{account.id}/account_subscription/top_up", headers: admin.create_new_auth_token, as: :json
+
+      expect(response).to have_http_status(:unprocessable_entity)
+    end
+
+    it 'saves the auto top-up settings and clears an earlier failure' do
+      subscription.update!(auto_top_up_failed_at: 1.day.ago)
+
+      patch "/api/v1/accounts/#{account.id}/account_subscription/top_up_settings",
+            params: { auto_top_up_enabled: true, auto_top_up_max_packs: 3 }, headers: admin.create_new_auth_token, as: :json
+
+      expect(response.parsed_body['auto']).to include('enabled' => true, 'max_packs' => 3, 'failed_at' => nil)
+    end
+
+    it 'keeps the ceiling between 1 and 10 packs' do
+      patch "/api/v1/accounts/#{account.id}/account_subscription/top_up_settings",
+            params: { auto_top_up_enabled: true, auto_top_up_max_packs: 11 }, headers: admin.create_new_auth_token, as: :json
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(subscription.reload.auto_top_up_enabled).to be(false)
+    end
+
+    it 'lets only administrators buy' do
+      post "/api/v1/accounts/#{account.id}/account_subscription/top_up", headers: agent.create_new_auth_token, as: :json
+
+      expect(response).to have_http_status(:unauthorized)
+      expect(top_up).not_to have_received(:buy)
+    end
+
+    it 'shows the pack, the auto top-up settings and the history to administrators' do
+      ExtraAiConversationEntry.credit!(account: account, amount: 50, stripe_reference: 'in_pack')
+
+      get "/api/v1/accounts/#{account.id}/account_subscription", headers: admin.create_new_auth_token, as: :json
+
+      top_up_json = response.parsed_body['top_up']
+      expect(top_up_json).to include('available' => true, 'pack' => { 'conversations' => 50, 'amount_cents' => 800, 'currency' => 'eur' })
+      expect(top_up_json['history']).to contain_exactly(include('reason' => 'purchase', 'amount' => 50))
+    end
+  end
 end

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_11_12_160000) do
+ActiveRecord::Schema[7.2].define(version: 2026_11_12_180000) do
   # These extensions should be enabled to support this database
   enable_extension "pg_stat_statements"
   enable_extension "pg_trgm"
@@ -91,6 +91,12 @@ ActiveRecord::Schema[7.2].define(version: 2026_11_12_160000) do
     t.string "ai_paused_reason"
     t.boolean "manual_ai_access", default: false, null: false
     t.datetime "past_due_since"
+    t.boolean "auto_top_up_enabled", default: false, null: false
+    t.integer "auto_top_up_max_packs", default: 1, null: false
+    t.datetime "auto_top_up_period_start"
+    t.integer "auto_top_up_count", default: 0, null: false
+    t.datetime "auto_top_up_pending_at"
+    t.datetime "auto_top_up_failed_at"
     t.index ["account_id"], name: "index_account_subscriptions_on_account_id", unique: true
     t.index ["billing_plan_id"], name: "index_account_subscriptions_on_billing_plan_id"
     t.index ["stripe_customer_id"], name: "index_account_subscriptions_on_stripe_customer_id", unique: true

@@ -63,6 +63,8 @@ Rails.application.routes.draw do
             post :change_plan
             post :portal
             post :payment
+            post :top_up
+            patch :top_up_settings
           end
           resources :data_exports, only: [:index, :create, :show] do
             get :download, on: :member

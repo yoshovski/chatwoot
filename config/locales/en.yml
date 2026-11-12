@@ -75,6 +75,8 @@ en:
 
   account_subscription:
     setup_fee: 'Customization and setup'
+    top_up:
+      pack_name: '%{count} extra AI conversations'
   activerecord:
     attributes:
       billing_plan:
@@ -97,6 +99,7 @@ en:
       ai_replies_paused: 'AI replies are paused for this account: its plan, trial or payment does not allow more AI conversations.'
       unavailable: 'Account payment is not available.'
       payment_failed: 'Unable to process payment. Please try again.'
+      card_declined: 'Your card was declined. Update your payment method and try again.'
     ai_knowledge:
       invalid_bot_id: Agent bot ID must be a positive integer
       invalid_identifier: Invalid knowledge identifier

@@ -97,4 +97,20 @@ RSpec.describe ConversationUsageWindow do
       expect(subscription.extra_ai_conversations).to eq(1)
     end
   end
+
+  describe 'auto top-up (T07)' do
+    let(:plan) { create(:billing_plan, ai_conversations_limit: 6) }
+
+    before { subscription.update!(enabled: true, stripe_customer_id: 'cus_test', auto_top_up_enabled: true) }
+
+    it 'asks for a pack once an AI reply leaves 5 or fewer AI conversations' do
+      expect { ai_reply }.to have_enqueued_job(Enterprise::Billing::AutoTopUpJob).with(account.id)
+    end
+
+    it 'asks for nothing while auto top-up is off' do
+      subscription.update!(auto_top_up_enabled: false)
+
+      expect { ai_reply }.not_to have_enqueued_job(Enterprise::Billing::AutoTopUpJob)
+    end
+  end
 end
