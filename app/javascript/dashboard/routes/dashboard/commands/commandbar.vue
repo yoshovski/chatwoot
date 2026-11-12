@@ -11,6 +11,7 @@ import { useGoToCommandHotKeys } from 'dashboard/composables/commands/useGoToCom
 import { useBulkActionsHotKeys } from 'dashboard/composables/commands/useBulkActionsHotKeys';
 import { useConversationHotKeys } from 'dashboard/composables/commands/useConversationHotKeys';
 import { useMacroHotKeys } from 'dashboard/composables/commands/useMacroHotKeys';
+import { useComposeHotKeys } from 'dashboard/composables/commands/useComposeHotKeys';
 import ConversationResolveAttributesModal from 'dashboard/components-next/ConversationWorkflow/ConversationResolveAttributesModal.vue';
 import wootConstants from 'dashboard/constants/globals';
 import {
@@ -51,6 +52,7 @@ const { goToCommandHotKeys } = useGoToCommandHotKeys(
   toRef(props, 'isPaywalled')
 );
 const { bulkActionsHotKeys } = useBulkActionsHotKeys();
+const { composeHotKeys } = useComposeHotKeys();
 const { conversationHotKeys } = useConversationHotKeys();
 const {
   macroHotKeys,
@@ -95,6 +97,7 @@ const hotKeys = computed(() => {
 
   const allActions = [
     ...dynamicSnoozeActions.value,
+    ...composeHotKeys.value,
     ...inboxHotKeys.value,
     ...goToCommandHotKeys.value,
     ...goToAppearanceHotKeys.value,

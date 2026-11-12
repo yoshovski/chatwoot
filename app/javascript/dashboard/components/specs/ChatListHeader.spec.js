@@ -25,6 +25,9 @@ const mountHeader = props =>
     },
     global: {
       mocks: { $t: key => key },
+      stubs: {
+        ComposeConversation: { template: '<div><slot name="trigger" /></div>' },
+      },
     },
   });
 
@@ -79,5 +82,17 @@ describe('ChatListHeader', () => {
     expect(wrapper.find('h1').text()).toBe('Conversations');
     expect(wrapper.find('[icon="i-lucide-pen-line"]').exists()).toBe(true);
     expect(wrapper.find('[icon="i-lucide-trash-2"]').exists()).toBe(true);
+  });
+
+  it('offers a new message button in every state', () => {
+    [
+      {},
+      { hasAppliedFilters: true },
+      { hasAppliedFilters: true, contactFilter },
+      { hasActiveFolders: true },
+    ].forEach(props => {
+      const wrapper = mountHeader(props);
+      expect(wrapper.find('[icon="i-lucide-square-pen"]').exists()).toBe(true);
+    });
   });
 });
