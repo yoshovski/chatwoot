@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_11_12_180000) do
+ActiveRecord::Schema[7.2].define(version: 2026_11_13_090000) do
   # These extensions should be enabled to support this database
   enable_extension "pg_stat_statements"
   enable_extension "pg_trgm"
@@ -1435,6 +1435,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_11_12_180000) do
     t.bigint "user_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "note"
     t.index ["account_id", "expires_at"], name: "index_extra_ai_conversation_open_lots", where: "(remaining > 0)"
     t.index ["account_id"], name: "index_extra_ai_conversation_entries_on_account_id"
     t.index ["conversation_usage_window_id"], name: "idx_on_conversation_usage_window_id_dd986b4514"

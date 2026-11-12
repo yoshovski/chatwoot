@@ -1,6 +1,6 @@
 # The ledger behind the extra AI conversation balance (T03). Each change is one row:
 #   purchase   +n  a lot that expires 12 months after purchase (Stripe reference unique, so one payment credits once)
-#   adjustment +n  a lot granted by a person (Super Admin), same expiry
+#   adjustment +n  a lot granted by a person (Super Admin, with a note saying why), same expiry
 #   usage      -1  one AI conversation beyond the plan allowance, taken from the lot that expires first
 #   expiry     -n  what was left of a lot when it expired
 # The balance is what is left of the lots that have not expired, so it never depends on the expiry job having run.
@@ -17,6 +17,8 @@ class ExtraAiConversationEntry < ApplicationRecord
   validates :reason, inclusion: { in: REASONS }
   validates :amount, numericality: { only_integer: true, other_than: 0 }
   validates :stripe_reference, uniqueness: true, allow_nil: true
+  validates :note, presence: true, if: -> { reason == 'adjustment' }
+  validates :note, length: { maximum: 255 }
 
   scope :open_lots, -> { where(reason: CREDIT_REASONS).where('remaining > 0 AND expires_at > ?', Time.current) }
 
@@ -25,14 +27,14 @@ class ExtraAiConversationEntry < ApplicationRecord
   end
 
   # Adds a lot. Called again with the same Stripe reference, it returns the first row and credits nothing.
-  def self.credit!(account:, amount:, reason: 'purchase', stripe_reference: nil, user: nil)
+  def self.credit!(account:, amount:, reason: 'purchase', stripe_reference: nil, user: nil, note: nil) # rubocop:disable Metrics/ParameterLists
     raise ArgumentError, "#{reason} does not add to the balance" unless CREDIT_REASONS.include?(reason)
 
     existing = stripe_reference && find_by(stripe_reference: stripe_reference)
     return existing if existing
 
     create!(account: account, reason: reason, amount: amount, remaining: amount, expires_at: LIFETIME.from_now,
-            stripe_reference: stripe_reference, user: user)
+            stripe_reference: stripe_reference, user: user, note: note)
   rescue ActiveRecord::RecordNotUnique
     find_by!(stripe_reference: stripe_reference)
   end

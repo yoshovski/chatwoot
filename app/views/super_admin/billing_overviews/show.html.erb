@@ -1,0 +1,70 @@
+<% content_for(:title) { t('super_admin.billing_overview.title') } %>
+
+<header class="main-content__header" role="banner">
+  <h1 class="main-content__page-title"><%= t('super_admin.billing_overview.title') %></h1>
+  <div>
+    <%= button_to t('super_admin.billing_overview.refresh'), refresh_super_admin_billing_overview_path, method: :post, class: 'button' %>
+  </div>
+</header>
+
+<section class="main-content__body">
+  <% if @overview.nil? %>
+    <div class="border border-slate-100 rounded-md p-8 bg-slate-25 text-center text-slate-600">
+      <%= t('super_admin.billing_overview.empty') %>
+    </div>
+  <% else %>
+    <% o = @overview %>
+    <p class="text-sm text-slate-600 mb-6">
+      <%= t('super_admin.billing_overview.computed_at', time: billing_time(o['computed_at'])) %>
+    </p>
+
+    <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
+      <% tiles = [
+           [t('super_admin.billing_overview.mrr'), o['mrr_cents'].presence ? o['mrr_cents'].map { |currency, cents| billing_money(cents, currency) }.join(' · ') : '0'],
+           [t('super_admin.billing_overview.paying'), o['paying_count']],
+           [t('super_admin.billing_overview.trials'), t('super_admin.billing_overview.trials_value', count: o['trials_count'], ending: o['trials_ending'].size)],
+           [t('super_admin.billing_overview.past_due'), o['past_due'].size],
+           [t('super_admin.billing_overview.near_limit'), o['near_limit'].size]
+         ] %>
+      <% tiles.each do |label, value| %>
+        <div class="border border-slate-100 rounded-md p-4">
+          <div class="text-xs font-semibold text-slate-600 uppercase"><%= label %></div>
+          <div class="text-xl font-semibold text-slate-900 mt-1" data-test="<%= label.parameterize %>"><%= value %></div>
+        </div>
+      <% end %>
+    </div>
+
+    <% account_link = ->(row) { row['account_id'] ? link_to(row['name'] || "##{row['account_id']}", "#{super_admin_account_path(row['account_id'])}#billing", class: 'text-woot-500 hover:underline') : '—' } %>
+
+    <% sections = [
+         ['trials_ending', o['trials_ending'], %w[account trial_ends_at], ->(row) { [account_link.(row), billing_time(row['trial_ends_at'])] }],
+         ['past_due_list', o['past_due'], %w[account plan revenue past_due_since], ->(row) { [account_link.(row), row['plan'] || '—', billing_money(row['revenue_cents'], row['currency']), billing_time(row['past_due_since'])] }],
+         ['near_limit_list', o['near_limit'], %w[account plan ai_used extra_left], ->(row) { [account_link.(row), row['plan'] || '—', "#{row['ai_used']} / #{row['ai_limit']}", row['extra_left']] }],
+         ['cancellations', o['cancellations'], %w[account state at reason], ->(row) { [account_link.(row), t("super_admin.billing_overview.cancel_state.#{row['state']}"), billing_time(row['at']), [row['reason'], row['feedback'], row['comment']].compact_blank.join(' · ').presence || '—'] }],
+         ['accounts', o['accounts'], %w[account plan status revenue ai_used ai_cost], ->(row) { [account_link.(row), row['plan'] || '—', row['status'], billing_money(row['revenue_cents'], row['currency']), row['ai_limit'] ? "#{row['ai_used']} / #{row['ai_limit']}" : row['ai_used'], o['ai_cost_connected'] ? billing_money(row['ai_cost_cents'], 'usd') : t('super_admin.billing_overview.not_connected')] }]
+       ] %>
+
+    <% sections.each do |key, rows, columns, cells| %>
+      <h2 class="text-base font-semibold text-slate-900 mt-8 mb-2" id="<%= key %>"><%= t("super_admin.billing_overview.sections.#{key}") %></h2>
+      <% if rows.blank? %>
+        <p class="text-sm text-slate-500"><%= t('super_admin.billing_overview.none') %></p>
+      <% else %>
+        <div class="overflow-x-auto border border-slate-100 rounded-md">
+          <table class="w-full text-left border-collapse text-sm">
+            <thead>
+              <tr class="bg-slate-50 border-b border-slate-100 text-xs font-semibold text-slate-600 uppercase">
+                <% columns.each do |column| %><th class="p-3"><%= t("super_admin.billing_overview.columns.#{column}") %></th><% end %>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100">
+              <% rows.each do |row| %>
+                <tr><% cells.(row).each do |cell| %><td class="p-3"><%= cell %></td><% end %></tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+      <% end %>
+    <% end %>
+    <p class="text-xs text-slate-500 mt-6"><%= t('super_admin.billing_overview.footnote') %></p>
+  <% end %>
+</section>

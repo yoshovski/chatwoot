@@ -856,6 +856,17 @@ Rails.application.routes.draw do
         post :reset_cache, on: :member
         post :apply_subscription_pricing, on: :member
         post :extend_subscription_period, on: :member
+        resource :billing, only: [], controller: 'account_billings' do
+          post :extend_trial
+          post :add_extra_conversations
+          post :apply_coupon
+          post :pause_ai
+          post :resume_ai
+          post :replay_event
+        end
+      end
+      resource :billing_overview, only: [:show] do
+        post :refresh
       end
       resources :billing_plans, only: [:index, :new, :create, :show, :edit, :update, :destroy] do
         post :create_stripe_prices, on: :member

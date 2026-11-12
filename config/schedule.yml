@@ -88,3 +88,9 @@ end_trials_job:
   cron: '30 3 * * *'
   class: 'EndTrialsJob'
   queue: scheduled_jobs
+
+# computes the Super Admin billing overview (MRR, trials, past due, near the limit, cancellations)
+billing_overview_snapshot_job:
+  cron: '45 3 * * *'
+  class: 'Enterprise::Billing::OverviewSnapshotJob'
+  queue: scheduled_jobs

@@ -91,6 +91,8 @@ as well as a link to its edit page.
     </div>
   </section>
 
+  <%= render partial: "billing", locals: { page: page } if ChatwootApp.enterprise? %>
+
   <%= render 'super_admin/shared/account_user_form', page: page, namespace: namespace, resource_type: 'account' %>
 
   <%= render partial: "seed_data", locals: { page: page } %>
