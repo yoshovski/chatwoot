@@ -6,8 +6,12 @@ class CaptainHome extends ApiClient {
     super('captain/home', { accountScoped: true });
   }
 
-  get({ signal } = {}) {
-    return axios.get(this.url, { signal });
+  // period: 7 or 30 days. timezoneOffset: the viewer's UTC offset in hours, so days follow their calendar.
+  get({ signal, period, timezoneOffset } = {}) {
+    return axios.get(this.url, {
+      signal,
+      params: { period, timezone_offset: timezoneOffset },
+    });
   }
 }
 

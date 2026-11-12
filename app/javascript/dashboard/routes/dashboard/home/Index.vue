@@ -12,35 +12,46 @@ import {
   FINISHED_SETTING,
   SKIPPED_SETTING,
 } from './homeSetup';
+import {
+  METRICS,
+  PERIODS,
+  dayLabels,
+  metricChange,
+  metricValue,
+  needItems,
+  statusPill,
+} from './homeView';
 
-import Button from 'dashboard/components-next/button/Button.vue';
-import EmptyState from 'dashboard/components-next/kit/EmptyState.vue';
 import ListRow from 'dashboard/components-next/kit/ListRow.vue';
-import MetricTile from 'dashboard/components-next/kit/MetricTile.vue';
 import PageFrame from 'dashboard/components-next/kit/PageFrame.vue';
 import PageHeader from 'dashboard/components-next/kit/PageHeader.vue';
 import SectionCard from 'dashboard/components-next/kit/SectionCard.vue';
 import StatusPill from 'dashboard/components-next/kit/StatusPill.vue';
+import DaysCard from './components/DaysCard.vue';
+import LeadsCard from './components/LeadsCard.vue';
+import MetricStrip from './components/MetricStrip.vue';
+import NeedsCard from './components/NeedsCard.vue';
 import SetupProgressCard from './components/SetupProgressCard.vue';
+import TopicsCard from './components/TopicsCard.vue';
 import UsageCard from './components/UsageCard.vue';
 
 const STATUS_DONE = 'done';
+const TIMEZONE_OFFSET = -new Date().getTimezoneOffset() / 60;
 
-const { t } = useI18n();
+const { t, locale } = useI18n();
 const router = useRouter();
 const { isAdmin } = useAdmin();
 const { uiSettings, updateUISettings } = useUISettings();
 const currentUser = useMapGetter('getCurrentUser');
 const { run, isPending } = useAbortableRequest();
 
+const period = ref(PERIODS[0]);
 const summary = ref(null);
 const hasError = ref(false);
-const isLoading = computed(() => isPending.value || !summary.value);
+const isLoading = computed(
+  () => isPending.value || (!summary.value && !hasError.value)
+);
 
-const captainRoute = navigationPath => ({
-  name: 'captain_assistants_index',
-  params: { navigationPath },
-});
 const stepRoute = step =>
   step.guided
     ? { name: 'account_home_setup', params: { step: step.key } }
@@ -66,72 +77,51 @@ const unskipStep = key =>
     [SKIPPED_SETTING]: skippedSteps.value.filter(step => step !== key),
   });
 
-const value = path =>
-  path.split('.').reduce((obj, key) => obj?.[key], summary.value) ?? 0;
+const agentStatus = computed(() =>
+  summary.value ? statusPill(summary.value.status, t) : null
+);
 
-const agentStatus = computed(() => {
-  if (summary.value?.usage?.plan?.ai_replies_paused) {
-    return { status: 'paused', label: t('HOME.V2.STATUS_PILL.PAUSED') };
-  }
-  return summary.value?.setup?.agent_inbox
-    ? { status: 'live', label: t('HOME.V2.STATUS_PILL.LIVE') }
-    : { status: 'attention', label: t('HOME.V2.STATUS_PILL.SETUP') };
-});
+const subtitle = computed(() =>
+  summary.value?.site
+    ? t('HOME.V2.SUBTITLE_SITE', {
+        site: summary.value.site,
+        days: period.value,
+      })
+    : t('HOME.V2.SUBTITLE', { days: period.value })
+);
 
-const metrics = computed(() => [
-  {
-    key: 'ai_conversations',
-    icon: 'i-lucide-bot',
-    tone: 'blue',
-    label: t('HOME.V2.METRICS.AI_CONVERSATIONS'),
-    value: value('usage.ai_conversations.used'),
-  },
-  {
-    key: 'resolved',
-    icon: 'i-lucide-circle-check-big',
-    tone: 'teal',
-    label: t('HOME.V2.METRICS.RESOLVED'),
-    value: `${value('performance.ai_resolution_rate')}%`,
-  },
-  {
-    key: 'product_answers',
-    icon: 'i-lucide-shopping-bag',
-    tone: 'amber',
-    label: t('HOME.V2.METRICS.PRODUCT_ANSWERS'),
-    value: value('performance.sales_assisted'),
-  },
-  {
-    key: 'leads',
-    icon: 'i-lucide-user-round-plus',
-    tone: 'violet',
-    label: t('HOME.V2.METRICS.LEADS'),
-    value: value('performance.leads_captured'),
-  },
-]);
+const metricLabels = computed(() => ({
+  ai_conversations: t('HOME.V2.METRICS.AI_CONVERSATIONS'),
+  resolved: t('HOME.V2.METRICS.RESOLVED'),
+  handed: t('HOME.V2.METRICS.HANDED'),
+  rating: t('HOME.V2.METRICS.RATING'),
+  product_answers: t('HOME.V2.METRICS.PRODUCT_ANSWERS'),
+}));
 
-const needs = computed(() => {
-  const unassigned = value('quick_actions.unassigned_conversations');
-  const unanswered = value('quick_actions.unanswered_questions');
-  return [
-    unassigned > 0 && {
-      key: 'unassigned',
-      tone: 'amber',
-      title: t('HOME.V2.NEEDS.UNASSIGNED', { count: unassigned }, unassigned),
-      hint: t('HOME.V2.NEEDS.UNASSIGNED_HINT'),
-      action: t('HOME.V2.NEEDS.UNASSIGNED_ACTION'),
-      to: { name: 'home' },
-      primary: true,
-    },
-    unanswered > 0 && {
-      key: 'unanswered',
-      tone: 'teal',
-      title: t('HOME.V2.NEEDS.UNANSWERED', { count: unanswered }, unanswered),
-      hint: t('HOME.V2.NEEDS.UNANSWERED_HINT'),
-      action: t('HOME.V2.NEEDS.UNANSWERED_ACTION'),
-      to: captainRoute('captain_assistants_faq_suggestions'),
-    },
-  ].filter(Boolean);
-});
+const metrics = computed(() =>
+  METRICS.map(config => {
+    const metric = summary.value?.metrics?.[config.key] || {
+      value: null,
+      previous: null,
+      points: [],
+    };
+    const change = metricChange(config, metric, t);
+    return {
+      key: config.key,
+      tone: config.tone,
+      label: metricLabels.value[config.key],
+      value: metricValue(config, metric.value),
+      change: change.text,
+      changeTone: change.tone,
+      points: metric.points.filter(point => point !== null),
+    };
+  })
+);
+
+const needs = computed(() => needItems(summary.value?.needs || [], t));
+const dayBars = computed(() =>
+  dayLabels(summary.value?.days || [], period.value, locale.value)
+);
 
 const projectStatus = computed(() => {
   const project = summary.value?.project_status || {};
@@ -181,12 +171,30 @@ const projectStatus = computed(() => {
 const loadSummary = async () => {
   hasError.value = false;
   try {
-    const response = await run(signal => CaptainHomeAPI.get({ signal }));
+    const response = await run(signal =>
+      CaptainHomeAPI.get({
+        signal,
+        period: period.value,
+        timezoneOffset: TIMEZONE_OFFSET,
+      })
+    );
     if (response) summary.value = response.data;
   } catch {
     hasError.value = true;
   }
 };
+
+const selectPeriod = option => {
+  if (option === period.value) return;
+  period.value = option;
+  loadSummary();
+};
+
+const openConversation = lead =>
+  router.push({
+    name: 'inbox_conversation',
+    params: { conversation_id: lead.id },
+  });
 
 onMounted(loadSummary);
 </script>
@@ -201,10 +209,32 @@ onMounted(loadSummary);
             name: currentUser.available_name || currentUser.name,
           })
         "
-        :description="$t('HOME.V2.SUBTITLE')"
+        :description="subtitle"
       >
-        <template v-if="summary" #action>
+        <template #action>
+          <div
+            role="group"
+            :aria-label="$t('HOME.V2.PERIOD.LABEL')"
+            class="flex rounded-full bg-white/15 p-0.5"
+          >
+            <button
+              v-for="days in PERIODS"
+              :key="days"
+              type="button"
+              class="rounded-full px-3 py-1 text-xs font-medium"
+              :class="
+                days === period
+                  ? 'bg-white/25 text-white'
+                  : 'text-white/80 hover:bg-white/10'
+              "
+              :aria-pressed="days === period"
+              @click="selectPeriod(days)"
+            >
+              {{ $t('HOME.V2.PERIOD.DAYS', { days }) }}
+            </button>
+          </div>
           <StatusPill
+            v-if="agentStatus"
             inverted
             :status="agentStatus.status"
             :label="agentStatus.label"
@@ -213,97 +243,73 @@ onMounted(loadSummary);
       </PageHeader>
     </template>
 
-    <SectionCard v-if="hasError">
-      <EmptyState
-        tone="error"
-        icon="i-lucide-circle-alert"
-        :title="$t('HOME.ERROR')"
-      >
-        <Button
-          :label="$t('HOME.RETRY')"
-          size="sm"
-          variant="faded"
-          color="slate"
-          @click="loadSummary"
-        />
-      </EmptyState>
-    </SectionCard>
+    <SetupProgressCard
+      v-if="showSetup"
+      :progress="setupProgress"
+      :step-route="stepRoute"
+      @skip="skipStep"
+      @unskip="unskipStep"
+    />
 
-    <template v-else>
-      <SetupProgressCard
-        v-if="showSetup"
-        :progress="setupProgress"
-        :step-route="stepRoute"
-        @skip="skipStep"
-        @unskip="unskipStep"
-      />
+    <MetricStrip
+      :metrics="metrics"
+      :period="period"
+      :is-loading="isLoading"
+      :has-error="hasError"
+      @retry="loadSummary"
+    />
 
-      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <MetricTile
-          v-for="metric in metrics"
-          :key="metric.key"
-          :label="metric.label"
-          :value="metric.value"
-          :icon="metric.icon"
-          :tone="metric.tone"
+    <div class="grid grid-cols-1 gap-4 lg:grid-cols-3">
+      <div class="flex min-w-0 flex-col gap-4 lg:col-span-2">
+        <NeedsCard
+          :items="needs"
           :is-loading="isLoading"
+          :has-error="hasError"
+          @action="item => router.push(item.to)"
+          @retry="loadSummary"
         />
-      </div>
-
-      <div class="grid grid-cols-1 gap-4 lg:grid-cols-3">
-        <div class="flex flex-col gap-4 lg:col-span-2">
-          <SectionCard :title="$t('HOME.V2.NEEDS.TITLE')">
-            <div v-if="isLoading" class="flex flex-col gap-3" aria-busy="true">
-              <span
-                v-for="n in 2"
-                :key="n"
-                class="h-10 w-full animate-pulse rounded bg-n-alpha-2"
-              />
-            </div>
-            <ul
-              v-else-if="needs.length"
-              class="m-0 flex list-none flex-col divide-y divide-n-weak p-0"
-            >
-              <ListRow
-                v-for="item in needs"
-                :key="item.key"
-                :title="item.title"
-                :hint="item.hint"
-                :tone="item.tone"
-                :action-label="item.action"
-                :primary="item.primary"
-                @action="router.push(item.to)"
-              />
-            </ul>
-            <EmptyState
-              v-else
-              tone="success"
-              icon="i-lucide-circle-check-big"
-              :title="$t('HOME.V2.NEEDS.EMPTY')"
+        <LeadsCard
+          :leads="summary?.leads || []"
+          :is-loading="isLoading"
+          :has-error="hasError"
+          @open="openConversation"
+          @retry="loadSummary"
+        />
+        <SectionCard v-if="summary" :title="$t('HOME.STATUS.TITLE')">
+          <ul class="m-0 flex list-none flex-col divide-y divide-n-weak p-0">
+            <ListRow
+              v-for="item in projectStatus"
+              :key="item.key"
+              :title="item.label"
+              :tone="item.tone"
+              :meta="item.stateLabel"
+              :action-label="item.canAct ? item.stateLabel : ''"
+              @action="router.push(item.to)"
             />
-          </SectionCard>
-
-          <SectionCard :title="$t('HOME.STATUS.TITLE')">
-            <ul class="m-0 flex list-none flex-col divide-y divide-n-weak p-0">
-              <ListRow
-                v-for="item in projectStatus"
-                :key="item.key"
-                :title="item.label"
-                :tone="item.tone"
-                :meta="item.stateLabel"
-                :action-label="item.canAct ? item.stateLabel : ''"
-                @action="router.push(item.to)"
-              />
-            </ul>
-          </SectionCard>
-        </div>
-
+          </ul>
+        </SectionCard>
+      </div>
+      <div class="flex min-w-0 flex-col gap-4">
         <UsageCard
           :usage="summary?.usage"
           :is-loading="isLoading"
+          :has-error="hasError"
           :billing-route="isAdmin ? { name: 'billing_settings_index' } : null"
+          @retry="loadSummary"
+        />
+        <DaysCard
+          :days="dayBars"
+          :is-loading="isLoading"
+          :has-error="hasError"
+          @retry="loadSummary"
+        />
+        <TopicsCard
+          :topics="summary?.topics || []"
+          :is-loading="isLoading"
+          :has-error="hasError"
+          @retry="loadSummary"
         />
       </div>
-    </template>
+    </div>
   </PageFrame>
 </template>
