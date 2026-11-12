@@ -175,7 +175,32 @@
       "ENDED_HELP": "AI replies are paused. You can still receive messages and reply as an agent.",
       "CAP_REACHED": "You have used all {limit} AI conversations in your trial. New conversations go to your team; AI replies continue in conversations already started."
     },
-    "BILLING_TITLE": "Billing"
+    "BILLING_TITLE": "Billing",
+    "TOP_UP": {
+      "TITLE": "Extra AI conversations",
+      "LEFT": "{count} extra AI conversations left. They are used after your plan allowance and last 12 months.",
+      "BUY": "Add {count} conversations · {price}",
+      "NOTICE": {
+        "PAID": "Payment received. The conversations appear here within a minute.",
+        "PROCESSING": "Payment started. The conversations appear here as soon as it is confirmed.",
+        "DECLINED": "Your card was declined. Update your payment method and try again.",
+        "ERROR": "Something went wrong. Nothing was charged; please try again.",
+        "SETTINGS_ERROR": "Could not save auto top-up. Please try again."
+      },
+      "AUTO_TITLE": "Auto top-up",
+      "AUTO_HELP": "When {threshold} AI conversations are left, add {count} for {price}.",
+      "AUTO_USED": "{used} of {max} packs used this month",
+      "AUTO_MAX_LABEL": "Most packs a month",
+      "AUTO_MAX_OPTION": "At most {count} a month",
+      "AUTO_FAILED": "Auto top-up was switched off on {date} because the payment failed. Update your payment method, then turn it on again.",
+      "HISTORY": {
+        "TITLE": "History",
+        "PURCHASE": "Bought {count} conversations",
+        "ADJUSTMENT": "{count} conversations added by our team",
+        "EXPIRY": "{count} conversations expired",
+        "REMAINING": "{count} left until {date}"
+      }
+    }
   },
   "DATA_EXPORTS": {
     "TITLE": "Data exports",

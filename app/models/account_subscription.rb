@@ -7,6 +7,7 @@ class AccountSubscription < ApplicationRecord
                             trial_ends_at period_started_at period_ends_at reset_usage].freeze
   include AccountSubscriptionPlan
   include AccountSubscriptionAiAccess
+  include AccountSubscriptionTopUp
 
   belongs_to :account
   attr_accessor :reset_usage, :new_custom_payment
@@ -98,7 +99,8 @@ class AccountSubscription < ApplicationRecord
             can_change_interval: interval_change_available?,
             can_manage: stripe_customer_id.present?, custom_payment_cents: custom_payment_cents,
             custom_payment_description: custom_payment_description,
-            can_pay_customization: enabled? && custom_payment_cents.positive? && custom_payment_paid_at.blank?
+            can_pay_customization: enabled? && custom_payment_cents.positive? && custom_payment_paid_at.blank?,
+            top_up: top_up_summary
           ).merge(plan_choice_summary)
   end
 

@@ -9,6 +9,7 @@ import AddOnList from './components/AddOnList.vue';
 import BillingTabs from './components/BillingTabs.vue';
 import PlanSummary from './components/PlanSummary.vue';
 import ProductUsageCard from './components/ProductUsageCard.vue';
+import TopUpCard from './components/TopUpCard.vue';
 import TrialBanner from './components/TrialBanner.vue';
 import SubscriptionDetails from './SubscriptionDetails.vue';
 import BaseSettingsHeader from '../components/BaseSettingsHeader.vue';
@@ -158,6 +159,15 @@ const pay = async (action = 'checkout', chosenInterval = interval.value) => {
             :hint="product.hint"
           />
         </div>
+        <TopUpCard
+          v-if="
+            canManage &&
+            (billing.top_up?.available || billing.top_up?.history.length)
+          "
+          :top-up="billing.top_up"
+          :extra-left="billing.extra_left || 0"
+          @refresh="refresh()"
+        />
         <AddOnList
           v-if="billing.plan?.add_ons.length"
           :add-ons="billing.plan.add_ons"

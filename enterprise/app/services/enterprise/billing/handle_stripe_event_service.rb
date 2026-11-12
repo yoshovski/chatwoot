@@ -18,6 +18,8 @@ class Enterprise::Billing::HandleStripeEventService
 
   # replay: true skips the legacy custom_attributes path, which adds plan credits on every run.
   def perform(event:, replay: false)
+    return if Enterprise::Billing::TopUpEventService.handle(event)
+
     Enterprise::Billing::StripeEventFactsService.new(event).perform
     return if Enterprise::Billing::AccountSubscriptionSyncService.handle(event)
     return if replay

@@ -22,6 +22,15 @@ class AccountSubscriptionAPI extends ApiClient {
     return axios.post(`${this.url}/payment`);
   }
 
+  // requestId is one per click: a double submit or a retried request charges once.
+  topUp(requestId) {
+    return axios.post(`${this.url}/top_up`, { request_id: requestId });
+  }
+
+  updateTopUpSettings(settings) {
+    return axios.patch(`${this.url}/top_up_settings`, settings);
+  }
+
   portal() {
     return axios.post(`${this.url}/portal`);
   }
