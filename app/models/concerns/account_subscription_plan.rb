@@ -52,6 +52,30 @@ module AccountSubscriptionPlan
     billing_plan&.summary(self)
   end
 
+  # The plan the live Stripe subscription is billed on, matched by its price.
+  def stripe_plan
+    BillingPlan.for_stripe_price(stripe_subscription_details['price_id'])
+  end
+
+  # One licensed price, charged automatically, with no change waiting for a payment confirmation.
+  def single_price_subscription?
+    stripe_subscription_details['interval_change_supported'] == true && stripe_subscription_details['pending_update'].blank?
+  end
+
+  def plan_change_available?
+    enabled? && %w[active trialing].include?(payment_status) && single_price_subscription? && stripe_plan.present? &&
+      (!ChatwootApp.enterprise? || account.billing_provider == 'stripe')
+  end
+
+  # Billing: the plans an admin can buy (no live subscription) or move to (a subscription on a plan price).
+  def plan_choice_summary
+    plans = BillingPlan.ordered.select(&:purchasable?)
+    { plans: plans.map(&:catalog_entry),
+      can_buy_plan: ChatwootApp.enterprise? && plans.any? { |plan| checkout_available?(plan: plan) },
+      can_change_plan: ChatwootApp.enterprise? && plan_change_available?,
+      pending_plan_change: stripe_subscription_details['pending_change'] }
+  end
+
   private
 
   def finite_limit(limit)

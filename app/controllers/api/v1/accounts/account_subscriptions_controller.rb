@@ -11,11 +11,15 @@ class Api::V1::Accounts::AccountSubscriptionsController < Api::V1::Accounts::Bas
                                             can_checkout: !sync_failed && subscription.pricing_summary[:can_checkout])
   end
 
+  # plan_id picks a plan; without it, Checkout sells the price Super Admin saved on the account.
   def checkout
     return head :not_found unless ChatwootApp.enterprise?
     return head :unprocessable_entity unless %w[month year].include?(params[:interval])
 
-    render json: Enterprise::Billing::AccountCheckoutService.new(account: Current.account).checkout(interval: params[:interval])
+    plan = BillingPlan.find_by(id: params[:plan_id]) if params.key?(:plan_id)
+    return head :unprocessable_entity if params.key?(:plan_id) && plan.nil?
+
+    render json: Enterprise::Billing::AccountCheckoutService.new(account: Current.account).checkout(interval: params[:interval], plan: plan)
   rescue Enterprise::Billing::AccountCheckoutService::Unavailable
     render json: { error: I18n.t('errors.account_subscription.unavailable') }, status: :unprocessable_entity
   rescue Stripe::StripeError
@@ -27,6 +31,20 @@ class Api::V1::Accounts::AccountSubscriptionsController < Api::V1::Accounts::Bas
     return head :unprocessable_entity unless %w[month year].include?(params[:interval])
 
     render json: Enterprise::Billing::AccountIntervalChangeService.new(account: Current.account).perform(interval: params[:interval])
+  rescue Enterprise::Billing::AccountCheckoutService::Unavailable
+    render json: { error: I18n.t('errors.account_subscription.unavailable') }, status: :unprocessable_entity
+  rescue Stripe::StripeError
+    render json: { error: I18n.t('errors.account_subscription.payment_failed') }, status: :bad_gateway
+  end
+
+  def change_plan
+    return head :not_found unless ChatwootApp.enterprise?
+    return head :unprocessable_entity unless %w[month year].include?(params[:interval])
+
+    plan = BillingPlan.find_by(id: params[:plan_id])
+    return head :unprocessable_entity unless plan
+
+    render json: Enterprise::Billing::AccountPlanChangeService.new(account: Current.account).perform(plan: plan, interval: params[:interval])
   rescue Enterprise::Billing::AccountCheckoutService::Unavailable
     render json: { error: I18n.t('errors.account_subscription.unavailable') }, status: :unprocessable_entity
   rescue Stripe::StripeError

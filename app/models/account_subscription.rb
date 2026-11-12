@@ -72,15 +72,21 @@ class AccountSubscription < ApplicationRecord
     usage_summary.merge(pricing_summary)
   end
 
-  def checkout_available?
-    enabled? && monthly_price_cents.positive? && (stripe_subscription_id.blank? || %w[canceled incomplete_expired].include?(payment_status)) &&
+  # Without a plan, Checkout sells the account's own saved price (a custom deal).
+  def checkout_available?(plan: nil)
+    enabled? && (plan ? plan.purchasable? : monthly_price_cents.positive?) && !live_stripe_subscription? &&
       (!ChatwootApp.enterprise? || account.billing_provider == 'stripe')
   end
 
+  def live_stripe_subscription?
+    stripe_subscription_id.present? && %w[canceled incomplete_expired].exclude?(payment_status)
+  end
+
+  # A plan-priced subscription changes interval through change_plan instead.
   def interval_change_available?
     details = stripe_subscription_details
-    enabled? && payment_status == 'active' && monthly_price_cents.positive? && details['interval_change_supported'] == true &&
-      details.values_at('schedule', 'pending_update').all?(&:blank?) && currency == details['currency']
+    enabled? && payment_status == 'active' && monthly_price_cents.positive? && single_price_subscription? &&
+      details['schedule'].blank? && currency == details['currency'] && stripe_plan.nil?
   end
 
   def pricing_summary
@@ -93,7 +99,7 @@ class AccountSubscription < ApplicationRecord
             can_manage: stripe_customer_id.present?, custom_payment_cents: custom_payment_cents,
             custom_payment_description: custom_payment_description,
             can_pay_customization: enabled? && custom_payment_cents.positive? && custom_payment_paid_at.blank?
-          )
+          ).merge(plan_choice_summary)
   end
 
   def daily_usage

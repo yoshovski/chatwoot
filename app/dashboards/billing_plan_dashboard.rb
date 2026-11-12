@@ -19,6 +19,7 @@ class BillingPlanDashboard < Administrate::BaseDashboard
     inboxes_limit: Field::Number,
     documents_limit: Field::Number,
     features: BillingPlanFeaturesField,
+    stripe_product_id: BillingPlanStripeField,
     account_subscriptions: CountField,
     created_at: Field::DateTime,
     updated_at: Field::DateTime
@@ -27,7 +28,7 @@ class BillingPlanDashboard < Administrate::BaseDashboard
   COLLECTION_ATTRIBUTES = %i[name active signup_default monthly_price currency account_subscriptions].freeze
   FORM_ATTRIBUTES = %i[name description active position currency monthly_price ai_conversations_limit trial_ai_conversations_limit
                        trial_days signup_default after_trial_plan conversations_limit agents_limit inboxes_limit documents_limit features].freeze
-  SHOW_PAGE_ATTRIBUTES = (FORM_ATTRIBUTES + %i[account_subscriptions]).freeze
+  SHOW_PAGE_ATTRIBUTES = (FORM_ATTRIBUTES + %i[stripe_product_id account_subscriptions]).freeze
 
   def display_resource(plan)
     plan.name

@@ -33,6 +33,33 @@ class BillingPlan < ApplicationRecord
   attr_writer :feature_settings, :add_on_prices
 
   before_validation :apply_feature_settings
+  # Stripe prices are fixed amounts. A new price or currency needs new Stripe prices ("Create in Stripe" again);
+  # subscribers stay on the price they bought until they change plan.
+  before_save :clear_stripe_prices, if: -> { will_save_change_to_monthly_price_cents? || will_save_change_to_currency? }
+
+  # Annual billing is two months free.
+  def annual_price_cents
+    monthly_price_cents * 10
+  end
+
+  # Self-serve checkout and plan changes need both Stripe prices (Super Admin "Create in Stripe").
+  def purchasable?
+    active? && monthly_price_cents.positive? && stripe_monthly_price_id.present? && stripe_annual_price_id.present?
+  end
+
+  def stripe_price_id(interval)
+    interval == 'year' ? stripe_annual_price_id : stripe_monthly_price_id
+  end
+
+  def self.for_stripe_price(price_id)
+    find_by(stripe_monthly_price_id: price_id) || find_by(stripe_annual_price_id: price_id)
+  end
+
+  # What Billing offers: the plans an admin can buy or move to.
+  def catalog_entry
+    slice(:id, :name, :description, :currency, :monthly_price_cents, :annual_price_cents, :ai_conversations_limit,
+          :conversations_limit, :agents_limit, :inboxes_limit, :documents_limit, :features).symbolize_keys
+  end
 
   def monthly_price
     format('%<units>d.%<fraction>02d', units: monthly_price_cents / 100, fraction: monthly_price_cents % 100)
@@ -54,7 +81,7 @@ class BillingPlan < ApplicationRecord
   end
 
   def summary(subscription)
-    slice(:name, :description, :currency, :monthly_price_cents, :features).symbolize_keys.merge(
+    slice(:id, :name, :description, :currency, :monthly_price_cents, :annual_price_cents, :features).symbolize_keys.merge(
       add_ons: add_ons.map { |key, price| { key: key, price_cents: price, active: subscription.add_ons.include?(key) } }
     )
   end
@@ -68,6 +95,11 @@ class BillingPlan < ApplicationRecord
     prices = @add_on_prices.to_h.stringify_keys
     self.features = FEATURES.select { |key| settings[key] == 'included' }
     self.add_ons = FEATURES.select { |key| settings[key] == 'add_on' }.index_with { |key| price_cents(prices[key]) }
+  end
+
+  def clear_stripe_prices
+    self.stripe_monthly_price_id = nil
+    self.stripe_annual_price_id = nil
   end
 
   def price_cents(value)
