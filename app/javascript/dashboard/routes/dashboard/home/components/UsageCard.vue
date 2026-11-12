@@ -5,12 +5,16 @@ import Icon from 'dashboard/components-next/icon/Icon.vue';
 import SectionCard from 'dashboard/components-next/kit/SectionCard.vue';
 import UsageMeter from 'dashboard/components-next/kit/UsageMeter.vue';
 import { aiPauseReasonText } from '../../settings/billing/aiPauseReason';
+import CardError from './CardError.vue';
 
 const props = defineProps({
   usage: { type: Object, default: null },
   isLoading: { type: Boolean, default: false },
+  hasError: { type: Boolean, default: false },
   billingRoute: { type: Object, default: null },
 });
+
+const emit = defineEmits(['retry']);
 
 const { t, locale } = useI18n();
 
@@ -59,7 +63,13 @@ const meters = computed(() => {
       'ai',
       t('HOME.USAGE.AI_CONVERSATIONS'),
       ai,
-      t('HOME.USAGE.RESETS', { date: formatDate(plan.value.quota_resets_at) })
+      ai.forecast_date
+        ? t('HOME.V2.USAGE.FORECAST', {
+            date: formatDate(Date.parse(ai.forecast_date) / 1000),
+          })
+        : t('HOME.USAGE.RESETS', {
+            date: formatDate(plan.value.quota_resets_at),
+          })
     ),
     meter('agents', t('HOME.USAGE.SEATS'), agents),
     meter('inboxes', t('HOME.USAGE.INBOXES'), inboxes),
@@ -81,6 +91,7 @@ const meters = computed(() => {
         class="h-8 w-full animate-pulse rounded bg-n-alpha-2"
       />
     </div>
+    <CardError v-else-if="hasError" @retry="emit('retry')" />
     <template v-else>
       <div
         v-if="planBadge || plan.ai_replies_paused"

@@ -32,7 +32,7 @@ defineProps({
         {{ description }}
       </p>
     </div>
-    <div v-if="$slots.action" class="flex shrink-0 items-center gap-2">
+    <div v-if="$slots.action" class="flex min-w-0 flex-wrap items-center gap-2">
       <slot name="action" />
     </div>
   </header>

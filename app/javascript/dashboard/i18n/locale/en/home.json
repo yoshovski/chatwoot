@@ -39,20 +39,6 @@
       "SKIPPED": "Skipped",
       "UNDO": "Undo"
     },
-    "QUICK_ACTIONS": {
-      "TITLE": "Needs attention",
-      "UNASSIGNED": "Unassigned chats",
-      "UNANSWERED": "Unanswered questions",
-      "LIVE_VISITORS": "Visitors online"
-    },
-    "PERFORMANCE": {
-      "TITLE": "Performance",
-      "LINK": "Overview",
-      "WINDOW": "Last 7 days",
-      "AI_RESOLUTION": "Resolved by AI",
-      "SALES_ASSISTED": "Sales assisted",
-      "LEADS": "Leads captured"
-    },
     "STATUS": {
       "TITLE": "Project status",
       "WIDGET": "Chat widget",
@@ -155,28 +141,77 @@
       }
     },
     "V2": {
-      "SUBTITLE": "Here is how your AI agent did in the last 7 days.",
+      "SUBTITLE": "Here is how your AI agent did in the last {days} days.",
       "STATUS_PILL": {
         "LIVE": "AI agent is live",
+        "LEARNING": "AI agent is learning",
         "PAUSED": "AI agent is paused",
-        "SETUP": "AI agent is not live yet"
+        "LIMIT": "AI limit reached",
+        "ATTENTION": "AI agent needs you"
       },
       "METRICS": {
         "AI_CONVERSATIONS": "AI conversations",
         "RESOLVED": "Solved by AI",
-        "PRODUCT_ANSWERS": "Product answers",
-        "LEADS": "New leads"
+        "HANDED": "Handed to team",
+        "RATING": "Customer rating",
+        "PRODUCT_ANSWERS": "Product answers"
       },
       "NEEDS": {
         "TITLE": "Needs you",
+        "TITLE_COUNT": "Needs you · {count}",
         "EMPTY": "Nothing needs you right now.",
-        "UNASSIGNED": "{count} chat is waiting for a person | {count} chats are waiting for a person",
-        "UNASSIGNED_HINT": "Nobody is assigned yet",
-        "UNASSIGNED_ACTION": "Open",
-        "UNANSWERED": "{count} question your agent couldn't answer | {count} questions your agent couldn't answer",
-        "UNANSWERED_HINT": "Add an answer once and it's used from then on",
-        "UNANSWERED_ACTION": "Review"
-      }
+        "SOMEONE": "A customer",
+        "HANDOFF": "{name} is waiting for a person",
+        "HANDOFF_HINT": "{inbox} · waiting since {time}",
+        "REPLY": "Reply",
+        "GAP": "“{question}”",
+        "GAP_HINT": "Asked in {count} conversation · no answer in your knowledge | Asked in {count} conversations · no answer in your knowledge",
+        "ADD_ANSWER": "Add answer",
+        "CONNECTION": "{name} is not connected",
+        "FAILED_HINT": "Failed {time}",
+        "FIX": "Fix",
+        "FOLLOW_UP_MESSAGE": "A follow-up message could not be sent",
+        "FOLLOW_UP_EMAIL": "A follow-up email could not be sent",
+        "CONVERSATION_HINT": "Conversation #{id} · {time}",
+        "OPEN": "Open",
+        "SYNC": "{name} could not be read",
+        "SYNC_HINT": "Last try {time}",
+        "CHANNEL": "{name} lost its connection",
+        "CHANNEL_HINT": "Reconnect it to keep getting messages",
+        "RECONNECT": "Reconnect"
+      },
+      "DAYS": {
+        "TITLE": "Conversations per day",
+        "AI": "AI agent",
+        "TEAM": "Your team",
+        "EMPTY": "No conversations in this period yet."
+      },
+      "TOPICS": {
+        "TITLE": "What customers asked about",
+        "EMPTY": "Add labels to your conversations to see the topics here."
+      },
+      "USAGE": {
+        "FORECAST": "At this pace you reach the limit on {date}"
+      },
+      "SUBTITLE_SITE": "Here is how your AI agent did on {site} in the last {days} days.",
+      "PERIOD": {
+        "LABEL": "Period",
+        "DAYS": "{days} days"
+      },
+      "CHANGE": {
+        "UP": "▲ {amount}",
+        "DOWN": "▼ {amount}",
+        "SAME": "No change",
+        "COMPARED": "Compared with the {days} days before",
+        "PERCENT": "{amount}%",
+        "POINTS": "{amount} point | {amount} points"
+      },
+      "LEADS": {
+        "TITLE": "New leads",
+        "EMPTY": "No leads yet. Your AI agent collects them when a customer leaves their details.",
+        "OPEN": "Open"
+      },
+      "CARD_ERROR": "This could not be loaded."
     }
   }
 }
