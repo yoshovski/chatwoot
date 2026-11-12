@@ -214,12 +214,11 @@ class Captain::AssistantStatsBuilder
 
   def attention_stats_projections(assistant_id, account_id)
     failed_sync = Captain::Document.sync_statuses['failed']
-    open_gap = Captain::KnowledgeGap.statuses['open']
 
     [
       Arel.sql("((SELECT COUNT(*) FROM captain_documents WHERE assistant_id = #{assistant_id} AND sync_status = #{failed_sync}) + " \
                "(SELECT COUNT(*) FROM captain_website_sources WHERE assistant_id = #{assistant_id} AND status = 'failed'))"),
-      Arel.sql("(SELECT COUNT(*) FROM captain_knowledge_gaps WHERE assistant_id = #{assistant_id} AND status = #{open_gap})"),
+      Arel.sql("(#{Captain::KnowledgeGap.unanswered.where(assistant_id: assistant_id).select('COUNT(*)').to_sql})"),
       Arel.sql("((SELECT COUNT(*) FROM captain_custom_tools WHERE account_id = #{account_id} AND enabled = FALSE) + " \
                "(SELECT COUNT(*) FROM captain_mcp_servers WHERE account_id = #{account_id} AND status = 'failed'))"),
       Arel.sql("(EXISTS(SELECT 1 FROM agent_sessions WHERE assistant_id = #{assistant_id}) OR " \

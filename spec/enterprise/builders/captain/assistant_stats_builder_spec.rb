@@ -283,7 +283,9 @@ RSpec.describe Captain::AssistantStatsBuilder do
         question: 'Do you ship to Iceland?',
         normalized_question: 'do you ship to iceland?',
         last_seen_at: Time.current,
-        status: :open
+        status: :open,
+        kind: :knowledge,
+        occurrences_count: 2
       )
       create(:captain_custom_tool, account: account, enabled: false)
       assistant.update!(config: assistant.config.merge('tested' => true))

@@ -162,6 +162,9 @@ Rails.application.routes.draw do
             resources :knowledge_gaps, only: [:index, :show] do
               post :answer, on: :member
               post :dismiss, on: :member
+              get :topics, on: :collection
+              get :action_requests, on: :collection
+              post :bulk_dismiss, on: :collection
             end
             resource :home, only: [:show], controller: 'home'
             resource :guided_setup, only: [:show], controller: 'guided_setup' do

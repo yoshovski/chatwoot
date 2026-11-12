@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_11_13_090000) do
+ActiveRecord::Schema[7.2].define(version: 2026_11_13_120000) do
   # These extensions should be enabled to support this database
   enable_extension "pg_stat_statements"
   enable_extension "pg_trgm"
@@ -724,6 +724,9 @@ ActiveRecord::Schema[7.2].define(version: 2026_11_13_090000) do
     t.string "reason", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "question", limit: 500
+    t.string "normalized_question"
+    t.index ["account_id", "normalized_question"], name: "idx_captain_knowledge_gap_occurrences_text"
     t.index ["account_id"], name: "index_captain_knowledge_gap_occurrences_on_account_id"
     t.index ["conversation_id"], name: "index_captain_knowledge_gap_occurrences_on_conversation_id"
     t.index ["knowledge_gap_id", "conversation_id"], name: "idx_captain_knowledge_gap_occurrences_unique", unique: true
@@ -740,8 +743,16 @@ ActiveRecord::Schema[7.2].define(version: 2026_11_13_090000) do
     t.bigint "response_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.integer "kind", default: 0, null: false
+    t.string "intent", limit: 40
+    t.string "topic", limit: 120
+    t.string "language", limit: 10
+    t.text "draft_answer"
+    t.datetime "classified_at"
+    t.vector "embedding", limit: 1536
     t.index ["account_id", "assistant_id", "status", "last_seen_at"], name: "idx_captain_knowledge_gaps_listing"
     t.index ["account_id"], name: "index_captain_knowledge_gaps_on_account_id"
+    t.index ["assistant_id", "kind", "status"], name: "idx_captain_knowledge_gaps_kind"
     t.index ["assistant_id", "normalized_question"], name: "idx_on_assistant_id_normalized_question_8e596bcf5e", unique: true
   end
 
