@@ -2,17 +2,20 @@
 #
 # Table name: captain_knowledge_gap_occurrences
 #
-#  id               :bigint           not null, primary key
-#  reason           :string           not null
-#  created_at       :datetime         not null
-#  updated_at       :datetime         not null
-#  account_id       :bigint           not null
-#  conversation_id  :bigint           not null
-#  knowledge_gap_id :bigint           not null
-#  message_id       :bigint
+#  id                  :bigint           not null, primary key
+#  normalized_question :string
+#  question            :string(500)
+#  reason              :string           not null
+#  created_at          :datetime         not null
+#  updated_at          :datetime         not null
+#  account_id          :bigint           not null
+#  conversation_id     :bigint           not null
+#  knowledge_gap_id    :bigint           not null
+#  message_id          :bigint
 #
 # Indexes
 #
+#  idx_captain_knowledge_gap_occurrences_text                  (account_id,normalized_question)
 #  idx_captain_knowledge_gap_occurrences_unique                (knowledge_gap_id,conversation_id) UNIQUE
 #  index_captain_knowledge_gap_occurrences_on_account_id       (account_id)
 #  index_captain_knowledge_gap_occurrences_on_conversation_id  (conversation_id)

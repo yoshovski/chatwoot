@@ -14,4 +14,16 @@ class Captain::KnowledgeGapPolicy < ApplicationPolicy
   def dismiss?
     true
   end
+
+  def topics?
+    true
+  end
+
+  def action_requests?
+    true
+  end
+
+  def bulk_dismiss?
+    true
+  end
 end

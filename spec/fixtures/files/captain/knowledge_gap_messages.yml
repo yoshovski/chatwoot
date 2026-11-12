@@ -1,0 +1,118 @@
+# 30 customer messages the AI could not answer, as a drone and farm equipment store sees them, and the groups they
+# should end up in. The spec stubs the model with kind/question/topic/intent below; `rake captain:knowledge_gaps:eval`
+# sends the same messages to the real fast model and compares.
+generator_t50:
+  kind: knowledge
+  topic: Generator compatibility
+  question: Can your generator power a DJI T50?
+  messages:
+    - I have a dji t50 and the generator I bought doesn't keep up, want to make sure the generator you are selling will
+    - is the 12kw generator enough to charge t50 batteries continuously?
+    - will your generator keep up with a DJI T50 in the field
+shipping_spain:
+  kind: knowledge
+  topic: Shipping
+  question: Do you ship to Spain?
+  messages:
+    - do you ship to spain
+    - Can I get delivery to Madrid?
+    - shipping to Spain possible??
+delivery_time:
+  kind: knowledge
+  topic: Shipping
+  question: How long does delivery take?
+  messages:
+    - how long does delivery take
+    - if I order today how many days until it arrives
+battery_warranty:
+  kind: knowledge
+  topic: Warranty
+  question: What warranty do the batteries have?
+  messages:
+    - what warranty do batteries have
+    - is the battery covered by warranty and for how long?
+    - Hi! do the flight batteries come with a guarantee
+t40_tank:
+  kind: knowledge
+  topic: Spray tank capacity
+  question: What is the spray tank capacity of the DJI T40?
+  messages:
+    - what is the tank capacity of the T40
+    - how many liters does the t40 spray tank hold
+invoice_payment:
+  kind: knowledge
+  topic: Zahlungsarten
+  question: Kann ich auf Rechnung bezahlen?
+  language: de
+  messages:
+    - Kann ich auf Rechnung bezahlen?
+    - Bietet ihr Kauf auf Rechnung an
+financing:
+  kind: knowledge
+  topic: Payment options
+  question: Do you offer financing?
+  messages:
+    - do you offer financing
+    - can I pay in monthly installments?
+order_status:
+  kind: action_request
+  intent: order_status
+  topic: Order status
+  question: Where is my order?
+  messages:
+    - can you check where is my order
+    - where is my package, order 1043
+    - my order hasn't arrived yet, can you send me the tracking
+cancel:
+  kind: action_request
+  intent: cancel
+  topic: Cancellations
+  question: Cancel my order
+  messages:
+    - please cancel my order 2211
+    - I want to cancel the order I placed yesterday
+return:
+  kind: action_request
+  intent: return
+  topic: Returns
+  question: Return a product
+  messages:
+    - how do I return the battery I bought, it's faulty
+    - I want to send back the charger I got last week
+booking:
+  kind: action_request
+  intent: booking
+  topic: Demo flights
+  question: Book a demo flight
+  messages:
+    - can I book a demo flight next week
+unanswered_emails:
+  kind: personal
+  topic: Complaints
+  question: Customer's emails were not answered
+  messages:
+    - my name is Jan and I emailed you twice with no answer
+case_handling:
+  kind: personal
+  topic: Complaints
+  question: Customer is unhappy with how their case was handled
+  messages:
+    - I'm really unhappy with how my case was handled
+hello:
+  kind: off_topic
+  topic: Greetings
+  question: Greeting
+  messages:
+    - hello??
+weather:
+  kind: off_topic
+  topic: Unrelated
+  question: Weather today
+  messages:
+    - what's the weather today
+laugh:
+  kind: off_topic
+  topic: Unrelated
+  question: Laughter
+  messages:
+    - lol

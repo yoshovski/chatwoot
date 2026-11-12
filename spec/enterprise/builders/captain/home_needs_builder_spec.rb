@@ -15,7 +15,7 @@ RSpec.describe Captain::HomeNeedsBuilder do
 
   def gap(question, count)
     Captain::KnowledgeGap.create!(account: account, assistant: assistant, question: question, normalized_question: question.downcase,
-                                  occurrences_count: count, last_seen_at: Time.current)
+                                  occurrences_count: count, last_seen_at: Time.current, kind: :knowledge)
   end
 
   it 'is empty for a new account' do

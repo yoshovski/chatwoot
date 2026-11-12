@@ -53,9 +53,9 @@ class Captain::HomeNeedsBuilder
     end
   end
 
-  # The questions the AI agent could not answer, asked most often first.
+  # The rewritten questions in the Unanswered list (KnowledgeGap.unanswered), asked most often first.
   def knowledge_gaps
-    Captain::KnowledgeGapFinder.new(user, account).perform.open.reorder(occurrences_count: :desc, last_seen_at: :desc).limit(LIMIT)
+    Captain::KnowledgeGapFinder.new(user, account).perform.unanswered.reorder(occurrences_count: :desc, last_seen_at: :desc).limit(LIMIT)
                                .map do |gap|
       { key: 'gap', id: gap.id, assistant_id: gap.assistant_id, question: gap.question, count: gap.occurrences_count,
         at: gap.last_seen_at.to_i }

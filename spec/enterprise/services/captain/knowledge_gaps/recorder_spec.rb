@@ -40,6 +40,23 @@ RSpec.describe Captain::KnowledgeGaps::Recorder do
     expect(gap.reload.status).to eq('open')
   end
 
+  it 'keeps the raw text on the occurrence and queues the classification' do
+    gap = nil
+    expect { gap = record('Do you ship to Spain?', conversation: conversation) }
+      .to have_enqueued_job(Captain::KnowledgeGaps::ClassifyJob)
+
+    expect(gap.occurrences.first).to have_attributes(question: 'Do you ship to Spain?', normalized_question: 'do ship to spain')
+  end
+
+  it 'keeps the rewritten question of a classified gap' do
+    gap = record('Do you ship to Spain?', conversation: conversation)
+    gap.update!(kind: :knowledge, question: 'Do you deliver to Spain?')
+
+    expect { record('do you ship to spain', conversation: other_conversation) }
+      .not_to have_enqueued_job(Captain::KnowledgeGaps::ClassifyJob)
+    expect(gap.reload).to have_attributes(question: 'Do you deliver to Spain?', occurrences_count: 2)
+  end
+
   it 'skips blank questions' do
     expect(record('  ?! ', conversation: conversation)).to be_nil
     expect(assistant.knowledge_gaps).to be_empty

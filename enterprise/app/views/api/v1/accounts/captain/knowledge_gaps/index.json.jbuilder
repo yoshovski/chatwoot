@@ -1,6 +1,7 @@
 json.payload do
   json.array! @gaps do |gap|
     json.partial! 'api/v1/models/captain/knowledge_gap', formats: [:json], resource: gap
+    json.examples @examples.fetch(gap.id, [])
     json.reasons do
       Captain::KnowledgeGapOccurrence::REASONS.each do |reason|
         json.set! reason, @reason_counts.fetch([gap.id, reason], 0)

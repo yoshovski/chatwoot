@@ -1,6 +1,8 @@
 class CaptainListener < BaseListener
   include ::Events::Types
 
+  DRAFT_ANSWER_DELAY = 2.minutes
+
   def message_created(event)
     message = event.data[:message]
     return if message.blank?
@@ -11,6 +13,7 @@ class CaptainListener < BaseListener
 
     cancel_scheduled_actions(message.conversation, 'human_message')
     ownership_service(message.conversation).record_human_takeover!
+    draft_knowledge_gap_answers(message.conversation)
   end
 
   def message_updated(event)
@@ -81,6 +84,14 @@ class CaptainListener < BaseListener
   end
 
   private
+
+  # A person replied: once they had a moment to finish, turn the reply into a draft answer for the open knowledge
+  # gaps this conversation raised (Captain::KnowledgeGaps::DraftAnswer).
+  def draft_knowledge_gap_answers(conversation)
+    gaps = Captain::KnowledgeGap.knowledge.open.where(draft_answer: nil)
+                                .where(id: Captain::KnowledgeGapOccurrence.where(conversation_id: conversation.id).select(:knowledge_gap_id))
+    gaps.each { |gap| Captain::KnowledgeGaps::DraftAnswerJob.set(wait: DRAFT_ANSWER_DELAY).perform_later(gap) }
+  end
 
   def handle_csat_update(message)
     response = CsatSurveyResponse.find_by(message: message)
