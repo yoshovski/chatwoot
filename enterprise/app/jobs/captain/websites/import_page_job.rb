@@ -20,6 +20,7 @@ class Captain::Websites::ImportPageJob < ApplicationJob
     return unless selected?(document)
 
     persist_result(document, result)
+    Captain::Onboarding::QuickStartPages.new(source).retire_unselected
   rescue TemporaryFetchError, ActiveRecord::RecordNotFound
     raise
   rescue StandardError
@@ -59,8 +60,9 @@ class Captain::Websites::ImportPageJob < ApplicationJob
   end
 
   def store(document, result, content, fingerprint, minhash)
-    document.metadata = document.metadata.merge('page_faqs' => result.faqs || [], 'page_text_fingerprint' => fingerprint,
-                                                'page_minhash' => minhash)
+    # The full import replaces a quick-start copy of the page.
+    document.metadata = document.metadata.except('quick_start')
+                                .merge('page_faqs' => result.faqs || [], 'page_text_fingerprint' => fingerprint, 'page_minhash' => minhash)
     document.update!(name: result.title.presence || document.name, content: content, status: :available,
                      sync_status: :synced, last_synced_at: Time.current, last_sync_attempted_at: Time.current, last_sync_error_code: nil)
   end
