@@ -16,6 +16,10 @@ module AccountSubscriptionSettings
     !ChatwootApp.chatwoot_cloud?
   end
 
+  def conversations_limit_reached?
+    account_subscription.present? && account_subscription.conversations_limit_reached?
+  end
+
   # An account without a subscription row is treated as a new, unconfigured manual one: no plan, so no AI.
   def ai_reply_allowed?(conversation = nil)
     (account_subscription || AccountSubscription.new(account: self)).ai_reply_allowed?(conversation)

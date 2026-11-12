@@ -2,7 +2,7 @@
 
 class AccountBuilder
   include CustomExceptions::Account
-  pattr_initialize [:account_name, :email!, :confirmed, :user, :user_full_name, :user_password, :super_admin, :locale]
+  pattr_initialize [:account_name, :email!, :confirmed, :user, :user_full_name, :user_password, :super_admin, :locale, :signup]
 
   def perform
     if @user.nil?
@@ -11,6 +11,7 @@ class AccountBuilder
     end
     ActiveRecord::Base.transaction do
       @account = create_account
+      start_signup_trial if @signup
       @user = create_and_link_user
     end
     [@user, @account]
@@ -50,6 +51,14 @@ class AccountBuilder
       custom_attributes: { 'onboarding_step' => 'account_details' }
     )
     Current.account = @account
+  end
+
+  # Public signups start on the signup plan's trial; EndTrialsJob moves an unpaid one to the plan after it.
+  def start_signup_trial
+    plan = BillingPlan.for_signup
+    return if plan.nil?
+
+    @account.create_account_subscription!(billing_plan: plan, trial_enabled: true)
   end
 
   def create_and_link_user

@@ -18,7 +18,7 @@ class Api::V2::AccountsController < Api::BaseController
       email: account_params[:email],
       user_password: account_params[:password],
       locale: account_params[:locale],
-      user: current_user
+      user: current_user, signup: current_user.nil?
     ).perform
 
     fetch_account_and_user_info

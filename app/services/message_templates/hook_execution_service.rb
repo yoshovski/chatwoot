@@ -14,6 +14,7 @@ class MessageTemplates::HookExecutionService
   delegate :contact, to: :conversation
 
   def trigger_templates
+    ::MessageTemplates::Template::OverConversationsLimit.new(conversation: conversation).perform if should_send_over_conversations_limit?
     ::MessageTemplates::Template::OutOfOffice.new(conversation: conversation).perform if should_send_out_of_office_message?
     ::MessageTemplates::Template::Greeting.new(conversation: conversation).perform if should_send_greeting?
     ::MessageTemplates::Template::EmailCollect.new(conversation: conversation).perform if inbox.enable_email_collect && should_send_email_collect?
@@ -30,6 +31,11 @@ class MessageTemplates::HookExecutionService
     return false if conversation.messages.outgoing.where(private: false).exists?(['created_at > ?', 5.minutes.ago])
 
     inbox.out_of_office? && conversation.messages.today.template.empty? && inbox.out_of_office_message.present?
+  end
+
+  # The account is over its plan's conversation limit (Free): tell the visitor the team replies by email.
+  def should_send_over_conversations_limit?
+    message.incoming? && conversation.additional_attributes['over_conversations_limit'] && conversation.messages.template.empty?
   end
 
   def first_message_from_contact?
@@ -56,7 +62,7 @@ class MessageTemplates::HookExecutionService
     # Only react to a contact's incoming message, not to the template messages this hook creates.
     return false unless message.incoming?
 
-    !contact_has_email? && inbox.web_widget? && !email_collect_was_sent?
+    !contact_has_email? && inbox.web_widget? && !email_collect_was_sent? && !conversation.additional_attributes['over_conversations_limit']
   end
 
   def contact_has_email?

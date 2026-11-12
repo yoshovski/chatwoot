@@ -4,18 +4,27 @@ class BillingPlan < ApplicationRecord
   # Only these flags are governed by plans. Every other feature flag stays per account.
   FEATURES = %w[captain_integration captain_integration_v2 native_ai_knowledge help_center campaigns reports
                 channel_voice calls crm_integration shopify_integration disable_branding].freeze
-  LIMIT_FIELDS = %w[ai_conversations_limit trial_ai_conversations_limit agents_limit inboxes_limit documents_limit].freeze
+  LIMIT_FIELDS = %w[ai_conversations_limit trial_ai_conversations_limit conversations_limit agents_limit inboxes_limit documents_limit].freeze
 
   has_many :account_subscriptions, dependent: :nullify
+  # Where an unpaid trial on this plan ends (Free); EndTrialsJob moves the account there.
+  belongs_to :after_trial_plan, class_name: 'BillingPlan', optional: true
 
   validates :name, presence: true, uniqueness: true
   validates :currency, inclusion: { in: AccountSubscription::SUPPORTED_CURRENCIES }
   validates :monthly_price_cents, numericality: { only_integer: true, greater_than_or_equal_to: 0 }
   validates :trial_days, numericality: { only_integer: true, in: 1..730 }
   validates(*LIMIT_FIELDS, numericality: { only_integer: true, greater_than_or_equal_to: 0 }, allow_nil: true)
+  # The plan a public signup starts its trial on (AccountBuilder). At most one.
+  validates :signup_default, uniqueness: true, if: :signup_default?
   validate :validate_features
+  validate :validate_after_trial_plan
 
   scope :ordered, -> { order(:position, :id) }
+
+  def self.for_signup
+    find_by(signup_default: true, active: true)
+  end
 
   after_update_commit :sync_accounts, if: -> { saved_change_to_features? || saved_change_to_add_ons? }
 
@@ -68,6 +77,10 @@ class BillingPlan < ApplicationRecord
 
   def sync_accounts
     account_subscriptions.includes(:account).find_each(&:sync_plan_features)
+  end
+
+  def validate_after_trial_plan
+    errors.add(:after_trial_plan_id, :invalid) if after_trial_plan_id.present? && after_trial_plan_id == id
   end
 
   def validate_features

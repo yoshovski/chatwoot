@@ -24,7 +24,7 @@ RSpec.describe 'Accounts API', type: :request do
                params: params,
                as: :json
 
-          expect(AccountBuilder).to have_received(:new).with(params.except(:password).merge(user_password: params[:password]))
+          expect(AccountBuilder).to have_received(:new).with(params.except(:password).merge(user_password: params[:password], signup: true))
           expect(account_builder).to have_received(:perform)
           expect(response.headers.keys).not_to include('access-token', 'token-type', 'client', 'expiry', 'uid')
           expect(response.parsed_body['email']).to eq(email)

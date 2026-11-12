@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_11_11_150000) do
+ActiveRecord::Schema[7.2].define(version: 2026_11_12_090000) do
   # These extensions should be enabled to support this database
   enable_extension "pg_stat_statements"
   enable_extension "pg_trgm"
@@ -398,7 +398,12 @@ ActiveRecord::Schema[7.2].define(version: 2026_11_11_150000) do
     t.jsonb "add_ons", default: {}, null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.boolean "signup_default", default: false, null: false
+    t.integer "conversations_limit"
+    t.bigint "after_trial_plan_id"
+    t.index ["after_trial_plan_id"], name: "index_billing_plans_on_after_trial_plan_id"
     t.index ["name"], name: "index_billing_plans_on_name", unique: true
+    t.index ["signup_default"], name: "index_billing_plans_on_signup_default", unique: true, where: "signup_default"
   end
 
   create_table "calls", force: :cascade do |t|
@@ -1950,6 +1955,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_11_11_150000) do
   add_foreign_key "account_subscriptions", "billing_plans", on_delete: :nullify
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "billing_plans", "billing_plans", column: "after_trial_plan_id", on_delete: :nullify
   add_foreign_key "campaign_recipients", "accounts", on_delete: :cascade
   add_foreign_key "campaign_recipients", "campaigns", on_delete: :cascade
   add_foreign_key "campaign_recipients", "contacts", on_delete: :cascade

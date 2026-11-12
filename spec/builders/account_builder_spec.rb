@@ -23,6 +23,41 @@ RSpec.describe AccountBuilder do
     allow(Account::SignUpEmailValidationService).to receive(:new).with(email).and_return(validation_service)
   end
 
+  describe 'the signup trial' do
+    let(:signup_builder) do
+      described_class.new(account_name: account_name, email: email, user_full_name: user_full_name, user_password: user_password, signup: true)
+    end
+    let!(:free) { create(:billing_plan, name: 'Free', ai_conversations_limit: 0, conversations_limit: 100) }
+    let!(:growth) do
+      create(:billing_plan, name: 'Growth', ai_conversations_limit: 150, trial_ai_conversations_limit: 50, trial_days: 14,
+                            signup_default: true, after_trial_plan: free, features: %w[captain_integration])
+    end
+
+    it 'puts a public signup on the signup plan for a capped 14 day trial' do
+      _user, account = signup_builder.perform
+
+      subscription = account.reload.account_subscription
+      expect(subscription).to have_attributes(billing_plan: growth, trial_enabled: true, payment_status: 'trialing', enabled: true)
+      expect(subscription.trial_ends_at).to be_within(1.minute).of(14.days.from_now)
+      expect(subscription.effective_limit).to eq(50)
+      expect(subscription.ai_reply_allowed?).to be(true)
+      expect(account.feature_enabled?('captain_integration')).to be(true)
+    end
+
+    it 'gives no plan to an account that is not a public signup' do
+      _user, account = account_builder.perform
+
+      expect(account.reload.account_subscription).to be_nil
+    end
+
+    it 'gives no plan when no plan is the signup default' do
+      growth.update!(signup_default: false)
+      _user, account = signup_builder.perform
+
+      expect(account.reload.account_subscription).to be_nil
+    end
+  end
+
   describe '#perform' do
     context 'when valid params are passed' do
       it 'creates a new account with correct name' do
