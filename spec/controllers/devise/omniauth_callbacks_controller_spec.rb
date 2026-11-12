@@ -46,7 +46,8 @@ RSpec.describe 'DeviseOverrides::OmniauthCallbacksController', type: :request do
                                                              user_full_name: 'test',
                                                              email: 'test_not_preset@example.com',
                                                              locale: I18n.locale,
-                                                             confirmed: nil
+                                                             confirmed: nil,
+                                                             signup: true
                                                            })
         expect(account_builder).to have_received(:perform)
       end

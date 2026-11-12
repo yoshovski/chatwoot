@@ -38,7 +38,7 @@ RSpec.describe Enterprise::Api::V2::AccountsController, type: :request do
              params: params,
              as: :json
 
-        expect(AccountBuilder).to have_received(:new).with(params.except(:password).merge(user_password: params[:password]))
+        expect(AccountBuilder).to have_received(:new).with(params.except(:password).merge(user_password: params[:password], signup: true))
         expect(account_builder).to have_received(:perform)
         expect(Enterprise::ClearbitLookupService).to have_received(:lookup).with(email)
 
@@ -77,7 +77,7 @@ RSpec.describe Enterprise::Api::V2::AccountsController, type: :request do
              params: params,
              as: :json
 
-        expect(AccountBuilder).to have_received(:new).with(params.except(:password).merge(user_password: params[:password]))
+        expect(AccountBuilder).to have_received(:new).with(params.except(:password).merge(user_password: params[:password], signup: true))
         expect(account_builder).to have_received(:perform)
         expect(Enterprise::ClearbitLookupService).to have_received(:lookup).with(email)
 

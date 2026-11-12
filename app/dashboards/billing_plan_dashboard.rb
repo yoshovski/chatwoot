@@ -12,6 +12,9 @@ class BillingPlanDashboard < Administrate::BaseDashboard
     ai_conversations_limit: Field::Number,
     trial_ai_conversations_limit: Field::Number,
     trial_days: Field::Number,
+    signup_default: Field::Boolean,
+    after_trial_plan: Field::BelongsTo.with_options(class_name: 'BillingPlan'),
+    conversations_limit: Field::Number,
     agents_limit: Field::Number,
     inboxes_limit: Field::Number,
     documents_limit: Field::Number,
@@ -21,11 +24,10 @@ class BillingPlanDashboard < Administrate::BaseDashboard
     updated_at: Field::DateTime
   }.freeze
 
-  COLLECTION_ATTRIBUTES = %i[name active monthly_price currency account_subscriptions].freeze
-  SHOW_PAGE_ATTRIBUTES = %i[name description active position currency monthly_price ai_conversations_limit trial_ai_conversations_limit
-                            trial_days agents_limit inboxes_limit documents_limit features account_subscriptions].freeze
+  COLLECTION_ATTRIBUTES = %i[name active signup_default monthly_price currency account_subscriptions].freeze
   FORM_ATTRIBUTES = %i[name description active position currency monthly_price ai_conversations_limit trial_ai_conversations_limit
-                       trial_days agents_limit inboxes_limit documents_limit features].freeze
+                       trial_days signup_default after_trial_plan conversations_limit agents_limit inboxes_limit documents_limit features].freeze
+  SHOW_PAGE_ATTRIBUTES = (FORM_ATTRIBUTES + %i[account_subscriptions]).freeze
 
   def display_resource(plan)
     plan.name

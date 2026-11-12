@@ -22,6 +22,13 @@ module AccountSubscriptionPlan
     trial_active? && billing_plan&.trial_ai_conversations_limit.present?
   end
 
+  # The plan's monthly limit on all conversations (Free). Conversations over it are kept but flagged; see
+  # Api::V1::Widget::BaseController and MessageTemplates::Template::OverConversationsLimit.
+  def conversations_limit_reached?
+    limit = billing_plan&.conversations_limit
+    !limit.nil? && account.conversations.where(created_at: quota_period.first..).count >= limit
+  end
+
   def sync_plan_features
     plan_features = billing_plan.enabled_features_for(self)
     account.enable_features(*plan_features)

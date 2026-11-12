@@ -40,7 +40,7 @@ class Api::V1::Widget::BaseController < ApplicationController
         browser: browser_params,
         initiated_at: timestamp_params,
         referer: permitted_params[:message][:referer_url]
-      },
+      }.merge(inbox.account.conversations_limit_reached? ? { over_conversations_limit: true } : {}),
       custom_attributes: permitted_params[:custom_attributes].presence || {}
     }
   end

@@ -209,6 +209,37 @@ RSpec.describe '/api/v1/widget/conversations/toggle_typing', type: :request do
     end
   end
 
+  describe 'POST /api/v1/widget/conversations over the plan conversation limit' do
+    let(:account) { create(:account, manual_ai_access: false) }
+    let(:free) { create(:billing_plan, name: 'Free', ai_conversations_limit: 0, conversations_limit: 1) }
+
+    before { AccountSubscription.create!(account: account, billing_plan: free, payment_status: 'active', quota_anchor: 1.day.ago) }
+
+    it 'keeps the conversation, flags it and tells the visitor the team replies by email' do
+      perform_enqueued_jobs do
+        post '/api/v1/widget/conversations',
+             headers: { 'X-Auth-Token' => token },
+             params: conversation_params.merge(contact: { name: 'alphy' }),
+             as: :json
+      end
+
+      expect(response).to have_http_status(:success)
+      created = account.conversations.find_by!(display_id: response.parsed_body['id'])
+      expect(created.additional_attributes['over_conversations_limit']).to be(true)
+      expect(created.messages.incoming.first.content).to eq('This is a test message')
+      expect(created.messages.template.pluck(:content_type)).to eq(%w[text input_email])
+    end
+
+    it 'does not flag conversations while the account is within the limit' do
+      free.update!(conversations_limit: 5)
+
+      post '/api/v1/widget/conversations', headers: { 'X-Auth-Token' => token }, params: conversation_params, as: :json
+
+      created = account.conversations.find_by!(display_id: response.parsed_body['id'])
+      expect(created.additional_attributes).not_to have_key('over_conversations_limit')
+    end
+  end
+
   describe 'POST /api/v1/widget/conversations/toggle_typing' do
     context 'with a conversation' do
       it 'dispatches the correct typing status' do

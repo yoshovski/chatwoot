@@ -18,6 +18,51 @@ RSpec.describe BillingPlan do
     end
   end
 
+  describe 'signup and after-trial plans' do
+    it 'allows only one signup default' do
+      create(:billing_plan, signup_default: true)
+
+      expect(build(:billing_plan, signup_default: true)).not_to be_valid
+    end
+
+    it 'finds the active signup default' do
+      plan = create(:billing_plan, signup_default: true)
+      expect(described_class.for_signup).to eq(plan)
+
+      plan.update!(active: false)
+      expect(described_class.for_signup).to be_nil
+    end
+
+    it 'rejects itself as the plan after the trial' do
+      plan = create(:billing_plan)
+
+      expect(plan.update(after_trial_plan_id: plan.id)).to be(false)
+    end
+  end
+
+  describe 'conversation limit' do
+    let(:account) { create(:account, manual_ai_access: false) }
+    let(:plan) { create(:billing_plan, conversations_limit: 2) }
+
+    before { AccountSubscription.create!(account: account, billing_plan: plan, payment_status: 'active', quota_anchor: 40.days.ago) }
+
+    it 'counts the conversations of the current month only' do
+      create(:conversation, account: account, created_at: 20.days.ago)
+      create(:conversation, account: account)
+      expect(account.reload.conversations_limit_reached?).to be(false)
+
+      create(:conversation, account: account)
+      expect(account.reload.conversations_limit_reached?).to be(true)
+    end
+
+    it 'has no limit without one on the plan' do
+      plan.update!(conversations_limit: nil)
+      create_list(:conversation, 3, account: account)
+
+      expect(account.reload.conversations_limit_reached?).to be(false)
+    end
+  end
+
   describe 'feature flags on assigned accounts' do
     let(:plan) { create(:billing_plan, features: ['captain_integration'], add_ons: { 'help_center' => 1000, 'disable_branding' => 2000 }) }
 

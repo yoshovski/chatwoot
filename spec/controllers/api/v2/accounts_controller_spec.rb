@@ -23,7 +23,7 @@ RSpec.describe 'Accounts API', type: :request do
                params: params,
                as: :json
 
-          expect(AccountBuilder).to have_received(:new).with(params.except(:password).merge(user_password: params[:password]))
+          expect(AccountBuilder).to have_received(:new).with(params.except(:password).merge(user_password: params[:password], signup: true))
           expect(account_builder).to have_received(:perform)
           expect(response.headers.keys).to include('access-token', 'token-type', 'client', 'expiry', 'uid')
           expect(response.body).to include('en')
@@ -73,7 +73,7 @@ RSpec.describe 'Accounts API', type: :request do
                params: params,
                as: :json
 
-          expect(AccountBuilder).to have_received(:new).with(params.merge(user_password: params[:password]))
+          expect(AccountBuilder).to have_received(:new).with(params.merge(user_password: params[:password], signup: true))
           expect(account_builder).to have_received(:perform)
           expect(response).to have_http_status(:forbidden)
           expect(response.body).to eq({ message: I18n.t('errors.signup.failed') }.to_json)
@@ -132,7 +132,7 @@ RSpec.describe 'Accounts API', type: :request do
                params: params,
                as: :json
 
-          expect(AccountBuilder).to have_received(:new).with(params.except(:password).merge(user_password: params[:password]))
+          expect(AccountBuilder).to have_received(:new).with(params.except(:password).merge(user_password: params[:password], signup: true))
           expect(response).to have_http_status(:success)
         end
       end

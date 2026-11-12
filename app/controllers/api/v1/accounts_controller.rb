@@ -28,7 +28,7 @@ class Api::V1::AccountsController < Api::BaseController
       email: account_params[:email],
       user_password: account_params[:password],
       locale: account_params[:locale],
-      user: current_user
+      user: current_user, signup: current_user.nil?
     ).perform
     enqueue_branding_enrichment
     if @user
