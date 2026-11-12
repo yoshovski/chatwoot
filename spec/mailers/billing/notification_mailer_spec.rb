@@ -40,6 +40,6 @@ RSpec.describe Billing::NotificationMailer do
     mail = notify('trial_ending_3', { 'ends_at' => 3.days.from_now, 'plan' => 'Growth', 'paid_next' => true,
                                       'amount' => { 'cents' => 4900, 'currency' => 'eur' } })
 
-    expect(mail.body.encoded).to include('your card is charged 49.00 EUR')
+    expect(mail.body.encoded).to include('Your card is charged 49.00 EUR', 'View your plan', 'Plan details and changes are in Billing.')
   end
 end

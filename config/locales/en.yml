@@ -1080,16 +1080,19 @@ en:
   billing_emails:
     greeting: 'Hi %{name},'
     usage_opt_out: 'Stop emails about AI usage'
+    plan_footnote: 'Plan details and changes are in Billing.'
     trial_ending_3:
       subject: 'Your trial ends in 3 days'
       body: 'Your free trial ends on %{date}. Choose a plan to keep your AI agent answering customers. Without a plan, the account moves to the Free plan and the AI agent stops.'
-      body_paid: 'Your free trial ends on %{date}. Your %{plan} plan starts then and your card is charged %{amount}. You can change or cancel the plan in Billing before that date.'
+      body_paid: 'Your free trial ends on %{date}. Your %{plan} plan starts then, so your AI agent keeps answering customers without a break. Your card is charged %{amount}.'
       button: 'Choose a plan'
+      button_paid: 'View your plan'
     trial_ending_1:
       subject: 'Your trial ends tomorrow'
       body: 'Your free trial ends tomorrow, %{date}. Choose a plan today to keep your AI agent answering customers. Without a plan, the account moves to the Free plan and the AI agent stops.'
-      body_paid: 'Your free trial ends tomorrow, %{date}. Your %{plan} plan starts then and your card is charged %{amount}. You can still change or cancel the plan in Billing.'
+      body_paid: 'Your free trial ends tomorrow, %{date}. Your %{plan} plan starts then, so your AI agent keeps answering customers without a break. Your card is charged %{amount}.'
       button: 'Choose a plan'
+      button_paid: 'View your plan'
     trial_ended:
       subject: 'You are now on the %{plan} plan'
       body: 'Your free trial has ended and the account is now on the %{plan} plan. Your AI agent no longer answers customers. Your conversations, contacts and settings are all kept. Choose a plan to switch the AI agent back on.'
@@ -1124,8 +1127,8 @@ en:
       button: 'Update card'
     annual_renewal:
       subject: 'Your plan renews on %{date}'
-      body: 'Your %{plan} plan renews for another year on %{date}, and your card is charged %{amount}. To change or cancel the plan, open Billing before that date.'
-      button: 'Billing'
+      body: 'Your %{plan} plan renews for another year on %{date}, so your AI agent keeps answering customers without a break. Your card is charged %{amount}.'
+      button: 'View your plan'
     top_up_receipt:
       subject: '%{count} AI conversations added'
       body: '%{count} extra AI conversations were added to your account. Your AI agent uses them after the conversations in your plan run out. They expire on %{date}. Stripe sends the payment receipt separately.'

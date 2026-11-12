@@ -13,15 +13,21 @@ class Billing::NotificationMailer < ApplicationMailer
     headers['List-Unsubscribe'] = "<#{@opt_out_url}>" if @opt_out_url
     headers['List-Unsubscribe-Post'] = 'List-Unsubscribe=One-Click' if @opt_out_url
 
-    send_mail_with_liquid(to: @recipient.email, subject: copy('subject'))
+    I18n.with_locale(recipient_locale) { send_mail_with_liquid(to: @recipient.email, subject: copy('subject')) }
   end
 
   private
 
+  # The recipient's own language (Profile), then the account's, then English (ApplicationMailer#switch_locale).
+  def recipient_locale
+    locale = @recipient.ui_settings&.dig('locale')
+    I18n.available_locales.map(&:to_s).include?(locale) ? locale : I18n.locale
+  end
+
   def liquid_locals
     super.merge(
-      greeting: t('billing_emails.greeting', name: @recipient.available_name),
-      body: copy(body_key), button_text: copy(button_key), button_url: billing_url,
+      heading: copy('subject'), greeting: t('billing_emails.greeting', name: @recipient.available_name),
+      body: copy(body_key), button_text: copy(button_key), button_url: billing_url, footnote: footnote, usage_percent: usage_percent,
       opt_out_url: @opt_out_url, opt_out_text: (t('billing_emails.usage_opt_out') if @opt_out_url)
     )
   end
@@ -35,7 +41,18 @@ class Billing::NotificationMailer < ApplicationMailer
   end
 
   def button_key
+    return 'button_paid' if body_key == 'body_paid'
+
     @kind == 'usage_100' && !@meta['can_top_up'] ? 'button_plans' : 'button'
+  end
+
+  def usage_percent
+    [(@meta['used'].to_f / @meta['limit'] * 100).round, 100].min if @meta['used'] && @meta['limit'].to_i.positive?
+  end
+
+  # Emails about a coming charge say where the plan is managed, quietly, under the button.
+  def footnote
+    t('billing_emails.plan_footnote') if @kind == 'annual_renewal' || body_key == 'body_paid'
   end
 
   def copy(part)
