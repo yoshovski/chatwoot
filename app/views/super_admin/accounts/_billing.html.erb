@@ -1,0 +1,101 @@
+<%# Billing timeline and actions (T10). Reads the database only; the actions are in SuperAdmin::AccountBillingsController. %>
+<% account = page.resource %>
+<% subscription = account.account_subscription %>
+<% timeline = Enterprise::Billing::AccountTimelineService.new(account: account) %>
+<% entries = timeline.perform %>
+<% field_class = 'border border-slate-200 rounded px-2 py-1 text-sm' %>
+
+<section class="main-content__body" id="billing">
+  <hr/>
+  <h2 class="text-lg font-semibold text-slate-900 mb-1"><%= t('super_admin.account_billing.title') %></h2>
+  <% if subscription %>
+    <p class="text-sm text-slate-600 mb-4">
+      <%= t('super_admin.account_billing.state',
+            status: subscription.payment_status,
+            plan: subscription.billing_plan&.name || '—',
+            ai: subscription.ai_pause_reason || t('super_admin.account_billing.ai_on'),
+            extra: subscription.extra_ai_conversations) %>
+    </p>
+
+    <div class="grid md:grid-cols-2 gap-4 mb-6">
+      <%= form_with url: extend_trial_super_admin_account_billing_path(account), method: :post, class: 'border border-slate-100 rounded-md p-4 flex flex-col gap-2' do %>
+        <strong class="text-sm"><%= t('super_admin.account_billing.extend_trial') %></strong>
+        <span class="text-xs text-slate-500"><%= t('super_admin.account_billing.extend_trial_help', ends: billing_time(subscription.trial_ends_at)) %></span>
+        <div class="flex gap-2 items-center">
+          <%= number_field_tag :days, 7, min: 1, max: Enterprise::Billing::AdminActionService::MAX_TRIAL_DAYS, class: field_class, 'aria-label': t('super_admin.account_billing.days') %>
+          <%= submit_tag t('super_admin.account_billing.extend_trial_submit'), class: 'button' %>
+        </div>
+      <% end %>
+
+      <%= form_with url: add_extra_conversations_super_admin_account_billing_path(account), method: :post, class: 'border border-slate-100 rounded-md p-4 flex flex-col gap-2' do %>
+        <strong class="text-sm"><%= t('super_admin.account_billing.add_extra') %></strong>
+        <span class="text-xs text-slate-500"><%= t('super_admin.account_billing.add_extra_help') %></span>
+        <div class="flex gap-2 items-center flex-wrap">
+          <%= number_field_tag :amount, 50, min: 1, max: Enterprise::Billing::AdminActionService::MAX_EXTRA_CONVERSATIONS, class: field_class, 'aria-label': t('super_admin.account_billing.amount') %>
+          <%= text_field_tag :note, nil, required: true, maxlength: 255, placeholder: t('super_admin.account_billing.note'), class: "#{field_class} flex-1" %>
+          <%= submit_tag t('super_admin.account_billing.add_extra_submit'), class: 'button' %>
+        </div>
+      <% end %>
+
+      <%= form_with url: apply_coupon_super_admin_account_billing_path(account), method: :post, class: 'border border-slate-100 rounded-md p-4 flex flex-col gap-2' do %>
+        <strong class="text-sm"><%= t('super_admin.account_billing.apply_coupon') %></strong>
+        <span class="text-xs text-slate-500"><%= t('super_admin.account_billing.apply_coupon_help') %></span>
+        <div class="flex gap-2 items-center">
+          <%= text_field_tag :coupon, nil, required: true, maxlength: 64, placeholder: t('super_admin.account_billing.coupon'), class: field_class %>
+          <%= submit_tag t('super_admin.account_billing.apply_coupon_submit'), class: 'button' %>
+        </div>
+      <% end %>
+
+      <div class="border border-slate-100 rounded-md p-4 flex flex-col gap-2">
+        <strong class="text-sm"><%= t('super_admin.account_billing.ai') %></strong>
+        <% if subscription.ai_paused_at %>
+          <span class="text-xs text-slate-500"><%= t('super_admin.account_billing.ai_paused_since', time: billing_time(subscription.ai_paused_at), reason: subscription.ai_paused_reason) %></span>
+          <%= button_to t('super_admin.account_billing.resume_ai'), resume_ai_super_admin_account_billing_path(account), method: :post, class: 'button' %>
+        <% else %>
+          <span class="text-xs text-slate-500"><%= t('super_admin.account_billing.pause_ai_help') %></span>
+          <%= button_to t('super_admin.account_billing.pause_ai'), pause_ai_super_admin_account_billing_path(account), method: :post, class: 'button',
+                        form: { data: { confirm: t('super_admin.account_billing.pause_ai_confirm') } } %>
+        <% end %>
+      </div>
+    </div>
+  <% else %>
+    <p class="text-sm text-slate-600 mb-4"><%= t('super_admin.account_billing.no_subscription') %></p>
+  <% end %>
+
+  <h3 class="text-base font-semibold text-slate-900 mb-2"><%= t('super_admin.account_billing.timeline') %></h3>
+  <p class="text-xs text-slate-500 mb-2"><%= t('super_admin.account_billing.timeline_help') %></p>
+  <% if entries.empty? %>
+    <p class="text-sm text-slate-500"><%= t('super_admin.billing_overview.none') %></p>
+  <% else %>
+    <div class="overflow-x-auto border border-slate-100 rounded-md">
+      <table class="w-full text-left border-collapse text-sm">
+        <thead>
+          <tr class="bg-slate-50 border-b border-slate-100 text-xs font-semibold text-slate-600 uppercase">
+            <th class="p-3"><%= t('super_admin.account_billing.columns.at') %></th>
+            <th class="p-3"><%= t('super_admin.account_billing.columns.kind') %></th>
+            <th class="p-3"><%= t('super_admin.account_billing.columns.what') %></th>
+            <th class="p-3"><%= t('super_admin.account_billing.columns.detail') %></th>
+            <th class="p-3"></th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100">
+          <% entries.each do |entry| %>
+            <tr>
+              <td class="p-3 whitespace-nowrap"><%= billing_time(entry.at) %></td>
+              <td class="p-3"><%= t("super_admin.account_billing.kinds.#{entry.kind}") %></td>
+              <td class="p-3 font-mono text-xs"><%= entry.title %></td>
+              <td class="p-3 text-slate-600"><%= entry.detail %></td>
+              <td class="p-3 text-right">
+                <% if entry.stripe_event_id %>
+                  <%= button_to t('super_admin.account_billing.replay_event'), replay_event_super_admin_account_billing_path(account),
+                                method: :post, params: { stripe_event_id: entry.stripe_event_id }, class: 'button button--alt',
+                                form: { data: { confirm: t('super_admin.account_billing.replay_confirm') } } %>
+                <% end %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  <% end %>
+</section>

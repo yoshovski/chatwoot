@@ -5,6 +5,8 @@ module AccountSubscriptionAiAccess
 
   PAST_DUE_GRACE = 7.days
   STOPPED_REASONS = { 'paused' => 'paused', 'unpaid' => 'payment_failed', 'incomplete' => 'payment_failed' }.freeze
+  # ai_paused_reason of a pause set by hand in Super Admin (T10); a Stripe dispute writes 'dispute'.
+  ADMIN_PAUSE_REASON = 'admin'.freeze
 
   included do
     before_save :track_past_due_since, if: :will_save_change_to_payment_status?
@@ -16,8 +18,9 @@ module AccountSubscriptionAiAccess
 
   # nil while the AI may reply, otherwise limit_reached, trial_ended, payment_failed, paused or no_plan.
   def ai_pause_reason(conversation = nil)
-    # ai_paused_at is set by a Stripe dispute (Enterprise::Billing::StripeEventFactsService); Super Admin clears it.
-    return 'payment_failed' if ai_paused_at.present?
+    # ai_paused_at is set by a Stripe dispute (Enterprise::Billing::StripeEventFactsService) or by Super Admin
+    # (SuperAdmin::AccountBillingController); Super Admin clears it.
+    return held_pause_reason if ai_paused_at.present?
 
     case payment_status
     # Invoiced outside Stripe: only accounts marked in Super Admin get AI replies, without a limit, as before T01.
@@ -41,6 +44,10 @@ module AccountSubscriptionAiAccess
   end
 
   private
+
+  def held_pause_reason
+    ai_paused_reason == ADMIN_PAUSE_REASON ? 'paused' : 'payment_failed'
+  end
 
   def running_pause_reason(conversation)
     return 'payment_failed' if payment_status == 'past_due' && !past_due_grace?

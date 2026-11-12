@@ -10,6 +10,9 @@ class AccountSubscription < ApplicationRecord
   include AccountSubscriptionTopUp
 
   belongs_to :account
+  # Plan and status changes for the Super Admin billing timeline (T10). The rows are not associated with the account,
+  # so they stay out of the account's own audit log.
+  audited only: %i[billing_plan_id payment_status billing_interval trial_enabled trial_ends_at ai_paused_at], on: %i[create update]
   attr_accessor :reset_usage, :new_custom_payment
 
   validates :billing_interval, inclusion: { in: %w[month year] }

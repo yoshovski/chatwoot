@@ -24,10 +24,14 @@ RSpec.describe ExtraAiConversationEntry do
 
     it 'records who granted an adjustment and expires 12 months after purchase' do
       user = create(:user)
-      lot = described_class.credit!(account: account, amount: 5, reason: 'adjustment', user: user)
+      lot = described_class.credit!(account: account, amount: 5, reason: 'adjustment', user: user, note: 'Goodwill')
 
-      expect(lot).to have_attributes(reason: 'adjustment', amount: 5, remaining: 5, user: user)
+      expect(lot).to have_attributes(reason: 'adjustment', amount: 5, remaining: 5, user: user, note: 'Goodwill')
       expect(lot.expires_at).to be_within(1.minute).of(12.months.from_now)
+    end
+
+    it 'requires a note saying why an adjustment was granted' do
+      expect { described_class.credit!(account: account, amount: 5, reason: 'adjustment') }.to raise_error(ActiveRecord::RecordInvalid)
     end
 
     it 'refuses a reason that does not add to the balance' do
