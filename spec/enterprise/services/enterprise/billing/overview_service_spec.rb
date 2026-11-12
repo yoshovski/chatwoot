@@ -61,28 +61,37 @@ RSpec.describe Enterprise::Billing::OverviewService do
 
   describe 'AI cost from LiteLLM' do
     let!(:subscription) { subscription_for('Acme', payment_status: 'active', monthly_price_cents: 4900) }
-    let(:spend_url) { 'http://litellm.test/global/spend/end_users' }
+    let(:customer) { "chatoctave-account-#{subscription.account_id}" }
+    let(:spend_url) { %r{\Ahttp://litellm\.test/customer/daily/activity} }
 
     around do |example|
       with_modified_env(LITELLM_SPEND_URL: 'http://litellm.test', LITELLM_SPEND_API_KEY: 'sk-viewer') { example.run }
     end
 
-    it 'adds the spend since the period started to each account' do
-      stub_request(:post, spend_url)
-        .with(headers: { 'Authorization' => 'Bearer sk-viewer' },
-              body: hash_including('startTime' => subscription.quota_period.first.utc.iso8601))
-        .to_return(status: 200, headers: { 'Content-Type' => 'application/json' },
-                   body: [{ end_user: "chatoctave-account-#{subscription.account_id}", total_spend: 1.2345, total_count: 9 },
-                          { end_user: 'someone-else', total_spend: 50 }, { end_user: nil, total_spend: 3 }].to_json)
+    def day(spend)
+      { date: Time.current.to_date.iso8601, breakdown: { entities: { customer => { metrics: { spend: spend } } } } }
+    end
+
+    it 'adds the spend since the period started to each account, over every page' do
+      first = stub_request(:get, spend_url)
+              .with(headers: { 'Authorization' => 'Bearer sk-viewer' },
+                    query: hash_including('end_user_ids' => customer, 'page' => '1',
+                                          'start_date' => subscription.quota_period.first.utc.to_date.iso8601))
+              .to_return(status: 200, headers: { 'Content-Type' => 'application/json' },
+                         body: { results: [day(1.2)], metadata: { has_more: true } }.to_json)
+      stub_request(:get, spend_url).with(query: hash_including('page' => '2'))
+                                   .to_return(status: 200, headers: { 'Content-Type' => 'application/json' },
+                                              body: { results: [day(0.0345)], metadata: { has_more: false } }.to_json)
 
       overview = described_class.new.perform
 
+      expect(first).to have_been_requested
       expect(overview[:ai_cost_status]).to eq('connected')
       expect(overview[:accounts].first[:ai_cost_cents]).to eq(123.45)
     end
 
     it 'says LiteLLM is unavailable and keeps the other numbers' do
-      stub_request(:post, spend_url).to_return(status: 401, body: 'nope')
+      stub_request(:get, spend_url).to_return(status: 401, body: 'nope')
 
       overview = described_class.new.perform
 

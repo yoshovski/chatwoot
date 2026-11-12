@@ -36,14 +36,14 @@ class Enterprise::Billing::OverviewService
 
   private
 
-  # Fills ai_cost_cents with the LiteLLM spend since each account's period started (one call per period start).
+  # Fills ai_cost_cents with the LiteLLM spend since the day each account's period started (one call per start day).
   # Returns not_connected, connected or unavailable; a LiteLLM failure leaves the costs empty and the rest stands.
   def add_ai_costs(rows)
     return 'not_connected' unless Enterprise::Billing::AiSpendService.configured?
 
     spend = Enterprise::Billing::AiSpendService.new
-    rows.group_by { |row| row[:period_started_at] }.each do |start, list|
-      costs = spend.spend_cents(from: start, to: Time.current)
+    rows.group_by { |row| row[:period_started_at].utc.to_date }.each do |start, list|
+      costs = spend.spend_cents(account_ids: list.pluck(:account_id), from: start.to_time(:utc))
       list.each { |row| row[:ai_cost_cents] = costs.fetch(row[:account_id], 0) }
     end
     'connected'
