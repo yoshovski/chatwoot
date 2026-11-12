@@ -18,7 +18,7 @@ RSpec.describe 'Account subscription API', type: :request do
       body = response.parsed_body
       expect(body['plan']).to include('name' => 'Growth', 'monthly_price_cents' => 4900, 'features' => ['captain_integration'])
       expect(body['plan']['add_ons']).to eq([{ 'key' => 'disable_branding', 'price_cents' => 2000, 'active' => false }])
-      expect(body['products']['ai_conversations']).to eq('used' => 0, 'limit' => 50, 'period' => 'trial')
+      expect(body['products']['ai_conversations']).to eq('used' => 0, 'limit' => 50, 'period' => 'trial', 'extra_left' => 0)
       expect(body).to include('trial_enabled' => true)
       expect(body['daily_usage'].last.keys).to include('consumed', 'conversations')
       expect(body).not_to have_key('monthly_price_cents')
