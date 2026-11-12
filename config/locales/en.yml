@@ -881,8 +881,9 @@ en:
       past_due: "Past due"
       near_limit: "Over 80 % of allowance"
       none: "None."
-      not_connected: "not connected"
-      footnote: "MRR is the monthly list price of active, past-due and hand-invoiced paid accounts, before discounts and tax; yearly prices count as a twelfth. AI cost per account needs LiteLLM spend and is not connected yet."
+      ai_cost_not_connected: "not connected"
+      ai_cost_unavailable: "LiteLLM unavailable"
+      footnote: "MRR is the monthly list price of active, past-due and hand-invoiced paid accounts, before discounts and tax; yearly prices count as a twelfth. AI cost is LiteLLM spend in USD since the account's period started; it needs LITELLM_SPEND_URL and LITELLM_SPEND_API_KEY."
       cancel_state:
         ended: "Ended"
         scheduled: "Set to end"

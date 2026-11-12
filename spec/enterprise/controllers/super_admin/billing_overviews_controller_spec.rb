@@ -31,7 +31,7 @@ RSpec.describe 'Super Admin billing overview', type: :request do
     get '/super_admin/billing_overview'
 
     expect(response).to have_http_status(:ok)
-    expect(response.body).to include('49.00 EUR', 'Acme', I18n.t('super_admin.billing_overview.not_connected'))
+    expect(response.body).to include('49.00 EUR', 'Acme', I18n.t('super_admin.billing_overview.ai_cost_not_connected'))
     expect(Enterprise::Billing::OverviewService).not_to have_received(:new)
     expect(Stripe::Subscription).not_to have_received(:retrieve)
   end

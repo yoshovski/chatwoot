@@ -41,7 +41,7 @@
          ['past_due_list', o['past_due'], %w[account plan revenue past_due_since], ->(row) { [account_link.(row), row['plan'] || '—', billing_money(row['revenue_cents'], row['currency']), billing_time(row['past_due_since'])] }],
          ['near_limit_list', o['near_limit'], %w[account plan ai_used extra_left], ->(row) { [account_link.(row), row['plan'] || '—', "#{row['ai_used']} / #{row['ai_limit']}", row['extra_left']] }],
          ['cancellations', o['cancellations'], %w[account state at reason], ->(row) { [account_link.(row), t("super_admin.billing_overview.cancel_state.#{row['state']}"), billing_time(row['at']), [row['reason'], row['feedback'], row['comment']].compact_blank.join(' · ').presence || '—'] }],
-         ['accounts', o['accounts'], %w[account plan status revenue ai_used ai_cost], ->(row) { [account_link.(row), row['plan'] || '—', row['status'], billing_money(row['revenue_cents'], row['currency']), row['ai_limit'] ? "#{row['ai_used']} / #{row['ai_limit']}" : row['ai_used'], o['ai_cost_connected'] ? billing_money(row['ai_cost_cents'], 'usd') : t('super_admin.billing_overview.not_connected')] }]
+         ['accounts', o['accounts'], %w[account plan status revenue ai_used ai_cost], ->(row) { [account_link.(row), row['plan'] || '—', row['status'], billing_money(row['revenue_cents'], row['currency']), row['ai_limit'] ? "#{row['ai_used']} / #{row['ai_limit']}" : row['ai_used'], o['ai_cost_status'] == 'connected' ? billing_money(row['ai_cost_cents'], 'usd') : t("super_admin.billing_overview.ai_cost_#{o['ai_cost_status']}")] }]
        ] %>
 
     <% sections.each do |key, rows, columns, cells| %>

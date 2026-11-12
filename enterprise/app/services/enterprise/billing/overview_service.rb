@@ -24,16 +24,34 @@ class Enterprise::Billing::OverviewService
 
   def perform
     rows = account_rows
+    ai_cost_status = add_ai_costs(rows)
     paying = rows.select { |row| row[:paying] }
     {
       computed_at: Time.current.iso8601, mrr_cents: mrr(paying), paying_count: paying.size,
       trials_count: rows.count { |row| row[:status] == 'trialing' }, trials_ending: trials_ending,
       past_due: rows.select { |row| row[:status] == 'past_due' }, near_limit: rows.select { |row| row[:near_limit] },
-      cancellations: cancellations, accounts: rows, ai_cost_connected: false
+      cancellations: cancellations, accounts: rows, ai_cost_status: ai_cost_status
     }
   end
 
   private
+
+  # Fills ai_cost_cents with the LiteLLM spend since each account's period started (one call per period start).
+  # Returns not_connected, connected or unavailable; a LiteLLM failure leaves the costs empty and the rest stands.
+  def add_ai_costs(rows)
+    return 'not_connected' unless Enterprise::Billing::AiSpendService.configured?
+
+    spend = Enterprise::Billing::AiSpendService.new
+    rows.group_by { |row| row[:period_started_at] }.each do |start, list|
+      costs = spend.spend_cents(from: start, to: Time.current)
+      list.each { |row| row[:ai_cost_cents] = costs.fetch(row[:account_id], 0) }
+    end
+    'connected'
+  rescue Enterprise::Billing::AiSpendService::Unavailable => e
+    Rails.logger.warn("[billing overview] AI cost unavailable: #{e.message}")
+    rows.each { |row| row[:ai_cost_cents] = nil }
+    'unavailable'
+  end
 
   def mrr(paying)
     paying.group_by { |row| row[:currency] }.transform_values { |list| list.sum { |row| row[:revenue_cents] } }
@@ -62,7 +80,7 @@ class Enterprise::Billing::OverviewService
       ai_used: used, ai_limit: limit, extra_left: subscription.extra_ai_conversations,
       near_limit: !limit.nil? && limit.positive? && used >= limit * NEAR_LIMIT_SHARE,
       past_due_since: [subscription.payment_failed_at, subscription.past_due_since].compact.min&.iso8601,
-      ai_cost_cents: nil }
+      period_started_at: subscription.quota_period.first, ai_cost_cents: nil }
   end
 
   # What the account pays per month: the live Stripe price when there is one, otherwise the saved price.

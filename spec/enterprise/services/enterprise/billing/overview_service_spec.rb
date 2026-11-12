@@ -32,7 +32,7 @@ RSpec.describe Enterprise::Billing::OverviewService do
     expect(overview[:past_due].pluck(:account_id)).to eq([late.account_id])
     expect(overview[:near_limit].pluck(:account_id)).to eq([late.account_id])
     expect(overview[:accounts].find { |row| row[:account_id] == paying.account_id }).to include(revenue_cents: 4000, ai_cost_cents: nil)
-    expect(overview[:ai_cost_connected]).to be(false)
+    expect(overview[:ai_cost_status]).to eq('not_connected')
   end
 
   it 'lists cancellations this month with their reasons and drops one the customer took back' do
@@ -56,6 +56,38 @@ RSpec.describe Enterprise::Billing::OverviewService do
 
     Enterprise::Billing::OverviewSnapshotJob.perform_now
 
-    expect(described_class.cached).to include('paying_count' => 0, 'ai_cost_connected' => false)
+    expect(described_class.cached).to include('paying_count' => 0, 'ai_cost_status' => 'not_connected')
+  end
+
+  describe 'AI cost from LiteLLM' do
+    let!(:subscription) { subscription_for('Acme', payment_status: 'active', monthly_price_cents: 4900) }
+    let(:spend_url) { 'http://litellm.test/global/spend/end_users' }
+
+    around do |example|
+      with_modified_env(LITELLM_SPEND_URL: 'http://litellm.test', LITELLM_SPEND_API_KEY: 'sk-viewer') { example.run }
+    end
+
+    it 'adds the spend since the period started to each account' do
+      stub_request(:post, spend_url)
+        .with(headers: { 'Authorization' => 'Bearer sk-viewer' },
+              body: hash_including('startTime' => subscription.quota_period.first.utc.iso8601))
+        .to_return(status: 200, headers: { 'Content-Type' => 'application/json' },
+                   body: [{ end_user: "chatoctave-account-#{subscription.account_id}", total_spend: 1.2345, total_count: 9 },
+                          { end_user: 'someone-else', total_spend: 50 }, { end_user: nil, total_spend: 3 }].to_json)
+
+      overview = described_class.new.perform
+
+      expect(overview[:ai_cost_status]).to eq('connected')
+      expect(overview[:accounts].first[:ai_cost_cents]).to eq(123.45)
+    end
+
+    it 'says LiteLLM is unavailable and keeps the other numbers' do
+      stub_request(:post, spend_url).to_return(status: 401, body: 'nope')
+
+      overview = described_class.new.perform
+
+      expect(overview).to include(ai_cost_status: 'unavailable', paying_count: 1)
+      expect(overview[:accounts].first[:ai_cost_cents]).to be_nil
+    end
   end
 end
