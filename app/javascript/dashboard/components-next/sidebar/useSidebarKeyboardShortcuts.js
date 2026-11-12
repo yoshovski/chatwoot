@@ -1,5 +1,7 @@
 import { useKeyboardEvents } from 'dashboard/composables/useKeyboardEvents';
 import { useRoute, useRouter } from 'vue-router';
+import { emitter } from 'shared/helpers/mitt';
+import { BUS_EVENTS } from 'shared/constants/busEvents';
 
 export function useSidebarKeyboardShortcuts(toggleShortcutModalFn) {
   const route = useRoute();
@@ -32,6 +34,9 @@ export function useSidebarKeyboardShortcuts(toggleShortcutModalFn) {
     },
     'Alt+KeyS': {
       action: () => navigateToRoute('agent_list'),
+    },
+    'Alt+KeyW': {
+      action: () => emitter.emit(BUS_EVENTS.OPEN_COMPOSE),
     },
   };
 

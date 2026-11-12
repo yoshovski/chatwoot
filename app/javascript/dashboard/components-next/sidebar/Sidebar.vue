@@ -9,12 +9,13 @@ import { useMapGetter } from 'dashboard/composables/store';
 import { useStore } from 'vuex';
 import { useI18n } from 'vue-i18n';
 import { useSidebarKeyboardShortcuts } from './useSidebarKeyboardShortcuts';
+import { useEmitter } from 'dashboard/composables/emitter';
+import { BUS_EVENTS } from 'shared/constants/busEvents';
 import { vOnClickOutside } from '@vueuse/components';
 import { FEATURE_FLAGS } from 'dashboard/featureFlags';
 import { AGENT_SECTIONS } from 'dashboard/components-next/captain/agentSections';
 import { useWindowSize } from '@vueuse/core';
 
-import Button from 'dashboard/components-next/button/Button.vue';
 import SidebarNavigation from './SidebarNavigation.vue';
 import SidebarProfileMenu from './SidebarProfileMenu.vue';
 import ChannelLeaf from './ChannelLeaf.vue';
@@ -147,6 +148,11 @@ const toggleShortcutModalFn = show => {
 };
 
 useSidebarKeyboardShortcuts(toggleShortcutModalFn);
+
+// The shortcut and the command bar open the composer from any page; it is
+// anchored under the search field, where no button is shown.
+const globalComposeRef = ref(null);
+useEmitter(BUS_EVENTS.OPEN_COMPOSE, () => globalComposeRef.value?.open());
 
 const expandedItem = ref(null);
 
@@ -936,17 +942,7 @@ const menuItems = computed(() => {
         </RouterLink>
       </template>
       <template #compose>
-        <ComposeConversation align="end">
-          <template #trigger>
-            <Button
-              icon="i-lucide-pen-line"
-              :aria-label="t('PLATFORM_NAV.COMPOSE')"
-              variant="ghost"
-              color="slate"
-              size="sm"
-            />
-          </template>
-        </ComposeConversation>
+        <ComposeConversation ref="globalComposeRef" align="end" />
       </template>
     </SidebarNavigation>
   </aside>

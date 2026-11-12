@@ -92,4 +92,10 @@ export const SHORTCUT_KEYS = [
     displayKeys: [KEYS.ALT, 'M'],
     keySet: ['Alt+KeyM'],
   },
+  {
+    id: 15,
+    label: 'NEW_MESSAGE',
+    displayKeys: [KEYS.ALT, 'W'],
+    keySet: ['Alt+KeyW'],
+  },
 ];

@@ -885,7 +885,7 @@ watch(appliedFilters, () => resetBulkActions());
     class="flex flex-col flex-shrink-0 conversations-list-wrap bg-n-surface-1 relative"
     :class="[
       { hidden: !showConversationList },
-      isOnExpandedLayout ? 'basis-full' : 'w-[18.75rem] 2xl:w-[22.5rem]',
+      isOnExpandedLayout ? 'basis-full' : 'w-[20.5rem] 2xl:w-[22.5rem]',
     ]"
   >
     <slot />

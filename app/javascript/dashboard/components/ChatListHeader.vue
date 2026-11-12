@@ -7,6 +7,7 @@ import wootConstants from 'dashboard/constants/globals';
 import ConversationBasicFilter from './widgets/conversation/ConversationBasicFilter.vue';
 import SwitchLayout from 'dashboard/routes/dashboard/conversation/search/SwitchLayout.vue';
 import NextButton from 'dashboard/components-next/button/Button.vue';
+import ComposeConversation from 'dashboard/components-next/NewConversation/ComposeConversation.vue';
 
 const props = defineProps({
   pageTitle: { type: String, required: true },
@@ -96,14 +97,14 @@ const toggleConversationLayout = () => {
         v-if="
           allCount > 0 && hasAppliedFiltersOrActiveFolders && !isListLoading
         "
-        class="px-2 py-1 my-0.5 mx-1 rounded-md capitalize bg-n-slate-3 text-xxs text-n-slate-12 shrink-0"
+        class="px-2 py-1 my-0.5 ms-1 rounded-md capitalize bg-n-slate-3 text-xxs text-n-slate-12 shrink-0"
         :title="allCount"
       >
         {{ formattedAllCount }}
       </span>
       <span
         v-if="!hasAppliedFiltersOrActiveFolders"
-        class="px-2 py-1 my-0.5 mx-1 rounded-md capitalize bg-n-slate-3 text-xxs text-n-slate-12 shrink-0"
+        class="px-2 py-1 my-0.5 ms-1 rounded-md capitalize bg-n-slate-3 text-xxs text-n-slate-12 shrink-0"
       >
         {{ $t(`CHAT_LIST.CHAT_STATUS_FILTER_ITEMS.${activeStatus}.TEXT`) }}
       </span>
@@ -179,6 +180,17 @@ const toggleConversationLayout = () => {
         :is-on-expanded-layout="isOnExpandedLayout"
         @toggle="toggleConversationLayout"
       />
+      <ComposeConversation align="start">
+        <template #trigger>
+          <NextButton
+            v-tooltip.top-end="$t('CHAT_LIST.NEW_MESSAGE')"
+            :aria-label="$t('CHAT_LIST.NEW_MESSAGE')"
+            icon="i-lucide-square-pen"
+            data-test-id="chat-list-new-message"
+            xs
+          />
+        </template>
+      </ComposeConversation>
     </div>
   </div>
 </template>

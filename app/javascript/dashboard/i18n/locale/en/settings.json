@@ -838,7 +838,8 @@
       "GO_TO_SETTINGS": "Go to Settings",
       "SWITCH_TO_PRIVATE_NOTE": "Switch to Private Note",
       "SWITCH_TO_REPLY": "Switch to Reply",
-      "TOGGLE_SNOOZE_DROPDOWN": "Toggle snooze dropdown"
+      "TOGGLE_SNOOZE_DROPDOWN": "Toggle snooze dropdown",
+      "NEW_MESSAGE": "New message"
     }
   },
   "ASSIGNMENT_POLICY": {
@@ -1140,7 +1141,6 @@
     "IDENTITY": "Identity",
     "MANAGE": "Manage",
     "AUDIENCE": "Audience",
-    "COMPOSE": "Compose conversation",
     "GROW": "Grow",
     "MANAGE_AGENT": "Configure agent",
     "NO_AGENT": "Create your first AI agent",
