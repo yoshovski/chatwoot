@@ -26,6 +26,9 @@ class AccountSubscription < ApplicationRecord
   before_validation :initialize_dates
   before_validation :initialize_trial
   before_validation :initialize_custom_payment
+  # Billing emails (T08) that follow from these facts go out right away instead of with the daily run.
+  BILLING_EMAIL_FIELDS = %w[payment_status payment_failed_at past_due_since trial_ends_at auto_top_up_failed_at stripe_subscription_details].freeze
+  after_update_commit :queue_billing_emails, if: -> { saved_changes.keys.intersect?(BILLING_EMAIL_FIELDS) }
 
   PRICE_FIELDS.each do |name|
     define_method(name) do
@@ -138,6 +141,10 @@ class AccountSubscription < ApplicationRecord
   end
 
   private
+
+  def queue_billing_emails
+    Billing::NotificationsJob.perform_later(account_id)
+  end
 
   def validate_price_inputs
     PRICE_FIELDS.each do |name|

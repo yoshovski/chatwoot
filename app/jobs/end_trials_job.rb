@@ -5,8 +5,10 @@ class EndTrialsJob < ApplicationJob
 
   def perform
     ended_trials.find_each do |subscription|
+      trial_ends_at = subscription.trial_ends_at
       subscription.update!(billing_plan: subscription.billing_plan.after_trial_plan, trial_enabled: false, payment_status: 'active',
                            reset_usage: true)
+      Billing::NotificationsService.new(subscription).deliver_trial_ended(trial_ends_at)
     end
   end
 

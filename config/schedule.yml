@@ -94,3 +94,10 @@ billing_overview_snapshot_job:
   cron: '45 3 * * *'
   class: 'Enterprise::Billing::OverviewSnapshotJob'
   queue: scheduled_jobs
+
+# executed daily at 0800 UTC
+# sends the billing emails that are due: trial ending, failed payment reminders, annual renewal, win-back (T08)
+billing_notifications_job:
+  cron: '0 8 * * *'
+  class: 'Billing::NotificationsJob'
+  queue: scheduled_jobs

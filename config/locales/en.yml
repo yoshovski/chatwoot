@@ -1077,3 +1077,74 @@ en:
       catalog_imported: 'Shopify catalog import queued successfully.'
       catalog_paused: 'Shopify catalog synchronization paused.'
       catalog_resumed: 'Shopify catalog synchronization resumed.'
+  billing_emails:
+    greeting: 'Hi %{name},'
+    usage_opt_out: 'Stop emails about AI usage'
+    trial_ending_3:
+      subject: 'Your trial ends in 3 days'
+      body: 'Your free trial ends on %{date}. Choose a plan to keep your AI agent answering customers. Without a plan, the account moves to the Free plan and the AI agent stops.'
+      body_paid: 'Your free trial ends on %{date}. Your %{plan} plan starts then and your card is charged %{amount}. You can change or cancel the plan in Billing before that date.'
+      button: 'Choose a plan'
+    trial_ending_1:
+      subject: 'Your trial ends tomorrow'
+      body: 'Your free trial ends tomorrow, %{date}. Choose a plan today to keep your AI agent answering customers. Without a plan, the account moves to the Free plan and the AI agent stops.'
+      body_paid: 'Your free trial ends tomorrow, %{date}. Your %{plan} plan starts then and your card is charged %{amount}. You can still change or cancel the plan in Billing.'
+      button: 'Choose a plan'
+    trial_ended:
+      subject: 'You are now on the %{plan} plan'
+      body: 'Your free trial has ended and the account is now on the %{plan} plan. Your AI agent no longer answers customers. Your conversations, contacts and settings are all kept. Choose a plan to switch the AI agent back on.'
+      body_with_ai: 'Your free trial has ended and the account is now on the %{plan} plan. Your AI agent can answer %{limit} conversations a month. Your conversations, contacts and settings are all kept. Choose a plan for more.'
+      button: 'See plans'
+    usage_80:
+      subject: '%{used} of %{limit} AI conversations used'
+      body: 'Your AI agent has used %{used} of the %{limit} AI conversations in your plan this month. The count starts again on %{date}. If it runs out before then, the AI agent pauses. Add conversations or move to a larger plan to keep it answering.'
+      body_trial: 'Your AI agent has used %{used} of the %{limit} AI conversations in your trial. When it reaches %{limit}, it pauses. Choose a plan to keep it answering.'
+      button: 'Billing'
+    usage_100:
+      subject: 'Your AI agent is paused'
+      body: 'Your AI agent has used all %{limit} AI conversations in your plan this month, so it stopped answering. Your team still gets every message. It starts again on %{date}, or right away when you add conversations.'
+      body_trial: 'Your AI agent has used all %{limit} AI conversations in your trial, so it stopped answering. Your team still gets every message. Choose a plan to switch it back on.'
+      button: 'Add conversations'
+      button_plans: 'Choose a plan'
+    payment_failed_0:
+      subject: 'We could not charge your card'
+      body: 'The payment for your %{plan} plan did not go through. Stripe will try again over the next days. Update your card before %{date} to keep your AI agent answering customers.'
+      button: 'Update card'
+    payment_failed_3:
+      subject: 'We could not charge your card'
+      body: 'The payment for your %{plan} plan still did not go through. Update your card before %{date} to keep your AI agent answering customers.'
+      button: 'Update card'
+    payment_failed_6:
+      subject: 'We could not charge your card'
+      body: 'The payment for your %{plan} plan still did not go through. Your AI agent pauses tomorrow, %{date}. Update your card today to keep it answering customers.'
+      button: 'Update card'
+    payment_paused:
+      subject: 'Your AI agent is paused'
+      body: 'Your card could not be charged for 7 days, so your AI agent stopped answering customers. Your team still gets every message. Update your card and the AI agent starts again as soon as the payment goes through.'
+      button: 'Update card'
+    annual_renewal:
+      subject: 'Your plan renews on %{date}'
+      body: 'Your %{plan} plan renews for another year on %{date}, and your card is charged %{amount}. To change or cancel the plan, open Billing before that date.'
+      button: 'Billing'
+    top_up_receipt:
+      subject: '%{count} AI conversations added'
+      body: '%{count} extra AI conversations were added to your account. Your AI agent uses them after the conversations in your plan run out. They expire on %{date}. Stripe sends the payment receipt separately.'
+      button: 'Billing'
+    auto_top_up_off:
+      subject: 'Automatic top-up is off'
+      body: 'Your card could not be charged for an automatic top-up, so automatic top-up is now off. When your AI conversations run out, the AI agent pauses. Update your card in Billing, then switch automatic top-up back on.'
+      button: 'Billing'
+    cancellation_confirmed:
+      subject: 'Your plan ends on %{date}'
+      body: 'Your %{plan} plan is cancelled and ends on %{date}. Until then everything keeps working. After that, your AI agent stops answering customers. Changed your mind? You can keep your plan until that date.'
+      button: 'Keep my plan'
+    win_back:
+      subject: 'Your AI agent is ready when you are'
+      body: 'Your conversations, knowledge and settings are still here. Choose a plan and your AI agent answers customers again in minutes.'
+      button: 'See plans'
+  billing_usage_emails:
+    title: 'Emails about AI usage'
+    'on': 'You get an email when %{account} has used 80 %% and 100 %% of its AI conversations. Emails about payments and your plan are not affected.'
+    'off': 'You no longer get emails about AI usage for %{account}. Emails about payments and your plan still arrive.'
+    turn_off: 'Stop these emails'
+    turn_on: 'Send them again'

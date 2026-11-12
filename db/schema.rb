@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_11_13_120000) do
+ActiveRecord::Schema[7.2].define(version: 2026_11_14_090000) do
   # These extensions should be enabled to support this database
   enable_extension "pg_stat_statements"
   enable_extension "pg_trgm"
@@ -114,6 +114,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_11_13_120000) do
     t.boolean "auto_offline", default: true, null: false
     t.bigint "custom_role_id"
     t.bigint "agent_capacity_policy_id"
+    t.boolean "billing_usage_emails", default: true, null: false
     t.index ["account_id", "user_id"], name: "uniq_user_id_per_account_id", unique: true
     t.index ["account_id"], name: "index_account_users_on_account_id"
     t.index ["agent_capacity_policy_id"], name: "index_account_users_on_agent_capacity_policy_id"
@@ -385,6 +386,16 @@ ActiveRecord::Schema[7.2].define(version: 2026_11_13_120000) do
     t.boolean "active", default: true, null: false
     t.integer "execution_delay"
     t.index ["account_id"], name: "index_automation_rules_on_account_id"
+  end
+
+  create_table "billing_notifications", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.string "kind", null: false
+    t.string "key", null: false
+    t.integer "recipients_count", default: 0, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id", "kind", "key"], name: "index_billing_notifications_on_account_id_and_kind_and_key", unique: true
   end
 
   create_table "billing_plans", force: :cascade do |t|
@@ -1978,6 +1989,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_11_13_120000) do
   add_foreign_key "account_subscriptions", "billing_plans", on_delete: :nullify
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "billing_notifications", "accounts", on_delete: :cascade
   add_foreign_key "billing_plans", "billing_plans", column: "after_trial_plan_id", on_delete: :nullify
   add_foreign_key "campaign_recipients", "accounts", on_delete: :cascade
   add_foreign_key "campaign_recipients", "campaigns", on_delete: :cascade

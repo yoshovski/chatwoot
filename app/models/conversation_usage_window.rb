@@ -15,7 +15,11 @@ class ConversationUsageWindow < ApplicationRecord
     account = Account.find(message.account_id)
     subscription = account.with_lock { open_window(account, message) }
     # After the lock is released, so the job sees the new window.
-    subscription&.request_auto_top_up
+    return unless subscription
+
+    subscription.request_auto_top_up
+    # The 80 % and 100 % usage emails (T08).
+    Billing::NotificationsJob.perform_later(account.id) if Billing::NotificationsService.new(subscription).usage_notice_pending?
   end
 
   # Returns the subscription when a window opened, nil when the conversation already had one.
