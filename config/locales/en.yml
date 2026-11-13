@@ -1118,12 +1118,41 @@ en:
       catalog_imported: 'Shopify catalog import queued successfully.'
       catalog_paused: 'Shopify catalog synchronization paused.'
       catalog_resumed: 'Shopify catalog synchronization resumed.'
-  signup_emails:
-    welcome:
+  onboarding_emails:
+    greeting: 'Hi %{name},'
+    opt_out: 'Stop these setup emails'
+    day_0:
       subject: 'Welcome to %{brand}'
-      greeting: 'Hi %{name},'
-      body: 'Your account is ready. Add your website and your AI agent learns from it in about a minute. Try it yourself, then put it on your site.'
-      button: 'Set up your AI agent'
+      body: 'Your account is ready, and your AI agent is learning from your website. Ask it a few questions your customers often ask and see how it answers. It takes two minutes.'
+      button: 'Test your agent'
+    day_1:
+      subject: 'Put your AI agent on your website'
+      body: "Your AI agent is ready, but your customers can't reach it yet. Paste this code just before </body> on your site, or send it to whoever runs your site. The chat appears right away."
+      button: 'Install'
+    day_3:
+      subject:
+        one: "1 question your AI agent couldn't answer"
+        other: "%{count} questions your AI agent couldn't answer"
+      body:
+        one: 'A customer asked this and your AI agent had no answer yet. Add an answer once and it uses it from then on.'
+        other: 'Customers asked these and your AI agent had no answer yet. Add an answer once and it uses it from then on.'
+      button: 'Add answers'
+    day_7:
+      subject: 'One week into your trial'
+      body:
+        one: 'Your free trial ends on %{date}. So far your AI agent has answered 1 customer conversation. Choose a plan to keep it answering after the trial.'
+        other: 'Your free trial ends on %{date}. So far your AI agent has answered %{count} customer conversations. Choose a plan to keep it answering after the trial.'
+      body_capped:
+        one: 'Your free trial ends on %{date}. So far your AI agent has answered 1 of the %{limit} conversations in your trial. Choose a plan to keep it answering after the trial.'
+        other: 'Your free trial ends on %{date}. So far your AI agent has answered %{count} of the %{limit} conversations in your trial. Choose a plan to keep it answering after the trial.'
+      body_none: 'Your free trial ends on %{date}. Your AI agent has not answered a customer yet. Put it on your site to see it at work, and choose a plan when you are ready.'
+      button: 'See plans'
+  onboarding_email_settings:
+    title: 'Setup emails'
+    'on': 'You get a few emails in your first week with %{account}, each with one next step. Emails about billing are not affected.'
+    'off': 'You no longer get setup emails for %{account}. Emails about billing still arrive.'
+    turn_off: 'Stop these emails'
+    turn_on: 'Send them again'
   billing_emails:
     greeting: 'Hi %{name},'
     usage_opt_out: 'Stop emails about AI usage'

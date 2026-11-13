@@ -101,3 +101,10 @@ billing_notifications_job:
   cron: '0 8 * * *'
   class: 'Billing::NotificationsJob'
   queue: scheduled_jobs
+
+# executed hourly at minute 20
+# sends the first-week emails that are due: day 1 install, day 3 unanswered questions, day 7 trial halfway (T15)
+onboarding_first_week_emails_job:
+  cron: '20 * * * *'
+  class: 'Onboarding::FirstWeekEmailsJob'
+  queue: scheduled_jobs
