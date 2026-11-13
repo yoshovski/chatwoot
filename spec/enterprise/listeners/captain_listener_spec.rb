@@ -245,6 +245,17 @@ describe CaptainListener do
 
       listener.message_created(event)
     end
+
+    it 'asks for a draft answer for open knowledge gaps of the conversation when a person replies' do
+      gap = Captain::KnowledgeGaps::Recorder.new(assistant: assistant, conversation: conversation, question: 'Do you ship to Spain?',
+                                                 reason: 'handoff').record
+      gap.knowledge!
+      message = create(:message, account: account, inbox: inbox, conversation: conversation,
+                                 message_type: :outgoing, private: false, sender: user)
+
+      expect { listener.message_created(Events::Base.new(:message_created, Time.current, message: message)) }
+        .to have_enqueued_job(Captain::KnowledgeGaps::DraftAnswerJob).with(gap)
+    end
   end
 
   describe '#conversation_status_changed' do

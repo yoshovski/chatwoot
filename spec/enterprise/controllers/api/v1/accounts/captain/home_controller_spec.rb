@@ -44,7 +44,7 @@ RSpec.describe 'Api::V1::Accounts::Captain::Home', type: :request do
       create(:captain_inbox, captain_assistant: assistant, inbox: widget_inbox)
       create(:captain_assistant_response, assistant: assistant, account: account, status: :approved)
       Captain::KnowledgeGaps::Recorder.new(assistant: assistant, conversation: conversation, question: 'Do you ship to Spain?',
-                                           reason: 'no_source').record
+                                           reason: 'handoff').record.knowledge!
       Captain::AgentSession.create!(assistant: assistant, session_type: :assistant, subject: conversation,
                                     sources: [{ index: 1, reference: 'product:mug', kind: 'product', used: true }])
       note = create(:message, account: account, conversation: conversation, private: true, message_type: :outgoing)

@@ -38,6 +38,8 @@ Rails.application.routes.draw do
       resources :responses, only: [:show]
     end
     resource :slack_uploads, only: [:show]
+    get '/billing_emails/usage_opt_out', to: 'billing_usage_emails#show', as: :billing_usage_emails
+    post '/billing_emails/usage_opt_out', to: 'billing_usage_emails#update'
   end
 
   get '/health', to: 'health#show'
@@ -162,6 +164,9 @@ Rails.application.routes.draw do
             resources :knowledge_gaps, only: [:index, :show] do
               post :answer, on: :member
               post :dismiss, on: :member
+              get :topics, on: :collection
+              get :action_requests, on: :collection
+              post :bulk_dismiss, on: :collection
             end
             resource :home, only: [:show], controller: 'home'
             resource :guided_setup, only: [:show], controller: 'guided_setup' do
