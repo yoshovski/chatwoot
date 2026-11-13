@@ -18,7 +18,10 @@ class AccountSignup < ApplicationRecord
   # The domain that identifies the business: nil for free mail (gmail.com, outlook.com, …) and disposable addresses,
   # which many unrelated people share.
   def self.business_domain(email)
-    Companies::BusinessEmailDetectorService.new(email).perform ? email.split('@').last.downcase : nil
+    address = ValidEmail2::Address.new(email.to_s)
+    return unless address.valid? && !address.disposable_domain? && EmailProviderInfo.call(email).nil?
+
+    email.split('@').last.downcase
   end
 
   # "https://www.Shop.example/path" → "shop.example".
