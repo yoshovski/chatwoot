@@ -2985,35 +2985,80 @@
         "UNANSWERED": "Unanswered",
         "ANSWERED": "Solved by team"
       },
-      "QUEUE_HINT": "Questions your AI agent couldn't answer, ranked by customer demand.",
-      "CONVERSATIONS": "{count} conversation | {count} conversations",
-      "LAST_SEEN": "Last seen {time}",
-      "REASON": {
-        "HANDOFF": "Handed to a person",
-        "NO_SOURCE": "No answer in knowledge"
-      },
-      "ADD_ANSWER": "Add answer",
-      "DISMISS": "Dismiss",
-      "DIALOG": {
-        "TITLE": "Add an answer",
-        "DESCRIPTION": "Answer once to save this as an FAQ used by the AI agent.",
-        "ANSWER_PLACEHOLDER": "Write the answer the AI agent should give",
-        "SEEN_IN": "Asked in",
-        "NO_CONVERSATIONS": "No conversations you can open.",
-        "SAVE": "Save answer"
-      },
-      "EMPTY_STATE": {
-        "TITLE": "No unanswered questions",
-        "SUBTITLE": "Questions your AI agent couldn't answer from its knowledge will show up here."
-      },
       "SUCCESS": {
-        "ANSWERED": "Answer saved to the AI agent's knowledge.",
-        "DISMISSED": "Question dismissed."
+        "ANSWERED": "Answer saved to the AI agent's knowledge."
       },
       "ERRORS": {
-        "LOAD": "There was an error loading unanswered questions. Please try again.",
         "ANSWER": "There was an error saving the answer. Please try again.",
         "DISMISS": "There was an error dismissing the question. Please try again."
+      }
+    },
+    "SUGGESTIONS": {
+      "HINT": "Questions your AI agent couldn't answer, rewritten and grouped by topic. Add an answer once and the agent uses it from then on.",
+      "CONVERSATIONS": "{count} conversation | {count} conversations",
+      "ASKED_IN": "Asked in {count} conversation | Asked in {count} conversations",
+      "NO_TOPIC": "Other questions",
+      "NOT_RELEVANT": "Not relevant",
+      "ANSWER_PLACEHOLDER": "Write the answer your AI agent should give",
+      "BULK": {
+        "SELECT": "Select",
+        "CANCEL": "Cancel",
+        "NOT_RELEVANT_COUNT": "Mark {count} as not relevant"
+      },
+      "ACTIONS": {
+        "TITLE": "Requests your agent can't do yet",
+        "DESCRIPTION": "These aren't questions, so an answer won't help. Your agent needs an action to handle them.",
+        "EXAMPLE": "e.g. “{text}”",
+        "INTENTS": {
+          "ORDER_STATUS": {
+            "TITLE": "Check an order's status",
+            "CTA": "Set up order tracking"
+          },
+          "CANCEL": {
+            "TITLE": "Cancel an order",
+            "CTA": "Create an action"
+          },
+          "RETURN": {
+            "TITLE": "Return or exchange an item",
+            "CTA": "Use the returns template"
+          },
+          "BOOKING": {
+            "TITLE": "Book a call or appointment",
+            "CTA": "Use the booking template"
+          },
+          "OTHER": {
+            "TITLE": "Other requests",
+            "CTA": "Create an action"
+          }
+        }
+      },
+      "EMPTY_STATE": {
+        "TITLE": "No suggestions right now",
+        "SUBTITLE": "When customers ask something your AI agent can't answer, it shows up here once it's been asked in 2 conversations, or right away if the chat was handed to your team.",
+        "ONLY_ACTIONS": "No unanswered questions right now. Customers did ask your agent to do a few things it can't do yet:"
+      },
+      "SUCCESS": {
+        "DISMISSED": "Marked as not relevant.",
+        "BULK_DISMISSED": "{count} question marked as not relevant. | {count} questions marked as not relevant."
+      },
+      "FOCUS": {
+        "MORE_QUOTES": "+ {count} more like this",
+        "DRAFT": "Suggested answer, from your team's reply",
+        "ADD": "Add answer",
+        "NEXT": "Next",
+        "LEFT": "{count} question to answer | {count} questions to answer",
+        "HAS_DRAFT": "Suggested answer ready",
+        "QUOTE": "“{text}”",
+        "EDIT": "Edit"
+      },
+      "ERROR": {
+        "TITLE": "Couldn't load your suggestions",
+        "DESCRIPTION": "Something went wrong on our side. Try again in a moment.",
+        "RETRY": "Try again"
+      },
+      "DONE": {
+        "TITLE": "All caught up",
+        "DESCRIPTION": "Every question has an answer or was set aside. New ones show up here when customers ask them."
       }
     },
     "INBOXES": {

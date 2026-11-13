@@ -3,7 +3,9 @@ import FaqSuggestions from './FaqSuggestions.vue';
 
 const mocks = vi.hoisted(() => ({
   apiGet: vi.fn(),
-  gapsGet: vi.fn(),
+  topics: vi.fn(),
+  actionRequests: vi.fn(),
+  answer: vi.fn(),
   dispatch: vi.fn(),
   replace: vi.fn(),
   route: null,
@@ -15,7 +17,11 @@ vi.mock('dashboard/api/captain/faqSuggestions', () => ({
 }));
 
 vi.mock('dashboard/api/captain/knowledgeGaps', () => ({
-  default: { get: mocks.gapsGet },
+  default: {
+    topics: mocks.topics,
+    actionRequests: mocks.actionRequests,
+    answer: mocks.answer,
+  },
 }));
 
 vi.mock('dashboard/composables/store', async () => {
@@ -76,9 +82,27 @@ const FaqSuggestionCardStub = {
   template: '<div>{{ suggestion.question }}</div>',
 };
 
-const KnowledgeGapCardStub = {
-  props: ['gap'],
-  template: '<div>{{ gap.question }}</div>',
+// Renders every question and lets a test answer the first one, as the focus card does.
+const SuggestionsFocusStub = {
+  props: ['topics'],
+  emits: ['save'],
+  template: `<div>
+    <p v-for="group in topics" :key="group.topic">
+      <span v-for="gap in group.gaps" :key="gap.id">{{ gap.question }}</span>
+    </p>
+    <button class="save-first" @click="$emit('save', topics[0].gaps[0], { question: 'Q', answer: 'A' })" />
+    <slot />
+  </div>`,
+};
+
+const EmptyStateStub = {
+  props: ['title'],
+  template: '<div>{{ title }}<slot /></div>',
+};
+
+const ActionRequestsCardStub = {
+  props: ['requests'],
+  template: '<div>{{ requests.map(request => request.intent).join() }}</div>',
 };
 
 const mountPage = () =>
@@ -88,13 +112,19 @@ const mountPage = () =>
       stubs: {
         PageLayout: PageLayoutStub,
         FaqSuggestionCard: FaqSuggestionCardStub,
-        KnowledgeGapCard: KnowledgeGapCardStub,
+        SuggestionsFocus: SuggestionsFocusStub,
+        KitEmptyState: EmptyStateStub,
+        ActionRequestsCard: ActionRequestsCardStub,
+        Button: { template: '<button class="retry" />' },
       },
     },
   });
 
-const gapsResponse = payload => ({
-  data: { payload, meta: { page: 1, total_count: payload.length } },
+const payloadResponse = payload => ({ data: { payload } });
+const topic = (name, gaps) => ({
+  topic: name,
+  conversations_count: gaps.length,
+  gaps,
 });
 
 describe('FaqSuggestions', () => {
@@ -102,7 +132,8 @@ describe('FaqSuggestions', () => {
     vi.clearAllMocks();
     mocks.route.params.assistantId = 1;
     mocks.route.query = {};
-    mocks.gapsGet.mockResolvedValue(gapsResponse([]));
+    mocks.topics.mockResolvedValue(payloadResponse([]));
+    mocks.actionRequests.mockResolvedValue(payloadResponse([]));
     mocks.getterValues['captainFaqSuggestions/getRecords'].value = [];
     mocks.getterValues['captainFaqSuggestions/getMeta'].value = {
       totalCount: 0,
@@ -120,9 +151,14 @@ describe('FaqSuggestions', () => {
     });
   });
 
-  it('opens on the unanswered questions', async () => {
-    mocks.gapsGet.mockResolvedValue(
-      gapsResponse([{ id: 7, question: 'Do you ship to Spain?' }])
+  it('opens on the unanswered questions grouped by topic', async () => {
+    mocks.topics.mockResolvedValue(
+      payloadResponse([
+        topic('Shipping', [{ id: 7, question: 'Do you ship to Spain?' }]),
+      ])
+    );
+    mocks.actionRequests.mockResolvedValue(
+      payloadResponse([{ intent: 'order_status', conversations_count: 9 }])
     );
     mocks.apiGet.mockResolvedValue({
       data: {
@@ -136,8 +172,12 @@ describe('FaqSuggestions', () => {
 
     expect(wrapper.text()).toContain('Do you ship to Spain?');
     expect(wrapper.text()).not.toContain('Agent answer');
-    expect(mocks.gapsGet).toHaveBeenCalledWith(
-      expect.objectContaining({ assistantId: 1, page: 1 })
+    expect(wrapper.text()).toContain('order_status');
+    expect(mocks.topics).toHaveBeenCalledWith(
+      expect.objectContaining({ assistantId: 1 })
+    );
+    expect(mocks.actionRequests).toHaveBeenCalledWith(
+      expect.objectContaining({ assistantId: 1 })
     );
     expect(mocks.replace).toHaveBeenCalledWith({
       query: { tab: 'unanswered', page: 1 },
@@ -188,6 +228,63 @@ describe('FaqSuggestions', () => {
 
     expect(wrapper.text()).toContain('Current assistant');
     expect(wrapper.text()).not.toContain('Previous assistant');
+
+    wrapper.unmount();
+  });
+
+  it('shows the action requests on their own when no question is waiting', async () => {
+    mocks.actionRequests.mockResolvedValue(
+      payloadResponse([{ intent: 'return', conversations_count: 4 }])
+    );
+
+    const wrapper = mountPage();
+    await flushPromises();
+
+    expect(wrapper.text()).toContain(
+      'CAPTAIN.SUGGESTIONS.EMPTY_STATE.ONLY_ACTIONS'
+    );
+    expect(wrapper.text()).toContain('return');
+
+    wrapper.unmount();
+  });
+
+  it('shows an error with a retry when the list cannot load', async () => {
+    mocks.topics.mockRejectedValueOnce(new Error('boom'));
+
+    const wrapper = mountPage();
+    await flushPromises();
+
+    expect(wrapper.text()).toContain('CAPTAIN.SUGGESTIONS.ERROR.TITLE');
+
+    await wrapper.find('button.retry').trigger('click');
+    await flushPromises();
+
+    expect(mocks.topics).toHaveBeenCalledTimes(2);
+    expect(wrapper.text()).not.toContain('CAPTAIN.SUGGESTIONS.ERROR.TITLE');
+
+    wrapper.unmount();
+  });
+
+  it('saves an answer and says so once the last question is handled', async () => {
+    mocks.topics
+      .mockResolvedValueOnce(
+        payloadResponse([
+          topic('Shipping', [{ id: 7, question: 'Do you ship to Spain?' }]),
+        ])
+      )
+      .mockResolvedValue(payloadResponse([]));
+    mocks.answer.mockResolvedValue({});
+
+    const wrapper = mountPage();
+    await flushPromises();
+    await wrapper.find('button.save-first').trigger('click');
+    await flushPromises();
+
+    expect(mocks.answer).toHaveBeenCalledWith(7, {
+      question: 'Q',
+      answer: 'A',
+    });
+    expect(wrapper.text()).toContain('CAPTAIN.SUGGESTIONS.DONE.TITLE');
 
     wrapper.unmount();
   });
