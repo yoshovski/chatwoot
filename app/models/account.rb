@@ -113,6 +113,7 @@ class Account < ApplicationRecord
   has_many :account_data_exports, dependent: :destroy
 
   include AccountSubscriptionSettings
+  include AccountSignupTracking
 
   has_one_attached :contacts_export
 

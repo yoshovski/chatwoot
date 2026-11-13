@@ -16,19 +16,12 @@ module AccountSubscriptionAiAccess
     ai_pause_reason(conversation).nil?
   end
 
-  # nil while the AI may reply, otherwise limit_reached, trial_ended, payment_failed, paused or no_plan.
+  # nil while the AI may reply, otherwise email_unconfirmed, limit_reached, trial_ended, payment_failed, paused or no_plan.
   def ai_pause_reason(conversation = nil)
-    # ai_paused_at is set by a Stripe dispute (Enterprise::Billing::StripeEventFactsService) or by Super Admin
-    # (SuperAdmin::AccountBillingController); Super Admin clears it.
-    return held_pause_reason if ai_paused_at.present?
+    # A public signup gets AI replies once its person confirmed their email (T11).
+    return 'email_unconfirmed' if account.signup_email_unconfirmed?
 
-    case payment_status
-    # Invoiced outside Stripe: only accounts marked in Super Admin get AI replies, without a limit, as before T01.
-    when 'manual' then 'no_plan' unless manual_ai_access?
-    when 'trialing', 'active', 'past_due' then running_pause_reason(conversation)
-    # canceled and incomplete_expired: the subscription is over. After a trial that was never paid, say so.
-    else STOPPED_REASONS.fetch(payment_status) { trial_enabled? ? 'trial_ended' : 'no_plan' }
-    end
+    subscription_pause_reason(conversation)
   end
 
   # Extra AI conversations bought and not yet used or expired (ExtraAiConversationEntry).
@@ -44,6 +37,20 @@ module AccountSubscriptionAiAccess
   end
 
   private
+
+  def subscription_pause_reason(conversation)
+    # ai_paused_at is set by a Stripe dispute (Enterprise::Billing::StripeEventFactsService) or by Super Admin
+    # (SuperAdmin::AccountBillingController); Super Admin clears it.
+    return held_pause_reason if ai_paused_at.present?
+
+    case payment_status
+    # Invoiced outside Stripe: only accounts marked in Super Admin get AI replies, without a limit, as before T01.
+    when 'manual' then 'no_plan' unless manual_ai_access?
+    when 'trialing', 'active', 'past_due' then running_pause_reason(conversation)
+    # canceled and incomplete_expired: the subscription is over. After a trial that was never paid, say so.
+    else STOPPED_REASONS.fetch(payment_status) { trial_enabled? ? 'trial_ended' : 'no_plan' }
+    end
+  end
 
   def held_pause_reason
     ai_paused_reason == ADMIN_PAUSE_REASON ? 'paused' : 'payment_failed'

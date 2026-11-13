@@ -40,4 +40,22 @@ describe GlobalConfigService do
       # end
     end
   end
+
+  describe '.account_signup_enabled?' do
+    before { GlobalConfig.clear_cache }
+
+    after { GlobalConfig.clear_cache }
+
+    it 'stays off without a captcha secret, even when ENABLE_ACCOUNT_SIGNUP is on' do
+      with_modified_env ENABLE_ACCOUNT_SIGNUP: 'true' do
+        expect(described_class.account_signup_enabled?).to be(false)
+      end
+    end
+
+    it 'is on with ENABLE_ACCOUNT_SIGNUP and a captcha secret' do
+      with_modified_env ENABLE_ACCOUNT_SIGNUP: 'true', TURNSTILE_SECRET_KEY: 'secret' do
+        expect(described_class.account_signup_enabled?).to be(true)
+      end
+    end
+  end
 end

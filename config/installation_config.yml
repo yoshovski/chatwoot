@@ -74,9 +74,32 @@
   locked: false
 - name: HCAPTCHA_SITE_KEY
   value:
+  display_title: 'hCaptcha site key'
   locked: false
 - name: HCAPTCHA_SERVER_KEY
   value:
+  display_title: 'hCaptcha secret key'
+  type: secret
+  locked: false
+- name: TURNSTILE_SITE_KEY
+  value:
+  display_title: 'Cloudflare Turnstile site key'
+  description: 'Used instead of hCaptcha when the Turnstile secret key is set'
+  locked: false
+- name: TURNSTILE_SECRET_KEY
+  value:
+  display_title: 'Cloudflare Turnstile secret key'
+  type: secret
+  locked: false
+- name: TERMS_VERSION
+  value: '2026-11-13'
+  display_title: 'Terms version'
+  description: 'Stored with each signup as the terms the person agreed to. Change it when the terms change'
+  locked: false
+- name: PRIVACY_VERSION
+  value: '2026-11-13'
+  display_title: 'Privacy policy version'
+  description: 'Stored with each signup as the privacy policy the person agreed to. Change it when the policy changes'
   locked: false
 - name: INSTALLATION_EVENTS_WEBHOOK_URL
   value:

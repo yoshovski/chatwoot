@@ -15,7 +15,8 @@
       "TRIAL_ENDED": "Your trial has ended. Choose a plan to turn the AI agent back on.",
       "PAYMENT_FAILED": "Your last payment failed. Update your payment method to turn the AI agent back on.",
       "PAUSED": "Your subscription is paused. Resume it to turn the AI agent back on.",
-      "NO_PLAN": "Your account has no plan with AI conversations. Choose a plan to turn the AI agent on."
+      "NO_PLAN": "Your account has no plan with AI conversations. Choose a plan to turn the AI agent on.",
+      "EMAIL_UNCONFIRMED": "Confirm your email address to turn the AI agent on. Check your inbox for the link."
     },
     "VIEW_USAGE": "View usage",
     "TRIAL_END_DATE": "Trial ends",

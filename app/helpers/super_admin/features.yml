@@ -106,6 +106,12 @@ line:
   icon: 'icon-line-line'
 
 # ------- OAuth & Authentication ------- #
+captcha:
+  name: 'Captcha'
+  description: 'Cloudflare Turnstile or hCaptcha keys. Public signup stays off without one.'
+  enabled: true
+  icon: 'icon-lock-line'
+  config_key: 'captcha'
 google:
   name: 'Google'
   description: 'Configuration for setting up Google OAuth Integration'

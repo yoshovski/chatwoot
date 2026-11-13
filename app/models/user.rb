@@ -68,6 +68,11 @@ class User < ApplicationRecord
          :two_factor_authenticatable,
          :omniauthable, omniauth_providers: [:google_oauth2, :saml]
 
+  # Devise, after the email is confirmed: the welcome email of a public signup (T11).
+  def after_confirmation
+    AccountSignup.where(user_id: id, welcome_sent_at: nil).find_each { |signup| Signup::WelcomeJob.perform_later(signup) }
+  end
+
   # TODO: remove in a future version once online status is moved to account users
   # remove the column availability from users
   enum :availability, { online: 0, offline: 1, busy: 2 }

@@ -6,6 +6,7 @@ class Api::V1::AccountsController < Api::BaseController
   before_action :check_signup_enabled, only: [:create]
   before_action :ensure_account_name, only: [:create]
   before_action :validate_captcha, only: [:create]
+  before_action :ensure_terms_accepted, only: [:create]
   before_action :fetch_account, except: [:create]
   before_action :validate_token_api_access, if: :authenticate_by_access_token?, except: [:create]
   before_action :check_authorization, except: [:create]
@@ -14,6 +15,7 @@ class Api::V1::AccountsController < Api::BaseController
               CustomExceptions::Account::InvalidParams,
               CustomExceptions::Account::UserExists,
               CustomExceptions::Account::UserErrors,
+              CustomExceptions::Account::TermsNotAccepted,
               with: :render_error_response
 
   def show
@@ -28,7 +30,7 @@ class Api::V1::AccountsController < Api::BaseController
       email: account_params[:email],
       user_password: account_params[:password],
       locale: account_params[:locale],
-      user: current_user, signup: current_user.nil?
+      user: current_user, signup: current_user.nil?, signup_details: signup_details
     ).perform
     enqueue_branding_enrichment
     if @user
@@ -137,7 +139,18 @@ class Api::V1::AccountsController < Api::BaseController
   end
 
   def validate_captcha
-    raise ActionController::InvalidAuthenticityToken, 'Invalid Captcha' unless ChatwootCaptcha.new(params[:h_captcha_client_response]).valid?
+    captcha = ChatwootCaptcha.new(params[:captcha_response], remote_ip: request.remote_ip)
+    raise ActionController::InvalidAuthenticityToken, 'Invalid Captcha' unless captcha.valid?
+  end
+
+  def signup_details
+    { ip: request.remote_ip, signup_method: api_only_signup? ? 'api' : 'email' }
+  end
+
+  # A public signup agrees to the terms and the privacy policy; AccountBuilder stores the versions (T11).
+  def ensure_terms_accepted
+    return if current_user
+    raise CustomExceptions::Account::TermsNotAccepted.new({}) unless params[:terms_accepted] == true
   end
 
   def pundit_user

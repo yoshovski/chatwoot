@@ -5,12 +5,14 @@ class Api::V2::AccountsController < Api::BaseController
                      only: [:create], raise: false
   before_action :check_signup_enabled, only: [:create]
   before_action :validate_captcha, only: [:create]
+  before_action :ensure_terms_accepted, only: [:create]
   before_action :fetch_account, except: [:create]
   before_action :check_authorization, except: [:create]
 
   rescue_from CustomExceptions::Account::InvalidEmail,
               CustomExceptions::Account::UserExists,
               CustomExceptions::Account::UserErrors,
+              CustomExceptions::Account::TermsNotAccepted,
               with: :render_error_response
 
   def create
@@ -18,7 +20,7 @@ class Api::V2::AccountsController < Api::BaseController
       email: account_params[:email],
       user_password: account_params[:password],
       locale: account_params[:locale],
-      user: current_user, signup: current_user.nil?
+      user: current_user, signup: current_user.nil?, signup_details: signup_details
     ).perform
 
     fetch_account_and_user_info
@@ -62,7 +64,18 @@ class Api::V2::AccountsController < Api::BaseController
   end
 
   def validate_captcha
-    raise ActionController::InvalidAuthenticityToken, 'Invalid Captcha' unless ChatwootCaptcha.new(params[:h_captcha_client_response]).valid?
+    captcha = ChatwootCaptcha.new(params[:captcha_response], remote_ip: request.remote_ip)
+    raise ActionController::InvalidAuthenticityToken, 'Invalid Captcha' unless captcha.valid?
+  end
+
+  def signup_details
+    { ip: request.remote_ip, signup_method: 'api' }
+  end
+
+  # A public signup agrees to the terms and the privacy policy; AccountBuilder stores the versions (T11).
+  def ensure_terms_accepted
+    return if current_user
+    raise CustomExceptions::Account::TermsNotAccepted.new({}) unless params[:terms_accepted] == true
   end
 end
 

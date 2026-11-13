@@ -2,14 +2,9 @@ require 'rails_helper'
 require 'base64'
 
 RSpec.describe 'Enterprise Google OAuth attribution', type: :request do
-  let(:email_validation_service) { instance_double(Account::SignUpEmailValidationService) }
-  let(:email) { 'oauth-attribution@example.com' }
-  let(:account_builder) { double }
-  let(:account) { create(:account) }
-  let(:first_touch_cookie) { encoded_cookie('source' => 'reddit', 'source_type' => 'paid_social') }
-  let(:last_touch_cookie) { encoded_cookie('source' => 'github', 'source_type' => 'referral') }
-
+  # Public signup needs a captcha (T11); these examples are about other rules.
   before do
+    allow(ChatwootCaptcha).to receive(:configured?).and_return(true)
     allow(ChatwootApp).to receive(:enterprise?).and_return(true)
     allow(ChatwootApp).to receive(:chatwoot_cloud?).and_return(true)
     allow(Account::SignUpEmailValidationService).to receive(:new).and_return(email_validation_service)
@@ -30,6 +25,13 @@ RSpec.describe 'Enterprise Google OAuth attribution', type: :request do
       }
     )
   end
+
+  let(:email_validation_service) { instance_double(Account::SignUpEmailValidationService) }
+  let(:email) { 'oauth-attribution@example.com' }
+  let(:account_builder) { double }
+  let(:account) { create(:account) }
+  let(:first_touch_cookie) { encoded_cookie('source' => 'reddit', 'source_type' => 'paid_social') }
+  let(:last_touch_cookie) { encoded_cookie('source' => 'github', 'source_type' => 'referral') }
 
   it 'records marketing attribution for Google OAuth signups' do
     cookies[Internal::Accounts::MarketingAttributionService::FIRST_TOUCH_COOKIE] = first_touch_cookie

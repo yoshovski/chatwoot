@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_11_14_090000) do
+ActiveRecord::Schema[7.2].define(version: 2026_11_15_090000) do
   # These extensions should be enabled to support this database
   enable_extension "pg_stat_statements"
   enable_extension "pg_trgm"
@@ -50,6 +50,31 @@ ActiveRecord::Schema[7.2].define(version: 2026_11_14_090000) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["account_id"], name: "index_account_saml_settings_on_account_id"
+  end
+
+  create_table "account_signups", force: :cascade do |t|
+    t.bigint "account_id"
+    t.bigint "user_id"
+    t.string "email"
+    t.string "email_domain"
+    t.string "website_domain"
+    t.string "ip"
+    t.string "signup_method", default: "email", null: false
+    t.string "terms_version"
+    t.string "privacy_version"
+    t.datetime "consented_at"
+    t.boolean "trial_granted", default: false, null: false
+    t.string "trial_refused_reason"
+    t.datetime "trial_override_at"
+    t.datetime "welcome_sent_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id"], name: "index_account_signups_on_account_id", unique: true
+    t.index ["created_at"], name: "index_account_signups_on_created_at"
+    t.index ["email_domain"], name: "index_account_signups_on_email_domain"
+    t.index ["ip"], name: "index_account_signups_on_ip"
+    t.index ["user_id"], name: "index_account_signups_on_user_id"
+    t.index ["website_domain"], name: "index_account_signups_on_website_domain"
   end
 
   create_table "account_subscriptions", force: :cascade do |t|

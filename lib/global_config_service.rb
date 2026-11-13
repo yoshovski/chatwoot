@@ -15,7 +15,13 @@ class GlobalConfigService
     i.value
   end
 
+  # Public signup needs a captcha (T11): with ENABLE_ACCOUNT_SIGNUP on and no Turnstile or hCaptcha secret it stays
+  # off. Super Admin refuses to switch it on without one (SuperAdmin::AppConfigsController); this covers the env var.
   def self.account_signup_enabled?
-    load('ENABLE_ACCOUNT_SIGNUP', 'false').to_s != 'false'
+    return false if load('ENABLE_ACCOUNT_SIGNUP', 'false').to_s == 'false'
+    return true if ChatwootCaptcha.configured?
+
+    Rails.logger.warn('ENABLE_ACCOUNT_SIGNUP is on but no captcha secret is set; public signup stays off')
+    false
   end
 end

@@ -66,7 +66,9 @@ export const register = async creds => {
       user_full_name: fullName,
       email: creds.email,
       password: creds.password,
-      h_captcha_client_response: creds.hCaptchaClientResponse,
+      captcha_response: creds.captchaResponse,
+      // The form shows the line agreeing to the terms and the privacy policy next to the button.
+      terms_accepted: true,
     });
     return response.data;
   } catch (error) {
@@ -75,10 +77,10 @@ export const register = async creds => {
   return null;
 };
 
-export const resendConfirmation = async ({ email, hCaptchaClientResponse }) => {
+export const resendConfirmation = async ({ email, captchaResponse }) => {
   return wootAPI.post('resend_confirmation', {
     email,
-    h_captcha_client_response: hCaptchaClientResponse,
+    captcha_response: captchaResponse,
   });
 };
 

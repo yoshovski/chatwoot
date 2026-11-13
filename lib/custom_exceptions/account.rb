@@ -25,6 +25,12 @@ module CustomExceptions::Account
     end
   end
 
+  class TermsNotAccepted < CustomExceptions::Base
+    def message
+      I18n.t 'errors.signup.terms_not_accepted'
+    end
+  end
+
   class UserErrors < CustomExceptions::Base
     def message
       @data[:errors].full_messages.join(',')

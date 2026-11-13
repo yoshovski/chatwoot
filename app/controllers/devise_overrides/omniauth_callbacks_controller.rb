@@ -90,7 +90,9 @@ class DeviseOverrides::OmniauthCallbacksController < DeviseTokenAuth::OmniauthCa
       email: auth_hash['info']['email'],
       locale: I18n.locale,
       confirmed: auth_hash['info']['email_verified'],
-      signup: true
+      signup: true,
+      # The Google button sits under the sign-up page's line agreeing to the terms and the privacy policy.
+      signup_details: { ip: request.remote_ip, signup_method: 'google' }
     ).perform
     Avatar::AvatarFromUrlJob.perform_later(@resource, auth_hash['info']['image'])
   end

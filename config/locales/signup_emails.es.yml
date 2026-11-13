@@ -1,0 +1,8 @@
+# Welcome email after signup (T11). English source: signup_emails in en.yml.
+es:
+  signup_emails:
+    welcome:
+      subject: 'Te damos la bienvenida a %{brand}'
+      greeting: 'Hola, %{name}:'
+      body: 'Tu cuenta está lista. Añade tu sitio web y tu agente de IA aprenderá de él en un minuto. Pruébalo tú mismo y luego ponlo en tu sitio.'
+      button: 'Configura tu agente de IA'
