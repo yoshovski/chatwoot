@@ -77,17 +77,16 @@
       "ERROR": "Couldn't load your setup.",
       "RETRY": "Try again",
       "STEP_NAMES": {
-        "KNOWLEDGE": "Website",
-        "TEST_AGENT": "Test",
-        "AGENT_INBOX": "Turn on",
-        "CHAT_WIDGET": "Install"
+        "KNOWLEDGE": "Your website",
+        "TEST_AGENT": "Meet your agent",
+        "AGENT_INBOX": "Go live",
+        "CHAT_WIDGET": "Add to your site"
       },
       "WEBSITE": {
         "TITLE": "Start with your website",
-        "DESCRIPTION": "Your AI agent learns from your pages and answers customers with what it finds there.",
+        "DESCRIPTION": "Your AI agent reads it and answers your customers from it. You can continue right away.",
         "LABEL": "Website address",
         "PLACEHOLDER": "example.com",
-        "SUBMIT": "Import website",
         "INVALID": "Enter a website address like example.com.",
         "STAGES": {
           "FIND": "Find your pages",
@@ -107,12 +106,13 @@
         "OTHER_URL": "Use another address"
       },
       "TEST": {
-        "TITLE": "Test your AI agent",
-        "DESCRIPTION": "Ask what your customers would ask. Nothing you type here reaches a customer.",
+        "TITLE": "Meet your AI agent",
+        "DESCRIPTION": "It already knows the pages it has read. Ask what a customer would ask; nothing you type here reaches a customer.",
+        "TRY": "Try one of these",
         "NO_AGENT": "Add your website first, so the AI agent has something to answer from."
       },
       "LIVE": {
-        "TITLE": "Turn your AI agent on",
+        "TITLE": "Go live",
         "DESCRIPTION": "It answers visitors in your website chat. Your team can take over any conversation.",
         "KNOWLEDGE_READY": "Knowledge is ready",
         "KNOWLEDGE_IMPORTING": "Pages are still being read. It answers from the ready ones.",
@@ -138,7 +138,21 @@
           "UNREACHABLE": "We couldn't open {site}. Check that it is public.",
           "ERROR": "The check didn't finish. Try again."
         }
-      }
+      },
+      "LEARNED": "Learned {learned} of {total} pages",
+      "LEARNING_MORE": "Still reading the rest in the background. You don't need to wait.",
+      "FINDING": "Reading your website…",
+      "CHAT": {
+        "SHOP": "Your shop",
+        "REPLY_TIME": "Replies in seconds",
+        "COMPOSER": "Type your message…",
+        "SEND": "Send",
+        "TEST_ONLY": "Test chat. Nothing here reaches a customer.",
+        "ERROR": "Your AI agent couldn't answer just now. Try again.",
+        "EMPTY": "Ask your AI agent something a customer would ask."
+      },
+      "LEARNED_SO_FAR": "Learned {count} page so far | Learned {count} pages so far",
+      "LEARNED_ALL": "Learned {count} page | Learned {count} pages"
     },
     "V2": {
       "SUBTITLE": "Here is how your AI agent did in the last {days} days.",

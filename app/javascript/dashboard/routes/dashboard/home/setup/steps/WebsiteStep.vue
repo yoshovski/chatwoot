@@ -9,10 +9,12 @@ import StepIntro from './StepIntro.vue';
 
 const props = defineProps({
   guided: { type: Object, required: true },
+  // The website given at sign-up.
+  defaultUrl: { type: String, default: '' },
 });
 
 const { t } = useI18n();
-const url = ref('');
+const url = ref(props.defaultUrl);
 const urlError = ref('');
 const isStarting = ref(false);
 const wantsOtherUrl = ref(false);
@@ -58,22 +60,28 @@ const stages = computed(() => {
   }));
 });
 
+// Starts the import from the address in the form. Resolves true when the setup may move on: the import started, or
+// there was nothing to start (no form, or an empty field, which the owner can fill in later).
 const submit = async () => {
   urlError.value = '';
   const value = url.value.trim();
-  if (!value || !/^(https?:\/\/)?[^\s/]+\.[^\s]{2,}/i.test(value)) {
+  if (!showForm.value || !value) return true;
+  if (!/^(https?:\/\/)?[^\s/]+\.[^\s]{2,}/i.test(value)) {
     urlError.value = t('HOME.GUIDED.WEBSITE.INVALID');
-    return;
+    return false;
   }
   isStarting.value = true;
   const result = await props.guided.startWebsite(value);
   isStarting.value = false;
-  if (result.ok) {
-    wantsOtherUrl.value = false;
-  } else {
+  if (!result.ok) {
     urlError.value = result.error || t('HOME.GUIDED.WEBSITE.INVALID');
+    return false;
   }
+  wantsOtherUrl.value = false;
+  return true;
 };
+
+defineExpose({ submit });
 </script>
 
 <template>
@@ -83,27 +91,15 @@ const submit = async () => {
       :description="$t('HOME.GUIDED.WEBSITE.DESCRIPTION')"
     />
 
-    <form
-      v-if="showForm"
-      class="flex flex-col gap-3 sm:flex-row sm:items-start"
-      novalidate
-      @submit.prevent="submit"
-    >
+    <form v-if="showForm" novalidate @submit.prevent="submit">
       <Input
         v-model="url"
-        class="flex-1"
         autofocus
         :label="$t('HOME.GUIDED.WEBSITE.LABEL')"
         :placeholder="$t('HOME.GUIDED.WEBSITE.PLACEHOLDER')"
         :message="urlError"
         :message-type="urlError ? 'error' : 'info'"
         :disabled="isStarting"
-      />
-      <Button
-        type="submit"
-        class="sm:mt-6"
-        :label="$t('HOME.GUIDED.WEBSITE.SUBMIT')"
-        :is-loading="isStarting"
       />
     </form>
 
