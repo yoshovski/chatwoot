@@ -16,8 +16,9 @@ import EmptyStateLayout from 'dashboard/components-next/EmptyStateLayout.vue';
 import FaqSuggestionCard from 'dashboard/components-next/captain/assistant/FaqSuggestionCard.vue';
 import FaqSuggestionReviewDialog from 'dashboard/components-next/captain/pageComponents/response/FaqSuggestionReviewDialog.vue';
 import Input from 'dashboard/components-next/input/Input.vue';
-import KnowledgeGapAnswerDialog from 'dashboard/components-next/captain/pageComponents/response/KnowledgeGapAnswerDialog.vue';
-import KnowledgeGapCard from 'dashboard/components-next/captain/assistant/KnowledgeGapCard.vue';
+import ActionRequestsCard from 'dashboard/components-next/captain/suggestions/ActionRequestsCard.vue';
+import KitEmptyState from 'dashboard/components-next/kit/EmptyState.vue';
+import SuggestionsFocus from 'dashboard/components-next/captain/suggestions/SuggestionsFocus.vue';
 import PageLayout from 'dashboard/components-next/captain/PageLayout.vue';
 import TabBar from 'dashboard/components-next/tabbar/TabBar.vue';
 
@@ -38,12 +39,15 @@ const reviewDialog = ref(null);
 const activeSuggestionId = ref(null);
 
 const activeTab = ref(TABS.UNANSWERED);
-const gaps = ref([]);
-const gapsMeta = ref({ page: 1, totalCount: 0 });
+const topicGroups = ref([]);
+const actionRequests = ref([]);
 const isFetchingGaps = ref(false);
-const selectedGap = ref(null);
-const gapDialog = ref(null);
-const activeGapId = ref(null);
+const hasGapsError = ref(false);
+const busyGapIds = ref([]);
+// Questions handled since the page opened: drives the progress bar and the "all done" state.
+const handledCount = ref(0);
+const gaps = computed(() => topicGroups.value.flatMap(group => group.gaps));
+const gapsMeta = computed(() => ({ page: 1, totalCount: gaps.value.length }));
 const isUnanswered = computed(() => activeTab.value === TABS.UNANSWERED);
 
 const selectedAssistantId = computed(() => Number(route.params.assistantId));
@@ -74,7 +78,12 @@ const listMeta = computed(() =>
   isUnanswered.value ? gapsMeta.value : suggestionMeta.value
 );
 const isListEmpty = computed(() =>
-  isUnanswered.value ? !gaps.value.length : !suggestions.value.length
+  isUnanswered.value
+    ? !hasGapsError.value &&
+      !handledCount.value &&
+      !gaps.value.length &&
+      !actionRequests.value.length
+    : !suggestions.value.length
 );
 
 const updateURL = page => {
@@ -86,27 +95,29 @@ const updateURL = page => {
 const { run: runListRequest, abort: abortListRequest } = useAbortableRequest();
 const { run: runGapsRequest, abort: abortGapsRequest } = useAbortableRequest();
 
-const fetchGaps = async (page = 1) => {
-  isFetchingGaps.value = true;
+// The Unanswered tab is one page: questions grouped by topic, and the action requests.
+const fetchGaps = async ({ quiet = false } = {}) => {
+  if (!quiet) isFetchingGaps.value = true;
+  hasGapsError.value = false;
   try {
+    const params = {
+      search: searchQuery.value,
+      assistantId: selectedAssistantId.value,
+    };
     const response = await runGapsRequest(signal =>
-      CaptainKnowledgeGapsAPI.get({
-        page,
-        search: searchQuery.value,
-        assistantId: selectedAssistantId.value,
-        signal,
-      })
+      Promise.all([
+        CaptainKnowledgeGapsAPI.topics({ ...params, signal }),
+        CaptainKnowledgeGapsAPI.actionRequests({ ...params, signal }),
+      ])
     );
     if (!response) return;
 
-    gaps.value = response.data.payload;
-    gapsMeta.value = {
-      page: Number(response.data.meta.page),
-      totalCount: response.data.meta.total_count,
-    };
+    const [topicsResponse, actionsResponse] = response;
+    topicGroups.value = topicsResponse.data.payload;
+    actionRequests.value = actionsResponse.data.payload;
     isFetchingGaps.value = false;
-  } catch (error) {
-    useAlert(error?.message || t('CAPTAIN.KNOWLEDGE_GAPS.ERRORS.LOAD'));
+  } catch {
+    hasGapsError.value = true;
     isFetchingGaps.value = false;
   }
 };
@@ -139,13 +150,13 @@ const fetchSuggestions = async (page = 1) => {
 
 const fetchActivePage = (page = 1) => {
   updateURL(page);
-  return isUnanswered.value ? fetchGaps(page) : fetchSuggestions(page);
+  return isUnanswered.value ? fetchGaps() : fetchSuggestions(page);
 };
 
 // Both lists load so each tab shows its count; the inactive one starts at page 1.
 const fetchBothLists = page => {
   updateURL(page);
-  fetchGaps(isUnanswered.value ? page : 1);
+  fetchGaps();
   fetchSuggestions(isUnanswered.value ? 1 : page);
 };
 
@@ -154,34 +165,44 @@ const handleTabChange = tab => {
   updateURL(listMeta.value.page);
 };
 
-const handleGapAnswer = gap => {
-  selectedGap.value = gap;
-  nextTick(() => gapDialog.value.dialogRef.open());
-};
-
-const handleGapDialogClose = () => {
-  selectedGap.value = null;
-};
-
-const refreshGaps = () => {
-  const currentPage = gapsMeta.value.page || 1;
-  const page =
-    gaps.value.length > 1 || currentPage === 1 ? currentPage : currentPage - 1;
-  fetchGaps(page);
-};
-
-const handleGapDismiss = async gap => {
-  activeGapId.value = gap.id;
+// Runs one change on some questions, shows the result and reloads the list.
+const changeGaps = async (ids, request, successMessage, errorMessage) => {
+  busyGapIds.value = ids;
   try {
-    await CaptainKnowledgeGapsAPI.dismiss(gap.id);
-    useAlert(t('CAPTAIN.KNOWLEDGE_GAPS.SUCCESS.DISMISSED'));
-    refreshGaps();
+    await request();
+    useAlert(successMessage);
+    handledCount.value += ids.length;
+    await fetchGaps({ quiet: true });
   } catch (error) {
-    useAlert(error?.message || t('CAPTAIN.KNOWLEDGE_GAPS.ERRORS.DISMISS'));
+    useAlert(error?.message || errorMessage);
   } finally {
-    activeGapId.value = null;
+    busyGapIds.value = [];
   }
 };
+
+const handleGapDismiss = gap =>
+  changeGaps(
+    [gap.id],
+    () => CaptainKnowledgeGapsAPI.dismiss(gap.id),
+    t('CAPTAIN.SUGGESTIONS.SUCCESS.DISMISSED'),
+    t('CAPTAIN.KNOWLEDGE_GAPS.ERRORS.DISMISS')
+  );
+
+const handleBulkDismiss = ids =>
+  changeGaps(
+    ids,
+    () => CaptainKnowledgeGapsAPI.bulkDismiss(ids),
+    t('CAPTAIN.SUGGESTIONS.SUCCESS.BULK_DISMISSED', { count: ids.length }),
+    t('CAPTAIN.KNOWLEDGE_GAPS.ERRORS.DISMISS')
+  );
+
+const handleGapSave = (gap, answer) =>
+  changeGaps(
+    [gap.id],
+    () => CaptainKnowledgeGapsAPI.answer(gap.id, answer),
+    t('CAPTAIN.KNOWLEDGE_GAPS.SUCCESS.ANSWERED'),
+    t('CAPTAIN.KNOWLEDGE_GAPS.ERRORS.ANSWER')
+  );
 
 const refreshCurrentPage = () => {
   const currentPage = suggestionMeta.value.page || 1;
@@ -260,9 +281,9 @@ watch(
   () => {
     selectedSuggestion.value = null;
     activeSuggestionId.value = null;
-    selectedGap.value = null;
-    gaps.value = [];
-    gapsMeta.value = { page: 1, totalCount: 0 };
+    topicGroups.value = [];
+    actionRequests.value = [];
+    handledCount.value = 0;
     store.dispatch('captainFaqSuggestions/setRecords', {
       records: [],
       meta: { page: 1, total_count: 0 },
@@ -284,7 +305,9 @@ onUnmounted(() => {
     :header-title="$t('CAPTAIN.AGENT_UX.SECTIONS.KNOWLEDGE')"
     :is-fetching="isFetching"
     :is-empty="isListEmpty"
-    :show-pagination-footer="!isFetching && (listMeta?.totalCount || 0) > 25"
+    :show-pagination-footer="
+      !isUnanswered && !isFetching && (listMeta?.totalCount || 0) > 25
+    "
     :show-know-more="false"
     :feature-flag="FEATURE_FLAGS.CAPTAIN"
     @update:current-page="fetchActivePage"
@@ -313,7 +336,7 @@ onUnmounted(() => {
         v-if="isUnanswered && gaps.length"
         class="mb-2 text-sm text-n-slate-11"
       >
-        {{ $t('CAPTAIN.KNOWLEDGE_GAPS.QUEUE_HINT') }}
+        {{ $t('CAPTAIN.SUGGESTIONS.HINT') }}
       </p>
       <div
         v-if="!isUnanswered && suggestions.length"
@@ -336,12 +359,12 @@ onUnmounted(() => {
       <EmptyStateLayout
         :title="
           isUnanswered
-            ? $t('CAPTAIN.KNOWLEDGE_GAPS.EMPTY_STATE.TITLE')
+            ? $t('CAPTAIN.SUGGESTIONS.EMPTY_STATE.TITLE')
             : $t('CAPTAIN.FAQ_SUGGESTIONS.EMPTY_STATE.TITLE')
         "
         :subtitle="
           isUnanswered
-            ? $t('CAPTAIN.KNOWLEDGE_GAPS.EMPTY_STATE.SUBTITLE')
+            ? $t('CAPTAIN.SUGGESTIONS.EMPTY_STATE.SUBTITLE')
             : $t('CAPTAIN.FAQ_SUGGESTIONS.EMPTY_STATE.SUBTITLE')
         "
         :show-backdrop="false"
@@ -362,34 +385,58 @@ onUnmounted(() => {
       <CaptainPaywall />
     </template>
     <template #body>
-      <section
-        v-if="isUnanswered"
-        :aria-label="$t('CAPTAIN.KNOWLEDGE_GAPS.TABS.UNANSWERED')"
-        class="border rounded-xl border-n-weak bg-n-solid-1 overflow-hidden mb-6"
-      >
-        <div
-          class="flex items-center gap-3 px-4 py-2.5 text-xs font-medium border-b border-n-weak text-n-slate-11 bg-n-alpha-1"
+      <div v-if="isUnanswered" class="mb-6 flex flex-col gap-5">
+        <KitEmptyState
+          v-if="hasGapsError"
+          tone="error"
+          class="rounded-card bg-n-solid-2 shadow-card outline outline-1 -outline-offset-1 outline-n-container"
+          icon="i-lucide-circle-alert"
+          :title="$t('CAPTAIN.SUGGESTIONS.ERROR.TITLE')"
+          :description="$t('CAPTAIN.SUGGESTIONS.ERROR.DESCRIPTION')"
         >
-          <span class="flex-1 min-w-0">
-            {{ $t('KNOWLEDGE_LIST.COLUMNS.QUESTION') }}
-          </span>
-          <span class="hidden sm:block w-36">
-            {{ $t('KNOWLEDGE_LIST.COLUMNS.DEMAND') }}
-          </span>
-          <span class="hidden md:block w-28">
-            {{ $t('KNOWLEDGE_LIST.COLUMNS.UPDATED') }}
-          </span>
-          <span class="sm:w-44 shrink-0 text-end" />
-        </div>
-        <KnowledgeGapCard
-          v-for="gap in gaps"
-          :key="gap.id"
-          :gap="gap"
-          :is-loading="activeGapId === gap.id"
-          @answer="handleGapAnswer"
+          <Button
+            :label="$t('CAPTAIN.SUGGESTIONS.ERROR.RETRY')"
+            size="sm"
+            variant="faded"
+            color="slate"
+            @click="fetchGaps()"
+          />
+        </KitEmptyState>
+        <SuggestionsFocus
+          v-else-if="gaps.length"
+          :topics="topicGroups"
+          :busy-ids="busyGapIds"
+          :handled-count="handledCount"
+          @save="handleGapSave"
           @dismiss="handleGapDismiss"
-        />
-      </section>
+          @bulk-dismiss="handleBulkDismiss"
+        >
+          <ActionRequestsCard
+            v-if="actionRequests.length"
+            :requests="actionRequests"
+          />
+        </SuggestionsFocus>
+        <template v-else>
+          <KitEmptyState
+            v-if="handledCount"
+            tone="success"
+            class="rounded-card bg-n-solid-2 shadow-card outline outline-1 -outline-offset-1 outline-n-container"
+            icon="i-lucide-party-popper"
+            :title="$t('CAPTAIN.SUGGESTIONS.DONE.TITLE')"
+            :description="$t('CAPTAIN.SUGGESTIONS.DONE.DESCRIPTION')"
+          />
+          <p
+            v-else
+            class="mb-0 rounded-card bg-n-solid-2 p-5 text-sm text-n-slate-11 shadow-card outline outline-1 -outline-offset-1 outline-n-container"
+          >
+            {{ $t('CAPTAIN.SUGGESTIONS.EMPTY_STATE.ONLY_ACTIONS') }}
+          </p>
+          <ActionRequestsCard
+            v-if="actionRequests.length"
+            :requests="actionRequests"
+          />
+        </template>
+      </div>
       <section
         v-else
         :aria-label="$t('CAPTAIN.KNOWLEDGE_GAPS.TABS.ANSWERED')"
@@ -427,13 +474,6 @@ onUnmounted(() => {
       :suggestion="selectedSuggestion"
       @close="handleReviewClose"
       @resolved="handleResolved"
-    />
-    <KnowledgeGapAnswerDialog
-      v-if="selectedGap"
-      ref="gapDialog"
-      :gap="selectedGap"
-      @close="handleGapDialogClose"
-      @resolved="refreshGaps"
     />
   </PageLayout>
 </template>

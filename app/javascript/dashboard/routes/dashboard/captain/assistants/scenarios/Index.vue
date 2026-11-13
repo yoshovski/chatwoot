@@ -190,9 +190,13 @@ onMounted(async () => {
     store.dispatch('captainTools/getTools'),
     store.dispatch('captainAssistants/show', { id: assistantId.value }),
   ]);
-  if (route.query.template === 'capture_business_lead') {
+  // ?template=<id> opens that template, e.g. from Home or from the Suggestions page.
+  const linkedTemplate = route.query.template
+    ? getTemplateById(route.query.template)
+    : null;
+  if (linkedTemplate) {
     await nextTick();
-    onUseTemplate(getTemplateById('capture_business_lead'));
+    onUseTemplate(linkedTemplate);
   }
 });
 </script>
