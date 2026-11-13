@@ -56,7 +56,8 @@ class Captain::Leads::HandoffCaptureService
     Captain::Leads::CaptureService.new(@assistant, contact).perform(
       name: name, email: email, lead_type: payload['lead_type'], summary: payload['summary'], fields: payload['fields']
     )
-    Captain::Leads::DeliveryService.new(@assistant, @conversation).perform(lead_type: payload['lead_type'], summary: payload['summary'])
+    Captain::Leads::DeliveryService.new(@assistant, @conversation).perform(lead_type: payload['lead_type'], summary: payload['summary'],
+                                                                           fields: payload['fields'])
   end
 
   def enabled?

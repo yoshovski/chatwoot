@@ -36,7 +36,7 @@ class Captain::Tools::SaveLeadDetailsTool < Captain::Tools::BasePublicTool
     )
     if conversation
       Captain::Leads::DeliveryService.new(@assistant, conversation).perform(lead_type: details[:lead_type], summary: details[:summary],
-                                                                            notify: !captured)
+                                                                            fields: JSON.parse(fields_json), notify: !captured)
     end
     tool_context.state[:lead_summary_saved_this_run] = true
     captured ? 'Existing lead updated using its stored identity. Continue helping; do not restart intake or repeat the confirmation.' : result

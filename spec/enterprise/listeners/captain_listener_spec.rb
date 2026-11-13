@@ -50,6 +50,14 @@ describe CaptainListener do
       end
     end
 
+    it 'writes the AI summary only for conversations the AI took part in' do
+      assistant.update!(config: {})
+      expect { listener.conversation_resolved(event) }.not_to have_enqueued_job(Captain::Conversation::SummaryJob)
+
+      create(:message, account: account, inbox: inbox, conversation: conversation, sender: assistant, message_type: :outgoing)
+      expect { listener.conversation_resolved(event) }.to have_enqueued_job(Captain::Conversation::SummaryJob).with(conversation, 'resolved')
+    end
+
     it 'records the resolution on an existing V2 outcome' do
       assistant.update!(config: {})
       outcome = create(

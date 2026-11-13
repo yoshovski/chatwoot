@@ -70,6 +70,9 @@ const state = reactive({
   handoffFallbackTeamId: '',
   continueWhileWaiting: false,
   handoffSafetyNet: false,
+  summaryPrivateNote: true,
+  leadPrivateNote: false,
+  actionPrivateNote: false,
   resolutionMessage: '',
   instructions: '',
 });
@@ -172,6 +175,10 @@ const updateStateFromAssistant = assistant => {
   state.handoffFallbackTeamId = config.handoff_fallback_team_id ?? '';
   state.continueWhileWaiting = config.continue_while_waiting || false;
   state.handoffSafetyNet = config.handoff_safety_net || false;
+  // Mirrors Captain::Assistant#summary_private_note? and friends.
+  state.summaryPrivateNote = config.summary_private_note !== false;
+  state.leadPrivateNote = config.lead_private_note === true;
+  state.actionPrivateNote = config.action_private_note === true;
   state.resolutionMessage = config.resolution_message;
   state.instructions = config.instructions;
   savedSnapshot.value = snapshot();
@@ -218,6 +225,9 @@ const handleSubmit = async () => {
       handoff_rules: state.handoffRules,
       continue_while_waiting: state.continueWhileWaiting,
       handoff_safety_net: state.handoffSafetyNet,
+      summary_private_note: state.summaryPrivateNote,
+      lead_private_note: state.leadPrivateNote,
+      action_private_note: state.actionPrivateNote,
     },
   };
 
@@ -296,6 +306,7 @@ const panels = reactive({
   messages: false,
   contact: false,
   waiting: false,
+  notes: false,
 });
 const plain = html =>
   (html || '')
@@ -319,6 +330,15 @@ const messagesSummary = computed(
         : state.handoffMessage
     ) || t('CAPTAIN.AGENT_UX.NOT_SET')
 );
+const notesSummary = computed(() => {
+  const on = [
+    state.summaryPrivateNote &&
+      t('CAPTAIN.AGENT_UX.HANDOFF.NOTES_HANDOFF_SHORT'),
+    state.leadPrivateNote && t('CAPTAIN.AGENT_UX.HANDOFF.NOTES_LEAD_SHORT'),
+    state.actionPrivateNote && t('CAPTAIN.AGENT_UX.HANDOFF.NOTES_ACTION_SHORT'),
+  ].filter(Boolean);
+  return on.length ? on.join(', ') : t('CAPTAIN.AGENT_UX.HANDOFF.NOTES_NONE');
+});
 const waitingSummary = computed(() =>
   [
     t(
@@ -455,6 +475,12 @@ const handsOver = computed(() => supportModel.value !== 'email');
           :title="t(`${U}.WAITING`)"
           :summary="waitingSummary"
           @edit="panels.waiting = true"
+        />
+        <SummaryRow
+          icon="i-lucide-sticky-note"
+          :title="t('CAPTAIN.AGENT_UX.HANDOFF.NOTES')"
+          :summary="notesSummary"
+          @edit="panels.notes = true"
         />
       </SettingsCard>
     </section>
@@ -630,6 +656,28 @@ const handsOver = computed(() => supportModel.value !== 'email');
           :description="
             t('CAPTAIN.ASSISTANTS.SETTINGS.HANDOVER.SAFETY_NET.DESC', { name })
           "
+        />
+      </div>
+    </SettingsPanel>
+
+    <SettingsPanel
+      v-model:open="panels.notes"
+      :title="t('CAPTAIN.AGENT_UX.HANDOFF.NOTES')"
+      :description="t('CAPTAIN.AGENT_UX.HANDOFF.NOTES_PANEL_DESC', { name })"
+    >
+      <div class="flex flex-col divide-y divide-n-weak">
+        <SettingsSwitchRow
+          v-model="state.summaryPrivateNote"
+          :title="t('CAPTAIN.AGENT_UX.HANDOFF.NOTES_HANDOFF')"
+          :description="t('CAPTAIN.AGENT_UX.HANDOFF.NOTES_HANDOFF_DESC')"
+        />
+        <SettingsSwitchRow
+          v-model="state.leadPrivateNote"
+          :title="t('CAPTAIN.AGENT_UX.HANDOFF.NOTES_LEAD')"
+        />
+        <SettingsSwitchRow
+          v-model="state.actionPrivateNote"
+          :title="t('CAPTAIN.AGENT_UX.HANDOFF.NOTES_ACTION')"
         />
       </div>
     </SettingsPanel>

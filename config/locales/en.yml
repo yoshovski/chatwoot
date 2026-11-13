@@ -329,6 +329,7 @@ en:
         recorded_at: Recorded date
         review_notes: Review Notes
   notifications:
+    ai_summary: 'AI summary: %{summary}'
     notification_title:
       conversation_creation: 'A conversation (#%{display_id}) has been created in %{inbox_name}'
       conversation_assignment: 'A conversation (#%{display_id}) has been assigned to you'

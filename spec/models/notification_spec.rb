@@ -76,6 +76,15 @@ has been assigned to you"
       expect(notification.push_message_body).to eq "#{message.sender.name}: #{message.content.truncate_words(10)}"
     end
 
+    it 'leads with the AI summary when the AI agent handed the conversation over' do
+      conversation = create(:conversation, additional_attributes: {
+                              'captain_summary' => { 'status' => 'handed_off', 'wants' => 'Club price for 40 boots', 'next_step' => 'Send a quote' }
+                            })
+      create(:message, sender: create(:user), content: 'Hi', conversation: conversation)
+      notification = create(:notification, notification_type: 'conversation_creation', primary_actor: conversation)
+      expect(notification.push_message_body).to eq 'AI summary: Club price for 40 boots · Send a quote'
+    end
+
     it 'returns appropriate body suited for the notification type conversation_assignment' do
       conversation = create(:conversation)
       message = create(:message, sender: create(:user), content: Faker::Lorem.paragraphs(number: 2), conversation: conversation)

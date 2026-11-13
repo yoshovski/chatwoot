@@ -56,7 +56,27 @@ RSpec.describe Captain::Tools::SaveLeadDetailsTool, type: :model do
       )
     end
 
+    it 'stores the lead in the AI summary without a private note by default' do
+      tool.perform(
+        tool_context,
+        name: 'Alex Doe',
+        email: 'alex.doe@example.com',
+        lead_type: 'Quote',
+        summary: 'Acme Corp requested a quote for their team.',
+        fields_json: { 'company' => 'Acme Corp' }.to_json
+      )
+
+      conversation.reload
+      expect(conversation.messages.where(private: true)).to be_empty
+      expect(conversation.additional_attributes['captain_summary']).to include(
+        'status' => 'lead',
+        'lead' => { 'type' => 'Quote', 'summary' => 'Acme Corp requested a quote for their team.', 'fields' => { 'company' => 'Acme Corp' } }
+      )
+    end
+
     it 'creates a private summary note and marks the conversation as lead captured' do
+      # Agents created before the AI summary keep their lead notes.
+      assistant.update!(config: assistant.config.merge('lead_private_note' => true))
       summary = 'Acme Corp requested a quote for their team.'
       expect(Captain::Leads::NotifyTeamJob).to receive(:perform_later).with(assistant.id, conversation.id)
 

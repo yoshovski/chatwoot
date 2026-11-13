@@ -13,6 +13,12 @@ class ConversationDrop < BaseDrop
     @obj.try(:contact).name.try(:capitalize) || 'Customer'
   end
 
+  # The AI agent's summary of a handed-over conversation (enterprise Captain::Conversation::Summary), if any.
+  def ai_summary
+    summary = @obj.try(:additional_attributes).to_h['captain_summary'].to_h
+    summary.slice('wants', 'details', 'next_step', 'reason').compact.presence
+  end
+
   def recent_messages
     @obj.try(:recent_messages).map do |message|
       {

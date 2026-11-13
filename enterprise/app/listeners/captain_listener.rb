@@ -55,13 +55,10 @@ class CaptainListener < BaseListener
 
     tracker(conversation).record_resolution(at: event.timestamp)
 
-    assistant = conversation.inbox.captain_assistant
-
     return unless conversation.inbox.captain_active?
 
-    Captain::Llm::ContactNotesService.new(assistant, conversation).generate_and_update_notes if assistant.config['feature_memory'].present?
-    Captain::Llm::ConversationFaqJob.perform_later(conversation, assistant) if assistant.config['feature_faq'].present?
-    Captain::Conversation::OutcomeLabelJob.perform_later(conversation, assistant) if outcome_label_eligible?(conversation, assistant)
+    enqueue_summary(conversation)
+    run_resolution_jobs(conversation, conversation.inbox.captain_assistant)
   end
 
   def conversation_bot_handoff(event)
@@ -84,6 +81,19 @@ class CaptainListener < BaseListener
   end
 
   private
+
+  def run_resolution_jobs(conversation, assistant)
+    Captain::Llm::ContactNotesService.new(assistant, conversation).generate_and_update_notes if assistant.config['feature_memory'].present?
+    Captain::Llm::ConversationFaqJob.perform_later(conversation, assistant) if assistant.config['feature_faq'].present?
+    Captain::Conversation::OutcomeLabelJob.perform_later(conversation, assistant) if outcome_label_eligible?(conversation, assistant)
+  end
+
+  # Only conversations the AI took part in get a summary.
+  def enqueue_summary(conversation)
+    return unless Captain::Conversation::Summary.read(conversation).present? || conversation.messages.exists?(sender_type: 'Captain::Assistant')
+
+    Captain::Conversation::SummaryJob.perform_later(conversation, 'resolved')
+  end
 
   # A person replied: once they had a moment to finish, turn the reply into a draft answer for the open knowledge
   # gaps this conversation raised (Captain::KnowledgeGaps::DraftAnswer).

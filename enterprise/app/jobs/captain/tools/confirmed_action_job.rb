@@ -1,6 +1,7 @@
 # Finishes a confirm-mode action after the customer clicks its card: Confirm runs the steps left after the
 # confirmation, then posts the action's success or failure message (no second LLM call). Cancel, an expired card or
-# one replaced by a newer action posts a short "didn't do it". Each outcome is also left as a private note.
+# one replaced by a newer action posts a short "didn't do it". Each outcome goes into the AI summary, and into a private
+# note when the agent's "action notes" setting is on.
 class Captain::Tools::ConfirmedActionJob < ApplicationJob
   queue_as :default
 
@@ -37,6 +38,9 @@ class Captain::Tools::ConfirmedActionJob < ApplicationJob
   end
 
   def post_note(outcome, error: nil)
+    Captain::Conversation::Summary.new(@conversation).record_action!(title: @tool.title, outcome: outcome)
+    return unless @assistant&.action_private_note?
+
     I18n.with_locale(account_locale) do
       text = I18n.t('captain.action_confirmation.note', title: @tool.title,
                                                         outcome: I18n.t("captain.action_confirmation.outcomes.#{outcome}", error: error))

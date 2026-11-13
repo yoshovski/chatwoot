@@ -60,7 +60,8 @@ class Captain::Conversation::HandoffService
 
   def persist_extras!
     ownership_service.add_needs_human_label!
-    note_service.post_note!(note_content)
+    Captain::Conversation::Summary.new(conversation).record_handoff!(note_content: note_content, reason: reason)
+    note_service.post_note!(note_content) if assistant.nil? || assistant.summary_private_note?
   end
 
   def note_service

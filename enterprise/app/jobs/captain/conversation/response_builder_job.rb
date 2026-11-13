@@ -263,10 +263,11 @@ class Captain::Conversation::ResponseBuilderJob < ApplicationJob # rubocop:disab
     note.update!(created_at: outgoing_message.created_at + 1.second)
   end
 
+  # HandoffTool records the note it posted. With the agent's handoff note turned off there is none, and another
+  # private note (a scenario's add_private_note) must not be moved.
   def find_handoff_private_note
-    note_id = @run_result&.context&.dig(:state, :captain_handoff_note_id) ||
-              @run_result&.context&.dig(:captain_handoff_note_id)
-    note_id ? @conversation.messages.find_by(id: note_id) : @conversation.messages.where(private: true).last
+    note_id = @run_result&.context&.dig(:state, :cw_metadata, :handoff_note_id)
+    @conversation.messages.find_by(id: note_id) if note_id
   end
 
   # The agent declared a handoff in its answer but never called the handoff tool,

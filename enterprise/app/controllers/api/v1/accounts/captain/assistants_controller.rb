@@ -148,6 +148,7 @@ class Api::V1::Accounts::Captain::AssistantsController < Api::V1::Accounts::Base
       :max_suggested_replies, :product_cards, :tone, :off_limits_message, :business_type, :answer_length, :helpful_links_mode, :tone_prompt,
       :answer_length_prompt, :follow_up_questions, :leads_enabled, :lead_max_questions, :lead_guided_setup, :lead_handoff_capture_enabled,
       :handoff_when_online, :handoff_when_offline, :offline_handoff_message, :no_handoff_message,
+      :summary_private_note, :lead_private_note, :action_private_note,
       { link_allowlist: [], image_allowlist: [], handoff_rules: [], lead_fields: %i[key label], lead_types: %i[name rule],
         limits: %i[cannot offer value] }
     ]

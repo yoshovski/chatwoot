@@ -12,6 +12,11 @@ import UnreadBadge from 'dashboard/components-next/Conversation/ConversationCard
 import SLACardLabel from './components/SLACardLabel.vue';
 import VoiceCallStatus from './VoiceCallStatus.vue';
 import Checkbox from 'dashboard/components-next/checkbox/Checkbox.vue';
+import AiSummaryLine from 'dashboard/components-next/captain/aiSummary/AiSummaryLine.vue';
+import {
+  readSummary,
+  summaryHeadline,
+} from 'dashboard/components-next/captain/aiSummary/aiSummary';
 
 const props = defineProps({
   chat: { type: Object, required: true },
@@ -38,6 +43,12 @@ const hovered = ref(false);
 const unreadCount = computed(() => props.chat.unread_count);
 const hasUnread = computed(() => unreadCount.value > 0);
 const lastMessageInChat = computed(() => getLastMessage(props.chat));
+// The AI summary's one-line form; resolved conversations don't need it in the list.
+const aiSummary = computed(() => {
+  const summary = readSummary(props.chat);
+  if (!summary || summary.status === 'resolved') return null;
+  return summaryHeadline(summary) ? summary : null;
+});
 
 const voiceCallData = computed(() => {
   const last = lastMessageInChat.value;
@@ -213,6 +224,11 @@ watch(
           {{ $t(`CHAT_LIST.NO_MESSAGES`) }}
         </span>
       </p>
+      <AiSummaryLine
+        v-if="aiSummary"
+        :summary="aiSummary"
+        class="ltr:pr-6 rtl:pl-6"
+      />
       <div
         class="absolute flex flex-col ltr:right-3 rtl:left-3"
         :class="showMetaSection ? 'top-8' : 'top-4'"
