@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref } from 'vue';
+import { computed } from 'vue';
 import Button from 'dashboard/components-next/button/Button.vue';
 import Icon from 'dashboard/components-next/icon/Icon.vue';
 import StepIntro from './StepIntro.vue';
@@ -10,9 +10,6 @@ const props = defineProps({
 
 defineEmits(['open']);
 
-const isTurningOn = ref(false);
-const error = ref('');
-
 const state = computed(() => props.guided.state || {});
 const readiness = computed(() => state.value.readiness);
 const inbox = computed(() => state.value.widget_inbox);
@@ -20,6 +17,7 @@ const canTurnOn = computed(() =>
   ['ready', 'importing'].includes(readiness.value)
 );
 
+// Turning on is the setup's primary button; without knowledge the step points back to the website.
 const knowledgeRow = computed(() => {
   if (readiness.value === 'ready')
     return {
@@ -39,14 +37,6 @@ const knowledgeRow = computed(() => {
     label: 'HOME.GUIDED.LIVE.NO_KNOWLEDGE',
   };
 });
-
-const turnOn = async () => {
-  error.value = '';
-  isTurningOn.value = true;
-  const result = await props.guided.goLive();
-  isTurningOn.value = false;
-  if (!result.ok) error.value = result.error;
-};
 </script>
 
 <template>
@@ -95,26 +85,15 @@ const turnOn = async () => {
           }}
         </li>
       </ul>
-      <div class="flex flex-wrap items-center gap-3">
-        <Button
-          v-if="canTurnOn"
-          :label="$t('HOME.GUIDED.LIVE.TURN_ON')"
-          icon="i-lucide-power"
-          :is-loading="isTurningOn"
-          @click="turnOn"
-        />
-        <Button
-          v-else
-          :label="$t('HOME.SETUP.STEPS.KNOWLEDGE.TITLE')"
-          variant="faded"
-          color="slate"
-          size="sm"
-          @click="$emit('open', 'knowledge')"
-        />
-      </div>
-      <p v-if="error" role="alert" class="mb-0 text-sm text-n-ruby-11">
-        {{ error }}
-      </p>
+      <Button
+        v-if="!canTurnOn"
+        class="self-start"
+        :label="$t('HOME.SETUP.STEPS.KNOWLEDGE.TITLE')"
+        variant="faded"
+        color="slate"
+        size="sm"
+        @click="$emit('open', 'knowledge')"
+      />
     </template>
   </div>
 </template>

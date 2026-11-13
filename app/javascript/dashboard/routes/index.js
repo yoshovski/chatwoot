@@ -6,12 +6,14 @@ import store from 'dashboard/store';
 import { validateLoggedInRoutes } from '../helper/routeHelpers';
 import { isOnOnboardingView } from 'v3/helpers/RouteHelper';
 import AnalyticsHelper from '../helper/AnalyticsHelper';
+import { OPEN_STEPS } from './dashboard/home/setup/accountOnboarding';
 
-const ONBOARDING_STEPS = ['account_details', 'enrichment', 'inbox_setup'];
 const routes = [...dashboard.routes];
 
-const onboardingPath = step =>
-  step === 'inbox_setup' ? 'onboarding/inbox-setup' : 'onboarding';
+// A new account goes straight to the guided setup, which closes the upstream onboarding steps (home/setup/
+// accountOnboarding.js). The upstream onboarding screens are no longer on this path.
+const SETUP_PATH = 'home/setup';
+const isOnSetup = route => route.name === 'account_home_setup';
 
 export const router = createRouter({ history: createWebHistory(), routes });
 
@@ -37,25 +39,17 @@ export const validateAuthenticateRoutePermission = async (to, next) => {
   const isAdmin = userAccount?.role === 'administrator';
   const isActive = userAccount?.status === 'active';
   const needsOnboarding =
-    ONBOARDING_STEPS.includes(userAccount?.onboarding_step) &&
-    isAdmin &&
-    isActive;
+    OPEN_STEPS.includes(userAccount?.onboarding_step) && isAdmin && isActive;
 
   if (to.name === 'no_accounts' || !to.name) {
-    const target = needsOnboarding
-      ? onboardingPath(userAccount?.onboarding_step)
-      : 'dashboard';
+    const target = needsOnboarding ? SETUP_PATH : 'dashboard';
     return next(frontendURL(`accounts/${routeAccountId}/${target}`));
   }
 
-  if (needsOnboarding && !isOnOnboardingView(to)) {
-    return next(
-      frontendURL(
-        `accounts/${routeAccountId}/${onboardingPath(userAccount?.onboarding_step)}`
-      )
-    );
+  if (needsOnboarding && !isOnSetup(to)) {
+    return next(frontendURL(`accounts/${routeAccountId}/${SETUP_PATH}`));
   }
-  if (!needsOnboarding && isOnOnboardingView(to)) {
+  if (isOnOnboardingView(to)) {
     return next(frontendURL(`accounts/${routeAccountId}/dashboard`));
   }
 

@@ -3,9 +3,9 @@ import WebsiteStep from './WebsiteStep.vue';
 
 vi.mock('vue-i18n', () => ({ useI18n: () => ({ t: key => key }) }));
 
-const render = guided =>
+const render = (guided, props = {}) =>
   mount(WebsiteStep, {
-    props: { guided: { importError: '', source: null, ...guided } },
+    props: { guided: { importError: '', source: null, ...guided }, ...props },
     global: {
       mocks: { $t: (key, values) => `${key} ${JSON.stringify(values || {})}` },
       stubs: {
@@ -40,6 +40,23 @@ describe('WebsiteStep', () => {
     await wrapper.find('form').trigger('submit');
     await flushPromises();
     expect(startWebsite).toHaveBeenCalledWith('example.com');
+  });
+
+  it('starts with the website from sign-up and lets an empty field move on', async () => {
+    const startWebsite = vi.fn().mockResolvedValue({ ok: true });
+    const wrapper = render(
+      { progress: { phase: 'idle' }, startWebsite },
+      { defaultUrl: 'shop.example.com' }
+    );
+
+    expect(wrapper.find('input').element.value).toBe('shop.example.com');
+    expect(await wrapper.vm.submit()).toBe(true);
+    expect(startWebsite).toHaveBeenCalledWith('shop.example.com');
+
+    startWebsite.mockClear();
+    await wrapper.find('input').setValue('');
+    expect(await wrapper.vm.submit()).toBe(true);
+    expect(startWebsite).not.toHaveBeenCalled();
   });
 
   it('shows the import progress while pages are read', () => {

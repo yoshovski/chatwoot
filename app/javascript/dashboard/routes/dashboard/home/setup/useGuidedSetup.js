@@ -9,7 +9,8 @@ const POLL_INTERVAL = 3000;
 const errorMessage = error => error?.response?.data?.error || '';
 
 // State and actions for the guided setup. Progress comes from the Home summary (the checklist's data source); the
-// website import is followed by polling its website source until every chosen page is read.
+// website import is followed by polling its website source until every chosen page is read, and the setup state
+// (the instant agent and its "learned" count) until the agent has read what it was given.
 export function useGuidedSetup() {
   const state = ref(null);
   const setup = ref(null);
@@ -23,6 +24,16 @@ export function useGuidedSetup() {
   const progress = computed(() => importProgress(source.value));
   const isImporting = computed(() =>
     ['finding', 'select', 'reading'].includes(progress.value.phase)
+  );
+  const learned = computed(() => state.value?.learned || 0);
+  const total = computed(() => state.value?.total || 0);
+  const starterQuestions = computed(
+    () => state.value?.instant_agent?.starter_questions || []
+  );
+  const isLearning = computed(
+    () =>
+      state.value?.instant_agent?.status === 'running' ||
+      learned.value < total.value
   );
 
   const loadSummary = async () => {
@@ -72,18 +83,20 @@ export function useGuidedSetup() {
   const poll = useTimeoutPoll(
     async () => {
       try {
+        const { data } = await GuidedSetupAPI.get();
+        state.value = data;
         await loadSource();
       } catch {
         // A missed poll is retried on the next tick.
       }
-      if (!isImporting.value) poll.pause();
+      if (!isImporting.value && !isLearning.value) poll.pause();
     },
     POLL_INTERVAL,
     { immediate: false }
   );
 
   const followImport = () => {
-    if (isImporting.value) poll.resume();
+    if (isImporting.value || isLearning.value) poll.resume();
   };
 
   const load = async () => {
@@ -157,7 +170,11 @@ export function useGuidedSetup() {
     loadError,
     importError,
     isImporting,
+    isLearning,
     assistantId,
+    learned,
+    total,
+    starterQuestions,
     load,
     startWebsite,
     retryImport,

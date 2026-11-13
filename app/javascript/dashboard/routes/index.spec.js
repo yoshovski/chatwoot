@@ -104,5 +104,54 @@ describe('#validateAuthenticateRoutePermission', () => {
         expect(next).toHaveBeenCalledWith();
       });
     });
+
+    describe('when the account is new', () => {
+      beforeEach(() => {
+        store.getters.getCurrentUser = {
+          account_id: 1,
+          id: 1,
+          accounts: [
+            {
+              id: 1,
+              role: 'administrator',
+              permissions: ['administrator'],
+              status: 'active',
+              onboarding_step: 'account_details',
+            },
+          ],
+        };
+      });
+
+      it('opens the guided setup instead of the account details', async () => {
+        await validateAuthenticateRoutePermission(
+          { name: 'home', params: { accountId: 1 }, meta: {} },
+          next
+        );
+
+        expect(next).toHaveBeenCalledWith('/app/accounts/1/home/setup');
+      });
+
+      it('stays in the guided setup', async () => {
+        await validateAuthenticateRoutePermission(
+          {
+            name: 'account_home_setup',
+            params: { accountId: 1 },
+            meta: { permissions: ['administrator'] },
+          },
+          next
+        );
+
+        expect(next).toHaveBeenCalledWith();
+      });
+    });
+
+    it('sends the old onboarding screens to the dashboard', async () => {
+      await validateAuthenticateRoutePermission(
+        { name: 'onboarding_account_details', params: { accountId: 1 } },
+        next
+      );
+
+      expect(next).toHaveBeenCalledWith('/app/accounts/1/dashboard');
+    });
   });
 });
