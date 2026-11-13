@@ -1,0 +1,37 @@
+# First-week emails (T15). English source: onboarding_emails in en.yml.
+it:
+  onboarding_emails:
+    greeting: 'Ciao %{name},'
+    opt_out: 'Non voglio più email di configurazione'
+    day_0:
+      subject: 'Benvenuto in %{brand}'
+      body: "Il tuo account è pronto e il tuo agente IA sta imparando dal tuo sito web. Fagli qualche domanda che i tuoi clienti fanno spesso e guarda come risponde. Bastano due minuti."
+      button: 'Prova il tuo agente'
+    day_1:
+      subject: 'Metti il tuo agente IA sul tuo sito'
+      body: "Il tuo agente IA è pronto, ma i tuoi clienti non possono ancora raggiungerlo. Incolla questo codice subito prima di </body> sul tuo sito, oppure invialo a chi gestisce il sito. La chat compare subito."
+      button: 'Installa'
+    day_3:
+      subject:
+        one: '1 domanda a cui il tuo agente IA non ha saputo rispondere'
+        other: '%{count} domande a cui il tuo agente IA non ha saputo rispondere'
+      body:
+        one: "Un cliente ha chiesto questo e il tuo agente IA non aveva ancora una risposta. Aggiungi la risposta una volta e la userà da quel momento."
+        other: "I clienti hanno chiesto questo e il tuo agente IA non aveva ancora una risposta. Aggiungi le risposte una volta e le userà da quel momento."
+      button: 'Aggiungi risposte'
+    day_7:
+      subject: 'Una settimana di prova'
+      body:
+        one: 'La tua prova gratuita termina il %{date}. Finora il tuo agente IA ha gestito 1 conversazione con i clienti. Scegli un piano per farlo rispondere anche dopo la prova.'
+        other: 'La tua prova gratuita termina il %{date}. Finora il tuo agente IA ha gestito %{count} conversazioni con i clienti. Scegli un piano per farlo rispondere anche dopo la prova.'
+      body_capped:
+        one: 'La tua prova gratuita termina il %{date}. Finora il tuo agente IA ha gestito 1 delle %{limit} conversazioni della prova. Scegli un piano per farlo rispondere anche dopo la prova.'
+        other: 'La tua prova gratuita termina il %{date}. Finora il tuo agente IA ha gestito %{count} delle %{limit} conversazioni della prova. Scegli un piano per farlo rispondere anche dopo la prova.'
+      body_none: "La tua prova gratuita termina il %{date}. Il tuo agente IA non ha ancora risposto a nessun cliente. Mettilo sul tuo sito per vederlo all'opera e scegli un piano quando vuoi."
+      button: 'Vedi i piani'
+  onboarding_email_settings:
+    title: 'Email di configurazione'
+    'on': 'Ricevi alcune email nella tua prima settimana con %{account}, ognuna con un passo successivo. Le email di fatturazione non cambiano.'
+    'off': 'Non ricevi più email di configurazione per %{account}. Le email di fatturazione continuano ad arrivare.'
+    turn_off: 'Non inviarle più'
+    turn_on: 'Inviale di nuovo'

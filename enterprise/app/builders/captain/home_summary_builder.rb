@@ -1,6 +1,14 @@
 # Everything the Home page shows, in one request: the AI agent's state, the period's numbers (Captain::HomeActivityBuilder),
 # what needs the owner (Captain::HomeNeedsBuilder), recent leads, usage with a forecast, and the setup checklist.
 class Captain::HomeSummaryBuilder
+  # The chat widget is on the site once a visitor was seen on it or started a conversation there. Also the skip rule of
+  # the day-1 email (T15).
+  def self.widget_installed?(account)
+    widget_inboxes = account.inboxes.where(channel_type: 'Channel::WebWidget')
+    ContactInbox.where(inbox_id: widget_inboxes.select(:id)).where.not(website_activity: {}).exists? ||
+      account.conversations.exists?(inbox_id: widget_inboxes.select(:id))
+  end
+
   def initialize(account, user, period: Captain::HomeActivityBuilder::PERIODS.first, timezone_offset: nil)
     @account = account
     @user = user
@@ -108,9 +116,7 @@ class Captain::HomeSummaryBuilder
   def widget_installed?
     return @widget_installed if defined?(@widget_installed)
 
-    widget_inboxes = account.inboxes.where(channel_type: 'Channel::WebWidget')
-    @widget_installed = ContactInbox.where(inbox_id: widget_inboxes.select(:id)).where.not(website_activity: {}).exists? ||
-                        account.conversations.exists?(inbox_id: widget_inboxes.select(:id))
+    @widget_installed = self.class.widget_installed?(account)
   end
 
   def mailbox_connected?
