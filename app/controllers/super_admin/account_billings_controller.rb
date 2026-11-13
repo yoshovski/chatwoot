@@ -8,6 +8,10 @@ class SuperAdmin::AccountBillingsController < SuperAdmin::ApplicationController
     perform { service.extend_trial(params[:days]) }
   end
 
+  def grant_trial
+    perform { service.grant_trial }
+  end
+
   def add_extra_conversations
     perform { service.add_extra_conversations(params[:amount], params[:note]) }
   end

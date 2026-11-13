@@ -124,6 +124,7 @@ en:
       email_already_exists: 'You have already signed up for an account with %{email}'
       invalid_params: 'Invalid, please check the signup paramters and try again'
       failed: Signup failed
+      terms_not_accepted: Please agree to the terms of service and the privacy policy to create an account.
     voice:
       call_already_accepted: '%{agent_name} is already handling the call.'
     assignment_policy:
@@ -869,6 +870,8 @@ en:
       period_extended: 'Stripe renewal extended to the saved date.'
       apply_pricing: "Apply saved pricing to Stripe (future renewals, no proration)"
       pricing_applied: "Saved pricing applied to Stripe."
+    app_config:
+      signup_needs_captcha: "Set the Cloudflare Turnstile or hCaptcha keys under Settings → Captcha before turning on account signup."
     billing_overview:
       title: "Billing overview"
       refresh: "Refresh now"
@@ -907,11 +910,44 @@ en:
         at: "When"
         reason: "Reason"
         ai_cost: "AI cost"
+    new_accounts:
+      title: "New accounts"
+      help: "Public signups, newest first. A flag is a hint, not proof: open the account and give the trial anyway when it is fine."
+      none: "No signups yet."
+      show_flagged: "Flagged only"
+      show_all: "All signups"
+      newer: "Newer"
+      older: "Older"
+      deleted: "Deleted account"
+      confirmed: "email confirmed"
+      unconfirmed: "email not confirmed"
+      columns:
+        at: "Signed up"
+        account: "Account"
+        email: "Email"
+        domains: "Website domain"
+        ip: "IP"
+        trial: "Trial"
+        flags: "Flags"
+      trial:
+        granted: "Trial"
+        none: "No trial plan"
+        domain_used: "Free: email domain had a trial"
+        website_used: "Free: website had a trial"
+      flags:
+        same_domain: "Same website domain"
+        same_ip: "Same IP"
+        disposable_looking: "Disposable-looking address"
     account_billing:
       title: "Billing"
       state: "Status %{status} · plan %{plan} · AI %{ai} · %{extra} extra AI conversations left"
       ai_on: "on"
       no_subscription: "This account has no subscription, so the billing actions are not available."
+      signup: "Public signup"
+      signup_state: "Signed up %{at} with %{method} · trial: %{trial} · terms %{terms}, privacy %{privacy}"
+      signup_trial_granted: "given"
+      grant_trial: "Give the trial anyway"
+      grant_trial_confirm: "Start the signup plan's trial for this account from today?"
       extend_trial: "Extend the trial"
       extend_trial_help: "Trial ends %{ends}. A trial Stripe runs is moved in Stripe as well."
       extend_trial_submit: "Extend"
@@ -948,6 +984,7 @@ en:
         detail: "Detail"
       done:
         extend_trial: "Trial extended."
+        grant_trial: "Trial started."
         add_extra_conversations: "Extra AI conversations added."
         apply_coupon: "Coupon applied in Stripe."
         pause_ai: "AI replies paused."
@@ -963,6 +1000,9 @@ en:
         already_paused: "AI replies are already paused."
         not_paused: "AI replies are not paused."
         event: "That Stripe event does not belong to this account."
+        no_signup: "This account did not come from a public signup."
+        trial_granted: "This account already has its signup trial."
+        paid: "This account has a live Stripe subscription."
     billing_plan:
       helper: "Choose per feature: not in the plan, included, or a paid add-on with its monthly price. Changing features updates every account on this plan."
       not_included: "Not included"
@@ -1078,6 +1118,12 @@ en:
       catalog_imported: 'Shopify catalog import queued successfully.'
       catalog_paused: 'Shopify catalog synchronization paused.'
       catalog_resumed: 'Shopify catalog synchronization resumed.'
+  signup_emails:
+    welcome:
+      subject: 'Welcome to %{brand}'
+      greeting: 'Hi %{name},'
+      body: 'Your account is ready. Add your website and your AI agent learns from it in about a minute. Try it yourself, then put it on your site.'
+      button: 'Set up your AI agent'
   billing_emails:
     greeting: 'Hi %{name},'
     usage_opt_out: 'Stop emails about AI usage'

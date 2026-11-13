@@ -161,8 +161,28 @@ class Rack::Attack
   end
 
   ## Prevent Brute-Force Signup Attacks ###
+  # Per IP, and per business email domain (T11). Free-mail domains (gmail.com, …) are shared by strangers, so only the
+  # IP limits and the captcha apply to them.
+  signup_request = ->(req) { %w[/api/v1/accounts /api/v2/accounts].include?(req.path_without_extensions) && req.post? }
+  signup_domain = lambda do |req|
+    email = req.params['email'].presence || ActionDispatch::Request.new(req.env).params['email'].presence
+    AccountSignup.business_domain(email.to_s.strip.downcase) if email.is_a?(String)
+  end
+
   throttle('accounts/ip', limit: 5, period: 30.minutes) do |req|
-    req.ip if req.path_without_extensions == '/api/v1/accounts' && req.post?
+    req.ip if signup_request.call(req)
+  end
+
+  throttle('accounts/ip/day', limit: 10, period: 1.day) do |req|
+    req.ip if signup_request.call(req)
+  end
+
+  throttle('accounts/email_domain', limit: 3, period: 1.hour) do |req|
+    signup_domain.call(req) if signup_request.call(req)
+  end
+
+  throttle('accounts/email_domain/day', limit: 10, period: 1.day) do |req|
+    signup_domain.call(req) if signup_request.call(req)
   end
 
   ##-----------------------------------------------##

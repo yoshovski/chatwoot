@@ -29,7 +29,7 @@ class SuperAdmin::AppConfigsController < SuperAdmin::ApplicationController
   end
 
   def create
-    errors = shopify_partner_config_errors
+    errors = shopify_partner_config_errors + signup_captcha_errors
     params['app_config'].each do |key, value|
       break if errors.any?
       next unless @allowed_configs.include?(key)
@@ -70,6 +70,7 @@ class SuperAdmin::AppConfigsController < SuperAdmin::ApplicationController
       'whatsapp_embedded' => %w[WHATSAPP_APP_ID WHATSAPP_APP_SECRET WHATSAPP_CONFIGURATION_ID WHATSAPP_API_VERSION],
       'notion' => %w[NOTION_CLIENT_ID NOTION_CLIENT_SECRET],
       'hubspot' => %w[HUBSPOT_CLIENT_ID HUBSPOT_CLIENT_SECRET],
+      'captcha' => %w[TURNSTILE_SITE_KEY TURNSTILE_SECRET_KEY HCAPTCHA_SITE_KEY HCAPTCHA_SERVER_KEY],
       'google' => %w[GOOGLE_OAUTH_CLIENT_ID GOOGLE_OAUTH_CLIENT_SECRET GOOGLE_OAUTH_REDIRECT_URI ENABLE_GOOGLE_OAUTH_LOGIN],
       'observability' => %w[LANGFUSE_TRACING_ENABLED LANGFUSE_CAPTURE_CONTENT OTEL_PROVIDER
                             LANGFUSE_BASE_URL LANGFUSE_PUBLIC_KEY LANGFUSE_SECRET_KEY],
@@ -89,6 +90,14 @@ class SuperAdmin::AppConfigsController < SuperAdmin::ApplicationController
     []
   rescue Shopify::PartnerClient::ConfigurationError => e
     [e.message]
+  end
+
+  # Public signup needs a captcha (T11). Set the Turnstile or hCaptcha keys under Captcha first.
+  def signup_captcha_errors
+    value = params.dig('app_config', 'ENABLE_ACCOUNT_SIGNUP')
+    return [] if value.nil? || value.to_s == 'false' || ChatwootCaptcha.configured?
+
+    [I18n.t('super_admin.app_config.signup_needs_captcha')]
   end
 
   def success_notice

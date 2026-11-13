@@ -3,10 +3,10 @@
 # because OmniAuth middleware intercepts all POST /auth/* routes as provider
 # callbacks, and Devise controller filters cause 307 redirects for custom actions.
 # Inherits from ActionController::API to avoid both issues entirely.
-# Rate-limited by Rack::Attack (IP + email) and gated by hCaptcha.
+# Rate-limited by Rack::Attack (IP + email) and gated by the captcha (Turnstile or hCaptcha).
 class Auth::ResendConfirmationsController < ActionController::API
   def create
-    return head(:ok) unless ChatwootCaptcha.new(params[:h_captcha_client_response]).valid?
+    return head(:ok) unless ChatwootCaptcha.new(params[:captcha_response], remote_ip: request.remote_ip).valid?
 
     email = params[:email]
     return head(:ok) unless email.is_a?(String)

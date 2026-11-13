@@ -8,6 +8,22 @@
 <section class="main-content__body" id="billing">
   <hr/>
   <h2 class="text-lg font-semibold text-slate-900 mb-1"><%= t('super_admin.account_billing.title') %></h2>
+  <% signup = account.account_signup %>
+  <% if signup %>
+    <div class="border border-slate-100 rounded-md p-4 mb-4 flex flex-col gap-2">
+      <strong class="text-sm"><%= t('super_admin.account_billing.signup') %></strong>
+      <span class="text-xs text-slate-500">
+        <%= t('super_admin.account_billing.signup_state',
+              at: billing_time(signup.created_at), method: signup.signup_method,
+              trial: signup.trial_granted? ? t('super_admin.account_billing.signup_trial_granted') : t("super_admin.new_accounts.trial.#{signup.trial_refused_reason || 'none'}"),
+              terms: signup.terms_version.presence || '—', privacy: signup.privacy_version.presence || '—') %>
+      </span>
+      <% unless signup.trial_granted? %>
+        <%= button_to t('super_admin.account_billing.grant_trial'), grant_trial_super_admin_account_billing_path(account), method: :post, class: 'button self-start',
+                      form: { data: { confirm: t('super_admin.account_billing.grant_trial_confirm') } } %>
+      <% end %>
+    </div>
+  <% end %>
   <% if subscription %>
     <p class="text-sm text-slate-600 mb-4">
       <%= t('super_admin.account_billing.state',

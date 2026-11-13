@@ -27,6 +27,35 @@ RSpec.describe 'Super Admin account billing', type: :request do
     expect(response.body).to include(I18n.t('super_admin.account_billing.replay_event'))
   end
 
+  describe 'give the trial anyway' do
+    let!(:free) { create(:billing_plan, name: 'Free', ai_conversations_limit: 0) }
+    let!(:growth) { create(:billing_plan, name: 'Growth', ai_conversations_limit: 150, signup_default: true, after_trial_plan: free) }
+
+    before do
+      subscription.update!(billing_plan: free, trial_enabled: false, payment_status: 'active', stripe_customer_id: nil)
+      AccountSignup.create!(account: account, email_domain: 'shop.example', trial_refused_reason: 'domain_used')
+    end
+
+    it 'starts the signup trial for a signup that was refused it, and logs who did it' do
+      get "/super_admin/accounts/#{account.id}"
+      expect(response.body).to include(I18n.t('super_admin.account_billing.grant_trial'))
+
+      post "#{base}/grant_trial"
+
+      expect(response).to redirect_to(account_page)
+      expect(subscription.reload).to have_attributes(billing_plan: growth, payment_status: 'trialing', trial_enabled: true)
+      expect(account.account_signup.reload).to have_attributes(trial_granted: true)
+      expect(last_action).to have_attributes(comment: 'super_admin.grant_trial', user_id: super_admin.id)
+    end
+
+    it 'refuses an account that already has its trial' do
+      account.account_signup.update!(trial_granted: true)
+      post "#{base}/grant_trial"
+
+      expect(flash[:alert]).to eq(I18n.t('super_admin.account_billing.refused.trial_granted'))
+    end
+  end
+
   describe 'extend the trial' do
     it 'moves a local trial and logs who did it' do
       ends_at = subscription.trial_ends_at

@@ -4,7 +4,7 @@ import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
 import { useStore } from 'vuex';
 import { useAlert } from 'dashboard/composables';
-import VueHcaptcha from '@hcaptcha/vue3-hcaptcha';
+import CaptchaWidget from '../../../components/Captcha/CaptchaWidget.vue';
 import NextButton from 'dashboard/components-next/button/Button.vue';
 import { resendConfirmation } from '../../../api/auth';
 
@@ -25,7 +25,7 @@ if (!props.email) {
 
 const globalConfig = computed(() => store.getters['globalConfig/get']);
 const isResendingEmail = ref(false);
-const hCaptcha = ref(null);
+const captcha = ref(null);
 let captchaToken = '';
 
 const performResend = async () => {
@@ -33,7 +33,7 @@ const performResend = async () => {
   try {
     await resendConfirmation({
       email: props.email,
-      hCaptchaClientResponse: captchaToken,
+      captchaResponse: captchaToken,
     });
     useAlert(t('REGISTER.VERIFY_EMAIL.RESEND_SUCCESS'));
   } catch {
@@ -41,16 +41,16 @@ const performResend = async () => {
   } finally {
     isResendingEmail.value = false;
     captchaToken = '';
-    if (globalConfig.value.hCaptchaSiteKey) {
-      hCaptcha.value.reset();
+    if (globalConfig.value.captchaProvider) {
+      captcha.value.reset();
     }
   }
 };
 
 const handleResendEmail = () => {
   if (isResendingEmail.value) return;
-  if (globalConfig.value.hCaptchaSiteKey) {
-    hCaptcha.value.execute();
+  if (globalConfig.value.captchaProvider) {
+    captcha.value.execute();
   } else {
     performResend();
   }
@@ -64,7 +64,7 @@ const onCaptchaVerified = token => {
 const onCaptchaError = () => {
   isResendingEmail.value = false;
   captchaToken = '';
-  hCaptcha.value.reset();
+  captcha.value.reset();
 };
 </script>
 
@@ -84,16 +84,13 @@ const onCaptchaError = () => {
         </p>
       </div>
       <div class="space-y-4">
-        <VueHcaptcha
-          v-if="globalConfig.hCaptchaSiteKey"
-          ref="hCaptcha"
-          size="invisible"
-          :sitekey="globalConfig.hCaptchaSiteKey"
+        <CaptchaWidget
+          v-if="globalConfig.captchaProvider"
+          ref="captcha"
+          :provider="globalConfig.captchaProvider"
+          :site-key="globalConfig.captchaSiteKey"
           @verify="onCaptchaVerified"
           @error="onCaptchaError"
-          @expired="onCaptchaError"
-          @challenge-expired="onCaptchaError"
-          @closed="onCaptchaError"
         />
         <NextButton
           lg

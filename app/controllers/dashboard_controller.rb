@@ -21,7 +21,6 @@ class DashboardController < ActionController::Base
     CLOUD_ANALYTICS_TOKEN
     DIRECT_UPLOADS_ENABLED
     MAXIMUM_FILE_UPLOAD_SIZE
-    HCAPTCHA_SITE_KEY
     LOGOUT_REDIRECT_LINK
     DISABLE_USER_PROFILE_UPDATE
     DISABLE_META_INBOX_CREATION
@@ -77,7 +76,9 @@ class DashboardController < ActionController::Base
     {
       APP_VERSION: Chatwoot.config[:version],
       VAPID_PUBLIC_KEY: VapidService.public_key,
-      ENABLE_ACCOUNT_SIGNUP: GlobalConfigService.load('ENABLE_ACCOUNT_SIGNUP', 'false'),
+      ENABLE_ACCOUNT_SIGNUP: GlobalConfigService.account_signup_enabled? ? GlobalConfigService.load('ENABLE_ACCOUNT_SIGNUP', 'false') : 'false',
+      CAPTCHA_PROVIDER: ChatwootCaptcha.frontend_config[:provider],
+      CAPTCHA_SITE_KEY: ChatwootCaptcha.frontend_config[:site_key],
       FB_APP_ID: GlobalConfigService.load('FB_APP_ID', ''),
       INSTAGRAM_APP_ID: GlobalConfigService.load('INSTAGRAM_APP_ID', ''),
       TIKTOK_APP_ID: GlobalConfigService.load('TIKTOK_APP_ID', ''),

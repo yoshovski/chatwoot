@@ -67,6 +67,19 @@ class Enterprise::Billing::AdminActionService
     record!('resume_ai', paused_for: previous)
   end
 
+  # One trial per website domain (T11): gives a public signup that was refused the trial, or lost it to a website
+  # another trial had, the signup plan's trial from today. A later website no longer takes it away.
+  def grant_trial
+    signup = @account.account_signup
+    refuse!('no_signup') unless signup
+    refuse!('trial_granted') if signup.trial_granted?
+    refuse!('paid') if subscription&.live_stripe_subscription?
+
+    refused_for = signup.trial_refused_reason
+    Signup::TrialService.new(@account).grant!
+    record!('grant_trial', refused_for: refused_for, trial_ends_at: subscription.reload.trial_ends_at&.iso8601)
+  end
+
   def replay_event(stripe_event_id)
     event = Enterprise::Billing::AccountTimelineService.new(account: @account).stripe_events.find_by(id: stripe_event_id)
     refuse!('event') unless event

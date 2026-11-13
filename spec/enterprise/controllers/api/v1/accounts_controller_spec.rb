@@ -2,6 +2,9 @@ require 'rails_helper'
 require 'base64'
 
 RSpec.describe 'Enterprise Accounts API', type: :request do
+  # Public signup needs a captcha (T11); these examples are about other rules.
+  before { allow(ChatwootCaptcha).to receive(:configured?).and_return(true) }
+
   describe 'POST /api/v1/accounts' do
     let(:email) { Faker::Internet.email }
     let(:user_full_name) { Faker::Name.name_with_middle }
@@ -37,7 +40,8 @@ RSpec.describe 'Enterprise Accounts API', type: :request do
                  user: nil,
                  locale: nil,
                  user_full_name: user_full_name,
-                 password: 'Password1!'
+                 password: 'Password1!',
+                 terms_accepted: true
                },
                headers: attribution_cookie_header,
                as: :json

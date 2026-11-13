@@ -1,6 +1,9 @@
 require 'rails_helper'
 
 RSpec.describe 'Accounts API', type: :request do
+  # Public signup needs a captcha (T11); these examples are about other rules.
+  before { allow(ChatwootCaptcha).to receive(:configured?).and_return(true) }
+
   describe 'POST /api/v1/accounts' do
     let(:email) { Faker::Internet.email }
     let(:user_full_name) { Faker::Name.name_with_middle }
@@ -18,13 +21,15 @@ RSpec.describe 'Accounts API', type: :request do
         with_modified_env ENABLE_ACCOUNT_SIGNUP: 'true' do
           allow(account_builder).to receive(:perform).and_return([user, account])
 
-          params = { account_name: 'test', email: email, user: nil, locale: nil, user_full_name: user_full_name, password: 'Password1!' }
+          params = { terms_accepted: true, account_name: 'test', email: email, user: nil, locale: nil, user_full_name: user_full_name,
+                     password: 'Password1!' }
 
           post api_v1_accounts_url,
                params: params,
                as: :json
 
-          expect(AccountBuilder).to have_received(:new).with(params.except(:password).merge(user_password: params[:password], signup: true))
+          builder_args = params.except(:password, :terms_accepted).merge(user_password: params[:password], signup: true)
+          expect(AccountBuilder).to have_received(:new).with(builder_args.merge(signup_details: { ip: '127.0.0.1', signup_method: 'email' }))
           expect(account_builder).to have_received(:perform)
           expect(response.headers.keys).not_to include('access-token', 'token-type', 'client', 'expiry', 'uid')
           expect(response.parsed_body['email']).to eq(email)
@@ -38,14 +43,14 @@ RSpec.describe 'Accounts API', type: :request do
           allow(ChatwootCaptcha).to receive(:new).and_return(captcha)
           allow(captcha).to receive(:valid?).and_return(true)
 
-          params = { account_name: 'test', email: email, user: nil, locale: nil, user_full_name: user_full_name, password: 'Password1!',
-                     h_captcha_client_response: '123' }
+          params = { terms_accepted: true, account_name: 'test', email: email, user: nil, locale: nil, user_full_name: user_full_name,
+                     password: 'Password1!', captcha_response: '123' }
 
           post api_v1_accounts_url,
                params: params,
                as: :json
 
-          expect(ChatwootCaptcha).to have_received(:new).with('123')
+          expect(ChatwootCaptcha).to have_received(:new).with('123', remote_ip: '127.0.0.1')
           expect(response.headers.keys).not_to include('access-token', 'token-type', 'client', 'expiry', 'uid')
           expect(response.parsed_body['email']).to eq(email)
         end
@@ -64,6 +69,20 @@ RSpec.describe 'Accounts API', type: :request do
           expect(AccountBuilder).not_to have_received(:new)
           expect(response).to have_http_status(:forbidden)
           expect(response.body).to eq({ message: I18n.t('errors.signup.invalid_params') }.to_json)
+        end
+      end
+    end
+
+    context 'when the terms are not accepted' do
+      it 'refuses the signup' do
+        with_modified_env ENABLE_ACCOUNT_SIGNUP: 'true' do
+          allow(AccountBuilder).to receive(:new)
+          post api_v1_accounts_url,
+               params: { account_name: 'test', email: email, user_full_name: user_full_name, password: 'Password1!', terms_accepted: 'yes' },
+               as: :json
+
+          expect(AccountBuilder).not_to have_received(:new)
+          expect(response.parsed_body['message']).to eq(I18n.t('errors.signup.terms_not_accepted'))
         end
       end
     end
@@ -133,7 +152,7 @@ RSpec.describe 'Accounts API', type: :request do
       end
 
       it 'returns auth headers and full response for api_only signup' do
-        params = { account_name: 'test', email: email, user_full_name: user_full_name, password: 'Password1!' }
+        params = { terms_accepted: true, account_name: 'test', email: email, user_full_name: user_full_name, password: 'Password1!' }
         with_modified_env ENABLE_ACCOUNT_SIGNUP: 'api_only' do
           post api_v1_accounts_url,
                params: params,
@@ -147,7 +166,7 @@ RSpec.describe 'Accounts API', type: :request do
 
     context 'when CW_API_ONLY_SERVER is true' do
       it 'returns auth headers and full response' do
-        params = { account_name: 'test', email: email, user_full_name: user_full_name, password: 'Password1!' }
+        params = { terms_accepted: true, account_name: 'test', email: email, user_full_name: user_full_name, password: 'Password1!' }
         with_modified_env ENABLE_ACCOUNT_SIGNUP: 'true', CW_API_ONLY_SERVER: 'true' do
           post api_v1_accounts_url,
                params: params,

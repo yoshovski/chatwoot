@@ -1,6 +1,12 @@
 require 'rails_helper'
 
 RSpec.describe 'DeviseOverrides::OmniauthCallbacksController', type: :request do
+  # Public signup needs a captcha (T11); these examples are about other rules.
+  before do
+    allow(ChatwootCaptcha).to receive(:configured?).and_return(true)
+    allow(Account::SignUpEmailValidationService).to receive(:new).and_return(email_validation_service)
+  end
+
   let(:account_builder) { double }
   let(:user_double) { object_double(:user) }
   let(:email_validation_service) { instance_double(Account::SignUpEmailValidationService) }
@@ -16,10 +22,6 @@ RSpec.describe 'DeviseOverrides::OmniauthCallbacksController', type: :request do
         image: 'https://example.com/image.jpg'
       }
     )
-  end
-
-  before do
-    allow(Account::SignUpEmailValidationService).to receive(:new).and_return(email_validation_service)
   end
 
   describe '#omniauth_sucess' do
@@ -47,7 +49,8 @@ RSpec.describe 'DeviseOverrides::OmniauthCallbacksController', type: :request do
                                                              email: 'test_not_preset@example.com',
                                                              locale: I18n.locale,
                                                              confirmed: nil,
-                                                             signup: true
+                                                             signup: true,
+                                                             signup_details: { ip: '127.0.0.1', signup_method: 'google' }
                                                            })
         expect(account_builder).to have_received(:perform)
       end

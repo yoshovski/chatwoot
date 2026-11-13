@@ -1,6 +1,12 @@
 require 'rails_helper'
 
 RSpec.describe Enterprise::Api::V2::AccountsController, type: :request do
+  # Public signup needs a captcha (T11); these examples are about other rules.
+  before do
+    allow(ChatwootCaptcha).to receive(:configured?).and_return(true)
+    allow(Enterprise::ClearbitLookupService).to receive(:lookup).and_return(clearbit_data)
+  end
+
   let(:email) { Faker::Internet.email }
   let(:user) { create(:user) }
   let(:account) { create(:account) }
@@ -13,10 +19,6 @@ RSpec.describe Enterprise::Api::V2::AccountsController, type: :request do
       timezone: 'America/Los_Angeles',
       logo: 'https://logo.clearbit.com/acme.com'
     }
-  end
-
-  before do
-    allow(Enterprise::ClearbitLookupService).to receive(:lookup).and_return(clearbit_data)
   end
 
   describe 'POST /api/v1/accounts' do
@@ -32,13 +34,14 @@ RSpec.describe Enterprise::Api::V2::AccountsController, type: :request do
       with_modified_env ENABLE_ACCOUNT_SIGNUP: 'true' do
         allow(account_builder).to receive(:perform).and_return([user, account])
 
-        params = { email: email, user: nil, locale: nil, password: 'Password1!' }
+        params = { terms_accepted: true, email: email, user: nil, locale: nil, password: 'Password1!' }
 
         post api_v2_accounts_url,
              params: params,
              as: :json
 
-        expect(AccountBuilder).to have_received(:new).with(params.except(:password).merge(user_password: params[:password], signup: true))
+        builder_args = params.except(:password, :terms_accepted).merge(user_password: params[:password], signup: true)
+        expect(AccountBuilder).to have_received(:new).with(builder_args.merge(signup_details: { ip: '127.0.0.1', signup_method: 'api' }))
         expect(account_builder).to have_received(:perform)
         expect(Enterprise::ClearbitLookupService).to have_received(:lookup).with(email)
 
@@ -55,7 +58,7 @@ RSpec.describe Enterprise::Api::V2::AccountsController, type: :request do
       with_modified_env ENABLE_ACCOUNT_SIGNUP: 'true' do
         allow(account_builder).to receive(:perform).and_return([user, account])
 
-        params = { email: email, user: nil, locale: nil, password: 'Password1!' }
+        params = { terms_accepted: true, email: email, user: nil, locale: nil, password: 'Password1!' }
 
         post api_v2_accounts_url,
              params: params,
@@ -71,13 +74,14 @@ RSpec.describe Enterprise::Api::V2::AccountsController, type: :request do
       with_modified_env ENABLE_ACCOUNT_SIGNUP: 'true' do
         allow(account_builder).to receive(:perform).and_return([user, account])
         allow(Enterprise::ClearbitLookupService).to receive(:lookup).and_raise(StandardError)
-        params = { email: email, user: nil, locale: nil, password: 'Password1!' }
+        params = { terms_accepted: true, email: email, user: nil, locale: nil, password: 'Password1!' }
 
         post api_v2_accounts_url,
              params: params,
              as: :json
 
-        expect(AccountBuilder).to have_received(:new).with(params.except(:password).merge(user_password: params[:password], signup: true))
+        builder_args = params.except(:password, :terms_accepted).merge(user_password: params[:password], signup: true)
+        expect(AccountBuilder).to have_received(:new).with(builder_args.merge(signup_details: { ip: '127.0.0.1', signup_method: 'api' }))
         expect(account_builder).to have_received(:perform)
         expect(Enterprise::ClearbitLookupService).to have_received(:lookup).with(email)
 

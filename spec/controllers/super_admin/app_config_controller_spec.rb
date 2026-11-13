@@ -3,6 +3,9 @@ require 'rails_helper'
 RSpec.describe 'Super Admin Application Config API', type: :request do
   let(:super_admin) { create(:super_admin) }
 
+  # Installation configs are cached in Redis, which the example's rollback does not clear.
+  after { GlobalConfig.clear_cache }
+
   describe 'GET /super_admin/app_config' do
     context 'when it is an unauthenticated super admin' do
       it 'returns unauthorized' do
@@ -55,6 +58,24 @@ RSpec.describe 'Super Admin Application Config API', type: :request do
         expect(flash[:success]).to be_present
         expect(flash[:alert]).to be_blank
         expect(flash[:notice]).to be_blank
+      end
+
+      it 'refuses to turn on account signup without a captcha secret' do
+        sign_in(super_admin, scope: :super_admin)
+        post '/super_admin/app_config?config=general', params: { app_config: { ENABLE_ACCOUNT_SIGNUP: 'true' } }
+
+        expect(response).to redirect_to(super_admin_app_config_path(config: 'general'))
+        expect(flash[:alert]).to eq(I18n.t('super_admin.app_config.signup_needs_captcha'))
+        expect(InstallationConfig.find_by(name: 'ENABLE_ACCOUNT_SIGNUP')&.value).not_to eq('true')
+      end
+
+      it 'turns on account signup once a captcha secret is set' do
+        create(:installation_config, name: 'TURNSTILE_SECRET_KEY', value: 'secret')
+        sign_in(super_admin, scope: :super_admin)
+        post '/super_admin/app_config?config=general', params: { app_config: { ENABLE_ACCOUNT_SIGNUP: 'true' } }
+
+        expect(response).to redirect_to(super_admin_settings_path)
+        expect(InstallationConfig.find_by(name: 'ENABLE_ACCOUNT_SIGNUP').value).to eq('true')
       end
 
       it 'rejects invalid Shopify Partner configuration before persisting any submitted value' do

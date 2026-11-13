@@ -863,6 +863,7 @@ Rails.application.routes.draw do
         post :extend_subscription_period, on: :member
         resource :billing, only: [], controller: 'account_billings' do
           post :extend_trial
+          post :grant_trial
           post :add_extra_conversations
           post :apply_coupon
           post :pause_ai
@@ -870,6 +871,7 @@ Rails.application.routes.draw do
           post :replay_event
         end
       end
+      resources :new_accounts, only: [:index]
       resource :billing_overview, only: [:show] do
         post :refresh
       end
