@@ -109,6 +109,7 @@ class Account < ApplicationRecord
   has_one :account_subscription, dependent: :destroy, autosave: true
   has_many :conversation_usage_windows, dependent: :delete_all
   has_many :extra_ai_conversation_entries, dependent: :delete_all
+  has_many :billing_notifications, dependent: :delete_all
   has_many :account_data_exports, dependent: :destroy
 
   include AccountSubscriptionSettings

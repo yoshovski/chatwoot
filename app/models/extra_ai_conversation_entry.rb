@@ -20,6 +20,9 @@ class ExtraAiConversationEntry < ApplicationRecord
   validates :note, presence: true, if: -> { reason == 'adjustment' }
   validates :note, length: { maximum: 255 }
 
+  # The top-up receipt email (T08).
+  after_create_commit -> { Billing::NotificationsJob.perform_later(account_id) }, if: -> { reason == 'purchase' && stripe_reference.present? }
+
   scope :open_lots, -> { where(reason: CREDIT_REASONS).where('remaining > 0 AND expires_at > ?', Time.current) }
 
   def self.balance(account)

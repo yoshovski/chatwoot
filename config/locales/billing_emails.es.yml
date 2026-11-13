@@ -1,0 +1,91 @@
+# Billing emails (T08) and the usage opt-out page. English source: billing_emails in en.yml.
+es:
+  billing_emails:
+    greeting: 'Hola, %{name}:'
+    usage_opt_out: Dejar de recibir correos sobre el uso de la IA
+    plan_footnote: Los detalles y cambios del plan están en Facturación.
+    date_format: '%{day} de %{month} de %{year}'
+    month_names:
+    - enero
+    - febrero
+    - marzo
+    - abril
+    - mayo
+    - junio
+    - julio
+    - agosto
+    - septiembre
+    - octubre
+    - noviembre
+    - diciembre
+    decimal_separator: ','
+    trial_ending_3:
+      subject: Tu prueba termina en 3 días
+      body: Tu prueba gratuita termina el %{date}. Elige un plan para que tu agente de IA siga respondiendo a tus clientes. Sin plan, la cuenta pasa al plan Free y el agente de IA se detiene.
+      body_paid: Tu prueba gratuita termina el %{date}. Ese día empieza tu plan %{plan}, así que tu agente de IA sigue respondiendo a tus clientes sin interrupciones. Se cargarán %{amount} en tu tarjeta.
+      button: Elegir un plan
+      button_paid: Ver tu plan
+    trial_ending_1:
+      subject: Tu prueba termina mañana
+      body: Tu prueba gratuita termina mañana, %{date}. Elige hoy un plan para que tu agente de IA siga respondiendo a tus clientes. Sin plan, la cuenta pasa al plan Free y el agente de IA se detiene.
+      body_paid: Tu prueba gratuita termina mañana, %{date}. Ese día empieza tu plan %{plan}, así que tu agente de IA sigue respondiendo a tus clientes sin interrupciones. Se cargarán %{amount} en tu tarjeta.
+      button: Elegir un plan
+      button_paid: Ver tu plan
+    trial_ended:
+      subject: Ahora estás en el plan %{plan}
+      body: Tu prueba gratuita ha terminado y la cuenta está ahora en el plan %{plan}. Tu agente de IA ya no responde a tus clientes. Se conservan todas tus conversaciones, contactos y ajustes. Elige un plan para volver a activar el agente de IA.
+      body_with_ai: Tu prueba gratuita ha terminado y la cuenta está ahora en el plan %{plan}. Tu agente de IA puede responder %{limit} conversaciones al mes. Se conservan todas tus conversaciones, contactos y ajustes. Elige un plan para tener más.
+      button: Ver planes
+    usage_80:
+      subject: '%{used} de %{limit} conversaciones de IA usadas'
+      body: Tu agente de IA ha usado %{used} de las %{limit} conversaciones de IA de tu plan este mes. El contador vuelve a empezar el %{date}. Si se agotan antes, el agente de IA se detiene. Añade conversaciones o pasa a un plan mayor para que siga respondiendo.
+      body_trial: Tu agente de IA ha usado %{used} de las %{limit} conversaciones de IA de tu prueba. Al llegar a %{limit}, se detiene. Elige un plan para que siga respondiendo.
+      button: Facturación
+    usage_100:
+      subject: Tu agente de IA está en pausa
+      body: Tu agente de IA ha usado las %{limit} conversaciones de IA de tu plan este mes y ha dejado de responder. Tu equipo sigue recibiendo todos los mensajes. Vuelve a empezar el %{date}, o en cuanto añadas conversaciones.
+      body_trial: Tu agente de IA ha usado las %{limit} conversaciones de IA de tu prueba y ha dejado de responder. Tu equipo sigue recibiendo todos los mensajes. Elige un plan para volver a activarlo.
+      button: Añadir conversaciones
+      button_plans: Elegir un plan
+    payment_failed_0:
+      subject: No hemos podido cobrar tu tarjeta
+      body: El pago de tu plan %{plan} no se ha completado. Stripe volverá a intentarlo en los próximos días. Actualiza tu tarjeta antes del %{date} para que tu agente de IA siga respondiendo a tus clientes.
+      button: Actualizar tarjeta
+    payment_failed_3:
+      subject: No hemos podido cobrar tu tarjeta
+      body: El pago de tu plan %{plan} sigue sin completarse. Actualiza tu tarjeta antes del %{date} para que tu agente de IA siga respondiendo a tus clientes.
+      button: Actualizar tarjeta
+    payment_failed_6:
+      subject: No hemos podido cobrar tu tarjeta
+      body: El pago de tu plan %{plan} sigue sin completarse. Tu agente de IA se detiene mañana, %{date}. Actualiza tu tarjeta hoy para que siga respondiendo a tus clientes.
+      button: Actualizar tarjeta
+    payment_paused:
+      subject: Tu agente de IA está en pausa
+      body: No hemos podido cobrar tu tarjeta durante 7 días, así que tu agente de IA ha dejado de responder a tus clientes. Tu equipo sigue recibiendo todos los mensajes. Actualiza tu tarjeta y el agente de IA volverá a empezar en cuanto se complete el pago.
+      button: Actualizar tarjeta
+    annual_renewal:
+      subject: Tu plan se renueva el %{date}
+      body: Tu plan %{plan} se renueva por un año más el %{date}, así que tu agente de IA sigue respondiendo a tus clientes sin interrupciones. Se cargarán %{amount} en tu tarjeta.
+      button: Ver tu plan
+    top_up_receipt:
+      subject: Se han añadido %{count} conversaciones de IA
+      body: Se han añadido %{count} conversaciones de IA extra a tu cuenta. Tu agente de IA las usa cuando se agotan las conversaciones de tu plan. Caducan el %{date}. Stripe envía el recibo del pago por separado.
+      button: Facturación
+    auto_top_up_off:
+      subject: La recarga automática está desactivada
+      body: No hemos podido cobrar tu tarjeta para una recarga automática, así que la recarga automática se ha desactivado. Cuando se agoten tus conversaciones de IA, el agente de IA se detendrá. Actualiza tu tarjeta en Facturación y vuelve a activar la recarga automática.
+      button: Facturación
+    cancellation_confirmed:
+      subject: Tu plan termina el %{date}
+      body: Tu plan %{plan} está cancelado y termina el %{date}. Hasta entonces todo sigue funcionando. Después, tu agente de IA dejará de responder a tus clientes. ¿Has cambiado de idea? Puedes mantener tu plan hasta esa fecha.
+      button: Mantener mi plan
+    win_back:
+      subject: Tu agente de IA te está esperando
+      body: Tus conversaciones, tu conocimiento y tus ajustes siguen aquí. Elige un plan y tu agente de IA volverá a responder a tus clientes en minutos.
+      button: Ver planes
+  billing_usage_emails:
+    title: Correos sobre el uso de la IA
+    'on': Recibes un correo cuando %{account} ha usado el 80 %% y el 100 %% de sus conversaciones de IA. Los correos sobre pagos y sobre tu plan no cambian.
+    'off': Ya no recibes correos sobre el uso de la IA de %{account}. Los correos sobre pagos y sobre tu plan siguen llegando.
+    turn_off: Dejar de recibirlos
+    turn_on: Volver a recibirlos

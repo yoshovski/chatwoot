@@ -38,6 +38,8 @@ Rails.application.routes.draw do
       resources :responses, only: [:show]
     end
     resource :slack_uploads, only: [:show]
+    get '/billing_emails/usage_opt_out', to: 'billing_usage_emails#show', as: :billing_usage_emails
+    post '/billing_emails/usage_opt_out', to: 'billing_usage_emails#update'
   end
 
   get '/health', to: 'health#show'

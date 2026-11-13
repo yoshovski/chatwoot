@@ -1,0 +1,91 @@
+# Billing emails (T08) and the usage opt-out page. English source: billing_emails in en.yml.
+it:
+  billing_emails:
+    greeting: Ciao %{name},
+    usage_opt_out: Non ricevere più email sull'uso dell'IA
+    plan_footnote: Dettagli e modifiche del piano sono in Fatturazione.
+    date_format: '%{day} %{month} %{year}'
+    month_names:
+    - gennaio
+    - febbraio
+    - marzo
+    - aprile
+    - maggio
+    - giugno
+    - luglio
+    - agosto
+    - settembre
+    - ottobre
+    - novembre
+    - dicembre
+    decimal_separator: ','
+    trial_ending_3:
+      subject: La tua prova termina tra 3 giorni
+      body: La tua prova gratuita termina il %{date}. Scegli un piano perché il tuo agente IA continui a rispondere ai clienti. Senza un piano, l'account passa al piano Free e l'agente IA si ferma.
+      body_paid: La tua prova gratuita termina il %{date}. Da quel giorno parte il tuo piano %{plan}, così il tuo agente IA continua a rispondere ai clienti senza interruzioni. Sulla tua carta verranno addebitati %{amount}.
+      button: Scegli un piano
+      button_paid: Vedi il tuo piano
+    trial_ending_1:
+      subject: La tua prova termina domani
+      body: La tua prova gratuita termina domani, %{date}. Scegli oggi un piano perché il tuo agente IA continui a rispondere ai clienti. Senza un piano, l'account passa al piano Free e l'agente IA si ferma.
+      body_paid: La tua prova gratuita termina domani, %{date}. Da quel giorno parte il tuo piano %{plan}, così il tuo agente IA continua a rispondere ai clienti senza interruzioni. Sulla tua carta verranno addebitati %{amount}.
+      button: Scegli un piano
+      button_paid: Vedi il tuo piano
+    trial_ended:
+      subject: Ora sei sul piano %{plan}
+      body: La tua prova gratuita è terminata e l'account ora è sul piano %{plan}. Il tuo agente IA non risponde più ai clienti. Conversazioni, contatti e impostazioni restano tutti salvati. Scegli un piano per riattivare l'agente IA.
+      body_with_ai: La tua prova gratuita è terminata e l'account ora è sul piano %{plan}. Il tuo agente IA può rispondere a %{limit} conversazioni al mese. Conversazioni, contatti e impostazioni restano tutti salvati. Scegli un piano per averne di più.
+      button: Vedi i piani
+    usage_80:
+      subject: '%{used} di %{limit} conversazioni IA usate'
+      body: Il tuo agente IA ha usato %{used} delle %{limit} conversazioni IA del tuo piano questo mese. Il conteggio riparte il %{date}. Se finiscono prima, l'agente IA si ferma. Aggiungi conversazioni o passa a un piano più grande perché continui a rispondere.
+      body_trial: Il tuo agente IA ha usato %{used} delle %{limit} conversazioni IA della tua prova. Arrivato a %{limit}, si ferma. Scegli un piano perché continui a rispondere.
+      button: Fatturazione
+    usage_100:
+      subject: Il tuo agente IA è in pausa
+      body: Il tuo agente IA ha usato tutte le %{limit} conversazioni IA del tuo piano questo mese e ha smesso di rispondere. Il tuo team continua a ricevere tutti i messaggi. Riparte il %{date}, oppure subito quando aggiungi conversazioni.
+      body_trial: Il tuo agente IA ha usato tutte le %{limit} conversazioni IA della tua prova e ha smesso di rispondere. Il tuo team continua a ricevere tutti i messaggi. Scegli un piano per riattivarlo.
+      button: Aggiungi conversazioni
+      button_plans: Scegli un piano
+    payment_failed_0:
+      subject: Non siamo riusciti ad addebitare la tua carta
+      body: Il pagamento del tuo piano %{plan} non è andato a buon fine. Stripe riproverà nei prossimi giorni. Aggiorna la carta prima del %{date} perché il tuo agente IA continui a rispondere ai clienti.
+      button: Aggiorna la carta
+    payment_failed_3:
+      subject: Non siamo riusciti ad addebitare la tua carta
+      body: Il pagamento del tuo piano %{plan} non è ancora andato a buon fine. Aggiorna la carta prima del %{date} perché il tuo agente IA continui a rispondere ai clienti.
+      button: Aggiorna la carta
+    payment_failed_6:
+      subject: Non siamo riusciti ad addebitare la tua carta
+      body: Il pagamento del tuo piano %{plan} non è ancora andato a buon fine. Domani, %{date}, il tuo agente IA si ferma. Aggiorna la carta oggi perché continui a rispondere ai clienti.
+      button: Aggiorna la carta
+    payment_paused:
+      subject: Il tuo agente IA è in pausa
+      body: Non siamo riusciti ad addebitare la tua carta per 7 giorni, quindi il tuo agente IA ha smesso di rispondere ai clienti. Il tuo team continua a ricevere tutti i messaggi. Aggiorna la carta e l'agente IA ripartirà appena il pagamento va a buon fine.
+      button: Aggiorna la carta
+    annual_renewal:
+      subject: Il tuo piano si rinnova il %{date}
+      body: Il tuo piano %{plan} si rinnova per un altro anno il %{date}, così il tuo agente IA continua a rispondere ai clienti senza interruzioni. Sulla tua carta verranno addebitati %{amount}.
+      button: Vedi il tuo piano
+    top_up_receipt:
+      subject: '%{count} conversazioni IA aggiunte'
+      body: Al tuo account sono state aggiunte %{count} conversazioni IA extra. Il tuo agente IA le usa quando finiscono le conversazioni del tuo piano. Scadono il %{date}. Stripe invia la ricevuta del pagamento a parte.
+      button: Fatturazione
+    auto_top_up_off:
+      subject: La ricarica automatica è disattivata
+      body: Non siamo riusciti ad addebitare la tua carta per una ricarica automatica, quindi la ricarica automatica è stata disattivata. Quando finiscono le conversazioni IA, l'agente IA si ferma. Aggiorna la carta in Fatturazione, poi riattiva la ricarica automatica.
+      button: Fatturazione
+    cancellation_confirmed:
+      subject: Il tuo piano termina il %{date}
+      body: Il tuo piano %{plan} è stato annullato e termina il %{date}. Fino ad allora tutto continua a funzionare. Dopo, il tuo agente IA smetterà di rispondere ai clienti. Hai cambiato idea? Puoi mantenere il tuo piano fino a quella data.
+      button: Mantieni il mio piano
+    win_back:
+      subject: Il tuo agente IA ti aspetta
+      body: Conversazioni, conoscenze e impostazioni sono ancora qui. Scegli un piano e il tuo agente IA torna a rispondere ai clienti in pochi minuti.
+      button: Vedi i piani
+  billing_usage_emails:
+    title: Email sull'uso dell'IA
+    'on': Ricevi un'email quando %{account} ha usato l'80 %% e il 100 %% delle sue conversazioni IA. Le email su pagamenti e piano non cambiano.
+    'off': Non ricevi più email sull'uso dell'IA per %{account}. Le email su pagamenti e piano continuano ad arrivare.
+    turn_off: Non inviarle più
+    turn_on: Inviale di nuovo

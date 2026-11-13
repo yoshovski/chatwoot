@@ -21,6 +21,14 @@ RSpec.describe EndTrialsJob do
     expect(account.feature_enabled?('reports')).to be(true)
   end
 
+  it 'tells the administrators once that the trial ended' do
+    create(:user, account: account, role: :administrator)
+    subscription.update!(trial_ends_at: 1.minute.ago)
+
+    expect { 2.times { described_class.perform_now } }.to have_enqueued_mail(Billing::NotificationMailer, :notify).once
+    expect(BillingNotification.where(account: account, kind: 'trial_ended').count).to eq(1)
+  end
+
   it 'moves a trial whose checkout was canceled' do
     subscription.update!(trial_ends_at: 1.minute.ago, payment_status: 'canceled', stripe_subscription_id: 'sub_1')
 
