@@ -37,6 +37,16 @@ const emit = defineEmits([
   'selectConversation',
   'deSelectConversation',
 ]);
+// List rows are rounded inside the list card; the compact rows in the side panel keep their dividers.
+const rowClass = computed(() => {
+  if (props.compact) {
+    return "border-b border-n-slate-3 hover:border-n-surface-1 hover:bg-n-alpha-1 dark:hover:bg-n-alpha-3 before:content-[none] before:absolute before:-top-px before:inset-x-0 before:h-px before:bg-n-surface-1 before:pointer-events-none hover:before:content-['']";
+  }
+  if (props.isActiveChat) {
+    return 'mb-1 rounded-xl bg-n-blue-2 outline outline-1 -outline-offset-1 outline-n-blue-5';
+  }
+  return 'mb-1 rounded-xl hover:bg-n-alpha-1 dark:hover:bg-n-alpha-3';
+});
 
 const hovered = ref(false);
 
@@ -120,14 +130,17 @@ watch(
 
 <template>
   <div
-    class="relative flex items-start flex-grow-0 flex-shrink-0 w-auto max-w-full py-0 cursor-pointer conversation border-b border-n-slate-3 hover:border-n-surface-1 hover:bg-n-alpha-1 dark:hover:bg-n-alpha-3 group hover:z-[1] before:content-[none] before:absolute before:-top-px before:inset-x-0 before:h-px before:bg-n-surface-1 before:pointer-events-none hover:before:content-['']"
-    :class="{
-      'active animate-card-select bg-n-background !border-n-surface-1':
-        isActiveChat,
-      'selected bg-n-slate-2 !border-n-surface-1': selected,
-      'px-0': compact,
-      'px-3': !compact,
-    }"
+    class="relative flex items-start flex-grow-0 flex-shrink-0 w-auto max-w-full py-0 cursor-pointer conversation group hover:z-[1]"
+    :class="[
+      rowClass,
+      {
+        'active animate-card-select': isActiveChat,
+        'bg-n-background !border-n-surface-1': isActiveChat && compact,
+        'selected bg-n-slate-2 !border-n-surface-1': selected,
+        'px-0': compact,
+        'px-3': !compact,
+      },
+    ]"
     @click="$emit('click', $event)"
     @contextmenu="$emit('contextmenu', $event)"
   >

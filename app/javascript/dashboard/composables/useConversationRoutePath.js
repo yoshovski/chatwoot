@@ -49,6 +49,7 @@ export function useConversationRoutePath() {
         teamId,
         foldersId: keepFolderScope && isOnFolder ? route.params.id : 0,
         conversationType,
+        listView: route.params.listView,
       })
     );
   };
@@ -80,6 +81,7 @@ export function useConversationRoutePath() {
       inboxId,
       label,
       teamId,
+      listView: route.params.listView,
     });
   };
 

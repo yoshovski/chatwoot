@@ -29,9 +29,8 @@ describe('platform navigation', () => {
     expect(match).toBe(helpCenter);
   });
 
-  it('keeps existing inbox, company and billing destinations in their new areas', () => {
+  it('keeps existing company and billing destinations in their new areas', () => {
     const items = [
-      { name: 'Inbox', to: route('notifications') },
       {
         name: 'Conversation',
         children: [{ name: 'All', to: route('conversations') }],
@@ -57,7 +56,6 @@ describe('platform navigation', () => {
       'Settings',
     ]);
     expect(navigationLeaves(grouped[0]).map(item => item.to.name)).toEqual([
-      'notifications',
       'conversations',
     ]);
     expect(navigationLeaves(grouped[1]).map(item => item.to.name)).toEqual([
@@ -67,7 +65,7 @@ describe('platform navigation', () => {
     expect(navigationLeaves(grouped[2]).map(item => item.to.name)).toContain(
       'billing'
     );
-    expect(items).toHaveLength(6);
+    expect(items).toHaveLength(5);
   });
 
   it('selects an agent behavior page through the last-active-agent redirect', () => {

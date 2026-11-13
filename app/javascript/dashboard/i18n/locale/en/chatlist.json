@@ -1,5 +1,11 @@
 {
   "CHAT_LIST": {
+    "STATE": {
+      "NEEDS_YOU": "Needs you",
+      "AI_HANDLING": "AI is handling",
+      "WAITING": "Waiting for the customer",
+      "SOLVED": "Solved"
+    },
     "LOADING": "Fetching conversations",
     "LOAD_MORE_CONVERSATIONS": "Load more conversations",
     "EOF": "All conversations loaded 🎉",
@@ -12,7 +18,7 @@
     "NEW_MESSAGE": "New message",
     "MENTION_HEADING": "Mentions",
     "UNATTENDED_HEADING": "Unattended",
-    "BOT_HEADING": "Handled by AI",
+    "BOT_HEADING": "AI agent",
     "SEARCH": {
       "INPUT": "Search for People, Chats, Saved Replies .."
     },
@@ -27,7 +33,7 @@
         "TEXT": "Open"
       },
       "resolved": {
-        "TEXT": "Resolved"
+        "TEXT": "Solved"
       },
       "pending": {
         "TEXT": "Pending"

@@ -234,6 +234,32 @@ export default {
       }),
     },
     {
+      // My open, Unassigned and Solved: the inbox's standard views.
+      path: frontendURL(
+        'accounts/:accountId/:listView(mine|unassigned|solved)'
+      ),
+      name: 'conversation_list_view',
+      meta: {
+        permissions: CONVERSATION_PERMISSIONS,
+      },
+      component: ConversationView,
+      props: route => ({ listView: route.params.listView }),
+    },
+    {
+      path: frontendURL(
+        'accounts/:accountId/:listView(mine|unassigned|solved)/conversations/:conversationId'
+      ),
+      name: 'conversation_through_list_view',
+      meta: {
+        permissions: CONVERSATION_PERMISSIONS,
+      },
+      component: ConversationView,
+      props: route => ({
+        conversationId: route.params.conversationId,
+        listView: route.params.listView,
+      }),
+    },
+    {
       path: frontendURL('accounts/:accountId/bot/conversations'),
       name: 'conversation_bot',
       meta: {

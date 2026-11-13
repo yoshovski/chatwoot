@@ -1,5 +1,7 @@
 <script setup>
 import { computed, watch, onMounted, ref } from 'vue';
+import SectionCard from 'dashboard/components-next/kit/SectionCard.vue';
+import Icon from 'dashboard/components-next/icon/Icon.vue';
 import {
   useMapGetter,
   useFunctionGetter,
@@ -24,7 +26,6 @@ import Draggable from 'vuedraggable';
 import MacrosList from './Macros/List.vue';
 import ShopifyOrdersList from 'dashboard/components/widgets/conversation/ShopifyOrdersList.vue';
 import HubspotContactCard from 'dashboard/components/widgets/conversation/HubspotContactCard.vue';
-import SidebarActionsHeader from 'dashboard/components-next/SidebarActionsHeader.vue';
 import LinearIssuesList from 'dashboard/components/widgets/conversation/linear/IssuesList.vue';
 import LinearSetupCTA from 'dashboard/components/widgets/conversation/linear/LinearSetupCTA.vue';
 
@@ -40,15 +41,29 @@ const props = defineProps({
 });
 
 const {
+  uiSettings,
   updateUISettings,
   isContactSidebarItemOpen,
   conversationSidebarItemsOrder,
-  toggleSidebarUIState,
   isOnExpandedLayout,
 } = useUISettings();
 
 const dragging = ref(false);
 const conversationSidebarItems = ref([]);
+
+// Every section is a kit card in one movable list. Orders and previous conversations come
+// first, and open, until the agent sets an order or closes them.
+const FIRST_ITEMS = ['shopify_orders', 'previous_conversation'];
+const OPEN_BY_DEFAULT = ['is_shopify_orders_open', 'is_previous_conv_open'];
+const isSectionOpen = key => {
+  if (OPEN_BY_DEFAULT.includes(key)) {
+    return uiSettings.value[key] !== false;
+  }
+  return isContactSidebarItemOpen(key);
+};
+const toggleSection = key => {
+  updateUISettings({ [key]: !isSectionOpen(key) });
+};
 
 const shopifyIntegration = useFunctionGetter(
   'integrations/getIntegration',
@@ -122,6 +137,22 @@ const isListScopedToContact = computed(
     appliedContactFilter.value?.id === contactId.value
 );
 
+const contactConversationsGetter = useMapGetter(
+  'contactConversations/getContactConversation'
+);
+const hasPreviousConversations = computed(() =>
+  contactConversationsGetter
+    .value(contactId.value)
+    .some(conversation => conversation.id !== Number(props.conversationId))
+);
+watch(
+  contactId,
+  id => {
+    if (id) store.dispatch('contactConversations/get', id);
+  },
+  { immediate: true }
+);
+
 const getContactDetails = () => {
   if (contactId.value) {
     store.dispatch('contacts/show', { id: contactId.value });
@@ -150,6 +181,14 @@ const closeContactPanel = () => {
 
 onMounted(() => {
   conversationSidebarItems.value = conversationSidebarItemsOrder.value;
+  if (!uiSettings.value.conversation_sidebar_items_order) {
+    conversationSidebarItems.value = [
+      ...FIRST_ITEMS.map(name => ({ name })),
+      ...conversationSidebarItems.value.filter(
+        item => !FIRST_ITEMS.includes(item.name)
+      ),
+    ];
+  }
   getContactDetails();
   store.dispatch('attributes/get', 0);
   // Load integrations to ensure linear integration state is available
@@ -159,12 +198,26 @@ onMounted(() => {
 
 <template>
   <div class="w-full">
-    <SidebarActionsHeader
-      :title="$t('CONVERSATION.SIDEBAR.CONTACT')"
-      @close="closeContactPanel"
-    />
-    <ContactInfo :contact="contact" :channel-type="channelType" />
-    <div class="px-2 pb-8 list-group">
+    <div class="flex flex-col gap-3 pb-3">
+      <SectionCard :title="$t('CONVERSATION_SIDEBAR.PANEL.CUSTOMER')">
+        <template #actions>
+          <button
+            type="button"
+            class="text-n-slate-11 hover:text-n-slate-12"
+            :aria-label="$t('CONVERSATION.SIDEBAR.CONTACT')"
+            @click="closeContactPanel"
+          >
+            <Icon icon="i-lucide-x" class="size-4" />
+          </button>
+        </template>
+        <ContactInfo
+          :contact="contact"
+          :channel-type="channelType"
+          class="-mx-5 -mb-5 -mt-4"
+        />
+      </SectionCard>
+    </div>
+    <div class="pb-8 list-group">
       <Draggable
         :list="conversationSidebarItems"
         animation="200"
@@ -181,11 +234,10 @@ onMounted(() => {
             class="conversation--actions"
           >
             <AccordionItem
+              card
               :title="$t('CONVERSATION_SIDEBAR.ACCORDION.CONVERSATION_ACTIONS')"
-              :is-open="isContactSidebarItemOpen('is_conv_actions_open')"
-              @toggle="
-                value => toggleSidebarUIState('is_conv_actions_open', value)
-              "
+              :is-open="isSectionOpen('is_conv_actions_open')"
+              @toggle="toggleSection('is_conv_actions_open')"
             >
               <ScheduledFollowUpChip
                 :conversation-id="conversationId"
@@ -202,12 +254,10 @@ onMounted(() => {
             class="conversation--actions"
           >
             <AccordionItem
+              card
               :title="$t('CONVERSATION_PARTICIPANTS.SIDEBAR_TITLE')"
-              :is-open="isContactSidebarItemOpen('is_conv_participants_open')"
-              @toggle="
-                value =>
-                  toggleSidebarUIState('is_conv_participants_open', value)
-              "
+              :is-open="isSectionOpen('is_conv_participants_open')"
+              @toggle="toggleSection('is_conv_participants_open')"
             >
               <ConversationParticipant
                 :conversation-id="conversationId"
@@ -217,12 +267,11 @@ onMounted(() => {
           </div>
           <div v-else-if="element.name === 'conversation_info'">
             <AccordionItem
+              card
               :title="$t('CONVERSATION_SIDEBAR.ACCORDION.CONVERSATION_INFO')"
-              :is-open="isContactSidebarItemOpen('is_conv_details_open')"
+              :is-open="isSectionOpen('is_conv_details_open')"
               compact
-              @toggle="
-                value => toggleSidebarUIState('is_conv_details_open', value)
-              "
+              @toggle="toggleSection('is_conv_details_open')"
             >
               <ConversationInfo
                 :conversation-attributes="conversationAdditionalAttributes"
@@ -236,13 +285,11 @@ onMounted(() => {
           </div>
           <div v-else-if="element.name === 'contact_attributes'">
             <AccordionItem
+              card
               :title="$t('CONVERSATION_SIDEBAR.ACCORDION.CONTACT_ATTRIBUTES')"
-              :is-open="isContactSidebarItemOpen('is_contact_attributes_open')"
+              :is-open="isSectionOpen('is_contact_attributes_open')"
               compact
-              @toggle="
-                value =>
-                  toggleSidebarUIState('is_contact_attributes_open', value)
-              "
+              @toggle="toggleSection('is_contact_attributes_open')"
             >
               <CustomAttributes
                 attribute-type="contact_attribute"
@@ -256,19 +303,20 @@ onMounted(() => {
           </div>
           <div
             v-else-if="
-              element.name === 'previous_conversation' && !isListScopedToContact
+              element.name === 'previous_conversation' &&
+              !isListScopedToContact &&
+              hasPreviousConversations
             "
           >
             <AccordionItem
               v-if="contact.id"
+              card
               :title="
                 $t('CONVERSATION_SIDEBAR.ACCORDION.PREVIOUS_CONVERSATION')
               "
-              :is-open="isContactSidebarItemOpen('is_previous_conv_open')"
+              :is-open="isSectionOpen('is_previous_conv_open')"
               compact
-              @toggle="
-                value => toggleSidebarUIState('is_previous_conv_open', value)
-              "
+              @toggle="toggleSection('is_previous_conv_open')"
             >
               <ContactConversations
                 :contact-id="contact.id"
@@ -281,10 +329,11 @@ onMounted(() => {
             feature-key="macros"
           >
             <AccordionItem
+              card
               :title="$t('CONVERSATION_SIDEBAR.ACCORDION.MACROS')"
-              :is-open="isContactSidebarItemOpen('is_macro_open')"
+              :is-open="isSectionOpen('is_macro_open')"
               compact
-              @toggle="value => toggleSidebarUIState('is_macro_open', value)"
+              @toggle="toggleSection('is_macro_open')"
             >
               <MacrosList :conversation-id="conversationId" />
             </AccordionItem>
@@ -297,12 +346,11 @@ onMounted(() => {
             "
           >
             <AccordionItem
+              card
               :title="$t('CONVERSATION_SIDEBAR.ACCORDION.LINEAR_ISSUES')"
-              :is-open="isContactSidebarItemOpen('is_linear_issues_open')"
+              :is-open="isSectionOpen('is_linear_issues_open')"
               compact
-              @toggle="
-                value => toggleSidebarUIState('is_linear_issues_open', value)
-              "
+              @toggle="toggleSection('is_linear_issues_open')"
             >
               <LinearSetupCTA v-if="!isLinearConnected" />
               <LinearIssuesList v-else :conversation-id="conversationId" />
@@ -314,12 +362,11 @@ onMounted(() => {
             "
           >
             <AccordionItem
+              card
               :title="$t('CONVERSATION_SIDEBAR.ACCORDION.SHOPIFY_ORDERS')"
-              :is-open="isContactSidebarItemOpen('is_shopify_orders_open')"
+              :is-open="isSectionOpen('is_shopify_orders_open')"
               compact
-              @toggle="
-                value => toggleSidebarUIState('is_shopify_orders_open', value)
-              "
+              @toggle="toggleSection('is_shopify_orders_open')"
             >
               <ShopifyOrdersList :contact-id="contactId" />
             </AccordionItem>
@@ -332,36 +379,33 @@ onMounted(() => {
             "
           >
             <AccordionItem
+              card
               :title="$t('CONVERSATION_SIDEBAR.ACCORDION.HUBSPOT_CONTACT')"
-              :is-open="isContactSidebarItemOpen('is_hubspot_contact_open')"
+              :is-open="isSectionOpen('is_hubspot_contact_open')"
               compact
-              @toggle="
-                value => toggleSidebarUIState('is_hubspot_contact_open', value)
-              "
+              @toggle="toggleSection('is_hubspot_contact_open')"
             >
               <HubspotContactCard :contact-id="contactId" />
             </AccordionItem>
           </div>
           <div v-else-if="element.name === 'contact_notes'">
             <AccordionItem
+              card
               :title="$t('CONVERSATION_SIDEBAR.ACCORDION.CONTACT_NOTES')"
-              :is-open="isContactSidebarItemOpen('is_contact_notes_open')"
+              :is-open="isSectionOpen('is_contact_notes_open')"
               compact
-              @toggle="
-                value => toggleSidebarUIState('is_contact_notes_open', value)
-              "
+              @toggle="toggleSection('is_contact_notes_open')"
             >
               <ContactNotes :contact-id="contactId" />
             </AccordionItem>
           </div>
           <div v-else-if="element.name === 'shared_files'">
             <AccordionItem
+              card
               :title="$t('CONVERSATION_SIDEBAR.ACCORDION.SHARED_FILES')"
-              :is-open="isContactSidebarItemOpen('is_shared_files_open')"
+              :is-open="isSectionOpen('is_shared_files_open')"
               compact
-              @toggle="
-                value => toggleSidebarUIState('is_shared_files_open', value)
-              "
+              @toggle="toggleSection('is_shared_files_open')"
             >
               <SharedFiles />
             </AccordionItem>

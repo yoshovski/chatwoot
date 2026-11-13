@@ -48,6 +48,10 @@ export default {
       type: String,
       default: '',
     },
+    listView: {
+      type: String,
+      default: '',
+    },
     foldersId: {
       type: [String, Number],
       default: 0,
@@ -188,13 +192,15 @@ export default {
 </script>
 
 <template>
-  <section class="flex w-full h-full min-w-0">
+  <!-- List, thread and side panel are cards on the tinted background, 12px apart. -->
+  <section class="flex w-full h-full min-w-0 gap-3 p-3 bg-n-background">
     <ChatList
       :show-conversation-list="showConversationList"
       :conversation-inbox="inboxId"
       :label="label"
       :team-id="teamId"
       :conversation-type="conversationType"
+      :list-view="listView"
       :folders-id="foldersId"
       :is-on-expanded-layout="isOnExpandedLayout"
       @conversation-load="onConversationLoad"
