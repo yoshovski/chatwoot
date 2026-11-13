@@ -34,7 +34,7 @@ defineProps({
       </div>
       <div
         v-if="errorMessage && hasError"
-        class="text-sm mt-1.5 ml-px text-n-ruby-9 leading-tight"
+        class="text-sm mt-1.5 ml-px text-n-ruby-11 leading-tight"
       >
         {{ errorMessage }}
       </div>

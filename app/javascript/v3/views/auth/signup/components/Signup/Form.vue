@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, reactive } from 'vue';
+import { ref, computed, reactive, watch } from 'vue';
 import DOMPurify from 'dompurify';
 import { useVuelidate } from '@vuelidate/core';
 import { required, minLength, email } from '@vuelidate/validators';
@@ -13,22 +13,33 @@ import NextButton from 'dashboard/components-next/button/Button.vue';
 import PasswordRequirements from './PasswordRequirements.vue';
 import { isValidPassword } from 'shared/helpers/Validators';
 import GoogleOAuthButton from '../../../../../components/GoogleOauth/Button.vue';
+import SimpleDivider from '../../../../../components/Divider/SimpleDivider.vue';
 import { register } from '../../../../../api/auth';
 import * as CompanyEmailValidator from 'company-email-validator';
 
 const MIN_PASSWORD_LENGTH = 6;
-
+const WEBSITE_PATTERN = /^(https?:\/\/)?([a-z0-9-]+\.)+[a-z]{2,}(\/\S*)?$/i;
 const store = useStore();
 const { t } = useI18n();
+
+// Codes the sign-up API returns for an email it refuses; anything else is shown as a toast.
+const EMAIL_API_ERRORS = {
+  email_taken: () => t('REGISTER.EMAIL.TAKEN'),
+  email_blocked: () => t('REGISTER.EMAIL.BLOCKED'),
+  email_disposable: () => t('REGISTER.EMAIL.DISPOSABLE'),
+  email_invalid: () => t('REGISTER.EMAIL.ERROR'),
+};
 const router = useRouter();
 
 const captcha = ref(null);
 const isPasswordFocused = ref(false);
 const isSignupInProgress = ref(false);
+const emailErrorCode = ref('');
 
 const credentials = reactive({
   email: '',
   password: '',
+  website: '',
   captchaResponse: '',
 });
 
@@ -46,10 +57,31 @@ const rules = {
       isValidPassword,
       minLength: minLength(MIN_PASSWORD_LENGTH),
     },
+    website: {
+      required,
+      validWebsite: value => WEBSITE_PATTERN.test(value.trim()),
+    },
   },
 };
 
 const v$ = useVuelidate(rules, { credentials });
+
+watch(
+  () => credentials.email,
+  () => {
+    emailErrorCode.value = '';
+  }
+);
+
+const emailError = computed(() => {
+  if (emailErrorCode.value) return EMAIL_API_ERRORS[emailErrorCode.value]();
+  const field = v$.value.credentials.email;
+  if (!field.$error) return '';
+  if (!field.required.$invalid && !field.email.$invalid) {
+    return t('REGISTER.EMAIL.PERSONAL');
+  }
+  return t('REGISTER.EMAIL.ERROR');
+});
 
 const globalConfig = computed(() => store.getters['globalConfig/get']);
 
@@ -74,23 +106,24 @@ const showGoogleOAuth = computed(
     Boolean(window.chatwootConfig.googleOAuthClientId)
 );
 
-const isFormValid = computed(() => !v$.value.$invalid);
-
 const performRegistration = async () => {
   isSignupInProgress.value = true;
   try {
-    await register(credentials);
+    await register({ ...credentials, website: credentials.website.trim() });
     router.push({
       name: 'auth_verify_email',
       state: { email: credentials.email },
     });
   } catch (error) {
-    const errorMessage = error?.message || t('REGISTER.API.ERROR_MESSAGE');
     if (globalConfig.value.captchaProvider) {
       captcha.value.reset();
       credentials.captchaResponse = '';
     }
-    useAlert(errorMessage);
+    if (EMAIL_API_ERRORS[error.code]) {
+      emailErrorCode.value = error.code;
+    } else {
+      useAlert(error?.message || t('REGISTER.API.ERROR_MESSAGE'));
+    }
   } finally {
     isSignupInProgress.value = false;
   }
@@ -122,27 +155,48 @@ const onCaptchaError = () => {
 
 <template>
   <div class="flex-1">
-    <form class="space-y-3" @submit.prevent="submit">
-      <FormInput
-        v-model="credentials.email"
-        type="email"
-        name="email_address"
-        :class="{ error: v$.credentials.email.$error }"
-        :label="$t('REGISTER.EMAIL.LABEL')"
-        :placeholder="$t('REGISTER.EMAIL.PLACEHOLDER')"
-        :has-error="v$.credentials.email.$error"
-        :error-message="$t('REGISTER.EMAIL.ERROR')"
-        @blur="v$.credentials.email.$touch"
+    <template v-if="showGoogleOAuth">
+      <GoogleOAuthButton>
+        {{ $t('REGISTER.OAUTH.GOOGLE_SIGNUP') }}
+      </GoogleOAuthButton>
+      <SimpleDivider
+        :label="$t('COMMON.OR')"
+        bg="bg-n-solid-1"
+        class="uppercase"
       />
+    </template>
+    <form class="space-y-3" novalidate @submit.prevent="submit">
+      <div>
+        <FormInput
+          v-model="credentials.email"
+          type="email"
+          name="email_address"
+          autocomplete="email"
+          :label="$t('REGISTER.EMAIL.LABEL')"
+          :placeholder="$t('REGISTER.EMAIL.PLACEHOLDER')"
+          :has-error="Boolean(emailError)"
+          :error-message="emailError"
+          @blur="v$.credentials.email.$touch"
+        />
+        <router-link
+          v-if="emailErrorCode === 'email_taken'"
+          to="/app/login"
+          data-testid="log_in_instead"
+          class="mt-1 inline-block text-sm text-link"
+        >
+          {{ $t('REGISTER.EMAIL.LOG_IN_INSTEAD') }}
+        </router-link>
+      </div>
       <div class="relative">
         <FormInput
           v-model="credentials.password"
           type="password"
           name="password"
-          :class="{ error: v$.credentials.password.$error }"
+          autocomplete="new-password"
           :label="$t('LOGIN.PASSWORD.LABEL')"
           :placeholder="$t('SET_NEW_PASSWORD.PASSWORD.PLACEHOLDER')"
           :has-error="v$.credentials.password.$error"
+          :error-message="$t('REGISTER.PASSWORD.IS_INVALID_PASSWORD')"
           @focus="isPasswordFocused = true"
           @blur="
             isPasswordFocused = false;
@@ -163,6 +217,18 @@ const onCaptchaError = () => {
           />
         </Transition>
       </div>
+      <FormInput
+        v-model="credentials.website"
+        type="text"
+        name="website"
+        inputmode="url"
+        autocomplete="url"
+        :label="$t('REGISTER.WEBSITE.LABEL')"
+        :placeholder="$t('REGISTER.WEBSITE.PLACEHOLDER')"
+        :has-error="v$.credentials.website.$error"
+        :error-message="$t('REGISTER.WEBSITE.ERROR')"
+        @blur="v$.credentials.website.$touch"
+      />
       <CaptchaWidget
         v-if="globalConfig.captchaProvider"
         ref="captcha"
@@ -177,15 +243,12 @@ const onCaptchaError = () => {
         data-testid="submit_button"
         class="w-full font-medium"
         :label="$t('REGISTER.SUBMIT')"
-        :disabled="isSignupInProgress || !isFormValid"
+        :disabled="isSignupInProgress"
         :is-loading="isSignupInProgress"
       />
     </form>
-    <GoogleOAuthButton v-if="showGoogleOAuth" class="mt-3">
-      {{ $t('REGISTER.OAUTH.GOOGLE_SIGNUP') }}
-    </GoogleOAuthButton>
     <p
-      class="text-sm mt-5 mb-0 text-n-slate-11 [&>a]:text-n-blue-10 [&>a]:font-medium [&>a]:hover:text-n-blue-11"
+      class="text-sm mt-5 mb-0 text-n-slate-11 [&>a]:text-n-blue-11 [&>a]:font-medium [&>a]:hover:text-n-blue-10"
       v-html="sanitizedTermsLink"
     />
   </div>

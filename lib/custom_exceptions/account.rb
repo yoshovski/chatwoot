@@ -11,11 +11,25 @@ module CustomExceptions::Account
         I18n.t 'errors.signup.invalid_email'
       end
     end
+
+    # `code` lets the sign-up form show the error under the email field.
+    def to_hash
+      code = if @data[:domain_blocked] then 'email_blocked'
+             elsif @data[:disposable] then 'email_disposable'
+             else
+               'email_invalid'
+             end
+      super.merge(code: code)
+    end
   end
 
   class UserExists < CustomExceptions::Base
     def message
       I18n.t('errors.signup.email_already_exists', email: @data[:email])
+    end
+
+    def to_hash
+      super.merge(code: 'email_taken')
     end
   end
 

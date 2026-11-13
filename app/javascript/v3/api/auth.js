@@ -67,14 +67,17 @@ export const register = async creds => {
       email: creds.email,
       password: creds.password,
       captcha_response: creds.captchaResponse,
+      website: creds.website,
       // The form shows the line agreeing to the terms and the privacy policy next to the button.
       terms_accepted: true,
     });
     return response.data;
   } catch (error) {
-    throwErrorMessage(error);
+    // `code` (email_taken, email_blocked, …) lets the form show the error under the email field.
+    const signupError = new Error(parseAPIErrorResponse(error));
+    signupError.code = error.response?.data?.code;
+    throw signupError;
   }
-  return null;
 };
 
 export const resendConfirmation = async ({ email, captchaResponse }) => {

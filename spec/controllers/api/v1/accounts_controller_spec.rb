@@ -87,6 +87,47 @@ RSpec.describe 'Accounts API', type: :request do
       end
     end
 
+    context 'when the sign-up form sends a website' do
+      it 'stores it on the new account' do
+        with_modified_env ENABLE_ACCOUNT_SIGNUP: 'true' do
+          post api_v1_accounts_url,
+               params: { terms_accepted: true, account_name: 'test', email: 'owner@shop-example.com', user_full_name: 'Owner',
+                         password: 'Password1!', website: ' shop-example.com ' },
+               as: :json
+
+          expect(response).to have_http_status(:success)
+          expect(User.from_email('owner@shop-example.com').accounts.first.custom_attributes['website']).to eq('shop-example.com')
+        end
+      end
+    end
+
+    context 'when the email cannot sign up' do
+      it 'says the email is taken, with a code for the form' do
+        create(:user, email: 'taken@shop-example.com')
+        with_modified_env ENABLE_ACCOUNT_SIGNUP: 'true' do
+          post api_v1_accounts_url,
+               params: { terms_accepted: true, account_name: 'test', email: 'taken@shop-example.com', user_full_name: 'Owner',
+                         password: 'Password1!' },
+               as: :json
+
+          expect(response.parsed_body['code']).to eq('email_taken')
+        end
+      end
+
+      it 'says the domain is blocked, with a code for the form' do
+        with_modified_env ENABLE_ACCOUNT_SIGNUP: 'true' do
+          allow(GlobalConfigService).to receive(:load).and_call_original
+          allow(GlobalConfigService).to receive(:load).with('BLOCKED_EMAIL_DOMAINS', '').and_return('blocked-example.com')
+          post api_v1_accounts_url,
+               params: { terms_accepted: true, account_name: 'test', email: 'owner@blocked-example.com', user_full_name: 'Owner',
+                         password: 'Password1!' },
+               as: :json
+
+          expect(response.parsed_body).to include('code' => 'email_blocked', 'message' => I18n.t('errors.signup.blocked_domain'))
+        end
+      end
+    end
+
     context 'when an authenticated user creates a second account' do
       let(:existing_user) { create(:user, password: 'Password1!') }
 

@@ -1,11 +1,13 @@
 {
   "REGISTER": {
-    "TRY_WOOT": "Create an account",
-    "GET_STARTED": "Get started with Chatwoot",
-    "TITLE": "Register",
-    "TESTIMONIAL_HEADER": "All it takes is one step to move forward",
-    "TESTIMONIAL_CONTENT": "You're one step away from engaging your customers, retaining them and finding new ones.",
-    "TERMS_ACCEPT": "By creating an account, you agree to our <a href=\"https://www.chatwoot.com/terms\">T & C</a> and <a href=\"https://www.chatwoot.com/privacy-policy\">Privacy policy</a>",
+    "TITLE": "Start your free trial",
+    "DESCRIPTION": "Your AI agent answers your customers from your own shop, in minutes.",
+    "PLAN_TRIAL": "{plan} trial · 14 days · no card",
+    "PANEL": {
+      "TITLE": "Your AI agent, live on your site",
+      "DESCRIPTION": "It answers from your products and pages, in your customer's language, day and night."
+    },
+    "TERMS_ACCEPT": "By creating an account, you agree to our <a href=\"https://www.chatwoot.com/terms\">Terms</a> and <a href=\"https://www.chatwoot.com/privacy-policy\">Privacy policy</a>.",
     "OAUTH": {
       "GOOGLE_SIGNUP": "Sign up with Google"
     },
@@ -21,19 +23,29 @@
     },
     "EMAIL": {
       "LABEL": "Work email",
-      "PLACEHOLDER": "Enter your work email address. E.g., bruce{'@'}wayne{'.'}enterprises",
-      "ERROR": "Please enter a valid work email address."
+      "PLACEHOLDER": "you{'@'}yourshop.com",
+      "ERROR": "Enter a valid email address, for example you{'@'}yourshop.com.",
+      "PERSONAL": "Use your work email. Gmail, Outlook and similar addresses are not accepted.",
+      "TAKEN": "An account with this email already exists.",
+      "BLOCKED": "This email domain is not accepted. If you think this is a mistake, contact support.",
+      "DISPOSABLE": "Use a permanent email address, not a temporary one.",
+      "LOG_IN_INSTEAD": "Log in instead"
     },
     "PASSWORD": {
       "LABEL": "Password",
       "PLACEHOLDER": "Password",
       "ERROR": "Password is too short.",
-      "IS_INVALID_PASSWORD": "Password should contain atleast 1 uppercase letter, 1 lowercase letter, 1 number and 1 special character.",
+      "IS_INVALID_PASSWORD": "Use at least 6 characters, with an uppercase letter, a lowercase letter, a number and a symbol.",
       "REQUIREMENTS_LENGTH": "At least 6 characters long",
       "REQUIREMENTS_UPPERCASE": "At least one uppercase letter",
       "REQUIREMENTS_LOWERCASE": "At least one lowercase letter",
       "REQUIREMENTS_NUMBER": "At least one number",
       "REQUIREMENTS_SPECIAL": "At least one special character"
+    },
+    "WEBSITE": {
+      "LABEL": "Website address",
+      "PLACEHOLDER": "yourshop.com",
+      "ERROR": "Enter your website address, for example yourshop.com."
     },
     "CONFIRM_PASSWORD": {
       "LABEL": "Confirm password",
@@ -48,10 +60,30 @@
     "HAVE_AN_ACCOUNT": "Already have an account?",
     "VERIFY_EMAIL": {
       "TITLE": "Check your inbox",
-      "DESCRIPTION": "We sent a verification link to {email}. Click the link to verify your email and get started.",
-      "RESEND": "Resend verification email",
+      "DESCRIPTION": "We sent a link to {email}. Open it to confirm your email and your AI agent starts answering.",
+      "RESEND": "Send the email again",
       "RESEND_SUCCESS": "Verification email sent. Please check your inbox.",
-      "RESEND_ERROR": "Could not send verification email. Please try again."
-    }
+      "RESEND_ERROR": "Could not send verification email. Please try again.",
+      "WRONG_ADDRESS": "Wrong address?",
+      "SIGN_UP_AGAIN": "Sign up again",
+      "SPAM_HINT": "No email after a few minutes? Check your spam folder."
+    },
+    "LOG_IN": "Log in"
+  },
+  "AUTH_WIDGET_PREVIEW": {
+    "EXAMPLE": "Example",
+    "SHOP": "Your shop",
+    "REPLY_TIME": "We reply immediately",
+    "TODAY": "Today",
+    "QUESTION": "Hi! Is the Trail Jacket in size M, and can it arrive by Friday?",
+    "ANSWER": "Yes, the Trail Jacket is in stock in M. Order before 3 pm today and it arrives on Thursday.",
+    "PRODUCT": {
+      "TITLE": "Trail Jacket",
+      "DESCRIPTION": "€129.00 · In stock",
+      "CTA": "View product"
+    },
+    "AGENT": "Your AI agent",
+    "COMPOSER": "Type your message",
+    "POWERED_BY": "Powered by {name}"
   }
 }

@@ -1,3 +1,4 @@
+import '@fontsource-variable/plus-jakarta-sans';
 import { createApp } from 'vue';
 import { createI18n } from 'vue-i18n';
 
