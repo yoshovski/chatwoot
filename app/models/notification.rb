@@ -115,7 +115,9 @@ class Notification < ApplicationRecord
 
   def push_message_body
     case notification_type
-    when 'conversation_creation', 'sla_missed_first_response'
+    when 'conversation_creation'
+      ai_summary_body || message_body(conversation.messages.first)
+    when 'sla_missed_first_response'
       message_body(conversation.messages.first)
     when 'assigned_conversation_new_message', 'participating_conversation_new_message', 'conversation_mention'
       message_body(secondary_actor)
@@ -131,6 +133,15 @@ class Notification < ApplicationRecord
   end
 
   private
+
+  # A conversation handed over by the AI agent leads with its summary (enterprise Captain::Conversation::Summary).
+  def ai_summary_body
+    summary = conversation.additional_attributes.to_h['captain_summary'].to_h
+    return unless summary['status'] == 'handed_off'
+
+    line = summary.values_at('wants', 'next_step').compact.join(' · ').presence || summary['reason']
+    I18n.t('notifications.ai_summary', summary: line.squish.truncate_words(20)) if line.present?
+  end
 
   def message_body(actor)
     sender_name = sender_name(actor)

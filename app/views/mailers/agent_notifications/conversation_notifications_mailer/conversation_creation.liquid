@@ -1,5 +1,15 @@
 <p>Hi {{user.available_name}}</p>
 
+{% if conversation.ai_summary %}
+  <div style="padding: 10px 20px; margin: 5px 0 20px 0; border: 1px solid #E4E4F0; border-radius: 10px;">
+    <h4 style="margin: 0 0 6px 0;">AI summary</h4>
+    {% if conversation.ai_summary.wants %}<p style="margin: 0;"><strong>Wants:</strong> {{ conversation.ai_summary.wants }}</p>{% endif %}
+    {% if conversation.ai_summary.details %}<p style="margin: 0;"><strong>Details:</strong> {{ conversation.ai_summary.details }}</p>{% endif %}
+    {% if conversation.ai_summary.next_step %}<p style="margin: 0;"><strong>Next step:</strong> {{ conversation.ai_summary.next_step }}</p>{% endif %}
+    {% if conversation.ai_summary.reason %}<p style="margin: 0;">{{ conversation.ai_summary.reason }}</p>{% endif %}
+  </div>
+{% endif %}
+
 <p>
   A new conversation (<a href="{{ action_url }}">#{{conversation.display_id}}</a>) has been created in {{ inbox.name }}.
   <strong>{{ conversation.contact_name }}</strong> wrote:

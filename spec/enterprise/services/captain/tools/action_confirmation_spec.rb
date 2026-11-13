@@ -5,7 +5,8 @@ RSpec.describe Captain::Tools::ActionConfirmation do
 
   let(:account) { create(:account) }
   let(:inbox) { create(:inbox, account: account) }
-  let(:assistant) { create(:captain_assistant, account: account) }
+  # An agent created before the AI summary: it still leaves a private note for each action outcome.
+  let(:assistant) { create(:captain_assistant, account: account, config: { 'knowledge_processing_version' => 1, 'action_private_note' => true }) }
   let(:contact) { create(:contact, account: account, email: 'jane@example.com') }
   let(:conversation) { create(:conversation, account: account, inbox: inbox, contact: contact) }
   let(:param_schema) { [{ 'name' => 'order_number', 'type' => 'string', 'description' => 'Order number' }] }
@@ -81,6 +82,18 @@ RSpec.describe Captain::Tools::ActionConfirmation do
     expect(conversation.messages.where(private: false).last.content).to eq('Order 1042 is cancelled.')
     expect(conversation.messages.where(private: true).last.content).to include('Cancel order', 'completed')
     expect(pending).to be_nil
+  end
+
+  it 'records the outcome in the AI summary and posts no note when action notes are off' do
+    assistant.update!(config: assistant.config.merge('action_private_note' => false))
+    stub_request(:post, 'https://example.com/orders/1042/cancel').to_return(status: 200, body: '{}')
+    http_tool.perform(tool_context, order_number: '1042')
+
+    click(card_message, 'confirm')
+
+    expect(conversation.messages.where(private: true)).to be_empty
+    expect(conversation.reload.additional_attributes.dig('captain_summary', 'actions'))
+      .to contain_exactly(include('title' => 'Cancel order', 'outcome' => 'succeeded'))
   end
 
   it 'posts the failure message when a remaining step fails' do

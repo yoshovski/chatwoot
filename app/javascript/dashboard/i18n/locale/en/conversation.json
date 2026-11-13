@@ -445,6 +445,16 @@
       "UNMUTE": "Unmute mic",
       "VIEW_CHAT_HISTORY": "View chat history",
       "GO_TO_CONVERSATION": "Go to conversation thread"
+    },
+    "AI_SUMMARY": {
+      "TITLE": "AI summary",
+      "STATUS": {
+        "NEEDS_REPLY": "Needs your reply",
+        "LEAD": "Lead saved",
+        "ACTION": "Action done",
+        "RESOLVED": "Resolved"
+      },
+      "LEAD_SAVED": "Lead saved: {type}"
     }
   },
   "EMAIL_TRANSCRIPT": {

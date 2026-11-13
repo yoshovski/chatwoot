@@ -12,6 +12,8 @@ import MessageList from 'next/message/MessageList.vue';
 import ConversationLabelSuggestion from './conversation/LabelSuggestion.vue';
 import ContactConversationLink from './ContactConversationLink.vue';
 import Banner from 'dashboard/components/ui/Banner.vue';
+import AiSummaryBar from 'dashboard/components-next/captain/aiSummary/AiSummaryBar.vue';
+import { readSummary } from 'dashboard/components-next/captain/aiSummary/aiSummary';
 import Spinner from 'dashboard/components-next/spinner/Spinner.vue';
 import ResizableEditorWrapper from './ResizableEditorWrapper.vue';
 import ReferralBubble from 'dashboard/components-next/Conversation/ReferralBubble.vue';
@@ -47,6 +49,7 @@ export default {
     MessageList,
     ReplyBox,
     Banner,
+    AiSummaryBar,
     ConversationLabelSuggestion,
     ContactConversationLink,
     Spinner,
@@ -101,6 +104,9 @@ export default {
   },
 
   computed: {
+    aiSummary() {
+      return readSummary(this.currentChat);
+    },
     ...mapGetters({
       currentChat: 'getSelectedChat',
       currentUserId: 'getCurrentUserID',
@@ -498,6 +504,9 @@ export default {
         class="mx-2 mt-2 overflow-hidden rounded-lg"
         :banner-message="$t('CONVERSATION.OLD_INSTAGRAM_INBOX_REPLY_BANNER')"
       />
+      <div v-if="aiSummary" class="ps-4 pe-16 pt-2">
+        <AiSummaryBar :summary="aiSummary" />
+      </div>
     </div>
     <MessageList
       ref="conversationPanelRef"

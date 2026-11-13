@@ -141,6 +141,9 @@ class Captain::Assistant < ApplicationRecord
     follow_up_questions
     handoff_collect_name
     handoff_collect_phone
+    summary_private_note
+    lead_private_note
+    action_private_note
   ].freeze
 
   before_validation :set_default_auto_resolve_mode, on: :create
@@ -435,6 +438,20 @@ class Captain::Assistant < ApplicationRecord
 
   def default_avatar_url
     "#{ENV.fetch('FRONTEND_URL', nil)}/assets/images/dashboard/captain/ai-agent-avatar.svg"
+  end
+
+  # The handoff summary is also posted as a private note until the mobile app shows the summary card.
+  def summary_private_note?
+    config['summary_private_note'] != false
+  end
+
+  # Lead and action notes are off unless turned on; agents created before the AI summary keep them on (migration).
+  def lead_private_note?
+    config['lead_private_note'] == true
+  end
+
+  def action_private_note?
+    config['action_private_note'] == true
   end
 
   def continue_while_waiting?
