@@ -3,6 +3,13 @@
 class Billing::NotificationMailer < ApplicationMailer
   OPT_OUT_PURPOSE = :billing_usage_emails
 
+  # The language to write in: the one asked for when its copy exists, otherwise English. Production falls back to
+  # English anyway; this keeps other environments the same and the opt-out page in step with the email.
+  def self.copy_locale(locale)
+    available = I18n.available_locales.map(&:to_s).include?(locale.to_s)
+    available && I18n.exists?('billing_emails.greeting', locale, fallback: false) ? locale : :en
+  end
+
   def notify(account_user, kind, meta)
     return unless smtp_config_set_or_development?
 
@@ -18,10 +25,10 @@ class Billing::NotificationMailer < ApplicationMailer
 
   private
 
-  # The recipient's own language (Profile), then the account's, then English (ApplicationMailer#switch_locale).
+  # The recipient's own language (Profile), then the account's (ApplicationMailer#switch_locale).
   def recipient_locale
-    locale = @recipient.ui_settings&.dig('locale')
-    I18n.available_locales.map(&:to_s).include?(locale) ? locale : I18n.locale
+    locale = @recipient.ui_settings&.dig('locale').presence || I18n.locale.to_s
+    self.class.copy_locale(locale)
   end
 
   def liquid_locals
@@ -63,14 +70,18 @@ class Billing::NotificationMailer < ApplicationMailer
 
   def date
     at = @meta.values_at('ends_at', 'resets_at', 'pauses_at', 'renews_at', 'expires_at').compact.first
-    at.to_time.in_time_zone.strftime('%-d %B %Y') if at
+    return unless at
+
+    day = at.to_time.in_time_zone.to_date
+    t('billing_emails.date_format', day: day.day, month: t('billing_emails.month_names')[day.month - 1], year: day.year)
   end
 
   def amount
     money = @meta['amount']
     return unless money
 
-    format('%<value>.2f %<currency>s', value: money['cents'].to_i / 100.0, currency: money['currency'].to_s.upcase)
+    value = format('%<value>.2f', value: money['cents'].to_i / 100.0).tr('.', t('billing_emails.decimal_separator'))
+    "#{value} #{money['currency'].to_s.upcase}"
   end
 
   def billing_url

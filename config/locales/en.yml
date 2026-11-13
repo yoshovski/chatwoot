@@ -1081,6 +1081,9 @@ en:
     greeting: 'Hi %{name},'
     usage_opt_out: 'Stop emails about AI usage'
     plan_footnote: 'Plan details and changes are in Billing.'
+    date_format: '%{day} %{month} %{year}'
+    month_names: [January, February, March, April, May, June, July, August, September, October, November, December]
+    decimal_separator: '.'
     trial_ending_3:
       subject: 'Your trial ends in 3 days'
       body: 'Your free trial ends on %{date}. Choose a plan to keep your AI agent answering customers. Without a plan, the account moves to the Free plan and the AI agent stops.'

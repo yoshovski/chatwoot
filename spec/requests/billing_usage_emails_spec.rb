@@ -27,4 +27,12 @@ RSpec.describe 'Billing usage email opt-out' do
     expect(response).to have_http_status(:not_found)
     expect(account_user.reload.billing_usage_emails).to be(true)
   end
+
+  it "shows the page in the person's language" do
+    admin.update!(ui_settings: { 'locale' => 'it' })
+
+    get '/billing_emails/usage_opt_out', params: { token: token }
+
+    expect(response.body).to include('Non inviarle più')
+  end
 end

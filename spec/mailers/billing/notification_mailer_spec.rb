@@ -42,4 +42,21 @@ RSpec.describe Billing::NotificationMailer do
 
     expect(mail.body.encoded).to include('Your card is charged 49.00 EUR', 'View your plan', 'Plan details and changes are in Billing.')
   end
+
+  it "writes in the recipient's own language, with local dates and amounts" do
+    admin.update!(ui_settings: { 'locale' => 'es' })
+    mail = notify('annual_renewal', { 'plan' => 'Growth', 'renews_at' => Time.zone.parse('2026-11-20 10:00'),
+                                      'amount' => { 'cents' => 47_000, 'currency' => 'eur' } })
+
+    expect(mail.subject).to eq('Tu plan se renueva el 20 de noviembre de 2026')
+    expect(mail.body.encoded).to include('Hola, Ana:', '470,00 EUR', 'Ver tu plan')
+  end
+
+  it 'uses the account language when the recipient has none, and English without copy in it' do
+    account.update!(locale: 'it')
+    expect(notify('payment_paused', {}).subject).to eq('Il tuo agente IA è in pausa')
+
+    account.update!(locale: 'de')
+    expect(notify('payment_paused', {}).subject).to eq('Your AI agent is paused')
+  end
 end
