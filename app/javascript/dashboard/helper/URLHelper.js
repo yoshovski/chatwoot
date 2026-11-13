@@ -11,6 +11,7 @@ export const conversationUrl = ({
   teamId,
   conversationType = '',
   foldersId,
+  listView,
 }) => {
   let url = `accounts/${accountId}/conversations/${id}`;
   if (activeInbox) {
@@ -21,6 +22,8 @@ export const conversationUrl = ({
     url = `accounts/${accountId}/team/${teamId}/conversations/${id}`;
   } else if (foldersId && foldersId !== 0) {
     url = `accounts/${accountId}/custom_view/${foldersId}/conversations/${id}`;
+  } else if (listView) {
+    url = `accounts/${accountId}/${listView}/conversations/${id}`;
   } else if (conversationType === 'mention') {
     url = `accounts/${accountId}/mentions/conversations/${id}`;
   } else if (conversationType === 'participating') {
@@ -40,9 +43,12 @@ export const conversationListPageURL = ({
   label,
   teamId,
   customViewId,
+  listView,
 }) => {
   let url = `accounts/${accountId}/dashboard`;
-  if (label) {
+  if (listView) {
+    url = `accounts/${accountId}/${listView}`;
+  } else if (label) {
     url = `accounts/${accountId}/label/${label}`;
   } else if (teamId) {
     url = `accounts/${accountId}/team/${teamId}`;

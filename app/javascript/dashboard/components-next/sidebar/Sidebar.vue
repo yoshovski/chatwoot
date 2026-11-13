@@ -206,7 +206,6 @@ const labels = useMapGetter('labels/getLabelsOnSidebar');
 const allUnreadCount = useMapGetter(
   'conversationUnreadCounts/getAllUnreadCount'
 );
-const notificationUnreadCount = useMapGetter('notifications/getUnreadCount');
 const getInboxUnreadCount = useMapGetter(
   'conversationUnreadCounts/getInboxUnreadCount'
 );
@@ -221,9 +220,6 @@ const mentionsUnreadCount = useMapGetter(
 );
 const participatingUnreadCount = useMapGetter(
   'conversationUnreadCounts/getParticipatingUnreadCount'
-);
-const unattendedUnreadCount = useMapGetter(
-  'conversationUnreadCounts/getUnattendedUnreadCount'
 );
 const getFolderUnreadCount = useMapGetter(
   'conversationUnreadCounts/getFolderUnreadCount'
@@ -361,29 +357,46 @@ const menuItems = computed(() => {
       activeOn: ['account_home', 'account_home_setup'],
     },
     {
-      name: 'Inbox',
-      badgeCount: notificationUnreadCount.value,
-      label: t('SIDEBAR.INBOX'),
-      icon: 'i-lucide-inbox',
-      to: accountScopedRoute('inbox_view'),
-      activeOn: ['inbox_view', 'inbox_view_conversation'],
-      getterKeys: {
-        count: 'notifications/getUnreadCount',
-      },
-    },
-    {
       name: 'Conversation',
-      badgeCount: notificationUnreadCount.value,
+      badgeCount: allUnreadCount.value,
       label: t('SIDEBAR.CONVERSATIONS'),
       icon: 'i-lucide-messages-square',
       children: [
+        // The inbox's standard views first (as in Tidio, Intercom, Help Scout).
         {
-          name: 'All',
-          label: t('SIDEBAR.ALL_CONVERSATIONS'),
+          name: 'My open',
+          label: t('SIDEBAR.MY_OPEN'),
+          icon: 'i-lucide-folder-open',
+          activeOn: ['conversation_through_list_view'],
+          to: accountScopedRoute('conversation_list_view', {
+            listView: 'mine',
+          }),
+        },
+        {
+          name: 'Unassigned',
+          label: t('SIDEBAR.UNASSIGNED'),
           icon: 'i-lucide-inbox',
-          badgeCount: allUnreadCount.value,
-          activeOn: ['inbox_conversation'],
-          to: accountScopedRoute('home'),
+          activeOn: ['conversation_through_list_view'],
+          to: accountScopedRoute('conversation_list_view', {
+            listView: 'unassigned',
+          }),
+        },
+        {
+          name: 'Bot',
+          activeOn: ['conversation_through_bot'],
+          label: t('SIDEBAR.BOT_CONVERSATIONS'),
+          icon: 'i-lucide-bot',
+          badgeCount: 0,
+          to: accountScopedRoute('conversation_bot'),
+        },
+        {
+          name: 'Solved',
+          label: t('SIDEBAR.SOLVED'),
+          icon: 'i-lucide-square-check',
+          activeOn: ['conversation_through_list_view'],
+          to: accountScopedRoute('conversation_list_view', {
+            listView: 'solved',
+          }),
         },
         {
           name: 'Mentions',
@@ -406,22 +419,12 @@ const menuItems = computed(() => {
           to: accountScopedRoute('conversation_participating'),
         },
         {
-          name: 'Unattended',
-          activeOn: ['conversation_through_unattended'],
-          label: t('SIDEBAR.UNATTENDED_CONVERSATIONS'),
-          icon: 'i-lucide-clock-alert',
-          badgeCount: hasFilteredUnreadCounts.value
-            ? unattendedUnreadCount.value
-            : 0,
-          to: accountScopedRoute('conversation_unattended'),
-        },
-        {
-          name: 'Bot',
-          activeOn: ['conversation_through_bot'],
-          label: t('SIDEBAR.BOT_CONVERSATIONS'),
-          icon: 'i-lucide-bot',
-          badgeCount: 0,
-          to: accountScopedRoute('conversation_bot'),
+          name: 'All',
+          label: t('SIDEBAR.ALL_CONVERSATIONS'),
+          icon: 'i-lucide-messages-square',
+          badgeCount: allUnreadCount.value,
+          activeOn: ['inbox_conversation'],
+          to: accountScopedRoute('home'),
         },
         {
           name: 'Folders',

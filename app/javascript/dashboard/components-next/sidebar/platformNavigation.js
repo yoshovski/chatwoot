@@ -4,11 +4,8 @@ export const navigationLeaves = item =>
 export const groupPlatformNavigation = (items, t) => {
   const byName = Object.fromEntries(items.map(item => [item.name, item]));
   return items
-    .filter(item => !['Inbox', 'Companies', 'Billing'].includes(item.name))
+    .filter(item => !['Companies', 'Billing'].includes(item.name))
     .map(item => {
-      if (item.name === 'Conversation') {
-        return { ...item, children: [byName.Inbox, ...item.children] };
-      }
       if (item.name === 'Contacts') {
         return {
           ...item,

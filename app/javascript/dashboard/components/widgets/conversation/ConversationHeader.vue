@@ -1,5 +1,7 @@
 <script setup>
 import { computed, ref } from 'vue';
+import ConversationStatePill from 'dashboard/components-next/Conversation/ConversationStatePill.vue';
+import { conversationState } from 'dashboard/components-next/Conversation/conversationState';
 import { useRoute } from 'vue-router';
 import { useStore } from 'vuex';
 import { useElementSize } from '@vueuse/core';
@@ -42,7 +44,7 @@ const chatMetadata = computed(() => props.chat.meta);
 
 const backButtonUrl = computed(() => {
   const {
-    params: { inbox_id: inboxId, label, teamId, id: customViewId },
+    params: { inbox_id: inboxId, label, teamId, id: customViewId, listView },
     name,
   } = route;
 
@@ -58,6 +60,7 @@ const backButtonUrl = computed(() => {
     teamId,
     conversationType: conversationTypeMap[name],
     customViewId,
+    listView,
   });
 });
 
@@ -140,6 +143,10 @@ const copyConversationId = async () => {
             size="14"
             class="text-n-amber-10 my-0 mx-0 min-w-[14px] flex-shrink-0"
             icon="warning"
+          />
+          <ConversationStatePill
+            :state="conversationState(chat)"
+            class="ms-1"
           />
         </div>
 

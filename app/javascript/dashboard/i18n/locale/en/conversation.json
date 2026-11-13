@@ -169,7 +169,7 @@
       "TRANSCRIPT_SHOW_LESS": "Show less"
     },
     "HEADER": {
-      "RESOLVE_ACTION": "Resolve",
+      "RESOLVE_ACTION": "Solve",
       "REOPEN_ACTION": "Reopen",
       "OPEN_ACTION": "Open",
       "MORE_ACTIONS": "More actions",
@@ -266,7 +266,7 @@
     },
     "CARD_CONTEXT_MENU": {
       "PENDING": "Mark as pending",
-      "RESOLVED": "Mark as resolved",
+      "RESOLVED": "Mark as solved",
       "MARK_AS_UNREAD": "Mark as unread",
       "MARK_AS_READ": "Mark as read",
       "REOPEN": "Reopen conversation",
@@ -509,6 +509,9 @@
     "TEAM_LABEL": "Assigned Team",
     "SELECT": {
       "PLACEHOLDER": "None"
+    },
+    "PANEL": {
+      "CUSTOMER": "Customer"
     },
     "ACCORDION": {
       "CONTACT_DETAILS": "Contact Details",

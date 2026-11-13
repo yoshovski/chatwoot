@@ -54,6 +54,8 @@ const props = defineProps({
   teamId: { type: [String, Number], default: 0 },
   label: { type: String, default: '' },
   conversationType: { type: String, default: '' },
+  // My open, Unassigned or Solved: the view fixes who owns it and its status.
+  listView: { type: String, default: '' },
   foldersId: { type: [String, Number], default: 0 },
   showConversationList: { default: true, type: Boolean },
   isOnExpandedLayout: { default: false, type: Boolean },
@@ -70,6 +72,20 @@ const resolveAttributesModalRef = ref(null);
 
 const activeAssigneeTab = ref(wootConstants.ASSIGNEE_TYPE.ME);
 const activeStatus = ref(wootConstants.STATUS_TYPE.OPEN);
+
+const { ASSIGNEE_TYPE, STATUS_TYPE } = wootConstants;
+const LIST_VIEW_FILTERS = {
+  mine: { assignee: ASSIGNEE_TYPE.ME, status: STATUS_TYPE.OPEN },
+  unassigned: { assignee: ASSIGNEE_TYPE.UNASSIGNED, status: STATUS_TYPE.OPEN },
+  solved: { assignee: ASSIGNEE_TYPE.ALL, status: STATUS_TYPE.RESOLVED },
+};
+const listViewFilter = computed(() => LIST_VIEW_FILTERS[props.listView]);
+// The sidebar's own views (My open, Unassigned, All, Mentions, …) already say whose
+// conversations they show, so the Mine/Unassigned/All tabs stay only for channels,
+// teams and labels.
+const isTopLevelView = computed(
+  () => !props.conversationInbox && !props.teamId && !props.label
+);
 const activeSortBy = ref(wootConstants.SORT_BY_TYPE.LAST_ACTIVITY_AT_DESC);
 const showAdvancedFilters = ref(false);
 // chatsOnView is to store the chats that are currently visible on the screen,
@@ -268,6 +284,13 @@ const pageTitle = computed(() => {
   if (hasAppliedFilters.value) {
     return t('CHAT_LIST.TAB_HEADING');
   }
+  if (listViewFilter.value) {
+    return {
+      mine: t('SIDEBAR.MY_OPEN'),
+      unassigned: t('SIDEBAR.UNASSIGNED'),
+      solved: t('SIDEBAR.SOLVED'),
+    }[props.listView];
+  }
   if (inbox.value.name) {
     return inbox.value.name;
   }
@@ -293,6 +316,9 @@ const pageTitle = computed(() => {
   }
   if (hasActiveFolders.value) {
     return activeFolder.value.name;
+  }
+  if (isTopLevelView.value) {
+    return t('SIDEBAR.ALL_CONVERSATIONS');
   }
   return t('CHAT_LIST.TAB_HEADING');
 });
@@ -387,6 +413,20 @@ function setFiltersFromUISettings() {
   )
     ? orderBy
     : wootConstants.SORT_BY_TYPE.LAST_ACTIVITY_AT_DESC;
+}
+
+// A list view fixes owner and status; the other views use the saved status.
+function applyListView() {
+  if (listViewFilter.value) {
+    activeAssigneeTab.value = listViewFilter.value.assignee;
+    activeStatus.value = listViewFilter.value.status;
+  } else {
+    setFiltersFromUISettings();
+    activeAssigneeTab.value = isTopLevelView.value
+      ? ASSIGNEE_TYPE.ALL
+      : ASSIGNEE_TYPE.ME;
+  }
+  store.dispatch('setChatStatusFilter', activeStatus.value);
 }
 
 function emitConversationLoaded() {
@@ -808,8 +848,7 @@ useEmitter('fetch_conversation_stats', () => {
 
 onMounted(() => {
   store.dispatch('setChatListFilters', conversationFilters.value);
-  setFiltersFromUISettings();
-  store.dispatch('setChatStatusFilter', activeStatus.value);
+  applyListView();
   store.dispatch('setChatSortFilter', activeSortBy.value);
   resetAndFetchData();
   if (hasActiveFolders.value) {
@@ -864,6 +903,10 @@ watch(
   computed(() => props.conversationType),
   () => resetAndFetchData()
 );
+watch([() => props.listView, isTopLevelView], () => {
+  applyListView();
+  resetAndFetchData();
+});
 
 watch(activeFolder, (newVal, oldVal) => {
   if (newVal !== oldVal) {
@@ -882,7 +925,7 @@ watch(appliedFilters, () => resetBulkActions());
 
 <template>
   <div
-    class="flex flex-col flex-shrink-0 conversations-list-wrap bg-n-surface-1 relative"
+    class="flex flex-col flex-shrink-0 conversations-list-wrap bg-n-solid-2 relative rounded-card shadow-card"
     :class="[
       { hidden: !showConversationList },
       isOnExpandedLayout ? 'basis-full' : 'w-[20.5rem] 2xl:w-[22.5rem]',
@@ -895,6 +938,7 @@ watch(appliedFilters, () => resetBulkActions());
       :has-applied-filters="hasAppliedFilters"
       :has-active-folders="hasActiveFolders"
       :active-status="activeStatus"
+      :lock-status="!!listViewFilter"
       :is-on-expanded-layout="isOnExpandedLayout"
       :conversation-stats="conversationStats"
       :is-list-loading="chatListLoading && !conversationList.length"
@@ -928,6 +972,7 @@ watch(appliedFilters, () => resetBulkActions());
 
     <ChatTypeTabs
       v-if="
+        !isTopLevelView &&
         !hasAppliedFiltersOrActiveFolders &&
         conversationType !== wootConstants.CONVERSATION_TYPE.BOT
       "
