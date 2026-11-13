@@ -32,7 +32,7 @@ class Api::V1::AccountsController < Api::BaseController
       locale: account_params[:locale],
       user: current_user, signup: current_user.nil?, signup_details: signup_details
     ).perform
-    enqueue_branding_enrichment
+    after_account_created
     if @user
       # Authenticated users (dashboard "add account") and api_only signups
       # need the full response with account_id. API-only deployments have no
@@ -85,6 +85,18 @@ class Api::V1::AccountsController < Api::BaseController
   rescue StandardError => e
     # Enrichment is optional — never let queue/Redis failures abort signup
     ChatwootExceptionTracker.new(e).capture_exception
+  end
+
+  def after_account_created
+    store_signup_website
+    enqueue_branding_enrichment
+  end
+
+  # The website from the sign-up form. Saving it runs the one-trial-per-website check (AccountSignupTracking).
+  def store_signup_website
+    return if current_user || @account.nil? || params[:website].blank?
+
+    @account.update!(custom_attributes: @account.custom_attributes.merge('website' => params[:website].to_s.strip))
   end
 
   def ensure_account_name

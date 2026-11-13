@@ -2,9 +2,9 @@
 // ChatOctave look: Bright. Tinted page, borderless white cards on soft shadows, large corners, a blue gradient
 // welcome band, Plus Jakarta Sans.
 //
-// Only the dashboard imports this file (through `_woot.scss`). `_next-colors.scss` is shared with the help-centre
-// portal, the survey page and the login screens, so the Bright colour values live here, after it, and those
-// entry points keep the upstream look. Names stay the upstream `n-*` names; only values change.
+// The dashboard (through `_woot.scss`) and the sign-up and log-in screens (`v3/App.vue`) import this file.
+// `_next-colors.scss` is shared with the help-centre portal and the survey page, so the Bright colour values live
+// here, after it, and those entry points keep the upstream look. Names stay the upstream `n-*` names; only values change.
 //
 // `.dark` sits on `<body>`, so it wins over `:root` for every variable set in both.
 @layer base {

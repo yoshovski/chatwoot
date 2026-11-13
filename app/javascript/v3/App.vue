@@ -56,11 +56,18 @@ export default {
 @tailwind utilities;
 
 @import '../dashboard/assets/scss/next-colors';
+@import '../dashboard/assets/scss/co-theme';
 
 html,
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
-    Oxygen-Sans, Ubuntu, Cantarell, 'Helvetica Neue', sans-serif;
+  font-family:
+    'Plus Jakarta Sans Variable',
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    Roboto,
+    'Helvetica Neue',
+    sans-serif;
   @apply h-full w-full;
 
   input,

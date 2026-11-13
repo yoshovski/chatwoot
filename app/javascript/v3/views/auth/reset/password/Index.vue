@@ -6,9 +6,10 @@ import { useBranding } from 'shared/composables/useBranding';
 import FormInput from '../../../../components/Form/Input.vue';
 import { resetPassword } from '../../../../api/auth';
 import NextButton from 'dashboard/components-next/button/Button.vue';
+import AuthLayout from '../../../../components/AuthLayout/AuthLayout.vue';
 
 export default {
-  components: { FormInput, NextButton },
+  components: { FormInput, NextButton, AuthLayout },
   setup() {
     const { replaceInstallationName } = useBranding();
     return { v$: useVuelidate(), replaceInstallationName };
@@ -63,48 +64,36 @@ export default {
 </script>
 
 <template>
-  <div
-    class="flex flex-col justify-center w-full min-h-screen py-12 bg-n-brand/5 dark:bg-n-background sm:px-6 lg:px-8"
+  <AuthLayout
+    :title="$t('RESET_PASSWORD.TITLE')"
+    :description="replaceInstallationName($t('RESET_PASSWORD.DESCRIPTION'))"
   >
-    <form
-      class="bg-white shadow sm:mx-auto sm:w-full sm:max-w-lg dark:bg-n-solid-2 p-11 sm:shadow-lg sm:rounded-lg"
-      @submit.prevent="submit"
-    >
-      <h1
-        class="mb-1 text-2xl font-medium tracking-tight text-left text-n-slate-12"
-      >
-        {{ $t('RESET_PASSWORD.TITLE') }}
-      </h1>
-      <p
-        class="mb-4 text-sm font-normal leading-6 tracking-normal text-n-slate-11"
-      >
-        {{ replaceInstallationName($t('RESET_PASSWORD.DESCRIPTION')) }}
-      </p>
-      <div class="space-y-5">
-        <FormInput
-          v-model="credentials.email"
-          name="email_address"
-          :has-error="v$.credentials.email.$error"
-          :error-message="$t('RESET_PASSWORD.EMAIL.ERROR')"
-          :placeholder="$t('RESET_PASSWORD.EMAIL.PLACEHOLDER')"
-          @input="v$.credentials.email.$touch"
-        />
-        <NextButton
-          lg
-          type="submit"
-          data-testid="submit_button"
-          class="w-full"
-          :label="$t('RESET_PASSWORD.SUBMIT')"
-          :disabled="v$.credentials.email.$invalid || resetPassword.showLoading"
-          :is-loading="resetPassword.showLoading"
-        />
-      </div>
-      <p class="mt-4 -mb-1 text-sm text-n-slate-11">
-        {{ $t('RESET_PASSWORD.GO_BACK_TO_LOGIN') }}
-        <router-link to="/auth/login" class="text-link text-n-brand">
-          {{ $t('COMMON.CLICK_HERE') }}.
-        </router-link>
-      </p>
+    <form class="space-y-5" @submit.prevent="submit">
+      <FormInput
+        v-model="credentials.email"
+        name="email_address"
+        type="email"
+        autocomplete="email"
+        :label="$t('LOGIN.EMAIL.LABEL')"
+        :has-error="v$.credentials.email.$error"
+        :error-message="$t('RESET_PASSWORD.EMAIL.ERROR')"
+        :placeholder="$t('RESET_PASSWORD.EMAIL.PLACEHOLDER')"
+        @input="v$.credentials.email.$touch"
+      />
+      <NextButton
+        lg
+        type="submit"
+        data-testid="submit_button"
+        class="w-full"
+        :label="$t('RESET_PASSWORD.SUBMIT')"
+        :disabled="v$.credentials.email.$invalid || resetPassword.showLoading"
+        :is-loading="resetPassword.showLoading"
+      />
     </form>
-  </div>
+    <p class="mt-6 mb-0 text-sm text-n-slate-11">
+      <router-link to="/app/login" class="text-link">
+        {{ $t('RESET_PASSWORD.GO_BACK_TO_LOGIN') }}
+      </router-link>
+    </p>
+  </AuthLayout>
 </template>
