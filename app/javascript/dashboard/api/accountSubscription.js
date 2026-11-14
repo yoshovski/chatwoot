@@ -10,8 +10,23 @@ class AccountSubscriptionAPI extends ApiClient {
     return axios.get(this.url, { params: { sync } });
   }
 
-  checkout(interval) {
-    return axios.post(`${this.url}/checkout`, { interval });
+  // Without planId, Checkout sells the price saved on the account (a custom deal).
+  checkout(interval, planId) {
+    return axios.post(`${this.url}/checkout`, {
+      interval,
+      ...(planId ? { plan_id: planId } : {}),
+    });
+  }
+
+  changePlan(planId, interval) {
+    return axios.post(`${this.url}/change_plan`, {
+      plan_id: planId,
+      interval,
+    });
+  }
+
+  invoices() {
+    return axios.get(`${this.url}/invoices`);
   }
 
   changeInterval(interval) {

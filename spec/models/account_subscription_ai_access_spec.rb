@@ -170,6 +170,23 @@ RSpec.describe AccountSubscriptionAiAccess do
       expect(subscription.past_due_since).to be_nil
     end
 
+    it 'tells Billing the day the AI pauses, counted from the first failed invoice' do
+      freeze_time do
+        subscription.update!(payment_status: 'past_due', past_due_since: 2.days.ago, payment_failed_at: 3.days.ago)
+
+        expect(subscription.pricing_summary[:ai_pauses_at]).to eq(4.days.from_now)
+      end
+      subscription.update!(payment_status: 'active')
+      expect(subscription.pricing_summary[:ai_pauses_at]).to be_nil
+    end
+
+    it 'gives no pause date when it does not know when the payment failed' do
+      subscription.update!(payment_status: 'past_due')
+      subscription.update!(past_due_since: nil, payment_failed_at: nil)
+
+      expect(subscription.pricing_summary[:ai_pauses_at]).to be_nil
+    end
+
     it 'allows AI up to the allowance for 7 days' do
       subscription.update!(payment_status: 'past_due', past_due_since: 6.days.ago)
       expect(subscription.ai_pause_reason).to be_nil

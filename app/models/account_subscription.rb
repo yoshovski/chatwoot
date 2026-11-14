@@ -106,7 +106,7 @@ class AccountSubscription < ApplicationRecord
             can_manage: stripe_customer_id.present?, custom_payment_cents: custom_payment_cents,
             custom_payment_description: custom_payment_description,
             can_pay_customization: enabled? && custom_payment_cents.positive? && custom_payment_paid_at.blank?,
-            top_up: top_up_summary
+            top_up: top_up_summary, ai_pauses_at: ai_pauses_at
           ).merge(plan_choice_summary)
   end
 
