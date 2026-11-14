@@ -46,9 +46,10 @@ const canPick = computed(
     (!liveSubscription.value &&
       (props.billing.can_buy_plan || props.billing.can_checkout))
 );
-// A founder or custom price is not a plan price, so it cannot move to another plan from here.
+// A founder or custom price is not a plan price, so it cannot move to another plan from here. Other reasons a
+// plan cannot change (a failed payment, a change waiting for confirmation) show no button at all.
 const contactToChange = computed(
-  () => liveSubscription.value && !props.billing.can_change_plan
+  () => Boolean(props.billing.custom_price) && !props.billing.can_change_plan
 );
 const WARN_AT = 90;
 const barClass = computed(() =>

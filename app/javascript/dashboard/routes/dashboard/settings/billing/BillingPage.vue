@@ -26,7 +26,7 @@ const pickerError = ref(false);
 const picker = ref(null);
 
 const canBuy = computed(() => Boolean(billing.value?.top_up?.available));
-const { alert, liveSubscription, canceling } = useBillingView(billing);
+const { alert, liveSubscription, canceling, money } = useBillingView(billing);
 // At the limit the alert owns the buy button; the usage card does not repeat it.
 const canBuyInCard = computed(
   () => canBuy.value && alert.value?.action !== 'buy'
@@ -40,11 +40,6 @@ const canCancel = computed(
   () =>
     liveSubscription.value && !canceling.value && billing.value.can_manage
 );
-const money = (cents, currency) =>
-  new Intl.NumberFormat(undefined, { style: 'currency', currency }).format(
-    cents / 100
-  );
-
 // Stripe pages (Checkout, portal, an invoice to confirm) open in the same tab and come back to Billing.
 const go = async (request, { onError } = {}) => {
   busy.value = true;

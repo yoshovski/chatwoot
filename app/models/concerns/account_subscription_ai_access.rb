@@ -87,7 +87,7 @@ module AccountSubscriptionAiAccess
     return unless payment_status == 'past_due'
 
     failed_at = [payment_failed_at, past_due_since].compact.min
-    (failed_at || Time.current) + PAST_DUE_GRACE
+    failed_at + PAST_DUE_GRACE if failed_at
   end
 
   # Grace counts from the first failed invoice: payment_failed_at from the Stripe event, or, when that event was

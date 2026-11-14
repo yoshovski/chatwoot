@@ -73,7 +73,9 @@ module AccountSubscriptionPlan
     { plans: plans.map(&:catalog_entry),
       can_buy_plan: ChatwootApp.enterprise? && plans.any? { |plan| checkout_available?(plan: plan) },
       can_change_plan: ChatwootApp.enterprise? && plan_change_available?,
-      pending_plan_change: stripe_subscription_details['pending_change'] }
+      pending_plan_change: stripe_subscription_details['pending_change'],
+      # A founder or custom price is not a plan price, so only we can move it to another plan.
+      custom_price: live_stripe_subscription? && stripe_plan.nil? }
   end
 
   private

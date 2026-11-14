@@ -127,7 +127,11 @@ describe('OverviewCard', () => {
   });
 
   it('marks a founder, shows the price actually charged and asks to contact us', async () => {
-    const data = billing({ founder_plan: true, can_change_plan: false });
+    const data = billing({
+      founder_plan: true,
+      can_change_plan: false,
+      custom_price: true,
+    });
     data.stripe_details.amount_cents = 2500;
     const wrapper = overview(data);
 
@@ -140,6 +144,16 @@ describe('OverviewCard', () => {
       .find(b => b.text() === 'BILLING_PAGE.CONTACT_TO_CHANGE');
     await contact.trigger('click');
     expect(wrapper.emitted('contact')).toHaveLength(1);
+  });
+
+  it('offers no plan change, and no contact, while a payment failed', () => {
+    const wrapper = overview(
+      billing({ payment_status: 'past_due', can_change_plan: false })
+    );
+
+    expect(wrapper.text()).toContain('BILLING_PAGE.STATUS.PAST_DUE');
+    expect(wrapper.text()).not.toContain('BILLING_PAGE.CHANGE_PLAN');
+    expect(wrapper.text()).not.toContain('BILLING_PAGE.CONTACT_TO_CHANGE');
   });
 
   it('shows Free without an AI meter', () => {

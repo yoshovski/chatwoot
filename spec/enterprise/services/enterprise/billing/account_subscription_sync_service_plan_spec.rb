@@ -61,11 +61,28 @@ describe Enterprise::Billing::AccountSubscriptionSyncService do
 
   it 'keeps the card brand and last four digits for the Billing page' do
     remote['default_payment_method'] = Stripe::PaymentMethod.construct_from(id: 'pm_1', object: 'payment_method', type: 'card',
-                                                                             card: { brand: 'visa', last4: '4242' })
+                                                                            card: { brand: 'visa', last4: '4242' })
 
     described_class.refresh(account)
 
     expect(subscription.reload.stripe_subscription_details['card']).to eq('brand' => 'visa', 'last4' => '4242')
+  end
+
+  it 'does not mark a plan price as a custom price' do
+    described_class.refresh(account)
+
+    expect(subscription.reload.plan_choice_summary[:custom_price]).to be(false)
+  end
+
+  context 'with a founder or custom price that is no plan price' do
+    let(:price_id) { 'price_founder_custom' }
+
+    it 'marks the custom price, so Billing offers to contact us instead of a plan change' do
+      described_class.refresh(account)
+
+      expect(subscription.reload.plan_choice_summary).to include(custom_price: true)
+      expect(subscription.plan_change_available?).to be(false)
+    end
   end
 
   it 'keeps the allowance when the plan does not change' do
