@@ -25,6 +25,8 @@ const buying = ref(false);
 const pickerError = ref(false);
 const picker = ref(null);
 
+// Punctuation between facts on one line; not a translatable word.
+const SEPARATOR = ' · ';
 const canBuy = computed(() => Boolean(billing.value?.top_up?.available));
 const { alert, liveSubscription, canceling, money } = useBillingView(billing);
 // At the limit the alert owns the buy button; the usage card does not repeat it.
@@ -37,8 +39,7 @@ const showAutoTopUp = computed(
     (canBuy.value || billing.value.top_up?.auto.enabled)
 );
 const canCancel = computed(
-  () =>
-    liveSubscription.value && !canceling.value && billing.value.can_manage
+  () => liveSubscription.value && !canceling.value && billing.value.can_manage
 );
 // Stripe pages (Checkout, portal, an invoice to confirm) open in the same tab and come back to Billing.
 const go = async (request, { onError } = {}) => {
@@ -75,20 +76,16 @@ const buyPack = async () => {
       return;
     }
     useAlert(
-      t(
-        data.status === 'paid'
-          ? 'BILLING_PAGE.TOP_UP.PAID'
-          : 'BILLING_PAGE.TOP_UP.PROCESSING'
-      )
+      data.status === 'paid'
+        ? t('BILLING_PAGE.TOP_UP.PAID')
+        : t('BILLING_PAGE.TOP_UP.PROCESSING')
     );
     await refresh();
   } catch (error) {
     useAlert(
-      t(
-        error?.response?.status === 422
-          ? 'BILLING_PAGE.TOP_UP.DECLINED'
-          : 'BILLING_PAGE.TOP_UP.ERROR'
-      )
+      error?.response?.status === 422
+        ? t('BILLING_PAGE.TOP_UP.DECLINED')
+        : t('BILLING_PAGE.TOP_UP.ERROR')
     );
   } finally {
     buying.value = false;
@@ -123,9 +120,9 @@ const choosePlan = async ({ plan, interval }) => {
   );
   if (!data || data.url) return;
   picker.value.close();
-  if (data.status === 'scheduled')
-    useAlert(t('BILLING_PAGE.PICKER.SCHEDULED'));
-  else if (data.status === 'changed') useAlert(t('BILLING_PAGE.PICKER.CHANGED'));
+  if (data.status === 'scheduled') useAlert(t('BILLING_PAGE.PICKER.SCHEDULED'));
+  else if (data.status === 'changed')
+    useAlert(t('BILLING_PAGE.PICKER.CHANGED'));
 };
 const keepPlan = () =>
   go(() =>
@@ -175,6 +172,7 @@ const onAlert = action =>
 
     <template v-else-if="billing">
       <BillingAlert
+        v-if="alert"
         :billing="billing"
         :busy="busy || buying"
         @action="onAlert"
@@ -206,9 +204,8 @@ const onAlert = action =>
           {{
             billing.custom_payment_description ||
             t('BILLING_PAGE.CUSTOMIZATION')
-          }}
-          ·
-          <span class="font-semibold tabular-nums">{{
+          }}{{ SEPARATOR
+          }}<span class="font-semibold tabular-nums">{{
             money(billing.custom_payment_cents, billing.currency)
           }}</span>
         </p>

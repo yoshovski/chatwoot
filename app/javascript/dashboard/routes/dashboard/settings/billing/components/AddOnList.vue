@@ -26,9 +26,7 @@ const label = key => t(`ACCOUNT_SUBSCRIPTION.PLAN_FEATURES.${key}`);
     <h2 class="m-0 text-sm font-medium text-n-slate-11">
       {{ t('ACCOUNT_SUBSCRIPTION.ADD_ONS.TITLE') }}
     </h2>
-    <ul
-      class="-mx-5 m-0 list-none divide-y divide-n-weak p-0"
-    >
+    <ul class="-mx-5 m-0 list-none divide-y divide-n-weak p-0">
       <li
         v-for="addOn in addOns"
         :key="addOn.key"

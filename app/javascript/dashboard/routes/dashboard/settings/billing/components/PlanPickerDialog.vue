@@ -56,11 +56,10 @@ const action = plan => {
   if (plan.id === currentId.value) {
     if (interval.value !== currentInterval.value)
       return {
-        label: t(
+        label:
           interval.value === 'year'
-            ? 'BILLING_PAGE.PICKER.SWITCH_ANNUAL'
-            : 'BILLING_PAGE.PICKER.SWITCH_MONTHLY'
-        ),
+            ? t('BILLING_PAGE.PICKER.SWITCH_ANNUAL')
+            : t('BILLING_PAGE.PICKER.SWITCH_MONTHLY'),
         solid: interval.value === 'year',
       };
     if (pending.value)
@@ -95,7 +94,11 @@ defineExpose({ open, close });
   <Dialog
     ref="dialog"
     width="5xl"
-    :title="t(liveSubscription ? 'BILLING_PAGE.CHANGE_PLAN' : 'BILLING_PAGE.CHOOSE_PLAN')"
+    :title="
+      liveSubscription
+        ? t('BILLING_PAGE.CHANGE_PLAN')
+        : t('BILLING_PAGE.CHOOSE_PLAN')
+    "
     :show-confirm-button="false"
     :cancel-button-label="t('BILLING_PAGE.PICKER.CLOSE')"
   >
@@ -121,11 +124,9 @@ defineExpose({ open, close });
           @click="interval = option"
         >
           {{
-            t(
-              option === 'year'
-                ? 'BILLING_PAGE.PICKER.ANNUAL'
-                : 'BILLING_PAGE.PICKER.MONTHLY'
-            )
+            option === 'year'
+              ? t('BILLING_PAGE.PICKER.ANNUAL')
+              : t('BILLING_PAGE.PICKER.MONTHLY')
           }}
           <span
             v-if="option === 'year' && bestSaving"
@@ -143,11 +144,7 @@ defineExpose({ open, close });
         <span class="i-lucide-star mt-0.5 size-4 shrink-0" aria-hidden="true" />
         {{ t('BILLING_PAGE.PICKER.FOUNDER_NOTE') }}
       </p>
-      <p
-        v-if="error"
-        class="mb-0 text-sm text-n-ruby-11"
-        role="alert"
-      >
+      <p v-if="error" class="mb-0 text-sm text-n-ruby-11" role="alert">
         {{ t('BILLING_PAGE.PAYMENT_ERROR') }}
       </p>
 
@@ -171,7 +168,9 @@ defineExpose({ open, close });
               class="rounded-full bg-n-blue-3 px-2 py-0.5 text-xs font-medium text-n-blue-11"
             >
               {{
-                t(trial ? 'BILLING_PAGE.PICKER.IN_TRIAL' : 'BILLING_PAGE.PICKER.CURRENT')
+                trial
+                  ? t('BILLING_PAGE.PICKER.IN_TRIAL')
+                  : t('BILLING_PAGE.PICKER.CURRENT')
               }}
             </span>
           </div>
@@ -187,7 +186,9 @@ defineExpose({ open, close });
                   plan.currency
                 )
               }}<span class="text-sm font-normal text-n-slate-11">{{
-                t(interval === 'year' ? 'BILLING_PAGE.PER_YEAR' : 'BILLING_PAGE.PER_MONTH')
+                interval === 'year'
+                  ? t('BILLING_PAGE.PER_YEAR')
+                  : t('BILLING_PAGE.PER_MONTH')
               }}</span>
             </p>
             <p
@@ -201,7 +202,9 @@ defineExpose({ open, close });
               }}
             </p>
           </div>
-          <ul class="m-0 flex list-none flex-col gap-1 p-0 text-sm text-n-slate-11">
+          <ul
+            class="m-0 flex list-none flex-col gap-1 p-0 text-sm text-n-slate-11"
+          >
             <li>
               {{
                 t(
@@ -232,7 +235,10 @@ defineExpose({ open, close });
               class="w-full"
               @click="emit('choose', { plan, interval })"
             />
-            <span v-if="action(plan)?.note" class="text-center text-xs text-n-slate-11">
+            <span
+              v-if="action(plan)?.note"
+              class="text-center text-xs text-n-slate-11"
+            >
               {{ action(plan).note }}
             </span>
           </div>

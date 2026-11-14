@@ -51,6 +51,9 @@ const canPick = computed(
 const contactToChange = computed(
   () => Boolean(props.billing.custom_price) && !props.billing.can_change_plan
 );
+// Punctuation between numbers and facts; not translatable words.
+const SEPARATOR = ' · ';
+const SLASH = ' / ';
 const WARN_AT = 90;
 const barClass = computed(() =>
   usedPercent.value >= WARN_AT ? 'bg-n-ruby-9' : 'bg-n-brand'
@@ -85,17 +88,21 @@ const PACE_TONES = {
             <span class="i-lucide-star size-3" aria-hidden="true" />
             {{ t('BILLING_PAGE.FOUNDER') }}
           </span>
-          <StatusPill v-if="status" :status="status.tone" :label="status.label" />
+          <StatusPill
+            v-if="status"
+            :status="status.tone"
+            :label="status.label"
+          />
         </div>
         <p class="mb-0 text-sm text-n-slate-11">
           <span v-if="!free" class="tabular-nums text-n-slate-12">
             {{ price }}{{ cadence }}
           </span>
           <template v-if="planLine">
-            <span v-if="!free"> · </span>{{ planLine }}
+            {{ free ? planLine : `${SEPARATOR}${planLine}` }}
           </template>
           <template v-if="card">
-            · {{ card }}
+            {{ SEPARATOR }}{{ card }}
             <button
               type="button"
               class="ms-1 inline p-0 align-baseline font-medium text-n-blue-11 hover:underline"
@@ -112,9 +119,8 @@ const PACE_TONES = {
               plan: pending.plan_name,
               date: date(pending.effective_at),
             })
-          }}
-          ·
-          <button
+          }}{{ SEPARATOR
+          }}<button
             type="button"
             class="inline p-0 align-baseline font-medium text-n-blue-11 hover:underline"
             :disabled="busy"
@@ -127,11 +133,9 @@ const PACE_TONES = {
       <Button
         v-if="canPick"
         :label="
-          t(
-            liveSubscription
-              ? 'BILLING_PAGE.CHANGE_PLAN'
-              : 'BILLING_PAGE.CHOOSE_PLAN'
-          )
+          liveSubscription
+            ? t('BILLING_PAGE.CHANGE_PLAN')
+            : t('BILLING_PAGE.CHOOSE_PLAN')
         "
         :variant="liveSubscription ? 'outline' : 'solid'"
         :color="liveSubscription ? 'slate' : 'blue'"
@@ -149,19 +153,17 @@ const PACE_TONES = {
       />
     </div>
 
-    <div
-      v-if="!noAi"
-      class="flex flex-col gap-3 border-t border-n-weak p-6"
-    >
+    <div v-if="!noAi" class="flex flex-col gap-3 border-t border-n-weak p-6">
       <div class="flex flex-wrap items-center justify-between gap-3">
         <div class="flex flex-wrap items-baseline gap-x-3 gap-y-1">
           <p
             class="mb-0 font-display text-3xl font-semibold tracking-display tabular-nums text-n-slate-12"
           >
-            {{ used }}<span class="text-n-slate-10"> / {{ included }}</span>
+            {{ used
+            }}<span class="text-n-slate-10">{{ SLASH }}{{ included }}</span>
           </p>
           <span class="text-sm text-n-slate-11">
-            {{ t(trial ? 'BILLING_PAGE.AI_IN_TRIAL' : 'BILLING_PAGE.AI') }}
+            {{ trial ? t('BILLING_PAGE.AI_IN_TRIAL') : t('BILLING_PAGE.AI') }}
           </span>
           <span
             v-if="extraLeft"

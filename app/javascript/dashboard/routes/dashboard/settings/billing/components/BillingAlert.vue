@@ -3,7 +3,7 @@ import { toRef } from 'vue';
 import Button from 'dashboard/components-next/button/Button.vue';
 import { useBillingView } from '../useBillingView';
 
-// The one alert at the top of Billing; the cards below never repeat it.
+// The one alert at the top of Billing; the cards below never repeat it. The page renders it only when there is one.
 const props = defineProps({
   billing: { type: Object, required: true },
   busy: { type: Boolean, default: false },
@@ -20,7 +20,6 @@ const TONES = {
 
 <template>
   <div
-    v-if="alert"
     class="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-card px-4 py-3"
     :class="TONES[alert.tone]"
     role="alert"

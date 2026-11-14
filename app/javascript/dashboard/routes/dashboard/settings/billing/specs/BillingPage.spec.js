@@ -1,3 +1,4 @@
+import { ref } from 'vue';
 import { mount, flushPromises } from '@vue/test-utils';
 import api from 'dashboard/api/accountSubscription';
 import AutoTopUpCard from '../components/AutoTopUpCard.vue';
@@ -5,6 +6,7 @@ import BillingAlert from '../components/BillingAlert.vue';
 import InvoicesCard from '../components/InvoicesCard.vue';
 import OverviewCard from '../components/OverviewCard.vue';
 import PlanPickerDialog from '../components/PlanPickerDialog.vue';
+import { useBillingView } from '../useBillingView';
 
 vi.mock('vue-i18n', () => ({
   useI18n: () => ({
@@ -156,6 +158,12 @@ describe('OverviewCard', () => {
     expect(wrapper.text()).not.toContain('BILLING_PAGE.CONTACT_TO_CHANGE');
   });
 
+  it('marks a subscription paused by an admin', () => {
+    const wrapper = overview(billing({ payment_status: 'paused' }));
+
+    expect(wrapper.text()).toContain('BILLING_PAGE.STATUS.PAUSED');
+  });
+
   it('shows Free without an AI meter', () => {
     const wrapper = overview(
       billing({
@@ -210,9 +218,29 @@ describe('OverviewCard', () => {
 });
 
 describe('BillingAlert', () => {
-  it('shows nothing for a running plan or a trial', () => {
-    expect(alertOf(billing()).text()).toBe('');
-    expect(alertOf(billing(TRIAL)).text()).toBe('');
+  it('has nothing to say for a running plan or a trial', () => {
+    const view = data => {
+      let result;
+      mount({
+        setup() {
+          result = useBillingView(ref(data));
+          return () => null;
+        },
+      });
+      return result;
+    };
+
+    expect(view(billing()).alert.value).toBeNull();
+    expect(view(billing(TRIAL)).alert.value).toBeNull();
+  });
+
+  it('names the admin pause and offers no button', () => {
+    const wrapper = alertOf(
+      billing({ ai_replies_paused: true, ai_pause_reason: 'paused' })
+    );
+
+    expect(wrapper.text()).toContain('ACCOUNT_SUBSCRIPTION.AI_PAUSED.PAUSED');
+    expect(wrapper.find('button').exists()).toBe(false);
   });
 
   it('gives the day the AI pauses when a payment failed', async () => {
