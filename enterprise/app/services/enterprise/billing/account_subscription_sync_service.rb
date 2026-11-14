@@ -2,7 +2,7 @@ class Enterprise::Billing::AccountSubscriptionSyncService
   EVENT_TYPES = %w[customer.subscription.created customer.subscription.updated customer.subscription.deleted].freeze
   INVOICE_EVENTS = %w[invoice.paid invoice.payment_failed invoice.finalized invoice.voided invoice.marked_uncollectible].freeze
   PAYMENT_EVENTS = %w[checkout.session.completed checkout.session.async_payment_succeeded].freeze
-  EXPAND = %w[latest_invoice schedule].freeze
+  EXPAND = %w[latest_invoice schedule default_payment_method].freeze
 
   def self.handle(event)
     service = new
@@ -54,7 +54,8 @@ class Enterprise::Billing::AccountSubscriptionSyncService
     return if older_subscription?(subscription, remote)
 
     attributes = subscription_attributes(subscription, remote).merge(plan_attributes(subscription, remote))
-    attributes[:stripe_subscription_details].merge!(price_id: remote.items.data.first.price.id, pending_change: pending_change(remote))
+    attributes[:stripe_subscription_details].merge!(price_id: remote.items.data.first.price.id, pending_change: pending_change(remote),
+                                                    card: card(remote['default_payment_method']))
     attributes[:quota_anchor] = attributes[:period_started_at] if subscription.stripe_subscription_id.blank?
     subscription.update!(attributes)
   end
@@ -160,6 +161,13 @@ class Enterprise::Billing::AccountSubscriptionSyncService
       interval_change_supported: interval_change_supported?(remote, item),
       latest_invoice: invoice.is_a?(Stripe::Invoice) ? invoice.to_h.slice(:status, :total, :currency, :created) : nil
     }
+  end
+
+  # Brand and last four digits for the Billing page; nil for other payment methods or when Stripe did not expand it.
+  def card(payment_method)
+    return unless payment_method.is_a?(Stripe::PaymentMethod) && payment_method['card']
+
+    { brand: payment_method.card.brand, last4: payment_method.card.last4 }
   end
 
   def subscription_attributes(subscription, remote)

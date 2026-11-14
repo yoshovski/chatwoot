@@ -59,6 +59,15 @@ describe Enterprise::Billing::AccountSubscriptionSyncService do
     end
   end
 
+  it 'keeps the card brand and last four digits for the Billing page' do
+    remote['default_payment_method'] = Stripe::PaymentMethod.construct_from(id: 'pm_1', object: 'payment_method', type: 'card',
+                                                                             card: { brand: 'visa', last4: '4242' })
+
+    described_class.refresh(account)
+
+    expect(subscription.reload.stripe_subscription_details['card']).to eq('brand' => 'visa', 'last4' => '4242')
+  end
+
   it 'keeps the allowance when the plan does not change' do
     anchor = subscription.quota_anchor
     subscription.update!(billing_plan: growth)

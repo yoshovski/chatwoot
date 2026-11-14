@@ -82,6 +82,14 @@ module AccountSubscriptionAiAccess
     counted_windows.where('(started_at, id) <= (?, ?)', window.started_at, window.id).count <= limit
   end
 
+  # Billing page: the day a past-due account's AI stops replying.
+  def ai_pauses_at
+    return unless payment_status == 'past_due'
+
+    failed_at = [payment_failed_at, past_due_since].compact.min
+    (failed_at || Time.current) + PAST_DUE_GRACE
+  end
+
   # Grace counts from the first failed invoice: payment_failed_at from the Stripe event, or, when that event was
   # missed, the moment the subscription first went past_due.
   def past_due_grace?

@@ -66,6 +66,7 @@ Rails.application.routes.draw do
             post :change_interval
             post :change_plan
             post :portal
+            get :invoices
             post :payment
             post :top_up
             patch :top_up_settings

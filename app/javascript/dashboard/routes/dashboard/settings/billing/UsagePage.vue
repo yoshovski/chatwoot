@@ -1,14 +1,15 @@
 <script setup>
 import { computed, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { useAccount } from 'dashboard/composables/useAccount';
 import { useAccountSubscription } from 'dashboard/composables/useAccountSubscription';
 import Button from 'dashboard/components-next/button/Button.vue';
-import BillingTabs from './components/BillingTabs.vue';
 import DailyUsageChart from './components/DailyUsageChart.vue';
 import BaseSettingsHeader from '../components/BaseSettingsHeader.vue';
 import SettingsLayout from '../SettingsLayout.vue';
 
 const { t } = useI18n();
+const { accountScopedRoute } = useAccount();
 const { billing, loading, loadFailed, refresh } = useAccountSubscription();
 onMounted(() => refresh({ sync: false }));
 
@@ -43,7 +44,13 @@ const charts = computed(() => [
         :description="t('ACCOUNT_SUBSCRIPTION.USAGE_PAGE.DESCRIPTION')"
       >
         <template #tabs>
-          <BillingTabs />
+          <router-link
+            :to="accountScopedRoute('billing_settings_index')"
+            class="inline-flex items-center gap-1 text-sm font-medium text-n-slate-11 hover:text-n-blue-11"
+          >
+            <span class="i-lucide-arrow-left size-4" aria-hidden="true" />
+            {{ t('BILLING_PAGE.BACK_TO_BILLING') }}
+          </router-link>
         </template>
       </BaseSettingsHeader>
     </template>
