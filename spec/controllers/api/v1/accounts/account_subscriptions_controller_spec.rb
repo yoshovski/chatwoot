@@ -31,4 +31,33 @@ RSpec.describe 'Account subscription API', type: :request do
       expect(response.parsed_body['products']['ai_conversations']).to include('limit' => nil, 'period' => 'month')
     end
   end
+
+  describe 'GET /api/v1/accounts/{account.id}/account_subscription/invoices' do
+    let(:admin) { create(:user, account: account, role: :administrator) }
+    let(:invoices) { [{ id: 'in_1', total: 3900, status: 'paid' }] }
+
+    it 'returns the invoices to an administrator' do
+      service = instance_double(Enterprise::Billing::InvoiceListService, perform: invoices)
+      allow(Enterprise::Billing::InvoiceListService).to receive(:new).with(account: account).and_return(service)
+
+      get "/api/v1/accounts/#{account.id}/account_subscription/invoices", headers: admin.create_new_auth_token, as: :json
+
+      expect(response).to have_http_status(:success)
+      expect(response.parsed_body['invoices']).to eq([{ 'id' => 'in_1', 'total' => 3900, 'status' => 'paid' }])
+    end
+
+    it 'says so when Stripe fails' do
+      allow(Enterprise::Billing::InvoiceListService).to receive(:new).and_raise(Stripe::APIConnectionError)
+
+      get "/api/v1/accounts/#{account.id}/account_subscription/invoices", headers: admin.create_new_auth_token, as: :json
+
+      expect(response).to have_http_status(:bad_gateway)
+    end
+
+    it 'is for administrators only' do
+      get "/api/v1/accounts/#{account.id}/account_subscription/invoices", headers: agent.create_new_auth_token, as: :json
+
+      expect(response).to have_http_status(:unauthorized)
+    end
+  end
 end

@@ -25,6 +25,7 @@ export default {
           component: ProviderIndex,
           meta: {
             permissions: ['administrator'],
+            tinted: true,
           },
         },
         {

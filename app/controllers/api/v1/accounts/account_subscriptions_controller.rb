@@ -61,6 +61,14 @@ class Api::V1::Accounts::AccountSubscriptionsController < Api::V1::Accounts::Bas
     render json: { error: I18n.t('errors.account_subscription.payment_failed') }, status: :bad_gateway
   end
 
+  def invoices
+    return head :not_found unless ChatwootApp.enterprise?
+
+    render json: { invoices: Enterprise::Billing::InvoiceListService.new(account: Current.account).perform }
+  rescue Stripe::StripeError
+    render json: { error: I18n.t('errors.account_subscription.payment_failed') }, status: :bad_gateway
+  end
+
   def portal
     return head :not_found unless ChatwootApp.enterprise?
 

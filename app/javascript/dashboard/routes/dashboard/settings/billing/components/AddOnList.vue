@@ -20,17 +20,19 @@ const label = key => t(`ACCOUNT_SUBSCRIPTION.PLAN_FEATURES.${key}`);
 </script>
 
 <template>
-  <section class="flex flex-col gap-2">
-    <h2 class="m-0 text-sm font-medium text-n-slate-12">
+  <section
+    class="flex min-w-0 flex-col gap-2 rounded-card bg-n-solid-2 p-5 shadow-card outline outline-1 -outline-offset-1 outline-n-container"
+  >
+    <h2 class="m-0 text-sm font-medium text-n-slate-11">
       {{ t('ACCOUNT_SUBSCRIPTION.ADD_ONS.TITLE') }}
     </h2>
     <ul
-      class="m-0 list-none divide-y divide-n-weak rounded-xl border border-n-weak bg-n-solid-1 p-0"
+      class="-mx-5 m-0 list-none divide-y divide-n-weak p-0"
     >
       <li
         v-for="addOn in addOns"
         :key="addOn.key"
-        class="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 px-4 py-3"
+        class="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 px-5 py-3"
       >
         <span class="text-sm text-n-slate-12">{{ label(addOn.key) }}</span>
         <span class="flex items-center gap-3 text-sm">
