@@ -14,11 +14,20 @@ const props = defineProps({
   config: { type: Object, required: true },
   // Message payloads that replace the widget's sample conversation.
   messages: { type: Array, default: null },
+  // AI agent test: the visitor can type, and the widget shows the AI agent typing.
+  testMode: { type: Boolean, default: false },
+  typing: { type: Boolean, default: false },
+  // Without the toolbar and the grey stage, for a page that draws its own frame.
+  bare: { type: Boolean, default: false },
 });
+
+// Test mode: a message the visitor sent, or an answer to a suggestion or form ({ messageId, submittedValues }).
+const emit = defineEmits(['send', 'submit']);
 
 const PREVIEW_MESSAGE = 'chatoctave:preview';
 const PREVIEW_READY = 'chatoctave:preview-ready';
 const PREVIEW_VIEW_CHANGED = 'chatoctave:preview-view';
+const PREVIEW_SEND = 'chatoctave:preview-send';
 const SEND_DEBOUNCE_MS = 250;
 // A fresh token is fetched this long before the current one expires.
 const TOKEN_REFRESH_MARGIN_MS = 60 * 1000;
@@ -49,13 +58,17 @@ const previewUrl = computed(() =>
 const isDark = computed(() => theme.value === 'dark');
 const isMobile = computed(() => device.value === 'mobile');
 
-const send = () => {
+const send = ({ withView = true } = {}) => {
   if (!isReady.value) return;
   const payload = {
     type: PREVIEW_MESSAGE,
     config: { ...props.config, darkMode: theme.value },
-    view: view.value,
   };
+  if (props.testMode) {
+    payload.config.testMode = true;
+    payload.typing = props.typing;
+  }
+  if (withView) payload.view = view.value;
   if (props.messages) payload.messages = props.messages;
   // The payload goes through structured clone, so it has to be plain data.
   iframe.value.contentWindow.postMessage(
@@ -92,15 +105,35 @@ useEventListener(window, 'message', event => {
     send();
   } else if (event.data?.type === PREVIEW_VIEW_CHANGED) {
     view.value = event.data.view;
+  } else if (event.data?.type === PREVIEW_SEND && props.testMode) {
+    if (event.data.submitted) emit('submit', event.data.submitted);
+    else emit('send', event.data.content);
   }
 });
 
-watch(() => [props.config, props.messages], sendDebounced, { deep: true });
-watch([view, theme], send);
+watch(
+  () => props.config,
+  () => sendDebounced(),
+  { deep: true }
+);
+// A test conversation is sent at once and keeps the visitor's screen.
+watch(
+  () => [props.messages, props.typing],
+  () => (props.testMode ? send({ withView: false }) : sendDebounced()),
+  { deep: true }
+);
+watch([view, theme], () => send());
 watch(
   () => props.inboxId,
   () => fetchToken()
 );
+
+// Start over: back to the welcome screen, as a new visitor sees it.
+const showHome = () => {
+  view.value = 'home';
+  send();
+};
+defineExpose({ showHome });
 
 onMounted(fetchToken);
 onBeforeUnmount(() => clearTimeout(refreshTimer));
@@ -109,9 +142,10 @@ onBeforeUnmount(() => clearTimeout(refreshTimer));
 <template>
   <section
     class="flex flex-col gap-3"
+    :class="{ 'size-full': bare }"
     :aria-label="$t('INBOX_MGMT.WIDGET_PREVIEW.TITLE')"
   >
-    <div class="flex flex-wrap items-center justify-between gap-2">
+    <div v-if="!bare" class="flex flex-wrap items-center justify-between gap-2">
       <div
         class="flex items-center gap-0.5 rounded-lg bg-n-alpha-1 p-0.5"
         role="group"
@@ -172,12 +206,23 @@ onBeforeUnmount(() => clearTimeout(refreshTimer));
     </div>
 
     <div
-      class="flex justify-center rounded-2xl bg-n-slate-2 p-4 outline outline-1 -outline-offset-1 outline-n-weak"
+      :class="
+        bare
+          ? 'relative size-full overflow-hidden'
+          : 'flex justify-center rounded-2xl bg-n-slate-2 p-4 outline outline-1 -outline-offset-1 outline-n-weak'
+      "
     >
       <div
-        class="relative w-full h-[40rem] overflow-hidden bg-n-solid-1 shadow-lg"
+        class="relative overflow-hidden bg-n-solid-1"
         :class="
-          isMobile ? 'max-w-[22.5rem] rounded-3xl' : 'max-w-[25rem] rounded-2xl'
+          bare
+            ? 'size-full'
+            : [
+                'w-full h-[40rem] shadow-lg',
+                isMobile
+                  ? 'max-w-[22.5rem] rounded-3xl'
+                  : 'max-w-[25rem] rounded-2xl',
+              ]
         "
       >
         <iframe

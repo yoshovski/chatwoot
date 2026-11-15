@@ -2,11 +2,13 @@ import { reactive } from 'vue';
 import { MESSAGE_TYPE } from 'widget/helpers/constants';
 import { getWidgetForegroundColor } from 'shared/helpers/colorHelper';
 
-// The inbox settings page frames the real widget in preview mode (GET /widget/preview) and drives it with
-// postMessage. The page shares this origin, so nothing else may change what the preview shows.
+// The inbox settings page and the AI agent test frame the real widget in preview mode (GET /widget/preview) and
+// drive it with postMessage. The page shares this origin, so nothing else may change what the preview shows.
+// In test mode the visitor's messages go to the framing page, which asks the AI agent and sends the reply back.
 export const PREVIEW_MESSAGE = 'chatoctave:preview';
 export const PREVIEW_READY = 'chatoctave:preview-ready';
 export const PREVIEW_VIEW_CHANGED = 'chatoctave:preview-view';
+export const PREVIEW_SEND = 'chatoctave:preview-send';
 
 export const PREVIEW_VIEWS = {
   HOME: 'home',
@@ -28,13 +30,14 @@ const CHANNEL_KEYS = [
 ];
 
 // Settings the SDK applies on a website (from the install snippet); the preview applies them itself.
-// opener is reserved for proactive openers and isn't drawn yet.
+// opener is reserved for proactive openers and isn't drawn yet. testMode unlocks the composer.
 const LAUNCHER_KEYS = [
   'bubbleType',
   'launcherTitle',
   'opener',
   'position',
   'showHome',
+  'testMode',
 ];
 
 const SAMPLE_SOURCE_URL = 'https://example.com/help/delivery';
@@ -48,7 +51,10 @@ export const previewState = reactive({
   opener: null,
   position: 'right',
   showHome: true,
+  testMode: false,
 });
+
+export const isPreviewTestMode = () => isPreviewMode() && previewState.testMode;
 
 export const setWidgetColorVariables = (widgetColor, widgetTextColor) => {
   const { style } = document.documentElement;
@@ -131,6 +137,17 @@ export const readPreviewMessage = event => {
 const notifyParent = message =>
   window.parent.postMessage(message, window.location.origin);
 
+// A message the visitor typed or picked from the starters, or (as submitted) a suggestion or form answered on an
+// earlier message. The framing page keeps the answer when it sends the conversation back.
+export const sendPreviewMessage = (content, submitted = null) => {
+  previewState.view = PREVIEW_VIEWS.CONVERSATION;
+  notifyParent({
+    type: PREVIEW_VIEW_CHANGED,
+    view: PREVIEW_VIEWS.CONVERSATION,
+  });
+  notifyParent({ type: PREVIEW_SEND, content, submitted });
+};
+
 const showView = (router, view) => {
   previewState.view = view;
   if (view === PREVIEW_VIEWS.LAUNCHER) return;
@@ -151,7 +168,7 @@ const pick = (source, keys) =>
 
 export const applyPreviewUpdate = (
   { store, router, setLocale },
-  { config = {}, view, messages }
+  { config = {}, view, messages, typing }
 ) => {
   Object.assign(window.chatwootWebChannel, pick(config, CHANNEL_KEYS));
   Object.assign(previewState, pick(config, LAUNCHER_KEYS));
@@ -168,8 +185,13 @@ export const applyPreviewUpdate = (
     store.dispatch('appConfig/setColorScheme', config.darkMode);
   if (config.locale) setLocale(config.locale);
   if (messages) setPreviewMessages(store, messages);
+  if (typing !== undefined)
+    store.commit('conversation/toggleAgentTypingStatus', {
+      status: typing ? 'on' : 'off',
+    });
 
-  showView(router, view || previewState.view);
+  // The AI agent test sends each new message without a view, so the visitor stays where they are.
+  if (view) showView(router, view);
 };
 
 // Preview mode never calls the API or opens a socket: it starts from the sample and waits for the settings page.

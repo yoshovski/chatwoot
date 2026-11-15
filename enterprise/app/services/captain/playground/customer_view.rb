@@ -1,5 +1,5 @@
 # What the customer would see for one playground run: the same message payloads the chat job would post, built
-# without a conversation, plus the handoff the run asked for. Nothing is written.
+# without a conversation, plus the handoff the run asked for and the sources the reply used. Nothing is written.
 class Captain::Playground::CustomerView
   def initialize(assistant:, response:, run_result:, message_history:, handoff_reason: nil)
     @assistant = assistant
@@ -17,10 +17,17 @@ class Captain::Playground::CustomerView
       assistant: @assistant, response: @response, customer_message: @customer_message, composer: composer
     ).source
     messages = composer.messages(suppress_suggestions: source.present?)
-    return { messages: messages, handoff: nil } unless source
+    return { messages: messages, handoff: nil, sources: used_sources } unless source
 
     capture = Captain::Conversation::ContactCaptureService
     messages << capture.form_payload(capture.requested_fields(@assistant), assistant: @assistant)
-    { messages: messages, handoff: { source: source, reason: @handoff_reason } }
+    { messages: messages, handoff: { source: source, reason: @handoff_reason }, sources: used_sources }
+  end
+
+  private
+
+  def used_sources
+    Captain::Assistant::RunSources.new(@run_result).to_a.select { |source| source[:used] }
+                                  .map { |source| source.slice(:kind, :title, :url, :document_title) }
   end
 end

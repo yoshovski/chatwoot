@@ -154,4 +154,91 @@ describe('WidgetLivePreview', () => {
       '/widget/preview?token=second-token'
     );
   });
+
+  describe('in the AI agent test', () => {
+    const mountTest = async (props = {}) => {
+      const wrapper = mount(WidgetLivePreview, {
+        props: {
+          inboxId: 7,
+          config: {},
+          messages: [],
+          testMode: true,
+          ...props,
+        },
+        attachTo: document.body,
+      });
+      await flushPromises();
+      return wrapper;
+    };
+
+    it('unlocks the composer and sends the conversation without moving the visitor', async () => {
+      const wrapper = await mountTest();
+      const postMessage = await markReady(wrapper);
+
+      expect(lastPayload(postMessage)).toEqual({
+        type: 'chatoctave:preview',
+        config: { darkMode: 'light', testMode: true },
+        typing: false,
+        view: 'home',
+        messages: [],
+      });
+
+      const message = { id: 1, content: 'Hi', message_type: 0 };
+      await wrapper.setProps({ messages: [message], typing: true });
+
+      expect(lastPayload(postMessage)).toEqual({
+        type: 'chatoctave:preview',
+        config: { darkMode: 'light', testMode: true },
+        typing: true,
+        messages: [message],
+      });
+    });
+
+    it('passes on what the visitor sent and answered', async () => {
+      const wrapper = await mountTest();
+      await markReady(wrapper);
+
+      postFromWidget(wrapper, {
+        type: 'chatoctave:preview-send',
+        content: 'Where is my order?',
+        submitted: null,
+      });
+      const submitted = {
+        messageId: 3,
+        submittedValues: [{ title: 'Returns' }],
+      };
+      postFromWidget(wrapper, {
+        type: 'chatoctave:preview-send',
+        content: null,
+        submitted,
+      });
+
+      expect(wrapper.emitted('send')).toEqual([['Where is my order?']]);
+      expect(wrapper.emitted('submit')).toEqual([[submitted]]);
+    });
+
+    it('goes back to the welcome screen on start over', async () => {
+      const wrapper = await mountTest();
+      const postMessage = await markReady(wrapper);
+      postFromWidget(wrapper, {
+        type: 'chatoctave:preview-view',
+        view: 'conversation',
+      });
+      await flushPromises();
+
+      wrapper.vm.showHome();
+      await flushPromises();
+
+      expect(lastPayload(postMessage).view).toBe('home');
+    });
+  });
+
+  it('ignores messages from the visitor outside the AI agent test', async () => {
+    const wrapper = await mountPreview();
+    await markReady(wrapper);
+
+    postFromWidget(wrapper, { type: 'chatoctave:preview-send', content: 'Hi' });
+
+    expect(wrapper.emitted('send')).toBeUndefined();
+  });
 });

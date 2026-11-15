@@ -17,7 +17,11 @@ import {
 import { createTemporaryMessage, getNonDeletedMessages } from './helpers';
 import { createReplyPacer } from './replyPacing';
 import { emitter } from 'shared/helpers/mitt';
-import { isPreviewMode } from 'widget/helpers/previewMode';
+import {
+  isPreviewMode,
+  isPreviewTestMode,
+  sendPreviewMessage,
+} from 'widget/helpers/previewMode';
 import { recordVisitAfterFirstMessage } from 'widget/api/websiteActivity';
 
 // One pacer for the widget's single store; it reveals through the store that used it last.
@@ -54,7 +58,12 @@ export const actions = {
     }
   },
   sendMessage: async ({ dispatch, state: conversationState }, params) => {
-    // Nothing is sent from the settings preview, so its sample conversation stays as configured.
+    // Nothing is sent from the settings preview, so its sample conversation stays as configured. The AI agent
+    // test hands the message to the framing page instead of the API.
+    if (isPreviewTestMode()) {
+      sendPreviewMessage(params.content);
+      return;
+    }
     if (isPreviewMode()) return;
     const { content, replyTo } = params;
     const message = createTemporaryMessage({ content, replyTo });

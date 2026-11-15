@@ -13,7 +13,7 @@ RSpec.describe Captain::Playground::Runner do
   end
   let(:message_history) { [{ role: 'user', content: 'How long does shipping take?' }] }
   let(:tool_state) { {} }
-  let(:run_result) { instance_double(Agents::RunResult, context: { state: tool_state }) }
+  let(:run_result) { instance_double(Agents::RunResult, context: { state: tool_state }, output: agent_response) }
   let(:agent_response) do
     {
       'agent_name' => 'Store Bot',
@@ -44,6 +44,26 @@ RSpec.describe Captain::Playground::Runner do
 
       expect(answer).to include(content_type: 'input_select')
       expect(answer[:content_attributes][:items].pluck('title')).to eq(['Track order', 'Return item'])
+    end
+  end
+
+  context 'when the answer cites a knowledge source and Show sources is off' do
+    let(:tool_state) do
+      {
+        Captain::Assistant::CITATION_SOURCES_STATE_KEY => { 1 => 'faq:11', 2 => 'faq:12' },
+        Captain::Assistant::CITATION_DETAILS_STATE_KEY => {
+          'faq:11' => { kind: 'faq', title: 'Shipping times', excerpt: 'We ship within two days.' },
+          'faq:12' => { kind: 'faq', title: 'Opening hours' }
+        }
+      }
+    end
+    let(:agent_response) do
+      super().merge('response_parts' => [{ 'text' => 'We ship within two days.', 'citation_indexes' => [1] }])
+    end
+
+    it 'lists the used source for the test panel and keeps it out of the bubble' do
+      expect(result[:sources]).to eq([{ 'kind' => 'faq', 'title' => 'Shipping times' }])
+      expect(result[:messages].first[:content_attributes].to_h).not_to have_key('captain_sources')
     end
   end
 

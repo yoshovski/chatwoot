@@ -796,22 +796,8 @@
       }
     },
     "PLAYGROUND": {
-      "PLAY_VIDEO": "Play video",
-      "USER": "You",
-      "ASSISTANT": "AI agent",
-      "MESSAGE_PLACEHOLDER": "Type your message...",
-      "SEND_MESSAGE": "Send message",
-      "HEADER": "Playground",
-      "CREDIT_NOTE": "Messages sent here will count toward your Captain credits.",
-      "CLEAR_CONVERSATION": "Clear conversation",
       "RESPONSE_ERROR": "Captain could not complete this test run. Review the setup and try again.",
       "CUSTOMER_VIEW": {
-        "INBOX_LABEL": "Preview as inbox",
-        "DEFAULT_LOOK": "Default look",
-        "INBOX_LOOK": "Inbox: {name}",
-        "OPEN_DEMO": "Open live demo",
-        "FORM_THANKS": "Thanks, a colleague will continue here.",
-        "VIEW_PRODUCT": "View",
         "HANDOFF": "Handed off to your team. In a live chat they'd be notified now.",
         "HANDOFF_REASON": {
           "TOOL": "The AI agent handed off on its own.",
@@ -888,28 +874,56 @@
         "SAVE_KNOWLEDGE_SUCCESS": "Knowledge added as a document.",
         "SAVE_KNOWLEDGE_ERROR": "Unable to add knowledge as a document."
       },
-      "RUN_DETAILS": {
-        "SUMMARY": "Run details · {duration}ms",
-        "HANDLER_VALUE": "Handled by: {handler}",
-        "SCENARIOS": "No scenarios | One scenario | {count} scenarios",
-        "RULES": "{count} rules",
-        "KNOWLEDGE_ATTACHED": "Temporary knowledge was attached to this run.",
-        "NO_EVENTS": "No tool calls or scenario handoffs were recorded.",
-        "HANDOFF": "{from} → {to}",
-        "STATUS": {
-          "RUNNING": "Running",
-          "COMPLETED": "Completed",
-          "FAILED": "Failed"
-        }
-      },
       "STARTER_QUESTIONS": {
         "EXAMPLE_1": "What do you offer?",
         "EXAMPLE_2": "How can I contact your team?",
         "EXAMPLE_3": "Where can I find your pricing?"
       },
-      "EMPTY": {
-        "TITLE": "Try {name}",
-        "DESCRIPTION": "Ask something a customer would, or start with one of these."
+      "WIDGET_TEST": {
+        "TITLE": "Test your AI agent",
+        "NOT_COUNTED": "Test chats are free: they don't count toward your usage or show up in Conversations.",
+        "WIDGET_LABEL": "Website chat to test",
+        "START_OVER": "Start over",
+        "REPLY_FAILED": "Sorry, something went wrong. Please try again.",
+        "NO_WIDGET": {
+          "TITLE": "Connect a website chat first",
+          "DESCRIPTION": "The test uses your real website chat, so your AI agent needs one.",
+          "ACTION": "Connect a website chat"
+        },
+        "TABS": {
+          "CUSTOMER": "As your customer",
+          "BEHIND": "Behind the answer"
+        },
+        "WHY": {
+          "TITLE": "Why this answer",
+          "EMPTY": "Ask something in the chat as a customer would. Each answer shows up here with what it was based on.",
+          "MAIN_AGENT": "Main AI agent",
+          "ANSWERED_BY": "Answered by",
+          "SOURCES": "Sources",
+          "NO_SOURCES": "None",
+          "ACTIONS": "Actions",
+          "NO_ACTIONS": "None",
+          "SECONDS": "{seconds} s",
+          "FIX": "Fix this answer",
+          "FIXED": "Fix saved"
+        },
+        "LOAD_ERROR": "Couldn't load your website chat.",
+        "RETRY": "Try again",
+        "FIX": {
+          "TITLE": "Fix this answer",
+          "DESCRIPTION": "Teach your AI agent the right answer. It is used from the next question on.",
+          "AS_FAQ": "Save as an FAQ",
+          "AS_RULE": "Add a rule",
+          "FAQ_HINT": "Write the answer you want customers to get for this question.",
+          "QUESTION": "Question",
+          "ANSWER": "Answer",
+          "RULE_HINT": "A rule changes how your AI agent answers every question, not only this one.",
+          "RULE": "Rule",
+          "RULE_PLACEHOLDER": "For example: Always mention the free return label when someone asks about returns.",
+          "SAVE": "Save",
+          "SAVED": "Saved. Ask again to see the new answer.",
+          "ERROR": "Couldn't save. Please try again."
+        }
       }
     },
     "PAYWALL": {

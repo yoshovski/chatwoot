@@ -11,6 +11,8 @@ import {
   startPreview,
   PREVIEW_MESSAGE,
   PREVIEW_READY,
+  PREVIEW_SEND,
+  PREVIEW_VIEW_CHANGED,
 } from '../previewMode';
 
 vi.mock('@rails/actioncable', () => ({
@@ -42,7 +44,9 @@ describe('widget preview mode', () => {
       opener: null,
       position: 'right',
       showHome: true,
+      testMode: false,
     });
+    router.replace.mockClear();
     vi.spyOn(window.parent, 'postMessage');
     startPreview({ store, router, t, setLocale });
   });
@@ -170,5 +174,83 @@ describe('widget preview mode', () => {
     await wrapper.setData({ userInput: 'Hello' });
     wrapper.vm.handleButtonClick();
     expect(onSendMessage).not.toHaveBeenCalled();
+  });
+
+  describe('in the AI agent test', () => {
+    const mountComposer = onSendMessage =>
+      mount(ChatInputWrap, {
+        props: { onSendMessage },
+        global: {
+          plugins: [store],
+          mocks: { $t: key => key },
+          directives: { onClickaway: {} },
+        },
+      });
+
+    beforeEach(() => {
+      postFromParent({
+        type: PREVIEW_MESSAGE,
+        config: { testMode: true },
+        messages: [],
+        view: 'home',
+      });
+      router.replace.mockClear();
+    });
+
+    it('hands the visitor message to the page instead of the API', async () => {
+      await store.dispatch('conversation/sendMessage', {
+        content: 'Where is my order?',
+      });
+
+      expect(window.parent.postMessage).toHaveBeenCalledWith(
+        { type: PREVIEW_VIEW_CHANGED, view: 'conversation' },
+        window.location.origin
+      );
+      expect(window.parent.postMessage).toHaveBeenCalledWith(
+        { type: PREVIEW_SEND, content: 'Where is my order?', submitted: null },
+        window.location.origin
+      );
+      // The page sends the conversation back; the widget adds nothing itself.
+      expect(messages()).toEqual([]);
+    });
+
+    it('hands a clicked suggestion to the page with the message it answers', async () => {
+      const submittedValues = [
+        { title: 'Returns', value: 'How do returns work?' },
+      ];
+
+      await store.dispatch('message/update', { messageId: 3, submittedValues });
+
+      expect(window.parent.postMessage).toHaveBeenCalledWith(
+        {
+          type: PREVIEW_SEND,
+          content: null,
+          submitted: { messageId: 3, submittedValues, email: undefined },
+        },
+        window.location.origin
+      );
+    });
+
+    it('lets the visitor type and send', async () => {
+      const onSendMessage = vi.fn();
+      const wrapper = mountComposer(onSendMessage);
+
+      expect(wrapper.find('textarea').attributes('disabled')).toBeUndefined();
+      expect(wrapper.text()).not.toContain('PREVIEW.COMPOSER_HINT');
+
+      await wrapper.setData({ userInput: 'Hello' });
+      wrapper.vm.handleButtonClick();
+      expect(onSendMessage).toHaveBeenCalledWith('Hello');
+    });
+
+    it('shows the AI agent typing and keeps the visitor on the same screen', () => {
+      postFromParent({ type: PREVIEW_MESSAGE, typing: true, messages: [] });
+
+      expect(store.getters['conversation/getIsAgentTyping']).toBe(true);
+      expect(router.replace).not.toHaveBeenCalled();
+
+      postFromParent({ type: PREVIEW_MESSAGE, typing: false });
+      expect(store.getters['conversation/getIsAgentTyping']).toBe(false);
+    });
   });
 });
