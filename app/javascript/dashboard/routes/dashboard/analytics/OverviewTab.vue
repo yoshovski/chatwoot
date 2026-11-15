@@ -2,65 +2,104 @@
 import { computed, onMounted, toRef } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useMapGetter, useStore } from 'dashboard/composables/store';
-import { metricView, overviewMetrics, teamRows } from './analyticsView';
-import { useAnalyticsData } from './useAnalyticsData';
-import OverviewTiles from './components/OverviewTiles.vue';
-import OverviewStory from './components/OverviewStory.vue';
-import OverviewCompare from './components/OverviewCompare.vue';
+import SectionCard from 'dashboard/components-next/kit/SectionCard.vue';
+import TopicsCard from '../home/components/TopicsCard.vue';
+import DayChart from './components/DayChart.vue';
+import MetricTiles from './components/MetricTiles.vue';
+import PeopleList from './components/PeopleList.vue';
+import {
+  analyticsMetrics,
+  chartDays,
+  metricView,
+  peopleRows,
+} from './analyticsView';
+import { LOADERS, useAnalyticsData } from './useAnalyticsData';
 
+// Overview: four numbers, conversations by day for the AI agent and the team, then topics and the busiest people.
 const props = defineProps({ period: { type: Number, required: true } });
 
 const { t } = useI18n();
 const store = useStore();
 const agents = useMapGetter('agents/getAgents');
-
-const { activity, report, agentSummary, isLoading, hasError, reload } =
-  useAnalyticsData(toRef(props, 'period'));
-
-// Design step only (README "Design step"): ?co_variant=a|b|c, read once, dev builds only.
-const VARIANTS = { a: OverviewTiles, b: OverviewStory, c: OverviewCompare };
-const variant = import.meta.env.DEV
-  ? new URLSearchParams(window.location.search).get('co_variant')
-  : null;
-const Layout = VARIANTS[variant] || OverviewTiles;
-
-const labels = computed(() => ({
-  conversations: t('ANALYTICS.METRICS.CONVERSATIONS'),
-  ai_conversations: t('ANALYTICS.METRICS.AI_CONVERSATIONS'),
-  resolved: t('ANALYTICS.METRICS.RESOLVED'),
-  handed: t('ANALYTICS.METRICS.HANDED'),
-  first_reply: t('ANALYTICS.METRICS.FIRST_REPLY'),
-  team_solved: t('ANALYTICS.METRICS.TEAM_SOLVED'),
-  rating: t('ANALYTICS.METRICS.RATING'),
-}));
-const raw = computed(() => overviewMetrics(activity.value, report.value));
-const metrics = computed(() =>
-  Object.fromEntries(
-    Object.entries(raw.value).map(([key, metric]) => [
-      key,
-      {
-        ...metricView(key, metric, t),
-        label: labels.value[key],
-        raw: metric,
-      },
-    ])
-  )
+const { data, isLoading, hasError, reload } = useAnalyticsData(
+  toRef(props, 'period'),
+  LOADERS
 );
-const team = computed(() => teamRows(agentSummary.value, agents.value));
+
+const metrics = computed(() => analyticsMetrics(data.value));
+const tiles = computed(() => [
+  metricView(
+    'conversations',
+    metrics.value.conversations,
+    t('ANALYTICS.METRICS.CONVERSATIONS'),
+    t
+  ),
+  metricView(
+    'resolved',
+    metrics.value.resolved,
+    t('ANALYTICS.METRICS.RESOLVED'),
+    t
+  ),
+  metricView(
+    'first_reply',
+    metrics.value.first_reply,
+    t('ANALYTICS.METRICS.FIRST_REPLY'),
+    t
+  ),
+  metricView('rating', metrics.value.rating, t('ANALYTICS.METRICS.RATING'), t),
+]);
+const days = computed(() =>
+  chartDays(data.value.activity?.days, day => [day.ai, day.team])
+);
+const series = computed(() => [
+  { label: t('ANALYTICS.CHART.AI'), total: t('ANALYTICS.CHART.AI_TOTAL') },
+  { label: t('ANALYTICS.CHART.TEAM'), total: t('ANALYTICS.CHART.TEAM_TOTAL') },
+]);
+const people = computed(() => peopleRows(data.value.agents, agents.value));
 
 onMounted(() => store.dispatch('agents/get'));
 </script>
 
 <template>
-  <component
-    :is="Layout"
-    :metrics="metrics"
-    :raw-days="activity?.days || []"
-    :topics="activity?.topics || []"
-    :team="team"
-    :period="period"
+  <MetricTiles
+    :tiles="tiles"
     :is-loading="isLoading"
     :has-error="hasError"
     @retry="reload"
   />
+  <SectionCard
+    :title="t('ANALYTICS.CHART.TITLE')"
+    :link-label="t('ANALYTICS.LINKS.CONVERSATIONS')"
+    :to="{ name: 'conversation_reports' }"
+  >
+    <DayChart
+      :days="days"
+      :series="series"
+      :period="period"
+      :note="t('ANALYTICS.CHART.NOTE')"
+      :empty-text="t('ANALYTICS.CHART.EMPTY')"
+      :is-loading="isLoading"
+      :has-error="hasError"
+      @retry="reload"
+    />
+  </SectionCard>
+  <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
+    <TopicsCard
+      :topics="data.activity?.topics || []"
+      :is-loading="isLoading"
+      :has-error="hasError"
+      @retry="reload"
+    />
+    <SectionCard
+      :title="t('ANALYTICS.PEOPLE.TITLE')"
+      :link-label="t('ANALYTICS.LINKS.TEAM')"
+      :to="{ name: 'analytics_team', query: { period } }"
+    >
+      <PeopleList
+        :rows="people"
+        :empty-text="t('ANALYTICS.PEOPLE.EMPTY')"
+        :is-loading="isLoading"
+      />
+    </SectionCard>
+  </div>
 </template>

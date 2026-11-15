@@ -50,45 +50,47 @@ const groups = computed(() =>
 </script>
 
 <template>
-  <section
-    v-for="group in groups"
-    :key="group.key"
-    class="flex flex-col gap-3"
-    :aria-labelledby="`reports-${group.key}`"
-  >
-    <h2
-      :id="`reports-${group.key}`"
-      class="mb-0 text-xs font-semibold uppercase tracking-wide text-n-slate-11"
+  <div class="flex flex-col gap-6">
+    <section
+      v-for="group in groups"
+      :key="group.key"
+      class="flex flex-col gap-3"
+      :aria-labelledby="`reports-${group.key}`"
     >
-      {{ group.title }}
-    </h2>
-    <ul
-      class="m-0 grid list-none grid-cols-1 gap-3 p-0 sm:grid-cols-2 lg:grid-cols-3"
-    >
-      <li v-for="report in group.reports" :key="report.key" class="flex">
-        <RouterLink
-          :to="{ name: report.name }"
-          class="group flex w-full items-start gap-3 rounded-card bg-n-solid-2 p-4 shadow-card outline outline-1 -outline-offset-1 outline-n-container hover:outline-n-blue-7 focus-visible:outline-2 focus-visible:outline-n-blue-9"
-        >
-          <span
-            class="grid size-9 shrink-0 place-items-center rounded-lg bg-n-blue-3 text-n-blue-11"
+      <h2
+        :id="`reports-${group.key}`"
+        class="mb-0 text-xs font-semibold uppercase tracking-wide text-n-slate-11"
+      >
+        {{ group.title }}
+      </h2>
+      <ul
+        class="m-0 grid list-none grid-cols-1 gap-3 p-0 sm:grid-cols-2 lg:grid-cols-3"
+      >
+        <li v-for="report in group.reports" :key="report.key" class="flex">
+          <RouterLink
+            :to="{ name: report.name }"
+            class="group flex w-full items-start gap-3 rounded-card bg-n-solid-2 p-4 shadow-card outline outline-1 -outline-offset-1 outline-n-container hover:outline-n-blue-7 focus-visible:outline-2 focus-visible:outline-n-blue-9"
           >
-            <Icon :icon="report.icon" class="size-4" />
-          </span>
-          <span class="flex min-w-0 flex-1 flex-col gap-0.5">
-            <span class="text-sm font-semibold text-n-slate-12">
-              {{ report.title }}
+            <span
+              class="grid size-9 shrink-0 place-items-center rounded-lg bg-n-blue-3 text-n-blue-11"
+            >
+              <Icon :icon="report.icon" class="size-4" />
             </span>
-            <span class="text-xs leading-5 text-n-slate-11">
-              {{ report.description }}
+            <span class="flex min-w-0 flex-1 flex-col gap-0.5">
+              <span class="text-sm font-semibold text-n-slate-12">
+                {{ report.title }}
+              </span>
+              <span class="text-xs leading-5 text-n-slate-11">
+                {{ report.description }}
+              </span>
             </span>
-          </span>
-          <Icon
-            icon="i-lucide-arrow-right"
-            class="mt-0.5 size-4 shrink-0 text-n-slate-9 group-hover:text-n-blue-11"
-          />
-        </RouterLink>
-      </li>
-    </ul>
-  </section>
+            <Icon
+              icon="i-lucide-arrow-right"
+              class="mt-0.5 size-4 shrink-0 text-n-slate-9 group-hover:text-n-blue-11"
+            />
+          </RouterLink>
+        </li>
+      </ul>
+    </section>
+  </div>
 </template>

@@ -44,7 +44,13 @@ export const durationText = (seconds, t) => {
     : t('ANALYTICS.DURATION.HOURS', { count: hours });
 };
 
-// How each number is compared with the period before.
+// The span of the same length right before a window.
+export const previousWindow = ({ since, until }) => ({
+  since: since - (until - since),
+  until: since,
+});
+
+// How each number looks and is compared with the period before.
 export const METRICS = {
   conversations: {
     icon: 'i-lucide-messages-square',
@@ -64,9 +70,21 @@ export const METRICS = {
     change: 'count',
     lowerIsBetter: true,
   },
+  product_answers: {
+    icon: 'i-lucide-shopping-bag',
+    tone: 'violet',
+    change: 'percent',
+  },
   first_reply: {
     icon: 'i-lucide-timer',
     tone: 'violet',
+    change: 'percent',
+    lowerIsBetter: true,
+    duration: true,
+  },
+  resolution_time: {
+    icon: 'i-lucide-hourglass',
+    tone: 'blue',
     change: 'percent',
     lowerIsBetter: true,
     duration: true,
@@ -77,44 +95,94 @@ export const METRICS = {
     change: 'percent',
   },
   rating: { icon: 'i-lucide-star', tone: 'amber', change: 'decimal' },
+  ratings_count: {
+    icon: 'i-lucide-message-square-heart',
+    tone: 'blue',
+    change: 'percent',
+  },
+  happy_share: {
+    icon: 'i-lucide-smile',
+    tone: 'teal',
+    change: 'points',
+    unit: '%',
+  },
+  reply_share: {
+    icon: 'i-lucide-mail-check',
+    tone: 'violet',
+    change: 'points',
+    unit: '%',
+  },
 };
 
 const EMPTY = { value: null, previous: null, points: [] };
 
-// Every Overview number as { value, previous, points } from the two summaries.
-export const overviewMetrics = (activity, report) => {
+const pair = (current, previous, key) => ({
+  value: current ? current[key] : null,
+  previous: previous ? previous[key] : null,
+  points: [],
+});
+
+// A whole percentage, at most 100; nothing to share without a whole.
+const share = (part, whole) =>
+  whole ? Math.min(Math.round((part / whole) * 100), 100) : null;
+
+// Ratings of 4 or 5 as a share of all ratings; `ratings_count` is { rating: count }.
+const happyShare = csat => {
+  if (!csat) return null;
+  const counts = csat.ratings_count || {};
+  return share((counts[4] || 0) + (counts[5] || 0), csat.total_count);
+};
+
+// Every number the views show, as { value, previous, points }, from whatever the view loaded.
+export const analyticsMetrics = ({
+  activity,
+  report,
+  csat,
+  csatPrevious,
+} = {}) => {
   const home = activity?.metrics || {};
   const days = activity?.days || [];
-  const previous = report?.previous || {};
   return {
     conversations: {
-      value: report ? report.conversations_count : null,
-      previous: report ? previous.conversations_count : null,
+      ...pair(report, report?.previous, 'conversations_count'),
       points: days.map(day => day.ai + day.team),
     },
     ai_conversations: home.ai_conversations || EMPTY,
     resolved: home.resolved || EMPTY,
     handed: home.handed || EMPTY,
-    first_reply: {
-      value: report ? report.avg_first_response_time : null,
-      previous: report ? previous.avg_first_response_time : null,
-      points: [],
-    },
-    team_solved: {
-      value: report ? report.resolutions_count : null,
-      previous: report ? previous.resolutions_count : null,
-      points: [],
-    },
+    product_answers: home.product_answers || EMPTY,
+    first_reply: pair(report, report?.previous, 'avg_first_response_time'),
+    resolution_time: pair(report, report?.previous, 'avg_resolution_time'),
+    team_solved: pair(report, report?.previous, 'resolutions_count'),
     rating: home.rating || EMPTY,
+    ratings_count: pair(csat, csatPrevious, 'total_count'),
+    happy_share: {
+      value: happyShare(csat),
+      previous: happyShare(csatPrevious),
+      points: [],
+    },
+    reply_share: {
+      value: csat
+        ? share(csat.total_count, csat.total_sent_messages_count)
+        : null,
+      previous: csatPrevious
+        ? share(
+            csatPrevious.total_count,
+            csatPrevious.total_sent_messages_count
+          )
+        : null,
+      points: [],
+    },
   };
 };
 
-// One number ready for a tile: formatted value, change line and its tone.
-export const metricView = (key, metric, t) => {
+// One number ready for a tile: label, formatted value, change line and its tone.
+export const metricView = (key, metric, label, t) => {
   const config = METRICS[key];
   const change = metricChange(config, metric, t);
   return {
     key,
+    label,
     icon: config.icon,
     tone: config.tone,
     value: config.duration
@@ -126,8 +194,11 @@ export const metricView = (key, metric, t) => {
   };
 };
 
-// Agents with conversations in the period, busiest first, with names from the agents store.
-export const teamRows = (agentSummary, agents) => {
+const byConversations = (first, second) =>
+  second.conversations - first.conversations;
+
+// People with conversations in the period, busiest first, named from the agents store.
+export const peopleRows = (agentSummary, agents) => {
   const names = Object.fromEntries(
     (agents || []).map(agent => [agent.id, agent.available_name || agent.name])
   );
@@ -140,16 +211,66 @@ export const teamRows = (agentSummary, agents) => {
       solved: row.resolved_conversations_count,
       firstReply: row.avg_first_response_time,
     }))
-    .sort((first, second) => second.conversations - first.conversations);
+    .sort(byConversations);
 };
 
-// The day with the most conversations, or null when the period is empty.
-export const busiestDay = days =>
-  days.reduce(
-    (best, day) =>
-      day.ai + day.team > (best ? best.ai + best.team : 0) ? day : best,
-    null
+// Teams with conversations in the period, busiest first, named from the teams store.
+export const teamRows = (teamSummary, teams) => {
+  const names = Object.fromEntries(
+    (teams || []).map(team => [team.id, team.name])
   );
+  return (teamSummary || [])
+    .filter(row => row.conversations_count > 0 && names[row.id])
+    .map(row => ({
+      id: row.id,
+      name: names[row.id],
+      conversations: row.conversations_count,
+      solved: row.resolved_conversations_count,
+      firstReply: row.avg_first_response_time,
+    }))
+    .sort(byConversations);
+};
+
+// The chart's days: [{ date, values }] for the given series of each Home day.
+export const chartDays = (days, pick) =>
+  (days || []).map(day => ({ date: day.date, values: pick(day) }));
+
+// The AI agent's day: conversations that stayed with it, then the ones it handed to the team.
+export const aiDays = activity => {
+  const handed = activity?.metrics?.handed?.points || [];
+  return (activity?.days || []).map((day, index) => {
+    const handedToday = handed[index] || 0;
+    return {
+      date: day.date,
+      values: [Math.max(day.ai - handedToday, 0), handedToday],
+    };
+  });
+};
+
+// Ratings 5 to 1 with their count and share of all ratings.
+export const ratingRows = csat => {
+  const counts = csat?.ratings_count || {};
+  const total = csat?.total_count || 0;
+  return [5, 4, 3, 2, 1].map(rating => ({
+    rating,
+    count: counts[rating] || 0,
+    share: share(counts[rating] || 0, total) || 0,
+  }));
+};
+
+// The latest ratings that came with a comment.
+export const commentRows = (responses, limit = 4) =>
+  (responses || [])
+    .filter(response => response.feedback_message)
+    .slice(0, limit)
+    .map(response => ({
+      id: response.id,
+      rating: response.rating,
+      comment: response.feedback_message,
+      name: response.contact?.name || '',
+      at: response.created_at,
+      conversationId: response.conversation_id,
+    }));
 
 // A round top for a chart axis, at least the largest value, and three gridlines that are whole numbers.
 export const chartScale = max => {

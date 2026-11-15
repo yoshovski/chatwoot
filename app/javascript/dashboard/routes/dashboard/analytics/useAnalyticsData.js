@@ -2,16 +2,25 @@ import { ref, watch } from 'vue';
 import CaptainHomeAPI from 'dashboard/api/captain/home';
 import ReportsAPI from 'dashboard/api/reports';
 import SummaryReportsAPI from 'dashboard/api/summaryReports';
-import { periodWindow } from './analyticsView';
+import { periodWindow, previousWindow } from './analyticsView';
 
 const TIMEZONE_OFFSET = -new Date().getTimezoneOffset() / 60;
 
-// Everything the Overview needs for one period, in three parallel requests: the AI agent's activity (Home), the
-// conversation summary with the period before, and the per-agent summary. A newer period wins over a slower one.
-export function useAnalyticsData(period) {
-  const activity = ref(null);
-  const report = ref(null);
-  const agentSummary = ref([]);
+// The requests the views share. Each takes the period's window and returns the response data.
+export const LOADERS = {
+  // The AI agent's activity per day against the period before (Captain::HomeActivityBuilder, via Home).
+  activity: ({ period }) =>
+    CaptainHomeAPI.get({ period, timezoneOffset: TIMEZONE_OFFSET }),
+  // Conversation numbers with the same span before (`previous`).
+  report: ({ since, until }) => ReportsAPI.getSummary(since, until, 'account'),
+  agents: ({ since, until }) =>
+    SummaryReportsAPI.getAgentReports({ since, until }),
+};
+
+// Loads what one view needs for the period, in parallel: `loaders` maps a name to a request (see LOADERS). A newer
+// period wins over a slower one; any failure shows the view's error state with a retry.
+export function useAnalyticsData(period, loaders) {
+  const data = ref({});
   const isLoading = ref(true);
   const hasError = ref(false);
   let token = 0;
@@ -21,20 +30,21 @@ export function useAnalyticsData(period) {
     const current = token;
     isLoading.value = true;
     hasError.value = false;
-    const { since, until } = periodWindow(period.value);
+    const window = periodWindow(period.value);
+    const request = {
+      ...window,
+      previous: previousWindow(window),
+      period: period.value,
+    };
     try {
-      const [home, summary, agents] = await Promise.all([
-        CaptainHomeAPI.get({
-          period: period.value,
-          timezoneOffset: TIMEZONE_OFFSET,
-        }),
-        ReportsAPI.getSummary(since, until, 'account'),
-        SummaryReportsAPI.getAgentReports({ since, until }),
-      ]);
+      const names = Object.keys(loaders);
+      const responses = await Promise.all(
+        names.map(name => loaders[name](request))
+      );
       if (current !== token) return;
-      activity.value = home.data;
-      report.value = summary.data;
-      agentSummary.value = agents.data;
+      data.value = Object.fromEntries(
+        names.map((name, index) => [name, responses[index].data])
+      );
     } catch {
       if (current === token) hasError.value = true;
     } finally {
@@ -44,5 +54,5 @@ export function useAnalyticsData(period) {
 
   watch(period, load, { immediate: true });
 
-  return { activity, report, agentSummary, isLoading, hasError, reload: load };
+  return { data, isLoading, hasError, reload: load };
 }

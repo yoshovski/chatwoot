@@ -116,9 +116,8 @@ export default {
       children: [
         {
           path: '',
-          redirect: to => {
-            return { name: 'account_overview_reports', params: to.params };
-          },
+          // The Reports section is now Analytics → Detailed reports (T23).
+          redirect: to => ({ name: 'analytics_reports', params: to.params }),
         },
         {
           path: 'overview',
