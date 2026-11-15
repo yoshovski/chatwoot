@@ -89,6 +89,24 @@
         "YES": "Yes, delete ",
         "NO": "No, keep "
       }
+    },
+    "PAGE": {
+      "TITLE": "Roles",
+      "SUBTITLE": "Besides Administrator and Agent, make roles that see and do only what you allow.",
+      "NEW": "New role",
+      "SEARCH": "Search roles",
+      "COUNT": "{n} role | {n} roles",
+      "COLUMNS": {
+        "NAME": "Role",
+        "PERMISSIONS": "Can do",
+        "ACTIONS": "Actions"
+      },
+      "LOADING": "Loading roles…",
+      "LOAD_ERROR": "Roles could not be loaded.",
+      "RETRY": "Try again",
+      "EMPTY_TITLE": "No roles of your own yet",
+      "EMPTY_DESCRIPTION": "Create a role when Administrator and Agent do not fit someone.",
+      "NO_RESULTS": "No role matches your search."
     }
   }
 }

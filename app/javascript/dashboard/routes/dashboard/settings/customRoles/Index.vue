@@ -1,16 +1,17 @@
 <script setup>
+/* eslint-disable @intlify/vue-i18n/no-dynamic-keys -- Permission keys come from fixed API values. */
 import { useAlert } from 'dashboard/composables';
-import SettingsLayout from '../SettingsLayout.vue';
-import BaseSettingsHeader from '../components/BaseSettingsHeader.vue';
 import CustomRoleModal from './component/CustomRoleModal.vue';
-import CustomRoleTableBody from './component/CustomRoleTableBody.vue';
 import CustomRolePaywall from './component/CustomRolePaywall.vue';
 import Button from 'dashboard/components-next/button/Button.vue';
 import { computed, onMounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useStore, useMapGetter } from 'dashboard/composables/store';
-import { picoSearch } from '@chatwoot/pico-search';
-import { BaseTable } from 'dashboard/components-next/table';
+import CustomRoleAPI from 'dashboard/api/customRole';
+import { getI18nKey } from 'dashboard/routes/dashboard/settings/helper/settingsHelper';
+import PageHeader from 'next/kit/PageHeader.vue';
+import SectionCard from 'next/kit/SectionCard.vue';
+import TableCard from 'next/kit/TableCard.vue';
 
 const store = useStore();
 const { t } = useI18n();
@@ -21,16 +22,10 @@ const selectedRole = ref(null);
 const loading = ref({});
 const showDeleteConfirmationPopup = ref(false);
 const activeResponse = ref({});
-const searchQuery = ref('');
+const isFetching = ref(true);
+const fetchFailed = ref(false);
 
 const records = useMapGetter('customRole/getCustomRoles');
-
-const filteredRecords = computed(() => {
-  const query = searchQuery.value.trim();
-  if (!query) return records.value;
-  return picoSearch(records.value, query, ['name', 'description']);
-});
-const uiFlags = useMapGetter('customRole/getUIFlags');
 
 const deleteConfirmText = computed(
   () => `${t('CUSTOM_ROLE.DELETE.CONFIRM.YES')} ${activeResponse.value.name}`
@@ -57,11 +52,17 @@ const isBehindAPaywall = computed(() => {
   );
 });
 
+// Loaded here, not through the store action, so the page can show a failed load.
 const fetchCustomRoles = async () => {
+  isFetching.value = true;
+  fetchFailed.value = false;
   try {
-    await store.dispatch('customRole/getCustomRole');
-  } catch (error) {
-    // Ignore Error
+    const { data } = await CustomRoleAPI.get();
+    store.commit('customRole/SET_CUSTOM_ROLE', data);
+  } catch {
+    fetchFailed.value = true;
+  } finally {
+    isFetching.value = false;
   }
 };
 
@@ -69,14 +70,22 @@ onMounted(() => {
   fetchCustomRoles();
 });
 
-const tableHeaders = computed(() => {
-  return [
-    t('CUSTOM_ROLE.LIST.TABLE_HEADER.NAME'),
-    t('CUSTOM_ROLE.LIST.TABLE_HEADER.DESCRIPTION'),
-    t('CUSTOM_ROLE.LIST.TABLE_HEADER.PERMISSIONS'),
-    t('CUSTOM_ROLE.LIST.TABLE_HEADER.ACTIONS'),
-  ];
-});
+const columns = computed(() => [
+  { key: 'name', label: t('CUSTOM_ROLE.PAGE.COLUMNS.NAME') },
+  { key: 'permissions', label: t('CUSTOM_ROLE.PAGE.COLUMNS.PERMISSIONS') },
+  {
+    key: 'actions',
+    label: t('CUSTOM_ROLE.PAGE.COLUMNS.ACTIONS'),
+    end: true,
+    hideLabel: true,
+    class: 'w-24',
+  },
+]);
+
+const formatPermissions = role =>
+  role.permissions
+    .map(permission => t(getI18nKey('CUSTOM_ROLE.PERMISSIONS', permission)))
+    .join(', ');
 
 const showAlertMessage = message => {
   loading.value[activeResponse.value.id] = false;
@@ -123,66 +132,97 @@ const deleteCustomRole = async id => {
 };
 
 const confirmDeletion = () => {
-  loading[activeResponse.value.id] = true;
+  loading.value[activeResponse.value.id] = true;
   closeDeletePopup();
   deleteCustomRole(activeResponse.value.id);
 };
 </script>
 
 <template>
-  <SettingsLayout
-    :is-loading="uiFlags.fetchingList"
-    :loading-message="$t('CUSTOM_ROLE.LOADING')"
-    :no-records-found="!records.length && !isBehindAPaywall"
-    :no-records-message="$t('CUSTOM_ROLE.LIST.404')"
-  >
-    <template #header>
-      <BaseSettingsHeader
-        v-model:search-query="searchQuery"
-        :title="$t('CUSTOM_ROLE.HEADER')"
-        :description="$t('CUSTOM_ROLE.DESCRIPTION')"
-        :link-text="$t('CUSTOM_ROLE.LEARN_MORE')"
-        :search-placeholder="$t('CUSTOM_ROLE.SEARCH_PLACEHOLDER')"
-        feature-name="canned_responses"
-      >
-        <template v-if="records?.length" #count>
-          <span class="text-body-main text-n-slate-11">
-            {{ $t('CUSTOM_ROLE.COUNT', { n: records.length }) }}
-          </span>
-        </template>
-        <template #actions>
-          <Button
-            :label="$t('CUSTOM_ROLE.HEADER_BTN_TXT')"
-            size="sm"
-            :disabled="isBehindAPaywall"
-            @click="openAddModal"
-          />
-        </template>
-      </BaseSettingsHeader>
-    </template>
+  <section class="flex w-full min-w-0 flex-col gap-5 pb-5 pt-2">
+    <PageHeader
+      :title="t('CUSTOM_ROLE.PAGE.TITLE')"
+      :description="t('CUSTOM_ROLE.PAGE.SUBTITLE')"
+    >
+      <template v-if="!isBehindAPaywall" #action>
+        <Button
+          :label="t('CUSTOM_ROLE.PAGE.NEW')"
+          icon="i-lucide-plus"
+          size="sm"
+          @click="openAddModal"
+        />
+      </template>
+    </PageHeader>
 
-    <template #body>
-      <CustomRolePaywall v-if="isBehindAPaywall" />
-      <BaseTable
-        v-else
-        :headers="tableHeaders"
-        :items="filteredRecords"
-        :no-data-message="
-          searchQuery
-            ? $t('CUSTOM_ROLE.NO_RESULTS')
-            : $t('CUSTOM_ROLE.LIST.404')
-        "
-      >
-        <template #row="{ items }">
-          <CustomRoleTableBody
-            :roles="items"
-            :loading="loading"
-            @edit="openEditModal"
-            @delete="openDeletePopup"
+    <SectionCard v-if="isBehindAPaywall">
+      <CustomRolePaywall />
+    </SectionCard>
+    <TableCard
+      v-else
+      :columns="columns"
+      :rows="records"
+      :loading="isFetching && !records.length"
+      :error="fetchFailed"
+      :search-keys="['name', 'description']"
+      :search-placeholder="t('CUSTOM_ROLE.PAGE.SEARCH')"
+      :count="t('CUSTOM_ROLE.PAGE.COUNT', { n: records.length })"
+      :loading-text="t('CUSTOM_ROLE.PAGE.LOADING')"
+      :error-text="t('CUSTOM_ROLE.PAGE.LOAD_ERROR')"
+      :retry-label="t('CUSTOM_ROLE.PAGE.RETRY')"
+      :empty-title="t('CUSTOM_ROLE.PAGE.EMPTY_TITLE')"
+      :empty-description="t('CUSTOM_ROLE.PAGE.EMPTY_DESCRIPTION')"
+      empty-icon="i-lucide-shield-plus"
+      :no-results-text="t('CUSTOM_ROLE.PAGE.NO_RESULTS')"
+      @retry="fetchCustomRoles"
+    >
+      <template #empty>
+        <Button
+          :label="t('CUSTOM_ROLE.PAGE.NEW')"
+          icon="i-lucide-plus"
+          size="sm"
+          @click="openAddModal"
+        />
+      </template>
+      <template #cell-name="{ row: role }">
+        <div class="flex min-w-0 flex-col">
+          <span class="truncate font-medium text-n-slate-12">
+            {{ role.name }}
+          </span>
+          <span
+            v-if="role.description"
+            class="truncate text-xs text-n-slate-11"
+          >
+            {{ role.description }}
+          </span>
+        </div>
+      </template>
+      <template #cell-permissions="{ row: role }">
+        <span class="text-n-slate-11">{{ formatPermissions(role) }}</span>
+      </template>
+      <template #cell-actions="{ row: role }">
+        <div class="flex justify-end gap-1">
+          <Button
+            v-tooltip.top="t('CUSTOM_ROLE.EDIT.BUTTON_TEXT')"
+            :aria-label="t('CUSTOM_ROLE.EDIT.BUTTON_TEXT')"
+            icon="i-lucide-pencil"
+            variant="ghost"
+            color="slate"
+            size="sm"
+            @click="openEditModal(role)"
           />
-        </template>
-      </BaseTable>
-    </template>
+          <Button
+            v-tooltip.top="t('CUSTOM_ROLE.DELETE.BUTTON_TEXT')"
+            :aria-label="t('CUSTOM_ROLE.DELETE.BUTTON_TEXT')"
+            icon="i-lucide-trash-2"
+            variant="ghost"
+            color="ruby"
+            size="sm"
+            :is-loading="loading[role.id]"
+            @click="openDeletePopup(role)"
+          />
+        </div>
+      </template>
+    </TableCard>
 
     <woot-modal
       v-model:show="showCustomRoleModal"
@@ -199,11 +239,11 @@ const confirmDeletion = () => {
       v-model:show="showDeleteConfirmationPopup"
       :on-close="closeDeletePopup"
       :on-confirm="confirmDeletion"
-      :title="$t('CUSTOM_ROLE.DELETE.CONFIRM.TITLE')"
-      :message="$t('CUSTOM_ROLE.DELETE.CONFIRM.MESSAGE')"
+      :title="t('CUSTOM_ROLE.DELETE.CONFIRM.TITLE')"
+      :message="t('CUSTOM_ROLE.DELETE.CONFIRM.MESSAGE')"
       :message-value="deleteMessage"
       :confirm-text="deleteConfirmText"
       :reject-text="deleteRejectText"
     />
-  </SettingsLayout>
+  </section>
 </template>

@@ -2,12 +2,10 @@
 import { useAlert } from 'dashboard/composables';
 import TeamForm from '../TeamForm.vue';
 import router from '../../../../index';
-import PageHeader from '../../SettingsSubPageHeader.vue';
 
 export default {
   components: {
     TeamForm,
-    PageHeader,
   },
   data() {
     return {
@@ -37,12 +35,8 @@ export default {
 </script>
 
 <template>
-  <div class="h-full w-full p-6 col-span-6 overflow-y-auto">
-    <PageHeader
-      :header-title="$t('TEAMS_SETTINGS.CREATE_FLOW.CREATE.TITLE')"
-      :header-content="$t('TEAMS_SETTINGS.CREATE_FLOW.CREATE.DESC')"
-    />
-    <div class="flex flex-wrap">
+  <div class="w-full">
+    <div class="flex w-full">
       <TeamForm
         :on-submit="createTeam"
         :submit-in-progress="false"

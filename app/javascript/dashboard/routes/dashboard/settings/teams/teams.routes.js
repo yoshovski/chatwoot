@@ -9,7 +9,6 @@ import EditTeam from './Edit/EditTeam.vue';
 import AddAgents from './Create/AddAgents.vue';
 import EditAgents from './Edit/EditAgents.vue';
 import FinishSetup from './FinishSetup.vue';
-import SettingsContent from '../Wrapper.vue';
 import SettingsWrapper from '../SettingsWrapper.vue';
 
 export default {
@@ -37,14 +36,7 @@ export default {
     },
     {
       path: frontendURL('accounts/:accountId/settings/teams'),
-      component: SettingsContent,
-      props: () => {
-        return {
-          headerTitle: 'TEAMS_SETTINGS.HEADER',
-          icon: 'people-team',
-          showBackButton: true,
-        };
-      },
+      component: SettingsWrapper,
       children: [
         {
           path: 'new',

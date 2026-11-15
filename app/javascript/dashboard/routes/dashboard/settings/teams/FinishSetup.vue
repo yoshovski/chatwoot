@@ -1,31 +1,23 @@
-<script>
-import NextButton from 'dashboard/components-next/button/Button.vue';
-import EmptyState from '../../../../components/widgets/EmptyState.vue';
+<script setup>
+import { useI18n } from 'vue-i18n';
+import Button from 'dashboard/components-next/button/Button.vue';
+import EmptyState from 'dashboard/components-next/kit/EmptyState.vue';
+import SectionCard from 'dashboard/components-next/kit/SectionCard.vue';
 
-export default {
-  components: {
-    NextButton,
-    EmptyState,
-  },
-};
+const { t } = useI18n();
 </script>
 
 <template>
-  <div class="h-full w-full p-6 col-span-6">
+  <SectionCard class="max-w-[40rem]">
     <EmptyState
-      :title="$t('TEAMS_SETTINGS.FINISH.TITLE')"
-      :message="$t('TEAMS_SETTINGS.FINISH.MESSAGE')"
-      :button-text="$t('TEAMS_SETTINGS.FINISH.BUTTON_TEXT')"
+      tone="success"
+      icon="i-lucide-circle-check"
+      :title="t('TEAMS_SETTINGS.WIZARD.DONE_TITLE')"
+      :description="t('TEAMS_SETTINGS.WIZARD.DONE_MESSAGE')"
     >
-      <div class="w-full text-center">
-        <router-link
-          :to="{
-            name: 'settings_teams_list',
-          }"
-        >
-          <NextButton teal :label="$t('TEAMS_SETTINGS.FINISH.BUTTON_TEXT')" />
-        </router-link>
-      </div>
+      <router-link :to="{ name: 'settings_teams_list' }">
+        <Button :label="t('TEAMS_SETTINGS.WIZARD.DONE_BUTTON')" size="sm" />
+      </router-link>
     </EmptyState>
-  </div>
+  </SectionCard>
 </template>

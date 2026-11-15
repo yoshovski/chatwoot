@@ -1,13 +1,11 @@
 <script setup>
 import { computed } from 'vue';
-import NextButton from 'dashboard/components-next/button/Button.vue';
+import { useI18n } from 'vue-i18n';
 import Avatar from 'next/avatar/Avatar.vue';
 import Checkbox from 'dashboard/components-next/checkbox/Checkbox.vue';
-import BaseTable from 'dashboard/components-next/table/BaseTable.vue';
-import BaseTableRow from 'dashboard/components-next/table/BaseTableRow.vue';
-import BaseTableCell from 'dashboard/components-next/table/BaseTableCell.vue';
-import { useI18n } from 'vue-i18n';
+import DataTable from 'dashboard/components-next/kit/DataTable.vue';
 
+// The teammates of the account with a checkbox each; the page's form saves the selection.
 const props = defineProps({
   agentList: {
     type: Array,
@@ -21,19 +19,9 @@ const props = defineProps({
     type: Function,
     default: () => {},
   },
-  isWorking: {
-    type: Boolean,
-    default: false,
-  },
-  submitButtonText: {
-    type: String,
-    default: '',
-  },
 });
 
 const { t } = useI18n();
-
-const selectedAgentCount = computed(() => props.selectedAgents.length);
 
 const allAgentsSelected = computed(
   () =>
@@ -45,109 +33,69 @@ const someAgentsSelected = computed(
   () => props.selectedAgents.length > 0 && !allAgentsSelected.value
 );
 
-const disableSubmitButton = computed(() => selectedAgentCount.value === 0);
-
-const isAgentSelected = agentId => {
-  return props.selectedAgents.includes(agentId);
-};
+const isAgentSelected = agentId => props.selectedAgents.includes(agentId);
 
 const handleSelectAgent = agentId => {
-  const shouldRemove = isAgentSelected(agentId);
-
-  let result = [];
-  if (shouldRemove) {
-    result = props.selectedAgents.filter(item => item !== agentId);
-  } else {
-    result = [...props.selectedAgents, agentId];
-  }
-
+  const result = isAgentSelected(agentId)
+    ? props.selectedAgents.filter(item => item !== agentId)
+    : [...props.selectedAgents, agentId];
   props.updateSelectedAgents(result);
 };
 
 const toggleSelectAll = () => {
-  if (allAgentsSelected.value) {
-    props.updateSelectedAgents([]);
-  } else {
-    const result = props.agentList.map(item => item.id);
-    props.updateSelectedAgents(result);
-  }
+  props.updateSelectedAgents(
+    allAgentsSelected.value ? [] : props.agentList.map(item => item.id)
+  );
 };
 
-const headers = computed(() => [
-  '',
-  t('TEAMS_SETTINGS.AGENTS.AGENT'),
-  t('TEAMS_SETTINGS.AGENTS.EMAIL'),
+const columns = computed(() => [
+  {
+    key: 'select',
+    label: t('TEAMS_SETTINGS.WIZARD.SELECT_ALL'),
+    class: 'w-10',
+  },
+  { key: 'name', label: t('TEAMS_SETTINGS.AGENTS.AGENT') },
+  { key: 'email', label: t('TEAMS_SETTINGS.AGENTS.EMAIL') },
 ]);
 </script>
 
 <template>
-  <BaseTable :headers="headers" :items="agentList">
-    <template #header-0>
-      <div class="flex items-center">
-        <Checkbox
-          :model-value="allAgentsSelected"
-          :indeterminate="someAgentsSelected"
-          :title="$t('TEAMS_SETTINGS.AGENTS.SELECT_ALL')"
-          @change="toggleSelectAll"
+  <DataTable :columns="columns" :rows="agentList">
+    <template #head-select>
+      <Checkbox
+        :model-value="allAgentsSelected"
+        :indeterminate="someAgentsSelected"
+        :aria-label="t('TEAMS_SETTINGS.WIZARD.SELECT_ALL')"
+        @change="toggleSelectAll"
+      />
+    </template>
+    <template #cell-select="{ row: agent }">
+      <Checkbox
+        :model-value="isAgentSelected(agent.id)"
+        :aria-label="agent.name"
+        @change="() => handleSelectAgent(agent.id)"
+      />
+    </template>
+    <template #cell-name="{ row: agent }">
+      <div class="flex min-w-0 items-center gap-2">
+        <Avatar
+          :src="agent.thumbnail"
+          :name="agent.name"
+          :status="agent.availability_status"
+          :size="24"
+          hide-offline-status
+          rounded-full
+          class="shrink-0"
         />
+        <span class="truncate font-medium text-n-slate-12">
+          {{ agent.name }}
+        </span>
       </div>
     </template>
-
-    <template #row="{ items }">
-      <BaseTableRow v-for="agent in items" :key="agent.id" :item="agent">
-        <template #default>
-          <BaseTableCell class="w-5">
-            <div class="flex items-center">
-              <Checkbox
-                :model-value="isAgentSelected(agent.id)"
-                @change="() => handleSelectAgent(agent.id)"
-              />
-            </div>
-          </BaseTableCell>
-
-          <BaseTableCell class="min-w-0 max-w-40">
-            <div class="flex items-center gap-2 min-w-0">
-              <Avatar
-                :src="agent.thumbnail"
-                :name="agent.name"
-                :status="agent.availability_status"
-                :size="24"
-                hide-offline-status
-                rounded-full
-                class="flex-shrink-0"
-              />
-              <h4 class="text-heading-3 mb-0 text-n-slate-12 truncate">
-                {{ agent.name }}
-              </h4>
-            </div>
-          </BaseTableCell>
-
-          <BaseTableCell class="min-w-0">
-            <span class="text-body-main text-n-slate-11 truncate block">
-              {{ agent.email || '---' }}
-            </span>
-          </BaseTableCell>
-        </template>
-      </BaseTableRow>
+    <template #cell-email="{ row: agent }">
+      <span class="block truncate text-n-slate-11">
+        {{ agent.email || '---' }}
+      </span>
     </template>
-  </BaseTable>
-
-  <div
-    class="sticky bottom-0 py-4 px-8 -mx-8 z-20 flex items-center justify-between bg-n-surface-1 border-t border-n-weak"
-  >
-    <p class="text-body-main text-n-slate-11 mb-0">
-      {{
-        $t('TEAMS_SETTINGS.AGENTS.SELECTED_COUNT', {
-          selected: selectedAgents.length,
-          total: agentList.length,
-        })
-      }}
-    </p>
-    <NextButton
-      type="submit"
-      :label="submitButtonText"
-      :disabled="disableSubmitButton"
-      :is-loading="isWorking"
-    />
-  </div>
+  </DataTable>
 </template>

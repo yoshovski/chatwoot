@@ -5,13 +5,15 @@ import { useAlert } from 'dashboard/composables';
 import { useVuelidate } from '@vuelidate/core';
 
 import Spinner from 'dashboard/components-next/spinner/Spinner.vue';
-import PageHeader from '../../SettingsSubPageHeader.vue';
+import FormLayout from 'dashboard/components-next/kit/FormLayout.vue';
+import SectionCard from 'dashboard/components-next/kit/SectionCard.vue';
 import AgentSelector from '../AgentSelector.vue';
 
 export default {
   components: {
     Spinner,
-    PageHeader,
+    FormLayout,
+    SectionCard,
     AgentSelector,
   },
   validations: {
@@ -40,8 +42,8 @@ export default {
     teamId() {
       return this.$route.params.teamId;
     },
-    headerTitle() {
-      return this.$t('TEAMS_SETTINGS.EDIT_FLOW.AGENTS.TITLE', {
+    cardTitle() {
+      return this.$t('TEAMS_SETTINGS.WIZARD.MEMBERS_CARD', {
         teamName: this.currentTeam.name,
       });
     },
@@ -103,33 +105,36 @@ export default {
 </script>
 
 <template>
-  <div class="h-full w-full px-8 pt-8 col-span-6 overflow-auto">
-    <form class="flex flex-col gap-4 mx-0" @submit.prevent="addAgents">
-      <PageHeader
-        :header-title="headerTitle"
-        :header-content="$t('TEAMS_SETTINGS.EDIT_FLOW.AGENTS.DESC')"
+  <FormLayout
+    :save-label="$t('TEAMS_SETTINGS.EDIT_FLOW.AGENTS.BUTTON_TEXT')"
+    :saving="isCreating"
+    :disabled="!selectedAgents.length"
+    @save="addAgents"
+  >
+    <SectionCard :title="cardTitle">
+      <p class="mb-0 text-sm text-n-slate-11">
+        {{ $t('TEAMS_SETTINGS.WIZARD.MEMBERS_HINT') }}
+      </p>
+      <p v-if="v$.selectedAgents.$error" class="mb-0 text-sm text-n-ruby-11">
+        {{ $t('TEAMS_SETTINGS.ADD.AGENT_VALIDATION_ERROR') }}
+      </p>
+      <AgentSelector
+        v-if="showAgentsList"
+        :agent-list="agentList"
+        :selected-agents="selectedAgents"
+        :update-selected-agents="updateSelectedAgents"
       />
-
-      <div class="w-full h-full">
-        <div v-if="v$.selectedAgents.$error">
-          <p class="error-message pb-2">
-            {{ $t('TEAMS_SETTINGS.ADD.AGENT_VALIDATION_ERROR') }}
-          </p>
-        </div>
-        <AgentSelector
-          v-if="showAgentsList"
-          :agent-list="agentList"
-          :selected-agents="selectedAgents"
-          :update-selected-agents="updateSelectedAgents"
-          :is-working="isCreating"
-          :submit-button-text="
-            $t('TEAMS_SETTINGS.EDIT_FLOW.AGENTS.BUTTON_TEXT')
-          "
-        />
-        <div v-else class="flex items-center justify-center py-6">
-          <Spinner class="text-n-blue-11" />
-        </div>
+      <div v-else class="flex items-center justify-center py-6">
+        <Spinner class="text-n-blue-11" />
       </div>
-    </form>
-  </div>
+    </SectionCard>
+    <template #status>
+      {{
+        $t('TEAMS_SETTINGS.WIZARD.SELECTED_COUNT', {
+          selected: selectedAgents.length,
+          total: agentList.length,
+        })
+      }}
+    </template>
+  </FormLayout>
 </template>
