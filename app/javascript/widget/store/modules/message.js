@@ -1,4 +1,8 @@
 import MessageAPI from '../../api/message';
+import {
+  isPreviewTestMode,
+  sendPreviewMessage,
+} from 'widget/helpers/previewMode';
 
 const state = {
   uiFlags: {
@@ -16,6 +20,11 @@ export const actions = {
     { email, messageId, submittedValues }
   ) => {
     if (uiFlags.isUpdating) {
+      return;
+    }
+    // In the AI agent test the framing page records the answer; a clicked suggestion becomes the next message.
+    if (isPreviewTestMode()) {
+      sendPreviewMessage(null, { messageId, submittedValues, email });
       return;
     }
     commit('toggleUpdateStatus', true);

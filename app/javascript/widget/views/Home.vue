@@ -5,6 +5,7 @@ import { mapActions, mapGetters } from 'vuex';
 import { useRouter } from 'vue-router';
 import { IFrameHelper } from 'widget/helpers/utils';
 import { CHATWOOT_ON_START_CONVERSATION } from 'widget/constants/sdkEvents';
+import { isPreviewTestMode } from 'widget/helpers/previewMode';
 import configMixin from 'widget/mixins/configMixin';
 import ArticleContainer from '../components/pageComponents/Home/Article/ArticleContainer.vue';
 export default {
@@ -41,7 +42,12 @@ export default {
       }
       const starterTitle =
         typeof starter === 'object' && starter ? starter.title : starter;
-      if (this.preChatFormEnabled && !this.conversationSize) {
+      // The AI agent test starts without a visitor, so it skips the pre-chat form.
+      if (
+        this.preChatFormEnabled &&
+        !this.conversationSize &&
+        !isPreviewTestMode()
+      ) {
         return this.router.replace({
           name: 'prechat-form',
           query: starterTitle ? { starter: starterTitle } : {},

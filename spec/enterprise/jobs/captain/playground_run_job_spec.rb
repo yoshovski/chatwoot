@@ -3,7 +3,7 @@ require 'rails_helper'
 RSpec.describe Captain::PlaygroundRunJob do
   let(:assistant) { create(:captain_assistant, account: create(:account), config: { 'suggested_replies' => true }) }
   let(:message_history) { [{ role: 'user', content: 'Hello' }] }
-  let(:run_result) { instance_double(Agents::RunResult, context: { state: {} }) }
+  let(:run_result) { instance_double(Agents::RunResult, context: { state: {} }, output: response) }
   let(:agent_runner) { instance_double(Captain::Assistant::AgentRunnerService, generate_response: response, last_run_result: run_result) }
   let(:response) do
     { 'response' => 'Hi there', 'response_parts' => [{ 'text' => 'Hi there', 'citation_indexes' => [] }],

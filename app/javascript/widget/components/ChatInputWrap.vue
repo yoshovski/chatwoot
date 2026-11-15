@@ -7,7 +7,7 @@ import ChatSendButton from 'widget/components/ChatSendButton.vue';
 import { useAttachments } from '../composables/useAttachments';
 import FluentIcon from 'shared/components/FluentIcon/Index.vue';
 import ResizableTextArea from 'shared/components/ResizableTextArea.vue';
-import { isPreviewMode } from 'widget/helpers/previewMode';
+import { isPreviewMode, previewState } from 'widget/helpers/previewMode';
 import { emitter } from 'shared/helpers/mitt';
 
 const EmojiPicker = defineAsyncComponent(
@@ -56,6 +56,10 @@ export default {
   },
 
   computed: {
+    // The settings preview shows a locked composer; the AI agent test types into the same widget.
+    isComposerLocked() {
+      return this.isPreview && !previewState.testMode;
+    },
     ...mapGetters({
       isWidgetOpen: 'appConfig/getIsWidgetOpen',
       shouldShowEmojiPicker: 'appConfig/getShouldShowEmojiPicker',
@@ -100,7 +104,7 @@ export default {
       this.focusInput();
     },
     handleButtonClick() {
-      if (this.isPreview) return;
+      if (this.isComposerLocked) return;
       if (this.attachedFile) {
         this.onSendAttachment({
           attachment: this.attachedFile,
@@ -195,14 +199,14 @@ export default {
       :rows="1"
       :aria-label="$t('CHAT_PLACEHOLDER')"
       :placeholder="$t('CHAT_PLACEHOLDER')"
-      :disabled="isPreview"
+      :disabled="isComposerLocked"
       class="reset-base h-8 min-h-8 max-h-40 w-full resize-none border-none bg-transparent px-0 py-1 text-base leading-6 text-n-slate-12 outline-none placeholder:text-n-slate-10"
       @typing-off="onTypingOff"
       @typing-on="onTypingOn"
     />
     <div class="relative flex items-center gap-0.5 py-1.5">
       <ChatAttachmentButton
-        v-if="canHandleAttachments"
+        v-if="canHandleAttachments && !isPreview"
         class="-ms-1.5 rounded-lg text-n-slate-10 transition-colors hover:bg-n-alpha-2 hover:text-n-slate-12"
         :on-attach="onAttachFile"
       />
@@ -226,12 +230,12 @@ export default {
         @select="onSelectEmoji"
         @keydown.esc="hideEmojiPicker"
       />
-      <span v-if="isPreview" class="ms-auto text-xs text-n-slate-10">
+      <span v-if="isComposerLocked" class="ms-auto text-xs text-n-slate-10">
         {{ $t('PREVIEW.COMPOSER_HINT') }}
       </span>
       <ChatSendButton
-        :class="{ 'ms-auto': !isPreview }"
-        :disabled="isPreview || !hasInput"
+        :class="{ 'ms-auto': !isComposerLocked }"
+        :disabled="isComposerLocked || !hasInput"
         @click="handleButtonClick"
       />
     </div>
