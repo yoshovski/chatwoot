@@ -30,16 +30,20 @@ const CHANGE_TONES = {
 
 <template>
   <div
-    class="flex min-w-0 flex-col gap-4 rounded-card bg-n-solid-2 p-5 shadow-card outline outline-1 -outline-offset-1 outline-n-container"
+    class="flex min-w-0 flex-col gap-3 rounded-card bg-n-solid-2 p-4 shadow-card sm:gap-4 sm:p-5 outline outline-1 -outline-offset-1 outline-n-container"
   >
-    <div class="flex items-center gap-2.5">
+    <div
+      class="flex flex-col items-start gap-2 sm:flex-row sm:items-center sm:gap-2.5"
+    >
       <span
         class="grid size-8 shrink-0 place-items-center rounded-lg"
         :class="TONES[tone].chip"
       >
         <Icon :icon="icon" class="size-4" />
       </span>
-      <span class="truncate text-sm text-n-slate-11">{{ label }}</span>
+      <span class="w-full text-sm leading-5 text-n-slate-11 sm:truncate">
+        {{ label }}
+      </span>
     </div>
     <div class="flex items-end justify-between gap-3">
       <div class="flex min-w-0 flex-col gap-1">
@@ -49,7 +53,7 @@ const CHANGE_TONES = {
         />
         <span
           v-else
-          class="font-display text-3xl font-semibold tabular-nums leading-9 tracking-display text-n-slate-12"
+          class="font-display text-2xl font-semibold sm:text-3xl tabular-nums leading-9 tracking-display text-n-slate-12"
         >
           {{ value }}
         </span>
@@ -60,7 +64,7 @@ const CHANGE_TONES = {
       <Sparkline
         v-if="points.length > 1"
         :points="points"
-        class="h-10 w-24 shrink-0"
+        class="hidden h-10 w-24 shrink-0 sm:block"
         :class="TONES[tone].line"
       />
     </div>

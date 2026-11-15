@@ -1,0 +1,123 @@
+{
+  "ANALYTICS": {
+    "TITLE": "Analytics",
+    "SUBTITLE": "The last {days} days, compared with the {days} days before.",
+    "MORE": {
+      "LABEL": "Detailed reports",
+      "BACK": "Detailed reports",
+      "LIVE": "Right now",
+      "CONVERSATIONS": "Conversations",
+      "AGENTS": "People",
+      "LABELS": "Labels",
+      "INBOXES": "Channels",
+      "TEAMS": "Teams",
+      "RATING": "Customer rating",
+      "TARGETS": "Reply-time targets",
+      "AI_AGENT": "AI agent"
+    },
+    "PERIOD": {
+      "LABEL": "Period",
+      "DAYS": "{days} days"
+    },
+    "TABS": {
+      "OVERVIEW": "Overview",
+      "AI_AGENT": "AI agent",
+      "TEAM": "Team",
+      "RATING": "Customer rating"
+    },
+    "METRICS": {
+      "CONVERSATIONS": "Conversations",
+      "AI_CONVERSATIONS": "Answered by AI agent",
+      "RESOLVED": "Solved by AI agent",
+      "HANDED": "Handed to your team",
+      "FIRST_REPLY": "Time to first reply",
+      "TEAM_SOLVED": "Solved by your team",
+      "RATING": "Customer rating",
+      "PRODUCT_ANSWERS": "Product answers",
+      "RESOLUTION_TIME": "Time to solve",
+      "RATINGS_COUNT": "Ratings received",
+      "HAPPY_SHARE": "Rated 4 or 5",
+      "REPLY_SHARE": "Customers who rated"
+    },
+    "DURATION": {
+      "SECONDS": "{count} s",
+      "MINUTES": "{count} min",
+      "HOURS": "{count} h",
+      "HOURS_MINUTES": "{hours} h {minutes} min"
+    },
+    "CHART": {
+      "TITLE": "Conversations by day",
+      "AI": "AI agent",
+      "TEAM": "Your team",
+      "EMPTY": "No conversations in this period yet.",
+      "LINK": "Conversation report",
+      "DAY": "{date}: {values}",
+      "NOTE": "Each bar counts the conversations someone replied in that day. A conversation over several days counts on each of them.",
+      "AI_TOTAL": "AI agent replied, day by day",
+      "TEAM_TOTAL": "Your team replied, day by day"
+    },
+    "REPORTS": {
+      "TITLE": "Detailed reports",
+      "SUBTITLE": "Every number in full, with filters and downloads.",
+      "GROUPS": {
+        "NOW": "What is happening",
+        "WHO": "Who and where",
+        "QUALITY": "How well it went"
+      },
+      "ITEMS": {
+        "LIVE": "Open conversations, who is online and the busiest hours of the week.",
+        "CONVERSATIONS": "Conversations, messages, reply and solve times over any period.",
+        "AGENTS": "Each person: conversations, time to first reply and solved.",
+        "TEAMS": "The same numbers for each team.",
+        "INBOXES": "The same numbers for each channel: chat, email, WhatsApp.",
+        "LABELS": "Conversations by label, to see what customers ask about.",
+        "AI_AGENT": "Conversations your AI agent solved or handed to your team, over time.",
+        "RATING": "Every customer rating with its comment, by person and channel.",
+        "TARGETS": "Conversations that missed a reply-time target, and why."
+      }
+    },
+    "LINKS": {
+      "CONVERSATIONS": "Conversation report",
+      "TEAM": "Team",
+      "AI_AGENT": "AI agent report",
+      "PEOPLE": "People report",
+      "TEAMS": "Teams report",
+      "RATING": "Rating report",
+      "ALL_COMMENTS": "All ratings"
+    },
+    "PEOPLE": {
+      "TITLE": "Your team",
+      "EMPTY": "Nobody on your team replied in this period.",
+      "ROW": "{conversations} conversations · first reply {time}"
+    },
+    "AI": {
+      "CHART_TITLE": "AI agent by day",
+      "STAYED": "Stayed with the AI agent",
+      "STAYED_TOTAL": "Stayed with the AI agent, day by day",
+      "HANDED": "Handed to your team",
+      "HANDED_TOTAL": "Handed to your team, day by day",
+      "NOTE": "Each bar counts the conversations your AI agent replied in that day; amber is the part it handed to your team.",
+      "EMPTY": "Your AI agent had no conversations in this period.",
+      "AGENTS_TITLE": "Your AI agents",
+      "AGENT_ROW": "{conversations} conversations · {rate} % solved",
+      "NO_AGENTS": "No AI agent yet."
+    },
+    "TEAM": {
+      "CHART_TITLE": "Your team by day",
+      "EMPTY": "Your team replied in no conversation in this period.",
+      "TEAMS_TITLE": "Teams",
+      "NO_TEAMS": "No team had conversations in this period."
+    },
+    "RATING": {
+      "SPLIT_TITLE": "How customers rated",
+      "STARS": "{rating} star | {rating} stars",
+      "COUNT": "{count} · {share} %",
+      "EMPTY": "No ratings in this period yet.",
+      "COMMENTS_TITLE": "Latest comments",
+      "NO_COMMENTS": "No comments with the ratings in this period.",
+      "COMMENT_META": "{rating} of 5 · {name} · {time}",
+      "SOMEONE": "A customer",
+      "QUOTE": "“{comment}”"
+    }
+  }
+}
