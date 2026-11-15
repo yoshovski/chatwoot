@@ -32,14 +32,16 @@ const CHANGE_TONES = {
   <div
     class="flex min-w-0 flex-col gap-3 rounded-card bg-n-solid-2 p-4 shadow-card sm:gap-4 sm:p-5 outline outline-1 -outline-offset-1 outline-n-container"
   >
-    <div class="flex items-center gap-2.5">
+    <div
+      class="flex flex-col items-start gap-2 sm:flex-row sm:items-center sm:gap-2.5"
+    >
       <span
         class="grid size-8 shrink-0 place-items-center rounded-lg"
         :class="TONES[tone].chip"
       >
         <Icon :icon="icon" class="size-4" />
       </span>
-      <span class="line-clamp-2 text-sm leading-5 text-n-slate-11 sm:truncate">
+      <span class="w-full text-sm leading-5 text-n-slate-11 sm:truncate">
         {{ label }}
       </span>
     </div>

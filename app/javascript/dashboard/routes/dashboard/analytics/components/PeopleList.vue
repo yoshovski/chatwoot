@@ -1,6 +1,7 @@
 <script setup>
 import { useI18n } from 'vue-i18n';
 import EmptyState from 'dashboard/components-next/kit/EmptyState.vue';
+import CardError from '../../home/components/CardError.vue';
 import { durationText } from '../analyticsView';
 
 // The busiest people or teams in the period: conversations and time to first reply.
@@ -10,7 +11,9 @@ defineProps({
   emptyText: { type: String, required: true },
   limit: { type: Number, default: 4 },
   isLoading: { type: Boolean, default: false },
+  hasError: { type: Boolean, default: false },
 });
+const emit = defineEmits(['retry']);
 const { t } = useI18n();
 </script>
 
@@ -22,6 +25,7 @@ const { t } = useI18n();
       class="h-8 w-full animate-pulse rounded bg-n-alpha-2"
     />
   </div>
+  <CardError v-else-if="hasError" @retry="emit('retry')" />
   <EmptyState
     v-else-if="!rows.length"
     icon="i-lucide-users"

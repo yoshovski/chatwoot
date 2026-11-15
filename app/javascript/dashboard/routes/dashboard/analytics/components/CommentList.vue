@@ -3,13 +3,16 @@ import { useI18n } from 'vue-i18n';
 import { RouterLink } from 'vue-router';
 import { dynamicTime } from 'shared/helpers/timeHelper';
 import EmptyState from 'dashboard/components-next/kit/EmptyState.vue';
+import CardError from '../../home/components/CardError.vue';
 
 // The latest ratings that came with a comment; each opens its conversation.
 defineProps({
   // [{ id, rating, comment, name, at, conversationId }]
   comments: { type: Array, default: () => [] },
   isLoading: { type: Boolean, default: false },
+  hasError: { type: Boolean, default: false },
 });
+const emit = defineEmits(['retry']);
 const { t } = useI18n();
 </script>
 
@@ -21,6 +24,7 @@ const { t } = useI18n();
       class="h-12 w-full animate-pulse rounded bg-n-alpha-2"
     />
   </div>
+  <CardError v-else-if="hasError" @retry="emit('retry')" />
   <EmptyState
     v-else-if="!comments.length"
     icon="i-lucide-message-square-quote"

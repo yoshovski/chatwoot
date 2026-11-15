@@ -101,6 +101,8 @@ onMounted(() => {
         :limit="8"
         :empty-text="t('ANALYTICS.PEOPLE.EMPTY')"
         :is-loading="isLoading"
+        :has-error="hasError"
+        @retry="reload"
       />
     </SectionCard>
     <SectionCard
@@ -113,6 +115,8 @@ onMounted(() => {
         :limit="8"
         :empty-text="t('ANALYTICS.TEAM.NO_TEAMS')"
         :is-loading="isLoading"
+        :has-error="hasError"
+        @retry="reload"
       />
     </SectionCard>
   </div>

@@ -84,7 +84,12 @@ const comments = computed(() => commentRows(data.value.responses));
       :link-label="t('ANALYTICS.LINKS.ALL_COMMENTS')"
       :to="{ name: 'csat_reports' }"
     >
-      <CommentList :comments="comments" :is-loading="isLoading" />
+      <CommentList
+        :comments="comments"
+        :is-loading="isLoading"
+        :has-error="hasError"
+        @retry="reload"
+      />
     </SectionCard>
   </div>
 </template>

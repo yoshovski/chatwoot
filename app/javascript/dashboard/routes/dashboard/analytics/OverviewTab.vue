@@ -99,6 +99,8 @@ onMounted(() => store.dispatch('agents/get'));
         :rows="people"
         :empty-text="t('ANALYTICS.PEOPLE.EMPTY')"
         :is-loading="isLoading"
+        :has-error="hasError"
+        @retry="reload"
       />
     </SectionCard>
   </div>
