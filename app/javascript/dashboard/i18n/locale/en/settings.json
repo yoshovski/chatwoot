@@ -1169,7 +1169,8 @@
     "CHOOSE_PAGES_HINT": "Pick which pages of this website your AI agent learns from",
     "SECTION_NAVIGATION": "Section pages",
     "UNREAD": "{count} unread",
-    "HIDE_MENU": "Hide menu"
+    "HIDE_MENU": "Hide menu",
+    "SHOW_MENU": "click to show its menu"
   },
   "KNOWLEDGE_LIST": {
     "BULK_ACTIONS": "Bulk actions",

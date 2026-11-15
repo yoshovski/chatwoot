@@ -11,7 +11,6 @@ import {
   moduleForArea,
 } from './platformNavigation';
 import Icon from 'next/icon/Icon.vue';
-import SidebarUnreadBadge from './SidebarUnreadBadge.vue';
 import SidebarSubGroup from './SidebarSubGroup.vue';
 import SidebarGroupLeaf from './SidebarGroupLeaf.vue';
 import AssistantNavigation from './AssistantNavigation.vue';
@@ -57,7 +56,7 @@ const activeModule = computed(
 );
 
 // The rail order is fixed: work tools, then the grow tools, then Settings.
-const GROW_MODULES = ['Reports', 'Campaigns', 'Portals'];
+const GROW_MODULES = ['Campaigns', 'Portals'];
 const mainModules = computed(() =>
   modules.value.filter(item => item.name !== 'Settings')
 );
@@ -116,13 +115,33 @@ const isHighlighted = item =>
     ? flyoutModule.value.name === item.name
     : isActive(item);
 
-const tooltipFor = item => ({
-  content: item.badgeCount
-    ? `${item.label} · ${t('PLATFORM_NAV.UNREAD', { count: item.badgeCount })}`
-    : item.label,
-  placement: 'right',
-  delay: { show: 300, hide: 0 },
-});
+const MAX_BADGE = 99;
+const badgeText = count => (count > MAX_BADGE ? `${MAX_BADGE}+` : count);
+const isPanelHidden = item =>
+  variant === 'c' && isActive(item) && Boolean(collapsed.value[item.name]);
+const tooltipFor = item => {
+  const parts = [item.label];
+  if (item.badgeCount) {
+    parts.push(t('PLATFORM_NAV.UNREAD', { count: item.badgeCount }));
+  }
+  if (isPanelHidden(item)) parts.push(t('PLATFORM_NAV.SHOW_MENU'));
+  return {
+    content: parts.join(' · '),
+    theme: 'co-nav',
+    delay: { show: 250, hide: 0 },
+  };
+};
+
+// Inside a panel, a gap marks where the next cluster starts: the people views
+// after the standard ones, every list (channels, teams, labels, views), and the
+// AI agent's setup pages between its overview and where it is live.
+const CLUSTER_STARTS = [
+  'Mentions',
+  'captain_section_profile',
+  'captain_section_channels',
+];
+const startsCluster = (child, index) =>
+  index > 0 && (Boolean(child.children) || CLUSTER_STARTS.includes(child.name));
 
 const openModule = item => {
   const remembered = lastRoutes.value[item.name];
@@ -167,49 +186,50 @@ watch(
   <nav
     ref="railRef"
     :aria-label="t('PLATFORM_NAV.PRODUCT_AREAS')"
-    class="flex w-16 shrink-0 flex-col items-center gap-3 bg-n-background py-3"
-    :class="{ 'border-e border-n-weak': showPanel && !isFlyout }"
+    class="flex w-[4.5rem] shrink-0 flex-col items-center gap-2 bg-n-background py-2"
   >
-    <div class="flex flex-col items-center">
-      <slot name="account" />
-      <slot name="compose" />
-    </div>
+    <slot name="account" />
+    <slot name="compose" />
     <div
-      class="flex min-h-0 flex-1 flex-col items-center gap-4 overflow-y-auto px-3 pt-1"
+      class="flex min-h-0 w-full flex-1 flex-col items-center overflow-y-auto pt-2"
     >
-      <ul
-        v-for="(group, index) in railGroups"
-        :key="index"
-        class="m-0 flex list-none flex-col gap-1 p-0"
-      >
-        <li v-for="item in group" :key="item.name">
-          <button
-            v-tooltip="tooltipFor(item)"
-            type="button"
-            :aria-label="item.label"
-            :aria-current="isActive(item) ? 'true' : undefined"
-            :aria-expanded="
-              isFlyout && item.children
-                ? flyoutModule?.name === item.name
-                : undefined
-            "
-            class="relative flex size-10 items-center justify-center rounded-xl transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-n-brand"
-            :class="
-              isHighlighted(item)
-                ? 'bg-n-brand/10 text-n-blue-11'
-                : 'text-n-slate-11 hover:bg-n-alpha-2 hover:text-n-slate-12'
-            "
-            @click="selectModule(item)"
-          >
-            <Icon :icon="item.icon" class="size-5" />
-            <SidebarUnreadBadge
-              v-if="item.badgeCount"
-              :count="item.badgeCount"
-              class="absolute -end-1 -top-1 ring-2 ring-n-background"
-            />
-          </button>
-        </li>
-      </ul>
+      <template v-for="(group, index) in railGroups" :key="index">
+        <div
+          v-if="index > 0"
+          aria-hidden="true"
+          class="my-3 h-px w-8 shrink-0 bg-n-strong"
+        />
+        <ul class="m-0 flex list-none flex-col items-center gap-1.5 p-0">
+          <li v-for="item in group" :key="item.name">
+            <button
+              v-tooltip="tooltipFor(item)"
+              type="button"
+              :aria-label="item.label"
+              :aria-current="isActive(item) ? 'true' : undefined"
+              :aria-expanded="
+                isFlyout && item.children
+                  ? flyoutModule?.name === item.name
+                  : undefined
+              "
+              class="relative flex size-12 items-center justify-center rounded-2xl transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-n-brand"
+              :class="
+                isHighlighted(item)
+                  ? 'bg-n-brand/10 text-n-blue-11'
+                  : 'text-n-slate-11 hover:bg-n-alpha-2 hover:text-n-slate-12'
+              "
+              @click="selectModule(item)"
+            >
+              <Icon :icon="item.icon" class="size-6" />
+              <span
+                v-if="item.badgeCount"
+                class="absolute end-1 top-1 grid h-[1.125rem] min-w-[1.125rem] place-items-center rounded-full bg-n-brand px-1 text-[0.6875rem] font-semibold leading-none text-white ring-2 ring-n-background"
+              >
+                {{ badgeText(item.badgeCount) }}
+              </span>
+            </button>
+          </li>
+        </ul>
+      </template>
     </div>
     <button
       v-if="settingsModule"
@@ -217,7 +237,7 @@ watch(
       type="button"
       :aria-label="settingsModule.label"
       :aria-current="isActive(settingsModule) ? 'true' : undefined"
-      class="flex size-10 shrink-0 items-center justify-center rounded-xl transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-n-brand"
+      class="flex size-12 shrink-0 items-center justify-center rounded-2xl transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-n-brand"
       :class="
         isHighlighted(settingsModule)
           ? 'bg-n-brand/10 text-n-blue-11'
@@ -225,23 +245,21 @@ watch(
       "
       @click="selectModule(settingsModule)"
     >
-      <Icon :icon="settingsModule.icon" class="size-5" />
+      <Icon :icon="settingsModule.icon" class="size-6" />
     </button>
     <slot name="profile" />
   </nav>
   <section
     v-if="showPanel"
     ref="panelRef"
-    class="flex w-60 min-w-0 flex-col bg-n-background"
-    :class="
-      isFlyout
-        ? 'absolute inset-y-0 z-50 border-x border-n-weak shadow-lg start-16'
-        : ''
-    "
+    class="flex w-60 min-w-0 flex-col border-s border-n-weak bg-n-background"
+    :class="isFlyout ? 'absolute inset-y-0 z-50 shadow-lg start-[4.5rem]' : ''"
   >
-    <div class="flex h-14 shrink-0 items-center justify-between gap-2 px-4">
+    <div
+      class="flex h-16 shrink-0 items-center justify-between gap-2 ps-5 pe-3"
+    >
       <h2
-        class="m-0 min-w-0 truncate text-base font-semibold text-n-slate-12"
+        class="m-0 min-w-0 truncate font-display text-lg font-semibold tracking-display text-n-slate-12"
         :title="panelModule.label"
       >
         {{ panelModule.label }}
@@ -259,22 +277,26 @@ watch(
           class="grid size-8 place-items-center rounded-lg text-n-slate-11 hover:bg-n-alpha-2 hover:text-n-slate-12"
           @click="toggleCollapsed(panelModule.name)"
         >
-          <Icon icon="i-lucide-panel-left-close" class="size-4" />
+          <Icon icon="i-lucide-panel-left-close" class="size-[1.125rem]" />
         </button>
       </div>
     </div>
     <AssistantNavigation v-if="panelModule.name === 'Captain'" />
     <nav
       :aria-label="t('PLATFORM_NAV.SECTION_NAVIGATION')"
-      class="min-h-0 flex-1 overflow-y-auto px-2 pb-5"
+      class="min-h-0 flex-1 overflow-y-auto px-3 pb-6"
     >
       <ul class="m-0 flex list-none flex-col gap-0.5 p-0">
-        <template v-for="child in panelItems" :key="child.name">
+        <template v-for="(child, index) in panelItems" :key="child.name">
+          <li
+            v-if="startsCluster(child, index)"
+            aria-hidden="true"
+            class="h-4 shrink-0 list-none"
+          />
           <SidebarSubGroup
             v-if="child.children"
             :name="`${panelModule.name}:${child.name}`"
             :label="child.label"
-            :icon="child.icon || 'i-lucide-folder'"
             :children="child.children"
             :active-child="
               child.children.includes(activeLeaf) ? activeLeaf : undefined
@@ -289,7 +311,6 @@ watch(
             v-else
             v-bind="child"
             :active="activeLeaf === child"
-            hide-tree-line
           />
         </template>
       </ul>

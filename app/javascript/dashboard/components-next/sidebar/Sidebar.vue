@@ -345,7 +345,7 @@ const menuItems = computed(() => {
       label: t('SIDEBAR.CONVERSATIONS'),
       icon: 'i-lucide-messages-square',
       children: [
-        // The inbox's standard views first (as in Tidio, Intercom, Help Scout).
+        // Standard views, then people, then the lists (channels, teams, labels, saved views).
         {
           name: 'My open',
           label: t('SIDEBAR.MY_OPEN'),
@@ -382,6 +382,14 @@ const menuItems = computed(() => {
           }),
         },
         {
+          name: 'All',
+          label: t('SIDEBAR.ALL_CONVERSATIONS'),
+          icon: 'i-lucide-messages-square',
+          badgeCount: allUnreadCount.value,
+          activeOn: ['inbox_conversation'],
+          to: accountScopedRoute('home'),
+        },
+        {
           name: 'Mentions',
           label: t('SIDEBAR.MENTIONED_CONVERSATIONS'),
           icon: 'i-lucide-at-sign',
@@ -400,53 +408,6 @@ const menuItems = computed(() => {
             : 0,
           activeOn: ['conversation_through_participating'],
           to: accountScopedRoute('conversation_participating'),
-        },
-        {
-          name: 'All',
-          label: t('SIDEBAR.ALL_CONVERSATIONS'),
-          icon: 'i-lucide-messages-square',
-          badgeCount: allUnreadCount.value,
-          activeOn: ['inbox_conversation'],
-          to: accountScopedRoute('home'),
-        },
-        {
-          name: 'Folders',
-          label: t('SIDEBAR.CUSTOM_VIEWS_FOLDER'),
-          icon: 'i-lucide-folder',
-          activeOn: ['conversations_through_folders'],
-          ...buildSortConfig(SIDEBAR_SORT_SECTIONS.FOLDERS),
-          collapsible: true,
-          showTreeLine: true,
-          children: sortedFolders.value.map(view => ({
-            name: `${view.name}-${view.id}`,
-            label: view.name,
-            badgeCount: hasFilteredUnreadCounts.value
-              ? getFolderUnreadCount.value(view.id)
-              : 0,
-            to: accountScopedRoute('folder_conversations', { id: view.id }),
-          })),
-        },
-        {
-          name: 'Teams',
-          label: t('SIDEBAR.TEAMS'),
-          icon: 'i-lucide-users',
-          activeOn: ['conversations_through_team'],
-          ...buildSortConfig(SIDEBAR_SORT_SECTIONS.TEAMS),
-          collapsible: true,
-          showTreeLine: true,
-          children: sortedTeams.value.map(team => ({
-            name: `${team.name}-${team.id}`,
-            label: team.name,
-            badgeCount: getTeamUnreadCount.value(team.id),
-            icon: team.icon
-              ? h(EmojiIcon, {
-                  value: team.icon,
-                  color: team.icon_color,
-                  class: 'size-3.5',
-                })
-              : undefined,
-            to: accountScopedRoute('team_conversations', { teamId: team.id }),
-          })),
         },
         {
           name: 'Channels',
@@ -472,6 +433,28 @@ const menuItems = computed(() => {
           })),
         },
         {
+          name: 'Teams',
+          label: t('SIDEBAR.TEAMS'),
+          icon: 'i-lucide-users',
+          activeOn: ['conversations_through_team'],
+          ...buildSortConfig(SIDEBAR_SORT_SECTIONS.TEAMS),
+          collapsible: true,
+          showTreeLine: true,
+          children: sortedTeams.value.map(team => ({
+            name: `${team.name}-${team.id}`,
+            label: team.name,
+            badgeCount: getTeamUnreadCount.value(team.id),
+            icon: team.icon
+              ? h(EmojiIcon, {
+                  value: team.icon,
+                  color: team.icon_color,
+                  class: 'size-3.5',
+                })
+              : 'i-lucide-users-round',
+            to: accountScopedRoute('team_conversations', { teamId: team.id }),
+          })),
+        },
+        {
           name: 'Labels',
           label: t('SIDEBAR.LABELS'),
           icon: 'i-lucide-tag',
@@ -490,6 +473,23 @@ const menuItems = computed(() => {
             to: accountScopedRoute('label_conversations', {
               label: label.title,
             }),
+          })),
+        },
+        {
+          name: 'Folders',
+          label: t('SIDEBAR.CUSTOM_VIEWS_FOLDER'),
+          icon: 'i-lucide-folder',
+          activeOn: ['conversations_through_folders'],
+          ...buildSortConfig(SIDEBAR_SORT_SECTIONS.FOLDERS),
+          collapsible: true,
+          showTreeLine: true,
+          children: sortedFolders.value.map(view => ({
+            name: `${view.name}-${view.id}`,
+            label: view.name,
+            badgeCount: hasFilteredUnreadCounts.value
+              ? getFolderUnreadCount.value(view.id)
+              : 0,
+            to: accountScopedRoute('folder_conversations', { id: view.id }),
           })),
         },
       ],

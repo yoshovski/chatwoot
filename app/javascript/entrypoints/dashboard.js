@@ -107,6 +107,12 @@ app.use(FloatingVue, {
     tooltip: {
       strategy: 'fixed',
     },
+    // The navigation rail's labels: brand blue, to the right of the icon.
+    'co-nav': {
+      $extend: 'tooltip',
+      placement: 'right',
+      distance: 10,
+    },
   },
 });
 app.use(hljsVuePlugin);

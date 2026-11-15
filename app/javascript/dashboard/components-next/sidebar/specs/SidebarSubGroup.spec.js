@@ -51,13 +51,12 @@ const mountSubGroup = props => {
       global: {
         stubs: {
           SidebarGroupLeaf: {
-            props: {
-              label: { type: String, required: true },
-              hideTreeLine: { type: Boolean, default: false },
-              thinTreeLine: { type: Boolean, default: false },
-            },
-            template:
-              '<li class="sidebar-leaf" :data-hide-tree-line="String(hideTreeLine)" :data-thin-tree-line="String(thinTreeLine)">{{ label }}</li>',
+            props: { label: { type: String, required: true } },
+            template: '<li class="sidebar-leaf">{{ label }}</li>',
+          },
+          Icon: {
+            props: ['icon'],
+            template: '<span class="icon-stub" :data-icon="icon" />',
           },
         },
       },
@@ -96,37 +95,34 @@ describe('SidebarSubGroup', () => {
     expect(wrapper.find('.sidebar-leaf').isVisible()).toBe(true);
   });
 
-  it('renders the tree line on the separator, positioned relative to it', () => {
-    const wrapper = mountSubGroup({ showTreeLine: true });
-    const button = wrapper.find('button');
+  it('shows the group label in the header', () => {
+    const wrapper = mountSubGroup();
 
-    expect(button.classes()).toContain('relative');
-    expect(button.classes()).toContain('before:bg-n-slate-4');
-    expect(button.classes()).toContain('before:-bottom-1');
+    expect(wrapper.find('button').text()).toBe('Teams');
   });
 
-  it('renders the end curve on the last separator', () => {
-    const wrapper = mountSubGroup({ showTreeLine: true, endTreeLine: true });
-    const button = wrapper.find('button');
+  it('shows an up caret next to the label while expanded', () => {
+    const wrapper = mountSubGroup();
 
-    expect(button.classes()).toContain('before:h-3');
-    expect(button.classes()).toContain('after:border-b-2');
+    expect(wrapper.find('button .icon-stub').attributes('data-icon')).toBe(
+      'i-lucide-chevron-up'
+    );
   });
 
-  it('draws nested item tree lines via the leaf connectors', () => {
-    const wrapper = mountSubGroup({ showTreeLine: true });
+  it('shows a down caret once the group is minimized', async () => {
+    const wrapper = mountSubGroup();
 
-    expect(
-      wrapper.find('.sidebar-leaf').attributes('data-hide-tree-line')
-    ).toBe('false');
+    await wrapper.find('button').trigger('click');
+
+    expect(wrapper.find('button .icon-stub').attributes('data-icon')).toBe(
+      'i-lucide-chevron-down'
+    );
   });
 
-  it('marks nested item connectors as thin', () => {
-    const wrapper = mountSubGroup({ showTreeLine: true });
+  it('draws no tree connectors around the header', () => {
+    const wrapper = mountSubGroup();
 
-    expect(
-      wrapper.find('.sidebar-leaf').attributes('data-thin-tree-line')
-    ).toBe('true');
+    expect(wrapper.html()).not.toContain('before:bg-n-slate-4');
   });
 
   it('minimizes the section and stores it by account and section name', async () => {
