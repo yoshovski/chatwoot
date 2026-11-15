@@ -12,8 +12,6 @@ const props = defineProps({
   active: { type: Boolean, default: false },
   component: { type: Function, default: null },
   badgeCount: { type: [Number, String], default: 0 },
-  hideTreeLine: { type: Boolean, default: false },
-  thinTreeLine: { type: Boolean, default: false },
 });
 
 const { resolvePermissions, resolveFeatureFlag } = useSidebarContext();
@@ -21,11 +19,6 @@ const { resolvePermissions, resolveFeatureFlag } = useSidebarContext();
 const shouldRenderComponent = computed(() => {
   return typeof props.component === 'function' || isVNode(props.component);
 });
-
-// Tree-line connector per leaf: vertical line (::before) + rounded elbow on the
-// last child (::after). Logical props (start / border-s / rounded-es)
-const TREE_CONNECTOR =
-  "child-item before:content-[''] before:absolute before:start-0 before:w-0.5 before:h-full before:bg-n-slate-4 first:before:rounded-t last:before:h-1/5 last:after:content-[''] last:after:absolute last:after:start-0 last:after:bottom-[calc(50%_-_2px)] last:after:h-3 last:after:w-2.5 last:after:border-b-2 last:after:border-s-2 last:after:rounded-es last:after:border-n-slate-4";
 </script>
 
 <template>
@@ -33,22 +26,19 @@ const TREE_CONNECTOR =
     :permissions="resolvePermissions(to)"
     :feature-flag="resolveFeatureFlag(to)"
     as="li"
-    class="py-0.5 ps-2 ms-3 relative text-n-slate-11 min-w-0"
-    :class="{
-      [TREE_CONNECTOR]: !hideTreeLine,
-      'before:!w-px last:after:!border-b last:after:!border-s':
-        !hideTreeLine && thinTreeLine,
-    }"
+    class="relative min-w-0 list-none"
   >
     <component
       :is="to ? 'router-link' : 'div'"
       :to="to"
       :title="label"
       :aria-current="active ? 'page' : undefined"
-      class="flex h-8 items-center gap-2 px-2 py-1 rounded-lg ltr:hover:bg-gradient-to-r rtl:hover:bg-gradient-to-l from-transparent via-n-slate-3/70 to-n-slate-3/70 group min-w-0"
-      :class="{
-        'text-n-blue-text bg-n-brand/10 active': active,
-      }"
+      class="group flex h-9 min-w-0 items-center gap-2.5 rounded-lg px-2.5 text-sm transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-n-brand"
+      :class="
+        active
+          ? 'active bg-n-brand/10 font-medium text-n-blue-11'
+          : 'text-n-slate-12 hover:bg-n-alpha-2'
+      "
     >
       <component
         :is="component"
@@ -56,10 +46,13 @@ const TREE_CONNECTOR =
         v-bind="{ label, icon, active, badgeCount }"
       />
       <template v-else>
-        <span v-if="icon" class="size-4 grid place-content-center rounded-full">
-          <Icon :icon="icon" class="size-4 inline-block" />
+        <span
+          class="grid size-[1.125rem] shrink-0 place-items-center"
+          :class="active ? 'text-n-blue-11' : 'text-n-slate-11'"
+        >
+          <Icon v-if="icon" :icon="icon" class="size-[1.125rem]" />
         </span>
-        <div class="flex-1 truncate min-w-0 text-sm">{{ label }}</div>
+        <span class="min-w-0 flex-1 truncate">{{ label }}</span>
         <SidebarUnreadBadge :count="badgeCount" />
       </template>
     </component>

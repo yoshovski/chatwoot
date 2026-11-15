@@ -10,7 +10,6 @@ const props = defineProps({
     type: String,
     required: true,
   },
-  // eslint-disable-next-line vue/no-unused-properties
   active: {
     type: Boolean,
     default: false,
@@ -41,9 +40,11 @@ const rowTitle = computed(() =>
 </script>
 
 <template>
-  <span class="size-4 grid place-content-center rounded-full">
-    <ChannelIcon :inbox="inbox" class="size-4" />
-  </span>
+  <ChannelIcon
+    :inbox="inbox"
+    class="size-[1.125rem] shrink-0"
+    :class="active ? 'text-n-blue-11' : 'text-n-slate-11'"
+  />
   <div
     :title="rowTitle"
     class="flex-1 truncate min-w-0"

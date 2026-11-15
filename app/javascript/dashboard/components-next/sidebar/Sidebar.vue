@@ -23,7 +23,6 @@ import ChannelLeaf from './ChannelLeaf.vue';
 import ChannelIcon from 'next/icon/ChannelIcon.vue';
 import EmojiIcon from 'next/emoji-icon-picker/EmojiIcon.vue';
 import SidebarAccountSwitcher from './SidebarAccountSwitcher.vue';
-import Logo from 'next/icon/Logo.vue';
 import ComposeConversation from 'dashboard/components-next/NewConversation/ComposeConversation.vue';
 import {
   SIDEBAR_SORT_SECTIONS,
@@ -151,7 +150,7 @@ const toggleShortcutModalFn = show => {
 useSidebarKeyboardShortcuts(toggleShortcutModalFn);
 
 // The shortcut and the command bar open the composer from any page; it is
-// anchored under the search field, where no button is shown.
+// anchored at the top of the rail, where no button is shown.
 const globalComposeRef = ref(null);
 useEmitter(BUS_EVENTS.OPEN_COMPOSE, () => globalComposeRef.value?.open());
 
@@ -346,7 +345,7 @@ const menuItems = computed(() => {
       label: t('SIDEBAR.CONVERSATIONS'),
       icon: 'i-lucide-messages-square',
       children: [
-        // The inbox's standard views first (as in Tidio, Intercom, Help Scout).
+        // Standard views, then people, then the lists (channels, teams, labels, saved views).
         {
           name: 'My open',
           label: t('SIDEBAR.MY_OPEN'),
@@ -383,6 +382,14 @@ const menuItems = computed(() => {
           }),
         },
         {
+          name: 'All',
+          label: t('SIDEBAR.ALL_CONVERSATIONS'),
+          icon: 'i-lucide-messages-square',
+          badgeCount: allUnreadCount.value,
+          activeOn: ['inbox_conversation'],
+          to: accountScopedRoute('home'),
+        },
+        {
           name: 'Mentions',
           label: t('SIDEBAR.MENTIONED_CONVERSATIONS'),
           icon: 'i-lucide-at-sign',
@@ -401,53 +408,6 @@ const menuItems = computed(() => {
             : 0,
           activeOn: ['conversation_through_participating'],
           to: accountScopedRoute('conversation_participating'),
-        },
-        {
-          name: 'All',
-          label: t('SIDEBAR.ALL_CONVERSATIONS'),
-          icon: 'i-lucide-messages-square',
-          badgeCount: allUnreadCount.value,
-          activeOn: ['inbox_conversation'],
-          to: accountScopedRoute('home'),
-        },
-        {
-          name: 'Folders',
-          label: t('SIDEBAR.CUSTOM_VIEWS_FOLDER'),
-          icon: 'i-lucide-folder',
-          activeOn: ['conversations_through_folders'],
-          ...buildSortConfig(SIDEBAR_SORT_SECTIONS.FOLDERS),
-          collapsible: true,
-          showTreeLine: true,
-          children: sortedFolders.value.map(view => ({
-            name: `${view.name}-${view.id}`,
-            label: view.name,
-            badgeCount: hasFilteredUnreadCounts.value
-              ? getFolderUnreadCount.value(view.id)
-              : 0,
-            to: accountScopedRoute('folder_conversations', { id: view.id }),
-          })),
-        },
-        {
-          name: 'Teams',
-          label: t('SIDEBAR.TEAMS'),
-          icon: 'i-lucide-users',
-          activeOn: ['conversations_through_team'],
-          ...buildSortConfig(SIDEBAR_SORT_SECTIONS.TEAMS),
-          collapsible: true,
-          showTreeLine: true,
-          children: sortedTeams.value.map(team => ({
-            name: `${team.name}-${team.id}`,
-            label: team.name,
-            badgeCount: getTeamUnreadCount.value(team.id),
-            icon: team.icon
-              ? h(EmojiIcon, {
-                  value: team.icon,
-                  color: team.icon_color,
-                  class: 'size-3.5',
-                })
-              : undefined,
-            to: accountScopedRoute('team_conversations', { teamId: team.id }),
-          })),
         },
         {
           name: 'Channels',
@@ -473,6 +433,28 @@ const menuItems = computed(() => {
           })),
         },
         {
+          name: 'Teams',
+          label: t('SIDEBAR.TEAMS'),
+          icon: 'i-lucide-users',
+          activeOn: ['conversations_through_team'],
+          ...buildSortConfig(SIDEBAR_SORT_SECTIONS.TEAMS),
+          collapsible: true,
+          showTreeLine: true,
+          children: sortedTeams.value.map(team => ({
+            name: `${team.name}-${team.id}`,
+            label: team.name,
+            badgeCount: getTeamUnreadCount.value(team.id),
+            icon: team.icon
+              ? h(EmojiIcon, {
+                  value: team.icon,
+                  color: team.icon_color,
+                  class: 'size-3.5',
+                })
+              : 'i-lucide-users-round',
+            to: accountScopedRoute('team_conversations', { teamId: team.id }),
+          })),
+        },
+        {
           name: 'Labels',
           label: t('SIDEBAR.LABELS'),
           icon: 'i-lucide-tag',
@@ -493,11 +475,28 @@ const menuItems = computed(() => {
             }),
           })),
         },
+        {
+          name: 'Folders',
+          label: t('SIDEBAR.CUSTOM_VIEWS_FOLDER'),
+          icon: 'i-lucide-folder',
+          activeOn: ['conversations_through_folders'],
+          ...buildSortConfig(SIDEBAR_SORT_SECTIONS.FOLDERS),
+          collapsible: true,
+          showTreeLine: true,
+          children: sortedFolders.value.map(view => ({
+            name: `${view.name}-${view.id}`,
+            label: view.name,
+            badgeCount: hasFilteredUnreadCounts.value
+              ? getFolderUnreadCount.value(view.id)
+              : 0,
+            to: accountScopedRoute('folder_conversations', { id: view.id }),
+          })),
+        },
       ],
     },
     {
       name: 'Captain',
-      icon: 'i-lucide-bot-message-square',
+      icon: 'i-lucide-bot',
       // The branded product name ("Octave AI Agents") is too long for the panel title.
       label: t('PLATFORM_NAV.AI_AGENTS'),
       children: agentNavItems.value,
@@ -624,7 +623,7 @@ const menuItems = computed(() => {
     {
       name: 'Reports',
       label: t('SIDEBAR.ANALYTICS'),
-      icon: 'i-lucide-chart-no-axes-column',
+      icon: 'i-lucide-chart-column',
       children: [
         {
           name: 'Analytics Overview',
@@ -744,6 +743,9 @@ const menuItems = computed(() => {
       name: 'Settings',
       label: t('SIDEBAR.SETTINGS'),
       icon: 'i-lucide-settings',
+      // The rail opens the settings home (cards and search, T31); the pages below
+      // only tell the rail which section is current.
+      to: accountScopedRoute('settings_home'),
       children: [
         {
           name: 'Settings Account Settings',
@@ -923,31 +925,30 @@ const menuItems = computed(() => {
     }"
   >
     <SidebarNavigation :items="menuItems" @navigate="closeMobileSidebar">
-      <template #brand>
-        <Logo class="size-6 shrink-0 text-n-blue-text" />
-      </template>
-      <template #profile>
-        <SidebarProfileMenu
-          @open-key-shortcut-modal="emit('openKeyShortcutModal')"
-        />
-      </template>
       <template #account>
         <SidebarAccountSwitcher
+          is-collapsed
           @show-create-account-modal="emit('showCreateAccountModal')"
         />
       </template>
-      <template #search>
+      <template #compose>
+        <ComposeConversation ref="globalComposeRef" align="start" />
+      </template>
+      <template #conversationTools>
         <RouterLink
+          v-tooltip.bottom="t('COMBOBOX.SEARCH_PLACEHOLDER')"
           :to="{ name: 'search' }"
           :aria-label="t('COMBOBOX.SEARCH_PLACEHOLDER')"
-          class="flex h-8 min-w-0 flex-1 items-center gap-2 rounded-lg bg-n-alpha-1 px-3 text-sm text-n-slate-11 hover:bg-n-alpha-2"
+          class="grid size-8 place-items-center rounded-lg text-n-slate-11 hover:bg-n-alpha-2 hover:text-n-slate-12"
         >
-          <span class="i-lucide-search size-4 shrink-0" />
-          <span class="truncate">{{ t('COMBOBOX.SEARCH_PLACEHOLDER') }}</span>
+          <span class="i-lucide-search size-4" />
         </RouterLink>
       </template>
-      <template #compose>
-        <ComposeConversation ref="globalComposeRef" align="end" />
+      <template #profile>
+        <SidebarProfileMenu
+          is-collapsed
+          @open-key-shortcut-modal="emit('openKeyShortcutModal')"
+        />
       </template>
     </SidebarNavigation>
   </aside>

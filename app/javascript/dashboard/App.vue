@@ -172,4 +172,14 @@ export default {
 .v-popper--theme-tooltip .v-popper__arrow-container {
   display: none;
 }
+
+.v-popper--theme-co-nav .v-popper__inner {
+  background: rgb(var(--co-brand)) !important;
+  color: white;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  padding: 6px 10px !important;
+  border-radius: 8px;
+  box-shadow: 0 6px 16px -4px rgb(var(--co-brand) / 0.45);
+}
 </style>

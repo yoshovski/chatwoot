@@ -144,7 +144,7 @@ const allowedMenuItems = computed(() => {
         @click="toggle"
       >
         <Avatar
-          :size="32"
+          :size="isCollapsed ? 36 : 32"
           :name="currentUser.available_name"
           :src="currentUser.avatar_url"
           :status="currentUserAvailability"
