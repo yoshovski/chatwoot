@@ -1,17 +1,17 @@
 {
   "INBOX_MGMT": {
-    "HEADER": "Inboxes",
-    "DESCRIPTION": "A channel is the mode of communication your customer chooses to interact with you. An inbox is where you manage interactions for a specific channel. It can include communications from various sources such as email, live chat, and social media.",
-    "LEARN_MORE": "Learn more about inboxes",
-    "COUNT": "{n} inbox | {n} inboxes",
-    "SEARCH_PLACEHOLDER": "Search inbox name, channel, or identifier...",
-    "NO_RESULTS": "No inboxes found matching your search",
-    "RECONNECTION_REQUIRED": "Your inbox is disconnected. You won't receive new messages until you reauthorize it.",
+    "HEADER": "Channels",
+    "DESCRIPTION": "Manage the channels your customers use to reach you.",
+    "LEARN_MORE": "Learn more about channels",
+    "COUNT": "{n} channel | {n} channels",
+    "SEARCH_PLACEHOLDER": "Search channel name, type, or identifier...",
+    "NO_RESULTS": "No channels found matching your search",
+    "RECONNECTION_REQUIRED": "Your channel is disconnected. You won't receive new messages until you reauthorize it.",
     "CLICK_TO_RECONNECT": "Click here to reconnect.",
     "WHATSAPP_REGISTRATION_INCOMPLETE": "Your WhatsApp Business registration isn’t complete. Please check your display name status in Meta Business Manager before reconnecting.",
     "COMPLETE_REGISTRATION": "Complete Registration",
     "LIST": {
-      "404": "There are no inboxes attached to this account."
+      "404": "There are no channels attached to this account."
     },
     "CREATE_FLOW": {
       "CHANNEL": {
@@ -19,12 +19,12 @@
         "BODY": "Choose the provider you want to integrate with Chatwoot."
       },
       "INBOX": {
-        "TITLE": "Create Inbox",
-        "BODY": "Authenticate your account and create an inbox."
+        "TITLE": "Create Channel",
+        "BODY": "Authenticate your account and create a channel."
       },
       "AGENT": {
         "TITLE": "Add Agents",
-        "BODY": "Add agents to the created inbox."
+        "BODY": "Add agents to the created channel."
       },
       "FINISH": {
         "TITLE": "Voilà!",
@@ -33,9 +33,9 @@
     },
     "ADD": {
       "CHANNEL_NAME": {
-        "LABEL": "Inbox Name",
-        "PLACEHOLDER": "Enter your inbox name (eg: Acme Inc)",
-        "ERROR": "Please enter a valid inbox name"
+        "LABEL": "Channel Name",
+        "PLACEHOLDER": "Enter your channel name (eg: Acme Inc)",
+        "ERROR": "Please enter a valid channel name"
       },
       "WEBSITE_NAME": {
         "LABEL": "Website Name",
@@ -45,12 +45,12 @@
         "HELP": "PS: By signing in, we only get access to your Page's messages. Your private messages can never be accessed by Chatwoot.",
         "CHOOSE_PAGE": "Choose Page",
         "CHOOSE_PLACEHOLDER": "Select a page from the list",
-        "INBOX_NAME": "Inbox Name",
-        "ADD_NAME": "Add a name for your inbox",
-        "PICK_NAME": "Pick a Name for your Inbox",
+        "INBOX_NAME": "Channel Name",
+        "ADD_NAME": "Add a name for your channel",
+        "PICK_NAME": "Pick a Name for your Channel",
         "PICK_A_VALUE": "Pick a value",
-        "CREATE_INBOX": "Create Inbox",
-        "RESTRICTED_WARNING": "Facebook inbox creation is temporarily unavailable due to an API-level issue on Meta’s side, not a problem with Chatwoot. We’re working closely with Meta to resolve it as quickly as possible.",
+        "CREATE_INBOX": "Create Channel",
+        "RESTRICTED_WARNING": "Facebook channel creation is temporarily unavailable due to an API-level issue on Meta’s side, not a problem with Chatwoot. We’re working closely with Meta to resolve it as quickly as possible.",
         "STATUS_LINK": "View status updates"
       },
       "INSTAGRAM": {
@@ -59,9 +59,9 @@
         "HELP": "To add your Instagram profile as a channel, you need to authenticate your Instagram Profile by clicking on 'Continue with Instagram' ",
         "ERROR_MESSAGE": "There was an error connecting to Instagram, please try again",
         "ERROR_AUTH": "There was an error connecting to Instagram, please try again",
-        "NEW_INBOX_SUGGESTION": "This Instagram account was previously linked to a different inbox and has now been migrated here. All new messages will appear here. The old inbox will no longer be able to send or receive messages for this account.",
-        "DUPLICATE_INBOX_BANNER": "This Instagram account was migrated to the new Instagram channel inbox. You won’t be able to send/receive Instagram messages from this inbox anymore.",
-        "RESTRICTED_WARNING": "Instagram inbox creation is temporarily unavailable due to an API-level issue on Meta’s side, not a problem with Chatwoot. We’re working closely with Meta to resolve it as quickly as possible.",
+        "NEW_INBOX_SUGGESTION": "This Instagram account was previously linked to a different channel and has now been migrated here. All new messages will appear here. The old channel will no longer be able to send or receive messages for this account.",
+        "DUPLICATE_INBOX_BANNER": "This Instagram account was migrated to the new Instagram channel. You won’t be able to send/receive Instagram messages from this channel anymore.",
+        "RESTRICTED_WARNING": "Instagram channel creation is temporarily unavailable due to an API-level issue on Meta’s side, not a problem with Chatwoot. We’re working closely with Meta to resolve it as quickly as possible.",
         "SETTINGS_RESTRICTED_WARNING": "Instagram messaging is currently affected by an API-level issue on Meta’s side, not a problem with Chatwoot. Some messages or actions may be delayed or unavailable. We’re working closely with Meta to resolve it as quickly as possible.",
         "STATUS_LINK": "View status updates"
       },
@@ -137,7 +137,7 @@
           "LABEL": "Widget Color",
           "PLACEHOLDER": "Update the widget color used in widget"
         },
-        "SUBMIT_BUTTON": "Create inbox",
+        "SUBMIT_BUTTON": "Create channel",
         "API": {
           "ERROR_MESSAGE": "We were not able to create a website channel, please try again"
         }
@@ -176,8 +176,8 @@
           "ERROR": "This field is required"
         },
         "CHANNEL_NAME": {
-          "LABEL": "Inbox Name",
-          "PLACEHOLDER": "Please enter a inbox name",
+          "LABEL": "Channel Name",
+          "PLACEHOLDER": "Please enter a channel name",
           "ERROR": "This field is required"
         },
         "PHONE_NUMBER": {
@@ -208,8 +208,8 @@
         },
         "TELNYX": {
           "INBOX_NAME": {
-            "LABEL": "Inbox Name",
-            "PLACEHOLDER": "Please enter an inbox name",
+            "LABEL": "Channel Name",
+            "PLACEHOLDER": "Please enter a channel name",
             "ERROR": "This field is required"
           },
           "API_KEY": {
@@ -263,8 +263,8 @@
             "ERROR": "This field is required"
           },
           "INBOX_NAME": {
-            "LABEL": "Inbox Name",
-            "PLACEHOLDER": "Please enter a inbox name",
+            "LABEL": "Channel Name",
+            "PLACEHOLDER": "Please enter a channel name",
             "ERROR": "This field is required"
           },
           "PHONE_NUMBER": {
@@ -301,8 +301,8 @@
           "RESTRICTION_DESCRIPTION": "Choose your WhatsApp provider. You can connect WhatsApp Cloud manually using your Cloud API credentials, or connect through Twilio using your account credentials."
         },
         "INBOX_NAME": {
-          "LABEL": "Inbox Name",
-          "PLACEHOLDER": "Please enter an inbox name",
+          "LABEL": "Channel Name",
+          "PLACEHOLDER": "Please enter a channel name",
           "ERROR": "This field is required"
         },
         "PHONE_NUMBER": {
@@ -387,14 +387,14 @@
             "TOKEN_PLACEHOLDER": "Paste access token"
           },
           "REVIEW": {
-            "TITLE": "Create your WhatsApp inbox",
-            "DESCRIPTION": "Review the number details and choose a name for the inbox.",
+            "TITLE": "Create your WhatsApp channel",
+            "DESCRIPTION": "Review the number details and choose a name for the channel.",
             "VERIFIED": "Your Meta number and access token are valid.",
             "BUSINESS_NAME": "Business name",
             "PHONE_NUMBER": "Phone number",
             "PHONE_ID": "Phone Number ID",
             "WABA_ID": "WhatsApp Business Account ID",
-            "INBOX_NAME": "Inbox name",
+            "INBOX_NAME": "Channel name",
             "INBOX_NAME_HELP": "We generated this name from your verified Meta business name. You can change it."
           },
           "VERIFY": {
@@ -422,7 +422,7 @@
             "SHOW_TOKEN": "Show token",
             "HIDE_TOKEN": "Hide token",
             "VERIFY_DETAILS": "Verify details",
-            "CONNECT": "Create inbox",
+            "CONNECT": "Create channel",
             "RETRY_WEBHOOK": "Retry webhook setup",
             "CONTINUE": "Continue to add agents"
           },
@@ -475,7 +475,7 @@
           },
           "RESTRICTED_WARNING": "WhatsApp Embedded Signup is temporarily unavailable due to an API-level issue on Meta’s side, not a problem with Chatwoot. You can use manual setup for eligible Cloud API numbers. We’re working closely with Meta to resolve it as quickly as possible.",
           "STATUS_LINK": "View status updates",
-          "CALLING_ENABLE_FAILED": "Your WhatsApp inbox is ready, but voice calling couldn't be turned on — this number isn't enrolled in the WhatsApp Business Calling API yet. Reach out to Meta or your WhatsApp Business Solution Provider to onboard it, then turn calling on from the inbox's Calls settings."
+          "CALLING_ENABLE_FAILED": "Your WhatsApp channel is ready, but voice calling couldn't be turned on — this number isn't enrolled in the WhatsApp Business Calling API yet. Reach out to Meta or your WhatsApp Business Solution Provider to onboard it, then turn calling on from the channel's Calls settings."
         },
         "API": {
           "ERROR_MESSAGE": "We were not able to save the WhatsApp channel",
@@ -549,7 +549,7 @@
       },
       "EMAIL_CHANNEL": {
         "TITLE": "Email Channel",
-        "DESC": "Integrate your email inbox.",
+        "DESC": "Integrate your email channel.",
         "CHANNEL_NAME": {
           "LABEL": "Channel Name",
           "PLACEHOLDER": "Please enter a channel name",
@@ -564,8 +564,8 @@
         "API": {
           "ERROR_MESSAGE": "We were not able to save the email channel"
         },
-        "FINISH_MESSAGE": "Your email inbox has been created successfully! You can start forwarding your emails to the address below, or configure SMTP and IMAP credentials to send and receive emails directly.",
-        "FINISH_MESSAGE_NO_FORWARDING": "Your email inbox has been created successfully! You need to configure SMTP and IMAP credentials to send and receive emails. Without these settings, no emails will be processed.",
+        "FINISH_MESSAGE": "Your email channel has been created successfully! You can start forwarding your emails to the address below, or configure SMTP and IMAP credentials to send and receive emails directly.",
+        "FINISH_MESSAGE_NO_FORWARDING": "Your email channel has been created successfully! You need to configure SMTP and IMAP credentials to send and receive emails. Without these settings, no emails will be processed.",
         "FORWARDING_ADDRESS_LABEL": "Forward emails to this address:",
         "CONFIGURE_SMTP_IMAP_LINK": "Click here",
         "CONFIGURE_SMTP_IMAP_TEXT": " to configure IMAP and SMTP settings"
@@ -671,17 +671,17 @@
       },
       "AGENTS": {
         "TITLE": "Agents",
-        "DESC": "Here you can add agents to manage your newly created inbox. Only these selected agents will have access to your inbox. Agents which are not part of this inbox will not be able to see or respond to messages in this inbox when they login. <br> <b>PS:</b> As an administrator, if you need access to all inboxes, you should add yourself as agent to all inboxes that you create.",
-        "VALIDATION_ERROR": "Add at least one agent to your new Inbox",
-        "PICK_AGENTS": "Pick agents for the inbox"
+        "DESC": "Here you can add agents to manage your newly created channel. Only these selected agents will have access to your channel. Agents which are not part of this channel will not be able to see or respond to messages in this channel when they login. <br> <b>PS:</b> As an administrator, if you need access to all channels, you should add yourself as agent to all channels that you create.",
+        "VALIDATION_ERROR": "Add at least one agent to your new Channel",
+        "PICK_AGENTS": "Pick agents for the channel"
       },
       "DETAILS": {
-        "TITLE": "Inbox Details",
-        "DESC": "From the dropdown below, select the Facebook Page you want to connect to Chatwoot. You can also give a custom name to your inbox for better identification."
+        "TITLE": "Channel Details",
+        "DESC": "From the dropdown below, select the Facebook Page you want to connect to Chatwoot. You can also give a custom name to your channel for better identification."
       },
       "FINISH": {
         "TITLE": "Nailed It!",
-        "DESC": "You have successfully finished integrating your Facebook Page with Chatwoot. Next time a customer messages your Page, the conversation will automatically appear on your inbox.<br>We are also providing you with a widget script that you can easily add to your website. Once this is live on your website, customers can message you right from your website without the help of any external tool and the conversation will appear right here, on Chatwoot.<br>Cool, huh? Well, we sure try to be :)"
+        "DESC": "You have successfully finished integrating your Facebook Page with Chatwoot. Next time a customer messages your Page, the conversation will automatically appear on your channel.<br>We are also providing you with a widget script that you can easily add to your website. Once this is live on your website, customers can message you right from your website without the help of any external tool and the conversation will appear right here, on Chatwoot.<br>Cool, huh? Well, we sure try to be :)"
       },
       "EMAIL_PROVIDER": {
         "TITLE": "Select your email provider",
@@ -689,14 +689,14 @@
       },
       "MICROSOFT": {
         "TITLE": "Microsoft Email",
-        "DESCRIPTION": "Click on the Sign in with Microsoft button to get started. You will redirected to the email sign in page. Once you accept the requested permissions, you would be redirected back to the inbox creation step.",
+        "DESCRIPTION": "Click on the Sign in with Microsoft button to get started. You will redirected to the email sign in page. Once you accept the requested permissions, you would be redirected back to the channel creation step.",
         "EMAIL_PLACEHOLDER": "Enter email address",
         "SIGN_IN": "Sign in with Microsoft",
         "ERROR_MESSAGE": "There was an error connecting to Microsoft, please try again"
       },
       "GOOGLE": {
         "TITLE": "Google Email",
-        "DESCRIPTION": "Click on the Sign in with Google button to get started. You will redirected to the email sign in page. Once you accept the requested permissions, you would be redirected back to the inbox creation step.",
+        "DESCRIPTION": "Click on the Sign in with Google button to get started. You will redirected to the email sign in page. Once you accept the requested permissions, you would be redirected back to the channel creation step.",
         "SIGN_IN": "Sign in with Google",
         "EMAIL_PLACEHOLDER": "Enter email address",
         "ERROR_MESSAGE": "There was an error connecting to Google, please try again"
@@ -708,35 +708,35 @@
       "ERROR_FB_AUTH": "Something went wrong, Please refresh page...",
       "ERROR_FB_UNAUTHORIZED": "You're not authorized to perform this action. ",
       "ERROR_FB_UNAUTHORIZED_HELP": "Please ensure you have access to the Facebook page with full control. You can read more about Facebook roles <a href=\" https://www.facebook.com/help/187316341316631\">here</a>.",
-      "ERROR_CHANNEL_CREATION": "We were unable to create the inbox. Please try again.",
-      "CREATING_CHANNEL": "Creating your Inbox...",
-      "TITLE": "Configure Inbox Details",
+      "ERROR_CHANNEL_CREATION": "We were unable to create the channel. Please try again.",
+      "CREATING_CHANNEL": "Creating your Channel...",
+      "TITLE": "Configure Channel Details",
       "DESC": ""
     },
     "AGENTS": {
       "BUTTON_TEXT": "Add agents",
-      "ADD_AGENTS": "Adding Agents to your Inbox..."
+      "ADD_AGENTS": "Adding Agents to your Channel..."
     },
     "FINISH": {
-      "TITLE": "Your Inbox is ready!",
+      "TITLE": "Your Channel is ready!",
       "MESSAGE": "You can now engage with your customers through your new Channel. Happy supporting",
       "BUTTON_TEXT": "Take me there",
       "MORE_SETTINGS": "More settings",
-      "WEBSITE_SUCCESS": "You have successfully finished creating a website channel. Copy the code shown below and paste it on your website. Next time a customer use the live chat, the conversation will automatically appear on your inbox.",
-      "WHATSAPP_QR_INSTRUCTION": "Scan the QR code above to quickly test your WhatsApp inbox",
-      "SMS_QR_INSTRUCTION": "Scan the QR code above to quickly test your SMS inbox",
-      "SMS_QR_ALT": "QR code to test the SMS inbox",
+      "WEBSITE_SUCCESS": "You have successfully finished creating a website channel. Copy the code shown below and paste it on your website. Next time a customer use the live chat, the conversation will automatically appear on your channel.",
+      "WHATSAPP_QR_INSTRUCTION": "Scan the QR code above to quickly test your WhatsApp channel",
+      "SMS_QR_INSTRUCTION": "Scan the QR code above to quickly test your SMS channel",
+      "SMS_QR_ALT": "QR code to test the SMS channel",
       "TWILIO_CALLBACK_FALLBACK": "Webhooks are configured automatically. If incoming messages do not arrive, use this callback URL in Twilio.",
-      "MESSENGER_QR_INSTRUCTION": "Scan the QR code above to quickly test your Facebook Messenger inbox",
-      "TELEGRAM_QR_INSTRUCTION": "Scan the QR code above to quickly test your Telegram inbox"
+      "MESSENGER_QR_INSTRUCTION": "Scan the QR code above to quickly test your Facebook Messenger channel",
+      "TELEGRAM_QR_INSTRUCTION": "Scan the QR code above to quickly test your Telegram channel"
     },
     "REAUTH": "Reauthorize",
     "VIEW": "View",
     "EDIT": {
       "API": {
-        "SUCCESS_MESSAGE": "Inbox settings updated successfully",
+        "SUCCESS_MESSAGE": "Channel settings updated successfully",
         "AUTO_ASSIGNMENT_SUCCESS_MESSAGE": "Auto assignment updated successfully",
-        "ERROR_MESSAGE": "We couldn't update inbox settings. Please try again later."
+        "ERROR_MESSAGE": "We couldn't update channel settings. Please try again later."
       },
       "EMAIL_COLLECT_BOX": {
         "ENABLED": "Enabled",
@@ -794,10 +794,10 @@
         "NO": "No, Keep "
       },
       "API": {
-        "SUCCESS_MESSAGE": "Inbox deleted successfully",
-        "ERROR_MESSAGE": "Could not delete inbox. Please try again later.",
-        "AVATAR_SUCCESS_MESSAGE": "Inbox avatar deleted successfully",
-        "AVATAR_ERROR_MESSAGE": "Could not delete the inbox avatar. Please try again later."
+        "SUCCESS_MESSAGE": "Channel deleted successfully",
+        "ERROR_MESSAGE": "Could not delete channel. Please try again later.",
+        "AVATAR_SUCCESS_MESSAGE": "Channel avatar deleted successfully",
+        "AVATAR_ERROR_MESSAGE": "Could not delete the channel avatar. Please try again later."
       }
     },
     "TABS": {
@@ -810,14 +810,14 @@
       "WIDGET_BUILDER": "Widget Builder",
       "BOT_CONFIGURATION": "Bot Configuration",
       "ACCOUNT_HEALTH": "Account Health",
-      "CSAT": "CSAT",
+      "CSAT": "Customer rating",
       "VOICE": "Voice",
       "CALLS": "Calls"
     },
     "VOICE_CONFIGURATION": {
       "ENABLE_VOICE": {
         "LABEL": "Enable Voice Calling",
-        "DESCRIPTION": "Enable voice calling on this inbox. Agents will be able to make and receive phone calls."
+        "DESCRIPTION": "Enable voice calling on this channel. Agents will be able to make and receive phone calls."
       },
       "CREDENTIALS": {
         "DESCRIPTION": "Voice calling requires Twilio API Key credentials. These are used to generate tokens for agent voice connections."
@@ -838,7 +838,7 @@
     "WHATSAPP_CALLING": {
       "ENABLE": {
         "LABEL": "Enable WhatsApp Calling",
-        "DESCRIPTION": "Allow agents to receive and place WhatsApp Cloud calls on this inbox. Customers can call this business number directly from WhatsApp."
+        "DESCRIPTION": "Allow agents to receive and place WhatsApp Cloud calls on this channel. Customers can call this business number directly from WhatsApp."
       },
       "ENABLE_FAILED": "Voice calling couldn't be turned on for this number — it isn't enrolled in the WhatsApp Business Calling API yet. Reach out to Meta or your WhatsApp Business Solution Provider to onboard it, then try again.",
       "PHONE_NUMBER": {
@@ -858,7 +858,7 @@
     "CHANNEL_PREFERENCES": "Channel Preferences",
     "TWILIO_HEALTH": {
       "TITLE": "Manage your Twilio number",
-      "DESCRIPTION": "Review the Twilio account, sender and webhooks backing this inbox. Anything Chatwoot cannot receive is flagged here",
+      "DESCRIPTION": "Review the Twilio account, sender and webhooks backing this channel. Anything Chatwoot cannot receive is flagged here",
       "GO_TO_SETTINGS": "Go to Twilio Console",
       "NO_DATA": "Health data is not available",
       "LOADING": "Fetching health data from Twilio…",
@@ -882,15 +882,15 @@
         },
         "SENDER": {
           "LABEL": "Sender",
-          "TOOLTIP": "The phone number or messaging service that carries this inbox"
+          "TOOLTIP": "The phone number or messaging service that carries this channel"
         },
         "CAPABILITIES": {
           "LABEL": "Number capabilities",
-          "TOOLTIP": "Capabilities Twilio has enabled on this number. A capability this inbox needs but does not have will never work"
+          "TOOLTIP": "Capabilities Twilio has enabled on this number. A capability this channel needs but does not have will never work"
         },
         "VOICE_CALLING": {
           "LABEL": "Voice calling",
-          "TOOLTIP": "Whether calling is turned on for this inbox"
+          "TOOLTIP": "Whether calling is turned on for this channel"
         }
       },
       "VALUES": {
@@ -956,9 +956,9 @@
       "ERRORS": {
         "AUTHORIZATION": {
           "EMBEDDED_TITLE": "WhatsApp connection needs to be refreshed",
-          "EMBEDDED_DESCRIPTION": "Meta could not validate the connection for this inbox. Go to Configuration to reconfigure it using Embedded Signup.",
+          "EMBEDDED_DESCRIPTION": "Meta could not validate the connection for this channel. Go to Configuration to reconfigure it using Embedded Signup.",
           "MANUAL_TITLE": "WhatsApp access token needs attention",
-          "MANUAL_DESCRIPTION": "Meta could not validate the access token for this inbox. Go to Configuration to verify or replace it."
+          "MANUAL_DESCRIPTION": "Meta could not validate the access token for this channel. Go to Configuration to verify or replace it."
         },
         "GENERIC_TITLE": "WhatsApp health data is unavailable",
         "GENERIC_DESCRIPTION": "Meta could not return the current health details. Review the error below and try again later.",
@@ -1121,7 +1121,7 @@
       "DISPLAY_FILE_PICKER": "Display file picker on the widget",
       "DISPLAY_EMOJI_PICKER": "Display emoji picker on the widget",
       "ALLOW_END_CONVERSATION": "Allow users to end conversation from the widget",
-      "USE_INBOX_AVATAR_FOR_BOT": "Use inbox name and avatar for the bot"
+      "USE_INBOX_AVATAR_FOR_BOT": "Use channel name and avatar for the bot"
     },
     "SETTINGS_POPUP": {
       "MESSENGER_HEADING": "Messenger Script",
@@ -1155,7 +1155,7 @@
         }
       },
       "INBOX_AGENTS": "Agents",
-      "INBOX_AGENTS_SUB_TEXT": "Add or remove agents from this inbox",
+      "INBOX_AGENTS_SUB_TEXT": "Add or remove agents from this channel",
       "AGENT_ASSIGNMENT": "Conversation Assignment",
       "AGENT_ASSIGNMENT_SUB_TEXT": "Update conversation assignment settings",
       "UPDATE": "Update",
@@ -1168,26 +1168,26 @@
       "ENABLE_CONTINUITY_VIA_EMAIL_SUB_TEXT": "Conversations will continue over email if the contact email address is available.",
       "ENABLE_CONTINUITY_VIA_EMAIL_DISABLED_TEXT": "This feature is available on a paid plan. Upgrade to enable conversation continuity via email.",
       "ENABLE_DEMO_MODE": "Demo page",
-      "ENABLE_DEMO_MODE_SUB_TEXT": "Publish a shareable page with this inbox's widget open, for showing the assistant to a client. Anyone with the link can start a conversation.",
+      "ENABLE_DEMO_MODE_SUB_TEXT": "Publish a shareable page with this channel's widget open, for showing the assistant to a client. Anyone with the link can start a conversation.",
       "DEMO_SLUG": "Demo link name",
       "DEMO_SLUG_HINT": "Filled in from the account name when you turn this on. Change it if you want a different link.",
       "DEMO_SLUG_PLACEHOLDER": "Generated from the account name",
       "DEMO_SLUG_ERROR": "Use lowercase letters, numbers and hyphens.",
       "LOCK_TO_SINGLE_CONVERSATION": "Conversation Routing",
       "LOCK_TO_SINGLE_CONVERSATION_SUB_TEXT": "Configure conversation creation for existing contacts",
-      "INBOX_UPDATE_TITLE": "Inbox Settings",
-      "INBOX_UPDATE_SUB_TEXT": "Update your inbox settings",
-      "AUTO_ASSIGNMENT_SUB_TEXT": "Enable or disable the automatic assignment of new conversations to the agents added to this inbox.",
+      "INBOX_UPDATE_TITLE": "Channel Settings",
+      "INBOX_UPDATE_SUB_TEXT": "Update your channel settings",
+      "AUTO_ASSIGNMENT_SUB_TEXT": "Enable or disable the automatic assignment of new conversations to the agents added to this channel.",
       "HMAC_VERIFICATION": "User Identity Validation",
       "HMAC_DESCRIPTION": "With this key you can generate a secret token that can be used to verify the identity of your users.",
       "HMAC_LINK_TO_DOCS": "You can read more here.",
       "HMAC_MANDATORY_VERIFICATION": "Enforce User Identity Validation",
       "HMAC_MANDATORY_DESCRIPTION": "If enabled, requests that cannot be verified will be rejected.",
-      "INBOX_IDENTIFIER": "Inbox Identifier",
+      "INBOX_IDENTIFIER": "Channel Identifier",
       "INBOX_IDENTIFIER_SUB_TEXT": "Use the `inbox_identifier` token shown here to authentication your API clients.",
       "FORWARD_EMAIL_TITLE": "Forward to Email",
       "FORWARD_EMAIL_SUB_TEXT": "Start forwarding your emails to the following email address.",
-      "FORWARD_EMAIL_NOT_CONFIGURED": "Forwarding emails to your inbox is currently disabled on this installation. To use this feature, it must be enabled by your administrator. Please get in touch with them to proceed.",
+      "FORWARD_EMAIL_NOT_CONFIGURED": "Forwarding emails to your channel is currently disabled on this installation. To use this feature, it must be enabled by your administrator. Please get in touch with them to proceed.",
       "ALLOW_MESSAGES_AFTER_RESOLVED": "Allow messages after conversation resolved",
       "ALLOW_MESSAGES_AFTER_RESOLVED_SUB_TEXT": "Allow the end-users to send messages even after the conversation is resolved.",
       "WHATSAPP_SECTION_SUBHEADER": "This API Key is used for the integration with the WhatsApp APIs.",
@@ -1207,21 +1207,21 @@
       "WHATSAPP_BUSINESS_MANAGEMENT_TOKEN_UPDATE_ERROR": "Could not update the business management token. Verify its WhatsApp Business Management permission and account access, then try again.",
       "WHATSAPP_BUSINESS_MANAGEMENT_TOKEN_GUIDE_LINK": "Learn how to generate a WhatsApp Business Management token",
       "WHATSAPP_EMBEDDED_SIGNUP_TITLE": "WhatsApp Embedded Signup",
-      "WHATSAPP_EMBEDDED_SIGNUP_SUBHEADER": "This inbox is connected through WhatsApp embedded signup.",
-      "WHATSAPP_EMBEDDED_SIGNUP_DESCRIPTION": "You can reconfigure this inbox to update your WhatsApp Business settings.",
+      "WHATSAPP_EMBEDDED_SIGNUP_SUBHEADER": "This channel is connected through WhatsApp embedded signup.",
+      "WHATSAPP_EMBEDDED_SIGNUP_DESCRIPTION": "You can reconfigure this channel to update your WhatsApp Business settings.",
       "WHATSAPP_RECONFIGURE_BUTTON": "Reconfigure",
       "WHATSAPP_MANUAL_TRANSFER_TITLE": "Switch to Manual Setup",
-      "WHATSAPP_MANUAL_TRANSFER_SUBHEADER": "This inbox was connected through WhatsApp embedded signup, which is no longer supported. Enter the WhatsApp Cloud API credentials from your own Meta app to switch this inbox to a manual setup. Configure the webhook in your Meta app using the verification token above before switching.",
+      "WHATSAPP_MANUAL_TRANSFER_SUBHEADER": "This channel was connected through WhatsApp embedded signup, which is no longer supported. Enter the WhatsApp Cloud API credentials from your own Meta app to switch this channel to a manual setup. Configure the webhook in your Meta app using the verification token above before switching.",
       "WHATSAPP_MANUAL_TRANSFER_PHONE_NUMBER_ID_LABEL": "Phone Number ID",
       "WHATSAPP_MANUAL_TRANSFER_BUSINESS_ACCOUNT_ID_LABEL": "Business Account ID",
       "WHATSAPP_MANUAL_TRANSFER_API_KEY_LABEL": "API Key",
       "WHATSAPP_MANUAL_TRANSFER_API_KEY_PLACEHOLDER": "Enter a permanent access token from your Meta app",
       "WHATSAPP_MANUAL_TRANSFER_BUTTON": "Switch to Manual Setup",
-      "WHATSAPP_MANUAL_TRANSFER_SUCCESS": "Inbox switched to manual setup successfully.",
+      "WHATSAPP_MANUAL_TRANSFER_SUCCESS": "Channel switched to manual setup successfully.",
       "WHATSAPP_MANUAL_TRANSFER_ERROR": "Could not switch to manual setup. Please verify the credentials and try again.",
       "WHATSAPP_CONNECT_TITLE": "Connect to WhatsApp Business",
       "WHATSAPP_CONNECT_SUBHEADER": "Upgrade to WhatsApp embedded signup for easier management.",
-      "WHATSAPP_CONNECT_DESCRIPTION": "Connect this inbox to WhatsApp Business for enhanced features and easier management.",
+      "WHATSAPP_CONNECT_DESCRIPTION": "Connect this channel to WhatsApp Business for enhanced features and easier management.",
       "WHATSAPP_CONNECT_BUTTON": "Connect",
       "WHATSAPP_CONNECT_SUCCESS": "Successfully connected to WhatsApp Business!",
       "WHATSAPP_CONNECT_ERROR": "Failed to connect to WhatsApp Business. Please try again.",
@@ -1239,19 +1239,19 @@
       "WHATSAPP_MANUAL_MIGRATION": {
         "BANNER": {
           "TITLE": "Manual setup recommended",
-          "DESCRIPTION": "This inbox connects through the shared Meta app used for embedded signup, which recent Meta restrictions have affected. To avoid similar issues in the future, we recommend reconnecting it with your own Meta app.",
+          "DESCRIPTION": "This channel connects through the shared Meta app used for embedded signup, which recent Meta restrictions have affected. To avoid similar issues in the future, we recommend reconnecting it with your own Meta app.",
           "START": "Start manual migration",
           "GUIDE": "View guide"
         },
         "DIALOG": {
           "EYEBROW": "WhatsApp manual migration",
-          "TITLE": "Reconnect WhatsApp inbox",
+          "TITLE": "Reconnect WhatsApp channel",
           "CLOSE": "Close",
           "ACTION_REQUIRED_TITLE": "Reconnect with your own Meta app",
-          "ACTION_REQUIRED_DESCRIPTION": "Inboxes connected through your own Meta app are not affected by restrictions on the shared embedded signup app. This guided flow updates the WhatsApp API connection without creating a new inbox.",
+          "ACTION_REQUIRED_DESCRIPTION": "Channels connected through your own Meta app are not affected by restrictions on the shared embedded signup app. This guided flow updates the WhatsApp API connection without creating a new channel.",
           "GUIDE_LINK": "Open the manual setup guide",
           "PRESERVED_TITLE": "Preserved",
-          "PRESERVED_DESCRIPTION": "Conversations, contacts, collaborators, routing, business hours, and inbox settings.",
+          "PRESERVED_DESCRIPTION": "Conversations, contacts, collaborators, routing, business hours, and channel settings.",
           "UPDATED_TITLE": "Updated",
           "UPDATED_DESCRIPTION": "WABA ID, phone number ID, access token, and webhook configuration.",
           "WABA_ID": "WABA ID",
@@ -1259,7 +1259,7 @@
           "WABA_HELP": "The WhatsApp Business Account that owns this phone number.",
           "PHONE_NUMBER_ID": "Phone Number ID",
           "PHONE_NUMBER_PLACEHOLDER": "Enter Phone Number ID",
-          "PHONE_NUMBER_HELP": "Meta's unique ID for the WhatsApp number connected to this inbox.",
+          "PHONE_NUMBER_HELP": "Meta's unique ID for the WhatsApp number connected to this channel.",
           "DISPLAY_PHONE_NUMBER": "Display phone number",
           "DISPLAY_PHONE_NUMBER_PLACEHOLDER": "Enter display phone number",
           "DISPLAY_PHONE_NUMBER_HELP": "The customer-facing WhatsApp number. This cannot be changed during migration.",
@@ -1271,7 +1271,7 @@
           "MESSAGING_PERMISSION": "whatsapp_business_messaging.",
           "MANAGEMENT_PERMISSION": "whatsapp_business_management",
           "REVIEW_TITLE": "Review before reconnecting",
-          "INBOX": "Inbox",
+          "INBOX": "Channel",
           "PHONE_NUMBER": "Phone number",
           "NOT_ENTERED": "Not entered",
           "VERIFY_NOTICE": "Chatwoot will verify these credentials with Meta before applying any changes. If verification fails, the current configuration is left untouched.",
@@ -1279,12 +1279,12 @@
           "CANCEL": "Cancel",
           "CONTINUE": "Continue",
           "REVIEW_MIGRATION": "Review migration",
-          "RECONNECT": "Reconnect WhatsApp inbox"
+          "RECONNECT": "Reconnect WhatsApp channel"
         },
         "STEPS": {
           "BEFORE_YOU_START": {
             "TITLE": "Before you start",
-            "DESCRIPTION": "This reconnects the WhatsApp API details for this inbox. Conversations, collaborators, routing, business hours, CSAT, and bot settings will be preserved."
+            "DESCRIPTION": "This reconnects the WhatsApp API details for this channel. Conversations, collaborators, routing, business hours, CSAT, and bot settings will be preserved."
           },
           "BUSINESS_DETAILS": {
             "TITLE": "Business details",
@@ -1296,13 +1296,13 @@
           },
           "REVIEW_MIGRATION": {
             "TITLE": "Review migration",
-            "DESCRIPTION": "Confirm the connection details before reconnecting this inbox. Chatwoot will verify the token, WABA, and phone number with Meta before applying changes."
+            "DESCRIPTION": "Confirm the connection details before reconnecting this channel. Chatwoot will verify the token, WABA, and phone number with Meta before applying changes."
           }
         }
       },
       "WHATSAPP_CALLING_ENABLED": {
         "LABEL": "Enable voice calling",
-        "DESCRIPTION": "Allow agents to start and receive WhatsApp voice calls on this inbox. Available only on embedded-signup WhatsApp Cloud channels with calling permission granted by Meta."
+        "DESCRIPTION": "Allow agents to start and receive WhatsApp voice calls on this channel. Available only on embedded-signup WhatsApp Cloud channels with calling permission granted by Meta."
       },
       "UPDATE_PRE_CHAT_FORM_SETTINGS": "Update Pre Chat Form Settings"
     },
@@ -1312,12 +1312,12 @@
       "SELECT_PLACEHOLDER": "Select Help Center",
       "NONE": "None",
       "REMOVE": "Remove Help Center",
-      "SUB_TEXT": "Attach a Help Center with the inbox"
+      "SUB_TEXT": "Attach a Help Center with the channel"
     },
     "AUTO_ASSIGNMENT": {
       "MAX_ASSIGNMENT_LIMIT": "Auto assignment limit",
       "MAX_ASSIGNMENT_LIMIT_RANGE_ERROR": "Please enter a value greater than 0",
-      "MAX_ASSIGNMENT_LIMIT_SUB_TEXT": "Limit the maximum number of conversations from this inbox that can be auto assigned to an agent"
+      "MAX_ASSIGNMENT_LIMIT_SUB_TEXT": "Limit the maximum number of conversations from this channel that can be auto assigned to an agent"
     },
     "ASSIGNMENT": {
       "TITLE": "Conversation Assignment",
@@ -1328,7 +1328,7 @@
       "DEFAULT_RULE_1": "Earliest created conversations first",
       "DEFAULT_RULE_2": "Round robin distribution",
       "CUSTOMIZE_WITH_POLICY": "Customize with assignment policy",
-      "USING_POLICY": "Using custom assignment policy for this inbox",
+      "USING_POLICY": "Using custom assignment policy for this channel",
       "CUSTOMIZE_POLICY": "Customize with assignment policy",
       "DELETE_POLICY": "Delete policy",
       "POLICY_LABEL": "Assignment policy",
@@ -1349,7 +1349,7 @@
       "UPGRADE_PROMPT": "Custom assignment policies are available on the Business plan",
       "UPGRADE_TO_BUSINESS": "Upgrade to Business",
       "DEFAULT_POLICY_LINKED": "Default policy linked",
-      "DEFAULT_POLICY_DESCRIPTION": "Link a custom assignment policy to customize how conversations are assigned to agents in this inbox.",
+      "DEFAULT_POLICY_DESCRIPTION": "Link a custom assignment policy to customize how conversations are assigned to agents in this channel.",
       "LINK_EXISTING_POLICY": "Link existing policy",
       "CREATE_NEW_POLICY": "Create new policy",
       "NO_POLICIES": "No assignment policies found",
@@ -1360,7 +1360,7 @@
     },
     "ASSIGNMENT_POLICY": {
       "DELETE_CONFIRM_TITLE": "Delete assignment policy?",
-      "DELETE_CONFIRM_MESSAGE": "Are you sure you want to remove this assignment policy from this inbox? The inbox will revert to default assignment rules.",
+      "DELETE_CONFIRM_MESSAGE": "Are you sure you want to remove this assignment policy from this channel? The channel will revert to default assignment rules.",
       "CANCEL": "Cancel",
       "CONFIRM_DELETE": "Delete",
       "DELETE_SUCCESS": "Assignment policy removed successfully",
@@ -1399,8 +1399,8 @@
       }
     },
     "CSAT": {
-      "TITLE": "Enable CSAT",
-      "SUBTITLE": "Automatically trigger CSAT surveys at the end of conversations to understand how customers feel about their support experience. Track satisfaction trends and identify areas for improvement over time.",
+      "TITLE": "Enable customer ratings",
+      "SUBTITLE": "Automatically trigger customer rating surveys at the end of conversations to understand how customers feel about their support experience. Track satisfaction trends and identify areas for improvement over time.",
       "DISPLAY_TYPE": {
         "LABEL": "Display type"
       },
@@ -1439,7 +1439,7 @@
       },
       "UTILITY_ANALYZER": {
         "ACTION": "Check utility fit",
-        "HELPER_NOTE": "Check this message before submission to improve Utility fit. The system creates a dedicated CSAT template with buttons for reporting and submits it as Utility; Meta may still reclassify it as Marketing based on content.",
+        "HELPER_NOTE": "Check this message before submission to improve Utility fit. The system creates a dedicated customer rating template with buttons for reporting and submits it as Utility; Meta may still reclassify it as Marketing based on content.",
         "RESULT_LABEL": "Meta category prediction",
         "GUIDANCE_NOTE": "This is a guidance check, not a guarantee of Meta approval.",
         "SUGGESTION_LABEL": "Suggested utility-safe rewrite",
@@ -1461,11 +1461,11 @@
         },
         "SELECT_PLACEHOLDER": "select labels"
       },
-      "NOTE": "Note: CSAT surveys are sent only once per conversation",
-      "WHATSAPP_NOTE": "Note: When you save, the system creates a dedicated CSAT template in WhatsApp (used to capture rating and feedback in reports) and submits it as Utility for approval. Meta may still classify it as Marketing based on content. After approval, surveys are sent only once per conversation as per the survey rule.",
+      "NOTE": "Note: customer rating surveys are sent only once per conversation",
+      "WHATSAPP_NOTE": "Note: When you save, the system creates a dedicated customer rating template in WhatsApp (used to capture rating and feedback in reports) and submits it as Utility for approval. Meta may still classify it as Marketing based on content. After approval, surveys are sent only once per conversation as per the survey rule.",
       "API": {
-        "SUCCESS_MESSAGE": "CSAT settings updated successfully",
-        "ERROR_MESSAGE": "We couldn't update CSAT settings. Please try again later."
+        "SUCCESS_MESSAGE": "customer rating settings updated successfully",
+        "ERROR_MESSAGE": "We couldn't update customer rating settings. Please try again later."
       }
     },
     "BUSINESS_HOURS": {
@@ -1474,7 +1474,7 @@
       "WEEKLY_TITLE": "Set your weekly hours",
       "TIMEZONE_LABEL": "Select timezone",
       "UPDATE": "Update business hours settings",
-      "TOGGLE_AVAILABILITY": "Enable business availability for this inbox",
+      "TOGGLE_AVAILABILITY": "Enable business availability for this channel",
       "UNAVAILABLE_MESSAGE_LABEL": "Unavailable message for visitors",
       "TOGGLE_HELP": "Enabling business availability will show the available hours on live chat widget even if all the agents are offline. Outside available hours visitors can be warned with a message and a pre-chat form.",
       "DAY": {
@@ -1493,7 +1493,7 @@
       "SUBTITLE": "Set your IMAP details",
       "NOTE_TEXT": "Configure IMAP to receive emails directly from your mailbox. Leave it disabled if you use email forwarding.",
       "UPDATE": "Update IMAP settings",
-      "TOGGLE_AVAILABILITY": "Enable IMAP configuration for this inbox",
+      "TOGGLE_AVAILABILITY": "Enable IMAP configuration for this channel",
       "TOGGLE_HELP": "Enabling IMAP will help the user to receive email",
       "EDIT": {
         "SUCCESS_MESSAGE": "IMAP settings updated successfully",
@@ -1526,7 +1526,7 @@
       "TITLE": "SMTP",
       "SUBTITLE": "Set your SMTP details",
       "UPDATE": "Update SMTP settings",
-      "TOGGLE_AVAILABILITY": "Enable SMTP configuration for this inbox",
+      "TOGGLE_AVAILABILITY": "Enable SMTP configuration for this channel",
       "TOGGLE_HELP": "Enabling SMTP will help the user to send email",
       "EDIT": {
         "SUCCESS_MESSAGE": "SMTP settings updated successfully",

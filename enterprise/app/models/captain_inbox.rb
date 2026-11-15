@@ -19,4 +19,12 @@ class CaptainInbox < ApplicationRecord
   belongs_to :inbox
 
   validates :inbox_id, uniqueness: true
+
+  after_commit :expire_inbox_cache
+
+  private
+
+  def expire_inbox_cache
+    inbox.update_account_cache
+  end
 end

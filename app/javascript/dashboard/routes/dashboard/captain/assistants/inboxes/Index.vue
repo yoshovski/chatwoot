@@ -1,116 +1,88 @@
 <script setup>
-import { computed, watch, ref, nextTick } from 'vue';
-import { useMapGetter, useStore } from 'dashboard/composables/store';
-import { useRoute } from 'vue-router';
-import { FEATURE_FLAGS } from 'dashboard/featureFlags';
-import { useAssistantSettings } from 'dashboard/routes/dashboard/captain/assistants/settings/useAssistantSettings';
+import { onMounted, ref } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
+import { useAdmin } from 'dashboard/composables/useAdmin';
+import CaptainInboxesAPI from 'dashboard/api/captain/inboxes';
+import PageHeader from 'next/kit/PageHeader.vue';
+import SectionCard from 'next/kit/SectionCard.vue';
+import EmptyState from 'next/kit/EmptyState.vue';
+import Button from 'next/button/Button.vue';
+import ChannelIcon from 'next/icon/ChannelIcon.vue';
 
-import DeleteDialog from 'dashboard/components-next/captain/pageComponents/DeleteDialog.vue';
-import PageLayout from 'dashboard/components-next/captain/PageLayout.vue';
-import ConnectInboxPanel from 'dashboard/components-next/captain/pageComponents/inbox/ConnectInboxPanel.vue';
-import InboxCard from 'dashboard/components-next/captain/assistant/InboxCard.vue';
-import InboxPageEmptyState from 'dashboard/components-next/captain/pageComponents/emptyStates/InboxPageEmptyState.vue';
-
-const store = useStore();
 const route = useRoute();
-const isConnectPanelOpen = ref(false);
-
-const assistantId = computed(() => Number(route.params.assistantId));
-const { assistant } = useAssistantSettings();
-
-const assistantUiFlags = useMapGetter('captainAssistants/getUIFlags');
-const uiFlags = useMapGetter('captainInboxes/getUIFlags');
-const isFetchingAssistant = computed(() => assistantUiFlags.value.fetchingItem);
-const isFetching = computed(() => uiFlags.value.fetchingList);
-
-const captainInboxes = useMapGetter('captainInboxes/getRecords');
-
-const selectedInbox = ref(null);
-const disconnectInboxDialog = ref(null);
-
-const handleDelete = () => {
-  disconnectInboxDialog.value?.dialogRef.open();
+const router = useRouter();
+const { t } = useI18n();
+const { isAdmin } = useAdmin();
+const inboxes = ref([]);
+const loading = ref(true);
+const error = ref(false);
+const load = async () => {
+  loading.value = true;
+  error.value = false;
+  try {
+    const { data } = await CaptainInboxesAPI.get({
+      assistantId: Number(route.params.assistantId),
+    });
+    inboxes.value = data.payload;
+  } catch {
+    error.value = true;
+  } finally {
+    loading.value = false;
+  }
 };
-
-const handleCreate = () => {
-  isConnectPanelOpen.value = true;
-};
-
-const handleAction = ({ action, id }) => {
-  selectedInbox.value = captainInboxes.value.find(inbox => id === inbox.id);
-  nextTick(() => {
-    if (action === 'delete') {
-      handleDelete();
-    }
-  });
-};
-
-watch(
-  assistantId,
-  newId => {
-    if (newId) {
-      store.dispatch('captainInboxes/get', {
-        assistantId: newId,
-      });
-      store.dispatch('inboxes/get');
-    }
-  },
-  { immediate: true }
-);
+onMounted(load);
 </script>
 
 <template>
-  <PageLayout
-    :header-title="$t('CAPTAIN.AGENT_UX.SECTIONS.CHANNELS')"
-    :button-label="$t('CAPTAIN.INBOXES.ADD_NEW')"
-    :button-policy="['administrator']"
-    :is-fetching="isFetchingAssistant || isFetching"
-    :is-empty="!captainInboxes.length"
-    :show-pagination-footer="false"
-    :show-know-more="false"
-    :feature-flag="FEATURE_FLAGS.CAPTAIN"
-    @click="handleCreate"
-  >
-    <template #subHeader>
-      <p class="mt-1 text-sm text-n-slate-11">
-        {{ $t('CAPTAIN.INBOXES.SUBHEADER') }}
-      </p>
-    </template>
-
-    <template #emptyState>
-      <InboxPageEmptyState @click="handleCreate" />
-    </template>
-
-    <template #body>
-      <div class="flex flex-col gap-4">
-        <InboxCard
-          v-for="captainInbox in captainInboxes"
-          :id="captainInbox.id"
-          :key="captainInbox.id"
-          :inbox="captainInbox"
-          :assistant="assistant"
-          @action="handleAction"
+  <section class="flex w-full min-w-0 flex-col gap-5">
+    <PageHeader
+      :title="t('CHANNELS.TITLE')"
+      :description="t('CHANNELS.AGENT_CHANNELS_HELP')"
+    >
+      <template v-if="isAdmin" #action>
+        <Button
+          :label="t('CHANNELS.MANAGE_ALL')"
+          size="sm"
+          @click="router.push({ name: 'settings_inbox_list' })"
         />
-      </div>
-    </template>
-
-    <DeleteDialog
-      v-if="selectedInbox"
-      ref="disconnectInboxDialog"
-      :entity="selectedInbox"
-      :delete-payload="{
-        assistantId: assistantId,
-        inboxId: selectedInbox.id,
-      }"
-      type="Inboxes"
-      translation-key="INBOXES"
-      @delete-success="selectedInbox = null"
+      </template>
+    </PageHeader>
+    <p v-if="loading" class="m-0 py-8 text-sm text-n-slate-11" role="status">
+      {{ t('CHANNELS.LOADING') }}
+    </p>
+    <EmptyState
+      v-else-if="error"
+      :title="t('CHANNELS.LOAD_ERROR')"
+      tone="error"
+    >
+      <Button :label="t('CHANNELS.RETRY')" size="sm" @click="load" />
+    </EmptyState>
+    <EmptyState
+      v-else-if="!inboxes.length"
+      :title="t('CHANNELS.NO_CONNECTED')"
+      :description="t('CHANNELS.AGENT_CHANNELS_HELP')"
     />
-
-    <ConnectInboxPanel
-      v-model:open="isConnectPanelOpen"
-      :assistant-id="assistantId"
-      :assistant-name="assistant?.name"
-    />
-  </PageLayout>
+    <div v-else class="grid gap-4 md:grid-cols-2">
+      <SectionCard v-for="inbox in inboxes" :key="inbox.id">
+        <div class="flex items-center gap-3">
+          <ChannelIcon :inbox="inbox" class="size-6 text-n-blue-11" />
+          <h2 class="m-0 text-base font-semibold text-n-slate-12">
+            {{ inbox.name }}
+          </h2>
+        </div>
+        <router-link
+          v-if="isAdmin"
+          :to="{ name: 'settings_inbox_show', params: { inboxId: inbox.id } }"
+        >
+          <Button
+            :label="t('CHANNELS.MANAGE')"
+            size="sm"
+            color="slate"
+            variant="faded"
+          />
+        </router-link>
+      </SectionCard>
+    </div>
+  </section>
 </template>

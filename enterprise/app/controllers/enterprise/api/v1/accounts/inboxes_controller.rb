@@ -1,9 +1,12 @@
 module Enterprise::Api::V1::Accounts::InboxesController
   extend ActiveSupport::Concern
 
-  def inbox_attributes
-    super + ee_inbox_attributes
+  def index
+    super
+    @inboxes = @inboxes.includes(:captain_assistant)
   end
+
+  def inbox_attributes = super + ee_inbox_attributes
 
   def enable_whatsapp_calling
     return unless ensure_whatsapp_calling_supported
@@ -57,9 +60,7 @@ module Enterprise::Api::V1::Accounts::InboxesController
     render_could_not_create_error(e.message)
   end
 
-  def ee_inbox_attributes
-    [auto_assignment_config: [:max_assignment_limit]]
-  end
+  def ee_inbox_attributes = [auto_assignment_config: [:max_assignment_limit]]
 
   private
 

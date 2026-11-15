@@ -28,7 +28,7 @@ import VoiceConfigurationPage from './settingsPage/VoiceConfigurationPage.vue';
 import WhatsappCallingPage from './settingsPage/WhatsappCallingPage.vue';
 import CustomerSatisfactionPage from './settingsPage/CustomerSatisfactionPage.vue';
 import CollaboratorsPage from './settingsPage/CollaboratorsPage.vue';
-import BotConfiguration from './components/BotConfiguration.vue';
+import ChannelAgentConnection from 'next/Channels/ChannelAgentConnection.vue';
 import AccountHealth from './components/AccountHealth.vue';
 import TwilioHealth from './components/TwilioHealth.vue';
 import WhatsappManualMigrationDialog from './components/WhatsappManualMigrationDialog.vue';
@@ -51,7 +51,7 @@ import { META_RESTRICTION_STATUS_URL } from 'dashboard/constants/globals';
 export default {
   components: {
     Banner,
-    BotConfiguration,
+    ChannelAgentConnection,
     CollaboratorsPage,
     ConfigurationPage,
     VoiceConfigurationPage,
@@ -86,6 +86,11 @@ export default {
     Icon,
   },
   mixins: [inboxMixin],
+  props: {
+    embedded: { type: Boolean, default: false },
+    section: { type: String, default: 'inbox-settings' },
+  },
+  emits: ['healthUpdated'],
   setup() {
     return { v$: useVuelidate() };
   },
@@ -119,6 +124,7 @@ export default {
       portals: 'portals/allPortals',
     }),
     selectedTabKey() {
+      if (this.embedded) return this.section;
       return this.tabs[this.selectedTabIndex]?.key;
     },
     // AccountHealth renders the structured provider error; TwilioHealth only needs the message.
@@ -194,13 +200,13 @@ export default {
       }
 
       if (
-        this.isFeatureEnabledonAccount(this.accountId, FEATURE_FLAGS.AGENT_BOTS)
+        this.isFeatureEnabledonAccount(this.accountId, FEATURE_FLAGS.CAPTAIN)
       ) {
         visibleToAllChannelTabs = [
           ...visibleToAllChannelTabs,
           {
-            key: 'bot-configuration',
-            name: this.$t('INBOX_MGMT.TABS.BOT_CONFIGURATION'),
+            key: 'ai-agent',
+            name: this.$t('CHANNELS.AI_AGENT'),
           },
         ];
       }
@@ -275,11 +281,7 @@ export default {
       return getInboxIconByType(type, medium, 'line', voiceEnabled);
     },
     bannerMaxWidth() {
-      const narrowTabs = [
-        'collaborators',
-        'bot-configuration',
-        'configuration',
-      ];
+      const narrowTabs = ['collaborators', 'ai-agent', 'configuration'];
       if (narrowTabs.includes(this.selectedTabKey)) return 'max-w-4xl';
       if (this.selectedTabKey === 'inbox-settings') {
         return this.isAWebWidgetInbox ? 'max-w-7xl' : 'max-w-4xl';
@@ -511,7 +513,8 @@ export default {
         : '';
     },
     async fetchHealthData() {
-      if (!this.inbox) return;
+      if (!this.inbox || (this.embedded && this.section !== 'configuration'))
+        return;
 
       if (!this.isAWhatsAppCloudChannel && !this.shouldShowTwilioHealth) {
         return;
@@ -533,6 +536,10 @@ export default {
               };
       } finally {
         this.isLoadingHealth = false;
+        this.$emit('healthUpdated', {
+          data: this.healthData,
+          error: this.healthError,
+        });
       }
     },
     goToWhatsAppConfiguration() {
@@ -571,7 +578,7 @@ export default {
       if (!tab) return;
 
       const { accountId, inboxId } = this.$route.params;
-      const baseUrl = `/app/accounts/${accountId}/settings/inboxes/${inboxId}`;
+      const baseUrl = `/app/accounts/${accountId}/channels/${inboxId}`;
 
       // Append the tab key only if it's not the default.
       const newUrl =
@@ -585,7 +592,8 @@ export default {
         this.selectedTabIndex = 0;
         return;
       }
-      const tabIndex = this.tabs.findIndex(tab => tab.key === tabParam);
+      const key = tabParam === 'bot-configuration' ? 'ai-agent' : tabParam;
+      const tabIndex = this.tabs.findIndex(tab => tab.key === key);
       this.selectedTabIndex = tabIndex === -1 ? 0 : tabIndex;
     },
     openTab(tabKey) {
@@ -676,9 +684,15 @@ export default {
   </div>
   <div
     v-else
-    class="grid grid-rows-[auto_1fr] grid-cols-[minmax(0,1fr)] h-full flex-grow flex-shrink pr-0 pl-0 w-full min-w-0 settings"
+    class="grid grid-cols-[minmax(0,1fr)] w-full min-w-0 settings"
+    :class="
+      embedded
+        ? '[&_.mx-6]:!mx-0'
+        : 'grid-rows-[auto_1fr] h-full flex-grow flex-shrink'
+    "
   >
     <SettingIntroBanner
+      v-if="!embedded"
       :header-image="inbox.avatarUrl"
       :header-title="inboxName"
       :header-identifier="inboxIdentifier"
@@ -699,81 +713,82 @@ export default {
         />
       </woot-tabs>
     </SettingIntroBanner>
-    <section class="w-full overflow-auto py-8">
+    <section class="w-full" :class="{ 'overflow-auto py-8': !embedded }">
       <div class="max-w-7xl mx-auto w-full">
-        <MicrosoftReauthorize
-          v-if="microsoftUnauthorized"
-          :inbox="inbox"
-          class="mb-4"
-          :class="bannerMaxWidth"
-        />
-        <FacebookReauthorize
-          v-if="facebookUnauthorized"
-          :inbox="inbox"
-          class="mb-4"
-          :class="bannerMaxWidth"
-        />
-        <GoogleReauthorize
-          v-if="googleUnauthorized"
-          :inbox="inbox"
-          class="mb-4"
-          :class="bannerMaxWidth"
-        />
-        <InstagramReauthorize
-          v-if="instagramUnauthorized"
-          :inbox="inbox"
-          class="mb-4"
-          :class="bannerMaxWidth"
-        />
-        <TiktokReauthorize
-          v-if="tiktokUnauthorized"
-          :inbox="inbox"
-          class="mb-4"
-          :class="bannerMaxWidth"
-        />
-        <WhatsappReauthorize
-          v-if="whatsappUnauthorized"
-          :whatsapp-registration-incomplete="whatsappRegistrationIncomplete"
-          :inbox="inbox"
-          class="mb-4"
-          :class="bannerMaxWidth"
-        />
-        <DuplicateInboxBanner
-          v-if="hasDuplicateInstagramInbox"
-          :content="$t('INBOX_MGMT.ADD.INSTAGRAM.DUPLICATE_INBOX_BANNER')"
-          class="mx-6 mb-4"
-          :class="bannerMaxWidth"
-        />
-        <Banner
-          v-if="showInstagramRestrictionSettingsBanner"
-          color="amber"
-          class="mx-6 mb-4 max-w-4xl"
-        >
-          <div class="flex items-start gap-3 text-start">
-            <Icon
-              icon="i-lucide-triangle-alert"
-              class="flex-shrink-0 size-4 mt-0.5"
-            />
-            <span>
-              {{ $t('INBOX_MGMT.ADD.INSTAGRAM.SETTINGS_RESTRICTED_WARNING') }}
-              <a
-                :href="metaRestrictionStatusUrl"
-                class="link underline"
-                rel="noopener noreferrer nofollow"
-                target="_blank"
-              >
-                {{ $t('INBOX_MGMT.ADD.INSTAGRAM.STATUS_LINK') }}
-              </a>
-            </span>
-          </div>
-        </Banner>
-        <WhatsappManualMigrationBanner
-          v-if="showWhatsAppManualMigration"
-          class="mx-6 mb-6"
-          :class="bannerMaxWidth"
-          @start="openWhatsAppManualMigrationDialog"
-        />
-
+        <template v-if="!embedded || section === 'configuration'">
+          <MicrosoftReauthorize
+            v-if="microsoftUnauthorized"
+            :inbox="inbox"
+            class="mb-4"
+            :class="bannerMaxWidth"
+          />
+          <FacebookReauthorize
+            v-if="facebookUnauthorized"
+            :inbox="inbox"
+            class="mb-4"
+            :class="bannerMaxWidth"
+          />
+          <GoogleReauthorize
+            v-if="googleUnauthorized"
+            :inbox="inbox"
+            class="mb-4"
+            :class="bannerMaxWidth"
+          />
+          <InstagramReauthorize
+            v-if="instagramUnauthorized"
+            :inbox="inbox"
+            class="mb-4"
+            :class="bannerMaxWidth"
+          />
+          <TiktokReauthorize
+            v-if="tiktokUnauthorized"
+            :inbox="inbox"
+            class="mb-4"
+            :class="bannerMaxWidth"
+          />
+          <WhatsappReauthorize
+            v-if="whatsappUnauthorized"
+            :whatsapp-registration-incomplete="whatsappRegistrationIncomplete"
+            :inbox="inbox"
+            class="mb-4"
+            :class="bannerMaxWidth"
+          />
+          <DuplicateInboxBanner
+            v-if="hasDuplicateInstagramInbox"
+            :content="$t('INBOX_MGMT.ADD.INSTAGRAM.DUPLICATE_INBOX_BANNER')"
+            class="mx-6 mb-4"
+            :class="bannerMaxWidth"
+          />
+          <Banner
+            v-if="showInstagramRestrictionSettingsBanner"
+            color="amber"
+            class="mx-6 mb-4 max-w-4xl"
+          >
+            <div class="flex items-start gap-3 text-start">
+              <Icon
+                icon="i-lucide-triangle-alert"
+                class="flex-shrink-0 size-4 mt-0.5"
+              />
+              <span>
+                {{ $t('INBOX_MGMT.ADD.INSTAGRAM.SETTINGS_RESTRICTED_WARNING') }}
+                <a
+                  :href="metaRestrictionStatusUrl"
+                  class="link underline"
+                  rel="noopener noreferrer nofollow"
+                  target="_blank"
+                >
+                  {{ $t('INBOX_MGMT.ADD.INSTAGRAM.STATUS_LINK') }}
+                </a>
+              </span>
+            </div>
+          </Banner>
+          <WhatsappManualMigrationBanner
+            v-if="showWhatsAppManualMigration"
+            class="mx-6 mb-6"
+            :class="bannerMaxWidth"
+            @start="openWhatsAppManualMigrationDialog"
+          />
+        </template>
         <!-- Kept mounted on other tabs so unsaved widget edits survive a tab switch. -->
         <WidgetSettings
           v-if="isAWebWidgetInbox"
@@ -1016,7 +1031,16 @@ export default {
           <CollaboratorsPage :inbox="inbox" />
         </div>
         <div v-if="selectedTabKey === 'configuration'" class="mx-6 max-w-4xl">
-          <ConfigurationPage :inbox="inbox" />
+          <p
+            v-if="embedded && isAnEmailChannel && inbox.provider"
+            class="text-sm text-n-slate-11"
+          >
+            {{ $t('CHANNELS.OAUTH_EMAIL', { provider: inbox.provider }) }}
+          </p>
+          <ConfigurationPage
+            v-if="!embedded || !isAnEmailChannel || !inbox.provider"
+            :inbox="inbox"
+          />
         </div>
         <div
           v-if="selectedTabKey === 'voice-configuration'"
@@ -1039,10 +1063,28 @@ export default {
         <div v-if="selectedTabKey === 'business-hours'">
           <WeeklyAvailability :inbox="inbox" />
         </div>
-        <div v-if="selectedTabKey === 'bot-configuration'">
-          <BotConfiguration :inbox="inbox" />
+        <div v-if="selectedTabKey === 'ai-agent'">
+          <ChannelAgentConnection :inbox="inbox" />
         </div>
-        <div v-if="selectedTabKey === 'whatsapp-health'">
+        <div
+          v-if="
+            selectedTabKey === 'whatsapp-health' ||
+            (embedded &&
+              section === 'configuration' &&
+              shouldShowWhatsAppConfiguration)
+          "
+        >
+          <NextButton
+            v-if="embedded"
+            class="mb-4"
+            :label="$t('CHANNELS.CHECK_CONNECTION')"
+            :is-loading="isLoadingHealth"
+            :disabled="isLoadingHealth"
+            size="sm"
+            color="slate"
+            variant="faded"
+            @click="fetchHealthData"
+          />
           <AccountHealth
             :health-data="healthData"
             :health-error="healthError"

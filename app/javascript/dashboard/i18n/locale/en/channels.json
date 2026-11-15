@@ -1,0 +1,63 @@
+{
+  "CHANNELS": {
+    "TITLE": "Channels",
+    "SUBTITLE": "See where customers reach you and keep every connection working.",
+    "ADD": "Add channel",
+    "SEARCH": "Search channels…",
+    "LOADING": "Loading channels…",
+    "LOAD_ERROR": "Channels could not be loaded. Try again.",
+    "RETRY": "Retry",
+    "EMPTY": "Connect your first channel",
+    "EMPTY_HELP": "Add a website, email or messaging channel to start talking with your customers.",
+    "NO_RESULTS": "No channels match your search.",
+    "NO_AGENT": "No AI agent",
+    "FIX": "Fix connection",
+    "MANAGE": "Manage channel",
+    "MANAGE_NAME": "Manage {name}",
+    "BACK": "All channels",
+    "NOT_FOUND": "This channel could not be found.",
+    "SETTINGS": "Channel settings",
+    "DELETE": "Delete channel",
+    "STATUS": {
+      "CONNECTED": "Connected",
+      "ATTENTION": "Needs attention",
+      "SETUP": "Not set up"
+    },
+    "HEALTH": {
+      "REAUTHORIZE": "The connection needs to be renewed. Open Connection to reconnect.",
+      "EMAIL_CONFIGURED": "Email connection configured. Send a test message to confirm delivery.",
+      "EMAIL_FORWARDING": "Email forwarding is available. Confirm forwarding with your email provider.",
+      "EMAIL_SETUP": "Set up email forwarding or connect an incoming mail server.",
+      "WHATSAPP_SETUP": "Finish connecting your WhatsApp account.",
+      "CHECK_FAILED": "Provider health could not be checked. Open Connection to retry.",
+      "WHATSAPP_RESTRICTED": "The last provider check reported an account or quality issue.",
+      "REGISTRATION": "WhatsApp registration is incomplete. Check the connection details.",
+      "WHATSAPP_CHECKED": "Connected at the last provider check. Open Connection for current details.",
+      "WHATSAPP_CONFIGURED": "WhatsApp credentials configured. Open Connection to check provider health.",
+      "CONFIGURED": "Channel configured. Check its settings to confirm delivery."
+    },
+    "GROUPS": {
+      "CONNECTION": "Connection",
+      "MESSAGES": "Look and messages",
+      "TEAM": "Team and hours"
+    },
+    "CUSTOMER_RATING": "Customer rating",
+    "TEAM": "Team members",
+    "HOURS": "Business hours",
+    "OAUTH_EMAIL": "Email is connected through {provider}. Renew the connection here if access expires.",
+    "AI_AGENT": "AI agent",
+    "AGENT_HELP": "Connect the AI agent that should reply on this channel. Disconnect the current agent before choosing another.",
+    "LOADING_AGENTS": "Loading AI agents…",
+    "AGENT_LOAD_ERROR": "AI agents could not be loaded. Try again.",
+    "AGENT_ERROR": "The AI agent connection could not be changed. Try again.",
+    "AGENT_SAVED": "AI agent connection updated.",
+    "SELECT_AGENT": "Select an AI agent",
+    "CONNECT": "Connect AI agent",
+    "DISCONNECT": "Disconnect AI agent",
+    "NO_AGENTS": "Create an AI agent to connect it to this channel.",
+    "AGENT_CHANNELS_HELP": "AI agent connections are managed on each channel’s Connection tab.",
+    "MANAGE_ALL": "Manage channels",
+    "NO_CONNECTED": "This AI agent has no connected channels.",
+    "CHECK_CONNECTION": "Check connection"
+  }
+}
