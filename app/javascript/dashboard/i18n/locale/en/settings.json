@@ -1209,5 +1209,126 @@
       "BY_HAND": "Written by hand",
       "FROM_CONVERSATION": "From conversations"
     }
+  },
+  "SETTINGS_HOME": {
+    "TITLE": "Settings",
+    "SUBTITLE": "Your team, replies, automation and account in one place.",
+    "SEARCH_PLACEHOLDER": "Search settings, e.g. \"add a teammate\" or \"password\"",
+    "NO_RESULTS": "No setting matches \"{query}\".",
+    "BACK": "Settings",
+    "SECTIONS": {
+      "TEAM": {
+        "TITLE": "Team",
+        "HINT": "Who answers, in which teams, with which rights."
+      },
+      "REPLIES": {
+        "TITLE": "Replies",
+        "HINT": "Saved replies, macros, labels and extra fields."
+      },
+      "AUTOMATION": {
+        "TITLE": "Automation",
+        "HINT": "Rules, assignment and reply-time targets."
+      },
+      "ACCOUNT": {
+        "TITLE": "Account",
+        "HINT": "Business details, your profile and security."
+      },
+      "INTEGRATIONS": {
+        "TITLE": "Integrations",
+        "HINT": "Connected apps, message templates and data."
+      }
+    },
+    "PAGES": {
+      "TEAMMATES": {
+        "LABEL": "Teammates",
+        "HINT": "Invite people and set their role.",
+        "KEYWORDS": "add a teammate invite agent member user people"
+      },
+      "TEAMS": {
+        "LABEL": "Teams",
+        "HINT": "Group teammates, e.g. Sales and Support.",
+        "KEYWORDS": "group department"
+      },
+      "ROLES": {
+        "LABEL": "Roles",
+        "HINT": "Decide what each role can see and do.",
+        "KEYWORDS": "permissions rights access custom role"
+      },
+      "CANNED": {
+        "LABEL": "Saved replies",
+        "HINT": "Answers you send often, with a shortcut.",
+        "KEYWORDS": "canned responses shortcut template answer"
+      },
+      "MACROS": {
+        "LABEL": "Macros",
+        "HINT": "Several actions with one click.",
+        "KEYWORDS": "actions shortcut"
+      },
+      "LABELS": {
+        "LABEL": "Labels",
+        "HINT": "Tag conversations and customers.",
+        "KEYWORDS": "tags tag"
+      },
+      "ATTRIBUTES": {
+        "LABEL": "Extra fields",
+        "HINT": "Your own fields on customers and conversations.",
+        "KEYWORDS": "custom attributes fields"
+      },
+      "RULES": {
+        "LABEL": "Rules",
+        "HINT": "When something happens, do this.",
+        "KEYWORDS": "automation rule trigger"
+      },
+      "ASSIGNMENT": {
+        "LABEL": "Assignment",
+        "HINT": "Who gets new conversations.",
+        "KEYWORDS": "assign round robin capacity policy"
+      },
+      "WORKFLOW": {
+        "LABEL": "Conversation flow",
+        "HINT": "Required fields before a conversation is closed.",
+        "KEYWORDS": "workflow resolve close"
+      },
+      "TARGETS": {
+        "LABEL": "Reply-time targets",
+        "HINT": "How fast your team should answer.",
+        "KEYWORDS": "sla response time target"
+      },
+      "ACCOUNT": {
+        "LABEL": "Business details",
+        "HINT": "Name, language and general options.",
+        "KEYWORDS": "account name language company general"
+      },
+      "PROFILE": {
+        "LABEL": "Your profile",
+        "HINT": "Your name, photo, signature and password.",
+        "KEYWORDS": "change my password photo avatar signature email notifications"
+      },
+      "SECURITY": {
+        "LABEL": "Security",
+        "HINT": "Sign-in options for your team.",
+        "KEYWORDS": "saml sso two factor login"
+      },
+      "AUDIT_LOG": {
+        "LABEL": "Activity log",
+        "HINT": "Who changed what, and when.",
+        "KEYWORDS": "audit logs history"
+      },
+      "APPS": {
+        "LABEL": "Connected apps",
+        "HINT": "Shopify, Slack, webhooks and more.",
+        "KEYWORDS": "integrations shopify slack webhook api"
+      },
+      "TEMPLATES": {
+        "LABEL": "Message templates",
+        "HINT": "Approved WhatsApp templates.",
+        "KEYWORDS": "whatsapp template"
+      },
+      "DATA": {
+        "LABEL": "Import and export",
+        "HINT": "Bring customers in or take them out.",
+        "KEYWORDS": "import export csv data"
+      }
+    }
   }
 }

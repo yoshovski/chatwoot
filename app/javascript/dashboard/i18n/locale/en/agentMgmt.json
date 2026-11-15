@@ -122,6 +122,28 @@
           "INPUT": "Search for agents"
         }
       }
+    },
+    "PAGE": {
+      "TITLE": "Teammates",
+      "SUBTITLE": "The people who answer your customers. Invite them by email and choose their role.",
+      "INVITE": "Invite teammate",
+      "SEARCH": "Search by name or email",
+      "COUNT": "{n} teammate | {n} teammates",
+      "COLUMNS": {
+        "NAME": "Name",
+        "ROLE": "Role",
+        "STATUS": "Status",
+        "ACTIONS": "Actions"
+      },
+      "ACTIVE": "Active",
+      "INVITED": "Invited",
+      "YOU": "You",
+      "LOADING": "Loading teammates…",
+      "LOAD_ERROR": "Teammates could not be loaded.",
+      "RETRY": "Try again",
+      "EMPTY_TITLE": "No teammates yet",
+      "EMPTY_DESCRIPTION": "Invite the people who answer your customers.",
+      "NO_RESULTS": "No teammate matches your search."
     }
   }
 }

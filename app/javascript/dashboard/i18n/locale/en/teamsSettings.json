@@ -119,6 +119,47 @@
         "LABEL": "Allow auto assign for this team."
       },
       "SUBMIT_CREATE": "Create team"
+    },
+    "PAGE": {
+      "TITLE": "Teams",
+      "SUBTITLE": "Group teammates, for example Sales and Support, and send conversations to the right group.",
+      "NEW": "New team",
+      "SEARCH": "Search teams",
+      "COUNT": "{n} team | {n} teams",
+      "COLUMNS": {
+        "NAME": "Team",
+        "ASSIGNMENT": "New conversations",
+        "ACTIONS": "Actions"
+      },
+      "AUTO_ASSIGN": "Assigned automatically",
+      "MANUAL_ASSIGN": "Picked by hand",
+      "LOADING": "Loading teams…",
+      "LOAD_ERROR": "Teams could not be loaded.",
+      "RETRY": "Try again",
+      "EMPTY_TITLE": "No teams yet",
+      "EMPTY_DESCRIPTION": "Create a team to send conversations to a group of teammates.",
+      "NO_RESULTS": "No team matches your search.",
+      "EDIT": "Edit team",
+      "DELETE": "Delete team"
+    },
+    "WIZARD": {
+      "NEW_TITLE": "New team",
+      "NEW_SUBTITLE": "Name the team, then choose who is in it.",
+      "EDIT_TITLE": "Edit team",
+      "EDIT_SUBTITLE": "Change the details, then who is in the team.",
+      "STEPS": {
+        "DETAILS": "Details",
+        "MEMBERS": "Teammates",
+        "DONE": "Done"
+      },
+      "DETAILS_CARD": "Team details",
+      "MEMBERS_CARD": "Who is in {teamName}",
+      "MEMBERS_HINT": "Everyone in the team is notified when a conversation is assigned to it.",
+      "SELECTED_COUNT": "{selected} of {total} teammates selected",
+      "SELECT_ALL": "Select all teammates",
+      "DONE_TITLE": "Your team is ready",
+      "DONE_MESSAGE": "Conversations can now be assigned to this team.",
+      "DONE_BUTTON": "Back to teams"
     }
   }
 }

@@ -1,37 +1,30 @@
-<script>
-export default {
-  computed: {
-    items() {
-      const steps = ['WIZARD_CREATE', 'WIZARD_ADD_AGENTS', 'WIZARD_FINISH'];
+<script setup>
+import { computed } from 'vue';
+import { useI18n } from 'vue-i18n';
+import TeamWizard from '../TeamWizard.vue';
 
-      const routes = {
-        WIZARD_CREATE: 'settings_teams_new',
-        WIZARD_ADD_AGENTS: 'settings_teams_add_agents',
-        WIZARD_FINISH: 'settings_teams_finish',
-      };
+const { t } = useI18n();
 
-      return steps.map(step => {
-        return {
-          title: this.$t(`TEAMS_SETTINGS.CREATE_FLOW.${step}.TITLE`),
-          body: this.$t(`TEAMS_SETTINGS.CREATE_FLOW.${step}.BODY`),
-          route: routes[step],
-        };
-      });
-    },
+const steps = computed(() => [
+  {
+    route: 'settings_teams_new',
+    label: t('TEAMS_SETTINGS.WIZARD.STEPS.DETAILS'),
   },
-};
+  {
+    route: 'settings_teams_add_agents',
+    label: t('TEAMS_SETTINGS.WIZARD.STEPS.MEMBERS'),
+  },
+  {
+    route: 'settings_teams_finish',
+    label: t('TEAMS_SETTINGS.WIZARD.STEPS.DONE'),
+  },
+]);
 </script>
 
 <template>
-  <div class="flex flex-col gap-6 mb-8 max-w-7xl mx-auto w-full !px-6">
-    <div
-      class="grid grid-cols-1 lg:grid-cols-8 lg:divide-x lg:rtl:divide-x-reverse lg:divide-n-weak rounded-xl border border-n-weak h-full min-h-[50dvh] w-full"
-    >
-      <woot-wizard
-        class="hidden lg:block col-span-2 h-fit py-8 px-6"
-        :items="items"
-      />
-      <router-view />
-    </div>
-  </div>
+  <TeamWizard
+    :title="t('TEAMS_SETTINGS.WIZARD.NEW_TITLE')"
+    :description="t('TEAMS_SETTINGS.WIZARD.NEW_SUBTITLE')"
+    :steps="steps"
+  />
 </template>

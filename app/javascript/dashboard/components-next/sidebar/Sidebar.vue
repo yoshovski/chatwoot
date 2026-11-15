@@ -759,7 +759,7 @@ const menuItems = computed(() => {
         // },
         {
           name: 'Settings Agents',
-          label: t('SIDEBAR.AGENTS'),
+          label: t('SETTINGS_HOME.PAGES.TEAMMATES.LABEL'),
           icon: 'i-lucide-square-user',
           to: accountScopedRoute('agent_list'),
         },
@@ -875,7 +875,7 @@ const menuItems = computed(() => {
         },
         {
           name: 'Settings Custom Roles',
-          label: t('SIDEBAR.CUSTOM_ROLES'),
+          label: t('SETTINGS_HOME.PAGES.ROLES.LABEL'),
           icon: 'i-lucide-shield-plus',
           to: accountScopedRoute('custom_roles_list'),
         },

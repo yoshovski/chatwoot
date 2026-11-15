@@ -8,6 +8,8 @@ import NextButton from 'dashboard/components-next/button/Button.vue';
 import Popover from 'dashboard/components-next/popover/Popover.vue';
 import EmojiIcon from 'dashboard/components-next/emoji-icon-picker/EmojiIcon.vue';
 import Icon from 'dashboard/components-next/icon/Icon.vue';
+import FormLayout from 'dashboard/components-next/kit/FormLayout.vue';
+import SectionCard from 'dashboard/components-next/kit/SectionCard.vue';
 
 const EmojiIconPicker = defineAsyncComponent(
   () =>
@@ -22,6 +24,8 @@ export default {
     EmojiIcon,
     Icon,
     EmojiIconPicker,
+    FormLayout,
+    SectionCard,
   },
   props: {
     onSubmit: {
@@ -93,8 +97,13 @@ export default {
 </script>
 
 <template>
-  <div class="flex-shrink-0 w-full">
-    <form class="mx-0 grid gap-4" @submit.prevent="handleSubmit">
+  <FormLayout
+    :save-label="submitButtonText"
+    :saving="submitInProgress"
+    :disabled="v$.title.$invalid"
+    @save="handleSubmit"
+  >
+    <SectionCard :title="$t('TEAMS_SETTINGS.WIZARD.DETAILS_CARD')">
       <div class="relative">
         <FormInput
           v-model="state.title"
@@ -159,22 +168,18 @@ export default {
         "
         @blur="v$.description.$touch"
       />
-      <div class="w-full flex items-center gap-2">
-        <input v-model="state.allowAutoAssign" type="checkbox" :value="true" />
-        <label for="conversation_creation">
-          {{ $t('TEAMS_SETTINGS.FORM.AUTO_ASSIGN.LABEL') }}
-        </label>
-      </div>
-      <div class="flex flex-row justify-end gap-2 py-2 px-0 w-full">
-        <div class="w-full">
-          <NextButton
-            type="submit"
-            :label="submitButtonText"
-            :disabled="v$.title.$invalid || submitInProgress"
-            :is-loading="submitInProgress"
-          />
-        </div>
-      </div>
-    </form>
-  </div>
+      <label
+        class="flex w-full items-center gap-2 text-sm text-n-slate-12"
+        for="team_allow_auto_assign"
+      >
+        <input
+          id="team_allow_auto_assign"
+          v-model="state.allowAutoAssign"
+          type="checkbox"
+          :value="true"
+        />
+        {{ $t('TEAMS_SETTINGS.FORM.AUTO_ASSIGN.LABEL') }}
+      </label>
+    </SectionCard>
+  </FormLayout>
 </template>

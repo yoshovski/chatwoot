@@ -1,35 +1,55 @@
 <script setup>
 import { useAlert } from 'dashboard/composables';
 import { useAdmin } from 'dashboard/composables/useAdmin';
-import BaseSettingsHeader from '../components/BaseSettingsHeader.vue';
-import SettingsLayout from '../SettingsLayout.vue';
-import { computed, ref } from 'vue';
-import { picoSearch } from '@chatwoot/pico-search';
-import { useMapGetter } from 'dashboard/composables/store.js';
-import { useStoreGetters, useStore } from 'dashboard/composables/store';
+import { computed, onMounted, ref } from 'vue';
+import { useMapGetter, useStore } from 'dashboard/composables/store';
 import { useI18n } from 'vue-i18n';
 
 import Icon from 'dashboard/components-next/icon/Icon.vue';
 import Button from 'dashboard/components-next/button/Button.vue';
 import EmojiIcon from 'dashboard/components-next/emoji-icon-picker/EmojiIcon.vue';
+import PageHeader from 'next/kit/PageHeader.vue';
+import TableCard from 'next/kit/TableCard.vue';
 
 const store = useStore();
 const { t } = useI18n();
-const getters = useStoreGetters();
 const { isAdmin } = useAdmin();
 
 const loading = ref({});
-const searchQuery = ref('');
+const isFetching = ref(true);
+const fetchFailed = ref(false);
 
 const teamsList = useMapGetter('teams/getTeams');
 
-const filteredTeamsList = computed(() => {
-  const query = searchQuery.value.trim();
-  if (!query) return teamsList.value;
-  return picoSearch(teamsList.value, query, ['name', 'description']);
-});
+const columns = computed(() => [
+  { key: 'name', label: t('TEAMS_SETTINGS.PAGE.COLUMNS.NAME') },
+  {
+    key: 'assignment',
+    label: t('TEAMS_SETTINGS.PAGE.COLUMNS.ASSIGNMENT'),
+    class: 'w-52',
+  },
+  {
+    key: 'actions',
+    label: t('TEAMS_SETTINGS.PAGE.COLUMNS.ACTIONS'),
+    end: true,
+    hideLabel: true,
+    class: 'w-24',
+  },
+]);
 
-const uiFlags = computed(() => getters['teams/getUIFlags'].value);
+const loadTeams = async () => {
+  isFetching.value = true;
+  fetchFailed.value = false;
+  try {
+    await store.dispatch('teams/get');
+  } catch {
+    fetchFailed.value = true;
+  } finally {
+    isFetching.value = false;
+  }
+};
+
+onMounted(loadTeams);
 
 const deleteTeam = async ({ id }) => {
   try {
@@ -81,107 +101,120 @@ const confirmPlaceHolderText = computed(() =>
 </script>
 
 <template>
-  <SettingsLayout
-    :is-loading="uiFlags.isFetching"
-    :loading-message="$t('TEAMS_SETTINGS.LOADING')"
-    :no-records-found="!teamsList.length"
-    :no-records-message="$t('TEAMS_SETTINGS.LIST.404')"
-  >
-    <template #header>
-      <BaseSettingsHeader
-        v-model:search-query="searchQuery"
-        :title="$t('TEAMS_SETTINGS.HEADER')"
-        :description="$t('TEAMS_SETTINGS.DESCRIPTION')"
-        :link-text="$t('TEAMS_SETTINGS.LEARN_MORE')"
-        :search-placeholder="$t('TEAMS_SETTINGS.SEARCH_PLACEHOLDER')"
-        feature-name="team_management"
-      >
-        <template v-if="teamsList?.length" #count>
-          <span class="text-body-main text-n-slate-11">
-            {{ $t('TEAMS_SETTINGS.COUNT', { n: teamsList.length }) }}
-          </span>
-        </template>
-        <template #actions>
-          <router-link v-if="isAdmin" :to="{ name: 'settings_teams_new' }">
-            <Button :label="$t('TEAMS_SETTINGS.NEW_TEAM')" size="sm" />
-          </router-link>
-        </template>
-      </BaseSettingsHeader>
-    </template>
-    <template #body>
-      <span
-        v-if="!filteredTeamsList.length && searchQuery"
-        class="flex-1 flex items-center justify-center py-20 text-center text-body-main !text-base text-n-slate-11"
-      >
-        {{ $t('TEAMS_SETTINGS.NO_RESULTS') }}
-      </span>
+  <section class="flex w-full min-w-0 flex-col gap-5 pb-5 pt-2">
+    <PageHeader
+      :title="t('TEAMS_SETTINGS.PAGE.TITLE')"
+      :description="t('TEAMS_SETTINGS.PAGE.SUBTITLE')"
+    >
+      <template v-if="isAdmin" #action>
+        <router-link :to="{ name: 'settings_teams_new' }">
+          <Button
+            :label="t('TEAMS_SETTINGS.PAGE.NEW')"
+            icon="i-lucide-plus"
+            size="sm"
+          />
+        </router-link>
+      </template>
+    </PageHeader>
 
-      <div v-else class="divide-y divide-n-weak border-t border-n-weak">
-        <div
-          v-for="team in filteredTeamsList"
-          :key="team.id"
-          class="flex justify-between flex-row items-start gap-4 py-4"
-        >
-          <div class="flex items-start gap-4">
-            <div
-              class="flex items-center flex-shrink-0 size-10 justify-center rounded-xl outline outline-1 outline-n-weak -outline-offset-1 text-lg"
-            >
-              <EmojiIcon
-                v-if="team.icon"
-                :value="team.icon"
-                :color="team.icon_color"
-                class="size-5"
-              />
-              <Icon
-                v-else
-                icon="i-lucide-users-round"
-                class="size-4 text-n-slate-11"
-              />
-            </div>
-            <div class="flex flex-col items-start gap-1">
-              <span class="block text-heading-3 text-n-slate-12 capitalize">
-                {{ team.name }}
-              </span>
-              <p class="mb-0 text-n-slate-11 text-body-main">
-                {{ team.description }}
-              </p>
-            </div>
-          </div>
-          <div class="flex justify-end gap-3">
-            <router-link
-              :to="{
-                name: 'settings_teams_edit',
-                params: { teamId: team.id },
-              }"
-            >
-              <Button
-                v-if="isAdmin"
-                v-tooltip.top="$t('TEAMS_SETTINGS.LIST.EDIT_TEAM')"
-                icon="i-woot-settings"
-                slate
-                sm
-              />
-            </router-link>
-
-            <Button
-              v-if="isAdmin"
-              v-tooltip.top="$t('TEAMS_SETTINGS.DELETE.BUTTON_TEXT')"
-              icon="i-woot-bin"
-              slate
-              sm
-              class="hover:enabled:text-n-ruby-11 hover:enabled:bg-n-ruby-2"
-              :is-loading="loading[team.id]"
-              @click="openDelete(team)"
+    <TableCard
+      :columns="columns"
+      :rows="teamsList"
+      :loading="isFetching && !teamsList.length"
+      :error="fetchFailed"
+      :search-keys="['name', 'description']"
+      :search-placeholder="t('TEAMS_SETTINGS.PAGE.SEARCH')"
+      :count="t('TEAMS_SETTINGS.PAGE.COUNT', { n: teamsList.length })"
+      :loading-text="t('TEAMS_SETTINGS.PAGE.LOADING')"
+      :error-text="t('TEAMS_SETTINGS.PAGE.LOAD_ERROR')"
+      :retry-label="t('TEAMS_SETTINGS.PAGE.RETRY')"
+      :empty-title="t('TEAMS_SETTINGS.PAGE.EMPTY_TITLE')"
+      :empty-description="t('TEAMS_SETTINGS.PAGE.EMPTY_DESCRIPTION')"
+      empty-icon="i-lucide-users-round"
+      :no-results-text="t('TEAMS_SETTINGS.PAGE.NO_RESULTS')"
+      @retry="loadTeams"
+    >
+      <template v-if="isAdmin" #empty>
+        <router-link :to="{ name: 'settings_teams_new' }">
+          <Button
+            :label="t('TEAMS_SETTINGS.PAGE.NEW')"
+            icon="i-lucide-plus"
+            size="sm"
+          />
+        </router-link>
+      </template>
+      <template #cell-name="{ row: team }">
+        <div class="flex items-center gap-3">
+          <span
+            class="grid size-9 shrink-0 place-items-center rounded-xl bg-n-alpha-2 text-lg"
+          >
+            <EmojiIcon
+              v-if="team.icon"
+              :value="team.icon"
+              :color="team.icon_color"
+              class="size-5"
             />
+            <Icon
+              v-else
+              icon="i-lucide-users-round"
+              class="size-4 text-n-slate-11"
+            />
+          </span>
+          <div class="flex min-w-0 flex-col">
+            <span class="truncate font-medium capitalize text-n-slate-12">
+              {{ team.name }}
+            </span>
+            <span
+              v-if="team.description"
+              class="truncate text-xs text-n-slate-11"
+            >
+              {{ team.description }}
+            </span>
           </div>
         </div>
-      </div>
-    </template>
+      </template>
+      <template #cell-assignment="{ row: team }">
+        <span class="text-n-slate-11">
+          {{
+            team.allow_auto_assign
+              ? t('TEAMS_SETTINGS.PAGE.AUTO_ASSIGN')
+              : t('TEAMS_SETTINGS.PAGE.MANUAL_ASSIGN')
+          }}
+        </span>
+      </template>
+      <template #cell-actions="{ row: team }">
+        <div v-if="isAdmin" class="flex justify-end gap-1">
+          <router-link
+            :to="{ name: 'settings_teams_edit', params: { teamId: team.id } }"
+          >
+            <Button
+              v-tooltip.top="t('TEAMS_SETTINGS.PAGE.EDIT')"
+              :aria-label="t('TEAMS_SETTINGS.PAGE.EDIT')"
+              icon="i-lucide-pencil"
+              variant="ghost"
+              color="slate"
+              size="sm"
+            />
+          </router-link>
+          <Button
+            v-tooltip.top="t('TEAMS_SETTINGS.PAGE.DELETE')"
+            :aria-label="t('TEAMS_SETTINGS.PAGE.DELETE')"
+            icon="i-lucide-trash-2"
+            variant="ghost"
+            color="ruby"
+            size="sm"
+            :is-loading="loading[team.id]"
+            @click="openDelete(team)"
+          />
+        </div>
+      </template>
+    </TableCard>
+
     <woot-confirm-delete-modal
       v-if="showDeletePopup"
       v-model:show="showDeletePopup"
       :title="confirmDeleteTitle"
-      :message="$t('TEAMS_SETTINGS.DELETE.CONFIRM.MESSAGE')"
+      :message="t('TEAMS_SETTINGS.DELETE.CONFIRM.MESSAGE')"
       :confirm-text="deleteConfirmText"
       :reject-text="deleteRejectText"
       :confirm-value="selectedTeam.name"
@@ -189,5 +222,5 @@ const confirmPlaceHolderText = computed(() =>
       @on-confirm="confirmDeletion"
       @on-close="closeDelete"
     />
-  </SettingsLayout>
+  </section>
 </template>
