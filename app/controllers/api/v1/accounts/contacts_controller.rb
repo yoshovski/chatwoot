@@ -12,6 +12,7 @@ class Api::V1::Accounts::ContactsController < Api::V1::Accounts::BaseController
   RESULTS_PER_PAGE = 15
 
   before_action :check_authorization
+  before_action :validate_export_segment, only: [:export]
   before_action :set_current_page, only: [:index, :active, :search, :filter]
   before_action :fetch_contact, only: [:show, :update, :destroy, :avatar, :contactable_inboxes, :destroy_custom_attributes]
   before_action :set_include_contact_inboxes, only: [:index, :active, :search, :filter, :show, :update]
@@ -44,7 +45,8 @@ class Api::V1::Accounts::ContactsController < Api::V1::Accounts::BaseController
 
   def export
     column_names = params['column_names']
-    filter_params = { :payload => params.permit!['payload'], :label => params.permit!['label'] }
+    filter_params = { payload: params.permit!['payload'], label: params[:label] }
+    filter_params.merge!(params.permit(:segment, :q).to_h.symbolize_keys) if params[:segment].present?
     Account::ContactsExportJob.perform_later(Current.account.id, Current.user.id, column_names, filter_params)
     head :ok, message: I18n.t('errors.contacts.export.success')
   end
@@ -115,6 +117,12 @@ class Api::V1::Accounts::ContactsController < Api::V1::Accounts::BaseController
   end
 
   private
+
+  def validate_export_segment
+    return if params[:segment].blank? || Contacts::Segments.new(Current.account).valid_reference?(params[:segment])
+
+    render json: { error: 'Invalid segment' }, status: :unprocessable_entity
+  end
 
   # TODO: Move this to a finder class
   def resolved_contacts

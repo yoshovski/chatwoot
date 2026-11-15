@@ -1,3 +1,4 @@
+import { API } from 'widget/helpers/axios';
 import { getCampaigns, triggerCampaign } from 'widget/api/campaign';
 import campaignTimer from 'widget/helpers/campaignTimer';
 import {
@@ -49,10 +50,13 @@ export const actions = {
     try {
       // Cache for 1 hour
       const CACHE_EXPIRY = 60 * 60 * 1000;
-      const cachedData = getFromCache(
-        `${CACHE_KEY_PREFIX}${websiteToken}`,
-        CACHE_EXPIRY
+      // Segment audiences depend on the authenticated visitor; never reuse a shared cached list.
+      const personalized = Boolean(
+        API.defaults?.headers?.common?.['X-Auth-Token']
       );
+      const cachedData = personalized
+        ? null
+        : getFromCache(`${CACHE_KEY_PREFIX}${websiteToken}`, CACHE_EXPIRY);
       if (cachedData) {
         commit('setCampaigns', cachedData);
         commit('setError', false);
@@ -66,7 +70,8 @@ export const actions = {
       }
 
       const { data: campaigns } = await getCampaigns(websiteToken);
-      setCache(`${CACHE_KEY_PREFIX}${websiteToken}`, campaigns);
+      if (!personalized)
+        setCache(`${CACHE_KEY_PREFIX}${websiteToken}`, campaigns);
       commit('setCampaigns', campaigns);
       commit('setError', false);
       resetCampaignTimers(

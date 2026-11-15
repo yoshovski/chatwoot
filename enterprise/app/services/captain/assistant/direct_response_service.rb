@@ -174,6 +174,10 @@ class Captain::Assistant::DirectResponseService
   def prompt_context(context)
     base = @assistant.prompt_context
     base = @runtime_configuration.prompt_context_for(@assistant, base) if @runtime_configuration
+    if @assistant.config['rule_segments'].present?
+      contact = @assistant.account.contacts.find_by(id: context.dig(:state, :contact, :id))
+      base = Captain::SegmentRules.new(@assistant, contact).apply(base)
+    end
     base.merge(
       message_length_limit: context.dig(:state, :message_length_limit),
       ownership_instruction: context.dig(:state, :ownership_instruction),

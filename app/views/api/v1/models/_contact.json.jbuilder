@@ -19,3 +19,12 @@ if defined?(with_contact_inboxes) && with_contact_inboxes.present?
     end
   end
 end
+
+if @include_directory_details
+  json.conversations_count resource[:conversations_count].to_i
+  json.labels resource.taggings.select { |tagging| tagging.context == 'labels' }.map { |tagging| tagging.tag.name }.uniq
+  json.contact_type resource.contact_type
+  activities = resource.contact_inboxes.filter_map { |item| item.website_activity.presence }
+  activity = activities.max_by { |item| item.dig('current_page', 'last_seen_at').to_s }
+  json.website_activity activity
+end

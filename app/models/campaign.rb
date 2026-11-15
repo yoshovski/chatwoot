@@ -46,6 +46,7 @@ class Campaign < ApplicationRecord
   validate :sender_must_belong_to_account
   validate :inbox_must_belong_to_account
   validate :validate_suggested_responses
+  validate :validate_segment_audience
 
   belongs_to :account
   belongs_to :inbox
@@ -70,7 +71,27 @@ class Campaign < ApplicationRecord
     execute_campaign
   end
 
+  def matches_contact_segment?(contact)
+    references = segment_audiences
+    return false if references.present? && !audience.is_a?(Array)
+
+    references.all? { |item| contact && Contacts::Segments.new(account).matches?(item['id'], contact) }
+  end
+
   private
+
+  def segment_audiences
+    Array.wrap(audience).select { |item| item.is_a?(Hash) && item['type'] == 'segment' }
+  end
+
+  def validate_segment_audience
+    references = segment_audiences
+    return if references.empty?
+
+    valid_shape = audience.is_a?(Array) && ongoing? && references.one?
+    valid = valid_shape && Contacts::Segments.new(account).valid_reference?(references.first['id'])
+    errors.add(:audience, 'must reference an account-owned customer segment') unless valid
+  end
 
   def feature_enabled?
     inbox.inbox_type != 'Whatsapp' || account.feature_enabled?(:whatsapp_campaign)

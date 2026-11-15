@@ -88,7 +88,7 @@ const handleRemoveLabels = labels => {
       :all-items="allItems"
       :select-all-label="selectAllLabel"
       :selected-count-label="selectedCountLabel"
-      class="py-2 ltr:!pr-3 rtl:!pl-3 justify-between"
+      class="py-2 ltr:!pr-3 rtl:!pl-3 justify-between flex-wrap [&>div]:flex-wrap"
     >
       <template #primaryActions>
         <Button
@@ -101,7 +101,7 @@ const handleRemoveLabels = labels => {
         />
       </template>
       <template #actions>
-        <div class="flex items-center gap-2 ml-auto">
+        <div class="flex flex-wrap items-center gap-2 ms-auto">
           <BulkLabelActions
             type="contact"
             :is-loading="isLoading"

@@ -10,11 +10,13 @@ const props = defineProps({
   description: { type: String, default: '' },
   items: { type: Array, default: () => [] },
   suggestions: { type: Array, default: () => [] },
+  segments: { type: Array, default: () => [] },
+  audiences: { type: Object, default: () => ({}) },
   placeholder: { type: String, default: '' },
   addLabel: { type: String, required: true },
 });
 
-const emit = defineEmits(['update']);
+const emit = defineEmits(['update', 'audienceChange']);
 const { t } = useI18n();
 const newRule = ref('');
 
@@ -69,14 +71,48 @@ const remove = id =>
       />
     </div>
     <div v-if="rows.length" class="flex flex-col gap-2">
-      <RuleCard
+      <div
         v-for="row in rows"
-        :id="row.id"
         :key="`${row.id}-${row.content}`"
-        :content="row.content"
-        @edit="edit"
-        @delete="remove"
-      />
+        class="flex flex-col gap-2"
+      >
+        <RuleCard
+          :id="row.id"
+          :content="row.content"
+          @edit="edit"
+          @delete="remove"
+        />
+        <select
+          :value="audiences[row.content] || ''"
+          :aria-label="t('CUSTOMERS.RULE_AUDIENCE', { rule: row.content })"
+          class="m-0 self-end max-w-full rounded-xl border-n-weak bg-n-solid-2 py-1 text-xs text-n-slate-11"
+          @change="
+            emit('audienceChange', {
+              content: row.content,
+              segmentId: $event.target.value,
+            })
+          "
+        >
+          <option value="">{{ t('CUSTOMERS.EVERYONE') }}</option>
+          <option
+            v-if="
+              audiences[row.content] &&
+              !segments.some(segment => segment.id === audiences[row.content])
+            "
+            :value="audiences[row.content]"
+            disabled
+          >
+            {{ t('CUSTOMERS.MISSING_SEGMENT') }}
+          </option>
+          <option
+            v-for="segment in segments"
+            :key="segment.id"
+            :value="segment.id"
+          >
+            {{ segment.name }}
+          </option>
+        </select>
+      </div>
     </div>
     <div
       v-if="!rows.length && openSuggestions.length"

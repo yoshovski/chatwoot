@@ -315,6 +315,8 @@ Rails.application.routes.draw do
           end
           resources :contacts, only: [:index, :show, :update, :create, :destroy] do
             collection do
+              get :segments, to: 'contacts/directory#segments'
+              get :directory, to: 'contacts/directory#index'
               get :active
               get :search
               post :filter

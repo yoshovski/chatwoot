@@ -34,6 +34,8 @@ class Captain::AudienceValidator < ActiveModel::Validator
   }.freeze
 
   def validate(record)
+    @account = record.account
+    validate_rule_segments(record)
     audience = record.config['audience']
     return if audience.blank?
 
@@ -46,10 +48,28 @@ class Captain::AudienceValidator < ActiveModel::Validator
 
   private
 
+  def validate_rule_segments(record)
+    audiences = record.config['rule_segments']
+    return if audiences.blank?
+
+    valid = audiences.is_a?(Hash) && audiences.all? { |field, rules| valid_rule_references?(record, field, rules) }
+    record.errors.add(:config, 'rule segments must reference account-owned customer segments') unless valid
+  end
+
+  def valid_rule_references?(record, field, rules)
+    return false unless Captain::SegmentRules::FIELDS.include?(field) && rules.is_a?(Hash)
+
+    rules.all? do |text, reference|
+      Array(record.public_send(field)).include?(text) && Contacts::Segments.new(record.account).valid_reference?(reference)
+    end
+  end
+
   def valid_node?(node, depth, custom_attribute_types)
     return false unless node.is_a?(Hash) && depth <= Captain::AudienceMatcher::MAX_DEPTH
 
     node = node.with_indifferent_access
+    return node.keys == ['segment_id'] && Contacts::Segments.new(@account).valid_reference?(node[:segment_id]) if node.key?(:segment_id)
+
     return valid_group?(node, depth, custom_attribute_types) if node.key?(:conditions)
 
     valid_leaf?(node, custom_attribute_types)

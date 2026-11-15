@@ -11,6 +11,8 @@ class Campaigns::CampaignConversationBuilder
     @contact_inbox = ContactInbox.find(@contact_inbox_id)
     @campaign = @contact_inbox.inbox.campaigns.find_by!(display_id: campaign_display_id)
 
+    return unless @campaign.matches_contact_segment?(@contact_inbox.contact)
+
     ActiveRecord::Base.transaction do
       @contact_inbox.lock!
 
