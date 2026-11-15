@@ -62,6 +62,15 @@ Rails.application.routes.draw do
             resource :contact_merge, only: [:create]
           end
           resource :account_subscription, only: [:show] do
+            if ChatwootApp.enterprise?
+              resources :cancellations, only: [:create], controller: 'subscription_cancellations' do
+                post :accept, on: :member
+                post :confirm, on: :member
+                post :dismiss, on: :member
+                post :keep, on: :collection
+                post :resume, on: :collection
+              end
+            end
             post :checkout
             post :change_interval
             post :change_plan

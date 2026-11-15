@@ -54,8 +54,6 @@ class Enterprise::Billing::AccountSubscriptionSyncService
     return if older_subscription?(subscription, remote)
 
     attributes = subscription_attributes(subscription, remote).merge(plan_attributes(subscription, remote))
-    attributes[:stripe_subscription_details].merge!(price_id: remote.items.data.first.price.id, pending_change: pending_change(remote),
-                                                    card: card(remote['default_payment_method']))
     attributes[:quota_anchor] = attributes[:period_started_at] if subscription.stripe_subscription_id.blank?
     subscription.update!(attributes)
   end
@@ -174,12 +172,23 @@ class Enterprise::Billing::AccountSubscriptionSyncService
     item = remote.items.data.first
     stripe_period(remote, item).merge(
       stripe_subscription_id: remote.id, stripe_subscription_created_at: Time.zone.at(remote.created),
-      payment_status: remote.status, billing_interval: item.price.recurring.interval,
-      stripe_subscription_details: stripe_details(remote, item),
+      payment_status: effective_status(remote), billing_interval: item.price.recurring.interval,
+      stripe_subscription_details: subscription_details(remote, item),
       stripe_checkout_session_id: %w[canceled incomplete_expired].include?(remote.status) ? subscription.stripe_checkout_session_id : nil,
       trial_enabled: trial_enabled_after_sync?(subscription, remote),
       trial_ends_at: remote.trial_end ? Time.zone.at(remote.trial_end) : subscription.trial_ends_at
     )
+  end
+
+  def subscription_details(remote, item)
+    stripe_details(remote, item).merge(price_id: item.price.id, pending_change: pending_change(remote),
+                                       card: card(remote['default_payment_method']), pause_collection: remote['pause_collection']&.to_h)
+  end
+
+  def effective_status(remote)
+    pause = remote['pause_collection']
+    paused = pause.present? && (pause['resumes_at'].blank? || pause['resumes_at'] > Time.current.to_i)
+    remote.status == 'active' && paused ? 'paused' : remote.status
   end
 
   def stripe_period(remote, item)

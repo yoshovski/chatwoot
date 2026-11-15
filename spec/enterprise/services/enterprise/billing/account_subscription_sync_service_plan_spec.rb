@@ -135,4 +135,25 @@ describe Enterprise::Billing::AccountSubscriptionSyncService do
     expect(subscription.reload.billing_plan).to eq(growth)
     expect(account.reload.feature_enabled?('campaigns')).to be(true)
   end
+
+  it 'maps collection pauses to the AI paused state and resumes when the deadline has passed' do
+    remote['pause_collection'] = Stripe::StripeObject.construct_from(behavior: 'void', resumes_at: 1.month.from_now.to_i)
+    described_class.refresh(account)
+    expect(subscription.reload.payment_status).to eq('paused')
+    expect(subscription.ai_pause_reason).to eq('paused')
+
+    travel 2.months do
+      described_class.refresh(account)
+      expect(subscription.reload.payment_status).to eq('active')
+      expect(subscription.ai_reply_allowed?).to be(true)
+    end
+  end
+
+  it 'keeps a payment failure authoritative over a collection pause' do
+    remote.status = 'unpaid'
+    remote['pause_collection'] = Stripe::StripeObject.construct_from(behavior: 'void', resumes_at: 1.month.from_now.to_i)
+    described_class.refresh(account)
+    expect(subscription.reload.payment_status).to eq('unpaid')
+    expect(subscription.ai_pause_reason).to eq('payment_failed')
+  end
 end
