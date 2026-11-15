@@ -1699,6 +1699,55 @@
             "RATE_LIMITED": "The workspace email limit has been reached. Leads will still be saved to Contacts.",
             "MISSING_TEAM": "This team is no longer available. Choose another team.",
             "UNAVAILABLE": "Teams could not be loaded. Reload the page to try again."
+          },
+          "SETUP": {
+            "TITLE": "Lead setup",
+            "FIELD_COUNT": "{count} / {max}",
+            "STEP_N": "Step {n}",
+            "BACK": "Back",
+            "NEXT": "Next: {step}",
+            "MORE_OPTIONS": "More options",
+            "STEPS": {
+              "ASK": {
+                "TITLE": "What to ask",
+                "HINT": "Name and email are always asked. Pick what else your team needs to follow up."
+              },
+              "WHEN": {
+                "TITLE": "When to ask",
+                "HINT": "Your AI agent answers first and offers follow-up only to the people you describe here."
+              },
+              "WHERE": {
+                "TITLE": "Where it goes",
+                "HINT": "Every lead is saved in Leads. Add an email to your team or HubSpot if you use it."
+              }
+            },
+            "SUMMARY": {
+              "NAME_EMAIL": "name, email",
+              "ASK": "Asks for {details} · at most {count} extra questions",
+              "WHEN": "Offers follow-up to: {who}",
+              "WHEN_HANDOFF": "Offers follow-up to: {who} Also when handing over to your team.",
+              "SAVED": "Saved in Leads",
+              "EMAIL_TEAM": "emailed to {team}",
+              "HUBSPOT": "sent to HubSpot"
+            },
+            "WHERE": {
+              "LIST": "Leads list",
+              "LIST_HELP": "Every lead with its summary, status and owner.",
+              "ALWAYS": "Always on",
+              "HUBSPOT": "HubSpot",
+              "CONNECT": "Connect HubSpot"
+            },
+            "WIDGET": {
+              "LABEL": "Preview of the website chat",
+              "ONLINE": "Usually replies in seconds",
+              "OFF": "Lead capture is off. Your customers do not see these questions yet.",
+              "ANSWER": "Their answer",
+              "TYPE_HERE": "Write a message…",
+              "THEN": "Then",
+              "TO_LIST": "Saved in Leads with an AI summary",
+              "TO_TEAM": "Email to {team}",
+              "TO_HUBSPOT": "Sent to HubSpot"
+            }
           }
         }
       },

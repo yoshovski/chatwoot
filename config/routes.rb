@@ -117,6 +117,9 @@ Rails.application.routes.draw do
             end
           end
           namespace :captain do
+            resources :leads, only: [:index, :update] do
+              get :export, on: :collection
+            end
             resource :preferences, only: [:show, :update]
             resources :assistants do
               member do

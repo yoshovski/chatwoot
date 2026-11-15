@@ -25,6 +25,7 @@ import generalSettings from './generalSettings.json';
 import helpCenter from './helpCenter.json';
 import analytics from './analytics.json';
 import home from './home.json';
+import leads from './leads.json';
 import inbox from './inbox.json';
 import inboxMgmt from './inboxMgmt.json';
 import integrationApps from './integrationApps.json';
@@ -77,6 +78,7 @@ export default {
   ...helpCenter,
   ...analytics,
   ...home,
+  ...leads,
   ...inbox,
   ...inboxMgmt,
   ...integrationApps,

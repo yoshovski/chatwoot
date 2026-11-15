@@ -1,0 +1,45 @@
+{
+  "LEADS": {
+    "TITLE": "Leads",
+    "SUBTITLE": "People who asked your AI agent for follow-up, with what they want.",
+    "EXPORT": "Export CSV",
+    "ALL": "All",
+    "NO_OWNER": "No owner",
+    "COLUMNS": {
+      "NAME": "Name",
+      "WANTS": "What they want",
+      "STATUS": "Status",
+      "OWNER": "Owner",
+      "HUBSPOT": "HubSpot",
+      "DATE": "Date"
+    },
+    "STATUS": {
+      "NEW": "New",
+      "CONTACTED": "Contacted",
+      "WON": "Won",
+      "LOST": "Lost"
+    },
+    "HUBSPOT": {
+      "SYNCED": "Synced",
+      "PENDING": "Sending",
+      "FAILED": "Not sent",
+      "OFF": "Off",
+      "NOT_SYNCED": "Not synced"
+    },
+    "LOADING": "Loading leads…",
+    "LOAD_ERROR": "Leads could not be loaded. Try again.",
+    "SAVE_ERROR": "Your change could not be saved. Try again.",
+    "EXPORT_ERROR": "Leads could not be exported. Try again.",
+    "OWNERS_ERROR": "Team members could not be loaded. Retry to change owners.",
+    "RETRY": "Try again",
+    "EMPTY": "Your captured leads will appear here.",
+    "EMPTY_HELP": "Enable lead capture in an AI agent’s settings. For example, offer follow-up to someone asking about wholesale prices.",
+    "EMPTY_FILTER": "No leads have this status yet.",
+    "SHOW_ALL": "Show all leads",
+    "OPEN_AGENTS": "Open AI agents",
+    "OWNER_FOR": "Owner for {name}",
+    "PREVIOUS": "Previous",
+    "NEXT": "Next",
+    "PAGE": "Page {page} · {total} leads"
+  }
+}

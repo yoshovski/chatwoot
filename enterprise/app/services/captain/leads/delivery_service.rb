@@ -11,6 +11,7 @@ class Captain::Leads::DeliveryService
       lead = { 'type' => lead_type, 'summary' => summary, 'fields' => fields.to_h }
       attributes = Captain::Conversation::Summary.new(@conversation).merged_attributes('status' => 'lead', 'lead' => lead)
                                                  .except('business_handoff', 'business_followup').merge('business_lead_captured' => true)
+      attributes['business_lead_captured_at'] ||= Time.current.iso8601
       attributes['business_lead_summary_note_id'] = note.id if note
       @conversation.update!(additional_attributes: attributes)
     end
