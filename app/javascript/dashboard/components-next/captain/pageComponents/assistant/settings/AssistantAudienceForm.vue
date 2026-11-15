@@ -2,6 +2,7 @@
 import { ref, computed, watch, useTemplateRef } from 'vue';
 import { useI18n } from 'vue-i18n';
 import RadioCard from 'dashboard/components-next/radioCard/RadioCard.vue';
+import SegmentPicker from 'dashboard/components-next/Contacts/Customers/SegmentPicker.vue';
 import SettingsSaveBar from './SettingsSaveBar.vue';
 import AudienceGroup from './audience/AudienceGroup.vue';
 import { useAudienceFilterTypes } from './audience/useAudienceFilterTypes.js';
@@ -25,6 +26,7 @@ const { filterTypes } = useAudienceFilterTypes();
 const MODE = {
   EVERYONE: 'everyone',
   SPECIFIC: 'specific',
+  SEGMENT: 'segment',
 };
 
 let uid = 0;
@@ -42,6 +44,11 @@ const isSaving = ref(false);
 const root = ref(defaultRoot());
 const mode = ref(MODE.EVERYONE);
 const showEmptyAudienceError = ref(false);
+const segmentId = ref('');
+const audienceMode = audience => {
+  if (audience?.segment_id) return MODE.SEGMENT;
+  return audience ? MODE.SPECIFIC : MODE.EVERYONE;
+};
 const savedSnapshot = ref('');
 
 const findOption = (filterType, value) =>
@@ -83,7 +90,7 @@ const hydrateNode = node => {
 };
 
 const hydrateRoot = audience => {
-  if (!audience) return defaultRoot();
+  if (!audience || audience.segment_id) return defaultRoot();
   const hydrated = hydrateNode(audience);
   return hasConditions(hydrated)
     ? hydrated
@@ -118,6 +125,8 @@ const serializeNode = node => {
 };
 
 const getAudiencePayload = () => {
+  if (mode.value === MODE.SEGMENT)
+    return segmentId.value ? { segment_id: segmentId.value } : null;
   const isSpecific = mode.value === MODE.SPECIFIC;
   return isSpecific && root.value.conditions.length
     ? serializeNode(root.value)
@@ -132,7 +141,8 @@ const isDirty = computed(() => {
 const discard = () => {
   const audience = props.assistant?.config?.audience;
   root.value = hydrateRoot(audience);
-  mode.value = audience ? MODE.SPECIFIC : MODE.EVERYONE;
+  mode.value = audienceMode(audience);
+  segmentId.value = audience?.segment_id || '';
   showEmptyAudienceError.value = false;
 };
 
@@ -140,7 +150,10 @@ const groupRef = useTemplateRef('groupRef');
 
 const handleSubmit = async () => {
   const isSpecific = mode.value === MODE.SPECIFIC;
-  if (isSpecific && !root.value.conditions.length) {
+  if (
+    (mode.value === MODE.SEGMENT && !segmentId.value) ||
+    (isSpecific && !root.value.conditions.length)
+  ) {
     showEmptyAudienceError.value = true;
     return;
   }
@@ -178,7 +191,8 @@ watch(
     if (!newAssistant) return;
     const audience = newAssistant.config?.audience;
     root.value = hydrateRoot(audience);
-    mode.value = audience ? MODE.SPECIFIC : MODE.EVERYONE;
+    mode.value = audienceMode(audience);
+    segmentId.value = audience?.segment_id || '';
     savedSnapshot.value = JSON.stringify(audience || null);
   },
   { immediate: true }
@@ -206,6 +220,19 @@ watch(
         :is-active="mode === MODE.EVERYONE"
         @select="mode = MODE.EVERYONE"
       />
+      <RadioCard
+        :id="MODE.SEGMENT"
+        :label="t('CUSTOMERS.AUDIENCE')"
+        description=""
+        :is-active="mode === MODE.SEGMENT"
+        @select="mode = MODE.SEGMENT"
+      >
+        <SegmentPicker
+          v-if="mode === MODE.SEGMENT"
+          v-model="segmentId"
+          class="w-full mt-2"
+        />
+      </RadioCard>
       <RadioCard
         :id="MODE.SPECIFIC"
         :label="t('CAPTAIN.ASSISTANTS.FORM.AUDIENCE.SPECIFIC.LABEL')"

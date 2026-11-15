@@ -27,6 +27,8 @@ class Captain::AudienceMatcher
 
   def matches_node?(node)
     node = node.with_indifferent_access
+    return Contacts::Segments.new(@contact.account).matches?(node[:segment_id], @contact) if node.key?(:segment_id)
+
     node.key?(:conditions) ? matches_group?(node) : matches_leaf?(node)
   end
 

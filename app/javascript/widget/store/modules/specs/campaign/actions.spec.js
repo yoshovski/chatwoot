@@ -103,6 +103,30 @@ describe('#actions', () => {
       );
     });
 
+    it('fetches visitor-specific audiences without reading or writing the shared cache', async () => {
+      const previousDefaults = API.defaults;
+      API.defaults = {
+        headers: { common: { 'X-Auth-Token': 'fixture-widget-session' } },
+      };
+      getFromCache.mockReturnValue(campaigns);
+      API.get.mockResolvedValue({ data: campaigns });
+      try {
+        await actions.fetchCampaigns(
+          { commit },
+          {
+            websiteToken: 'test-widget',
+            currentURL: 'https://chatwoot.com',
+            isInBusinessHours: true,
+          }
+        );
+        expect(API.get).toHaveBeenCalled();
+        expect(getFromCache).not.toHaveBeenCalled();
+        expect(setCache).not.toHaveBeenCalled();
+      } finally {
+        API.defaults = previousDefaults;
+      }
+    });
+
     it('sends correct actions if API is error', async () => {
       getFromCache.mockReturnValue(null);
       API.get.mockRejectedValue({ message: 'Authentication required' });

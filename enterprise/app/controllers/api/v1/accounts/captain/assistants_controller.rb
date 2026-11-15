@@ -172,11 +172,19 @@ class Api::V1::Accounts::Captain::AssistantsController < Api::V1::Accounts::Base
     permitted[:response_guidelines] = params[:assistant][:response_guidelines] if params[:assistant].key?(:response_guidelines)
     permitted[:guardrails] = params[:assistant][:guardrails] if params[:assistant].key?(:guardrails)
 
+    permit_rule_segments(permitted)
     permit_audience_config(permitted)
     permit_reply_label_keywords(permitted)
     permit_email_templates(permitted)
 
     permitted
+  end
+
+  def permit_rule_segments(permitted)
+    return unless params.dig(:assistant, :config)&.key?(:rule_segments)
+
+    rules = params[:assistant][:config][:rule_segments]
+    permitted[:config][:rule_segments] = rules.respond_to?(:permit!) ? rules.permit!.to_h : rules
   end
 
   # The audience is a recursive condition tree that strong params can't whitelist by shape;

@@ -165,6 +165,7 @@ class Captain::Assistant::IntentRouter # rubocop:disable Metrics/ClassLength
   def routing_policy
     context = @assistant.prompt_context
     context = @runtime_configuration.prompt_context_for(@assistant, context) if @runtime_configuration
+    context = Captain::SegmentRules.new(@assistant, @conversation&.contact).apply(context)
     policy = context.slice(
       :description, :scenarios, :response_guidelines, :guardrails, :business_overview, :knowledge_topics, :knowledge_offerings,
       :lead_capture

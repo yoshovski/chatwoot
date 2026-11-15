@@ -20,6 +20,14 @@ class ContactAPI extends ApiClient {
     });
   }
 
+  segments(options = {}) {
+    return axios.get(`${this.url}/segments`, options);
+  }
+
+  directory(params, options = {}) {
+    return axios.get(`${this.url}/directory`, { params, ...options });
+  }
+
   show(id) {
     return axios.get(`${this.url}/${id}?include_contact_inboxes=false`);
   }
@@ -28,11 +36,14 @@ class ContactAPI extends ApiClient {
     return axios.patch(`${this.url}/${id}?include_contact_inboxes=false`, data);
   }
 
-  getConversations(contactId, { inboxId, conversationId } = {}) {
+  getConversations(contactId, { inboxId, conversationId, signal } = {}) {
     const params = {};
     if (inboxId) params.inbox_id = inboxId;
     if (conversationId) params.conversation_id = conversationId;
-    return axios.get(`${this.url}/${contactId}/conversations`, { params });
+    return axios.get(`${this.url}/${contactId}/conversations`, {
+      params,
+      signal,
+    });
   }
 
   getAttachments(contactId, page = 1) {

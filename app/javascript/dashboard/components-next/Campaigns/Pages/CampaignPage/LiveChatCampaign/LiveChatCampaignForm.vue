@@ -1,4 +1,6 @@
 <script setup>
+// Translation keys are selected from the fixed mappings in this screen.
+/* eslint-disable @intlify/vue-i18n/no-dynamic-keys */
 import { reactive, computed, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useVuelidate } from '@vuelidate/core';
@@ -7,6 +9,7 @@ import { useMapGetter, useStore } from 'dashboard/composables/store';
 import { useAlert } from 'dashboard/composables';
 import { URLPattern } from 'urlpattern-polyfill';
 
+import SegmentPicker from 'dashboard/components-next/Contacts/Customers/SegmentPicker.vue';
 import Input from 'dashboard/components-next/input/Input.vue';
 import Button from 'dashboard/components-next/button/Button.vue';
 import ComboBox from 'dashboard/components-next/combobox/ComboBox.vue';
@@ -51,6 +54,7 @@ const initialState = {
   endPoint: '',
   timeOnPage: 10,
   suggestedResponses: [],
+  segmentId: '',
 };
 
 const state = reactive({ ...initialState });
@@ -94,7 +98,7 @@ const inboxOptions = computed(() =>
 );
 
 const sendersAndBotList = computed(() => [
-  { value: 0, label: 'Bot' },
+  { value: 0, label: t('CUSTOMERS.AI_AGENT') },
   ...mapToOptions(senderList.value, 'id', 'name'),
 ]);
 
@@ -142,6 +146,7 @@ const prepareCampaignDetails = () => ({
   sender_id: state.senderId || null,
   enabled: state.enabled,
   trigger_only_during_business_hours: state.triggerOnlyDuringBusinessHours,
+  audience: state.segmentId ? [{ type: 'segment', id: state.segmentId }] : [],
   trigger_rules: {
     url: state.endPoint,
     time_on_page: state.timeOnPage,
@@ -183,6 +188,8 @@ const updateStateFromCampaign = campaign => {
   Object.assign(state, {
     title,
     message,
+    segmentId:
+      campaign.audience?.find(item => item.type === 'segment')?.id || '',
     inboxId,
     senderId: sender?.id ?? 0,
     enabled,
@@ -290,6 +297,12 @@ defineExpose({ prepareCampaignDetails, isSubmitDisabled });
       />
     </div>
 
+    <div class="flex flex-col gap-2">
+      <div class="text-sm font-medium text-n-slate-12">
+        {{ t('CUSTOMERS.AUDIENCE') }}
+      </div>
+      <SegmentPicker v-model="state.segmentId" />
+    </div>
     <Input
       v-model="state.endPoint"
       type="url"

@@ -301,7 +301,6 @@
       "ID": "(ID: {identifier})"
     }
   },
-
   "CONTACTS_LAYOUT": {
     "HEADER": {
       "TITLE": "Contacts",
@@ -609,8 +608,8 @@
     "DESCRIPTION": "Select the labels you want to add to the selected contacts.",
     "NO_LABELS_FOUND": "No labels available yet.",
     "SELECTED_COUNT": "{count} selected",
-    "CLEAR_SELECTION": "Clear selection",
-    "SELECT_ALL": "Select all ({count})",
+    "CLEAR_SELECTION": "Clear",
+    "SELECT_ALL": "All ({count})",
     "DELETE_CONTACTS": "Delete",
     "DELETE_SUCCESS": "Contacts deleted successfully.",
     "DELETE_FAILED": "Failed to delete contacts.",
@@ -623,7 +622,6 @@
       "CONFIRM_SINGLE": "Delete contact"
     }
   },
-
   "COMPOSE_NEW_CONVERSATION": {
     "CONTACT_SEARCH": {
       "ERROR_MESSAGE": "We couldn’t complete the search. Please try again."
@@ -682,5 +680,69 @@
         "SEND": "Send ({keyCode})"
       }
     }
+  },
+  "CUSTOMERS": {
+    "TITLE": "Customers",
+    "AI_AGENT": "AI agent",
+    "NEW_SEGMENT": "New segment",
+    "EDIT_SEGMENT": "Edit segment",
+    "SAVE_SEGMENT": "Save segment",
+    "ADD_CUSTOMER": "Add customer",
+    "SEGMENTS_LABEL": "Segments",
+    "SEGMENTS": {
+      "ALL": "All",
+      "ONLINE": "Online now",
+      "LEADS": "Leads",
+      "NEW": "New this week",
+      "WAITING": "Waiting for reply"
+    },
+    "COLUMNS": {
+      "NAME": "Name",
+      "EMAIL": "Email",
+      "LAST_SEEN": "Last seen",
+      "CONVERSATIONS": "Conversations",
+      "LABELS": "Labels",
+      "SOURCE": "Source",
+      "CURRENT_PAGE": "Current page"
+    },
+    "COLUMNS_LABEL": "Columns",
+    "SEARCH": "Search customers",
+    "SELECT_PAGE": "Select this page",
+    "SELECT_CUSTOMER": "Select {name}",
+    "UNKNOWN": "—",
+    "CUSTOMER_ID": "#{id}",
+    "VISITOR": "Visitor #{id}",
+    "CREATE_SEGMENT": "Create segment",
+    "SEGMENT_NAME": "Name",
+    "SEGMENT_PLACEHOLDER": "e.g. Returning customers",
+    "ADD_CONDITION": "Add condition",
+    "SAVE_ERROR": "Could not save segment. Try again.",
+    "PROFILE": "Customer",
+    "FULL_PROFILE": "Full profile",
+    "RECENT_CONVERSATIONS": "Recent conversations",
+    "NO_CONVERSATIONS": "No conversations yet.",
+    "CONVERSATION_ID": "Conversation #{id}",
+    "LOAD_ERROR": "Could not load customers.",
+    "RETRY": "Try again",
+    "ACTION_QUEUED": "Action queued. Changes appear after processing.",
+    "ACTION_ERROR": "Action failed. Try again.",
+    "DELETE_SEGMENT": "Delete segment",
+    "DELETE_SEGMENT_WARNING": "Customers stay in your account. Rules using this segment will stop matching.",
+    "IMPORT": "Import",
+    "EXPORT": "Export",
+    "MORE": "More actions",
+    "REFRESH": "Refresh",
+    "LOADING": "Loading customers…",
+    "EMPTY": "No customers in this segment.",
+    "NO_RESULTS": "No matching customers.",
+    "SHOWING": "Showing {startItem}–{endItem} of {totalItems} customers",
+    "DELETE_CUSTOMERS": "Delete {count} customers?",
+    "DELETE_WARNING": "This permanently deletes the selected customers and their conversations. Online customers cannot be deleted.",
+    "DELETE": "Delete",
+    "AUDIENCE": "Segment",
+    "RULE_AUDIENCE": "Segment for: {rule}",
+    "EVERYONE": "Everyone",
+    "SEGMENT_LOAD_ERROR": "Could not load segments.",
+    "MISSING_SEGMENT": "Unavailable segment"
   }
 }

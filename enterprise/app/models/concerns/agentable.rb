@@ -17,6 +17,7 @@ module Concerns::Agentable
 
   def agent_instructions(context = nil, prompt_template: template_name, runtime_configuration: nil)
     enhanced_context = runtime_prompt_context(prompt_context, runtime_configuration)
+    enhanced_context = apply_segment_rules(enhanced_context, context)
     enhanced_context = enhanced_context.merge(context_state_context(context)) if context
 
     Captain::PromptRenderer.render(prompt_template, enhanced_context.with_indifferent_access)
@@ -30,6 +31,17 @@ module Concerns::Agentable
   end
 
   private
+
+  def apply_segment_rules(prompt, context)
+    return prompt unless is_a?(Captain::Assistant) || is_a?(Captain::Scenario)
+
+    owner = is_a?(Captain::Scenario) ? assistant : self
+    return prompt if owner.config['rule_segments'].blank?
+
+    state = context ? context.context.fetch(:state, {}) : {}
+    contact = owner.account.contacts.find_by(id: state.dig(:contact, :id))
+    Captain::SegmentRules.new(owner, contact).apply(prompt)
+  end
 
   def runtime_prompt_context(context, runtime_configuration)
     return context unless runtime_configuration

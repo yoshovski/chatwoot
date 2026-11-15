@@ -57,6 +57,8 @@ class Account::ContactsExportJob < ApplicationJob
   end
 
   def contacts
+    return Contacts::Directory.new(@account, @account_user, @params).scope if @params[:segment].present?
+
     if @params.present? && @params[:payload].present? && @params[:payload].any?
       result = ::Contacts::FilterService.new(@account, @account_user, @params).perform
       result[:contacts]

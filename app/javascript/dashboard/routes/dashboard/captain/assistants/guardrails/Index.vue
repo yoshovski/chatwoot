@@ -1,6 +1,9 @@
 <script setup>
-import { computed, ref } from 'vue';
+// Translation keys are selected from the fixed mappings in this screen.
+/* eslint-disable @intlify/vue-i18n/no-dynamic-keys */
+import { computed, ref, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
+import ContactsAPI from 'dashboard/api/contacts';
 import { useAssistantSettings } from '../settings/useAssistantSettings';
 import { useBusinessExamples } from 'dashboard/components-next/captain/assistant/useBusinessExamples';
 
@@ -25,8 +28,62 @@ const name = computed(() => assistant.value?.name || '');
 const guidelines = computed(() => assistant.value?.response_guidelines || []);
 const guardrails = computed(() => assistant.value?.guardrails || []);
 
-const saveGuidelines = list => updateAssistant({ response_guidelines: list });
-const saveGuardrails = list => updateAssistant({ guardrails: list });
+const segments = ref([]);
+const segmentNames = {
+  all: 'CUSTOMERS.SEGMENTS.ALL',
+  online: 'CUSTOMERS.SEGMENTS.ONLINE',
+  leads: 'CUSTOMERS.SEGMENTS.LEADS',
+  new: 'CUSTOMERS.SEGMENTS.NEW',
+  waiting: 'CUSTOMERS.SEGMENTS.WAITING',
+};
+onMounted(async () => {
+  try {
+    segments.value = (await ContactsAPI.segments()).data.payload.map(
+      segment => ({
+        ...segment,
+        name: segment.built_in ? t(segmentNames[segment.id]) : segment.name,
+      })
+    );
+  } catch {
+    /* Existing rules remain editable when the segment list is unavailable. */
+  }
+});
+const ruleAudiences = computed(
+  () => assistant.value?.config?.rule_segments || {}
+);
+const saveRules = (field, list) => {
+  const previous = assistant.value[field] || [];
+  const audiences = ruleAudiences.value[field] || {};
+  const next = Object.fromEntries(
+    list
+      .map((text, index) => [
+        text,
+        audiences[text] ||
+          (previous.length === list.length ? audiences[previous[index]] : ''),
+      ])
+      .filter(([, segment]) => segment)
+  );
+  return updateAssistant({
+    [field]: list,
+    config: {
+      ...assistant.value.config,
+      rule_segments: { ...ruleAudiences.value, [field]: next },
+    },
+  });
+};
+const saveAudience = (field, { content, segmentId }) => {
+  const next = { ...ruleAudiences.value[field] };
+  if (segmentId) next[content] = segmentId;
+  else delete next[content];
+  return updateAssistant({
+    config: {
+      ...assistant.value.config,
+      rule_segments: { ...ruleAudiences.value, [field]: next },
+    },
+  });
+};
+const saveGuidelines = list => saveRules('response_guidelines', list);
+const saveGuardrails = list => saveRules('guardrails', list);
 
 const declineOpen = ref(false);
 const offLimitsDraft = ref('');
@@ -42,11 +99,14 @@ const declineSummary = computed(
         :title="t(`${U}.ALWAYS_TITLE`)"
         :description="t(`${U}.ALWAYS_DESC`, { name })"
         :items="guidelines"
+        :segments="segments"
+        :audiences="ruleAudiences.response_guidelines"
         :suggestions="examples.guidelines.value"
         :placeholder="
           t('CAPTAIN.ASSISTANTS.RESPONSE_GUIDELINES.ADD.NEW.PLACEHOLDER')
         "
         :add-label="t('CAPTAIN.ASSISTANTS.RESPONSE_GUIDELINES.ADD.NEW.TITLE')"
+        @audience-change="saveAudience('response_guidelines', $event)"
         @update="saveGuidelines"
       />
 
@@ -55,9 +115,12 @@ const declineSummary = computed(
           :title="t(`${U}.NEVER_TITLE`)"
           :description="t(`${U}.NEVER_DESC`, { name })"
           :items="guardrails"
+          :segments="segments"
+          :audiences="ruleAudiences.guardrails"
           :suggestions="examples.guardrails.value"
           :placeholder="t('CAPTAIN.ASSISTANTS.GUARDRAILS.ADD.NEW.PLACEHOLDER')"
           :add-label="t('CAPTAIN.ASSISTANTS.GUARDRAILS.ADD.NEW.TITLE')"
+          @audience-change="saveAudience('guardrails', $event)"
           @update="saveGuardrails"
         />
         <SettingsCard>
