@@ -548,6 +548,16 @@ const menuItems = computed(() => {
           to: accountScopedRoute('contacts_dashboard_active'),
           activeOn: ['contacts_dashboard_active'],
         },
+        ...(isOnChatwootCloud.value || isEnterprise
+          ? [
+              {
+                name: 'Leads',
+                label: t('SIDEBAR.LEADS'),
+                to: accountScopedRoute('leads_index'),
+                activeOn: ['leads_index'],
+              },
+            ]
+          : []),
         {
           name: 'Segments',
           icon: 'i-lucide-group',

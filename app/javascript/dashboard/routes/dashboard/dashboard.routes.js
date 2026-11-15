@@ -12,6 +12,7 @@ import { routes as captainRoutes } from './captain/captain.routes';
 import { routes as knowledgeRoutes } from './knowledge/routes';
 import { routes as homeRoutes } from './home/routes';
 import { routes as analyticsRoutes } from './analytics/routes';
+import { routes as leadsRoutes } from './leads/routes';
 import AppContainer from './Dashboard.vue';
 import Suspended from './suspended/Index.vue';
 import NoAccounts from './noAccounts/Index.vue';
@@ -26,6 +27,7 @@ export default {
       children: [
         ...homeRoutes,
         ...analyticsRoutes,
+        ...leadsRoutes,
         ...captainRoutes,
         ...knowledgeRoutes,
         ...inboxRoutes,
