@@ -68,9 +68,13 @@ class User < ApplicationRecord
          :two_factor_authenticatable,
          :omniauthable, omniauth_providers: [:google_oauth2, :saml]
 
-  # Devise, after the email is confirmed: the welcome email of a public signup (T11).
+  # Devise, after the email is confirmed: the welcome email of a public signup (T11), and the website import of an
+  # account claimed from the site's agent preview (T27).
   def after_confirmation
     AccountSignup.where(user_id: id, welcome_sent_at: nil).find_each { |signup| Signup::WelcomeJob.perform_later(signup) }
+    AccountSignup.where(user_id: id, signup_method: 'agent_preview').where.not(account_id: nil).find_each do |signup|
+      Signup::StartWebsiteImportJob.perform_later(signup.account_id)
+    end
   end
 
   # TODO: remove in a future version once online status is moved to account users

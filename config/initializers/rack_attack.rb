@@ -185,6 +185,15 @@ class Rack::Attack
     signup_domain.call(req) if signup_request.call(req)
   end
 
+  ## Agent preview (T27) ###
+  # All requests come through chatoctave.com's proxy, so these are totals, not per visitor: a backstop behind the
+  # per-IP and daily-budget limits in Captain::AgentPreviews::Limits.
+  agent_preview_request = ->(req) { req.post? && req.path.start_with?('/public/api/v1/agent_previews') }
+
+  throttle('agent_previews/minute', limit: ENV.fetch('AGENT_PREVIEW_RATE_PER_MINUTE', 30).to_i, period: 1.minute) do |req|
+    'agent_previews' if agent_preview_request.call(req)
+  end
+
   ##-----------------------------------------------##
 
   ###-----------------------------------------------###

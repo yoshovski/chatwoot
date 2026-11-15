@@ -3,7 +3,7 @@
 # later in onboarding or settings (website_domain). When the account is deleted the row keeps only the domains and the
 # trial decision, so deleting an account and signing up again does not earn a second trial.
 class AccountSignup < ApplicationRecord
-  METHODS = %w[email google api].freeze
+  METHODS = %w[email google api agent_preview].freeze
 
   belongs_to :account, optional: true
   belongs_to :user, optional: true

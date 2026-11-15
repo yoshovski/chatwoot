@@ -753,6 +753,14 @@ Rails.application.routes.draw do
         end
 
         resources :csat_survey, only: [:show, :update]
+
+        # chatoctave.com's agent preview (T27), through the site's proxy only.
+        resources :agent_previews, only: [:create], param: :token do
+          member do
+            post :messages
+            post :claim
+          end
+        end
       end
     end
   end
