@@ -79,7 +79,7 @@ describe('SidebarNavigation', () => {
   it('opens the panel of the current section with its pages', () => {
     const wrapper = mountNavigation();
 
-    expect(wrapper.find('#co-section-panel h2').text()).toBe('Conversations');
+    expect(wrapper.find('h2').text()).toBe('Conversations');
     expect(wrapper.findAll('.leaf').map(leaf => leaf.text())).toEqual([
       'My open',
       'Mentions',
@@ -102,7 +102,7 @@ describe('SidebarNavigation', () => {
     expect(railButton(wrapper, 'Conversations').text()).toBe('3');
   });
 
-  it('hides the panel, remembers it, and moves focus to the rail icon', async () => {
+  it('hides the panel, remembers it, and keeps a toggle to show it', async () => {
     const wrapper = mountNavigation();
 
     await wrapper
@@ -117,6 +117,11 @@ describe('SidebarNavigation', () => {
     expect(JSON.parse(localStorage.getItem('co-nav-collapsed'))).toEqual({
       Conversation: true,
     });
+
+    await wrapper
+      .find('button[aria-label="PLATFORM_NAV.SHOW_MENU"]')
+      .trigger('click');
+    expect(wrapper.find('#co-section-panel').exists()).toBe(true);
   });
 
   it('shows a hidden panel again from its rail icon without navigating', async () => {

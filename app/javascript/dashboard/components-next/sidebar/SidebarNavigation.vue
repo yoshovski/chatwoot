@@ -1,5 +1,5 @@
 <script setup>
-import { computed, nextTick, ref, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { useSidebarContext } from './provider';
@@ -93,14 +93,6 @@ const showPanel = computed(
 );
 
 const isActive = item => activeModule.value?.name === item.name;
-// Hiding the panel removes the focused button, so focus goes to the section's
-// rail icon, which shows the panel again.
-const railRef = ref(null);
-const hidePanel = async () => {
-  toggleCollapsed(activeModule.value.name);
-  await nextTick();
-  railRef.value?.querySelector('[aria-current="true"]')?.focus();
-};
 
 const MAX_BADGE = 99;
 const badgeText = count => (count > MAX_BADGE ? `${MAX_BADGE}+` : count);
@@ -111,7 +103,6 @@ const tooltipFor = item => {
   if (item.badgeCount) {
     parts.push(t('PLATFORM_NAV.UNREAD', { count: item.badgeCount }));
   }
-  if (isPanelHidden(item)) parts.push(t('PLATFORM_NAV.SHOW_MENU'));
   return {
     content: parts.join(' · '),
     theme: 'co-nav',
@@ -171,9 +162,8 @@ watch(
 
 <template>
   <nav
-    ref="railRef"
     :aria-label="t('PLATFORM_NAV.PRODUCT_AREAS')"
-    class="flex w-[4.5rem] shrink-0 flex-col items-center gap-2 bg-n-background py-2"
+    class="relative flex w-[4.5rem] shrink-0 flex-col items-center gap-2 bg-n-background py-2"
   >
     <slot name="account" />
     <slot name="compose" />
@@ -244,18 +234,43 @@ watch(
       <Icon :icon="settingsModule.icon" class="size-6" />
     </button>
     <slot name="profile" />
+    <!-- With the panel hidden, a small handle on the rail's edge, level with
+    the panel title, shows it again; the page keeps the full width. -->
+    <button
+      v-if="hasPanel(activeModule) && !showPanel"
+      v-tooltip.right="t('PLATFORM_NAV.SHOW_MENU')"
+      type="button"
+      :aria-label="t('PLATFORM_NAV.SHOW_MENU')"
+      aria-controls="co-section-panel"
+      aria-expanded="false"
+      class="absolute -end-3.5 top-[1.125rem] z-30 grid size-7 place-items-center rounded-full border border-n-weak bg-n-solid-1 text-n-slate-11 shadow-sm hover:text-n-slate-12 focus-visible:outline focus-visible:outline-2 focus-visible:outline-n-brand"
+      @click="toggleCollapsed(activeModule.name)"
+    >
+      <Icon icon="i-lucide-chevrons-right" class="size-4" />
+    </button>
   </nav>
-  <section
-    v-if="showPanel"
-    id="co-section-panel"
-    :aria-label="activeModule.label"
-    class="flex w-60 min-w-0 flex-col border-s border-n-weak bg-n-background"
+  <div
+    v-if="hasPanel(activeModule)"
+    class="flex shrink-0 flex-col overflow-hidden bg-n-background transition-[width] duration-200 ease-out motion-reduce:transition-none"
+    :class="showPanel ? 'w-56 border-s border-n-weak' : 'w-0'"
   >
     <div
-      class="flex h-16 shrink-0 items-center justify-between gap-2 ps-5 pe-3"
+      v-if="showPanel"
+      class="flex h-16 w-56 shrink-0 items-center gap-1.5 ps-3 pe-3"
     >
+      <button
+        v-tooltip.bottom="t('PLATFORM_NAV.HIDE_MENU')"
+        type="button"
+        :aria-label="t('PLATFORM_NAV.HIDE_MENU')"
+        aria-controls="co-section-panel"
+        aria-expanded="true"
+        class="grid size-8 shrink-0 place-items-center rounded-lg text-n-slate-11 hover:bg-n-alpha-2 hover:text-n-slate-12 focus-visible:outline focus-visible:outline-2 focus-visible:outline-n-brand"
+        @click="toggleCollapsed(activeModule.name)"
+      >
+        <Icon icon="i-lucide-panel-left-close" class="size-[1.125rem]" />
+      </button>
       <h2
-        class="m-0 min-w-0 truncate font-display text-lg font-semibold tracking-display text-n-slate-12"
+        class="m-0 min-w-0 flex-1 truncate font-display text-lg font-semibold tracking-display text-n-slate-12"
         :title="activeModule.label"
       >
         {{ activeModule.label }}
@@ -265,52 +280,48 @@ watch(
           v-if="activeModule.name === 'Conversation'"
           name="conversationTools"
         />
-        <button
-          v-tooltip.bottom="t('PLATFORM_NAV.HIDE_MENU')"
-          type="button"
-          :aria-label="t('PLATFORM_NAV.HIDE_MENU')"
-          aria-controls="co-section-panel"
-          aria-expanded="true"
-          class="grid size-8 place-items-center rounded-lg text-n-slate-11 hover:bg-n-alpha-2 hover:text-n-slate-12 focus-visible:outline focus-visible:outline-2 focus-visible:outline-n-brand"
-          @click="hidePanel"
-        >
-          <Icon icon="i-lucide-panel-left-close" class="size-[1.125rem]" />
-        </button>
       </div>
     </div>
-    <AssistantNavigation v-if="activeModule.name === 'Captain'" />
-    <nav
-      :aria-label="t('PLATFORM_NAV.SECTION_NAVIGATION')"
-      class="min-h-0 flex-1 overflow-y-auto px-3 pb-6"
+    <section
+      v-if="showPanel"
+      id="co-section-panel"
+      :aria-label="activeModule.label"
+      class="flex min-h-0 w-56 flex-1 flex-col"
     >
-      <ul class="m-0 flex list-none flex-col gap-0.5 p-0">
-        <template v-for="(child, index) in panelItems" :key="child.name">
-          <li
-            v-if="startsCluster(child, index)"
-            aria-hidden="true"
-            class="h-4 shrink-0 list-none"
-          />
-          <SidebarSubGroup
-            v-if="child.children"
-            :name="`${activeModule.name}:${child.name}`"
-            :label="child.label"
-            :children="child.children"
-            :active-child="
-              child.children.includes(activeLeaf) ? activeLeaf : undefined
-            "
-            is-expanded
-            collapsible
-            :sort-options="child.sortOptions"
-            :active-sort="child.activeSort"
-            @update-sort="child.onSortChange?.($event)"
-          />
-          <SidebarGroupLeaf
-            v-else
-            v-bind="child"
-            :active="activeLeaf === child"
-          />
-        </template>
-      </ul>
-    </nav>
-  </section>
+      <AssistantNavigation v-if="activeModule.name === 'Captain'" />
+      <nav
+        :aria-label="t('PLATFORM_NAV.SECTION_NAVIGATION')"
+        class="min-h-0 flex-1 overflow-y-auto px-3 pb-6"
+      >
+        <ul class="m-0 flex list-none flex-col gap-0.5 p-0">
+          <template v-for="(child, index) in panelItems" :key="child.name">
+            <li
+              v-if="startsCluster(child, index)"
+              aria-hidden="true"
+              class="h-4 shrink-0 list-none"
+            />
+            <SidebarSubGroup
+              v-if="child.children"
+              :name="`${activeModule.name}:${child.name}`"
+              :label="child.label"
+              :children="child.children"
+              :active-child="
+                child.children.includes(activeLeaf) ? activeLeaf : undefined
+              "
+              is-expanded
+              collapsible
+              :sort-options="child.sortOptions"
+              :active-sort="child.activeSort"
+              @update-sort="child.onSortChange?.($event)"
+            />
+            <SidebarGroupLeaf
+              v-else
+              v-bind="child"
+              :active="activeLeaf === child"
+            />
+          </template>
+        </ul>
+      </nav>
+    </section>
+  </div>
 </template>

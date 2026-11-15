@@ -42,10 +42,11 @@ const rowClass = computed(() => {
   if (props.compact) {
     return "border-b border-n-slate-3 hover:border-n-surface-1 hover:bg-n-alpha-1 dark:hover:bg-n-alpha-3 before:content-[none] before:absolute before:-top-px before:inset-x-0 before:h-px before:bg-n-surface-1 before:pointer-events-none hover:before:content-['']";
   }
+  // Cards sit inset from the list edges; the open one is a soft tint, no frame.
   if (props.isActiveChat) {
-    return 'mb-1 rounded-xl bg-n-blue-2 outline outline-1 -outline-offset-1 outline-n-blue-5';
+    return 'mx-2 mb-1 rounded-xl bg-n-blue-2 dark:bg-n-alpha-3';
   }
-  return 'mb-1 rounded-xl hover:bg-n-alpha-1 dark:hover:bg-n-alpha-3';
+  return 'mx-2 mb-1 rounded-xl hover:bg-n-alpha-1 dark:hover:bg-n-alpha-3';
 });
 
 const hovered = ref(false);
