@@ -1,8 +1,7 @@
 <script setup>
-import { computed, ref, watch } from 'vue';
+import { computed, nextTick, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
-import { onClickOutside } from '@vueuse/core';
 import { useSidebarContext } from './provider';
 import {
   groupPlatformNavigation,
@@ -22,14 +21,6 @@ const route = useRoute();
 const router = useRouter();
 const { isAllowed, resolvePath } = useSidebarContext();
 const lastRoutes = ref({});
-
-// Design step (T32): a = fixed panel, b = flyout panel, c = collapsible panel.
-const readVariant = () => {
-  if (!import.meta.env.DEV) return 'c';
-  const value = new URLSearchParams(window.location.search).get('co_variant');
-  return ['a', 'b', 'c'].includes(value) ? value : 'c';
-};
-const variant = readVariant();
 
 const accessible = items =>
   items.flatMap(item => {
@@ -70,55 +61,48 @@ const settingsModule = computed(() =>
   modules.value.find(item => item.name === 'Settings')
 );
 
+// Each section's panel can be hidden to give the page the full width; the
+// choice is remembered per section in this browser.
+const COLLAPSED_KEY = 'co-nav-collapsed';
 const readCollapsed = () => {
   try {
-    return JSON.parse(localStorage.getItem('co-nav-collapsed') || '{}');
+    return JSON.parse(localStorage.getItem(COLLAPSED_KEY) || '{}');
   } catch {
     return {};
   }
 };
-const collapsed = ref(variant === 'c' ? readCollapsed() : {});
+const collapsed = ref(readCollapsed());
 const toggleCollapsed = name => {
   collapsed.value = { ...collapsed.value, [name]: !collapsed.value[name] };
   try {
-    localStorage.setItem('co-nav-collapsed', JSON.stringify(collapsed.value));
+    localStorage.setItem(COLLAPSED_KEY, JSON.stringify(collapsed.value));
   } catch {
     // Remembering the choice is a convenience; the toggle still works.
   }
 };
 
-const flyoutModule = ref(null);
-const panelModule = computed(() =>
-  variant === 'b' ? flyoutModule.value : activeModule.value
-);
-const panelItems = computed(() => panelModule.value?.children || []);
+const panelItems = computed(() => activeModule.value?.children || []);
 // A section without pages (Home) is the page itself: no panel, full width.
+const hasPanel = item => Boolean(item?.children);
 const showPanel = computed(
   () =>
-    Boolean(panelModule.value?.children) &&
-    !(variant === 'c' && collapsed.value[panelModule.value.name])
-);
-const isFlyout = variant === 'b';
-const panelRef = ref(null);
-const railRef = ref(null);
-onClickOutside(
-  panelRef,
-  () => {
-    flyoutModule.value = null;
-  },
-  { ignore: [railRef, '[data-popover-content]', '.v-popper__popper'] }
+    hasPanel(activeModule.value) && !collapsed.value[activeModule.value.name]
 );
 
 const isActive = item => activeModule.value?.name === item.name;
-const isHighlighted = item =>
-  isFlyout && flyoutModule.value
-    ? flyoutModule.value.name === item.name
-    : isActive(item);
+// Hiding the panel removes the focused button, so focus goes to the section's
+// rail icon, which shows the panel again.
+const railRef = ref(null);
+const hidePanel = async () => {
+  toggleCollapsed(activeModule.value.name);
+  await nextTick();
+  railRef.value?.querySelector('[aria-current="true"]')?.focus();
+};
 
 const MAX_BADGE = 99;
 const badgeText = count => (count > MAX_BADGE ? `${MAX_BADGE}+` : count);
 const isPanelHidden = item =>
-  variant === 'c' && isActive(item) && Boolean(collapsed.value[item.name]);
+  isActive(item) && hasPanel(item) && Boolean(collapsed.value[item.name]);
 const tooltipFor = item => {
   const parts = [item.label];
   if (item.badgeCount) {
@@ -150,12 +134,7 @@ const openModule = item => {
   router.push(target || navigationLeaves(item)[0].to);
 };
 const selectModule = item => {
-  if (isFlyout && item.children) {
-    flyoutModule.value = flyoutModule.value?.name === item.name ? null : item;
-    return;
-  }
-  flyoutModule.value = null;
-  if (variant === 'c' && collapsed.value[item.name] && isActive(item)) {
+  if (isPanelHidden(item)) {
     toggleCollapsed(item.name);
     return;
   }
@@ -169,7 +148,6 @@ watch(
     if (activeModule.value) {
       lastRoutes.value[activeModule.value.name] = route.fullPath;
     }
-    flyoutModule.value = null;
     emit('navigate');
   }
 );
@@ -207,13 +185,16 @@ watch(
               :aria-label="item.label"
               :aria-current="isActive(item) ? 'true' : undefined"
               :aria-expanded="
-                isFlyout && item.children
-                  ? flyoutModule?.name === item.name
+                isActive(item) && hasPanel(item) ? showPanel : undefined
+              "
+              :aria-controls="
+                isActive(item) && hasPanel(item)
+                  ? 'co-section-panel'
                   : undefined
               "
               class="relative flex size-12 items-center justify-center rounded-2xl transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-n-brand"
               :class="
-                isHighlighted(item)
+                isActive(item)
                   ? 'bg-n-brand/10 text-n-blue-11'
                   : 'text-n-slate-11 hover:bg-n-alpha-2 hover:text-n-slate-12'
               "
@@ -237,9 +218,15 @@ watch(
       type="button"
       :aria-label="settingsModule.label"
       :aria-current="isActive(settingsModule) ? 'true' : undefined"
+      :aria-expanded="
+        isActive(settingsModule) && hasPanel(settingsModule)
+          ? showPanel
+          : undefined
+      "
+      :aria-controls="isActive(settingsModule) ? 'co-section-panel' : undefined"
       class="flex size-12 shrink-0 items-center justify-center rounded-2xl transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-n-brand"
       :class="
-        isHighlighted(settingsModule)
+        isActive(settingsModule)
           ? 'bg-n-brand/10 text-n-blue-11'
           : 'text-n-slate-11 hover:bg-n-alpha-2 hover:text-n-slate-12'
       "
@@ -251,37 +238,38 @@ watch(
   </nav>
   <section
     v-if="showPanel"
-    ref="panelRef"
+    id="co-section-panel"
+    :aria-label="activeModule.label"
     class="flex w-60 min-w-0 flex-col border-s border-n-weak bg-n-background"
-    :class="isFlyout ? 'absolute inset-y-0 z-50 shadow-lg start-[4.5rem]' : ''"
   >
     <div
       class="flex h-16 shrink-0 items-center justify-between gap-2 ps-5 pe-3"
     >
       <h2
         class="m-0 min-w-0 truncate font-display text-lg font-semibold tracking-display text-n-slate-12"
-        :title="panelModule.label"
+        :title="activeModule.label"
       >
-        {{ panelModule.label }}
+        {{ activeModule.label }}
       </h2>
       <div class="flex shrink-0 items-center gap-0.5">
         <slot
-          v-if="panelModule.name === 'Conversation'"
+          v-if="activeModule.name === 'Conversation'"
           name="conversationTools"
         />
         <button
-          v-if="variant === 'c'"
           v-tooltip.bottom="t('PLATFORM_NAV.HIDE_MENU')"
           type="button"
           :aria-label="t('PLATFORM_NAV.HIDE_MENU')"
-          class="grid size-8 place-items-center rounded-lg text-n-slate-11 hover:bg-n-alpha-2 hover:text-n-slate-12"
-          @click="toggleCollapsed(panelModule.name)"
+          aria-controls="co-section-panel"
+          aria-expanded="true"
+          class="grid size-8 place-items-center rounded-lg text-n-slate-11 hover:bg-n-alpha-2 hover:text-n-slate-12 focus-visible:outline focus-visible:outline-2 focus-visible:outline-n-brand"
+          @click="hidePanel"
         >
           <Icon icon="i-lucide-panel-left-close" class="size-[1.125rem]" />
         </button>
       </div>
     </div>
-    <AssistantNavigation v-if="panelModule.name === 'Captain'" />
+    <AssistantNavigation v-if="activeModule.name === 'Captain'" />
     <nav
       :aria-label="t('PLATFORM_NAV.SECTION_NAVIGATION')"
       class="min-h-0 flex-1 overflow-y-auto px-3 pb-6"
@@ -295,7 +283,7 @@ watch(
           />
           <SidebarSubGroup
             v-if="child.children"
-            :name="`${panelModule.name}:${child.name}`"
+            :name="`${activeModule.name}:${child.name}`"
             :label="child.label"
             :children="child.children"
             :active-child="
