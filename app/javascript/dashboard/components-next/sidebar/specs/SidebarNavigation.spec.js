@@ -38,6 +38,15 @@ const items = [
       { name: 'Mentions', label: 'Mentions', to: { name: 'mentions' } },
     ],
   },
+  {
+    name: 'Settings',
+    label: 'Settings',
+    icon: 'i-lucide-settings',
+    to: { name: 'settings_home' },
+    children: [
+      { name: 'Settings Agents', label: 'Teammates', to: { name: 'agents' } },
+    ],
+  },
 ];
 
 const mountNavigation = () =>
@@ -122,6 +131,20 @@ describe('SidebarNavigation', () => {
 
     expect(wrapper.find('#co-section-panel').exists()).toBe(true);
     expect(push).not.toHaveBeenCalled();
+  });
+
+  it('opens the settings home with no panel, also from a settings page', async () => {
+    Object.assign(route, { name: 'agents', path: '/agents' });
+    const wrapper = mountNavigation();
+
+    expect(wrapper.find('#co-section-panel').exists()).toBe(false);
+    expect(railButton(wrapper, 'Settings').attributes('aria-current')).toBe(
+      'true'
+    );
+
+    await railButton(wrapper, 'Settings').trigger('click');
+
+    expect(push).toHaveBeenCalledWith({ name: 'settings_home' });
   });
 
   it('opens another section on its first page', async () => {

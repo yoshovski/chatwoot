@@ -743,6 +743,9 @@ const menuItems = computed(() => {
       name: 'Settings',
       label: t('SIDEBAR.SETTINGS'),
       icon: 'i-lucide-settings',
+      // The rail opens the settings home (cards and search, T31); the pages below
+      // only tell the rail which section is current.
+      to: accountScopedRoute('settings_home'),
       children: [
         {
           name: 'Settings Account Settings',

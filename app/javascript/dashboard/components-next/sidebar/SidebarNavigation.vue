@@ -83,7 +83,10 @@ const toggleCollapsed = name => {
 
 const panelItems = computed(() => activeModule.value?.children || []);
 // A section without pages (Home) is the page itself: no panel, full width.
-const hasPanel = item => Boolean(item?.children);
+// Settings has its own home with cards and search, so it needs no panel either.
+const PANEL_LESS = ['Settings'];
+const hasPanel = item =>
+  Boolean(item?.children) && !PANEL_LESS.includes(item.name);
 const showPanel = computed(
   () =>
     hasPanel(activeModule.value) && !collapsed.value[activeModule.value.name]
@@ -128,6 +131,10 @@ const startsCluster = (child, index) =>
   index > 0 && (Boolean(child.children) || CLUSTER_STARTS.includes(child.name));
 
 const openModule = item => {
+  if (!hasPanel(item) && item.to) {
+    router.push(item.to);
+    return;
+  }
   const remembered = lastRoutes.value[item.name];
   const target =
     remembered && isAllowed(router.resolve(remembered)) ? remembered : null;
@@ -138,7 +145,9 @@ const selectModule = item => {
     toggleCollapsed(item.name);
     return;
   }
-  if (isActive(item)) return;
+  // A section without a panel opens its home again, e.g. back to the
+  // settings cards from a settings page.
+  if (isActive(item) && hasPanel(item)) return;
   openModule(item);
 };
 
