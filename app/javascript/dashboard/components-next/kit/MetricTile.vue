@@ -39,7 +39,9 @@ const CHANGE_TONES = {
       >
         <Icon :icon="icon" class="size-4" />
       </span>
-      <span class="truncate text-sm text-n-slate-11">{{ label }}</span>
+      <span class="line-clamp-2 text-sm leading-5 text-n-slate-11 sm:truncate">
+        {{ label }}
+      </span>
     </div>
     <div class="flex items-end justify-between gap-3">
       <div class="flex min-w-0 flex-col gap-1">

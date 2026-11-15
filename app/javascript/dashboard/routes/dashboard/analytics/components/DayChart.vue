@@ -21,8 +21,9 @@ const props = defineProps({
 const emit = defineEmits(['retry']);
 const { t, locale } = useI18n();
 
-// A month shows every fifth day under the bars, so the labels stay readable.
+// A month shows every fifth date under the bars, every tenth on a phone, so the dates never overlap.
 const LABEL_EVERY = 5;
+const LABEL_EVERY_NARROW = 10;
 const TONES = [
   { bar: 'bg-n-blue-9', dot: 'bg-n-blue-9' },
   { bar: 'bg-n-amber-8', dot: 'bg-n-amber-8' },
@@ -68,10 +69,7 @@ const bars = computed(() =>
       day: 'numeric',
       month: 'long',
     });
-    const showLabel =
-      isWeek.value ||
-      index % LABEL_EVERY === 0 ||
-      index === props.days.length - 1;
+    const showLabel = isWeek.value || index % LABEL_EVERY === 0;
     return {
       key: day.date,
       total,
@@ -90,6 +88,7 @@ const bars = computed(() =>
         label: props.series[position].label,
       })),
       label: showLabel ? dayLabel(date) : '',
+      wideOnly: !isWeek.value && index % LABEL_EVERY_NARROW !== 0,
       align: tooltipAlign(index),
       ariaLabel: t('ANALYTICS.CHART.DAY', {
         date: fullDate,
@@ -222,7 +221,9 @@ const bars = computed(() =>
             :key="bar.key"
             class="min-w-0 flex-1 whitespace-nowrap text-center text-xs text-n-slate-10"
           >
-            {{ bar.label }}
+            <span :class="{ 'hidden sm:inline': bar.wideOnly }">
+              {{ bar.label }}
+            </span>
           </span>
         </div>
       </div>
