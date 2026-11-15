@@ -1,0 +1,85 @@
+{
+  "ANALYTICS": {
+    "TITLE": "Analytics",
+    "SUBTITLE": "The last {days} days, compared with the {days} days before.",
+    "MORE_REPORTS": "More reports",
+    "MORE": {
+      "LABEL": "More reports",
+      "BACK": "Analytics",
+      "LIVE": "Right now",
+      "CONVERSATIONS": "Conversations",
+      "AGENTS": "People",
+      "LABELS": "Labels",
+      "INBOXES": "Channels",
+      "TEAMS": "Teams",
+      "RATING": "Customer rating",
+      "TARGETS": "Reply-time targets",
+      "AI_AGENT": "AI agent"
+    },
+    "PERIOD": {
+      "LABEL": "Period",
+      "DAYS": "{days} days"
+    },
+    "TABS": {
+      "LABEL": "Analytics sections",
+      "OVERVIEW": "Overview",
+      "AI_AGENT": "AI agent",
+      "TEAM": "Team",
+      "RATING": "Customer rating"
+    },
+    "PENDING": {
+      "TITLE": "This tab follows the Overview",
+      "DESCRIPTION": "It gets the same layout once the Overview layout is chosen."
+    },
+    "METRICS": {
+      "CONVERSATIONS": "Conversations",
+      "AI_CONVERSATIONS": "Answered by your AI agent",
+      "RESOLVED": "Solved by AI agent",
+      "HANDED": "Handed to your team",
+      "FIRST_REPLY": "Time to first reply",
+      "TEAM_SOLVED": "Solved by your team",
+      "RATING": "Customer rating"
+    },
+    "DURATION": {
+      "SECONDS": "{count} s",
+      "MINUTES": "{count} min",
+      "HOURS": "{count} h",
+      "HOURS_MINUTES": "{hours} h {minutes} min"
+    },
+    "CHART": {
+      "TITLE": "Conversations by day",
+      "AI": "AI agent",
+      "TEAM": "Your team",
+      "EMPTY": "No conversations in this period yet.",
+      "SUMMARY": "Over {days} days, counted per day: {ai} conversations with your AI agent and {team} with your team."
+    },
+    "TEAM_LIST": {
+      "TITLE": "Your team",
+      "SEE_ALL": "Team",
+      "EMPTY": "Nobody on your team had a conversation in this period.",
+      "ROW": "{conversations} conversations · first reply {time}"
+    },
+    "STORY": {
+      "TITLE": "Your last {days} days",
+      "RESOLVED": "Your AI agent solved {rate} % of the {count} conversations it answered.",
+      "HANDED": "It handed {count} to your team, who replied first after {time} on average.",
+      "TEAM_SOLVED": "Your team solved {count} conversations.",
+      "RATING": "Customers rated you {rating} out of 5.",
+      "NO_RATING": "No customer ratings in this period yet.",
+      "CHANGE": "{change} against the {days} days before",
+      "BUSIEST": "Busiest day: {date}, with {count} conversations."
+    },
+    "COMPARE": {
+      "AI": "AI agent",
+      "TEAM": "Your team",
+      "CONVERSATIONS": "Conversations",
+      "SOLVED": "Solved",
+      "RATE": "Solved share",
+      "FIRST_REPLY": "Time to first reply",
+      "INSTANT": "Seconds",
+      "HANDED": "Handed to your team",
+      "BETTER": "Better",
+      "RATING_BOTH": "Customer rating for both: {rating} out of 5."
+    }
+  }
+}

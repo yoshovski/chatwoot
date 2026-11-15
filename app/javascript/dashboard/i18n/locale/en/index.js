@@ -23,6 +23,7 @@ import emoji from './emoji.json';
 import general from './general.json';
 import generalSettings from './generalSettings.json';
 import helpCenter from './helpCenter.json';
+import analytics from './analytics.json';
 import home from './home.json';
 import inbox from './inbox.json';
 import inboxMgmt from './inboxMgmt.json';
@@ -74,6 +75,7 @@ export default {
   ...general,
   ...generalSettings,
   ...helpCenter,
+  ...analytics,
   ...home,
   ...inbox,
   ...inboxMgmt,

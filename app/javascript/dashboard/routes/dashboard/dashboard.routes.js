@@ -11,6 +11,7 @@ import campaignsRoutes from './campaigns/campaigns.routes';
 import { routes as captainRoutes } from './captain/captain.routes';
 import { routes as knowledgeRoutes } from './knowledge/routes';
 import { routes as homeRoutes } from './home/routes';
+import { routes as analyticsRoutes } from './analytics/routes';
 import AppContainer from './Dashboard.vue';
 import Suspended from './suspended/Index.vue';
 import NoAccounts from './noAccounts/Index.vue';
@@ -24,6 +25,7 @@ export default {
       component: AppContainer,
       children: [
         ...homeRoutes,
+        ...analyticsRoutes,
         ...captainRoutes,
         ...knowledgeRoutes,
         ...inboxRoutes,

@@ -1,4 +1,5 @@
 <script setup>
+import { MORE_REPORTS } from 'dashboard/routes/dashboard/settings/reports/moreReports';
 import { h, ref, computed, onMounted, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import { provideSidebarContext } from './provider';
@@ -319,33 +320,11 @@ const closeMobileSidebar = () => {
   emit('closeMobileSidebar');
 };
 
-const newReportRoutes = () => [
-  {
-    name: 'Reports Agent',
-    label: t('SIDEBAR.REPORTS_AGENT'),
-    to: accountScopedRoute('agent_reports_index'),
-    activeOn: ['agent_reports_show'],
-  },
-  {
-    name: 'Reports Label',
-    label: t('SIDEBAR.REPORTS_LABEL'),
-    to: accountScopedRoute('label_reports_index'),
-  },
-  {
-    name: 'Reports Inbox',
-    label: t('SIDEBAR.REPORTS_INBOX'),
-    to: accountScopedRoute('inbox_reports_index'),
-    activeOn: ['inbox_reports_show'],
-  },
-  {
-    name: 'Reports Team',
-    label: t('SIDEBAR.REPORTS_TEAM'),
-    to: accountScopedRoute('team_reports_index'),
-    activeOn: ['team_reports_show'],
-  },
-];
-
-const reportRoutes = computed(() => newReportRoutes());
+// The upstream report pages, reachable under "More reports" (T23).
+const MORE_REPORT_ROUTES = MORE_REPORTS.flatMap(report => [
+  report.name,
+  ...report.activeOn,
+]);
 
 const menuItems = computed(() => {
   return [
@@ -629,34 +608,34 @@ const menuItems = computed(() => {
     },
     {
       name: 'Reports',
-      label: t('SIDEBAR.REPORTS'),
+      label: t('SIDEBAR.ANALYTICS'),
       icon: 'i-lucide-chart-no-axes-column',
       children: [
         {
-          name: 'Report Overview',
-          label: t('SIDEBAR.REPORTS_OVERVIEW'),
+          name: 'Analytics Overview',
+          label: t('ANALYTICS.TABS.OVERVIEW'),
+          to: accountScopedRoute('analytics_overview'),
+        },
+        {
+          name: 'Analytics AI agent',
+          label: t('ANALYTICS.TABS.AI_AGENT'),
+          to: accountScopedRoute('analytics_ai_agent'),
+        },
+        {
+          name: 'Analytics Team',
+          label: t('ANALYTICS.TABS.TEAM'),
+          to: accountScopedRoute('analytics_team'),
+        },
+        {
+          name: 'Analytics Rating',
+          label: t('ANALYTICS.TABS.RATING'),
+          to: accountScopedRoute('analytics_rating'),
+        },
+        {
+          name: 'More reports',
+          label: t('ANALYTICS.MORE_REPORTS'),
           to: accountScopedRoute('account_overview_reports'),
-        },
-        {
-          name: 'Report Conversation',
-          label: t('SIDEBAR.REPORTS_CONVERSATION'),
-          to: accountScopedRoute('conversation_reports'),
-        },
-        ...reportRoutes.value,
-        {
-          name: 'Reports CSAT',
-          label: t('SIDEBAR.CSAT'),
-          to: accountScopedRoute('csat_reports'),
-        },
-        {
-          name: 'Reports SLA',
-          label: t('SIDEBAR.REPORTS_SLA'),
-          to: accountScopedRoute('sla_reports'),
-        },
-        {
-          name: 'Reports Bot',
-          label: t('SIDEBAR.REPORTS_BOT'),
-          to: accountScopedRoute('bot_reports'),
+          activeOn: MORE_REPORT_ROUTES,
         },
       ],
     },
