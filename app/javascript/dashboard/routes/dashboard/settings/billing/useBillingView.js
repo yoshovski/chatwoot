@@ -254,6 +254,18 @@ export const useBillingView = billing => {
         action: 'plans',
         label: t('BILLING_PAGE.CHOOSE_PLAN'),
       };
+    if (reason === 'paused' && b().stripe_details?.pause_collection)
+      return {
+        tone: 'slate',
+        icon: 'i-lucide-circle-pause',
+        text: b().stripe_details.pause_collection.resumes_at
+          ? t('BILLING_PAGE.CANCEL_FLOW.PAUSED_UNTIL', {
+              date: date(b().stripe_details.pause_collection.resumes_at * 1000),
+            })
+          : t('BILLING_PAGE.STATUS.PAUSED'),
+        action: 'resume',
+        label: t('BILLING_PAGE.CANCEL_FLOW.RESUME'),
+      };
     if (reason && reason !== 'no_plan')
       return {
         tone: 'amber',
@@ -266,8 +278,8 @@ export const useBillingView = billing => {
         tone: 'slate',
         icon: 'i-lucide-calendar-x',
         text: t('BILLING_PAGE.ALERT.CANCELS', { date: date(endsAt.value) }),
-        action: 'portal',
-        label: t('BILLING_PAGE.RESUME'),
+        action: 'keep',
+        label: t('BILLING_PAGE.CANCEL_FLOW.KEEP'),
       };
     return null;
   });
@@ -281,6 +293,7 @@ export const useBillingView = billing => {
     free,
     liveSubscription,
     canceling,
+    endsAt,
     pastDue,
     price,
     priceCents,

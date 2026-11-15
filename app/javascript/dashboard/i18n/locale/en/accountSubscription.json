@@ -183,6 +183,66 @@
       "SCHEDULED": "Done. The change applies at the end of this period.",
       "CHANGED": "Done. Your new plan is active."
     },
-    "KEEP_PLAN": "Keep {plan}"
+    "KEEP_PLAN": "Keep {plan}",
+    "CANCEL_FLOW": {
+      "TITLE": "Before you go",
+      "DESCRIPTION": "What could we have done better? Choose a reason, or cancel right away.",
+      "BACK": "Back to Billing",
+      "KEEP": "Keep my plan",
+      "CANCEL": "Cancel anyway",
+      "REASON": "Your reason",
+      "OFFER": "An option for you",
+      "END_NOTE": "Your plan stays active until {date}. After that, billing stops and your AI agent stops replying.",
+      "FEATURE_LABEL": "Which feature were you hoping for?",
+      "FEATURE_PLACEHOLDER": "Tell us what would help your team…",
+      "PAUSE_LABEL": "How long would you like to pause?",
+      "MONTHS": "{count} month | {count} months",
+      "SUCCESS_TITLE": "Your cancellation is scheduled",
+      "SUCCESS_DESCRIPTION": "You can change your mind and keep your plan from Billing before {date}.",
+      "ACCEPTED_TITLE": "Thanks for giving us another chance",
+      "REASONS": {
+        "expensive": "Too expensive",
+        "unused": "Not using it",
+        "feature": "Missing a feature",
+        "quality": "Answers are not good enough",
+        "other": "Other"
+      },
+      "OFFERS": {
+        "expensive": {
+          "TITLE": "A little more room in your budget",
+          "DESCRIPTION": "Keep your current plan with 30% off for the next 3 months. Your regular price resumes after that. Available once per account.",
+          "ACTION": "Accept 30% off"
+        },
+        "unused": {
+          "TITLE": "Take a break, keep your setup",
+          "DESCRIPTION": "Pause for up to 3 months. Your AI agent pauses too, and your plan resumes automatically. Billing dates stay the same; payments already made are not refunded.",
+          "ACTION": "Pause my plan"
+        },
+        "feature": {
+          "TITLE": "Tell us what is missing",
+          "DESCRIPTION": "Share the feature you need. If a smaller plan suits you better for now, you can review your options.",
+          "ACTION": "Move to this plan"
+        },
+        "quality": {
+          "TITLE": "Let us help your AI agent get it right",
+          "DESCRIPTION": "Request a free setup session to work through your knowledge and instructions with our team. Your plan stays active.",
+          "ACTION": "Request a free session"
+        },
+        "other": {
+          "TITLE": "Thanks for letting us know",
+          "DESCRIPTION": "You can cancel below. Your plan stays active until the end of the paid period.",
+          "ACTION": ""
+        }
+      },
+      "ERROR": "We could not update your subscription. Please try again.",
+      "UNAVAILABLE": "This offer is not available for your current subscription. You can still cancel below.",
+      "SMALLER_PLAN": "Choose a smaller plan",
+      "DISCOUNTED": "30% off has been applied for 3 months. Your regular price resumes after that.",
+      "PAUSED": "Your plan and AI agent are paused. Billing resumes automatically on the date shown in Billing.",
+      "DOWNGRADED": "Your smaller plan starts at the end of your current paid period.",
+      "SETUP_REQUESTED": "Your request for a free setup session has been saved for our team. Your plan stays active.",
+      "PAUSED_UNTIL": "Plan paused until {date}. Your AI agent is paused too.",
+      "RESUME": "Resume my plan"
+    }
   }
 }

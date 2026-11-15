@@ -28,6 +28,21 @@ ActiveRecord::Schema[7.2].define(version: 2026_11_16_090000) do
     t.index ["token"], name: "index_access_tokens_on_token", unique: true
   end
 
+  create_table "account_cancellations", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.bigint "user_id"
+    t.string "stripe_subscription_id", null: false
+    t.string "reason", null: false
+    t.text "feature"
+    t.string "outcome", default: "started", null: false
+    t.jsonb "details", default: {}, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id"], name: "index_account_cancellations_on_account_id"
+    t.index ["account_id"], name: "one_retention_discount_per_account", unique: true, where: "((outcome)::text = 'discounted'::text)"
+    t.index ["user_id"], name: "index_account_cancellations_on_user_id"
+  end
+
   create_table "account_data_exports", force: :cascade do |t|
     t.bigint "account_id", null: false
     t.bigint "user_id", null: false
@@ -2009,6 +2024,8 @@ ActiveRecord::Schema[7.2].define(version: 2026_11_16_090000) do
     t.index ["inbox_id"], name: "index_working_hours_on_inbox_id"
   end
 
+  add_foreign_key "account_cancellations", "accounts", on_delete: :cascade
+  add_foreign_key "account_cancellations", "users", on_delete: :nullify
   add_foreign_key "account_data_exports", "accounts"
   add_foreign_key "account_data_exports", "users"
   add_foreign_key "account_subscriptions", "accounts"

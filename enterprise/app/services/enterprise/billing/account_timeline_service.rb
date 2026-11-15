@@ -11,7 +11,7 @@ class Enterprise::Billing::AccountTimelineService
   end
 
   def perform
-    (stripe_entries + ledger_entries + audit_entries).select(&:at).sort_by(&:at).reverse.first(LIMIT)
+    (stripe_entries + ledger_entries + audit_entries + cancellation_entries).select(&:at).sort_by(&:at).reverse.first(LIMIT)
   end
 
   def stripe_events
@@ -22,6 +22,13 @@ class Enterprise::Billing::AccountTimelineService
   end
 
   private
+
+  def cancellation_entries
+    AccountCancellation.where(account: @account).includes(:user).order(updated_at: :desc).limit(LIMIT).map do |attempt|
+      Entry.new(at: attempt.updated_at, kind: 'cancellation', title: "#{attempt.reason.humanize} · #{attempt.outcome.humanize}",
+                detail: [attempt.feature.presence, attempt.details.presence&.to_json, attempt.user&.email].compact.join(' · '))
+    end
+  end
 
   def stripe_entries
     stripe_events.map do |event|

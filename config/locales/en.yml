@@ -973,6 +973,7 @@ en:
       replay_confirm: "Run this Stripe event again?"
       stripe_failed: "Stripe refused: %{error}"
       kinds:
+        cancellation: "Cancellation"
         stripe: "Stripe"
         ledger: "Ledger"
         change: "Change"

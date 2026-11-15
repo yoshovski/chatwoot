@@ -13,12 +13,14 @@ import BillingAlert from './components/BillingAlert.vue';
 import InvoicesCard from './components/InvoicesCard.vue';
 import OverviewCard from './components/OverviewCard.vue';
 import PlanPickerDialog from './components/PlanPickerDialog.vue';
+import CancelPlanDialog from './components/CancelPlanDialog.vue';
 import { useBillingView } from './useBillingView';
 
 // Billing: plan and AI usage side by side, what happens at the limit, then invoices. Administrators only (route).
 const { t } = useI18n();
 const { billing, loading, loadFailed, refresh } = useAccountSubscription();
 onMounted(() => refresh());
+const cancellation = ref(null);
 
 const busy = ref(false);
 const buying = ref(false);
@@ -28,7 +30,8 @@ const picker = ref(null);
 // Punctuation between facts on one line; not a translatable word.
 const SEPARATOR = ' · ';
 const canBuy = computed(() => Boolean(billing.value?.top_up?.available));
-const { alert, liveSubscription, canceling, money } = useBillingView(billing);
+const { alert, liveSubscription, canceling, endsAt, date, money } =
+  useBillingView(billing);
 // At the limit the alert owns the buy button; the usage card does not repeat it.
 const canBuyInCard = computed(
   () => canBuy.value && alert.value?.action !== 'buy'
@@ -124,13 +127,16 @@ const choosePlan = async ({ plan, interval }) => {
   else if (data.status === 'changed')
     useAlert(t('BILLING_PAGE.PICKER.CHANGED'));
 };
-const keepPlan = () =>
+const keepScheduledPlan = () =>
   go(() =>
     api.changePlan(
       billing.value.plan.id,
       billing.value.stripe_details?.interval || billing.value.billing_interval
     )
   );
+const keepPlan = () =>
+  canceling.value ? go(() => api.keepPlan()) : keepScheduledPlan();
+const resumePlan = () => go(() => api.resumePlan());
 const contactUs = () => window.$chatwoot?.toggle?.('open');
 
 const onAlert = action =>
@@ -139,6 +145,8 @@ const onAlert = action =>
     portal: openPortal,
     buy: buyPack,
     plans: openPlans,
+    keep: keepPlan,
+    resume: resumePlan,
   })[action]?.();
 </script>
 
@@ -171,8 +179,24 @@ const onAlert = action =>
     </div>
 
     <template v-else-if="billing">
+      <div
+        v-if="canceling"
+        class="flex flex-wrap items-center justify-between gap-3 rounded-card bg-n-alpha-2 px-4 py-3"
+        role="status"
+      >
+        <p class="mb-0 text-sm font-medium text-n-slate-12">
+          {{ t('BILLING_PAGE.ALERT.CANCELS', { date: date(endsAt) }) }}
+        </p>
+        <Button
+          :label="t('BILLING_PAGE.CANCEL_FLOW.KEEP')"
+          size="sm"
+          :disabled="busy"
+          :is-loading="busy"
+          @click="keepPlan"
+        />
+      </div>
       <BillingAlert
-        v-if="alert"
+        v-if="alert && alert.action !== 'keep'"
         :billing="billing"
         :busy="busy || buying"
         @action="onAlert"
@@ -226,17 +250,22 @@ const onAlert = action =>
 
       <InvoicesCard v-if="billing.can_manage" @portal="openPortal" />
 
-      <!-- Cancelling stays one readable click away; T09 replaces the portal with its own flow. -->
+      <!-- One dialog: optional reason, matching offer, and a direct period-end cancellation. -->
       <button
         v-if="canCancel"
         type="button"
         class="mb-16 self-start text-sm text-n-slate-11 underline underline-offset-4 hover:text-n-slate-12 sm:mb-0"
         :disabled="busy"
-        @click="openPortal"
+        @click="cancellation.open()"
       >
         {{ t('BILLING_PAGE.CANCEL_PLAN') }}
       </button>
 
+      <CancelPlanDialog
+        ref="cancellation"
+        :billing="billing"
+        @changed="refresh()"
+      />
       <PlanPickerDialog
         ref="picker"
         :billing="billing"

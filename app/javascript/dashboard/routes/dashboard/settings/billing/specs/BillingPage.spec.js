@@ -269,13 +269,15 @@ describe('BillingAlert', () => {
     expect(wrapper.emitted('action')).toEqual([['buy']]);
   });
 
-  it('says when the plan ends and offers to resume it', () => {
+  it('says when the plan ends and offers to keep it', async () => {
     const data = billing();
     data.stripe_details.cancel_at_period_end = true;
     const wrapper = alertOf(data);
 
     expect(wrapper.text()).toContain('BILLING_PAGE.ALERT.CANCELS');
-    expect(wrapper.text()).toContain('BILLING_PAGE.RESUME');
+    expect(wrapper.text()).toContain('BILLING_PAGE.CANCEL_FLOW.KEEP');
+    await wrapper.find('button').trigger('click');
+    expect(wrapper.emitted('action')[0]).toEqual(['keep']);
   });
 });
 

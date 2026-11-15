@@ -85,3 +85,39 @@ Billing UX revision: normal currency inputs accept comma or dot decimal separato
 Billing now distinguishes the absence of an online subscription, an existing subscription, its payment status and scheduled cancellation. Existing Stripe subscribers see their actual recurring item price, cadence, renewal/end date and latest invoice status, with management instead of a second checkout selector. Saved offers are used only for new subscriptions. Paid invoice status is separate from active subscription status. Stripe state is refreshed on billing page entry, retry and before subscription checkout; ordinary usage polling reads local state. An open checkout is reused, and switching its interval expires the old session before creating another.
 
 Run the new account-subscription migration before application/workers and register the invoice events above. Review the installation's customer portal configuration. Active eligible subscribers can select **Change billing** to review monthly/yearly pricing in Stripe. The hosted confirmation updates the existing subscription item, preserves quantity and reviews credits/payment before confirmation. A subscription scheduled to end must first be explicitly resumed in Stripe. Unsupported structures, schedules and payment issues retain portal management. Preparing a review never changes the subscription or creates a second checkout. See the [UX review](usage-billing-review.md) for state behavior and rollout checks, and [LiteLLM tenant usage](ai-agents/litellm-tenant-usage.md) for customer filtering and the separate Dify attribution requirement.
+
+
+## Cancellation and retention (T09)
+
+Billing uses a single dialog with optional reasons, a matching offer, and a direct **Cancel anyway** button.
+Opening it, choosing a reason and cancelling takes three clicks; the reason can be skipped. Cancellation sets
+`cancel_at_period_end`, preserving the paid period. **Keep my plan** clears a scheduled cancellation, including
+custom-price subscriptions. A pending downgrade schedule is released before cancellation so it cannot replace
+the cancellation later.
+
+Run migration `20261115200000_create_account_cancellations` before starting the new application/workers.
+`AccountCancellation` stores the administrator, reason, optional missing-feature text, decision and timestamps.
+Super Admin's account billing timeline displays these records. **Request a free session** records a request
+there; it does not book an appointment or send a message. Confirmation/win-back emails remain with T08.
+
+The 30% offer creates a three-month repeating Stripe coupon with one redemption. A partial unique index permits
+one accepted discount per account across all subscriptions. Stripe metadata and request idempotency keys support
+reconciliation after a lost response. It is only offered on an active, undiscounted, single monthly recurring item,
+without a pending update or schedule. Annual subscribers can cancel but do not receive this coupon, since it
+could discount the annual invoice. Existing discounts are never replaced.
+
+Pausing uses `pause_collection` with `behavior: void` and a one-, two- or three-month `resumes_at` deadline. Paid
+time is not refunded and billing dates do not move. Stripe leaves its subscription status active; the shared sync
+service maps an unexpired collection pause to ChatOctave's paused state, blocking AI replies. It maps it back after
+the deadline. A scheduled `Enterprise::Billing::ResumeCollectionJob` refreshes the account at the deadline even if
+no administrator visits Billing; subscription/invoice webhooks and normal page refreshes also reconcile state.
+**Resume my plan** clears the collection pause early. Manual/dispute AI holds remain separate.
+
+Missing-feature offers list only smaller purchasable plans in the same currency and use the existing period-end
+plan change service. Cancellation and retention endpoints require an account administrator and scope attempt
+IDs to the authenticated account. Shopify billing continues to use its own provider flow.
+
+Before rollout, use an isolated Stripe test account to exercise each reason, period-end cancellation and keeping
+a plan, pause/resume (including the scheduled refresh), discount expiry/one-use enforcement and downgrade
+schedules. Check the resulting local AI state and Super Admin timeline as well as Stripe state. Existing Stripe
+Tax settings are preserved; this flow does not change tax collection or registrations.

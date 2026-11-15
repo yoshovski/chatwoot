@@ -46,6 +46,30 @@ class AccountSubscriptionAPI extends ApiClient {
     return axios.patch(`${this.url}/top_up_settings`, settings);
   }
 
+  startCancellation(reason = 'other') {
+    return axios.post(`${this.url}/cancellations`, { reason });
+  }
+
+  cancelPlan(id, decision) {
+    return axios.post(`${this.url}/cancellations/${id}/confirm`, decision);
+  }
+
+  acceptRetention(id, decision) {
+    return axios.post(`${this.url}/cancellations/${id}/accept`, decision);
+  }
+
+  dismissCancellation(id, decision) {
+    return axios.post(`${this.url}/cancellations/${id}/dismiss`, decision);
+  }
+
+  keepPlan() {
+    return axios.post(`${this.url}/cancellations/keep`);
+  }
+
+  resumePlan() {
+    return axios.post(`${this.url}/cancellations/resume`);
+  }
+
   portal() {
     return axios.post(`${this.url}/portal`);
   }
