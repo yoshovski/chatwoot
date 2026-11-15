@@ -3,7 +3,12 @@ import { ref } from 'vue';
 import Sidebar from '../Sidebar.vue';
 
 const mocks = vi.hoisted(() => ({
-  route: { name: 'captain_assistants_documents_index', path: '/', params: {} },
+  route: {
+    name: 'captain_assistants_documents_index',
+    path: '/',
+    params: {},
+    query: {},
+  },
 }));
 
 vi.mock('vue-router', () => ({
