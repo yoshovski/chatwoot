@@ -2,10 +2,9 @@
   "ANALYTICS": {
     "TITLE": "Analytics",
     "SUBTITLE": "The last {days} days, compared with the {days} days before.",
-    "MORE_REPORTS": "More reports",
     "MORE": {
-      "LABEL": "More reports",
-      "BACK": "Analytics",
+      "LABEL": "Detailed reports",
+      "BACK": "Detailed reports",
       "LIVE": "Right now",
       "CONVERSATIONS": "Conversations",
       "AGENTS": "People",
@@ -51,7 +50,11 @@
       "AI": "AI agent",
       "TEAM": "Your team",
       "EMPTY": "No conversations in this period yet.",
-      "SUMMARY": "Over {days} days, counted per day: {ai} conversations with your AI agent and {team} with your team."
+      "LINK": "Conversation report",
+      "DAY": "{date}: AI agent {ai}, your team {team}",
+      "NOTE": "Each bar counts the conversations someone replied in that day. A conversation over several days counts on each of them.",
+      "AI_TOTAL": "AI agent replied, day by day",
+      "TEAM_TOTAL": "Your team replied, day by day"
     },
     "TEAM_LIST": {
       "TITLE": "Your team",
@@ -80,6 +83,26 @@
       "HANDED": "Handed to your team",
       "BETTER": "Better",
       "RATING_BOTH": "Customer rating for both: {rating} out of 5."
+    },
+    "REPORTS": {
+      "TITLE": "Detailed reports",
+      "SUBTITLE": "Every number in full, with filters and downloads.",
+      "GROUPS": {
+        "NOW": "What is happening",
+        "WHO": "Who and where",
+        "QUALITY": "How well it went"
+      },
+      "ITEMS": {
+        "LIVE": "Open conversations, who is online and the busiest hours of the week.",
+        "CONVERSATIONS": "Conversations, messages, reply and solve times over any period.",
+        "AGENTS": "Each person: conversations, time to first reply and solved.",
+        "TEAMS": "The same numbers for each team.",
+        "INBOXES": "The same numbers for each channel: chat, email, WhatsApp.",
+        "LABELS": "Conversations by label, to see what customers ask about.",
+        "AI_AGENT": "Conversations your AI agent solved or handed to your team, over time.",
+        "RATING": "Every customer rating with its comment, by person and channel.",
+        "TARGETS": "Conversations that missed a reply-time target, and why."
+      }
     }
   }
 }

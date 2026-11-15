@@ -3,6 +3,7 @@ import { FEATURE_FLAGS } from 'dashboard/featureFlags';
 import AnalyticsIndex from './Index.vue';
 import OverviewTab from './OverviewTab.vue';
 import PendingTab from './PendingTab.vue';
+import ReportsHub from './ReportsHub.vue';
 
 const meta = {
   featureFlag: FEATURE_FLAGS.REPORTS,
@@ -38,6 +39,12 @@ export const routes = [
         meta,
         component: tab.name === 'analytics_overview' ? OverviewTab : PendingTab,
       })),
+      {
+        path: 'reports',
+        name: 'analytics_reports',
+        meta,
+        component: ReportsHub,
+      },
     ],
   },
 ];

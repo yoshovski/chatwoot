@@ -150,3 +150,12 @@ export const busiestDay = days =>
       day.ai + day.team > (best ? best.ai + best.team : 0) ? day : best,
     null
   );
+
+// A round top for a chart axis, at least the largest value, and three gridlines that are whole numbers.
+export const chartScale = max => {
+  const power = 10 ** Math.max(Math.floor(Math.log10(Math.max(max, 1))), 0);
+  const top = [2, 4, 6, 8, 10]
+    .map(step => step * power)
+    .find(step => step >= max);
+  return { top, ticks: [top, top / 2, 0] };
+};

@@ -38,7 +38,7 @@ const links = computed(() =>
         class="flex items-center gap-1 overflow-x-auto border-b border-n-weak pt-4"
       >
         <RouterLink
-          :to="{ name: 'analytics_overview' }"
+          :to="{ name: 'analytics_reports' }"
           class="me-2 inline-flex shrink-0 items-center gap-1 py-2 text-sm font-medium text-n-blue-11"
         >
           <Icon icon="i-lucide-arrow-left" class="size-4" />

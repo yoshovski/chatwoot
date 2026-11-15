@@ -2,7 +2,6 @@
 import { computed, onMounted, toRef } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useMapGetter, useStore } from 'dashboard/composables/store';
-import { dayLabels } from '../home/homeView';
 import { metricView, overviewMetrics, teamRows } from './analyticsView';
 import { useAnalyticsData } from './useAnalyticsData';
 import OverviewTiles from './components/OverviewTiles.vue';
@@ -11,7 +10,7 @@ import OverviewCompare from './components/OverviewCompare.vue';
 
 const props = defineProps({ period: { type: Number, required: true } });
 
-const { t, locale } = useI18n();
+const { t } = useI18n();
 const store = useStore();
 const agents = useMapGetter('agents/getAgents');
 
@@ -47,9 +46,6 @@ const metrics = computed(() =>
     ])
   )
 );
-const days = computed(() =>
-  dayLabels(activity.value?.days || [], props.period, locale.value)
-);
 const team = computed(() => teamRows(agentSummary.value, agents.value));
 
 onMounted(() => store.dispatch('agents/get'));
@@ -59,7 +55,6 @@ onMounted(() => store.dispatch('agents/get'));
   <component
     :is="Layout"
     :metrics="metrics"
-    :days="days"
     :raw-days="activity?.days || []"
     :topics="activity?.topics || []"
     :team="team"

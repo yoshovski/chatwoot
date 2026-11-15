@@ -1,28 +1,40 @@
-// The upstream report pages kept under Analytics → More reports, with plain names. `activeOn` lists the detail pages.
+// The upstream report pages kept under Analytics → Detailed reports, with plain names, grouped by the question they
+// answer. `activeOn` lists their detail pages.
+const report = (key, group, icon, name, activeOn = []) => ({
+  key,
+  group,
+  icon,
+  name,
+  activeOn,
+});
+
 export const MORE_REPORTS = [
-  { key: 'LIVE', name: 'account_overview_reports' },
-  { key: 'CONVERSATIONS', name: 'conversation_reports' },
-  {
-    key: 'AGENTS',
-    name: 'agent_reports_index',
-    activeOn: ['agent_reports_show', 'agent_reports'],
-  },
-  {
-    key: 'LABELS',
-    name: 'label_reports_index',
-    activeOn: ['label_reports_show', 'label_reports'],
-  },
-  {
-    key: 'INBOXES',
-    name: 'inbox_reports_index',
-    activeOn: ['inbox_reports_show', 'inbox_reports'],
-  },
-  {
-    key: 'TEAMS',
-    name: 'team_reports_index',
-    activeOn: ['team_reports_show', 'team_reports'],
-  },
-  { key: 'RATING', name: 'csat_reports' },
-  { key: 'TARGETS', name: 'sla_reports' },
-  { key: 'AI_AGENT', name: 'bot_reports' },
-].map(report => ({ activeOn: [], ...report }));
+  report('LIVE', 'NOW', 'i-lucide-radio', 'account_overview_reports'),
+  report(
+    'CONVERSATIONS',
+    'NOW',
+    'i-lucide-messages-square',
+    'conversation_reports'
+  ),
+  report('LABELS', 'NOW', 'i-lucide-tags', 'label_reports_index', [
+    'label_reports_show',
+    'label_reports',
+  ]),
+  report('AGENTS', 'WHO', 'i-lucide-user-round', 'agent_reports_index', [
+    'agent_reports_show',
+    'agent_reports',
+  ]),
+  report('TEAMS', 'WHO', 'i-lucide-users', 'team_reports_index', [
+    'team_reports_show',
+    'team_reports',
+  ]),
+  report('INBOXES', 'WHO', 'i-lucide-inbox', 'inbox_reports_index', [
+    'inbox_reports_show',
+    'inbox_reports',
+  ]),
+  report('AI_AGENT', 'QUALITY', 'i-lucide-bot', 'bot_reports'),
+  report('RATING', 'QUALITY', 'i-lucide-star', 'csat_reports'),
+  report('TARGETS', 'QUALITY', 'i-lucide-timer', 'sla_reports'),
+];
+
+export const MORE_REPORT_GROUPS = ['NOW', 'WHO', 'QUALITY'];

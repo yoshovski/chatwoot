@@ -2,8 +2,7 @@
 export const overviewProps = {
   // { key: { label, value, change, changeTone, points, icon, tone, raw } }
   metrics: { type: Object, required: true },
-  // [{ label, ai, team }] for the chart; rawDays keeps the ISO dates.
-  days: { type: Array, default: () => [] },
+  // [{ date, ai, team }] from the Home activity.
   rawDays: { type: Array, default: () => [] },
   topics: { type: Array, default: () => [] },
   // [{ id, name, conversations, solved, firstReply }]

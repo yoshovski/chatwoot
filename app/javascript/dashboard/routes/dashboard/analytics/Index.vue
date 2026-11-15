@@ -1,52 +1,45 @@
 <script setup>
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router';
-import Button from 'dashboard/components-next/button/Button.vue';
+import { RouterView, useRoute, useRouter } from 'vue-router';
 import PageFrame from 'dashboard/components-next/kit/PageFrame.vue';
 import PageHeader from 'dashboard/components-next/kit/PageHeader.vue';
-import { TABS } from './routes';
 import { PERIODS, periodFromQuery } from './analyticsView';
 
-// The Analytics section: one period control (kept in the URL) and the tabs. Each tab reads the period from the route.
+// The Analytics section. The sidebar is the navigation; this frame names the current view and holds the one period
+// control (kept in the URL), which every view except the reports hub reads from the route.
 const { t } = useI18n();
 const route = useRoute();
 const router = useRouter();
 
 const period = computed(() => periodFromQuery(route.query.period));
+const hasPeriod = computed(() => route.name !== 'analytics_reports');
+
+const titles = computed(() => ({
+  analytics_overview: t('ANALYTICS.TITLE'),
+  analytics_ai_agent: t('ANALYTICS.TABS.AI_AGENT'),
+  analytics_team: t('ANALYTICS.TABS.TEAM'),
+  analytics_rating: t('ANALYTICS.TABS.RATING'),
+  analytics_reports: t('ANALYTICS.REPORTS.TITLE'),
+}));
+const title = computed(() => titles.value[route.name]);
+const description = computed(() =>
+  hasPeriod.value
+    ? t('ANALYTICS.SUBTITLE', { days: period.value })
+    : t('ANALYTICS.REPORTS.SUBTITLE')
+);
 
 const selectPeriod = days => {
   if (days === period.value) return;
   router.replace({ query: { ...route.query, period: days } });
 };
-
-const tabLabels = computed(() => ({
-  OVERVIEW: t('ANALYTICS.TABS.OVERVIEW'),
-  AI_AGENT: t('ANALYTICS.TABS.AI_AGENT'),
-  TEAM: t('ANALYTICS.TABS.TEAM'),
-  RATING: t('ANALYTICS.TABS.RATING'),
-}));
-
-const tabs = computed(() =>
-  TABS.map(tab => ({
-    ...tab,
-    label: tabLabels.value[tab.key],
-    to: { name: tab.name, query: route.query },
-    active: route.name === tab.name,
-  }))
-);
-
-const openMoreReports = () => router.push({ name: 'account_overview_reports' });
 </script>
 
 <template>
   <PageFrame>
     <template #header>
-      <PageHeader
-        :title="t('ANALYTICS.TITLE')"
-        :description="t('ANALYTICS.SUBTITLE', { days: period })"
-      >
-        <template #action>
+      <PageHeader :title="title" :description="description">
+        <template v-if="hasPeriod" #action>
           <div
             role="group"
             :aria-label="t('ANALYTICS.PERIOD.LABEL')"
@@ -68,35 +61,8 @@ const openMoreReports = () => router.push({ name: 'account_overview_reports' });
               {{ t('ANALYTICS.PERIOD.DAYS', { days }) }}
             </button>
           </div>
-          <Button
-            :label="t('ANALYTICS.MORE_REPORTS')"
-            icon="i-lucide-table-2"
-            size="sm"
-            variant="faded"
-            color="slate"
-            @click="openMoreReports"
-          />
         </template>
       </PageHeader>
-      <nav
-        :aria-label="t('ANALYTICS.TABS.LABEL')"
-        class="-mb-1 flex gap-1 overflow-x-auto border-b border-n-weak"
-      >
-        <RouterLink
-          v-for="tab in tabs"
-          :key="tab.name"
-          :to="tab.to"
-          class="-mb-px shrink-0 border-b-2 px-3 py-2 text-sm font-medium"
-          :class="
-            tab.active
-              ? 'border-n-blue-9 text-n-slate-12'
-              : 'border-transparent text-n-slate-11 hover:text-n-slate-12'
-          "
-          :aria-current="tab.active ? 'page' : undefined"
-        >
-          {{ tab.label }}
-        </RouterLink>
-      </nav>
     </template>
     <RouterView :period="period" />
   </PageFrame>

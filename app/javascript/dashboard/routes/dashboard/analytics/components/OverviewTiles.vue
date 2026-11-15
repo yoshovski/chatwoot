@@ -37,9 +37,14 @@ const tiles = computed(() => TILES.map(key => props.metrics[key]));
       :is-loading="isLoading"
     />
   </div>
-  <SectionCard :title="$t('ANALYTICS.CHART.TITLE')">
+  <SectionCard
+    :title="$t('ANALYTICS.CHART.TITLE')"
+    :link-label="$t('ANALYTICS.CHART.LINK')"
+    :to="{ name: 'conversation_reports' }"
+  >
     <ConversationsChart
-      :days="days"
+      :days="rawDays"
+      :period="period"
       :is-loading="isLoading"
       :has-error="hasError"
       @retry="emit('retry')"

@@ -128,12 +128,18 @@ const busiest = computed(() => {
     </ul>
   </SectionCard>
   <div class="grid grid-cols-1 gap-4 lg:grid-cols-3">
-    <SectionCard class="lg:col-span-2" :title="t('ANALYTICS.CHART.TITLE')">
+    <SectionCard
+      class="lg:col-span-2"
+      :title="t('ANALYTICS.CHART.TITLE')"
+      :link-label="t('ANALYTICS.CHART.LINK')"
+      :to="{ name: 'conversation_reports' }"
+    >
       <p v-if="busiest && !isLoading" class="mb-0 text-sm text-n-slate-11">
         {{ busiest }}
       </p>
       <ConversationsChart
-        :days="days"
+        :days="rawDays"
+        :period="period"
         :is-loading="isLoading"
         :has-error="hasError"
         @retry="emit('retry')"

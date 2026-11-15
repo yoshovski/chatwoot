@@ -152,9 +152,14 @@ const columns = computed(() => [
       </dl>
     </SectionCard>
   </div>
-  <SectionCard :title="t('ANALYTICS.CHART.TITLE')">
+  <SectionCard
+    :title="t('ANALYTICS.CHART.TITLE')"
+    :link-label="t('ANALYTICS.CHART.LINK')"
+    :to="{ name: 'conversation_reports' }"
+  >
     <ConversationsChart
-      :days="days"
+      :days="rawDays"
+      :period="period"
       :is-loading="isLoading"
       :has-error="hasError"
       @retry="emit('retry')"

@@ -320,7 +320,12 @@ const closeMobileSidebar = () => {
   emit('closeMobileSidebar');
 };
 
-// The upstream report pages, reachable under "More reports" (T23).
+// Moving between Analytics views keeps the chosen period.
+const analyticsQuery = computed(() =>
+  route.query.period ? { period: route.query.period } : {}
+);
+
+// The upstream report pages, reachable under "Detailed reports" (T23).
 const MORE_REPORT_ROUTES = MORE_REPORTS.flatMap(report => [
   report.name,
   ...report.activeOn,
@@ -614,27 +619,35 @@ const menuItems = computed(() => {
         {
           name: 'Analytics Overview',
           label: t('ANALYTICS.TABS.OVERVIEW'),
-          to: accountScopedRoute('analytics_overview'),
+          to: accountScopedRoute(
+            'analytics_overview',
+            {},
+            analyticsQuery.value
+          ),
         },
         {
           name: 'Analytics AI agent',
           label: t('ANALYTICS.TABS.AI_AGENT'),
-          to: accountScopedRoute('analytics_ai_agent'),
+          to: accountScopedRoute(
+            'analytics_ai_agent',
+            {},
+            analyticsQuery.value
+          ),
         },
         {
           name: 'Analytics Team',
           label: t('ANALYTICS.TABS.TEAM'),
-          to: accountScopedRoute('analytics_team'),
+          to: accountScopedRoute('analytics_team', {}, analyticsQuery.value),
         },
         {
           name: 'Analytics Rating',
           label: t('ANALYTICS.TABS.RATING'),
-          to: accountScopedRoute('analytics_rating'),
+          to: accountScopedRoute('analytics_rating', {}, analyticsQuery.value),
         },
         {
-          name: 'More reports',
-          label: t('ANALYTICS.MORE_REPORTS'),
-          to: accountScopedRoute('account_overview_reports'),
+          name: 'Detailed reports',
+          label: t('ANALYTICS.REPORTS.TITLE'),
+          to: accountScopedRoute('analytics_reports'),
           activeOn: MORE_REPORT_ROUTES,
         },
       ],
