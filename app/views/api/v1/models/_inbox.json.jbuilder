@@ -104,6 +104,8 @@ if resource.email?
     json.branded_email_layout resource.branded_email_layout
   end
 
+  json.reauthorization_required resource.channel.reauthorization_required? if Current.account_user&.administrator?
+
   ## IMAP
   if Current.account_user&.administrator?
     json.imap_login resource.channel.try(:imap_login)
@@ -150,6 +152,9 @@ json.bot_name resource.channel.try(:bot_name) if resource.telegram?
 
 ### WhatsApp Channel
 if resource.whatsapp?
+  json.connection_configured resource.channel.provider_config.to_h['api_key'].present?
+  json.phone_number_health resource.channel.phone_number_health.slice('status', 'quality_rating', 'platform_type', 'throughput_level')
+  json.health_check_failed resource.channel.phone_number_health_error.present?
   message_templates = resource.channel.try(:message_templates)
   json.message_templates message_templates.is_a?(Array) ? message_templates : []
   json.provider_config resource.channel.try(:provider_config) if Current.account_user&.administrator?
@@ -195,3 +200,5 @@ if resource.channel_type == 'Channel::Whatsapp' && resource.channel.respond_to?(
   json.recording_enabled resource.channel.try(:recording_enabled?)
   json.transcription_enabled resource.channel.try(:transcription_enabled?)
 end
+
+json.partial! 'api/v1/models/inbox_captain', resource: resource if ChatwootApp.enterprise?

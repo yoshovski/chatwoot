@@ -1,3 +1,4 @@
+import channels from './channels.json';
 import accountSubscription from './accountSubscription.json';
 import knowledge from './knowledge.json';
 import advancedFilters from './advancedFilters.json';
@@ -51,6 +52,7 @@ import sessionLimit from './sessionLimit.json';
 import yearInReview from './yearInReview.json';
 
 export default {
+  ...channels,
   ...accountSubscription,
   ...knowledge,
   ...advancedFilters,

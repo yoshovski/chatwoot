@@ -305,7 +305,7 @@
   "CONFIRM_EMAIL": "Verifying...",
   "SETTINGS": {
     "INBOXES": {
-      "NEW_INBOX": "Add Inbox"
+      "NEW_INBOX": "Add channel"
     }
   },
   "SIDEBAR": {
@@ -338,13 +338,13 @@
     "CAPTAIN_TOOLS": "Actions & MCP",
     "CAPTAIN_SCENARIOS": "Scenarios",
     "CAPTAIN_PLAYGROUND": "Playground",
-    "CAPTAIN_INBOXES": "Inboxes",
+    "CAPTAIN_INBOXES": "Channels",
     "CAPTAIN_SETTINGS": "Settings",
     "HOME": "Home",
     "AGENTS": "Agents",
     "AGENT_BOTS": "Bots",
     "AUDIT_LOGS": "Audit Logs",
-    "INBOXES": "Inboxes",
+    "INBOXES": "Channels",
     "WHATSAPP_TEMPLATES": "Templates",
     "NOTIFICATIONS": "Notifications",
     "CANNED_RESPONSES": "Canned Responses",
@@ -366,7 +366,7 @@
     "TAGGED_WITH": "Tagged with",
     "NEW_LABEL": "New label",
     "NEW_TEAM": "New team",
-    "NEW_INBOX": "New inbox",
+    "NEW_INBOX": "New channel",
     "REPORTS_CONVERSATION": "Conversations",
     "CSAT": "CSAT",
     "LIVE_CHAT": "Live Chat",

@@ -1,224 +1,201 @@
 <script setup>
-import { computed, onActivated, ref } from 'vue';
+/* eslint-disable @intlify/vue-i18n/no-dynamic-keys -- Health and status keys come from the fixed channel health map. */
+import { computed, onMounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { useAlert } from 'dashboard/composables';
-import Avatar from 'next/avatar/Avatar.vue';
-import { useAdmin } from 'dashboard/composables/useAdmin';
-import SettingsLayout from '../SettingsLayout.vue';
-import BaseSettingsHeader from '../components/BaseSettingsHeader.vue';
-import {
-  useMapGetter,
-  useStoreGetters,
-  useStore,
-} from 'dashboard/composables/store';
-import ChannelName from './components/ChannelName.vue';
-import ChannelIcon from 'next/icon/ChannelIcon.vue';
-import Button from 'dashboard/components-next/button/Button.vue';
+import InboxesAPI from 'dashboard/api/inboxes';
+import { useMapGetter, useStore } from 'dashboard/composables/store';
 import { getInboxIdentifier, searchInboxes } from 'dashboard/helper/inbox';
+import PageHeader from 'next/kit/PageHeader.vue';
+import SectionCard from 'next/kit/SectionCard.vue';
+import StatusPill from 'next/kit/StatusPill.vue';
+import EmptyState from 'next/kit/EmptyState.vue';
+import Button from 'next/button/Button.vue';
+import ChannelIcon from 'next/icon/ChannelIcon.vue';
+import Icon from 'next/icon/Icon.vue';
+import ChannelName from './components/ChannelName.vue';
+import { channelHealth, CHANNEL_STATES } from 'next/Channels/channelHealth';
 
-const IDENTIFIER_SEPARATOR = '·';
-
-const getters = useStoreGetters();
-const store = useStore();
 const { t } = useI18n();
-const { isAdmin } = useAdmin();
-
-const showDeletePopup = ref(false);
-const selectedInbox = ref({});
-const searchQuery = ref('');
-
+const store = useStore();
 const inboxes = useMapGetter('inboxes/getInboxes');
-
-onActivated(() => {
-  store.dispatch('inboxes/get');
-});
-
-const inboxesList = computed(() => {
-  return inboxes.value
-    ?.map(inbox => ({
+const loading = ref(true);
+const error = ref(false);
+const query = ref('');
+const channels = computed(() =>
+  inboxes.value
+    .map(inbox => ({
       ...inbox,
       channel_identifier: getInboxIdentifier(inbox),
+      health: channelHealth(inbox),
     }))
-    .sort((a, b) => a.name.localeCompare(b.name));
-});
-
-const filteredInboxesList = computed(() => {
-  const query = searchQuery.value.trim();
-  if (!query) return inboxesList.value;
-  return searchInboxes(inboxesList.value, query);
-});
-
-const uiFlags = computed(() => getters['inboxes/getUIFlags'].value);
-
-const deleteConfirmText = computed(
-  () => `${t('INBOX_MGMT.DELETE.CONFIRM.YES')} ${selectedInbox.value.name}`
+    .sort((a, b) => a.name.localeCompare(b.name))
 );
-
-const deleteRejectText = computed(
-  () => `${t('INBOX_MGMT.DELETE.CONFIRM.NO')} ${selectedInbox.value.name}`
+const filtered = computed(() =>
+  searchInboxes(channels.value, query.value.trim())
 );
-
-const confirmDeleteMessage = computed(
-  () => `${t('INBOX_MGMT.DELETE.CONFIRM.MESSAGE')} ${selectedInbox.value.name}?`
+const summaries = computed(() =>
+  Object.entries(CHANNEL_STATES).map(([key, value]) => ({
+    ...value,
+    key,
+    count: channels.value.filter(channel => channel.health.status === key)
+      .length,
+  }))
 );
-const confirmPlaceHolderText = computed(
-  () =>
-    `${t('INBOX_MGMT.DELETE.CONFIRM.PLACE_HOLDER', {
-      inboxName: selectedInbox.value.name,
-    })}`
-);
-
-const deleteInbox = async ({ id }) => {
+const load = async () => {
+  loading.value = true;
+  error.value = false;
   try {
-    await store.dispatch('inboxes/delete', id);
-    useAlert(t('INBOX_MGMT.DELETE.API.SUCCESS_MESSAGE'));
-  } catch (error) {
-    useAlert(t('INBOX_MGMT.DELETE.API.ERROR_MESSAGE'));
+    const { data } = await InboxesAPI.get();
+    store.commit('inboxes/SET_INBOXES', data.payload);
+  } catch {
+    error.value = true;
+  } finally {
+    loading.value = false;
   }
 };
-const closeDelete = () => {
-  showDeletePopup.value = false;
-  selectedInbox.value = {};
-};
-
-const confirmDeletion = () => {
-  deleteInbox(selectedInbox.value);
-  closeDelete();
-};
-const openDelete = inbox => {
-  showDeletePopup.value = true;
-  selectedInbox.value = inbox;
-};
+onMounted(load);
 </script>
 
 <template>
-  <SettingsLayout
-    :no-records-found="!inboxesList.length"
-    :no-records-message="$t('INBOX_MGMT.LIST.404')"
-    :is-loading="uiFlags.isFetching"
-  >
-    <template #header>
-      <BaseSettingsHeader
-        v-model:search-query="searchQuery"
-        :title="$t('INBOX_MGMT.HEADER')"
-        :description="$t('INBOX_MGMT.DESCRIPTION')"
-        :link-text="$t('INBOX_MGMT.LEARN_MORE')"
-        :search-placeholder="$t('INBOX_MGMT.SEARCH_PLACEHOLDER')"
-        feature-name="inboxes"
-      >
-        <template v-if="inboxesList?.length" #count>
-          <span class="text-body-main text-n-slate-11">
-            {{ $t('INBOX_MGMT.COUNT', { n: inboxesList.length }) }}
-          </span>
-        </template>
-        <template #actions>
-          <router-link v-if="isAdmin" :to="{ name: 'settings_inbox_new' }">
-            <Button :label="$t('SETTINGS.INBOXES.NEW_INBOX')" size="sm" />
-          </router-link>
-        </template>
-      </BaseSettingsHeader>
-    </template>
-    <template #body>
-      <span
-        v-if="!filteredInboxesList.length && searchQuery"
-        class="flex-1 flex items-center justify-center py-20 text-center text-body-main !text-base text-n-slate-11"
-      >
-        {{ $t('INBOX_MGMT.NO_RESULTS') }}
-      </span>
-      <div v-else class="divide-y divide-n-weak border-t border-n-weak">
-        <div
-          v-for="inbox in filteredInboxesList"
-          :key="inbox.id"
-          class="flex justify-between flex-row items-start gap-4 py-4"
-        >
-          <div class="flex items-center gap-4 min-w-0 flex-1">
+  <section class="flex w-full min-w-0 flex-col gap-5 pb-5 pt-4">
+    <PageHeader
+      :title="t('CHANNELS.TITLE')"
+      :description="t('CHANNELS.SUBTITLE')"
+    >
+      <template #action>
+        <router-link :to="{ name: 'settings_inbox_new' }">
+          <Button :label="t('CHANNELS.ADD')" icon="i-lucide-plus" size="sm" />
+        </router-link>
+      </template>
+    </PageHeader>
+    <p
+      v-if="loading"
+      class="m-0 py-12 text-center text-sm text-n-slate-11"
+      role="status"
+    >
+      {{ t('CHANNELS.LOADING') }}
+    </p>
+    <EmptyState
+      v-else-if="error"
+      :title="t('CHANNELS.LOAD_ERROR')"
+      tone="error"
+    >
+      <Button :label="t('CHANNELS.RETRY')" size="sm" @click="load" />
+    </EmptyState>
+    <EmptyState
+      v-else-if="!channels.length"
+      :title="t('CHANNELS.EMPTY')"
+      :description="t('CHANNELS.EMPTY_HELP')"
+      icon="i-lucide-radio"
+    />
+    <template v-else>
+      <div class="flex flex-wrap items-center gap-3">
+        <div class="me-auto flex flex-wrap gap-4">
+          <div
+            v-for="summary in summaries"
+            :key="summary.key"
+            class="flex items-center gap-1.5 text-xs text-n-slate-11"
+          >
+            <span
+              class="size-2 rounded-full"
+              :class="
+                summary.key === 'connected'
+                  ? 'bg-n-teal-9'
+                  : summary.key === 'attention'
+                    ? 'bg-n-amber-9'
+                    : 'bg-n-slate-9'
+              "
+            />
+            {{ summary.count }} {{ t(summary.label) }}
+          </div>
+        </div>
+        <label class="relative m-0 w-full sm:w-64">
+          <Icon
+            icon="i-lucide-search"
+            class="pointer-events-none absolute start-3 top-3 size-4 text-n-slate-10"
+          />
+          <input
+            v-model="query"
+            type="search"
+            :aria-label="t('CHANNELS.SEARCH')"
+            :placeholder="t('CHANNELS.SEARCH')"
+            class="!mb-0 !ps-9"
+          />
+        </label>
+      </div>
+      <EmptyState v-if="!filtered.length" :title="t('CHANNELS.NO_RESULTS')" />
+      <div v-else class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <SectionCard v-for="channel in filtered" :key="channel.id">
+          <div class="flex items-center justify-between gap-2">
             <div
-              v-if="inbox.avatar_url"
-              class="bg-n-alpha-3 rounded-xl size-10 ring ring-n-solid-1 border border-n-strong shadow-sm grid place-items-center"
+              class="grid size-11 shrink-0 place-items-center rounded-xl bg-n-blue-2 text-n-blue-11"
             >
-              <Avatar
-                :src="inbox.avatar_url"
-                :name="inbox.name"
-                :size="24"
-                rounded-full
+              <ChannelIcon :inbox="channel" class="size-6" />
+            </div>
+            <StatusPill
+              :status="channel.health.tone"
+              :label="t(channel.health.label)"
+              class="!px-2 !text-xs"
+            />
+          </div>
+          <div class="min-w-0">
+            <h2
+              class="mb-1 break-words text-base font-semibold text-n-slate-12"
+            >
+              {{ channel.name }}
+            </h2>
+            <div
+              class="flex min-w-0 items-center gap-1 text-xs text-n-slate-11"
+            >
+              <ChannelName
+                :channel-type="channel.channel_type"
+                :medium="channel.medium"
+                :voice-enabled="channel.voice_enabled"
               />
-            </div>
-            <div
-              v-else
-              class="size-10 justify-center bg-n-alpha-3 rounded-xl ring ring-n-solid-1 border border-n-strong shadow-sm grid place-items-center"
-            >
-              <ChannelIcon class="size-6 text-n-slate-10" :inbox="inbox" />
-            </div>
-            <div class="flex flex-col items-start gap-1 min-w-0">
-              <span
-                :title="inbox.name"
-                class="block text-heading-3 text-n-slate-12 capitalize truncate max-w-full"
-              >
-                {{ inbox.name }}
-              </span>
               <div
-                class="flex items-center gap-1 min-w-0 max-w-full text-body-main text-n-slate-11"
+                v-if="channel.channel_identifier"
+                dir="auto"
+                class="truncate"
+                :title="channel.channel_identifier"
               >
-                <ChannelName
-                  :channel-type="inbox.channel_type"
-                  :medium="inbox.medium"
-                  :voice-enabled="inbox.voice_enabled"
-                  class="shrink-0"
-                />
-                <template v-if="inbox.channel_identifier">
-                  <span aria-hidden="true">{{ IDENTIFIER_SEPARATOR }}</span>
-                  <bdi
-                    dir="auto"
-                    :title="inbox.channel_identifier"
-                    class="truncate"
-                    data-test-id="channel-identifier"
-                  >
-                    {{ inbox.channel_identifier }}
-                  </bdi>
-                </template>
+                {{ channel.channel_identifier }}
               </div>
             </div>
           </div>
-          <div class="flex gap-3 justify-end shrink-0">
-            <router-link
-              :to="{
-                name: 'settings_inbox_show',
-                params: { inboxId: inbox.id },
-              }"
-            >
-              <Button
-                v-if="isAdmin"
-                v-tooltip.top="$t('INBOX_MGMT.SETTINGS')"
-                icon="i-woot-settings"
-                slate
-                sm
-              />
-            </router-link>
-            <Button
-              v-if="isAdmin"
-              v-tooltip.top="$t('INBOX_MGMT.DELETE.BUTTON_TEXT')"
-              icon="i-woot-bin"
-              slate
-              sm
-              class="hover:enabled:text-n-ruby-11 hover:enabled:bg-n-ruby-2"
-              @click="openDelete(inbox)"
-            />
+          <p class="m-0 min-h-10 text-sm text-n-slate-11">
+            {{ t(channel.health.reason) }}
+          </p>
+          <div
+            class="mt-auto flex items-center gap-2 border-t border-n-weak pt-3 text-xs text-n-slate-11"
+          >
+            <Icon icon="i-lucide-sparkles" class="size-3.5 shrink-0" />
+            <span class="truncate">{{
+              channel.captain_assistant?.name || t('CHANNELS.NO_AGENT')
+            }}</span>
           </div>
-        </div>
+          <router-link
+            :to="{
+              name: 'settings_inbox_show',
+              params: { inboxId: channel.id },
+            }"
+          >
+            <Button
+              :label="
+                t(
+                  channel.health.status === 'attention'
+                    ? 'CHANNELS.FIX'
+                    : 'CHANNELS.MANAGE'
+                )
+              "
+              :aria-label="t('CHANNELS.MANAGE_NAME', { name: channel.name })"
+              :color="channel.health.status === 'attention' ? 'amber' : 'slate'"
+              variant="faded"
+              size="sm"
+              class="w-full"
+            />
+          </router-link>
+        </SectionCard>
       </div>
     </template>
-
-    <woot-confirm-delete-modal
-      v-if="showDeletePopup"
-      v-model:show="showDeletePopup"
-      :title="$t('INBOX_MGMT.DELETE.CONFIRM.TITLE')"
-      :message="confirmDeleteMessage"
-      :confirm-text="deleteConfirmText"
-      :reject-text="deleteRejectText"
-      :confirm-value="selectedInbox.name"
-      :confirm-place-holder-text="confirmPlaceHolderText"
-      @on-confirm="confirmDeletion"
-      @on-close="closeDelete"
-    />
-  </SettingsLayout>
+  </section>
 </template>

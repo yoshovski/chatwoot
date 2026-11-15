@@ -1,4 +1,5 @@
 <script setup>
+/* eslint-disable @intlify/vue-i18n/no-dynamic-keys -- The wizard uses a fixed set of creation steps. */
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRoute } from 'vue-router';
@@ -59,7 +60,13 @@ const items = computed(() => {
 </script>
 
 <template>
-  <div class="mx-auto flex flex-col gap-6 mb-8 max-w-7xl w-full !px-6">
+  <div class="mx-auto flex flex-col gap-6 mb-8 max-w-7xl w-full">
+    <router-link
+      :to="{ name: 'settings_inbox_list' }"
+      class="self-start text-sm font-medium text-n-blue-11"
+    >
+      {{ t('CHANNELS.BACK') }}
+    </router-link>
     <PageHeader class="block lg:hidden !mb-0" :header-title="pageTitle" />
     <div
       class="grid grid-cols-1 lg:grid-cols-8 lg:divide-x lg:rtl:divide-x-reverse lg:divide-n-weak rounded-xl border border-n-weak h-full min-h-[50dvh]"
@@ -69,7 +76,7 @@ const items = computed(() => {
         :global-config="globalConfig"
         :items="items"
       />
-      <div class="col-span-6 flex min-h-0 flex-col overflow-y-auto">
+      <div class="min-w-0 lg:col-span-6 flex min-h-0 flex-col overflow-y-auto">
         <router-view />
       </div>
     </div>

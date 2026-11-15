@@ -14,9 +14,12 @@ const route = useRoute();
 
 // Routes that manage filters/pagination via query params opt out of
 // query-keyed remounts, else every filter change rebuilds the page.
-const routeKey = computed(() =>
-  route.meta.reuseOnQueryChange ? route.path : route.fullPath
-);
+const routeKey = computed(() => {
+  if (route.meta.reuseOnTabChange) {
+    return `${route.name}:${route.params.accountId}:${route.params.inboxId}`;
+  }
+  return route.meta.reuseOnQueryChange ? route.path : route.fullPath;
+});
 </script>
 
 <template>
