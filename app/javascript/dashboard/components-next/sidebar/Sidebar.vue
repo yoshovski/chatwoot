@@ -23,7 +23,6 @@ import ChannelLeaf from './ChannelLeaf.vue';
 import ChannelIcon from 'next/icon/ChannelIcon.vue';
 import EmojiIcon from 'next/emoji-icon-picker/EmojiIcon.vue';
 import SidebarAccountSwitcher from './SidebarAccountSwitcher.vue';
-import Logo from 'next/icon/Logo.vue';
 import ComposeConversation from 'dashboard/components-next/NewConversation/ComposeConversation.vue';
 import {
   SIDEBAR_SORT_SECTIONS,
@@ -151,7 +150,7 @@ const toggleShortcutModalFn = show => {
 useSidebarKeyboardShortcuts(toggleShortcutModalFn);
 
 // The shortcut and the command bar open the composer from any page; it is
-// anchored under the search field, where no button is shown.
+// anchored at the top of the rail, where no button is shown.
 const globalComposeRef = ref(null);
 useEmitter(BUS_EVENTS.OPEN_COMPOSE, () => globalComposeRef.value?.open());
 
@@ -497,7 +496,7 @@ const menuItems = computed(() => {
     },
     {
       name: 'Captain',
-      icon: 'i-lucide-bot-message-square',
+      icon: 'i-lucide-bot',
       // The branded product name ("Octave AI Agents") is too long for the panel title.
       label: t('PLATFORM_NAV.AI_AGENTS'),
       children: agentNavItems.value,
@@ -624,7 +623,7 @@ const menuItems = computed(() => {
     {
       name: 'Reports',
       label: t('SIDEBAR.ANALYTICS'),
-      icon: 'i-lucide-chart-no-axes-column',
+      icon: 'i-lucide-chart-column',
       children: [
         {
           name: 'Analytics Overview',
@@ -923,31 +922,30 @@ const menuItems = computed(() => {
     }"
   >
     <SidebarNavigation :items="menuItems" @navigate="closeMobileSidebar">
-      <template #brand>
-        <Logo class="size-6 shrink-0 text-n-blue-text" />
-      </template>
-      <template #profile>
-        <SidebarProfileMenu
-          @open-key-shortcut-modal="emit('openKeyShortcutModal')"
-        />
-      </template>
       <template #account>
         <SidebarAccountSwitcher
+          is-collapsed
           @show-create-account-modal="emit('showCreateAccountModal')"
         />
       </template>
-      <template #search>
+      <template #compose>
+        <ComposeConversation ref="globalComposeRef" align="start" />
+      </template>
+      <template #conversationTools>
         <RouterLink
+          v-tooltip.bottom="t('COMBOBOX.SEARCH_PLACEHOLDER')"
           :to="{ name: 'search' }"
           :aria-label="t('COMBOBOX.SEARCH_PLACEHOLDER')"
-          class="flex h-8 min-w-0 flex-1 items-center gap-2 rounded-lg bg-n-alpha-1 px-3 text-sm text-n-slate-11 hover:bg-n-alpha-2"
+          class="grid size-8 place-items-center rounded-lg text-n-slate-11 hover:bg-n-alpha-2 hover:text-n-slate-12"
         >
-          <span class="i-lucide-search size-4 shrink-0" />
-          <span class="truncate">{{ t('COMBOBOX.SEARCH_PLACEHOLDER') }}</span>
+          <span class="i-lucide-search size-4" />
         </RouterLink>
       </template>
-      <template #compose>
-        <ComposeConversation ref="globalComposeRef" align="end" />
+      <template #profile>
+        <SidebarProfileMenu
+          is-collapsed
+          @open-key-shortcut-modal="emit('openKeyShortcutModal')"
+        />
       </template>
     </SidebarNavigation>
   </aside>

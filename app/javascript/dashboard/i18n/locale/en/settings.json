@@ -1166,7 +1166,10 @@
     "SOURCE_COUNT": "{count} source | {count} sources",
     "WEBSITE_DISCOVERING": "Finding pages",
     "WEBSITE_NOT_ADDED": "No pages selected yet",
-    "CHOOSE_PAGES_HINT": "Pick which pages of this website your AI agent learns from"
+    "CHOOSE_PAGES_HINT": "Pick which pages of this website your AI agent learns from",
+    "SECTION_NAVIGATION": "Section pages",
+    "UNREAD": "{count} unread",
+    "HIDE_MENU": "Hide menu"
   },
   "KNOWLEDGE_LIST": {
     "BULK_ACTIONS": "Bulk actions",
