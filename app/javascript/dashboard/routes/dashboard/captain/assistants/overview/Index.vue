@@ -357,7 +357,7 @@ const primaryMetrics = computed(() => [
     key: 'hoursSaved',
     icon: 'i-lucide-clock',
     tone: 'violet',
-    label: t('CAPTAIN.OVERVIEW.METRICS.HOURS_SAVED.LABEL'),
+    label: t('ANALYTICS.ESTIMATED_HOURS_SAVED'),
     hint: t('CAPTAIN.OVERVIEW.METRICS.HOURS_SAVED.HINT'),
     ...metricFor('hours_saved', formatDuration, 'up'),
   },
@@ -472,7 +472,7 @@ const closeDrilldown = () => {
           color="slate"
           size="sm"
           icon="i-lucide-chart-bar"
-          :label="$t('CAPTAIN.OVERVIEW.VIEW_REPORT')"
+          :label="$t('ANALYTICS.VIEW_WORKSPACE_REPORT')"
           @click="openReportPage"
         />
         <TestAgentButton :assistant-id="assistantId" />

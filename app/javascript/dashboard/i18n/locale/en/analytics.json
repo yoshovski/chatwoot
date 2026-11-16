@@ -28,16 +28,16 @@
     "METRICS": {
       "CONVERSATIONS": "Conversations",
       "AI_CONVERSATIONS": "Answered by AI agent",
-      "RESOLVED": "Solved by AI agent",
+      "RESOLVED": "AI resolution rate",
       "HANDED": "Handed to your team",
       "FIRST_REPLY": "Time to first reply",
-      "TEAM_SOLVED": "Solved by your team",
+      "TEAM_SOLVED": "Resolutions",
       "RATING": "Customer rating",
       "PRODUCT_ANSWERS": "Product answers",
       "RESOLUTION_TIME": "Time to solve",
       "RATINGS_COUNT": "Ratings received",
       "HAPPY_SHARE": "Rated 4 or 5",
-      "REPLY_SHARE": "Customers who rated"
+      "REPLY_SHARE": "Rating response rate"
     },
     "DURATION": {
       "SECONDS": "{count} s",
@@ -88,7 +88,7 @@
     "PEOPLE": {
       "TITLE": "Your team",
       "EMPTY": "Nobody on your team replied in this period.",
-      "ROW": "{conversations} conversations · first reply {time}"
+      "ROW": "{conversations} conversations \u00b7 first reply {time}"
     },
     "AI": {
       "CHART_TITLE": "AI agent by day",
@@ -99,7 +99,7 @@
       "NOTE": "Each bar counts the conversations your AI agent replied in that day; amber is the part it handed to your team.",
       "EMPTY": "Your AI agent had no conversations in this period.",
       "AGENTS_TITLE": "Your AI agents",
-      "AGENT_ROW": "{conversations} conversations · {rate} % solved",
+      "AGENT_ROW": "{conversations} conversations \u00b7 {rate} % solved",
       "NO_AGENTS": "No AI agent yet."
     },
     "TEAM": {
@@ -111,13 +111,35 @@
     "RATING": {
       "SPLIT_TITLE": "How customers rated",
       "STARS": "{rating} star | {rating} stars",
-      "COUNT": "{count} · {share} %",
+      "COUNT": "{count} \u00b7 {share} %",
       "EMPTY": "No ratings in this period yet.",
       "COMMENTS_TITLE": "Latest comments",
       "NO_COMMENTS": "No comments with the ratings in this period.",
-      "COMMENT_META": "{rating} of 5 · {name} · {time}",
+      "COMMENT_META": "{rating} of 5 \u00b7 {name} \u00b7 {time}",
       "SOMEONE": "A customer",
-      "QUOTE": "“{comment}”"
-    }
+      "QUOTE": "\u201c{comment}\u201d"
+    },
+    "VIEW_WORKSPACE_REPORT": "View workspace report",
+    "CONTEXT": "All AI agents \u00b7 {since} \u2013 {until} ({timezone})",
+    "UNSUPPORTED_PERIOD": "This report range is unsupported. Showing the last 7 days; choose a supported range above.",
+    "METRIC_DEFINITION": "About {metric}",
+    "DEFINITIONS": {
+      "CONVERSATIONS": "Unique conversations created in this period, across the workspace. Daily chart activity counts replies and uses a different denominator.",
+      "AI_CONVERSATIONS": "Unique conversations in which an AI agent authored a message during this period. This is activity, not billable AI usage.",
+      "RESOLVED": "AI resolve events divided by conversations with an AI message in the period. Bot resolves after a handoff are excluded. This is a percentage, not a conversation count.",
+      "HANDED": "Unique conversations with an AI handoff event in the period among conversations with AI messages in the reporting windows. A higher count can mean appropriate escalation.",
+      "PRODUCT_ANSWERS": "Unique conversations with an assistant session that used a product source during this period.",
+      "FIRST_REPLY": "Average time to first response from the conversation report, across the workspace.",
+      "RESOLUTION_TIME": "Average time to resolution from the conversation report, across the workspace.",
+      "TEAM_SOLVED": "Resolution count from the workspace conversation report; includes all resolution paths, not only human agents.",
+      "RATING": "Average customer rating from 1 to 5 across the workspace. A dash means no ratings are available.",
+      "RATINGS_COUNT": "Number of customer ratings received in this period across the workspace.",
+      "HAPPY_SHARE": "Ratings of 4 or 5 divided by all ratings received in this period.",
+      "REPLY_SHARE": "Ratings received divided by rating requests sent, capped at 100%. This compares period totals, not a matched customer cohort."
+    },
+    "PARTIAL_ERROR": "Some metrics could not be loaded. Unavailable values are shown as a dash.",
+    "RETRY": "Retry",
+    "ESTIMATED_HOURS_SAVED": "Estimated hours saved",
+    "NO_COMPARISON": "No prior-period comparison"
   }
 }

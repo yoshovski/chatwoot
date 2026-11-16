@@ -110,4 +110,49 @@ RSpec.describe Captain::HomeActivityBuilder do
     expect(utc.last(2)).to eq([1, 0])
     expect(madrid.last(2)).to eq([0, 1])
   end
+
+  describe 'workspace analytics ranges' do
+    it 'counts both assistants while per-assistant metrics remain scoped' do
+      other = create(:captain_assistant, account: account)
+      first_conversation = create(:conversation, account: account, inbox: inbox)
+      second_conversation = create(:conversation, account: account, inbox: inbox)
+      ai_reply(first_conversation, 60.days.ago)
+      create(:message, account: account, inbox: inbox, conversation: second_conversation,
+                       sender: other, message_type: :outgoing, created_at: 1.day.ago)
+
+      workspace = described_class.new(account, period: 7, range: '90').activity
+      selected = Captain::AssistantStatsBuilder.new(assistant, '90').metrics
+      expect(workspace[:metrics][:ai_conversations][:value]).to eq(2)
+      expect(selected[:conversations_handled][:current]).to eq(1)
+      expect(workspace[:days].first[:date]).to eq(90.days.ago.to_date.iso8601)
+    end
+
+    it 'partitions ratings at the exact rolling boundary even on the same date' do
+      conversation = create(:conversation, account: account, inbox: inbox)
+      create(:csat_survey_response, account: account, conversation: conversation, rating: 1, created_at: 7.days.ago - 1.hour)
+      create(:csat_survey_response, account: account, conversation: conversation, rating: 5, created_at: 7.days.ago + 1.hour)
+
+      rating = described_class.new(account, period: 7, range: '7').activity[:metrics][:rating]
+      expect(rating[:value]).to eq(5)
+      expect(rating[:previous]).to eq(1)
+      expect(rating[:points].first).to eq(5)
+    end
+
+    it 'excludes the unused remainder of the prior month from month-to-date ratings' do
+      conversation = create(:conversation, account: account, inbox: inbox)
+      create(:csat_survey_response, account: account, conversation: conversation, rating: 1, created_at: Time.zone.parse('2026-10-30 12:00'))
+      create(:csat_survey_response, account: account, conversation: conversation, rating: 2, created_at: Time.zone.parse('2026-10-05 12:00'))
+      create(:csat_survey_response, account: account, conversation: conversation, rating: 5, created_at: Time.zone.parse('2026-11-05 12:00'))
+
+      rating = described_class.new(account, period: 7, range: 'this_month').activity[:metrics][:rating]
+      expect(rating[:value]).to eq(5)
+      expect(rating[:previous]).to eq(2)
+    end
+
+    it 'uses completed calendar months and the viewer timezone' do
+      activity = described_class.new(account, period: 7, range: 'last_month', timezone_offset: '1').activity
+      expect(activity[:days].first[:date]).to eq('2026-10-01')
+      expect(activity[:days].last[:date]).to eq('2026-10-31')
+    end
+  end
 end

@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onMounted, toRef } from 'vue';
+import { computed, toRef } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useMapGetter, useStore } from 'dashboard/composables/store';
 import CaptainAssistantAPI from 'dashboard/api/captain/assistant';
@@ -13,13 +13,15 @@ import { LOADERS, useAnalyticsData } from './useAnalyticsData';
 
 // AI agent: what it answered, solved and handed on, per day; what customers asked; each AI agent with its own numbers
 // and a way into its page.
-const props = defineProps({ period: { type: Number, required: true } });
+const props = defineProps({
+  period: { type: [Number, String], required: true },
+});
 
 const { t } = useI18n();
 const store = useStore();
 const assistants = useMapGetter('captainAssistants/getRecords');
 
-const { data, isLoading, hasError, reload } = useAnalyticsData(
+const { data, isLoading, hasError, failures, reload } = useAnalyticsData(
   toRef(props, 'period'),
   { activity: LOADERS.activity }
 );
@@ -29,8 +31,9 @@ const perAgent = useAnalyticsData(toRef(props, 'period'), {
     if (!assistants.value.length) {
       await store.dispatch('captainAssistants/get');
     }
+    const records = [...assistants.value];
     const responses = await Promise.all(
-      assistants.value.map(assistant =>
+      records.map(assistant =>
         CaptainAssistantAPI.getMetrics({
           assistantId: assistant.id,
           range: String(period),
@@ -38,7 +41,7 @@ const perAgent = useAnalyticsData(toRef(props, 'period'), {
       )
     );
     return {
-      data: assistants.value.map((assistant, index) => ({
+      data: records.map((assistant, index) => ({
         id: assistant.id,
         name: assistant.name,
         metrics: responses[index].data,
@@ -74,8 +77,6 @@ const series = computed(() => [
   { label: t('ANALYTICS.AI.STAYED'), total: t('ANALYTICS.AI.STAYED_TOTAL') },
   { label: t('ANALYTICS.AI.HANDED'), total: t('ANALYTICS.AI.HANDED_TOTAL') },
 ]);
-
-onMounted(() => store.dispatch('captainAssistants/get'));
 </script>
 
 <template>
@@ -83,6 +84,7 @@ onMounted(() => store.dispatch('captainAssistants/get'));
     :tiles="tiles"
     :is-loading="isLoading"
     :has-error="hasError"
+    :has-partial-error="Object.values(failures).some(Boolean) && !hasError"
     @retry="reload"
   />
   <SectionCard
@@ -97,7 +99,7 @@ onMounted(() => store.dispatch('captainAssistants/get'));
       :note="t('ANALYTICS.AI.NOTE')"
       :empty-text="t('ANALYTICS.AI.EMPTY')"
       :is-loading="isLoading"
-      :has-error="hasError"
+      :has-error="failures.activity"
       @retry="reload"
     />
   </SectionCard>
@@ -105,7 +107,7 @@ onMounted(() => store.dispatch('captainAssistants/get'));
     <TopicsCard
       :topics="data.activity?.topics || []"
       :is-loading="isLoading"
-      :has-error="hasError"
+      :has-error="failures.activity"
       @retry="reload"
     />
     <SectionCard :title="t('ANALYTICS.AI.AGENTS_TITLE')">

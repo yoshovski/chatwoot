@@ -12,7 +12,7 @@ const props = defineProps({
   days: { type: Array, default: () => [] },
   // [{ label, total }]: what each value is, in stacking order; `total` names the period sum above the chart.
   series: { type: Array, required: true },
-  period: { type: Number, required: true },
+  period: { type: [Number, String], required: true },
   note: { type: String, default: '' },
   emptyText: { type: String, required: true },
   isLoading: { type: Boolean, default: false },
@@ -43,7 +43,11 @@ const isEmpty = computed(() => !sum(totals.value));
 const scale = computed(() =>
   chartScale(Math.max(...props.days.map(day => sum(day.values)), 0))
 );
-const isWeek = computed(() => props.period <= 7);
+const isWeek = computed(() =>
+  typeof props.period === 'number'
+    ? props.period <= 7
+    : props.period.endsWith('week')
+);
 
 // Keep the hover card inside the chart at both ends.
 const tooltipAlign = index => {
@@ -69,7 +73,10 @@ const bars = computed(() =>
       day: 'numeric',
       month: 'long',
     });
-    const showLabel = isWeek.value || index % LABEL_EVERY === 0;
+    const labelEvery = Math.max(LABEL_EVERY, Math.ceil(props.days.length / 6));
+    const showLabel =
+      isWeek.value ||
+      (index % labelEvery === 0 && index < props.days.length - 2);
     return {
       key: day.date,
       total,
@@ -88,7 +95,9 @@ const bars = computed(() =>
         label: props.series[position].label,
       })),
       label: showLabel ? dayLabel(date) : '',
-      wideOnly: !isWeek.value && index % LABEL_EVERY_NARROW !== 0,
+      wideOnly:
+        !isWeek.value &&
+        index % Math.max(LABEL_EVERY_NARROW, labelEvery * 2) !== 0,
       align: tooltipAlign(index),
       ariaLabel: t('ANALYTICS.CHART.DAY', {
         date: fullDate,

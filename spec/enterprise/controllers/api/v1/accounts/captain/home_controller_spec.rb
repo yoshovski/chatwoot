@@ -34,6 +34,26 @@ RSpec.describe 'Api::V1::Accounts::Captain::Home', type: :request do
     expect(response).to have_http_status(:unprocessable_entity)
   end
 
+  describe 'analytics report ranges' do
+    it 'preserves every range offered by the assistant Overview' do
+      Captain::AssistantStatsWindow::ALLOWED_RANGES.each do |range|
+        get url, params: { range: range, timezone_offset: '1' }, headers: admin.create_new_auth_token
+
+        expect(response).to have_http_status(:success)
+        expect(response.parsed_body['period']).to eq(range)
+        window = Captain::AssistantStatsWindow.new(range, '1').current
+        expect(response.parsed_body['days'].first['date']).to eq(window.first.to_date.iso8601)
+        expect(response.parsed_body['days'].last['date']).to eq(window.last.to_date.iso8601)
+      end
+    end
+
+    it 'rejects unsupported report ranges instead of silently substituting one' do
+      get url, params: { range: '365' }, headers: admin.create_new_auth_token
+
+      expect(response).to have_http_status(:unprocessable_entity)
+    end
+  end
+
   describe 'with data' do
     let(:assistant) { create(:captain_assistant, account: account) }
     let(:widget_inbox) { create(:inbox, account: account, channel: create(:channel_widget, account: account)) }

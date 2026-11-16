@@ -17,20 +17,26 @@ const t = (key, params = {}) =>
   Object.keys(params).length ? `${key} ${JSON.stringify(params)}` : key;
 
 describe('periodFromQuery', () => {
-  it('accepts 7 and 30 and falls back to 7', () => {
+  it('accepts all Overview ranges and falls back to 7 for unknown values', () => {
     expect(periodFromQuery('30')).toBe(30);
     expect(periodFromQuery('7')).toBe(7);
-    expect(periodFromQuery('90')).toBe(7);
+    expect(periodFromQuery('90')).toBe(90);
+    ['this_week', 'last_week', 'this_month', 'last_month'].forEach(range => {
+      expect(periodFromQuery(range)).toBe(range);
+    });
+    expect(periodFromQuery('365')).toBe(7);
     expect(periodFromQuery(undefined)).toBe(7);
   });
 });
 
 describe('periodWindow and previousWindow', () => {
-  it('starts at midnight of the first day and ends now', () => {
+  it('matches the rolling window used by the assistant Overview', () => {
     const now = new Date(2026, 10, 15, 14, 30);
     const window = periodWindow(7, now);
 
-    expect(new Date(window.since * 1000)).toEqual(new Date(2026, 10, 9));
+    expect(new Date(window.since * 1000)).toEqual(
+      new Date(2026, 10, 8, 14, 30)
+    );
     expect(window.until).toBe(Math.floor(now.getTime() / 1000));
   });
 
@@ -236,4 +242,69 @@ describe('chartScale', () => {
     expect(chartScale(300)).toEqual({ top: 400, ticks: [400, 200, 0] });
     expect(chartScale(0)).toEqual({ top: 2, ticks: [2, 1, 0] });
   });
+});
+
+describe('calendar report windows', () => {
+  const now = new Date(2026, 10, 16, 14, 30);
+  it.each([
+    ['this_week', new Date(2026, 10, 15), now],
+    ['last_week', new Date(2026, 10, 8), new Date(2026, 10, 14, 23, 59, 59)],
+    ['this_month', new Date(2026, 10, 1), now],
+    ['last_month', new Date(2026, 9, 1), new Date(2026, 9, 31, 23, 59, 59)],
+  ])(
+    'resolves %s without substituting a rolling range',
+    (range, start, end) => {
+      expect(periodWindow(range, now)).toEqual({
+        since: start / 1000,
+        until: end / 1000,
+      });
+    }
+  );
+
+  it('compares a complete month with the complete previous month', () => {
+    const window = periodWindow('last_month', now);
+    expect(previousWindow(window, 'last_month')).toEqual({
+      since: new Date(2026, 8, 1) / 1000,
+      until: new Date(2026, 8, 30, 23, 59, 59) / 1000,
+    });
+  });
+
+  it('clamps month-to-date comparisons to the previous month end', () => {
+    const window = periodWindow('this_month', new Date(2026, 2, 31, 14, 30));
+    expect(previousWindow(window, 'this_month')).toEqual({
+      since: new Date(2026, 1, 1) / 1000,
+      until: new Date(2026, 1, 28, 23, 59, 59) / 1000,
+    });
+  });
+});
+
+it('treats increased handoffs neutrally and explains the denominator', () => {
+  const view = metricView(
+    'handed',
+    { value: 8, previous: 3 },
+    'Handed to team',
+    t
+  );
+  expect(view.changeTone).toBe('neutral');
+  expect(view.hint).toBe('ANALYTICS.DEFINITIONS.HANDED');
+});
+
+it('distinguishes no handled conversations, missing ratings and zero counts', () => {
+  const metrics = analyticsMetrics({
+    activity: {
+      metrics: {
+        ai_conversations: { value: 0, previous: 0, points: [] },
+        resolved: { value: 0, previous: 0, points: [] },
+        rating: { value: null, previous: null, points: [] },
+      },
+    },
+  });
+  expect(metrics.ai_conversations.value).toBe(0);
+  expect(metrics.resolved.value).toBeNull();
+  expect(metricView('rating', metrics.rating, 'Rating', t).value).toBe('–');
+  expect(
+    metricView('ai_conversations', metrics.ai_conversations, 'Handled', t)
+      .change
+  ).toBe('ANALYTICS.NO_COMPARISON');
+  expect(durationText(0, t)).toContain('"count":0');
 });

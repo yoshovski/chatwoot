@@ -4,11 +4,16 @@ import { useI18n } from 'vue-i18n';
 import { RouterView, useRoute, useRouter } from 'vue-router';
 import PageFrame from 'dashboard/components-next/kit/PageFrame.vue';
 import PageHeader from 'dashboard/components-next/kit/PageHeader.vue';
-import { PERIODS, periodFromQuery } from './analyticsView';
+import RangeSelector from 'dashboard/components-next/captain/pageComponents/overview/RangeSelector.vue';
+import {
+  isSupportedPeriod,
+  periodFromQuery,
+  periodWindow,
+} from './analyticsView';
 
 // The Analytics section. The sidebar is the navigation; this frame names the current view and holds the one period
 // control (kept in the URL), which every view except the reports hub reads from the route.
-const { t } = useI18n();
+const { t, locale } = useI18n();
 const route = useRoute();
 const router = useRouter();
 
@@ -23,15 +28,28 @@ const titles = computed(() => ({
   analytics_reports: t('ANALYTICS.REPORTS.TITLE'),
 }));
 const title = computed(() => titles.value[route.name]);
-const description = computed(() =>
-  hasPeriod.value
-    ? t('ANALYTICS.SUBTITLE', { days: period.value })
-    : t('ANALYTICS.REPORTS.SUBTITLE')
+const description = computed(() => {
+  if (!hasPeriod.value) return t('ANALYTICS.REPORTS.SUBTITLE');
+  const { since, until } = periodWindow(period.value);
+  const format = value =>
+    new Date(value * 1000).toLocaleString(locale.value, {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+    });
+  return t('ANALYTICS.CONTEXT', {
+    since: format(since),
+    until: format(until),
+    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+  });
+});
+const unsupportedPeriod = computed(
+  () => !isSupportedPeriod(route.query.period)
 );
 
 const selectPeriod = days => {
   if (days === period.value) return;
-  router.replace({ query: { ...route.query, period: days } });
+  router.push({ query: { ...route.query, period: days } });
 };
 </script>
 
@@ -40,30 +58,16 @@ const selectPeriod = days => {
     <template #header>
       <PageHeader :title="title" :description="description">
         <template v-if="hasPeriod" #action>
-          <div
-            role="group"
-            :aria-label="t('ANALYTICS.PERIOD.LABEL')"
-            class="flex rounded-full bg-n-alpha-2 p-0.5"
-          >
-            <button
-              v-for="days in PERIODS"
-              :key="days"
-              type="button"
-              class="rounded-full px-3 py-1 text-xs font-medium"
-              :class="
-                days === period
-                  ? 'bg-n-solid-2 text-n-slate-12 shadow-sm'
-                  : 'text-n-slate-11 hover:text-n-slate-12'
-              "
-              :aria-pressed="days === period"
-              @click="selectPeriod(days)"
-            >
-              {{ t('ANALYTICS.PERIOD.DAYS', { days }) }}
-            </button>
-          </div>
+          <RangeSelector
+            :model-value="String(period)"
+            @update:model-value="selectPeriod"
+          />
         </template>
       </PageHeader>
     </template>
+    <p v-if="unsupportedPeriod" role="status" class="text-sm text-n-amber-11">
+      {{ t('ANALYTICS.UNSUPPORTED_PERIOD') }}
+    </p>
     <RouterView :period="period" />
   </PageFrame>
 </template>
