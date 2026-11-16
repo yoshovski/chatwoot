@@ -19,7 +19,7 @@ import integrations from './integrations/integrations.routes';
 import labels from './labels/labels.routes';
 import macros from './macros/macros.routes';
 import reports from './reports/reports.routes';
-import store from '../../../store';
+import SettingsHome from './SettingsHome.vue';
 import sla from './sla/sla.routes';
 import teams from './teams/teams.routes';
 import customRoles from './customRoles/customRole.routes';
@@ -37,16 +37,7 @@ export default {
       meta: {
         permissions: [...ROLES, ...CONVERSATION_PERMISSIONS],
       },
-      redirect: to => {
-        if (
-          store.getters.getCurrentRole === 'administrator' &&
-          store.getters.getCurrentCustomRoleId === null
-        ) {
-          return { name: 'general_settings_index', params: to.params };
-        }
-
-        return { name: 'canned_list', params: to.params };
-      },
+      component: SettingsHome,
     },
     ...account.routes,
     ...agent.routes,

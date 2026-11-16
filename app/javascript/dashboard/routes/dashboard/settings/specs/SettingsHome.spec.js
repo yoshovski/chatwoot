@@ -15,6 +15,7 @@ const page = (key, label, keywords) => ({
   hint: `${label} hint`,
   keywords,
   route: `${key.toLowerCase()}_route`,
+  to: { name: `${key.toLowerCase()}_route`, params: { accountId: 42 } },
   icon: 'i-lucide-circle',
 });
 
@@ -33,7 +34,11 @@ vi.mock('../useSettingsSections', () => ({
         title: 'Account',
         hint: 'Your details',
         icon: 'i-lucide-briefcase',
-        pages: [page('PROFILE', 'Your profile', 'change my password')],
+        pages: [
+          page('PROFILE', 'Your profile', 'change my password'),
+          page('BILLING', 'Billing', 'subscription invoices'),
+          page('CHANNELS', 'Channels', 'inbox connection'),
+        ],
       },
     ]),
 }));
@@ -41,7 +46,11 @@ vi.mock('../useSettingsSections', () => ({
 const global = {
   stubs: {
     Icon: true,
-    RouterLink: { props: ['to'], template: '<a :href="to.name"><slot /></a>' },
+    RouterLink: {
+      name: 'RouterLink',
+      props: ['to'],
+      template: '<a :href="to.name"><slot /></a>',
+    },
   },
 };
 
@@ -58,6 +67,22 @@ describe('SettingsHome', () => {
     );
   });
 
+  it.each([
+    ['subscription', 'billing_route'],
+    ['invoices', 'billing_route'],
+    ['inbox', 'channels_route'],
+    ['connection', 'channels_route'],
+  ])(
+    'finds %s with its explicit account route parameters',
+    async (query, name) => {
+      const wrapper = mount(SettingsHome, { global });
+      await wrapper.find('input[type="search"]').setValue(query);
+      const links = wrapper.findAllComponents({ name: 'RouterLink' });
+      expect(links).toHaveLength(1);
+      expect(links[0].props('to')).toEqual({ name, params: { accountId: 42 } });
+    }
+  );
+
   it('finds pages by their keywords and says when nothing matches', async () => {
     const wrapper = mount(SettingsHome, { global });
     const input = wrapper.find('input[type="search"]');
@@ -68,7 +93,7 @@ describe('SettingsHome', () => {
     ]);
     expect(wrapper.text()).toContain('Account');
 
-    await input.setValue('billing');
+    await input.setValue('no such setting');
     expect(wrapper.findAll('a')).toHaveLength(0);
     expect(wrapper.text()).toContain('SETTINGS_HOME.NO_RESULTS');
   });

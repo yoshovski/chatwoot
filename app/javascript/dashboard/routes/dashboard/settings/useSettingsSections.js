@@ -46,6 +46,7 @@ export const useSettingsSections = () => {
       hint: t(`SETTINGS_HOME.SECTIONS.${section.key}.HINT`),
       pages: section.pages.filter(canOpen).map(page => ({
         ...page,
+        to: { name: page.route, params: { accountId: accountId.value } },
         label: t(`SETTINGS_HOME.PAGES.${page.key}.LABEL`),
         hint: t(`SETTINGS_HOME.PAGES.${page.key}.HINT`),
         keywords: t(`SETTINGS_HOME.PAGES.${page.key}.KEYWORDS`),

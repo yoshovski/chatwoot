@@ -135,12 +135,14 @@ const allowedMenuItems = computed(() => {
   >
     <template #trigger="{ toggle, isOpen }">
       <button
-        class="flex gap-2 items-center p-1 text-left rounded-lg cursor-pointer hover:bg-n-alpha-1"
+        class="flex gap-2 items-center p-1 text-left rounded-lg cursor-pointer hover:bg-n-alpha-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-n-brand"
         :class="[
           { 'bg-n-alpha-1': isOpen },
           isCollapsed ? 'justify-center' : 'w-full',
         ]"
         :title="isCollapsed ? currentUser.available_name : undefined"
+        :aria-label="isCollapsed ? t('PLATFORM_NAV.PROFILE_MENU') : undefined"
+        :aria-expanded="isOpen"
         @click="toggle"
       >
         <Avatar

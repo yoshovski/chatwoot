@@ -43,11 +43,18 @@ describe('platform navigation', () => {
         name: 'Companies',
         children: [{ name: 'Companies list', to: route('companies') }],
       },
-      { name: 'Billing', to: route('billing') },
-      { name: 'Usage', to: route('usage') },
       {
         name: 'Settings',
-        children: [{ name: 'Settings Account Settings', to: route('general') }],
+        children: [
+          {
+            name: 'Account',
+            children: [
+              { name: 'Billing', to: route('billing') },
+              { name: 'Usage', to: route('usage') },
+              { name: 'Business details', to: route('general') },
+            ],
+          },
+        ],
       },
     ];
     const grouped = groupPlatformNavigation(items, key => key);
@@ -66,7 +73,7 @@ describe('platform navigation', () => {
     expect(navigationLeaves(grouped[2]).map(item => item.to.name)).toEqual(
       expect.arrayContaining(['billing', 'usage', 'general'])
     );
-    expect(items).toHaveLength(6);
+    expect(items).toHaveLength(4);
   });
 
   it('selects an agent behavior page through the last-active-agent redirect', () => {

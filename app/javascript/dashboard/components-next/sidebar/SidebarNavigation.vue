@@ -10,6 +10,7 @@ import {
   moduleForArea,
 } from './platformNavigation';
 import Icon from 'next/icon/Icon.vue';
+import { useNavigationLayout } from './useNavigationLayout';
 import SidebarSubGroup from './SidebarSubGroup.vue';
 import SidebarGroupLeaf from './SidebarGroupLeaf.vue';
 import AssistantNavigation from './AssistantNavigation.vue';
@@ -21,6 +22,12 @@ const route = useRoute();
 const router = useRouter();
 const { isAllowed, resolvePath } = useSidebarContext();
 const lastRoutes = ref({});
+const { isMobile, isCompact } = useNavigationLayout();
+// Responsive overrides never write to the user's saved desktop preference.
+const temporaryPanels = ref({});
+watch([isMobile, isCompact], () => {
+  temporaryPanels.value = {};
+});
 
 const accessible = items =>
   items.flatMap(item => {
@@ -72,7 +79,28 @@ const readCollapsed = () => {
   }
 };
 const collapsed = ref(readCollapsed());
+
+const panelItems = computed(() => activeModule.value?.children || []);
+// A section without pages (Home) is the page itself: no panel, full width.
+const PANEL_LESS = ['Settings'];
+const hasPanel = item =>
+  Boolean(item?.children) && !PANEL_LESS.includes(item.name);
+const showPanel = computed(
+  () =>
+    hasPanel(activeModule.value) &&
+    (isMobile.value || isCompact.value
+      ? (temporaryPanels.value[activeModule.value.name] ?? isMobile.value)
+      : !collapsed.value[activeModule.value.name])
+);
+
 const toggleCollapsed = name => {
+  if (isMobile.value || isCompact.value) {
+    temporaryPanels.value = {
+      ...temporaryPanels.value,
+      [name]: !showPanel.value,
+    };
+    return;
+  }
   collapsed.value = { ...collapsed.value, [name]: !collapsed.value[name] };
   try {
     localStorage.setItem(COLLAPSED_KEY, JSON.stringify(collapsed.value));
@@ -81,22 +109,12 @@ const toggleCollapsed = name => {
   }
 };
 
-const panelItems = computed(() => activeModule.value?.children || []);
-// A section without pages (Home) is the page itself: no panel, full width.
-const PANEL_LESS = [];
-const hasPanel = item =>
-  Boolean(item?.children) && !PANEL_LESS.includes(item.name);
-const showPanel = computed(
-  () =>
-    hasPanel(activeModule.value) && !collapsed.value[activeModule.value.name]
-);
-
 const isActive = item => activeModule.value?.name === item.name;
 
 const MAX_BADGE = 99;
 const badgeText = count => (count > MAX_BADGE ? `${MAX_BADGE}+` : count);
 const isPanelHidden = item =>
-  isActive(item) && hasPanel(item) && Boolean(collapsed.value[item.name]);
+  isActive(item) && hasPanel(item) && !showPanel.value;
 const tooltipFor = item => {
   const parts = [item.label];
   if (item.badgeCount) {
@@ -123,6 +141,7 @@ const startsCluster = (child, index) =>
 const openModule = item => {
   if (!hasPanel(item) && item.to) {
     router.push(item.to);
+    emit('navigate');
     return;
   }
   const remembered = lastRoutes.value[item.name];
@@ -221,7 +240,11 @@ watch(
           ? showPanel
           : undefined
       "
-      :aria-controls="isActive(settingsModule) ? 'co-section-panel' : undefined"
+      :aria-controls="
+        isActive(settingsModule) && hasPanel(settingsModule)
+          ? 'co-section-panel'
+          : undefined
+      "
       class="flex size-12 shrink-0 items-center justify-center rounded-2xl transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-n-brand"
       :class="
         isActive(settingsModule)
