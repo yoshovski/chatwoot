@@ -20,6 +20,7 @@ import ActionRequestsCard from 'dashboard/components-next/captain/suggestions/Ac
 import KitEmptyState from 'dashboard/components-next/kit/EmptyState.vue';
 import SuggestionsFocus from 'dashboard/components-next/captain/suggestions/SuggestionsFocus.vue';
 import PageLayout from 'dashboard/components-next/captain/PageLayout.vue';
+import TestAgentButton from 'dashboard/components-next/captain/TestAgentButton.vue';
 import TabBar from 'dashboard/components-next/tabbar/TabBar.vue';
 
 const TABS = { UNANSWERED: 'unanswered', ANSWERED: 'answered' };
@@ -312,6 +313,10 @@ onUnmounted(() => {
     :feature-flag="FEATURE_FLAGS.CAPTAIN"
     @update:current-page="fetchActivePage"
   >
+    <template #headerActions>
+      <TestAgentButton :assistant-id="selectedAssistantId" />
+    </template>
+
     <template #search>
       <Input
         v-model="searchQuery"
@@ -324,34 +329,34 @@ onUnmounted(() => {
       />
     </template>
 
-    <template #subHeader>
-      <div class="mb-3">
+    <template #controls>
+      <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
         <TabBar
           :tabs="tabs"
           :initial-active-tab="activeTabIndex"
           @tab-changed="handleTabChange"
         />
-      </div>
-      <p
-        v-if="isUnanswered && gaps.length"
-        class="mb-2 text-sm text-n-slate-11"
-      >
-        {{ $t('CAPTAIN.SUGGESTIONS.HINT') }}
-      </p>
-      <div
-        v-if="!isUnanswered && suggestions.length"
-        class="mb-2 flex items-center gap-2 text-sm text-n-slate-11"
-      >
-        <span class="font-medium text-n-slate-12">
-          {{
-            $t('CAPTAIN.FAQ_SUGGESTIONS.QUEUE_COUNT', {
-              count: suggestionMeta.totalCount,
-            })
-          }}
-        </span>
-        <span class="border-s border-n-weak ps-2">
-          {{ $t('CAPTAIN.FAQ_SUGGESTIONS.QUEUE_HINT') }}
-        </span>
+        <p
+          v-if="isUnanswered && gaps.length"
+          class="mb-0 text-sm text-n-slate-11"
+        >
+          {{ $t('CAPTAIN.SUGGESTIONS.HINT') }}
+        </p>
+        <div
+          v-else-if="!isUnanswered && suggestions.length"
+          class="flex items-center gap-2 text-sm text-n-slate-11"
+        >
+          <span class="font-medium text-n-slate-12">
+            {{
+              $t('CAPTAIN.FAQ_SUGGESTIONS.QUEUE_COUNT', {
+                count: suggestionMeta.totalCount,
+              })
+            }}
+          </span>
+          <span class="border-s border-n-weak ps-2">
+            {{ $t('CAPTAIN.FAQ_SUGGESTIONS.QUEUE_HINT') }}
+          </span>
+        </div>
       </div>
     </template>
 

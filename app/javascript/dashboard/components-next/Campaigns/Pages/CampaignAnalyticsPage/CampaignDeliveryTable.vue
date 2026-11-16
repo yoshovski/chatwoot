@@ -84,6 +84,7 @@ const isEmpty = computed(() => props.deliveries.length === 0);
       :class="{ 'border-t border-n-weak': isEmpty }"
     >
       <BaseTable
+        :card="false"
         :headers="headers"
         :items="deliveries"
         :no-data-message="noDataMessage"

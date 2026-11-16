@@ -9,6 +9,7 @@ import { usePolicy } from 'dashboard/composables/usePolicy';
 
 import PageLayout from 'dashboard/components-next/captain/PageLayout.vue';
 import CaptainPaywall from 'dashboard/components-next/captain/pageComponents/Paywall.vue';
+import TestAgentButton from 'dashboard/components-next/captain/TestAgentButton.vue';
 import BuiltInActionsSection from 'dashboard/components-next/captain/pageComponents/builtInActions/BuiltInActionsSection.vue';
 import EmailTemplatesSection from 'dashboard/components-next/captain/pageComponents/builtInActions/EmailTemplatesSection.vue';
 import CustomToolCard from 'dashboard/components-next/captain/pageComponents/customTool/CustomToolCard.vue';
@@ -299,6 +300,13 @@ const onHeaderButton = () => {
     @update:current-page="onPageChange"
     @click="onHeaderButton"
   >
+    <template #headerActions>
+      <TestAgentButton
+        v-if="route.params.assistantId"
+        :assistant-id="route.params.assistantId"
+      />
+    </template>
+
     <template #paywall>
       <CaptainPaywall feature-prefix="CAPTAIN.CUSTOM_TOOLS" />
     </template>

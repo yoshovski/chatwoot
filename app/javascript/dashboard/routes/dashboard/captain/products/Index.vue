@@ -7,6 +7,7 @@ import { dynamicTime } from 'shared/helpers/timeHelper';
 import shopifyAPI from 'dashboard/api/integrations/shopify';
 import PageLayout from 'dashboard/components-next/captain/PageLayout.vue';
 import CaptainPaywall from 'dashboard/components-next/captain/pageComponents/Paywall.vue';
+import TestAgentButton from 'dashboard/components-next/captain/TestAgentButton.vue';
 import ShopifyCatalogCard from 'dashboard/components-next/captain/knowledge/ShopifyCatalogCard.vue';
 import Input from 'dashboard/components-next/input/Input.vue';
 import Icon from 'dashboard/components-next/icon/Icon.vue';
@@ -110,6 +111,13 @@ onMounted(() => fetchProducts(1));
     :show-know-more="false"
     @update:current-page="fetchProducts"
   >
+    <template #headerActions>
+      <TestAgentButton
+        v-if="$route.params.assistantId"
+        :assistant-id="$route.params.assistantId"
+      />
+    </template>
+
     <template #search>
       <Input
         v-model="searchQuery"

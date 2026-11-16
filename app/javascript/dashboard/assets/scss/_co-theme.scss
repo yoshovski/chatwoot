@@ -1,32 +1,43 @@
 // scss-lint:disable PropertySortOrder
-// ChatOctave look: Bright. Tinted page, borderless white cards on soft shadows, large corners, a blue gradient
-// welcome band, Plus Jakarta Sans.
+// ChatOctave look: crisp SaaS surfaces on a neutral-cool canvas, 1px hairline borders,
+// refined 12px card radius, and Plus Jakarta Sans across all headings, tables, and body text.
 //
 // The dashboard (through `_woot.scss`) and the sign-up and log-in screens (`v3/App.vue`) import this file.
-// `_next-colors.scss` is shared with the help-centre portal and the survey page, so the Bright colour values live
-// here, after it, and those entry points keep the upstream look. Names stay the upstream `n-*` names; only values change.
-//
+// `_next-colors.scss` is shared with the help-centre portal and the survey page, so overrides live here.
 // `.dark` sits on `<body>`, so it wins over `:root` for every variable set in both.
 @layer base {
   :root {
     --co-font-body: 'Plus Jakarta Sans Variable';
     --co-font-display: 'Plus Jakarta Sans Variable';
-    --co-radius-card: 1.25rem;
-    --co-shadow-card:
-      0 1px 2px 0 rgb(16 24 64 / 0.04), 0 12px 28px -12px rgb(16 24 64 / 0.14);
-    // White text stays at 4.5:1 or more over the whole band (the end stop is darkened for that).
+    --co-radius-card: 0.75rem;
+    --co-radius-tile: 0.625rem;
+    --co-shadow-card: 0 1px 2px 0 rgb(15 23 42 / 0.03);
+    // White text stays at 4.5:1 or more over the whole band.
     --co-hero-bg: linear-gradient(120deg, #205cf0 0%, #2459e6 50%, #0b6aa8 100%);
     --co-display-tracking: -0.02em;
     --co-brand: 32 92 240;
 
-    --background-color: 241 245 253;
+    --background-color: 245 247 250;
+    --surface-1: 245 247 250;
+    --surface-2: 255 255 255;
+    --surface-active: 241 245 249;
+
+    --solid-1: 248 250 252;
+    --solid-2: 255 255 255;
+    --solid-3: 241 245 249;
+    --solid-active: 255 255 255;
+    --button-color: 255 255 255;
+
     --slate-11: 84 92 120;
     --slate-12: 20 24 45;
-    --border-weak: 232 237 248;
-    --border-container: 255 255 255;
-    --border-strong: 222 229 244;
-    --alpha-1: 32, 92, 240, 0.05;
-    --alpha-2: 32, 92, 240, 0.09;
+    --border-weak: 230 235 242;
+    --border-container: 226 232 240;
+    --border-strong: 203 213 225;
+    --alpha-1: 15, 23, 42, 0.04;
+    --alpha-2: 15, 23, 42, 0.07;
+    --alpha-3: 255, 255, 255, 0.96;
+    --black-alpha-1: 15, 23, 42, 0.04;
+    --black-alpha-2: 15, 23, 42, 0.03;
 
     --blue-2: 243 247 255;
     --blue-3: 230 239 255;
@@ -37,29 +48,35 @@
 
     [data-co-shell] {
       --background-color: 255 255 255;
-      --border-weak: 255 255 255;
+      --border-weak: 230 235 242;
     }
   }
 
-  // Bright on dark: a deep navy page, cards one step lighter with a hairline, shadows that read on dark,
-  // a darker welcome band. Body text (slate-11 on a card) is 8:1, headings 14:1.
   .dark {
-    --co-shadow-card:
-      inset 0 1px 0 0 rgb(255 255 255 / 0.04), 0 12px 28px -12px rgb(0 0 0 / 0.6);
+    --co-shadow-card: inset 0 1px 0 0 rgb(255 255 255 / 0.04), 0 1px 2px 0 rgb(0 0 0 / 0.25);
     --co-hero-bg: linear-gradient(120deg, #1a3fae 0%, #1f4fc8 50%, #0b5a8c 100%);
 
     --background-color: 14 17 28;
+    --surface-1: 14 17 28;
+    --surface-2: 23 27 41;
+    --surface-active: 32 38 56;
+
     --slate-11: 176 180 186;
     --slate-12: 237 238 240;
-    --border-weak: 34 39 56;
-    --border-container: 255, 255, 255, 0.06;
-    --border-strong: 44 50 70;
-    --alpha-1: 32, 38, 60, 0.8;
-    --alpha-2: 120, 140, 200, 0.12;
+    --border-weak: 30 35 52;
+    --border-container: 36 42 62;
+    --border-strong: 52 60 88;
+    --alpha-1: 255, 255, 255, 0.04;
+    --alpha-2: 255, 255, 255, 0.08;
+    --alpha-3: 23, 27, 41, 0.96;
+    --black-alpha-1: 0, 0, 0, 0.22;
+    --black-alpha-2: 14, 17, 28, 0.55;
 
-    --solid-1: 20 23 36;
-    --solid-2: 24 28 43;
-    --solid-3: 34 39 58;
+    --solid-1: 18 22 34;
+    --solid-2: 23 27 41;
+    --solid-3: 32 38 56;
+    --solid-active: 32 38 56;
+    --button-color: 30 35 52;
 
     --blue-2: 15 24 44;
     --blue-3: 18 38 80;
@@ -69,8 +86,62 @@
     --solid-blue: 20 52 110;
 
     [data-co-shell] {
-      --background-color: 20 23 36;
-      --border-weak: 20 23 36;
+      --background-color: 18 22 34;
+      --border-weak: 30 35 52;
+    }
+  }
+}
+
+// Contextual surface step-down: secondary buttons and inputs placed inside a primary
+// card keep clear contrast without forcing grey backgrounds on standalone controls.
+:root .bg-n-solid-2 {
+  --button-color: 248 250 252;
+}
+
+.dark .bg-n-solid-2 {
+  --button-color: 30 35 52;
+}
+
+.bg-n-solid-2 .bg-n-solid-2:where(input, select, textarea) {
+  background-color: rgb(var(--solid-1));
+}
+
+// Upgrade unmigrated legacy settings tables/sections without touching per-route templates.
+[data-co-settings-bridge] {
+  font-family: var(--co-font-body), sans-serif;
+
+  :where(table):not(.min-w-full) {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    background-color: rgb(var(--solid-2));
+    border-radius: var(--co-radius-card);
+    box-shadow: var(--co-shadow-card);
+    outline: 1px solid rgb(var(--border-container));
+    outline-offset: -1px;
+    overflow: hidden;
+
+    thead th {
+      background-color: rgb(var(--solid-1));
+      border-bottom: 1px solid rgb(var(--border-weak));
+      padding: 0.75rem 1rem;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: rgb(var(--slate-11));
+    }
+
+    tbody tr:not(:last-child) td {
+      border-bottom: 1px solid rgb(var(--border-weak));
+    }
+
+    tbody tr:hover td {
+      background-color: rgba(var(--alpha-1));
+    }
+
+    td {
+      padding: 0.875rem 1rem;
+      font-size: 0.875rem;
+      color: rgb(var(--slate-12));
     }
   }
 }

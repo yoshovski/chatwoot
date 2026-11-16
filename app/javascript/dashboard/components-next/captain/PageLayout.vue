@@ -59,7 +59,7 @@ const props = defineProps({
   },
   containerClass: {
     type: String,
-    default: 'max-w-[71rem]',
+    default: 'max-w-[64rem]',
   },
 });
 
@@ -81,11 +81,9 @@ const handlePageChange = event => {
 </script>
 
 <template>
-  <section
-    class="flex flex-col w-full h-full overflow-hidden bg-n-surface-1 md:rounded-2xl md:border md:border-n-weak"
-  >
+  <section class="flex flex-col w-full h-full overflow-hidden bg-n-background">
     <!-- Above positioned content of the page (tab bars use z-10), so header dropdowns open over it. -->
-    <header class="sticky top-0 z-20 px-6">
+    <header class="sticky top-0 z-20 bg-n-background/90 backdrop-blur-md px-6">
       <div class="w-full mx-auto" :class="containerClass">
         <div
           class="flex items-start lg:items-center justify-between w-full py-6 lg:py-0 lg:h-20 gap-4 lg:gap-2 flex-col lg:flex-row"
@@ -95,7 +93,7 @@ const handlePageChange = event => {
             <div class="flex items-center gap-4">
               <h1
                 v-if="headerTitle"
-                class="text-2xl font-semibold tracking-tight text-n-slate-12"
+                class="mb-0 font-display text-2xl font-semibold tracking-display text-n-slate-12"
               >
                 {{ headerTitle }}
               </h1>
@@ -158,7 +156,7 @@ const handlePageChange = event => {
         :current-page="currentPage"
         :total-items="totalCount"
         :items-per-page="itemsPerPage"
-        class="max-w-[67rem]"
+        class="max-w-[64rem]"
         @update:current-page="handlePageChange"
       />
     </footer>

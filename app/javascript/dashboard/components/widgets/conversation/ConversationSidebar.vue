@@ -52,7 +52,7 @@ const closeContactPanel = () => {
         ],
       },
     ]"
-    class="bg-n-background h-full overflow-hidden flex flex-col fixed top-0 z-40 w-full max-w-sm p-3 transition-transform duration-300 ease-in-out ltr:right-0 rtl:left-0 shadow-lg md:static md:w-[22rem] md:min-w-[22rem] md:p-0 md:bg-transparent md:shadow-none"
+    class="bg-n-background h-full overflow-hidden flex flex-col fixed top-0 z-40 w-full max-w-sm p-3 transition-transform duration-300 ease-in-out ltr:right-0 rtl:left-0 shadow-lg md:static md:w-[20rem] md:min-w-[20rem] md:p-0 md:bg-transparent md:shadow-none"
     :class="[
       {
         'md:flex': activeTab === 0,

@@ -25,7 +25,7 @@ const tone = computed(() => TONES[props.status]);
 
 <template>
   <span
-    class="inline-flex items-center gap-2 rounded-full px-3 py-1 text-sm font-medium"
+    class="inline-flex items-center gap-2 rounded-full px-3 py-1 text-sm font-medium ring-1 ring-inset ring-current/15"
     :class="inverted ? 'bg-n-black/20 text-white' : tone.pill"
   >
     <span class="size-2 shrink-0 rounded-full" :class="tone.dot" />

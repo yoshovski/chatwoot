@@ -1,7 +1,8 @@
 <script setup>
 import { ref, unref, provide, computed, watch, onMounted } from 'vue';
 import { useStore } from 'vuex';
-import { useRouter } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
+import { frontendURL, conversationUrl } from 'dashboard/helper/URLHelper';
 import {
   useMapGetter,
   useFunctionGetter,
@@ -65,6 +66,7 @@ const emit = defineEmits(['conversationLoad']);
 const { uiSettings } = useUISettings();
 const { t } = useI18n();
 const router = useRouter();
+const route = useRoute();
 const store = useStore();
 const { buildConversationListPath } = useConversationRoutePath();
 
@@ -919,16 +921,49 @@ watch(chatLists, () => {
   chatsOnView.value = conversationList.value;
 });
 
+// On a wide screen, opening a list opens its most recent conversation instead
+// of an empty thread. Phones and the expanded layout keep the list on its own.
+watch(
+  [conversationList, chatListLoading],
+  ([list, loading]) => {
+    if (
+      loading ||
+      !list.length ||
+      route.params.conversation_id ||
+      props.isOnExpandedLayout ||
+      window.innerWidth < wootConstants.SMALL_SCREEN_BREAKPOINT
+    ) {
+      return;
+    }
+    const path = frontendURL(
+      conversationUrl({
+        accountId: route.params.accountId,
+        activeInbox: props.conversationInbox,
+        id: list[0].id,
+        label: props.label,
+        teamId: props.teamId,
+        conversationType: props.conversationType,
+        foldersId: props.foldersId,
+        listView: route.params.listView,
+      })
+    );
+    router.replace({ path, query: route.query });
+  },
+  { immediate: true }
+);
+
 // Filters can be applied from outside the list, so clear the selection here.
 watch(appliedFilters, () => resetBulkActions());
 </script>
 
 <template>
   <div
-    class="flex flex-col flex-shrink-0 conversations-list-wrap bg-n-solid-2 relative rounded-card shadow-card"
+    class="flex flex-col flex-shrink-0 conversations-list-wrap bg-n-solid-2 relative"
     :class="[
       { hidden: !showConversationList },
-      isOnExpandedLayout ? 'basis-full' : 'w-[20.5rem] 2xl:w-[22.5rem]',
+      isOnExpandedLayout
+        ? 'basis-full'
+        : 'w-[21.5rem] xl:w-[22.5rem] border-e border-n-weak',
     ]"
   >
     <slot />

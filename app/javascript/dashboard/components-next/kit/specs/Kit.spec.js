@@ -76,7 +76,7 @@ describe('SectionCard', () => {
 });
 
 describe('MetricTile', () => {
-  it('shows the value, the change and a trend line', () => {
+  it('shows the label, the value and the change without a sparkline', () => {
     const wrapper = mount(MetricTile, {
       global,
       props: {
@@ -85,13 +85,38 @@ describe('MetricTile', () => {
         icon: 'i-lucide-bot',
         change: '+12%',
         changeTone: 'good',
-        points: [1, 3, 2],
       },
     });
 
+    expect(wrapper.text()).toContain('AI conversations');
     expect(wrapper.text()).toContain('186');
     expect(wrapper.text()).toContain('+12%');
-    expect(wrapper.find('svg').exists()).toBe(true);
+    expect(wrapper.find('svg').exists()).toBe(false);
+    expect(wrapper.attributes('role')).toBeUndefined();
+  });
+
+  it('emits click only when clickable is true', async () => {
+    const staticTile = mount(MetricTile, {
+      global,
+      props: { label: 'Leads', value: 4, icon: 'i-lucide-users' },
+    });
+    await staticTile.trigger('click');
+    expect(staticTile.emitted('click')).toBeUndefined();
+
+    const interactiveTile = mount(MetricTile, {
+      global,
+      props: {
+        label: 'Leads',
+        value: 4,
+        icon: 'i-lucide-users',
+        clickable: true,
+      },
+    });
+    expect(interactiveTile.attributes('role')).toBe('button');
+    expect(interactiveTile.attributes('tabindex')).toBe('0');
+    await interactiveTile.trigger('click');
+    await interactiveTile.trigger('keydown.enter');
+    expect(interactiveTile.emitted('click')).toHaveLength(2);
   });
 
   it('shows a placeholder while loading', () => {

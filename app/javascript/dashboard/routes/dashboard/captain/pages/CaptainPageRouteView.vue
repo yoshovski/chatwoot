@@ -25,7 +25,7 @@ watch(
   <!-- min-w-0 lets wide lists shrink so the Copilot panel beside them stays on screen. -->
   <div class="flex w-full h-full min-w-0 min-h-0">
     <section
-      class="flex flex-1 h-full min-w-0 px-0 overflow-hidden bg-n-surface-1"
+      class="flex flex-1 h-full min-w-0 px-0 overflow-hidden bg-n-background"
     >
       <router-view />
     </section>

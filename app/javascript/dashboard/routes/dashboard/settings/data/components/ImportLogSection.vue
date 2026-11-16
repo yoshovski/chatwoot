@@ -89,6 +89,7 @@ defineEmits(['toggle', 'download']);
           </p>
           <div v-else class="overflow-x-auto">
             <BaseTable
+              :card="false"
               class="[&_td:first-child]:ps-4 [&_th:first-child]:ps-4 [&_th]:text-n-slate-11 [&_thead]:border-t-0"
               :headers="headers"
               :items="items"

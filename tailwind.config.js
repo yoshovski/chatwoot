@@ -8,6 +8,8 @@ const {
 } = require('@egoist/tailwindcss-icons');
 
 const defaultSansFonts = [
+  "'Plus Jakarta Sans Variable'",
+  "'Plus Jakarta Sans'",
   '-apple-system',
   'system-ui',
   'BlinkMacSystemFont',
@@ -45,7 +47,10 @@ const tailwindConfig = {
         interDisplay: ['InterDisplay', ...defaultSansFonts],
         display: ['var(--co-font-display)', ...defaultSansFonts],
       },
-      borderRadius: { card: 'var(--co-radius-card)' },
+      borderRadius: {
+        card: 'var(--co-radius-card)',
+        tile: 'var(--co-radius-tile)',
+      },
       boxShadow: { card: 'var(--co-shadow-card)' },
       letterSpacing: { display: 'var(--co-display-tracking)' },
       fontWeight: {

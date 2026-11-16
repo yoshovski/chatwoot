@@ -5,25 +5,15 @@ import { RouterLink, useRoute, useRouter } from 'vue-router';
 import { FEATURE_FLAGS } from 'dashboard/featureFlags';
 import { usePolicy } from 'dashboard/composables/usePolicy';
 import { useMapGetter, useStore } from 'dashboard/composables/store';
-import {
-  isAbortError,
-  useAbortableRequest,
-} from 'dashboard/composables/useAbortableRequest';
 import CaptainAssistant from 'dashboard/api/captain/assistant';
-import CaptainAssistantStats from 'dashboard/api/captain/assistantStats';
 
 import Button from 'dashboard/components-next/button/Button.vue';
-import SidePanel from 'dashboard/components-next/side-panel/SidePanel.vue';
 import PageLayout from 'dashboard/components-next/captain/PageLayout.vue';
 import TestAgentButton from 'dashboard/components-next/captain/TestAgentButton.vue';
 import CaptainPaywall from 'dashboard/components-next/captain/pageComponents/Paywall.vue';
+import MetricTile from 'dashboard/components-next/kit/MetricTile.vue';
 import RangeSelector from 'dashboard/components-next/captain/pageComponents/overview/RangeSelector.vue';
-import MetricCard from 'dashboard/components-next/captain/pageComponents/overview/MetricCard.vue';
 import AssistantDrilldownDrawer from 'dashboard/components-next/captain/pageComponents/overview/AssistantDrilldownDrawer.vue';
-import KnowledgeCard from 'dashboard/components-next/captain/pageComponents/overview/KnowledgeCard.vue';
-import ResolutionFlowCard from 'dashboard/components-next/captain/pageComponents/overview/v2/ResolutionFlowCard.vue';
-import ResolutionTrendCard from 'dashboard/components-next/captain/pageComponents/overview/v2/ResolutionTrendCard.vue';
-import CsatCard from 'dashboard/components-next/captain/pageComponents/overview/v2/CsatCard.vue';
 
 const { t } = useI18n();
 const route = useRoute();
@@ -48,15 +38,6 @@ const metricStats = ref(null);
 const faqStats = ref(null);
 const isFetchingMetrics = ref(false);
 const isFetchingFaqStats = ref(false);
-
-const reportPanel = ref(null);
-const isReportOpen = ref(false);
-const reportOverview = ref(null);
-const resolutionFlow = ref(null);
-const resolutionTrend = ref(null);
-
-const { run: runReportRequest, isPending: isFetchingReport } =
-  useAbortableRequest();
 
 let metricsFetchToken = 0;
 let faqStatsFetchToken = 0;
@@ -120,37 +101,6 @@ const fetchFaqStats = async () => {
   }
 };
 
-const optionalResponseData = async request => {
-  try {
-    return (await request).data;
-  } catch (error) {
-    if (isAbortError(error)) throw error;
-    return null;
-  }
-};
-
-const fetchReportCharts = async () => {
-  if (!isReportOpen.value) return;
-  const results = await runReportRequest(signal => {
-    const request = {
-      assistantId: assistantId.value,
-      range: selectedRange.value,
-      signal,
-    };
-
-    return Promise.all([
-      optionalResponseData(CaptainAssistantStats.getOverview(request)),
-      optionalResponseData(CaptainAssistantStats.getResolutionFlow(request)),
-      optionalResponseData(CaptainAssistantStats.getResolutionTrend(request)),
-    ]);
-  });
-
-  if (results) {
-    [reportOverview.value, resolutionFlow.value, resolutionTrend.value] =
-      results;
-  }
-};
-
 onUnmounted(() => {
   metricsAbortController?.abort();
   faqStatsAbortController?.abort();
@@ -160,7 +110,6 @@ watch(
   [selectedRange, assistantId],
   () => {
     fetchMetrics();
-    fetchReportCharts();
   },
   { immediate: true }
 );
@@ -369,6 +318,8 @@ const primaryMetrics = computed(() => [
   {
     key: 'handled',
     metric: 'conversations_handled',
+    icon: 'i-lucide-message-square-dot',
+    tone: 'blue',
     label: t('CAPTAIN.OVERVIEW.METRICS.HANDLED.LABEL'),
     hint: t('CAPTAIN.OVERVIEW.METRICS.HANDLED.HINT'),
     ...metricFor('conversations_handled', v => v.toLocaleString(), 'up'),
@@ -376,43 +327,19 @@ const primaryMetrics = computed(() => [
   {
     key: 'autoResolution',
     metric: 'auto_resolution_rate',
+    icon: 'i-lucide-circle-check-big',
+    tone: 'teal',
     label: t('CAPTAIN.OVERVIEW.METRICS.AUTO_RESOLUTION.LABEL'),
     hint: t('CAPTAIN.OVERVIEW.METRICS.AUTO_RESOLUTION.HINT'),
     ...metricFor('auto_resolution_rate', v => `${v}%`, 'up', 'point'),
   },
   {
     key: 'hoursSaved',
+    icon: 'i-lucide-clock',
+    tone: 'violet',
     label: t('CAPTAIN.OVERVIEW.METRICS.HOURS_SAVED.LABEL'),
     hint: t('CAPTAIN.OVERVIEW.METRICS.HOURS_SAVED.HINT'),
     ...metricFor('hours_saved', formatDuration, 'up'),
-  },
-]);
-
-const reportMetrics = computed(() => [
-  {
-    key: 'handoff',
-    metric: 'handoff_rate',
-    label: t('CAPTAIN.OVERVIEW.METRICS.HANDOFF.LABEL'),
-    hint: t('CAPTAIN.OVERVIEW.METRICS.HANDOFF.HINT'),
-    ...metricFor('handoff_rate', v => `${v}%`, 'down', 'point'),
-  },
-  {
-    key: 'reopen',
-    metric: 'reopen_rate',
-    label: t('CAPTAIN.OVERVIEW.METRICS.REOPEN.LABEL'),
-    hint: t('CAPTAIN.OVERVIEW.METRICS.REOPEN.HINT'),
-    ...metricFor('reopen_rate', v => `${v}%`, 'down', 'point'),
-  },
-  {
-    key: 'depth',
-    label: t('CAPTAIN.OVERVIEW.METRICS.DEPTH.LABEL'),
-    hint: t('CAPTAIN.OVERVIEW.METRICS.DEPTH.HINT'),
-    ...metricFor(
-      'conversation_depth',
-      v => v.toFixed(1),
-      'neutral',
-      'absolute'
-    ),
   },
 ]);
 
@@ -477,22 +404,17 @@ const attentionItems = computed(() => {
   return items;
 });
 
-const openReportPanel = () => {
-  isReportOpen.value = true;
-  reportPanel.value?.open();
-  fetchReportCharts();
-};
-
-const closeReportPanel = () => {
-  isReportOpen.value = false;
-  reportPanel.value?.close();
-};
+const openReportPage = () =>
+  router.push({
+    name: 'analytics_ai_agent',
+    params: { accountId: accountId.value },
+    query: { period: selectedRange.value },
+  });
 
 const drilldown = ref({ metric: '', label: '', value: '' });
 const isDrilldownOpen = ref(false);
 
 const openDrilldown = metric => {
-  if (isReportOpen.value) closeReportPanel();
   drilldown.value = {
     metric: metric.metric,
     label: metric.label,
@@ -524,7 +446,7 @@ const closeDrilldown = () => {
           size="sm"
           icon="i-lucide-chart-bar"
           :label="$t('CAPTAIN.OVERVIEW.VIEW_REPORT')"
-          @click="openReportPanel"
+          @click="openReportPage"
         />
         <TestAgentButton :assistant-id="assistantId" />
       </div>
@@ -537,7 +459,7 @@ const closeDrilldown = () => {
         <!-- Readiness checklist for a new / incomplete AI agent -->
         <section
           v-if="showReadinessChecklist"
-          class="overflow-hidden border rounded-xl bg-n-solid-1 border-n-weak"
+          class="overflow-hidden rounded-card bg-n-solid-2 shadow-card outline outline-1 -outline-offset-1 outline-n-container"
         >
           <div
             class="flex flex-wrap items-center justify-between gap-4 px-5 py-4 border-b border-n-weak"
@@ -619,7 +541,7 @@ const closeDrilldown = () => {
         <template v-if="isRunningAgent">
           <!-- One status line with edit links -->
           <div
-            class="flex flex-wrap items-center justify-between gap-3 px-4 py-3 border rounded-xl bg-n-solid-1 border-n-weak"
+            class="flex flex-wrap items-center justify-between gap-3 px-4 py-3 rounded-card bg-n-solid-2 shadow-card outline outline-1 -outline-offset-1 outline-n-container"
           >
             <div
               class="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-n-slate-12"
@@ -665,18 +587,24 @@ const closeDrilldown = () => {
           </div>
 
           <!-- Three key numbers -->
-          <div
-            class="grid grid-cols-1 gap-px overflow-hidden border rounded-xl sm:grid-cols-3 bg-n-weak border-n-weak"
-          >
-            <MetricCard
+          <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+            <MetricTile
               v-for="metric in primaryMetrics"
               :key="metric.key"
+              :icon="metric.icon"
+              :tone="metric.tone"
               :label="metric.label"
               :value="metric.value"
-              :trend="metric.trend"
+              :change="metric.trend"
+              :change-tone="
+                metric.trendGood === true
+                  ? 'good'
+                  : metric.trendGood === false
+                    ? 'bad'
+                    : 'neutral'
+              "
               :hint="metric.hint"
-              :trend-good="metric.trendGood"
-              :loading="isFetchingMetrics"
+              :is-loading="isFetchingMetrics"
               :clickable="
                 canDrilldown && Boolean(metric.metric) && !isFetchingMetrics
               "
@@ -686,7 +614,7 @@ const closeDrilldown = () => {
 
           <!-- Short Needs attention list -->
           <section
-            class="overflow-hidden border rounded-xl bg-n-solid-1 border-n-weak"
+            class="overflow-hidden rounded-card bg-n-solid-2 shadow-card outline outline-1 -outline-offset-1 outline-n-container"
           >
             <div class="px-5 py-3.5 border-b border-n-weak">
               <h2 class="m-0 text-sm font-medium text-n-slate-12">
@@ -736,62 +664,6 @@ const closeDrilldown = () => {
           </section>
         </template>
       </div>
-
-      <!-- Deeper charts & metrics behind "View report" side panel -->
-      <SidePanel
-        ref="reportPanel"
-        :title="$t('CAPTAIN.OVERVIEW.REPORT_PANEL.TITLE')"
-        :description="$t('CAPTAIN.OVERVIEW.REPORT_PANEL.DESCRIPTION')"
-        width="5xl"
-        @close="isReportOpen = false"
-      >
-        <div class="flex flex-col gap-5">
-          <div>
-            <h4
-              class="mt-0 mb-2.5 text-xs font-medium uppercase tracking-wider text-n-slate-11"
-            >
-              {{ $t('CAPTAIN.OVERVIEW.REPORT_PANEL.OUTCOMES_TITLE') }}
-            </h4>
-            <div
-              class="grid grid-cols-1 gap-px overflow-hidden border rounded-xl sm:grid-cols-3 bg-n-weak border-n-weak"
-            >
-              <MetricCard
-                v-for="metric in reportMetrics"
-                :key="metric.key"
-                :label="metric.label"
-                :value="metric.value"
-                :trend="metric.trend"
-                :hint="metric.hint"
-                :trend-good="metric.trendGood"
-                :loading="isFetchingMetrics"
-                :clickable="
-                  canDrilldown && Boolean(metric.metric) && !isFetchingMetrics
-                "
-                @click="openDrilldown(metric)"
-              />
-            </div>
-          </div>
-
-          <KnowledgeCard :knowledge="faqStats ?? undefined" />
-
-          <ResolutionFlowCard
-            :flow="resolutionFlow"
-            :loading="isFetchingReport"
-          />
-
-          <ResolutionTrendCard
-            :trend="resolutionTrend"
-            :loading="isFetchingReport"
-          />
-
-          <CsatCard
-            :autonomous="reportOverview?.autonomous_csat_score"
-            :assisted="reportOverview?.assisted_csat_score"
-            :human-only="reportOverview?.human_only_csat_score"
-            :loading="isFetchingReport"
-          />
-        </div>
-      </SidePanel>
 
       <AssistantDrilldownDrawer
         v-if="canDrilldown"

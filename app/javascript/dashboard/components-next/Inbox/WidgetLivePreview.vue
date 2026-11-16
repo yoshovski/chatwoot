@@ -147,7 +147,7 @@ onBeforeUnmount(() => clearTimeout(refreshTimer));
   >
     <div v-if="!bare" class="flex flex-wrap items-center justify-between gap-2">
       <div
-        class="flex items-center gap-0.5 rounded-lg bg-n-alpha-1 p-0.5"
+        class="flex items-center gap-1 rounded-lg bg-n-solid-1 p-1 outline outline-1 -outline-offset-1 outline-n-container"
         role="group"
         :aria-label="$t('INBOX_MGMT.WIDGET_PREVIEW.VIEW_LABEL')"
       >
@@ -158,7 +158,7 @@ onBeforeUnmount(() => clearTimeout(refreshTimer));
           class="rounded-md px-2.5 py-1 text-xs font-medium transition-colors"
           :class="
             view === option.value
-              ? 'bg-n-solid-1 text-n-slate-12 shadow-sm'
+              ? 'bg-n-solid-active text-n-slate-12 shadow-sm outline outline-1 -outline-offset-1 outline-n-container'
               : 'text-n-slate-11 hover:text-n-slate-12'
           "
           :aria-pressed="view === option.value"
@@ -209,7 +209,7 @@ onBeforeUnmount(() => clearTimeout(refreshTimer));
       :class="
         bare
           ? 'relative size-full overflow-hidden'
-          : 'flex justify-center rounded-2xl bg-n-slate-2 p-4 outline outline-1 -outline-offset-1 outline-n-weak'
+          : 'flex justify-center rounded-card bg-n-solid-1 p-6 outline outline-1 -outline-offset-1 outline-n-container'
       "
     >
       <div

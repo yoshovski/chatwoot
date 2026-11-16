@@ -105,7 +105,7 @@ const exportLeads = async () => {
 </script>
 
 <template>
-  <PageFrame>
+  <PageFrame size="wide">
     <template #header>
       <PageHeader :title="t('LEADS.TITLE')" :description="t('LEADS.SUBTITLE')">
         <template #action>
@@ -128,36 +128,42 @@ const exportLeads = async () => {
       :aria-busy="isPending"
     >
       <div
-        class="flex flex-wrap items-center gap-1.5 border-b border-n-weak px-4 py-3"
+        class="flex flex-wrap items-center border-b border-n-weak px-5 py-3.5"
         role="group"
         :aria-label="t('LEADS.COLUMNS.STATUS')"
       >
-        <button
-          v-for="status in ['', ...STATUSES]"
-          :key="status || 'all'"
-          type="button"
-          class="flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium"
-          :class="
-            statusFilter === status
-              ? 'bg-n-slate-12 text-n-solid-1'
-              : 'bg-n-alpha-2 text-n-slate-11 hover:text-n-slate-12'
-          "
-          :aria-pressed="statusFilter === status"
-          @click="statusFilter = status"
+        <div
+          class="inline-flex flex-wrap items-center gap-1 rounded-lg bg-n-solid-1 p-1 outline outline-1 -outline-offset-1 outline-n-container"
         >
-          <span
-            v-if="status"
-            class="size-1.5 rounded-full"
-            :class="STATUS_TONES[status].dot"
-            aria-hidden="true"
-          />
-          {{
-            status ? t(`LEADS.STATUS.${status.toUpperCase()}`) : t('LEADS.ALL')
-          }}
-          <span class="opacity-70">{{
-            status ? counts[status] || 0 : allCount
-          }}</span>
-        </button>
+          <button
+            v-for="status in ['', ...STATUSES]"
+            :key="status || 'all'"
+            type="button"
+            class="flex items-center gap-1.5 rounded-md px-3 py-1 text-xs font-medium transition-colors"
+            :class="
+              statusFilter === status
+                ? 'bg-n-solid-active text-n-slate-12 shadow-sm outline outline-1 -outline-offset-1 outline-n-container'
+                : 'text-n-slate-11 hover:text-n-slate-12'
+            "
+            :aria-pressed="statusFilter === status"
+            @click="statusFilter = status"
+          >
+            <span
+              v-if="status"
+              class="size-1.5 rounded-full"
+              :class="STATUS_TONES[status].dot"
+              aria-hidden="true"
+            />
+            {{
+              status
+                ? t(`LEADS.STATUS.${status.toUpperCase()}`)
+                : t('LEADS.ALL')
+            }}
+            <span class="tabular-nums opacity-70">{{
+              status ? counts[status] || 0 : allCount
+            }}</span>
+          </button>
+        </div>
       </div>
       <p
         v-if="isPending"

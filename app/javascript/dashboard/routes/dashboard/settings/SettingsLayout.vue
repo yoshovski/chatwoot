@@ -22,7 +22,8 @@ defineProps({
 
 <template>
   <div
-    class="flex flex-col w-full gap-4 font-inter"
+    data-co-settings-bridge
+    class="flex flex-col w-full gap-5"
     :class="contentSized ? 'h-auto' : 'h-full'"
   >
     <slot name="header" />
@@ -32,12 +33,12 @@ defineProps({
       <slot v-if="isLoading" name="loading">
         <woot-loading-state :message="loadingMessage" />
       </slot>
-      <p
+      <div
         v-else-if="noRecordsFound"
-        class="flex-1 py-20 text-n-slate-12 flex items-center justify-center text-base"
+        class="flex items-center justify-center rounded-card bg-n-solid-2 p-12 text-center text-sm text-n-slate-11 shadow-card outline outline-1 -outline-offset-1 outline-n-container"
       >
         {{ noRecordsMessage }}
-      </p>
+      </div>
       <slot v-else name="body" />
       <!-- Do not delete the slot below. It is required to render anything that is not defined in the above slots. -->
       <slot />
