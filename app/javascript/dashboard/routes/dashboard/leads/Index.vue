@@ -12,6 +12,7 @@ import PageFrame from 'dashboard/components-next/kit/PageFrame.vue';
 import PageHeader from 'dashboard/components-next/kit/PageHeader.vue';
 import Button from 'dashboard/components-next/button/Button.vue';
 import LeadsTable from './LeadsTable.vue';
+import LeadCaptureEntry from './LeadCaptureEntry.vue';
 import { STATUSES, STATUS_TONES } from './leadsView';
 
 const { t } = useI18n();
@@ -81,7 +82,9 @@ const updateLead = async (lead, changes) => {
       if (statusFilter.value && leads.value.length === 1 && page.value > 1) {
         page.value -= 1;
       } else {
-        await load();
+        counts.value[previousStatus] -= 1;
+        counts.value[data.status] = (counts.value[data.status] || 0) + 1;
+        if (statusFilter.value) await load();
       }
     }
   } catch {
@@ -187,20 +190,12 @@ const exportLeads = async () => {
         <p class="m-0 text-sm font-medium text-n-slate-12">
           {{ t(statusFilter ? 'LEADS.EMPTY_FILTER' : 'LEADS.EMPTY') }}
         </p>
-        <p v-if="!statusFilter" class="m-0 text-sm text-n-slate-11">
-          {{ t('LEADS.EMPTY_HELP') }}
-        </p>
+        <LeadCaptureEntry v-if="!statusFilter" />
         <Button
           v-if="statusFilter"
           :label="t('LEADS.SHOW_ALL')"
           size="sm"
           @click="statusFilter = ''"
-        />
-        <Button
-          v-else
-          :label="t('LEADS.OPEN_AGENTS')"
-          size="sm"
-          @click="router.push({ name: 'captain_assistants_index' })"
         />
       </div>
       <template v-else>

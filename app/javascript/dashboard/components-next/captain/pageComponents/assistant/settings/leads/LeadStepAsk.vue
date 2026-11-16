@@ -20,6 +20,7 @@ const {
   label,
   settings,
   attempted,
+  activating,
   fieldErrorFor,
   fieldError,
   typeErrorFor,
@@ -159,7 +160,8 @@ const removeEditingType = () => {
 const typesInvalid = computed(
   () =>
     attempted.value &&
-    ((settings.value.leads_enabled && !settings.value.lead_types.length) ||
+    (((settings.value.leads_enabled || activating.value) &&
+      !settings.value.lead_types.length) ||
       settings.value.lead_types.some(typeError))
 );
 </script>
@@ -331,9 +333,11 @@ const typesInvalid = computed(
       </div>
       <p
         v-else
+        :aria-invalid="typesInvalid"
+        tabindex="-1"
         class="m-0 rounded-xl bg-n-alpha-1 px-3.5 py-3 text-xs"
         :class="
-          attempted && settings.leads_enabled
+          attempted && (settings.leads_enabled || activating)
             ? 'text-n-ruby-11 outline outline-1 outline-n-ruby-8'
             : 'text-n-slate-11'
         "

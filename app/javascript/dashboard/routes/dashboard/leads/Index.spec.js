@@ -111,4 +111,17 @@ describe('Leads', () => {
     expect(row.owner).toBeNull();
     wrapper.unmount();
   });
+  it('updates status without remounting the unfiltered list or refetching its rows', async () => {
+    LeadsAPI.update.mockResolvedValueOnce({ data: { ...lead, status: 'won' } });
+    const wrapper = shallowMount(Index, options);
+    await flushPromises();
+    const table = wrapper.findComponent(LeadsTable);
+    const row = table.props('leads')[0];
+    table.vm.$emit('status', row, 'won');
+    await flushPromises();
+    expect(LeadsAPI.get).toHaveBeenCalledTimes(1);
+    expect(wrapper.findComponent(LeadsTable).vm).toBe(table.vm);
+    expect(row.status).toBe('won');
+    wrapper.unmount();
+  });
 });

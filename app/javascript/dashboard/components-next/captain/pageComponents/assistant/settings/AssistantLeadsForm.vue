@@ -2,7 +2,6 @@
 import { computed, ref } from 'vue';
 import Button from 'dashboard/components-next/button/Button.vue';
 import Dialog from 'dashboard/components-next/dialog/Dialog.vue';
-import SettingsSwitchRow from './SettingsSwitchRow.vue';
 import SettingsSaveBar from './SettingsSaveBar.vue';
 import SettingsSplit from './SettingsSplit.vue';
 import LeadStepAsk from './leads/LeadStepAsk.vue';
@@ -31,7 +30,7 @@ const {
   hasErrors,
   isDirty,
   reset,
-  enableCapture,
+  activating,
   setup,
   statusLabel,
   statusTone,
@@ -59,11 +58,12 @@ const goTo = offset => {
 };
 
 // Every validation error is in "What to ask": show it before focusing the invalid field.
-const submit = async () => {
+const submit = async (enabled = settings.value.leads_enabled) => {
+  activating.value = enabled;
   if (hasErrors.value) {
     activeStep.value = 'ask';
   }
-  return lead.save(form.value);
+  return lead.save(form.value, enabled);
 };
 
 const PILL_TONES = {
@@ -79,7 +79,7 @@ const DOT_TONES = {
 </script>
 
 <template>
-  <form ref="form" class="flex flex-col gap-6" @submit.prevent="submit">
+  <form ref="form" class="flex flex-col gap-6" @submit.prevent="submit()">
     <fieldset
       :disabled="saving"
       class="m-0 flex min-w-0 flex-col gap-6 border-0 p-0"
@@ -87,13 +87,20 @@ const DOT_TONES = {
       <section
         class="flex flex-col gap-3 rounded-card bg-n-solid-2 px-5 py-3 shadow-card outline outline-1 -outline-offset-1 outline-n-container sm:flex-row sm:items-center sm:justify-between"
       >
-        <SettingsSwitchRow
-          class="flex-1 !py-1"
-          :model-value="settings.leads_enabled"
-          :title="label('ENABLE')"
-          :description="label('ENABLE_DESCRIPTION')"
-          @update:model-value="enableCapture"
-        />
+        <div class="flex flex-1 flex-col gap-1">
+          <h3 class="m-0 text-sm font-semibold text-n-slate-12">
+            {{ label('TITLE') }}
+          </h3>
+          <p class="m-0 text-sm text-n-slate-11">
+            {{
+              label(
+                settings.leads_enabled
+                  ? 'ACTIVATION.ENABLED_HELP'
+                  : 'ACTIVATION.PAUSED_HELP'
+              )
+            }}
+          </p>
+        </div>
         <button
           type="button"
           class="flex shrink-0 items-center gap-2 self-start rounded-full px-3 py-1 text-sm font-medium sm:self-center"
@@ -112,8 +119,7 @@ const DOT_TONES = {
       <SettingsSplit>
         <!-- A · Stepper: one step at a time, Back / Next. -->
         <section
-          class="flex flex-col gap-5 rounded-card bg-n-solid-2 p-5 shadow-card outline outline-1 -outline-offset-1 outline-n-container transition-opacity"
-          :class="{ 'opacity-70': !settings.leads_enabled }"
+          class="flex flex-col gap-5 rounded-card bg-n-solid-2 p-5 shadow-card outline outline-1 -outline-offset-1 outline-n-container"
         >
           <ol
             class="m-0 grid list-none grid-cols-3 gap-2 p-0"
@@ -197,6 +203,42 @@ const DOT_TONES = {
           </div>
         </section>
 
+        <section
+          class="flex flex-col gap-4 rounded-card bg-n-solid-2 p-5 shadow-card outline outline-1 -outline-offset-1 outline-n-container"
+          :aria-label="label('ACTIVATION.SUMMARY')"
+        >
+          <h3 class="m-0 text-sm font-semibold text-n-slate-12">
+            {{ label('ACTIVATION.SUMMARY') }}
+          </h3>
+          <dl class="m-0 flex flex-col gap-3">
+            <div v-for="step in STEPS" :key="step" class="min-w-0">
+              <dt class="text-xs font-semibold text-n-slate-12">
+                {{ stepTitle(step) }}
+              </dt>
+              <dd class="m-0 break-words text-sm text-n-slate-11">
+                {{ summaries[step] }}
+              </dd>
+            </div>
+          </dl>
+          <Button
+            type="button"
+            class="self-start"
+            :label="
+              label(
+                settings.leads_enabled
+                  ? 'ACTIVATION.PAUSE'
+                  : 'ACTIVATION.ENABLE'
+              )
+            "
+            :is-loading="saving"
+            :disabled="saving || isDirty || loading || scenarioError"
+            @click="submit(!settings.leads_enabled)"
+          />
+          <p v-if="isDirty" class="m-0 text-xs text-n-slate-11">
+            {{ label('ACTIVATION.SAVE_FIRST') }}
+          </p>
+        </section>
+
         <template #preview>
           <LeadWidgetPreview :focus="activeStep" />
         </template>
@@ -214,7 +256,7 @@ const DOT_TONES = {
     <SettingsSaveBar
       :is-dirty="isDirty"
       :is-saving="saving"
-      @save="submit"
+      @save="submit()"
       @discard="reset"
     />
 
@@ -248,7 +290,7 @@ const DOT_TONES = {
               size="xs"
               variant="faded"
               icon="i-lucide-git-branch"
-              :disabled="!settings.leads_enabled || loading || scenarioError"
+              :disabled="loading || scenarioError"
               :is-loading="saving"
               :label="
                 label(

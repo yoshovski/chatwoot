@@ -99,4 +99,107 @@ describe('Lead setup stepper', () => {
     expect(save).not.toHaveBeenCalled();
     wrapper.unmount();
   });
+  it('saves paused edits without activating and enables only through the explicit action', async () => {
+    const save = vi.fn().mockResolvedValue(true);
+    const wrapper = shallowMount(AssistantLeadsForm, {
+      props: {
+        assistant: { id: 1, config: { ...config, leads_enabled: false } },
+        save,
+      },
+      global,
+    });
+    await flushPromises();
+    const state = wrapper.findComponent(Capture).vm.lead;
+    state.settings.value.lead_trigger = 'New trigger';
+    wrapper.findComponent(SettingsSaveBar).vm.$emit('save');
+    await flushPromises();
+    expect(save.mock.calls[0][0].config).toMatchObject({
+      leads_enabled: false,
+      lead_trigger: 'New trigger',
+    });
+    const enable = wrapper
+      .findAll('button-stub')
+      .find(button =>
+        button.attributes('label')?.endsWith('ACTIVATION.ENABLE')
+      );
+    await enable.trigger('click');
+    await flushPromises();
+    expect(save.mock.calls[1][0].config.leads_enabled).toBe(true);
+    expect(state.settings.value.leads_enabled).toBe(true);
+    expect(state.fieldKeyLocked(state.settings.value.lead_fields[0])).toBe(
+      true
+    );
+    wrapper.unmount();
+  });
+
+  it('keeps paused state and delivery edits when saving fails', async () => {
+    const save = vi.fn().mockResolvedValue(false);
+    const wrapper = shallowMount(AssistantLeadsForm, {
+      props: {
+        assistant: { id: 1, config: { ...config, leads_enabled: false } },
+        save,
+      },
+      global,
+    });
+    await flushPromises();
+    const state = wrapper.findComponent(Capture).vm.lead;
+    state.settings.value.lead_notification_team_id = 9;
+    wrapper.findComponent(SettingsSaveBar).vm.$emit('save');
+    await flushPromises();
+    expect(state.settings.value.lead_notification_team_id).toBe(9);
+    expect(state.settings.value.leads_enabled).toBe(false);
+    expect(state.isDirty.value).toBe(true);
+    wrapper.unmount();
+  });
+
+  it('rejects activation without a lead type and shows the relevant step', async () => {
+    const save = vi.fn();
+    const wrapper = shallowMount(AssistantLeadsForm, {
+      props: {
+        assistant: {
+          id: 1,
+          config: { ...config, leads_enabled: false, lead_types: [] },
+        },
+        save,
+      },
+      global,
+    });
+    await flushPromises();
+    await wrapper.findAll('ol button')[2].trigger('click');
+    const enable = wrapper
+      .findAll('button-stub')
+      .find(button =>
+        button.attributes('label')?.endsWith('ACTIVATION.ENABLE')
+      );
+    await enable.trigger('click');
+    await flushPromises();
+    expect(wrapper.findComponent(LeadStepAsk).exists()).toBe(true);
+    expect(wrapper.find('[role="alert"]').exists()).toBe(true);
+    expect(save).not.toHaveBeenCalled();
+    wrapper.unmount();
+  });
+
+  it('retains the saved capture state when activation fails', async () => {
+    const save = vi.fn().mockResolvedValue(false);
+    const wrapper = shallowMount(AssistantLeadsForm, {
+      props: {
+        assistant: { id: 1, config: { ...config, leads_enabled: false } },
+        save,
+      },
+      global,
+    });
+    await flushPromises();
+    const enable = wrapper
+      .findAll('button-stub')
+      .find(button =>
+        button.attributes('label')?.endsWith('ACTIVATION.ENABLE')
+      );
+    await enable.trigger('click');
+    await flushPromises();
+    expect(save.mock.calls[0][0].config.leads_enabled).toBe(true);
+    expect(
+      wrapper.findComponent(Capture).vm.lead.settings.value.leads_enabled
+    ).toBe(false);
+    wrapper.unmount();
+  });
 });
