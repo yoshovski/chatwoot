@@ -1,8 +1,12 @@
-import { mount } from '@vue/test-utils';
+import { flushPromises, mount } from '@vue/test-utils';
+import { createMemoryHistory, createRouter } from 'vue-router';
+import { withFullI18n } from 'test-i18n';
 import DataTable from '../DataTable.vue';
 import FormLayout from '../FormLayout.vue';
 import SearchField from '../SearchField.vue';
 import TableCard from '../TableCard.vue';
+
+withFullI18n();
 
 const global = {
   stubs: {
@@ -88,6 +92,11 @@ describe('TableCard', () => {
     expect(empty.text()).toContain('Nobody yet');
     expect(empty.text()).toContain('Invite');
     expect(empty.find('table').exists()).toBe(false);
+
+    await empty.setProps({ unavailableText: 'Your role cannot view this' });
+    expect(empty.text()).toContain('Your role cannot view this');
+    expect(empty.text()).not.toContain('Nobody yet');
+    expect(empty.find('button').exists()).toBe(false);
   });
 
   it('filters rows by the search keys and says when nothing matches', async () => {
@@ -109,6 +118,9 @@ describe('TableCard', () => {
     await wrapper.find('input[type="search"]').setValue('zzz');
     expect(wrapper.find('table').exists()).toBe(false);
     expect(wrapper.text()).toContain('No match');
+    await wrapper.get('button').trigger('click');
+    expect(wrapper.get('input').element.value).toBe('');
+    expect(wrapper.findAll('tbody tr')).toHaveLength(2);
   });
 });
 
@@ -136,9 +148,84 @@ describe('FormLayout', () => {
     });
 
     expect(wrapper.find('button').attributes('disabled')).toBeDefined();
+    await wrapper.get('form').trigger('submit');
     await wrapper.setProps({ saving: false, disabled: true });
     expect(wrapper.find('button').attributes('disabled')).toBeDefined();
+    await wrapper.get('form').trigger('submit');
+    expect(wrapper.emitted('save')).toBeUndefined();
     await wrapper.setProps({ disabled: false });
     expect(wrapper.find('button').attributes('disabled')).toBeUndefined();
+  });
+});
+
+describe('explicit-save forms', () => {
+  const dialog = {
+    emits: ['confirm', 'close'],
+    methods: { open: vi.fn(), close: vi.fn() },
+    template: '<div />',
+  };
+  const stubs = { ...global.stubs, Dialog: dialog };
+
+  it('guards dirty navigation until the user confirms leaving', async () => {
+    const router = createRouter({
+      history: createMemoryHistory(),
+      routes: [
+        {
+          path: '/',
+          component: FormLayout,
+          props: { saveLabel: 'Save', dirty: true },
+        },
+        { path: '/next', component: { template: '<p>Next</p>' } },
+      ],
+    });
+    await router.push('/');
+    const wrapper = mount(
+      { template: '<router-view />' },
+      {
+        global: { plugins: [router], stubs },
+      }
+    );
+
+    const canceled = router.push('/next');
+    await flushPromises();
+    expect(dialog.methods.open).toHaveBeenCalledTimes(1);
+    wrapper.getComponent(dialog).vm.$emit('close');
+    await canceled;
+    expect(router.currentRoute.value.path).toBe('/');
+
+    const confirmed = router.push('/next');
+    await flushPromises();
+    wrapper.getComponent(dialog).vm.$emit('confirm');
+    await confirmed;
+    expect(router.currentRoute.value.path).toBe('/next');
+    wrapper.unmount();
+  });
+
+  it('preserves input on failure and warns about leaving while dirty', async () => {
+    const wrapper = mount(FormLayout, {
+      global: { stubs },
+      attachTo: document.body,
+      props: { saveLabel: 'Save', dirty: false },
+      slots: { default: '<input aria-invalid="true" />' },
+    });
+    const input = wrapper.get('input');
+    await wrapper.get('form').trigger('submit');
+    expect(wrapper.emitted('save')).toBeUndefined();
+
+    await input.setValue('Draft');
+    await wrapper.setProps({ dirty: true });
+    await wrapper.get('form').trigger('submit');
+    expect(wrapper.emitted('save')).toHaveLength(1);
+    await wrapper.setProps({ error: 'Review your name' });
+    expect(wrapper.get('[role="alert"]').text()).toBe('Review your name');
+    expect(input.element.value).toBe('Draft');
+    expect(document.activeElement).toBe(input.element);
+
+    const beforeUnload = new Event('beforeunload', { cancelable: true });
+    window.dispatchEvent(beforeUnload);
+    expect(beforeUnload.defaultPrevented).toBe(true);
+    await wrapper.get('button[type="button"]').trigger('click');
+    expect(wrapper.emitted('discard')).toHaveLength(1);
+    wrapper.unmount();
   });
 });

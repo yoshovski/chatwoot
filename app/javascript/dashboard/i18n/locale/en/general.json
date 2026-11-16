@@ -10,7 +10,15 @@
     "BETA_DESCRIPTION": "This feature is in beta and may change as we improve it.",
     "ACCEPT": "Accept",
     "DISCARD": "Discard",
-    "PREFERRED": "Preferred"
+    "PREFERRED": "Preferred",
+    "CLEAR_SEARCH": "Clear search",
+    "METRIC_HELP": "About {metric}",
+    "FORM": {
+      "UNSAVED": "Unsaved changes",
+      "LEAVE_DESCRIPTION": "Leaving this page will discard your edits.",
+      "KEEP_EDITING": "Keep editing",
+      "DISCARD_AND_LEAVE": "Discard and leave"
+    }
   },
   "CHOICE_TOGGLE": {
     "YES": "Yes",

@@ -62,8 +62,14 @@ describe('KnowledgeSourceBrowser', () => {
   it('lists each website once with its page count in the source menu', async () => {
     const wrapper = mountBrowser();
     await flushPromises();
-    await wrapper.find('button').trigger('click');
-    const menu = wrapper.findComponent({ name: 'DropdownMenu' });
+    const filtersToggle = wrapper.get(
+      'button[aria-controls="knowledge-filters"]'
+    );
+    await filtersToggle.trigger('click');
+    expect(filtersToggle.attributes('aria-expanded')).toBe('true');
+    await wrapper.get('#knowledge-filters button').trigger('click');
+
+    const menu = wrapper.getComponent({ name: 'DropdownMenu' });
     const websites = menu
       .props('menuSections')[1]
       .items.map(item => item.label);

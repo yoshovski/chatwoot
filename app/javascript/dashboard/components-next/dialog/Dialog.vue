@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, useId } from 'vue';
 import { OnClickOutside } from '@vueuse/components';
 import { useI18n } from 'vue-i18n';
 
@@ -65,6 +65,9 @@ const emit = defineEmits(['confirm', 'close']);
 
 const { t } = useI18n();
 
+const titleId = useId();
+const descriptionId = useId();
+
 const dialogRef = ref(null);
 const dialogContentRef = ref(null);
 const isOpen = ref(false);
@@ -93,14 +96,18 @@ const open = () => {
 };
 
 const close = () => {
-  emit('close');
-  dialogRef.value?.close();
   isOpen.value = false;
+  dialogRef.value?.close();
+  emit('close');
 };
 
 // Only close if the close event originated from this dialog,
 // not from a child dialog (e.g. ProseMirror prompt) bubbling up.
-const handleDialogClose = e => e.target === dialogRef.value && close();
+const handleDialogClose = e => {
+  if (e.target === dialogRef.value && isOpen.value && !dialogRef.value.open) {
+    close();
+  }
+};
 
 // Only close on click-outside if this dialog is the topmost one.
 // If another dialog (e.g. ProseMirror prompt) is open on top, ignore.
@@ -126,6 +133,10 @@ defineExpose({ open, close });
         positionClass,
         overflowYAuto ? 'overflow-y-auto' : 'overflow-visible',
       ]"
+      :aria-labelledby="title ? titleId : undefined"
+      :aria-describedby="
+        description || (title && $slots.description) ? descriptionId : undefined
+      "
       @close.prevent="handleDialogClose"
     >
       <OnClickOutside @trigger="handleClickOutside">
@@ -136,14 +147,20 @@ defineExpose({ open, close });
           @click.stop
         >
           <div v-if="title || description" class="flex flex-col gap-2">
-            <h3 class="text-base font-medium leading-6 text-n-slate-12">
+            <h3
+              v-if="title"
+              :id="titleId"
+              class="text-base font-medium leading-6 text-n-slate-12"
+            >
               {{ title }}
             </h3>
-            <slot name="description">
-              <p v-if="description" class="mb-0 text-sm text-n-slate-11">
-                {{ description }}
-              </p>
-            </slot>
+            <div v-if="description || $slots.description" :id="descriptionId">
+              <slot name="description">
+                <p class="mb-0 text-sm text-n-slate-11">
+                  {{ description }}
+                </p>
+              </slot>
+            </div>
           </div>
           <slot v-if="isOpen" />
           <!-- Dialog content will be injected here -->

@@ -19,6 +19,7 @@ const props = defineProps({
   count: { type: String, default: '' },
   loadingText: { type: String, required: true },
   errorText: { type: String, required: true },
+  unavailableText: { type: String, default: '' },
   retryLabel: { type: String, required: true },
   emptyTitle: { type: String, required: true },
   emptyDescription: { type: String, default: '' },
@@ -28,6 +29,12 @@ const props = defineProps({
 
 const emit = defineEmits(['retry']);
 const query = ref('');
+const searchControls = ref(null);
+
+const clearSearch = () => {
+  query.value = '';
+  searchControls.value?.querySelector('input')?.focus();
+};
 
 const visibleRows = computed(() => {
   const value = query.value.trim();
@@ -45,12 +52,7 @@ const visibleRows = computed(() => {
     >
       {{ loadingText }}
     </p>
-    <EmptyState
-      v-else-if="error"
-      tone="error"
-      icon="i-lucide-triangle-alert"
-      :title="errorText"
-    >
+    <EmptyState v-else-if="error" state="error" :title="errorText">
       <button
         type="button"
         class="text-sm font-medium text-n-blue-11 hover:underline"
@@ -60,7 +62,15 @@ const visibleRows = computed(() => {
       </button>
     </EmptyState>
     <EmptyState
+      v-else-if="unavailableText"
+      state="unavailable"
+      :title="unavailableText"
+    >
+      <slot name="unavailable" />
+    </EmptyState>
+    <EmptyState
       v-else-if="!rows.length"
+      state="first-use"
       :icon="emptyIcon"
       :title="emptyTitle"
       :description="emptyDescription"
@@ -70,6 +80,7 @@ const visibleRows = computed(() => {
     <template v-else>
       <div
         v-if="searchKeys.length || count"
+        ref="searchControls"
         class="flex flex-wrap items-center gap-3"
       >
         <SearchField
@@ -82,12 +93,19 @@ const visibleRows = computed(() => {
           {{ count }}
         </span>
       </div>
-      <p
+      <EmptyState
         v-if="!visibleRows.length"
-        class="m-0 py-10 text-center text-sm text-n-slate-11"
+        state="filtered"
+        :title="noResultsText || $t('GENERAL.PHONE_INPUT.EMPTY_STATE')"
       >
-        {{ noResultsText }}
-      </p>
+        <button
+          type="button"
+          class="min-h-8 text-sm font-medium text-n-blue-11 hover:underline"
+          @click="clearSearch"
+        >
+          {{ $t('GENERAL.CLEAR_SEARCH') }}
+        </button>
+      </EmptyState>
       <DataTable
         v-else
         :columns="columns"
