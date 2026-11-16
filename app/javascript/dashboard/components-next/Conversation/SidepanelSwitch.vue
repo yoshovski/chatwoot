@@ -2,7 +2,7 @@
 import Button from 'dashboard/components-next/button/Button.vue';
 import ButtonGroup from 'dashboard/components-next/buttonGroup/ButtonGroup.vue';
 import { useUISettings } from 'dashboard/composables/useUISettings';
-import { computed } from 'vue';
+import { computed, inject } from 'vue';
 import { FEATURE_FLAGS } from 'dashboard/featureFlags';
 import { useMapGetter } from 'dashboard/composables/store';
 import { useKeyboardEvents } from 'dashboard/composables/useKeyboardEvents';
@@ -26,7 +26,17 @@ const isCopilotPanelOpen = computed(
   () => uiSettings.value.is_copilot_panel_open
 );
 
+// The conversation view decides whether details dock or float as a drawer.
+const detailsPanel = inject('conversationDetailsPanel', null);
+const isDetailsOpen = computed(() =>
+  detailsPanel ? detailsPanel.isOpen.value : isContactSidebarOpen.value
+);
+
 const handleConversationSidebarToggle = () => {
+  if (detailsPanel) {
+    detailsPanel.toggle();
+    return;
+  }
   updateUISettings({
     is_contact_sidebar_open: !isContactSidebarOpen.value,
     is_copilot_panel_open: false,
@@ -59,8 +69,10 @@ useKeyboardEvents(keyboardEvents);
       sm
       class="!rounded-full transition-all duration-[250ms] ease-out active:!scale-95 active:!brightness-105 active:duration-75"
       :class="{
-        'bg-n-alpha-2 active:shadow-sm': isContactSidebarOpen,
+        'bg-n-alpha-2 active:shadow-sm': isDetailsOpen,
       }"
+      :aria-label="$t('CONVERSATION.SIDEBAR.CONTACT')"
+      :aria-expanded="isDetailsOpen"
       icon="i-ph-user-bold"
       @click="handleConversationSidebarToggle"
     />

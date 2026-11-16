@@ -1,5 +1,5 @@
 <script setup>
-import { computed, watch, onMounted, ref } from 'vue';
+import { computed, inject, watch, onMounted, ref } from 'vue';
 import Icon from 'dashboard/components-next/icon/Icon.vue';
 import {
   useMapGetter,
@@ -171,7 +171,14 @@ const onDragEnd = () => {
   });
 };
 
+// In the conversation view the panel may be a drawer, which the view closes.
+const detailsPanel = inject('conversationDetailsPanel', null);
+
 const closeContactPanel = () => {
+  if (detailsPanel) {
+    detailsPanel.close();
+    return;
+  }
   updateUISettings({
     is_contact_sidebar_open: false,
     is_copilot_panel_open: false,

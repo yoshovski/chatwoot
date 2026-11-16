@@ -60,6 +60,8 @@ const props = defineProps({
   foldersId: { type: [String, Number], default: 0 },
   showConversationList: { default: true, type: Boolean },
   isOnExpandedLayout: { default: false, type: Boolean },
+  // List and thread don't fit side by side, so only one of them shows.
+  isSinglePane: { default: false, type: Boolean },
 });
 
 const emit = defineEmits(['conversationLoad']);
@@ -921,8 +923,8 @@ watch(chatLists, () => {
   chatsOnView.value = conversationList.value;
 });
 
-// On a wide screen, opening a list opens its most recent conversation instead
-// of an empty thread. Phones and the expanded layout keep the list on its own.
+// Where list and thread fit side by side, opening a list opens its most recent
+// conversation instead of an empty thread. Otherwise the list stays on its own.
 watch(
   [conversationList, chatListLoading],
   ([list, loading]) => {
@@ -930,8 +932,7 @@ watch(
       loading ||
       !list.length ||
       route.params.conversation_id ||
-      props.isOnExpandedLayout ||
-      window.innerWidth < wootConstants.SMALL_SCREEN_BREAKPOINT
+      props.isSinglePane
     ) {
       return;
     }
@@ -961,7 +962,7 @@ watch(appliedFilters, () => resetBulkActions());
     class="flex flex-col flex-shrink-0 conversations-list-wrap bg-n-solid-2 relative"
     :class="[
       { hidden: !showConversationList },
-      isOnExpandedLayout
+      isSinglePane
         ? 'basis-full'
         : 'w-[21.5rem] xl:w-[22.5rem] border-e border-n-weak',
     ]"

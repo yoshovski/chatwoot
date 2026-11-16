@@ -1,7 +1,9 @@
 <script>
+import { computed, ref } from 'vue';
 import { mapGetters } from 'vuex';
 import { useUISettings } from 'dashboard/composables/useUISettings';
 import { useAccount } from 'dashboard/composables/useAccount';
+import { useConversationPaneLayout } from 'dashboard/composables/useConversationPaneLayout';
 import ChatList from '../../../components/ChatList.vue';
 import ConversationBox from '../../../components/widgets/conversation/ConversationBox.vue';
 import wootConstants from 'dashboard/constants/globals';
@@ -18,6 +20,15 @@ export default {
     CmdBarConversationSnooze,
     SidepanelSwitch,
     ConversationSidebar,
+  },
+  provide() {
+    return {
+      conversationDetailsPanel: {
+        isOpen: computed(() => this.isDetailsVisible),
+        toggle: this.toggleDetails,
+        close: this.closeDetails,
+      },
+    };
   },
   beforeRouteLeave(to, from, next) {
     // Clear selected state if navigating away from a conversation to a route without a conversationId to prevent stale data issues
@@ -61,17 +72,28 @@ export default {
     const { uiSettings, updateUISettings, isOnExpandedLayout } =
       useUISettings();
     const { accountId } = useAccount();
+    const sectionRef = ref(null);
+    const { isSinglePane, canDockDetails } = useConversationPaneLayout(
+      sectionRef,
+      isOnExpandedLayout
+    );
 
     return {
       uiSettings,
       updateUISettings,
       isOnExpandedLayout,
       accountId,
+      sectionRef,
+      isSinglePane,
+      canDockDetails,
     };
   },
   data() {
     return {
       showSearchModal: false,
+      // Opened where docking would squeeze the thread. Kept apart from the
+      // saved is_contact_sidebar_open preference, which only docks the panel.
+      isDetailsDrawerOpen: false,
     };
   },
   computed: {
@@ -80,23 +102,30 @@ export default {
       currentChat: 'getSelectedChat',
     }),
     showConversationList() {
-      return this.isOnExpandedLayout ? !this.conversationId : true;
+      return this.isSinglePane ? !this.conversationId : true;
     },
     showMessageView() {
-      return this.conversationId ? true : !this.isOnExpandedLayout;
+      return this.conversationId ? true : !this.isSinglePane;
     },
-    shouldShowSidebar() {
+    isDetailsVisible() {
       if (!this.currentChat.id) {
         return false;
       }
-
-      const { is_contact_sidebar_open: isContactSidebarOpen } = this.uiSettings;
-      return isContactSidebarOpen;
+      if (!this.canDockDetails) {
+        return this.isDetailsDrawerOpen;
+      }
+      return (
+        !!this.uiSettings.is_contact_sidebar_open || this.isDetailsDrawerOpen
+      );
+    },
+    isDetailsDrawer() {
+      return !this.canDockDetails;
     },
   },
   watch: {
     conversationId() {
       this.fetchConversationIfUnavailable();
+      this.isDetailsDrawerOpen = false;
     },
   },
 
@@ -181,6 +210,21 @@ export default {
         this.$store.dispatch('clearSelectedState');
       }
     },
+    toggleDetails() {
+      if (this.isDetailsDrawer) {
+        this.isDetailsDrawerOpen = !this.isDetailsDrawerOpen;
+        return;
+      }
+      const isVisible = this.isDetailsVisible;
+      this.isDetailsDrawerOpen = false;
+      this.updateUISettings({
+        is_contact_sidebar_open: !isVisible,
+        is_copilot_panel_open: false,
+      });
+    },
+    closeDetails() {
+      if (this.isDetailsVisible) this.toggleDetails();
+    },
     onSearch() {
       this.showSearchModal = true;
     },
@@ -193,8 +237,13 @@ export default {
 
 <template>
   <!-- List and thread share one card, split by a line, so the thread gets the
-  width; the customer panel sits beside it on the tinted background. -->
-  <section class="flex w-full h-full min-w-0 gap-3 p-3 bg-n-background">
+  width; the customer panel sits beside it on the tinted background. Panes that
+  would squeeze the thread give way: the list hides behind Back and the
+  customer panel floats as a drawer (see useConversationPaneLayout). -->
+  <section
+    ref="sectionRef"
+    class="relative flex w-full h-full min-w-0 gap-3 p-3 bg-n-background"
+  >
     <div
       class="flex min-w-0 flex-1 overflow-hidden rounded-card bg-n-solid-2 shadow-card outline outline-1 -outline-offset-1 outline-n-container"
     >
@@ -207,18 +256,24 @@ export default {
         :list-view="listView"
         :folders-id="foldersId"
         :is-on-expanded-layout="isOnExpandedLayout"
+        :is-single-pane="isSinglePane"
         @conversation-load="onConversationLoad"
       />
       <ConversationBox
         v-if="showMessageView"
         class="!rounded-none !shadow-none"
         :inbox-id="inboxId"
-        :is-on-expanded-layout="isOnExpandedLayout"
+        :is-on-expanded-layout="isSinglePane"
       >
         <SidepanelSwitch v-if="currentChat.id" />
       </ConversationBox>
     </div>
-    <ConversationSidebar v-if="shouldShowSidebar" :current-chat="currentChat" />
+    <ConversationSidebar
+      v-if="isDetailsVisible"
+      :current-chat="currentChat"
+      :is-drawer="isDetailsDrawer"
+      @close="closeDetails"
+    />
     <CmdBarConversationSnooze />
   </section>
 </template>
