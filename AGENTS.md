@@ -84,6 +84,7 @@
 - For bugfix PRs, use `How to reproduce` when helpful.
 - Optionally add a `What changed` section for implementation highlights.
 - Do not add a `How this was tested` section listing specs/commands.
+- For visible UI changes, include actual application screenshots when practical: before/after for changed screens, and desktop/mobile when responsive behavior changes. Label relevant states or themes. Embed PR attachments or GitHub-accessible repository image links; local paths do not count. If capture or attachment is unavailable, briefly explain why. Omit screenshots for changes with no visible UI impact.
 
 ## Project-Specific
 
