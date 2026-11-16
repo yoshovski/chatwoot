@@ -51,7 +51,10 @@ const startEdit = () => {
 };
 
 const saveEdit = () => {
+  if (!isEditing.value) return;
   isEditing.value = false;
+  if (!editedContent.value.trim() || editedContent.value === props.content)
+    return;
   // Update local content
   localContent.value = editedContent.value;
   emit('edit', { id: props.id, content: editedContent.value });
@@ -73,16 +76,26 @@ const saveEdit = () => {
       v-if="isEditing"
       v-model="editedContent"
       focus-on-mount
-      @keyup.enter="saveEdit"
+      @enter-press="saveEdit"
+      @blur="saveEdit"
+      @escape-press="isEditing = false"
     />
-    <span v-else class="flex items-center gap-2 text-sm text-n-slate-12">
+    <span v-else class="min-w-0 break-words text-sm text-n-slate-12">
       {{ localContent }}
     </span>
-    <div class="flex items-center gap-2">
-      <Button icon="i-lucide-pen" slate xs ghost @click="startEdit" />
+    <div class="flex shrink-0 items-center gap-2">
+      <Button
+        icon="i-lucide-pen"
+        slate
+        xs
+        ghost
+        :aria-label="$t('CAPTAIN.AGENT_UX.CONFIGURATION.RULES.EDIT')"
+        @click="startEdit"
+      />
       <span class="w-px h-4 bg-n-weak" />
       <Button
         icon="i-lucide-trash"
+        :aria-label="$t('CAPTAIN.AGENT_UX.CONFIGURATION.RULES.REMOVE')"
         slate
         xs
         ghost

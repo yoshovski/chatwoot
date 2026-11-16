@@ -8,7 +8,7 @@ vi.mock('vue-i18n', () => ({
 const stubs = {
   SettingsCard: { template: '<section><slot /></section>' },
   Input: {
-    props: ['modelValue'],
+    props: ['modelValue', 'size'],
     emits: ['update:modelValue'],
     template:
       '<input :value="modelValue" @input="$emit(\'update:modelValue\', $event.target.value)" />',
@@ -44,7 +44,7 @@ const buttonWithLabel = (wrapper, label) =>
 const prefix = 'CAPTAIN.ASSISTANTS.SETTINGS.BOUNDARIES.LIMITS';
 
 describe('AssistantLimits', () => {
-  it('adds a limit and saves it with the rest of the config', async () => {
+  it('exposes the normalized limits for the parent settings save', async () => {
     const wrapper = mountLimits();
     expect(wrapper.findAll('[data-test-id="limit-row"]')).toHaveLength(1);
 
@@ -53,34 +53,24 @@ describe('AssistantLimits', () => {
     await row.find('input').setValue('  give legal advice ');
     await row.find('select').setValue('link');
     await row.findAll('input')[1].setValue('https://example.com/legal');
-    await buttonWithLabel(wrapper, 'CAPTAIN.ASSISTANTS.SETTINGS.SAVE').trigger(
-      'click'
-    );
-
-    expect(wrapper.emitted('submit')[0][0]).toEqual({
-      config: {
-        product_name: 'Acme',
-        limits: [
-          { cannot: 'issue refunds', offer: 'handoff' },
-          {
-            cannot: 'give legal advice',
-            offer: 'link',
-            value: 'https://example.com/legal',
-          },
-        ],
+    expect(wrapper.vm.validate()).toBe(true);
+    expect(wrapper.vm.isDirty).toBe(true);
+    expect(wrapper.vm.limits).toEqual([
+      { cannot: 'issue refunds', offer: 'handoff' },
+      {
+        cannot: 'give legal advice',
+        offer: 'link',
+        value: 'https://example.com/legal',
       },
-    });
+    ]);
   });
 
   it('removes a limit', async () => {
     const wrapper = mountLimits();
 
     await wrapper.find(`[aria-label="${prefix}.REMOVE"]`).trigger('click');
-    await buttonWithLabel(wrapper, 'CAPTAIN.ASSISTANTS.SETTINGS.SAVE').trigger(
-      'click'
-    );
 
-    expect(wrapper.emitted('submit')[0][0].config.limits).toEqual([]);
+    expect(wrapper.vm.limits).toEqual([]);
   });
 
   it('does not save a link without a valid URL or a blank limit', async () => {
@@ -90,19 +80,15 @@ describe('AssistantLimits', () => {
     const row = wrapper.findAll('[data-test-id="limit-row"]')[1];
     await row.find('select').setValue('link');
     await row.findAll('input')[1].setValue('example.com');
-    await buttonWithLabel(wrapper, 'CAPTAIN.ASSISTANTS.SETTINGS.SAVE').trigger(
-      'click'
-    );
 
-    expect(wrapper.emitted('submit')).toBeUndefined();
+    expect(wrapper.vm.validate()).toBe(false);
+    await wrapper.vm.$nextTick();
     expect(wrapper.text()).toContain(`${prefix}.ERRORS.CANNOT_REQUIRED`);
 
     await row.find('input').setValue('give legal advice');
-    await buttonWithLabel(wrapper, 'CAPTAIN.ASSISTANTS.SETTINGS.SAVE').trigger(
-      'click'
-    );
 
-    expect(wrapper.emitted('submit')).toBeUndefined();
+    expect(wrapper.vm.validate()).toBe(false);
+    await wrapper.vm.$nextTick();
     expect(wrapper.text()).toContain(`${prefix}.ERRORS.LINK`);
   });
 

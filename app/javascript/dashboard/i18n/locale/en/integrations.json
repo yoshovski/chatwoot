@@ -1385,6 +1385,11 @@
             "PLACEHOLDER": "For example: Hand off when the customer asks about a refund over 100 euros.",
             "ADD": "Add rule",
             "REMOVE": "Remove rule",
+            "TEXT": "Rule text",
+            "ADD": "Add to changes",
+            "ADD_ALWAYS": "Add an always rule",
+            "ADD_NEVER": "Add a never rule",
+            "NEVER_PLACEHOLDER": "For example, decline requests for legal advice.",
             "PRESETS": {
               "LEGAL": {
                 "LABEL": "Escalate legal advice",
@@ -3495,6 +3500,54 @@
       "OFF": "Off",
       "NOT_SET": "Not set",
       "UNSAVED_PREVIEW": "Preview includes unsaved changes",
+      "CONFIGURATION": {
+        "SCOPE": "Changes apply to {name} when you save. Test AI agent uses the saved settings.",
+        "CURRENT": "Current behavior",
+        "SAVED": "Changes saved",
+        "DEFAULT_MESSAGE": "Uses the default message",
+        "PROFILE": {
+          "SUMMARY": "Customers see {name} as the AI agent for {business}.",
+          "AVATAR_REMOVAL": "Removing the current picture takes effect immediately. New pictures are uploaded when you save."
+        },
+        "STYLE": {
+          "SUMMARY": "{tone} tone · {length} answers"
+        },
+        "RULES": {
+          "SUMMARY": "Always rules: {always} · Never discuss rules: {never}",
+          "DECLINE_LABEL": "Reply to off-limits questions",
+          "EDIT": "Edit rule",
+          "REMOVE": "Remove rule",
+          "TEXT": "Rule text",
+          "ADD": "Add to changes",
+          "ADD_ALWAYS": "Add an always rule",
+          "ADD_NEVER": "Add a never rule",
+          "NEVER_PLACEHOLDER": "For example, decline requests for legal advice."
+        },
+        "DATA": {
+          "SUMMARY": "Read existing contact details: {details} · Remember returning customers: {memory}"
+        },
+        "HANDOFF": {
+          "TEAM_AVAILABILITY": "When the agent needs a person",
+          "KEEPS": "The AI agent keeps the conversation",
+          "INBOX": "Inbox assignment",
+          "CONFIGURED": "A fallback destination is configured",
+          "MESSAGES": "Team online: {online} · Team offline: {offline}",
+          "TRIGGERS": "Requests for a person or an answer the AI can't give | Standard triggers and {count} custom rule | Standard triggers and {count} custom rules",
+          "SCOPE": "Your team is online during inbox working hours when an inbox teammate is available. The AI agent’s own availability is set under Channels → Working hours."
+        },
+        "SCHEDULE": {
+          "CHANNEL_HOURS": "Connected channel hours",
+          "EXPLANATION": "Each channel uses its own time zone and daily hours. Overnight coverage follows the hours set separately on each day. Channels with working hours turned off have no schedule restriction.",
+          "LOADING": "Loading connected channel hours…",
+          "ERROR": "Couldn’t load connected channel hours.",
+          "RETRY": "Try again",
+          "EMPTY": "No channels are connected to this agent yet.",
+          "UNRESTRICTED": "Working hours are off",
+          "CLOSED": "Closed",
+          "ALL_DAY": "Open all day",
+          "RANGE": "{start}–{end}"
+        }
+      },
       "STYLE": {
         "VOICE_TITLE": "How {name} talks",
         "TONE": "Tone",
@@ -3526,9 +3579,9 @@
       },
       "RULES": {
         "ALWAYS_TITLE": "Always",
-        "ALWAYS_DESC": "Business habits {name} follows in every answer.",
+        "ALWAYS_DESC": "Instructions {name} should follow when replying. For example, ask for the order number before checking a delivery.",
         "NEVER_TITLE": "Never discuss",
-        "NEVER_DESC": "Topics {name} declines politely.",
+        "NEVER_DESC": "Topics {name} should decline. For example, decline requests for legal advice.",
         "CANT_TITLE": "Can't do, offer instead",
         "CANT_DESC": "Requests {name} can't handle and what to offer instead.",
         "DECLINE_TITLE": "How {name} says no",
@@ -3539,7 +3592,7 @@
       },
       "CUSTOMER_DATA": {
         "TITLE": "What {name} may use about a customer",
-        "DESC": "Both are off for new agents. Turn them on only if your privacy notice covers it.",
+        "DESC": "Choose whether the agent can use details already on a contact or remember what it learns during chats.",
         "CONTACT_TITLE": "Read contact details",
         "CONTACT_DESC": "Name, email, phone and custom attributes you store on the contact. Used to personalise answers and skip questions.",
         "MEMORY_TITLE": "Remember returning customers",
@@ -3562,7 +3615,7 @@
         "TRIGGERS": "When to hand over",
         "TRIGGERS_SUMMARY": "When asked, plus {count} rule | When asked, plus {count} rules",
         "TRIGGERS_NONE": "Only when the customer asks or {name} can't answer",
-        "TRIGGERS_PANEL_DESC": "{name} always hands over when the customer asks for a person or it can't answer. Add situations where it should hand over right away.",
+        "TRIGGERS_PANEL_DESC": "Requests for a person or questions {name} can’t answer trigger this handoff policy. Add other situations that should trigger it.",
         "MESSAGES": "What {name} says",
         "MESSAGES_PANEL_DESC": "Each message is shown in the matching situation only.",
         "CONTACT": "Contact details asked",
@@ -3587,7 +3640,7 @@
         "NOTES_NONE": "Summary only, no notes",
         "TEAM_LABEL": "Hand chats to team",
         "PERSON_LABEL": "Or a specific person (optional)",
-        "TEAM_HINT": "Leave both empty to use the inbox's own assignment rules."
+        "TEAM_HINT": "If a chat still needs an assignee after handoff, use the selected person if they belong to the inbox, then the selected team. Leave both empty to rely on inbox assignment."
       },
       "AFTER_CHAT": {
         "LABELS_TITLE": "Labels for reporting",

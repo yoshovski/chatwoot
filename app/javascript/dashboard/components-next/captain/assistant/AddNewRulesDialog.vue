@@ -1,81 +1,52 @@
 <script setup>
-import { useToggle } from '@vueuse/core';
-import { vOnClickOutside } from '@vueuse/components';
-
+import { ref } from 'vue';
 import Button from 'dashboard/components-next/button/Button.vue';
-import InlineInput from 'dashboard/components-next/inline-input/InlineInput.vue';
+import Dialog from 'dashboard/components-next/dialog/Dialog.vue';
+import TextArea from 'dashboard/components-next/textarea/TextArea.vue';
 
 defineProps({
-  placeholder: {
-    type: String,
-    default: '',
-  },
-  buttonLabel: {
-    type: String,
-    default: '',
-  },
-  confirmLabel: {
-    type: String,
-    default: '',
-  },
-  cancelLabel: {
-    type: String,
-    default: '',
-  },
+  placeholder: { type: String, default: '' },
+  buttonLabel: { type: String, default: '' },
+  confirmLabel: { type: String, default: '' },
+  cancelLabel: { type: String, default: '' },
 });
 
 const emit = defineEmits(['add']);
+const modelValue = defineModel({ type: String, default: '' });
+const dialog = ref(null);
 
-const modelValue = defineModel({
-  type: String,
-  default: '',
-});
-
-const [showPopover, togglePopover] = useToggle();
-const onClickAdd = () => {
-  if (!modelValue.value?.trim()) return;
-  emit('add', modelValue.value.trim());
+const add = () => {
+  const rule = modelValue.value.trim();
+  if (!rule) return;
+  emit('add', rule);
   modelValue.value = '';
-  togglePopover(false);
-};
-
-const onClickCancel = () => {
-  togglePopover(false);
+  dialog.value.close();
 };
 </script>
 
 <template>
-  <div
-    v-on-click-outside="() => togglePopover(false)"
-    class="inline-flex relative"
-  >
+  <div>
     <Button
       :label="buttonLabel"
+      type="button"
       sm
       slate
-      class="flex-shrink-0"
-      @click="togglePopover(!showPopover)"
+      @click="dialog.open()"
     />
-    <div
-      v-if="showPopover"
-      class="absolute w-[26.5rem] top-9 z-50 ltr:left-0 rtl:right-0 flex flex-col gap-5 bg-n-alpha-3 backdrop-blur-[100px] p-4 rounded-xl border border-n-weak shadow-md"
+    <Dialog
+      ref="dialog"
+      :title="buttonLabel"
+      :confirm-button-label="confirmLabel"
+      :cancel-button-label="cancelLabel"
+      :disable-confirm-button="!modelValue.trim()"
+      @confirm="add"
     >
-      <InlineInput
+      <TextArea
         v-model="modelValue"
+        :label="$t('CAPTAIN.AGENT_UX.CONFIGURATION.RULES.TEXT')"
         :placeholder="placeholder"
-        @keyup.enter="onClickAdd"
+        min-height="6rem"
       />
-      <div class="flex gap-2 justify-between">
-        <Button
-          :label="cancelLabel"
-          sm
-          link
-          slate
-          class="h-10 hover:!no-underline"
-          @click="onClickCancel"
-        />
-        <Button :label="confirmLabel" sm @click="onClickAdd" />
-      </div>
-    </div>
+    </Dialog>
   </div>
 </template>

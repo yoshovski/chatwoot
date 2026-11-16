@@ -14,8 +14,6 @@ const props = defineProps({
   },
 });
 
-const emit = defineEmits(['submit']);
-
 const { t } = useI18n();
 
 const MAX_LIMITS = 15;
@@ -49,7 +47,7 @@ const reset = () => {
   showErrors.value = false;
 };
 
-watch(savedLimits, reset, { immediate: true });
+watch(() => JSON.stringify(savedLimits.value), reset, { immediate: true });
 
 const limits = computed(() => rows.value.map(toLimit));
 const isDirty = computed(
@@ -115,14 +113,12 @@ const removeLimit = index => {
   rows.value.splice(index, 1);
 };
 
-const save = () => {
+const validate = () => {
   showErrors.value = true;
-  if (errors.value.some(Boolean)) return;
-
-  emit('submit', {
-    config: { ...props.assistant.config, limits: limits.value },
-  });
+  return !errors.value.some(Boolean);
 };
+
+defineExpose({ isDirty, limits, reset, validate });
 </script>
 
 <template>
@@ -145,6 +141,15 @@ const save = () => {
             v-model="row.cannot"
             size="sm"
             class="flex-1 min-w-0"
+            :aria-label="
+              t('CAPTAIN.ASSISTANTS.SETTINGS.BOUNDARIES.LIMITS.CANNOT')
+            "
+            :aria-invalid="showErrors && Boolean(errors[index])"
+            :aria-describedby="
+              showErrors && errors[index]
+                ? `agent-limit-error-${index}`
+                : undefined
+            "
             :placeholder="examples[index % examples.length]"
           />
           <Button
@@ -174,7 +179,7 @@ const save = () => {
             v-if="needsValue(row.offer)"
             v-model="row.value"
             size="sm"
-            class="flex-1 min-w-48"
+            class="flex-1 min-w-0"
             :placeholder="
               row.offer === 'link'
                 ? t(
@@ -186,7 +191,12 @@ const save = () => {
             "
           />
         </div>
-        <p v-if="showErrors && errors[index]" class="m-0 text-xs text-n-ruby-9">
+        <p
+          v-if="showErrors && errors[index]"
+          :id="`agent-limit-error-${index}`"
+          role="alert"
+          class="m-0 text-xs text-n-ruby-9"
+        >
           {{ errors[index] }}
         </p>
       </div>
@@ -201,22 +211,6 @@ const save = () => {
           :disabled="rows.length >= MAX_LIMITS"
           @click="addLimit"
         />
-        <template v-if="isDirty">
-          <Button
-            type="button"
-            :label="t('CAPTAIN.ASSISTANTS.SETTINGS.SAVE')"
-            size="sm"
-            @click="save"
-          />
-          <Button
-            type="button"
-            :label="t('CAPTAIN.ASSISTANTS.SETTINGS.SAVE_BAR.DISCARD')"
-            variant="ghost"
-            color="slate"
-            size="sm"
-            @click="reset"
-          />
-        </template>
       </div>
     </div>
   </SettingsCard>

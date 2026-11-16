@@ -201,6 +201,32 @@ describe('explicit-save forms', () => {
     wrapper.unmount();
   });
 
+  it('guards a switch to a different record on the same route', async () => {
+    const router = createRouter({
+      history: createMemoryHistory(),
+      routes: [
+        {
+          path: '/agents/:id',
+          component: FormLayout,
+          props: { saveLabel: 'Save', dirty: true, guardRouteParams: true },
+        },
+      ],
+    });
+    await router.push('/agents/1');
+    const wrapper = mount(
+      { template: '<router-view />' },
+      { global: { plugins: [router], stubs } }
+    );
+    await router.push('/agents/1?tab=profile');
+    const navigation = router.push('/agents/2');
+    await flushPromises();
+    expect(router.currentRoute.value.params.id).toBe('1');
+    wrapper.getComponent(dialog).vm.$emit('confirm');
+    await navigation;
+    expect(router.currentRoute.value.params.id).toBe('2');
+    wrapper.unmount();
+  });
+
   it('preserves input on failure and warns about leaving while dirty', async () => {
     const wrapper = mount(FormLayout, {
       global: { stubs },

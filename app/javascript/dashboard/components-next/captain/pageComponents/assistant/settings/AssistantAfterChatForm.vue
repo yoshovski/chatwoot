@@ -12,6 +12,7 @@ import DurationSelect from './DurationSelect.vue';
 import SettingsCard from './SettingsCard.vue';
 import SettingsSwitchRow from './SettingsSwitchRow.vue';
 import SettingsSaveBar from './SettingsSaveBar.vue';
+import { useSettingsSave } from './useSettingsSave';
 import SettingsSplit from './SettingsSplit.vue';
 import ChoiceCard from './ChoiceCard.vue';
 import AfterChatFlow from './AfterChatFlow.vue';
@@ -128,7 +129,6 @@ const validationRules = {
 
 const v$ = useVuelidate(validationRules, state);
 
-const isSaving = ref(false);
 const savedSnapshot = ref('');
 const snapshot = () => JSON.stringify(state);
 const isDirty = computed(() => snapshot() !== savedSnapshot.value);
@@ -176,7 +176,7 @@ const handleSubmit = async () => {
   const isValid = await Promise.all(
     fieldsToValidate().map(field => v$.value[field].$validate())
   ).then(results => results.every(Boolean));
-  if (!isValid) return;
+  if (!isValid) return undefined;
 
   const payload = {
     config: {
@@ -197,26 +197,39 @@ const handleSubmit = async () => {
     });
   }
 
-  isSaving.value = true;
-  try {
-    await props.save(payload);
-  } finally {
-    isSaving.value = false;
-  }
+  return props.save(payload);
 };
 
 watch(
-  () => props.assistant,
-  newAssistant => {
-    if (newAssistant) updateStateFromAssistant(newAssistant);
-  },
+  [() => props.assistant.id, () => JSON.stringify(props.assistant.config)],
+  discard,
   { immediate: true }
 );
+const {
+  isSaving,
+  isSaved,
+  saveError,
+  save: saveChanges,
+} = useSettingsSave(isDirty, handleSubmit);
 </script>
 
 <template>
   <SettingsSplit>
-    <section v-if="isCaptainV2Enabled" class="flex flex-col gap-3">
+    <section
+      v-if="isCaptainV2Enabled"
+      :inert="isSaving"
+      class="flex flex-col gap-3"
+    >
+      <SettingsCard
+        :title="t('CAPTAIN.AGENT_UX.CONFIGURATION.CURRENT')"
+        :description="
+          autoResolveOptions.find(
+            option =>
+              option.value ===
+              (assistant.config?.auto_resolve_mode ?? 'evaluated')
+          )?.description
+        "
+      />
       <h3 class="text-base font-semibold text-n-slate-12">
         {{ t('CAPTAIN.ASSISTANTS.SETTINGS.AFTER_CHAT.QUIET_TITLE') }}
       </h3>
@@ -282,6 +295,7 @@ watch(
         </div>
         <p
           v-if="formErrors.inactivityThresholdMinutes"
+          role="alert"
           class="pb-3 mb-0 text-xs text-n-ruby-9"
         >
           {{ formErrors.inactivityThresholdMinutes }}
@@ -302,6 +316,7 @@ watch(
         <div v-if="state.sendInactivityResolutionMessage" class="pt-1 pb-3">
           <Editor
             v-model="state.resolutionMessage"
+            :aria-invalid="Boolean(formErrors.resolutionMessage)"
             :placeholder="
               t('CAPTAIN.ASSISTANTS.FORM.RESOLUTION_MESSAGE.PLACEHOLDER')
             "
@@ -315,6 +330,7 @@ watch(
 
     <SettingsCard
       v-if="isAdmin"
+      :inert="isSaving"
       :title="t('CAPTAIN.ASSISTANTS.SETTINGS.AFTER_CHAT.ORGANIZE')"
     >
       <SettingsSwitchRow
@@ -343,7 +359,9 @@ watch(
     <SettingsSaveBar
       :is-dirty="isDirty"
       :is-saving="isSaving"
-      @save="handleSubmit"
+      :is-saved="isSaved"
+      :error="saveError"
+      @save="saveChanges"
       @discard="discard"
     />
 

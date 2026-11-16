@@ -54,7 +54,7 @@ const handleDeleteSuccess = () => {
     <AssistantBasicSettingsForm
       :assistant="assistant"
       :save="updateAssistant"
-      @delete-avatar="deleteAssistantAvatar"
+      :delete-avatar="deleteAssistantAvatar"
     >
       <template
         #default="{ description, descriptionMaxLength, setDescription }"

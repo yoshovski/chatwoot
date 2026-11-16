@@ -11,6 +11,7 @@ import SettingsPageLayout from 'dashboard/components-next/captain/pageComponents
 import SettingsSplit from 'dashboard/components-next/captain/pageComponents/assistant/settings/SettingsSplit.vue';
 import SettingsCard from 'dashboard/components-next/captain/pageComponents/assistant/settings/SettingsCard.vue';
 import SettingsSwitchRow from 'dashboard/components-next/captain/pageComponents/assistant/settings/SettingsSwitchRow.vue';
+import { useSettingsSave } from 'dashboard/components-next/captain/pageComponents/assistant/settings/useSettingsSave';
 import SettingsSaveBar from 'dashboard/components-next/captain/pageComponents/assistant/settings/SettingsSaveBar.vue';
 import SettingsPanel from 'dashboard/components-next/captain/pageComponents/assistant/settings/SettingsPanel.vue';
 import SummaryRow from 'dashboard/components-next/captain/pageComponents/assistant/settings/SummaryRow.vue';
@@ -47,15 +48,16 @@ const isDirty = computed(() =>
     ([key, value]) => JSON.stringify(saved.value[key]) !== JSON.stringify(value)
   )
 );
-const isSaving = ref(false);
-const save = async () => {
-  isSaving.value = true;
-  const ok = await updateAssistant({
-    config: { ...saved.value, ...draft.value },
-  });
-  isSaving.value = false;
-  if (ok) draft.value = {};
-};
+const { isSaving, isSaved, saveError, save } = useSettingsSave(
+  isDirty,
+  async () => {
+    const ok = await updateAssistant({
+      config: { ...saved.value, ...draft.value },
+    });
+    if (ok) draft.value = {};
+    return ok;
+  }
+);
 const discard = () => {
   draft.value = {};
 };
@@ -214,66 +216,82 @@ const extrasSummary = computed(() =>
 </script>
 
 <template>
-  <SettingsPageLayout :heading="t('CAPTAIN.AGENT_UX.SECTIONS.BEHAVIOR')">
+  <SettingsPageLayout :heading="t('CAPTAIN.AGENT_UX.TABS.REPLY_STYLE')">
     <SettingsSplit>
-      <section class="flex flex-col gap-5">
-        <h3 class="m-0 text-base font-semibold text-n-slate-12">
-          {{ t(`${U}.VOICE_TITLE`, { name }) }}
-        </h3>
-        <div class="flex flex-col gap-2">
-          <span class="text-sm font-medium text-n-slate-12">
-            {{ t(`${U}.TONE`) }}
-          </span>
-          <SegmentedChoice
-            v-model="tone"
-            :label="t(`${U}.TONE`)"
-            :options="toneOptions"
-          />
-          <p class="m-0 text-sm text-n-slate-11">
-            {{ choiceHint(tone, 'TONE') }}
-          </p>
-        </div>
-        <div class="flex flex-col gap-2">
-          <span class="text-sm font-medium text-n-slate-12">
-            {{ t(`${U}.LENGTH`) }}
-          </span>
-          <SegmentedChoice
-            v-model="answerLength"
-            :label="t(`${U}.LENGTH`)"
-            :options="lengthOptions"
-          />
-          <p class="m-0 text-sm text-n-slate-11">
-            {{ choiceHint(answerLength, 'ANSWER_LENGTH') }}
-          </p>
-        </div>
-      </section>
+      <SettingsCard
+        :title="t('CAPTAIN.AGENT_UX.CONFIGURATION.CURRENT')"
+        :description="
+          t('CAPTAIN.AGENT_UX.CONFIGURATION.STYLE.SUMMARY', {
+            tone: toneOptions.find(
+              option => option.id === (saved.tone || 'friendly')
+            )?.label,
+            length: lengthOptions.find(
+              option => option.id === (saved.answer_length || 'balanced')
+            )?.label,
+          })
+        "
+      />
+      <div class="flex flex-col gap-6" :inert="isSaving">
+        <section class="flex flex-col gap-5">
+          <h3 class="m-0 text-base font-semibold text-n-slate-12">
+            {{ t(`${U}.VOICE_TITLE`, { name }) }}
+          </h3>
+          <div class="flex flex-col gap-2">
+            <span class="text-sm font-medium text-n-slate-12">
+              {{ t(`${U}.TONE`) }}
+            </span>
+            <SegmentedChoice
+              v-model="tone"
+              :label="t(`${U}.TONE`)"
+              :options="toneOptions"
+            />
+            <p class="m-0 text-sm text-n-slate-11">
+              {{ choiceHint(tone, 'TONE') }}
+            </p>
+          </div>
+          <div class="flex flex-col gap-2">
+            <span class="text-sm font-medium text-n-slate-12">
+              {{ t(`${U}.LENGTH`) }}
+            </span>
+            <SegmentedChoice
+              v-model="answerLength"
+              :label="t(`${U}.LENGTH`)"
+              :options="lengthOptions"
+            />
+            <p class="m-0 text-sm text-n-slate-11">
+              {{ choiceHint(answerLength, 'ANSWER_LENGTH') }}
+            </p>
+          </div>
+        </section>
 
-      <SettingsCard>
-        <SummaryRow
-          icon="i-lucide-store"
-          :title="t(`${U}.BUSINESS_TITLE`)"
-          :summary="businessSummary"
-          :action-label="t('CAPTAIN.AGENT_UX.CHANGE')"
-          @edit="businessOpen = true"
-        />
-        <SummaryRow
-          icon="i-lucide-mouse-pointer-click"
-          :title="t(`${U}.EXTRAS_TITLE`)"
-          :summary="extrasSummary"
-          @edit="extrasOpen = true"
-        />
-        <SummaryRow
-          icon="i-lucide-file-text"
-          :title="t(`${U}.EXACT_TITLE`)"
-          :summary="t(`${U}.EXACT_SUMMARY`, { name })"
-          muted
-          @edit="exactOpen = true"
-        />
-      </SettingsCard>
-
+        <SettingsCard>
+          <SummaryRow
+            icon="i-lucide-store"
+            :title="t(`${U}.BUSINESS_TITLE`)"
+            :summary="businessSummary"
+            :action-label="t('CAPTAIN.AGENT_UX.CHANGE')"
+            @edit="businessOpen = true"
+          />
+          <SummaryRow
+            icon="i-lucide-mouse-pointer-click"
+            :title="t(`${U}.EXTRAS_TITLE`)"
+            :summary="extrasSummary"
+            @edit="extrasOpen = true"
+          />
+          <SummaryRow
+            icon="i-lucide-file-text"
+            :title="t(`${U}.EXACT_TITLE`)"
+            :summary="t(`${U}.EXACT_SUMMARY`, { name })"
+            muted
+            @edit="exactOpen = true"
+          />
+        </SettingsCard>
+      </div>
       <SettingsSaveBar
         :is-dirty="isDirty"
         :is-saving="isSaving"
+        :is-saved="isSaved"
+        :error="saveError"
         @save="save"
         @discard="discard"
       />

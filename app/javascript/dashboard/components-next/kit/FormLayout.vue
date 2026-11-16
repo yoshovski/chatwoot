@@ -1,6 +1,10 @@
 <script setup>
 import { computed, inject, ref, watch } from 'vue';
-import { matchedRouteKey, onBeforeRouteLeave } from 'vue-router';
+import {
+  matchedRouteKey,
+  onBeforeRouteLeave,
+  onBeforeRouteUpdate,
+} from 'vue-router';
 import { useEventListener } from '@vueuse/core';
 import Button from 'dashboard/components-next/button/Button.vue';
 import Dialog from 'dashboard/components-next/dialog/Dialog.vue';
@@ -15,6 +19,7 @@ const props = defineProps({
   // Omitted for legacy forms. Explicit-save callers compare the draft to the saved data.
   dirty: { type: Boolean, default: undefined },
   error: { type: String, default: '' },
+  guardRouteParams: { type: Boolean, default: false },
 });
 
 const emit = defineEmits(['save', 'discard']);
@@ -59,17 +64,26 @@ const confirmLeave = () => {
   leaveDialog.value.close();
 };
 
+const canLeave = () => {
+  if (props.saving) return false;
+  if (!props.dirty) return true;
+  if (!pendingLeave) {
+    pendingLeave = new Promise(resolve => {
+      resolveLeave = resolve;
+    });
+    leaveDialog.value.open();
+  }
+  return pendingLeave;
+};
+
 if (inject(matchedRouteKey, null)) {
-  onBeforeRouteLeave(() => {
-    if (props.saving) return false;
-    if (!props.dirty) return true;
-    if (!pendingLeave) {
-      pendingLeave = new Promise(resolve => {
-        resolveLeave = resolve;
-      });
-      leaveDialog.value.open();
-    }
-    return pendingLeave;
+  onBeforeRouteLeave(canLeave);
+  onBeforeRouteUpdate((to, from) => {
+    if (!props.guardRouteParams) return true;
+    const paramsChanged = Object.keys(from.params).some(
+      key => to.params[key] !== from.params[key]
+    );
+    return paramsChanged ? canLeave() : true;
   });
 }
 </script>

@@ -1,7 +1,7 @@
 <script setup>
 import { computed } from 'vue';
 import { useRoute } from 'vue-router';
-import { useMapGetter } from 'dashboard/composables/store';
+import { useFunctionGetter, useMapGetter } from 'dashboard/composables/store';
 import PageLayout from 'next/captain/PageLayout.vue';
 import TestAgentButton from 'next/captain/TestAgentButton.vue';
 
@@ -13,7 +13,11 @@ defineProps({
 
 const route = useRoute();
 const uiFlags = useMapGetter('captainAssistants/getUIFlags');
-const isFetching = computed(() => uiFlags.value.fetchingItem);
+const assistantId = computed(() => Number(route.params.assistantId));
+const assistant = useFunctionGetter('captainAssistants/getRecord', assistantId);
+const isFetching = computed(
+  () => uiFlags.value.fetchingItem && !assistant.value.id
+);
 </script>
 
 <template>
@@ -31,7 +35,15 @@ const isFetching = computed(() => uiFlags.value.fetchingItem);
       <slot name="headerActions" />
     </template>
     <template #body>
-      <div class="flex flex-col w-full gap-6 pb-24 sm:pb-8">
+      <div class="flex min-w-0 flex-col w-full gap-6 pb-8">
+        <p
+          v-if="assistant.name && showTestAgent"
+          class="m-0 break-words text-sm text-n-slate-11"
+        >
+          {{
+            $t('CAPTAIN.AGENT_UX.CONFIGURATION.SCOPE', { name: assistant.name })
+          }}
+        </p>
         <p v-if="description" class="m-0 text-sm text-n-slate-11">
           {{ description }}
         </p>

@@ -3,7 +3,9 @@ import { ref, computed, watch, useTemplateRef } from 'vue';
 import { useI18n } from 'vue-i18n';
 import RadioCard from 'dashboard/components-next/radioCard/RadioCard.vue';
 import SegmentPicker from 'dashboard/components-next/Contacts/Customers/SegmentPicker.vue';
+import SettingsCard from './SettingsCard.vue';
 import SettingsSaveBar from './SettingsSaveBar.vue';
+import { useSettingsSave } from './useSettingsSave';
 import AudienceGroup from './audience/AudienceGroup.vue';
 import { useAudienceFilterTypes } from './audience/useAudienceFilterTypes.js';
 
@@ -40,7 +42,6 @@ const hasConditions = node =>
 
 const defaultRoot = () => ({ id: nextId(), operator: 'and', conditions: [] });
 
-const isSaving = ref(false);
 const root = ref(defaultRoot());
 const mode = ref(MODE.EVERYONE);
 const showEmptyAudienceError = ref(false);
@@ -134,7 +135,7 @@ const getAudiencePayload = () => {
 };
 
 const isDirty = computed(() => {
-  const current = JSON.stringify(getAudiencePayload());
+  const current = JSON.stringify([mode.value, getAudiencePayload()]);
   return current !== savedSnapshot.value;
 });
 
@@ -155,12 +156,12 @@ const handleSubmit = async () => {
     (isSpecific && !root.value.conditions.length)
   ) {
     showEmptyAudienceError.value = true;
-    return;
+    return undefined;
   }
 
   showEmptyAudienceError.value = false;
   if (isSpecific && groupRef.value && !groupRef.value.validate()) {
-    return;
+    return undefined;
   }
 
   const audience = getAudiencePayload();
@@ -171,29 +172,24 @@ const handleSubmit = async () => {
     },
   };
 
-  emit('submit', payload);
   if (props.save) {
-    isSaving.value = true;
-    try {
-      const ok = await props.save(payload);
-      if (ok) {
-        savedSnapshot.value = JSON.stringify(audience);
-      }
-    } finally {
-      isSaving.value = false;
-    }
+    return props.save(payload);
   }
+  emit('submit', payload);
+  return undefined;
 };
 
 watch(
-  () => props.assistant,
-  newAssistant => {
-    if (!newAssistant) return;
-    const audience = newAssistant.config?.audience;
-    root.value = hydrateRoot(audience);
-    mode.value = audienceMode(audience);
-    segmentId.value = audience?.segment_id || '';
-    savedSnapshot.value = JSON.stringify(audience || null);
+  [
+    () => props.assistant.id,
+    () => JSON.stringify(props.assistant.config?.audience),
+  ],
+  () => {
+    discard();
+    savedSnapshot.value = JSON.stringify([
+      mode.value,
+      props.assistant.config?.audience || null,
+    ]);
   },
   { immediate: true }
 );
@@ -204,11 +200,27 @@ watch(
     showEmptyAudienceError.value = false;
   }
 );
+const {
+  isSaving,
+  isSaved,
+  saveError,
+  save: saveChanges,
+} = useSettingsSave(isDirty, handleSubmit);
 </script>
 
 <template>
   <div class="flex flex-col gap-6">
-    <div class="flex flex-col gap-3">
+    <SettingsCard
+      :title="t('CAPTAIN.AGENT_UX.CONFIGURATION.CURRENT')"
+      :description="
+        {
+          everyone: t('CAPTAIN.ASSISTANTS.FORM.AUDIENCE.EVERYONE.LABEL'),
+          segment: t('CUSTOMERS.AUDIENCE'),
+          specific: t('CAPTAIN.ASSISTANTS.FORM.AUDIENCE.SPECIFIC.LABEL'),
+        }[audienceMode(assistant.config?.audience)]
+      "
+    />
+    <div class="flex flex-col gap-3" :inert="isSaving">
       <RadioCard
         :id="MODE.EVERYONE"
         :label="t('CAPTAIN.ASSISTANTS.FORM.AUDIENCE.EVERYONE.LABEL')"
@@ -261,7 +273,9 @@ watch(
     <SettingsSaveBar
       :is-dirty="isDirty"
       :is-saving="isSaving"
-      @save="handleSubmit"
+      :is-saved="isSaved"
+      :error="saveError"
+      @save="saveChanges"
       @discard="discard"
     />
   </div>

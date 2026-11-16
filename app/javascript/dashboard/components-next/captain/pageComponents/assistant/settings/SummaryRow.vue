@@ -28,7 +28,7 @@ const { t } = useI18n();
     <div class="flex flex-col flex-1 min-w-0 gap-0.5">
       <span class="text-sm font-medium text-n-slate-12">{{ title }}</span>
       <span
-        class="text-sm truncate"
+        class="break-words text-sm"
         :class="muted ? 'text-n-slate-10' : 'text-n-slate-11'"
       >
         <slot name="summary">{{ summary }}</slot>

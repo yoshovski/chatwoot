@@ -130,6 +130,13 @@ onMounted(() => {
       ]"
       :type="type"
       :placeholder="placeholder"
+      :aria-invalid="
+        $attrs['aria-invalid'] ?? (messageType === 'error' ? true : undefined)
+      "
+      :aria-describedby="
+        $attrs['aria-describedby'] ||
+        (message ? `${uniqueId}-message` : undefined)
+      "
       :disabled="disabled"
       :min="['date', 'datetime-local', 'time'].includes(type) ? min : undefined"
       :max="
@@ -145,6 +152,7 @@ onMounted(() => {
     />
     <p
       v-if="message"
+      :id="`${uniqueId}-message`"
       class="min-w-0 mt-1 mb-0 text-label-small transition-colors duration-150 ease-in-out"
       :class="messageClass"
     >

@@ -4,7 +4,7 @@ import { useI18n } from 'vue-i18n';
 import AddNewRulesDialog from 'dashboard/components-next/captain/assistant/AddNewRulesDialog.vue';
 import RuleCard from 'dashboard/components-next/captain/assistant/RuleCard.vue';
 
-// One short list of plain-language rules. Adding, editing and deleting a rule saves it at once.
+// One short list of plain-language rules. Edits belong to the parent settings draft.
 const props = defineProps({
   title: { type: String, required: true },
   description: { type: String, default: '' },
@@ -42,8 +42,8 @@ const remove = id =>
 
 <template>
   <section class="flex flex-col gap-3">
-    <div class="flex items-start justify-between gap-3">
-      <div class="flex flex-col gap-0.5">
+    <div class="flex flex-wrap items-start justify-between gap-3">
+      <div class="flex min-w-0 flex-1 flex-col gap-0.5">
         <h3 class="m-0 text-base font-semibold text-n-slate-12">
           {{ title }}
           <span
@@ -59,11 +59,10 @@ const remove = id =>
       </div>
       <AddNewRulesDialog
         v-model="newRule"
+        class="shrink-0"
         :placeholder="placeholder"
         :button-label="addLabel"
-        :confirm-label="
-          t('CAPTAIN.ASSISTANTS.RESPONSE_GUIDELINES.ADD.NEW.CREATE')
-        "
+        :confirm-label="t('CAPTAIN.AGENT_UX.CONFIGURATION.RULES.ADD')"
         :cancel-label="
           t('CAPTAIN.ASSISTANTS.RESPONSE_GUIDELINES.ADD.NEW.CANCEL')
         "

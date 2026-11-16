@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onMounted, reactive, ref, watch } from 'vue';
+import { computed, nextTick, onMounted, reactive, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useVuelidate } from '@vuelidate/core';
 import { minLength } from '@vuelidate/validators';
@@ -15,6 +15,7 @@ import Select from 'dashboard/components-next/select/Select.vue';
 import SettingsCard from './SettingsCard.vue';
 import SettingsSwitchRow from './SettingsSwitchRow.vue';
 import SettingsSaveBar from './SettingsSaveBar.vue';
+import { useSettingsSave } from './useSettingsSave';
 import SettingsSplit from './SettingsSplit.vue';
 import HandoffFlow from './HandoffFlow.vue';
 import HandoffRules from './HandoffRules.vue';
@@ -85,7 +86,6 @@ const validationRules = {
 
 const v$ = useVuelidate(validationRules, state);
 
-const isSaving = ref(false);
 const savedSnapshot = ref('');
 const snapshot = () => JSON.stringify(state);
 const isDirty = computed(() => snapshot() !== savedSnapshot.value);
@@ -200,67 +200,6 @@ const fallbackAgent = computed(() =>
   )
 );
 
-const fieldsToValidate = () =>
-  isCaptainV2Enabled.value
-    ? ['handoffMessage']
-    : ['handoffMessage', 'resolutionMessage', 'instructions'];
-
-const handleSubmit = async () => {
-  const isValid = await Promise.all(
-    fieldsToValidate().map(field => v$.value[field].$validate())
-  ).then(results => results.every(Boolean));
-  if (!isValid) return;
-
-  const payload = {
-    config: {
-      ...props.assistant.config,
-      handoff_message: state.handoffMessage,
-      handoff_form_message: state.handoffFormMessage.trim(),
-      handoff_collect_name: state.handoffCollectName,
-      handoff_collect_phone: state.handoffCollectPhone,
-      handoff_when_online: state.handoffWhenOnline,
-      handoff_when_offline: state.handoffWhenOffline,
-      offline_handoff_message: state.offlineHandoffMessage,
-      no_handoff_message: state.noHandoffMessage,
-      handoff_rules: state.handoffRules,
-      continue_while_waiting: state.continueWhileWaiting,
-      handoff_safety_net: state.handoffSafetyNet,
-      summary_private_note: state.summaryPrivateNote,
-      lead_private_note: state.leadPrivateNote,
-      action_private_note: state.actionPrivateNote,
-    },
-  };
-
-  if (isAdmin.value) {
-    payload.config.handoff_fallback_agent_id = state.handoffFallbackAgentId
-      ? Number(state.handoffFallbackAgentId)
-      : null;
-    payload.config.handoff_fallback_team_id = state.handoffFallbackTeamId
-      ? Number(state.handoffFallbackTeamId)
-      : null;
-  }
-
-  if (!isCaptainV2Enabled.value) {
-    payload.config.resolution_message = state.resolutionMessage;
-    payload.config.instructions = state.instructions;
-  }
-
-  isSaving.value = true;
-  try {
-    await props.save(payload);
-  } finally {
-    isSaving.value = false;
-  }
-};
-
-watch(
-  () => props.assistant,
-  newAssistant => {
-    if (newAssistant) updateStateFromAssistant(newAssistant);
-  },
-  { immediate: true }
-);
-
 // Redesign: the support model is the first decision; details are summaries with side-panel editors.
 const U = 'CAPTAIN.AGENT_UX.HANDOFF';
 const MODELS = {
@@ -301,6 +240,37 @@ const modelOptions = computed(() => [
 const actionLabel = action =>
   actionOptions.value.find(option => option.value === action)?.label || action;
 
+const savedConfig = computed(() => props.assistant.config || {});
+const savedDestination = computed(() => {
+  const config = savedConfig.value;
+  if (
+    config.handoff_when_online === 'keep' &&
+    config.handoff_when_offline === 'keep'
+  ) {
+    return t('CAPTAIN.AGENT_UX.CONFIGURATION.HANDOFF.KEEPS');
+  }
+  if (
+    !isCaptainV2Enabled.value ||
+    (!config.handoff_fallback_agent_id && !config.handoff_fallback_team_id)
+  ) {
+    return t('CAPTAIN.AGENT_UX.CONFIGURATION.HANDOFF.INBOX');
+  }
+  if (!isAdmin.value)
+    return t('CAPTAIN.AGENT_UX.CONFIGURATION.HANDOFF.CONFIGURED');
+  const agent = agentsList.value?.find(
+    option => option.id === Number(config.handoff_fallback_agent_id)
+  );
+  const team = teamsList.value?.find(
+    option => option.id === Number(config.handoff_fallback_team_id)
+  );
+  return (
+    [agent?.name, team?.name].filter(Boolean).join(' · ') ||
+    t('CAPTAIN.AGENT_UX.CONFIGURATION.HANDOFF.CONFIGURED')
+  );
+});
+const savedRuleCount = computed(
+  () => savedConfig.value.handoff_rules?.length || 0
+);
 const panels = reactive({
   triggers: false,
   messages: false,
@@ -313,6 +283,23 @@ const plain = html =>
     .replace(/<[^>]+>/g, ' ')
     .replace(/\s+/g, ' ')
     .trim();
+const savedMessages = computed(() => {
+  const config = savedConfig.value;
+  const handoff = plain(config.handoff_message);
+  const keep = plain(config.no_handoff_message);
+  const defaultMessage = t('CAPTAIN.AGENT_UX.CONFIGURATION.DEFAULT_MESSAGE');
+  const online =
+    (config.handoff_when_online === 'keep' ? keep : handoff) || defaultMessage;
+  const offline =
+    (config.handoff_when_offline === 'keep'
+      ? keep
+      : plain(config.offline_handoff_message) || handoff) || defaultMessage;
+  if (online === offline) return online;
+  return t('CAPTAIN.AGENT_UX.CONFIGURATION.HANDOFF.MESSAGES', {
+    online,
+    offline,
+  });
+});
 const triggersSummary = computed(() =>
   state.handoffRules.length
     ? t(
@@ -351,166 +338,295 @@ const waitingSummary = computed(() =>
     .join(' · ')
 );
 const handsOver = computed(() => supportModel.value !== 'email');
+const fieldsToValidate = () => [
+  ...(handsOver.value ? ['handoffMessage'] : []),
+  ...(isCaptainV2Enabled.value ? [] : ['resolutionMessage', 'instructions']),
+];
+
+const handleSubmit = async () => {
+  const isValid = await Promise.all(
+    fieldsToValidate().map(field => v$.value[field].$validate())
+  ).then(results => results.every(Boolean));
+  if (!isValid) {
+    panels.messages = Boolean(
+      formErrors.value.handoffMessage && handsOver.value
+    );
+    return undefined;
+  }
+
+  const payload = {
+    config: {
+      ...props.assistant.config,
+      handoff_message: state.handoffMessage,
+      handoff_form_message: state.handoffFormMessage.trim(),
+      handoff_collect_name: state.handoffCollectName,
+      handoff_collect_phone: state.handoffCollectPhone,
+      handoff_when_online: state.handoffWhenOnline,
+      handoff_when_offline: state.handoffWhenOffline,
+      offline_handoff_message: state.offlineHandoffMessage,
+      no_handoff_message: state.noHandoffMessage,
+      handoff_rules: state.handoffRules,
+      continue_while_waiting: state.continueWhileWaiting,
+      handoff_safety_net: state.handoffSafetyNet,
+      summary_private_note: state.summaryPrivateNote,
+      lead_private_note: state.leadPrivateNote,
+      action_private_note: state.actionPrivateNote,
+    },
+  };
+
+  if (isAdmin.value) {
+    payload.config.handoff_fallback_agent_id = state.handoffFallbackAgentId
+      ? Number(state.handoffFallbackAgentId)
+      : null;
+    payload.config.handoff_fallback_team_id = state.handoffFallbackTeamId
+      ? Number(state.handoffFallbackTeamId)
+      : null;
+  }
+
+  if (!isCaptainV2Enabled.value) {
+    payload.config.resolution_message = state.resolutionMessage;
+    payload.config.instructions = state.instructions;
+  }
+
+  return props.save(payload);
+};
+
+watch(
+  [() => props.assistant.id, () => JSON.stringify(props.assistant.config)],
+  discard,
+  { immediate: true }
+);
+
+const {
+  isSaving,
+  isSaved,
+  saveError,
+  save: saveChanges,
+} = useSettingsSave(isDirty, handleSubmit);
+const handoffFields = ref(null);
+const messageEditor = ref(null);
+watch(isSaving, async saving => {
+  if (saving) return;
+  await nextTick();
+  const invalidField =
+    panels.messages && formErrors.value.handoffMessage
+      ? messageEditor.value?.$el
+      : handoffFields.value?.querySelector('[aria-invalid="true"]');
+  invalidField?.querySelector('[contenteditable="true"]')?.focus();
+});
 </script>
 
 <template>
   <SettingsSplit>
-    <section class="flex flex-col gap-3">
-      <h3 class="m-0 text-base font-semibold text-n-slate-12">
-        {{ t(`${U}.MODEL_TITLE`, { name }) }}
-      </h3>
-      <div
-        class="flex flex-col gap-2"
-        role="radiogroup"
-        :aria-label="t(`${U}.MODEL_TITLE`, { name })"
-      >
-        <ChoiceCard
-          v-for="option in modelOptions"
-          :key="option.value"
-          name="support-model"
-          :value="option.value"
-          :icon="option.icon"
-          :label="option.label"
-          :description="option.description"
-          :is-active="supportModel === option.value"
-          @select="chooseModel(option.value)"
-        />
-        <ChoiceCard
-          v-if="supportModel === 'custom'"
-          name="support-model"
-          value="custom"
-          icon="i-lucide-shuffle"
-          :label="t(`${U}.MODEL_CUSTOM`)"
-          :description="
-            t(`${U}.MODEL_CUSTOM_DESC`, {
-              online: actionLabel(state.handoffWhenOnline),
-              offline: actionLabel(state.handoffWhenOffline),
-            })
-          "
-          is-active
-        />
-      </div>
-      <div
-        v-if="handsOver && isAdmin"
-        class="grid gap-3 p-4 rounded-xl bg-n-alpha-1 sm:grid-cols-2"
-      >
-        <div class="flex flex-col gap-1.5">
-          <span class="text-sm font-medium text-n-slate-12">
-            {{ t(`${U}.TEAM_LABEL`) }}
-          </span>
-          <Select
-            v-model="state.handoffFallbackTeamId"
-            :options="teamOptions"
-            :aria-label="t(`${U}.TEAM_LABEL`)"
-            class="w-full [&>select]:w-full"
-          />
+    <SettingsCard :title="t('CAPTAIN.AGENT_UX.CONFIGURATION.CURRENT')">
+      <dl class="m-0 grid gap-2 pt-2 text-sm">
+        <div>
+          <dt class="font-medium text-n-slate-12">
+            {{ t('CAPTAIN.AGENT_UX.CONFIGURATION.HANDOFF.TEAM_AVAILABILITY') }}
+          </dt>
+          <dd class="m-0 break-words text-n-slate-11">
+            {{
+              t(`${U}.MODEL_CUSTOM_DESC`, {
+                online: actionLabel(
+                  savedConfig.handoff_when_online || 'transfer'
+                ),
+                offline: actionLabel(
+                  savedConfig.handoff_when_offline || 'transfer'
+                ),
+              })
+            }}
+          </dd>
         </div>
-        <div class="flex flex-col gap-1.5">
-          <span class="text-sm font-medium text-n-slate-12">
-            {{ t(`${U}.PERSON_LABEL`) }}
-          </span>
-          <Select
-            v-model="state.handoffFallbackAgentId"
-            :options="agentOptions"
-            :aria-label="t(`${U}.PERSON_LABEL`)"
-            class="w-full [&>select]:w-full"
-          />
+        <div>
+          <dt class="font-medium text-n-slate-12">{{ t(`${U}.ASSIGN`) }}</dt>
+          <dd class="m-0 break-words text-n-slate-11">
+            {{ savedDestination }}
+          </dd>
         </div>
-        <p class="m-0 text-xs text-n-slate-11 sm:col-span-2">
-          {{ t(`${U}.TEAM_HINT`) }}
+        <div>
+          <dt class="font-medium text-n-slate-12">{{ t(`${U}.TRIGGERS`) }}</dt>
+          <dd class="m-0 break-words text-n-slate-11">
+            {{
+              t(
+                'CAPTAIN.AGENT_UX.CONFIGURATION.HANDOFF.TRIGGERS',
+                { count: savedRuleCount },
+                savedRuleCount
+              )
+            }}
+          </dd>
+        </div>
+        <div>
+          <dt class="font-medium text-n-slate-12">
+            {{ t(`${U}.MESSAGES`, { name }) }}
+          </dt>
+          <dd class="m-0 break-words text-n-slate-11">{{ savedMessages }}</dd>
+        </div>
+      </dl>
+    </SettingsCard>
+    <div ref="handoffFields" class="flex flex-col gap-6" :inert="isSaving">
+      <section class="flex flex-col gap-3">
+        <h3 class="m-0 text-base font-semibold text-n-slate-12">
+          {{ t(`${U}.MODEL_TITLE`, { name }) }}
+        </h3>
+        <p class="m-0 text-sm text-n-slate-11">
+          {{ t('CAPTAIN.AGENT_UX.CONFIGURATION.HANDOFF.SCOPE') }}
         </p>
-      </div>
-      <form
-        v-if="supportModel === 'email'"
-        class="flex flex-col gap-2 sm:flex-row sm:items-start"
-        @submit.prevent="sendToEmail"
-      >
-        <Input
-          v-model="supportEmail"
-          type="email"
+        <div
+          class="flex flex-col gap-2"
+          role="radiogroup"
+          :aria-label="t(`${U}.MODEL_TITLE`, { name })"
+        >
+          <ChoiceCard
+            v-for="option in modelOptions"
+            :key="option.value"
+            name="support-model"
+            :value="option.value"
+            :icon="option.icon"
+            :label="option.label"
+            :description="option.description"
+            :is-active="supportModel === option.value"
+            @select="chooseModel(option.value)"
+          />
+          <ChoiceCard
+            v-if="supportModel === 'custom'"
+            name="support-model"
+            value="custom"
+            icon="i-lucide-shuffle"
+            :label="t(`${U}.MODEL_CUSTOM`)"
+            :description="
+              t(`${U}.MODEL_CUSTOM_DESC`, {
+                online: actionLabel(state.handoffWhenOnline),
+                offline: actionLabel(state.handoffWhenOffline),
+              })
+            "
+            is-active
+          />
+        </div>
+        <div
+          v-if="handsOver && isAdmin"
+          class="grid gap-3 p-4 rounded-xl bg-n-alpha-1 sm:grid-cols-2"
+        >
+          <div class="flex flex-col gap-1.5">
+            <span class="text-sm font-medium text-n-slate-12">
+              {{ t(`${U}.TEAM_LABEL`) }}
+            </span>
+            <Select
+              v-model="state.handoffFallbackTeamId"
+              :options="teamOptions"
+              :aria-label="t(`${U}.TEAM_LABEL`)"
+              class="w-full [&>select]:w-full"
+            />
+          </div>
+          <div class="flex flex-col gap-1.5">
+            <span class="text-sm font-medium text-n-slate-12">
+              {{ t(`${U}.PERSON_LABEL`) }}
+            </span>
+            <Select
+              v-model="state.handoffFallbackAgentId"
+              :options="agentOptions"
+              :aria-label="t(`${U}.PERSON_LABEL`)"
+              class="w-full [&>select]:w-full"
+            />
+          </div>
+          <p class="m-0 text-xs text-n-slate-11 sm:col-span-2">
+            {{ t(`${U}.TEAM_HINT`) }}
+          </p>
+        </div>
+        <form
+          v-if="supportModel === 'email'"
+          class="flex flex-col gap-2 sm:flex-row sm:items-start"
+          @submit.prevent="sendToEmail"
+        >
+          <Input
+            v-model="supportEmail"
+            type="email"
+            :placeholder="
+              t('CAPTAIN.ASSISTANTS.SETTINGS.HANDOVER.EMAIL_ONLY.PLACEHOLDER')
+            "
+            :aria-label="t(`${U}.EMAIL_LABEL`)"
+            class="flex-1"
+          />
+          <Button
+            type="submit"
+            :label="t('CAPTAIN.ASSISTANTS.SETTINGS.HANDOVER.EMAIL_ONLY.APPLY')"
+            icon="i-lucide-mail"
+            variant="faded"
+            :disabled="!isValidSupportEmail"
+          />
+        </form>
+      </section>
+
+      <section class="flex flex-col gap-3">
+        <h3 class="m-0 text-base font-semibold text-n-slate-12">
+          {{ t(`${U}.DETAILS_TITLE`) }}
+        </h3>
+        <SettingsCard>
+          <SummaryRow
+            v-if="handsOver"
+            icon="i-lucide-git-fork"
+            :title="t(`${U}.TRIGGERS`)"
+            :summary="triggersSummary"
+            @edit="panels.triggers = true"
+          />
+          <SummaryRow
+            icon="i-lucide-message-square-text"
+            :title="t(`${U}.MESSAGES`, { name })"
+            :summary="messagesSummary"
+            @edit="panels.messages = true"
+          />
+          <SummaryRow
+            v-if="handsOver"
+            icon="i-lucide-contact-round"
+            :title="t(`${U}.CONTACT`)"
+            :summary="contactFields.join(', ')"
+            @edit="panels.contact = true"
+          />
+          <SummaryRow
+            v-if="handsOver"
+            icon="i-lucide-hourglass"
+            :title="t(`${U}.WAITING`)"
+            :summary="waitingSummary"
+            @edit="panels.waiting = true"
+          />
+          <SummaryRow
+            icon="i-lucide-sticky-note"
+            :title="t('CAPTAIN.AGENT_UX.HANDOFF.NOTES')"
+            :summary="notesSummary"
+            @edit="panels.notes = true"
+          />
+        </SettingsCard>
+      </section>
+
+      <template v-if="!isCaptainV2Enabled">
+        <Editor
+          v-model="state.resolutionMessage"
+          :aria-invalid="Boolean(formErrors.resolutionMessage)"
+          :label="t('CAPTAIN.ASSISTANTS.FORM.RESOLUTION_MESSAGE.LABEL')"
           :placeholder="
-            t('CAPTAIN.ASSISTANTS.SETTINGS.HANDOVER.EMAIL_ONLY.PLACEHOLDER')
+            t('CAPTAIN.ASSISTANTS.FORM.RESOLUTION_MESSAGE.PLACEHOLDER')
           "
-          :aria-label="t(`${U}.EMAIL_LABEL`)"
-          class="flex-1"
+          :message="formErrors.resolutionMessage"
+          :message-type="formErrors.resolutionMessage ? 'error' : 'info'"
+          class="z-0"
         />
-        <Button
-          type="submit"
-          :label="t('CAPTAIN.ASSISTANTS.SETTINGS.HANDOVER.EMAIL_ONLY.APPLY')"
-          icon="i-lucide-mail"
-          variant="faded"
-          :disabled="!isValidSupportEmail"
+        <Editor
+          v-model="state.instructions"
+          :aria-invalid="Boolean(formErrors.instructions)"
+          :label="t('CAPTAIN.ASSISTANTS.FORM.INSTRUCTIONS.LABEL')"
+          :placeholder="t('CAPTAIN.ASSISTANTS.FORM.INSTRUCTIONS.PLACEHOLDER')"
+          :message="formErrors.instructions"
+          :max-length="20000"
+          :message-type="formErrors.instructions ? 'error' : 'info'"
+          class="z-0"
         />
-      </form>
-    </section>
-
-    <section class="flex flex-col gap-3">
-      <h3 class="m-0 text-base font-semibold text-n-slate-12">
-        {{ t(`${U}.DETAILS_TITLE`) }}
-      </h3>
-      <SettingsCard>
-        <SummaryRow
-          v-if="handsOver"
-          icon="i-lucide-git-fork"
-          :title="t(`${U}.TRIGGERS`)"
-          :summary="triggersSummary"
-          @edit="panels.triggers = true"
-        />
-        <SummaryRow
-          icon="i-lucide-message-square-text"
-          :title="t(`${U}.MESSAGES`, { name })"
-          :summary="messagesSummary"
-          @edit="panels.messages = true"
-        />
-        <SummaryRow
-          v-if="handsOver"
-          icon="i-lucide-contact-round"
-          :title="t(`${U}.CONTACT`)"
-          :summary="contactFields.join(', ')"
-          @edit="panels.contact = true"
-        />
-        <SummaryRow
-          v-if="handsOver"
-          icon="i-lucide-hourglass"
-          :title="t(`${U}.WAITING`)"
-          :summary="waitingSummary"
-          @edit="panels.waiting = true"
-        />
-        <SummaryRow
-          icon="i-lucide-sticky-note"
-          :title="t('CAPTAIN.AGENT_UX.HANDOFF.NOTES')"
-          :summary="notesSummary"
-          @edit="panels.notes = true"
-        />
-      </SettingsCard>
-    </section>
-
-    <template v-if="!isCaptainV2Enabled">
-      <Editor
-        v-model="state.resolutionMessage"
-        :label="t('CAPTAIN.ASSISTANTS.FORM.RESOLUTION_MESSAGE.LABEL')"
-        :placeholder="
-          t('CAPTAIN.ASSISTANTS.FORM.RESOLUTION_MESSAGE.PLACEHOLDER')
-        "
-        :message="formErrors.resolutionMessage"
-        :message-type="formErrors.resolutionMessage ? 'error' : 'info'"
-        class="z-0"
-      />
-      <Editor
-        v-model="state.instructions"
-        :label="t('CAPTAIN.ASSISTANTS.FORM.INSTRUCTIONS.LABEL')"
-        :placeholder="t('CAPTAIN.ASSISTANTS.FORM.INSTRUCTIONS.PLACEHOLDER')"
-        :message="formErrors.instructions"
-        :max-length="20000"
-        :message-type="formErrors.instructions ? 'error' : 'info'"
-        class="z-0"
-      />
-    </template>
-
+      </template>
+    </div>
     <SettingsSaveBar
       :is-dirty="isDirty"
       :is-saving="isSaving"
-      @save="handleSubmit"
+      :is-saved="isSaved"
+      :error="saveError"
+      @save="saveChanges"
       @discard="discard"
     />
 
@@ -530,7 +646,9 @@ const handsOver = computed(() => supportModel.value !== 'email');
     >
       <Editor
         v-if="handsOver"
+        ref="messageEditor"
         v-model="state.handoffMessage"
+        :aria-invalid="Boolean(formErrors.handoffMessage)"
         :label="
           t('CAPTAIN.ASSISTANTS.SETTINGS.HANDOVER.MESSAGE_TITLE', { name })
         "

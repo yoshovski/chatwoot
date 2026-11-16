@@ -17,14 +17,15 @@ export function useAssistantSettings() {
   );
 
   const updateAssistant = async updatedAssistant => {
+    const id = assistantId.value;
     try {
       await store.dispatch('captainAssistants/update', {
-        id: assistantId.value,
+        id,
         ...updatedAssistant,
       });
       useAlert(t('CAPTAIN.ASSISTANTS.EDIT.SUCCESS_MESSAGE'));
       // Previews and suggestions follow the saved name, description and business type.
-      refreshBusinessExamples(assistantId.value);
+      refreshBusinessExamples(id);
       return true;
     } catch (error) {
       useAlert(error?.message || t('CAPTAIN.ASSISTANTS.EDIT.ERROR_MESSAGE'));
