@@ -1,4 +1,5 @@
 import { mount } from '@vue/test-utils';
+import { withFullI18n } from 'test-i18n';
 import DayBars from '../DayBars.vue';
 import EmptyState from '../EmptyState.vue';
 import ListRow from '../ListRow.vue';
@@ -10,6 +11,8 @@ import Sparkline from '../Sparkline.vue';
 import StatusPill from '../StatusPill.vue';
 import Stepper from '../Stepper.vue';
 import UsageMeter from '../UsageMeter.vue';
+
+withFullI18n();
 
 const global = {
   stubs: {
@@ -112,11 +115,42 @@ describe('MetricTile', () => {
         clickable: true,
       },
     });
-    expect(interactiveTile.attributes('role')).toBe('button');
-    expect(interactiveTile.attributes('tabindex')).toBe('0');
-    await interactiveTile.trigger('click');
-    await interactiveTile.trigger('keydown.enter');
-    expect(interactiveTile.emitted('click')).toHaveLength(2);
+    const button = interactiveTile.get('button');
+    const [labelId, valueId] = button.attributes('aria-labelledby').split(' ');
+    expect(interactiveTile.get(`[id="${labelId}"]`).text()).toBe('Leads');
+    expect(interactiveTile.get(`[id="${valueId}"]`).text()).toBe('4');
+    await button.trigger('click');
+    expect(interactiveTile.emitted('click')).toHaveLength(1);
+  });
+
+  it('opens and dismisses metric help independently of the tile action', async () => {
+    const wrapper = mount(MetricTile, {
+      global,
+      attachTo: document.body,
+      props: {
+        label: 'Leads',
+        value: 4,
+        icon: 'i-lucide-users',
+        hint: 'Leads captured in the last 7 days',
+        clickable: true,
+      },
+    });
+
+    const help = wrapper.get('button[aria-label="About Leads"]');
+    const content = wrapper.get(`[id="${help.attributes('aria-controls')}"]`);
+    expect(content.isVisible()).toBe(false);
+    help.element.focus();
+
+    await help.trigger('click');
+    expect(help.attributes('aria-expanded')).toBe('true');
+    expect(content.isVisible()).toBe(true);
+    expect(wrapper.emitted('click')).toBeUndefined();
+
+    await help.trigger('keydown', { key: 'Escape' });
+    expect(help.attributes('aria-expanded')).toBe('false');
+    expect(content.isVisible()).toBe(false);
+    expect(document.activeElement).toBe(help.element);
+    wrapper.unmount();
   });
 
   it('shows a placeholder while loading', () => {
@@ -222,6 +256,24 @@ describe('EmptyState', () => {
 
     expect(wrapper.attributes('role')).toBe('alert');
     expect(wrapper.find('button').text()).toBe('Retry');
+  });
+
+  it('keeps decorative examples inert and actions outside the decoration', () => {
+    const wrapper = mount(EmptyState, {
+      global,
+      props: { title: 'Add a source', state: 'first-use' },
+      slots: {
+        default: '<button>Add source</button>',
+        secondary: '<a href="/help">Help</a>',
+        decorative: '<button>Fictional record</button>',
+      },
+    });
+
+    expect(wrapper.get('[inert][aria-hidden="true"]').text()).toBe(
+      'Fictional record'
+    );
+    expect(wrapper.get('button').text()).toBe('Add source');
+    expect(wrapper.get('a').text()).toBe('Help');
   });
 
   it('is quiet when there is just nothing', () => {

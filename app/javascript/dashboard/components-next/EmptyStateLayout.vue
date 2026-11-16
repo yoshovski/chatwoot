@@ -1,4 +1,5 @@
 <script setup>
+import EmptyState from './kit/EmptyState.vue';
 import Policy from 'dashboard/components/policy.vue';
 
 defineProps({
@@ -14,6 +15,12 @@ defineProps({
     type: Array,
     default: () => [],
   },
+  state: {
+    type: String,
+    default: '',
+    validator: value =>
+      ['', 'first-use', 'filtered', 'unavailable', 'error'].includes(value),
+  },
   showBackdrop: {
     type: Boolean,
     default: true,
@@ -22,7 +29,28 @@ defineProps({
 </script>
 
 <template>
+  <EmptyState
+    v-if="state"
+    :state="state"
+    :title="title"
+    :description="subtitle"
+  >
+    <template v-if="$slots.actions" #default>
+      <Policy :permissions="actionPerms">
+        <slot name="actions" />
+      </Policy>
+    </template>
+    <template v-if="$slots.secondary" #secondary>
+      <Policy :permissions="actionPerms">
+        <slot name="secondary" />
+      </Policy>
+    </template>
+    <template v-if="$slots.decorative" #decorative>
+      <slot name="decorative" />
+    </template>
+  </EmptyState>
   <section
+    v-else
     class="relative flex flex-col items-center justify-center w-full h-full overflow-hidden"
   >
     <div
@@ -30,6 +58,8 @@ defineProps({
     >
       <div
         v-if="showBackdrop"
+        inert
+        aria-hidden="true"
         class="w-full h-full space-y-4 overflow-y-hidden opacity-50 pointer-events-none"
       >
         <slot name="empty-state-item" />
