@@ -9,6 +9,7 @@ defineProps({
   period: { type: Number, required: true },
   isLoading: { type: Boolean, default: false },
   hasError: { type: Boolean, default: false },
+  compact: { type: Boolean, default: false },
 });
 
 const emit = defineEmits(['retry']);
@@ -29,14 +30,21 @@ const CHANGE_TONES = {
   </div>
   <div
     v-else
-    class="grid grid-cols-2 gap-px overflow-hidden rounded-card bg-n-weak shadow-card outline outline-1 -outline-offset-1 outline-n-container lg:grid-cols-5"
+    class="grid gap-px overflow-hidden rounded-card bg-n-weak shadow-card outline outline-1 -outline-offset-1 outline-n-container"
+    :class="compact ? 'grid-cols-3' : 'grid-cols-2 lg:grid-cols-5'"
   >
     <div
       v-for="metric in metrics"
       :key="metric.key"
-      class="flex min-w-0 flex-col gap-1 bg-n-solid-2 px-4 py-3.5 last:col-span-2 lg:last:col-span-1"
+      class="flex min-w-0 flex-col gap-1 bg-n-solid-2 py-3.5"
+      :class="
+        compact ? 'px-2.5 sm:px-4' : 'px-4 last:col-span-2 lg:last:col-span-1'
+      "
     >
-      <span class="truncate text-xs font-medium text-n-slate-11">
+      <span
+        class="text-xs font-medium text-n-slate-11"
+        :class="{ truncate: !compact }"
+      >
         {{ metric.label }}
       </span>
       <span
@@ -44,7 +52,11 @@ const CHANGE_TONES = {
         class="my-1 h-7 w-14 animate-pulse rounded bg-n-alpha-2"
         aria-busy="true"
       />
-      <div v-else class="flex items-baseline justify-between gap-2">
+      <div
+        v-else
+        class="flex items-baseline justify-between"
+        :class="compact ? 'flex-wrap gap-x-2' : 'gap-2'"
+      >
         <span
           class="font-display text-2xl font-semibold tabular-nums tracking-display text-n-slate-12"
         >

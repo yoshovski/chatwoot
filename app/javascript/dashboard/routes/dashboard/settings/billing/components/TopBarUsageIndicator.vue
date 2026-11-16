@@ -7,6 +7,8 @@ import { usePolicy } from 'dashboard/composables/usePolicy';
 import { useAccountSubscription } from 'dashboard/composables/useAccountSubscription';
 import { useBillingView } from '../useBillingView';
 
+defineProps({ title: { type: String, default: '' } });
+
 const { t } = useI18n();
 const { accountScopedRoute } = useAccount();
 const { checkPermissions } = usePolicy();
@@ -111,10 +113,21 @@ const upgradeLabel = computed(() =>
 
 <template>
   <div
-    v-if="showIndicator"
-    class="flex h-11 shrink-0 items-center justify-end gap-2.5 border-b border-n-weak bg-n-solid-2 px-4"
+    v-if="showIndicator || title"
+    class="flex h-11 shrink-0 items-center justify-end border-b border-n-weak bg-n-solid-2"
+    :class="title ? 'gap-1.5 px-2.5 sm:gap-2.5 sm:px-4' : 'gap-2.5 px-4'"
   >
-    <div v-on-click-outside="() => (isOpen = false)" class="relative">
+    <h1
+      v-if="title"
+      class="m-0 me-auto min-w-0 truncate font-display text-base font-semibold text-n-slate-12"
+    >
+      {{ title }}
+    </h1>
+    <div
+      v-if="showIndicator"
+      v-on-click-outside="() => (isOpen = false)"
+      class="relative shrink-0"
+    >
       <button
         type="button"
         class="inline-flex h-7 items-center gap-1.5 rounded-lg border px-2.5 text-xs font-medium shadow-sm transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-n-brand"
@@ -123,8 +136,12 @@ const upgradeLabel = computed(() =>
         :aria-label="t('ACCOUNT_SUBSCRIPTION.TOP_BAR.POPOVER_LABEL')"
         @click="isOpen = !isOpen"
       >
-        <span :class="pillIcon" class="size-3.5 shrink-0" aria-hidden="true" />
-        <span class="tabular-nums">{{ pillLabel }}</span>
+        <span
+          :class="[pillIcon, { 'max-sm:hidden': title }]"
+          class="size-3.5 shrink-0"
+          aria-hidden="true"
+        />
+        <span class="whitespace-nowrap tabular-nums">{{ pillLabel }}</span>
         <span
           v-if="trial && !isPausedOrLimit"
           class="rounded bg-n-blue-3 px-1.5 py-0.5 text-[10px] font-semibold leading-none text-n-blue-11"
@@ -133,7 +150,7 @@ const upgradeLabel = computed(() =>
         </span>
         <span
           class="i-lucide-chevron-down size-3.5 shrink-0 opacity-75 transition-transform"
-          :class="{ 'rotate-180': isOpen }"
+          :class="{ 'rotate-180': isOpen, 'max-sm:hidden': title }"
           aria-hidden="true"
         />
       </button>
@@ -203,6 +220,7 @@ const upgradeLabel = computed(() =>
     </div>
 
     <router-link
+      v-if="showIndicator"
       :to="accountScopedRoute('billing_settings_index')"
       class="inline-flex h-7 shrink-0 items-center gap-1 rounded-lg bg-n-teal-9 px-3 text-xs font-semibold text-white shadow-sm transition-colors hover:bg-n-teal-10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-n-teal-9"
     >

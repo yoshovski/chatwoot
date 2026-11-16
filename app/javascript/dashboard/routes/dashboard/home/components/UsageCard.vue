@@ -12,6 +12,7 @@ const props = defineProps({
   isLoading: { type: Boolean, default: false },
   hasError: { type: Boolean, default: false },
   billingRoute: { type: Object, default: null },
+  compact: { type: Boolean, default: false },
 });
 
 const emit = defineEmits(['retry']);
@@ -48,29 +49,54 @@ const meter = (key, label, counts, hint = '') => {
     label,
     used,
     limit,
-    valueLabel: hasLimit
-      ? t('HOME.USAGE.OF_LIMIT', { used, limit })
-      : String(used),
-    hint: hasLimit ? hint : t('HOME.USAGE.NO_LIMIT_SET'),
+    valueLabel:
+      hasLimit || props.compact
+        ? t('HOME.USAGE.OF_LIMIT', { used, limit: limit ?? '∞' })
+        : String(used),
+    hint: hasLimit
+      ? hint
+      : [t('HOME.USAGE.NO_LIMIT_SET'), props.compact ? hint : '']
+          .filter(Boolean)
+          .join(' · '),
   };
 };
 
+const aiUsageHint = ai => {
+  if (!props.compact && ai?.forecast_date) {
+    return t('HOME.V2.USAGE.FORECAST', {
+      date: formatDate(Date.parse(ai.forecast_date) / 1000),
+    });
+  }
+  if (props.compact && (plan.value.ai_trial_cap || ai?.limit == null))
+    return '';
+  return t('HOME.USAGE.RESETS', {
+    date: formatDate(plan.value.quota_resets_at),
+  });
+};
 const meters = computed(() => {
   if (!props.usage) return [];
   const { ai_conversations: ai, agents, inboxes, documents } = props.usage;
+  const aiMeter = meter(
+    'ai',
+    props.compact
+      ? t('HOME.DASHBOARD.AI_AGENT_CONVERSATIONS')
+      : t('HOME.USAGE.AI_CONVERSATIONS'),
+    ai,
+    aiUsageHint(ai)
+  );
+  if (props.compact) {
+    return [
+      meter(
+        'conversations',
+        t('HOME.DASHBOARD.TOTAL_CONVERSATIONS'),
+        props.usage.conversations,
+        t('HOME.DASHBOARD.BILLING_PERIOD')
+      ),
+      aiMeter,
+    ];
+  }
   return [
-    meter(
-      'ai',
-      t('HOME.USAGE.AI_CONVERSATIONS'),
-      ai,
-      ai.forecast_date
-        ? t('HOME.V2.USAGE.FORECAST', {
-            date: formatDate(Date.parse(ai.forecast_date) / 1000),
-          })
-        : t('HOME.USAGE.RESETS', {
-            date: formatDate(plan.value.quota_resets_at),
-          })
-    ),
+    aiMeter,
     meter('agents', t('HOME.USAGE.SEATS'), agents),
     meter('inboxes', t('HOME.USAGE.INBOXES'), inboxes),
     meter('documents', t('HOME.USAGE.DOCUMENTS'), documents),
@@ -80,13 +106,13 @@ const meters = computed(() => {
 
 <template>
   <SectionCard
-    :title="$t('HOME.USAGE.TITLE')"
+    :title="compact ? t('HOME.DASHBOARD.CURRENT_USAGE') : t('HOME.USAGE.TITLE')"
     :link-label="billingRoute ? $t('HOME.USAGE.LINK') : ''"
     :to="billingRoute"
   >
     <div v-if="isLoading" class="flex flex-col gap-4" aria-busy="true">
       <span
-        v-for="n in 4"
+        v-for="n in compact ? 2 : 4"
         :key="n"
         class="h-8 w-full animate-pulse rounded bg-n-alpha-2"
       />
@@ -122,16 +148,35 @@ const meters = computed(() => {
           {{ pauseReason }}
         </span>
       </div>
-      <div class="flex flex-col gap-4">
-        <UsageMeter
+      <p
+        v-if="compact && usage?.ai_conversations?.extra_left > 0"
+        class="m-0 text-xs text-n-slate-11"
+      >
+        {{
+          $t('HOME.DASHBOARD.EXTRAS', {
+            count: usage.ai_conversations.extra_left,
+          })
+        }}
+      </p>
+      <div
+        class="flex flex-col"
+        :class="compact ? 'divide-y divide-n-weak' : 'gap-4'"
+      >
+        <div
           v-for="item in meters"
           :key="item.key"
-          :label="item.label"
-          :used="item.used"
-          :limit="item.limit"
-          :value-label="item.valueLabel"
-          :hint="item.hint"
-        />
+          :class="{ 'py-3 first:pt-0 last:pb-0': compact }"
+        >
+          <UsageMeter
+            :label="item.label"
+            :used="item.used"
+            :limit="item.limit"
+            :value-label="item.valueLabel"
+            :hint="item.hint"
+            :show-unlimited-track="compact"
+            :bar-tone="compact && item.key === 'ai' ? 'bg-n-violet-9' : ''"
+          />
+        </div>
       </div>
     </template>
   </SectionCard>

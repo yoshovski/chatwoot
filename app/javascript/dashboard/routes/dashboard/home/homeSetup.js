@@ -38,3 +38,30 @@ export const buildSetupProgress = (setup = {}, skipped = [], finished = []) => {
 export const firstOpenGuidedStep = progress =>
   progress.steps.find(step => step.guided && !step.done && !step.skipped)
     ?.key || GUIDED_STEPS[0];
+
+export const setupStepText = t => ({
+  knowledge: {
+    title: t('HOME.SETUP.STEPS.KNOWLEDGE.TITLE'),
+    hint: t('HOME.SETUP.STEPS.KNOWLEDGE.HINT'),
+  },
+  test_agent: {
+    title: t('HOME.SETUP.STEPS.TEST_AGENT.TITLE'),
+    hint: t('HOME.SETUP.STEPS.TEST_AGENT.HINT'),
+  },
+  agent_inbox: {
+    title: t('HOME.SETUP.STEPS.AGENT_INBOX.TITLE'),
+    hint: t('HOME.SETUP.STEPS.AGENT_INBOX.HINT'),
+  },
+  chat_widget: {
+    title: t('HOME.SETUP.STEPS.CHAT_WIDGET.TITLE'),
+    hint: t('HOME.SETUP.STEPS.CHAT_WIDGET.HINT'),
+  },
+  mailbox: {
+    title: t('HOME.SETUP.STEPS.MAILBOX.TITLE'),
+    hint: t('HOME.SETUP.STEPS.MAILBOX.HINT'),
+  },
+  teammate: {
+    title: t('HOME.SETUP.STEPS.TEAMMATE.TITLE'),
+    hint: t('HOME.SETUP.STEPS.TEAMMATE.HINT'),
+  },
+});

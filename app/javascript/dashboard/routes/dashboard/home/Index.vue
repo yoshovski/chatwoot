@@ -1,118 +1,63 @@
 <script setup>
-import { computed, onMounted, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { useRouter } from 'vue-router';
-import { useMapGetter } from 'dashboard/composables/store';
+import { useRoute } from 'vue-router';
+import { differenceInCalendarDays, format, subDays } from 'date-fns';
 import { useAdmin } from 'dashboard/composables/useAdmin';
-import { useUISettings } from 'dashboard/composables/useUISettings';
 import { useAbortableRequest } from 'dashboard/composables/useAbortableRequest';
 import CaptainHomeAPI from 'dashboard/api/captain/home';
-import {
-  buildSetupProgress,
-  FINISHED_SETTING,
-  SKIPPED_SETTING,
-} from './homeSetup';
+import { useHomeSetupProgress } from './useHomeSetupProgress';
 import {
   METRICS,
   PERIODS,
   metricChange,
   metricValue,
   needItems,
-  statusPill,
 } from './homeView';
-
-import ListRow from 'dashboard/components-next/kit/ListRow.vue';
-import PageFrame from 'dashboard/components-next/kit/PageFrame.vue';
-import PageHeader from 'dashboard/components-next/kit/PageHeader.vue';
-import SectionCard from 'dashboard/components-next/kit/SectionCard.vue';
-import StatusPill from 'dashboard/components-next/kit/StatusPill.vue';
-import DaysCard from './components/DaysCard.vue';
-import LeadsCard from './components/LeadsCard.vue';
-import MetricStrip from './components/MetricStrip.vue';
-import NeedsCard from './components/NeedsCard.vue';
-import SetupProgressCard from './components/SetupProgressCard.vue';
-import TopicsCard from './components/TopicsCard.vue';
-import UsageCard from './components/UsageCard.vue';
+import HomeDashboard from './components/HomeDashboard.vue';
 
 const STATUS_DONE = 'done';
-const TIMEZONE_OFFSET = -new Date().getTimezoneOffset() / 60;
 
 const { t } = useI18n();
-const router = useRouter();
+const route = useRoute();
 const { isAdmin } = useAdmin();
-const { uiSettings, updateUISettings } = useUISettings();
-const currentUser = useMapGetter('getCurrentUser');
 const { run, isPending } = useAbortableRequest();
 
-const period = ref(PERIODS[0]);
+const now = new Date();
+const dateRange = ref([subDays(now, PERIODS[0] - 1), now]);
+const rangeDays = computed(
+  () => differenceInCalendarDays(dateRange.value[1], dateRange.value[0]) + 1
+);
 const summary = ref(null);
 const hasError = ref(false);
 const isLoading = computed(
   () => isPending.value || (!summary.value && !hasError.value)
 );
 
-const stepRoute = step =>
-  step.guided
-    ? { name: 'account_home_setup', params: { step: step.key } }
-    : { name: step.route };
-
-const skippedSteps = computed(() => uiSettings.value[SKIPPED_SETTING] || []);
-const finishedSteps = computed(() => uiSettings.value[FINISHED_SETTING] || []);
-const setupProgress = computed(() =>
-  buildSetupProgress(
-    summary.value?.setup,
-    skippedSteps.value,
-    finishedSteps.value
-  )
-);
+const { progress: setupProgress } = useHomeSetupProgress(summary);
 const showSetup = computed(
   () => isAdmin.value && summary.value && !setupProgress.value.isComplete
-);
-
-const skipStep = key =>
-  updateUISettings({ [SKIPPED_SETTING]: [...skippedSteps.value, key] });
-const unskipStep = key =>
-  updateUISettings({
-    [SKIPPED_SETTING]: skippedSteps.value.filter(step => step !== key),
-  });
-
-const agentStatus = computed(() =>
-  summary.value ? statusPill(summary.value.status, t) : null
-);
-
-const subtitle = computed(() =>
-  summary.value?.site
-    ? t('HOME.V2.SUBTITLE_SITE', {
-        site: summary.value.site,
-        days: period.value,
-      })
-    : t('HOME.V2.SUBTITLE', { days: period.value })
 );
 
 const metricLabels = computed(() => ({
   ai_conversations: t('HOME.V2.METRICS.AI_CONVERSATIONS'),
   resolved: t('HOME.V2.METRICS.RESOLVED'),
   handed: t('HOME.V2.METRICS.HANDED'),
-  rating: t('HOME.V2.METRICS.RATING'),
-  product_answers: t('HOME.V2.METRICS.PRODUCT_ANSWERS'),
 }));
 
 const metrics = computed(() =>
-  METRICS.map(config => {
+  METRICS.filter(config => metricLabels.value[config.key]).map(config => {
     const metric = summary.value?.metrics?.[config.key] || {
       value: null,
       previous: null,
-      points: [],
     };
     const change = metricChange(config, metric, t);
     return {
       key: config.key,
-      tone: config.tone,
       label: metricLabels.value[config.key],
       value: metricValue(config, metric.value),
       change: change.text,
       changeTone: change.tone,
-      points: metric.points.filter(point => point !== null),
     };
   })
 );
@@ -170,8 +115,9 @@ const loadSummary = async () => {
     const response = await run(signal =>
       CaptainHomeAPI.get({
         signal,
-        period: period.value,
-        timezoneOffset: TIMEZONE_OFFSET,
+        startDate: format(dateRange.value[0], 'yyyy-MM-dd'),
+        endDate: format(dateRange.value[1], 'yyyy-MM-dd'),
+        timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
       })
     );
     if (response) summary.value = response.data;
@@ -180,133 +126,33 @@ const loadSummary = async () => {
   }
 };
 
-const selectPeriod = option => {
-  if (option === period.value) return;
-  period.value = option;
+const selectDates = dates => {
+  dateRange.value = dates;
   loadSummary();
 };
 
-const openConversation = lead =>
-  router.push({
-    name: 'inbox_conversation',
-    params: { conversation_id: lead.id },
-  });
-
-onMounted(loadSummary);
+watch(
+  () => route.params.accountId,
+  () => {
+    summary.value = null;
+    loadSummary();
+  },
+  { immediate: true }
+);
 </script>
 
 <template>
-  <PageFrame>
-    <template #header>
-      <PageHeader
-        band
-        :title="
-          $t('HOME.TITLE', {
-            name: currentUser.available_name || currentUser.name,
-          })
-        "
-        :description="subtitle"
-      >
-        <template #action>
-          <div
-            role="group"
-            :aria-label="$t('HOME.V2.PERIOD.LABEL')"
-            class="flex rounded-full bg-white/15 p-0.5"
-          >
-            <button
-              v-for="days in PERIODS"
-              :key="days"
-              type="button"
-              class="rounded-full px-3 py-1 text-xs font-medium"
-              :class="
-                days === period
-                  ? 'bg-white/25 text-white'
-                  : 'text-white/80 hover:bg-white/10'
-              "
-              :aria-pressed="days === period"
-              @click="selectPeriod(days)"
-            >
-              {{ $t('HOME.V2.PERIOD.DAYS', { days }) }}
-            </button>
-          </div>
-          <StatusPill
-            v-if="agentStatus"
-            inverted
-            :status="agentStatus.status"
-            :label="agentStatus.label"
-          />
-        </template>
-      </PageHeader>
-    </template>
-
-    <SetupProgressCard
-      v-if="showSetup"
-      :progress="setupProgress"
-      :step-route="stepRoute"
-      @skip="skipStep"
-      @unskip="unskipStep"
-    />
-
-    <MetricStrip
-      :metrics="metrics"
-      :period="period"
-      :is-loading="isLoading"
-      :has-error="hasError"
-      @retry="loadSummary"
-    />
-
-    <div class="grid grid-cols-1 gap-4 lg:grid-cols-3">
-      <div class="flex min-w-0 flex-col gap-4 lg:col-span-2">
-        <NeedsCard
-          :items="needs"
-          :is-loading="isLoading"
-          :has-error="hasError"
-          @action="item => router.push(item.to)"
-          @retry="loadSummary"
-        />
-        <LeadsCard
-          :leads="summary?.leads || []"
-          :is-loading="isLoading"
-          :has-error="hasError"
-          @open="openConversation"
-          @retry="loadSummary"
-        />
-        <SectionCard v-if="summary" :title="$t('HOME.STATUS.TITLE')">
-          <ul class="m-0 flex list-none flex-col divide-y divide-n-weak p-0">
-            <ListRow
-              v-for="item in projectStatus"
-              :key="item.key"
-              :title="item.label"
-              :tone="item.tone"
-              :meta="item.stateLabel"
-              :action-label="item.canAct ? item.stateLabel : ''"
-              @action="router.push(item.to)"
-            />
-          </ul>
-        </SectionCard>
-      </div>
-      <div class="flex min-w-0 flex-col gap-4">
-        <UsageCard
-          :usage="summary?.usage"
-          :is-loading="isLoading"
-          :has-error="hasError"
-          :billing-route="isAdmin ? { name: 'billing_settings_index' } : null"
-          @retry="loadSummary"
-        />
-        <DaysCard
-          :days="summary?.days || []"
-          :period="period"
-          :is-loading="isLoading"
-          :has-error="hasError"
-          @retry="loadSummary"
-        />
-        <TopicsCard
-          :topics="summary?.topics || []"
-          :is-loading="isLoading"
-          :has-error="hasError"
-          @retry="loadSummary"
-        />
-      </div>
-    </div>
-  </PageFrame>
+  <HomeDashboard
+    :period="rangeDays"
+    :date-range="dateRange"
+    :summary="summary"
+    :metrics="metrics"
+    :needs="needs"
+    :project-status="projectStatus"
+    :setup-progress="showSetup ? setupProgress : null"
+    :is-loading="isLoading"
+    :has-error="hasError"
+    @select-dates="selectDates"
+    @retry="loadSummary"
+  />
 </template>

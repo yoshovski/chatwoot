@@ -17,6 +17,8 @@ const props = defineProps({
   emptyText: { type: String, required: true },
   isLoading: { type: Boolean, default: false },
   hasError: { type: Boolean, default: false },
+  compact: { type: Boolean, default: false },
+  line: { type: Boolean, default: false },
 });
 const emit = defineEmits(['retry']);
 const { t, locale } = useI18n();
@@ -43,6 +45,10 @@ const isEmpty = computed(() => !sum(totals.value));
 const scale = computed(() =>
   chartScale(Math.max(...props.days.map(day => sum(day.values)), 0))
 );
+const columnGaps = computed(() => {
+  if (props.line) return '';
+  return props.days.length > 31 ? 'gap-px sm:gap-0.5' : 'gap-0.5 sm:gap-2';
+});
 const isWeek = computed(() =>
   typeof props.period === 'number'
     ? props.period <= 7
@@ -63,6 +69,17 @@ const dayLabel = date =>
     : date.toLocaleDateString(locale.value, { day: 'numeric', month: 'short' });
 
 const percent = value => `${(value / scale.value.top) * 100}%`;
+const linePaths = computed(() =>
+  props.series.map((_, seriesIndex) =>
+    props.days
+      .map((day, index) => {
+        const x = ((index + 0.5) / props.days.length) * 100;
+        const y = 100 - (day.values[seriesIndex] / scale.value.top) * 100;
+        return `${x},${y}`;
+      })
+      .join(' ')
+  )
+);
 
 const bars = computed(() =>
   props.days.map((day, index) => {
@@ -92,9 +109,11 @@ const bars = computed(() =>
       values: day.values.map((value, position) => ({
         position,
         value,
+        height: percent(value),
         label: props.series[position].label,
       })),
       label: showLabel ? dayLabel(date) : '',
+      shortLabel: date.getDate(),
       wideOnly:
         !isWeek.value &&
         index % Math.max(LABEL_EVERY_NARROW, labelEvery * 2) !== 0,
@@ -134,6 +153,7 @@ const bars = computed(() =>
           {{ item.total }}
         </dt>
         <dd
+          v-if="!compact && !line"
           class="m-0 font-display text-2xl font-semibold tabular-nums text-n-slate-12"
         >
           {{ totals[index] }}
@@ -164,8 +184,29 @@ const bars = computed(() =>
             :style="{ top: `${100 - (tick / scale.top) * 100}%` }"
             aria-hidden="true"
           />
+          <svg
+            v-if="line"
+            viewBox="0 0 100 100"
+            preserveAspectRatio="none"
+            class="pointer-events-none absolute inset-0 size-full overflow-visible"
+            aria-hidden="true"
+          >
+            <polyline
+              v-for="(points, index) in linePaths"
+              :key="series[index].label"
+              :points="points"
+              fill="none"
+              vector-effect="non-scaling-stroke"
+              stroke-width="2.5"
+              stroke-linejoin="round"
+              stroke-linecap="round"
+              :stroke-dasharray="index ? '5 3' : undefined"
+              :class="index ? 'stroke-n-amber-11' : 'stroke-n-blue-9'"
+            />
+          </svg>
           <ol
-            class="relative m-0 flex h-full list-none items-end gap-0.5 p-0 sm:gap-2"
+            class="relative m-0 flex h-full list-none items-end p-0"
+            :class="columnGaps"
           >
             <li
               v-for="bar in bars"
@@ -175,14 +216,31 @@ const bars = computed(() =>
               :aria-label="bar.ariaLabel"
             >
               <span
-                v-if="isWeek && bar.total"
+                v-if="!line && !compact && isWeek && bar.total"
                 class="mb-1 text-center text-xs font-medium tabular-nums text-n-slate-11"
                 aria-hidden="true"
               >
                 {{ bar.total }}
               </span>
               <span
-                class="mx-auto flex w-full max-w-12 flex-col justify-end gap-px overflow-hidden rounded-t-md group-hover:opacity-80"
+                v-if="line"
+                class="pointer-events-none absolute inset-y-0 start-1/2 hidden border-s border-dashed border-n-slate-8 group-hover:block group-focus-visible:block"
+                aria-hidden="true"
+              />
+              <template v-if="line && days.length === 1">
+                <span
+                  v-for="value in bar.values"
+                  :key="value.position"
+                  class="pointer-events-none absolute start-1/2 size-2 -translate-x-1/2 translate-y-1/2 rounded-full"
+                  :class="TONES[value.position].bar"
+                  :style="{ bottom: value.height }"
+                  aria-hidden="true"
+                />
+              </template>
+              <span
+                v-if="!line"
+                class="mx-auto flex w-full max-w-12 flex-col justify-end overflow-hidden rounded-t-md group-hover:opacity-80"
+                :class="{ 'gap-px': !compact }"
                 :style="{ height: bar.height }"
                 aria-hidden="true"
               >
@@ -224,13 +282,20 @@ const bars = computed(() =>
             </li>
           </ol>
         </div>
-        <div class="flex gap-0.5 sm:gap-2" aria-hidden="true">
+        <div class="flex" :class="columnGaps" aria-hidden="true">
           <span
             v-for="bar in bars"
             :key="bar.key"
             class="min-w-0 flex-1 whitespace-nowrap text-center text-xs text-n-slate-10"
           >
-            <span :class="{ 'hidden sm:inline': bar.wideOnly }">
+            <span v-if="compact && isWeek" class="sm:hidden">{{
+              bar.shortLabel
+            }}</span>
+            <span
+              :class="{
+                'hidden sm:inline': bar.wideOnly || (compact && isWeek),
+              }"
+            >
               {{ bar.label }}
             </span>
           </span>

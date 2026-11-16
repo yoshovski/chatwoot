@@ -236,7 +236,7 @@ export default {
     {
       // My open, Unassigned and Solved: the inbox's standard views.
       path: frontendURL(
-        'accounts/:accountId/:listView(mine|unassigned|solved)'
+        'accounts/:accountId/:listView(mine|unassigned|solved|open)'
       ),
       name: 'conversation_list_view',
       meta: {
@@ -247,7 +247,7 @@ export default {
     },
     {
       path: frontendURL(
-        'accounts/:accountId/:listView(mine|unassigned|solved)/conversations/:conversationId'
+        'accounts/:accountId/:listView(mine|unassigned|solved|open)/conversations/:conversationId'
       ),
       name: 'conversation_through_list_view',
       meta: {

@@ -15,11 +15,12 @@ class Captain::HomeActivityBuilder
   BOT_RESOLVED_EVENT = Captain::AssistantStatsBuilder::BOT_RESOLVED_EVENT_NAME
   PRODUCT_SOURCE_USED = [{ kind: 'product', used: true }].to_json.freeze
 
-  def initialize(account, period:, timezone_offset: nil, range: nil)
+  def initialize(account, period: PERIODS.first, timezone_offset: nil, range: nil, calendar: nil)
     @window = Captain::AssistantStatsWindow.new(range, timezone_offset) if range.present?
     @account = account
-    @period = period
-    @zone = ActiveSupport::TimeZone[timezone_name_from_offset(timezone_offset)] || Time.zone
+    @date_range = calendar&.fetch(:dates)
+    @period = @date_range ? (@date_range.last - @date_range.first).to_i + 1 : period
+    @zone = calendar&.fetch(:zone) || ActiveSupport::TimeZone[timezone_name_from_offset(timezone_offset)] || Time.zone
   end
 
   def activity
@@ -154,6 +155,8 @@ class Captain::HomeActivityBuilder
   end
 
   def dates
+    return @dates ||= @date_range.to_a if @date_range
+
     @dates ||= if @window
                  (current_range.first.to_date..current_range.last.to_date).to_a
                else
@@ -168,13 +171,17 @@ class Captain::HomeActivityBuilder
   def current_range
     return @window.current if @window
 
-    @current_range ||= zone.local(dates.first.year, dates.first.month, dates.first.day)..Time.current
+    @current_range ||= day_start(dates.first)..(@date_range ? [day_start(dates.last).end_of_day, Time.current].min : Time.current)
   end
 
   def previous_range
     return @window.previous if @window
 
-    @previous_range ||= (current_range.first - period.days)...current_range.first
+    @previous_range ||= day_start(dates.first - period)...current_range.first
+  end
+
+  def day_start(date)
+    zone.local(date.year, date.month, date.day)
   end
 
   def full_span

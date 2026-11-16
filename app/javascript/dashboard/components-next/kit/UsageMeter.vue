@@ -9,6 +9,8 @@ const props = defineProps({
   limit: { type: Number, default: null },
   valueLabel: { type: String, default: '' },
   hint: { type: String, default: '' },
+  barTone: { type: String, default: '' },
+  showUnlimitedTrack: { type: Boolean, default: false },
 });
 
 const WARN_AT = 90;
@@ -20,7 +22,7 @@ const percent = computed(() => {
   return Math.min(100, Math.round((props.used / props.limit) * 100));
 });
 const barClass = computed(() =>
-  percent.value >= WARN_AT ? 'bg-n-ruby-9' : 'bg-n-brand'
+  percent.value >= WARN_AT ? 'bg-n-ruby-9' : props.barTone || 'bg-n-brand'
 );
 </script>
 
@@ -28,7 +30,10 @@ const barClass = computed(() =>
   <div class="flex min-w-0 flex-col gap-1.5">
     <div class="flex items-baseline justify-between gap-2">
       <span class="truncate text-xs text-n-slate-11">{{ label }}</span>
-      <span class="shrink-0 text-xs tabular-nums text-n-slate-12">
+      <span
+        class="shrink-0 tabular-nums text-n-slate-12"
+        :class="showUnlimitedTrack ? 'text-sm font-medium' : 'text-xs'"
+      >
         {{ valueLabel || used }}
       </span>
     </div>
@@ -47,6 +52,11 @@ const barClass = computed(() =>
         :style="{ width: `${percent}%` }"
       />
     </div>
+    <div
+      v-else-if="showUnlimitedTrack"
+      class="h-1.5 rounded-full bg-n-alpha-2"
+      aria-hidden="true"
+    />
     <span v-if="hint" class="text-xs text-n-slate-10">{{ hint }}</span>
   </div>
 </template>
