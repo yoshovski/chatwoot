@@ -4,6 +4,8 @@ import { useRoute, useRouter } from 'vue-router';
 import { useStore, useMapGetter } from 'dashboard/composables/store';
 import { useTrack } from 'dashboard/composables';
 import { useUISettings } from 'dashboard/composables/useUISettings';
+import { useWindowSize } from '@vueuse/core';
+import wootConstants from 'dashboard/constants/globals';
 import { BUS_EVENTS } from 'shared/constants/busEvents';
 import { INBOX_EVENTS } from 'dashboard/helper/AnalyticsHelper/events';
 import { emitter } from 'shared/helpers/mitt';
@@ -18,7 +20,16 @@ import ConversationSidebar from 'dashboard/components/widgets/conversation/Conve
 const route = useRoute();
 const router = useRouter();
 const store = useStore();
-const { uiSettings } = useUISettings();
+const { uiSettings, updateUISettings } = useUISettings();
+const { width: windowWidth } = useWindowSize();
+const isSmallScreen = computed(
+  () => windowWidth.value < wootConstants.SMALL_SCREEN_BREAKPOINT
+);
+const closeContactPanel = () =>
+  updateUISettings({
+    is_contact_sidebar_open: false,
+    is_copilot_panel_open: false,
+  });
 
 const isConversationLoading = ref(false);
 
@@ -205,7 +216,7 @@ onMounted(async () => {
       >
         <Spinner class="text-n-brand" />
       </div>
-      <div v-else class="flex h-[calc(100%-48px)] min-w-0">
+      <div v-else class="relative flex h-[calc(100%-48px)] min-w-0">
         <ConversationBox
           class="flex-1 [&.conversation-details-wrap]:!border-0"
           is-inbox-view
@@ -217,6 +228,8 @@ onMounted(async () => {
         <ConversationSidebar
           v-if="isContactPanelOpen"
           :current-chat="currentChat"
+          :is-drawer="isSmallScreen"
+          @close="closeContactPanel"
         />
       </div>
     </div>

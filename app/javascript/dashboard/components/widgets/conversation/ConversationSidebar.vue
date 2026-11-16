@@ -1,68 +1,71 @@
 <script setup>
-import { computed } from 'vue';
+import { nextTick, onBeforeUnmount, ref, watch } from 'vue';
 import ContactPanel from 'dashboard/routes/dashboard/conversation/ContactPanel.vue';
-import { useUISettings } from 'dashboard/composables/useUISettings';
-import { useWindowSize } from '@vueuse/core';
-import { vOnClickOutside } from '@vueuse/components';
-import wootConstants from 'dashboard/constants/globals';
 
-defineProps({
+const props = defineProps({
   currentChat: {
     required: true,
     type: Object,
   },
+  // Floats over the thread instead of sitting beside it, where docking would
+  // leave the thread too narrow to read.
+  isDrawer: {
+    type: Boolean,
+    default: false,
+  },
 });
 
-const { uiSettings, updateUISettings } = useUISettings();
+const emit = defineEmits(['close']);
 
-const { width: windowWidth } = useWindowSize();
+const panelRef = ref(null);
+let focusBeforeDrawer = null;
 
-const activeTab = computed(() => {
-  const { is_contact_sidebar_open: isContactSidebarOpen } = uiSettings.value;
+const restoreFocus = () => {
+  if (focusBeforeDrawer?.isConnected) focusBeforeDrawer.focus();
+  focusBeforeDrawer = null;
+};
 
-  if (isContactSidebarOpen) {
-    return 0;
-  }
-  return null;
-});
-
-const isSmallScreen = computed(
-  () => windowWidth.value < wootConstants.SMALL_SCREEN_BREAKPOINT
+watch(
+  () => props.isDrawer,
+  async isDrawer => {
+    if (!isDrawer) {
+      focusBeforeDrawer = null;
+      return;
+    }
+    focusBeforeDrawer = document.activeElement;
+    await nextTick();
+    panelRef.value?.focus();
+  },
+  { immediate: true }
 );
 
-const closeContactPanel = () => {
-  if (isSmallScreen.value && uiSettings.value?.is_contact_sidebar_open) {
-    updateUISettings({
-      is_contact_sidebar_open: false,
-      is_copilot_panel_open: false,
-    });
-  }
-};
+onBeforeUnmount(() => {
+  if (props.isDrawer) restoreFocus();
+});
 </script>
 
 <template>
   <div
-    v-on-click-outside="[
-      () => closeContactPanel(),
-      {
-        ignore: [
-          'dialog.ProseMirror-prompt-backdrop',
-          '[data-popover-content]',
-          '[data-popover-backdrop]',
-        ],
-      },
-    ]"
-    class="bg-n-background h-full overflow-hidden flex flex-col fixed top-0 z-40 w-full max-w-sm p-3 transition-transform duration-300 ease-in-out ltr:right-0 rtl:left-0 shadow-lg md:static md:w-[21rem] md:min-w-[21rem] xl:w-[22rem] xl:min-w-[22rem] md:p-0 md:bg-transparent md:shadow-none"
-    :class="[
-      {
-        'md:flex': activeTab === 0,
-        'md:hidden': activeTab !== 0,
-      },
-    ]"
+    v-if="isDrawer"
+    class="absolute inset-0 z-30 bg-n-alpha-black2"
+    @click="emit('close')"
+  />
+  <div
+    ref="panelRef"
+    data-conversation-details
+    :role="isDrawer ? 'dialog' : 'complementary'"
+    :aria-label="$t('CONVERSATION.SIDEBAR.CONTACT')"
+    tabindex="-1"
+    class="flex flex-col h-full overflow-hidden outline-none"
+    :class="
+      isDrawer
+        ? 'absolute inset-y-0 end-0 z-40 w-full max-w-sm p-3 bg-n-background shadow-lg'
+        : 'w-[21rem] min-w-[21rem] xl:w-[22rem] xl:min-w-[22rem]'
+    "
+    @keydown.esc.stop="isDrawer && emit('close')"
   >
     <div class="flex flex-col flex-1 min-h-0 overflow-hidden">
       <ContactPanel
-        v-show="activeTab === 0"
         :conversation-id="currentChat.id"
         :inbox-id="currentChat.inbox_id"
       />
