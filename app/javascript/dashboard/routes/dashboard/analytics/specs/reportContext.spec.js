@@ -1,7 +1,6 @@
 import { mount, flushPromises } from '@vue/test-utils';
 import { createMemoryHistory, createRouter } from 'vue-router';
 import Index from '../Index.vue';
-import MetricTiles from '../components/MetricTiles.vue';
 
 vi.mock('vue-i18n', () => ({
   useI18n: () => ({
@@ -79,28 +78,5 @@ it('preserves Overview ranges through refresh, tab navigation and history', asyn
   expect(wrapper.get('[role="status"]').text()).toContain(
     'ANALYTICS.UNSUPPORTED_PERIOD'
   );
-  wrapper.unmount();
-});
-
-it('renders definitions as native keyboard and touch disclosure controls', () => {
-  const wrapper = mount(MetricTiles, {
-    props: {
-      tiles: [
-        {
-          key: 'handed',
-          label: 'Handed to team',
-          value: 0,
-          icon: 'i-lucide-users',
-          tone: 'amber',
-          hint: 'More handoffs can mean correct escalation.',
-        },
-      ],
-    },
-    global: { mocks: { $t: key => key }, stubs: { MetricTile: true } },
-  });
-  expect(wrapper.get('details summary').text()).toContain(
-    'ANALYTICS.METRIC_DEFINITION'
-  );
-  expect(wrapper.get('details p').text()).toContain('correct escalation');
   wrapper.unmount();
 });

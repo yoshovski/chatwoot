@@ -172,21 +172,6 @@ export const METRICS = {
   },
 };
 
-const metricDefinitions = t => ({
-  conversations: t('ANALYTICS.DEFINITIONS.CONVERSATIONS'),
-  ai_conversations: t('ANALYTICS.DEFINITIONS.AI_CONVERSATIONS'),
-  resolved: t('ANALYTICS.DEFINITIONS.RESOLVED'),
-  handed: t('ANALYTICS.DEFINITIONS.HANDED'),
-  product_answers: t('ANALYTICS.DEFINITIONS.PRODUCT_ANSWERS'),
-  first_reply: t('ANALYTICS.DEFINITIONS.FIRST_REPLY'),
-  resolution_time: t('ANALYTICS.DEFINITIONS.RESOLUTION_TIME'),
-  team_solved: t('ANALYTICS.DEFINITIONS.TEAM_SOLVED'),
-  rating: t('ANALYTICS.DEFINITIONS.RATING'),
-  ratings_count: t('ANALYTICS.DEFINITIONS.RATINGS_COUNT'),
-  happy_share: t('ANALYTICS.DEFINITIONS.HAPPY_SHARE'),
-  reply_share: t('ANALYTICS.DEFINITIONS.REPLY_SHARE'),
-});
-
 const EMPTY = { value: null, previous: null, points: [] };
 
 const pair = (current, previous, key) => ({
@@ -270,7 +255,6 @@ export const metricView = (key, metric, label, t) => {
         ? t('ANALYTICS.NO_COMPARISON')
         : ''),
     changeTone: config.neutralTrend ? 'neutral' : change.tone,
-    hint: metricDefinitions(t)[key],
     points: (metric.points || []).filter(point => point !== null),
   };
 };
