@@ -21,6 +21,7 @@ import { useListSelection } from 'dashboard/components-next/captain/list/useList
 import Input from 'dashboard/components-next/input/Input.vue';
 import Button from 'next/button/Button.vue';
 import PageLayout from 'dashboard/components-next/captain/PageLayout.vue';
+import KnowledgeLoadError from 'dashboard/components-next/captain/knowledge/KnowledgeLoadError.vue';
 import TestAgentButton from 'dashboard/components-next/captain/TestAgentButton.vue';
 import CaptainPaywall from 'dashboard/components-next/captain/pageComponents/Paywall.vue';
 import DocumentDetails from 'dashboard/components-next/captain/pageComponents/document/DocumentDetails.vue';
@@ -43,6 +44,9 @@ const { currentAccount } = useAccount();
 const uiFlags = useMapGetter('captainDocuments/getUIFlags');
 const documents = useMapGetter('captainDocuments/getRecords');
 const isFetching = computed(() => uiFlags.value.fetchingList);
+const loadError = ref(false);
+const hasLoaded = ref(false);
+const requestedPage = ref(1);
 const documentsMeta = useMapGetter('captainDocuments/getMeta');
 
 const selectedAssistantId = computed(() => Number(route.params.assistantId));
@@ -140,6 +144,7 @@ const fetchDocuments = async (page = 1, { showLoader = true } = {}) => {
   documentsRequestId += 1;
   const requestId = documentsRequestId;
   const filterParams = buildDocumentFilterParams(page);
+  requestedPage.value = page;
 
   if (showLoader) {
     fetchingListRequestId = requestId;
@@ -155,11 +160,14 @@ const fetchDocuments = async (page = 1, { showLoader = true } = {}) => {
 
     const { payload, meta } = response.data;
     store.dispatch('captainDocuments/setRecords', { records: payload, meta });
+    loadError.value = false;
+    hasLoaded.value = true;
     syncIntervalHours.value = Number(meta?.sync_interval_hours) || null;
     return payload;
   } catch (error) {
     if (isCurrentDocumentRequest(requestId, filterParams)) {
-      throw error;
+      loadError.value = true;
+      selection.clear();
     }
     return [];
   } finally {
@@ -174,7 +182,7 @@ const refreshDocumentsPage = (
   page = documentsMeta.value?.page || 1,
   { showLoader = false } = {}
 ) => {
-  return fetchDocuments(page, { showLoader }).catch(() => {});
+  return fetchDocuments(page, { showLoader });
 };
 
 const onFiltersChanged = () => {
@@ -187,10 +195,29 @@ const debouncedSearch = debounce(onFiltersChanged, 300);
 const syncPollStartedAt = ref(null);
 
 const hasDocumentsSyncing = computed(() =>
-  (documents.value || []).some(doc => doc.sync_in_progress)
+  (documents.value || []).some(
+    doc => doc.sync_in_progress || doc.status === 'in_progress'
+  )
 );
 
-const hasSyncingDocuments = computed(() => hasDocumentsSyncing.value);
+const hasSyncingDocuments = computed(
+  () => hasDocumentsSyncing.value || discoveringWebsites.value.length > 0
+);
+
+const websiteProgress = site => {
+  if (site.status === 'failed' || site.recoverable)
+    return t('CAPTAIN.DOCUMENTS.IMPORT_FAILED');
+  if (['pending', 'discovering'].includes(site.status))
+    return t('CAPTAIN.DOCUMENTS.KNOWLEDGE_STATE.FINDING_PAGES');
+  const imported = (site.pages || []).filter(page => page.document_id);
+  if (!imported.length) return t('CAPTAIN.DOCUMENTS.IMPORT_REVIEW');
+  return t('CAPTAIN.DOCUMENTS.IMPORT_PROGRESS', {
+    ready: imported.filter(page => page.knowledge_state === 'searchable')
+      .length,
+    total: imported.length,
+    failed: imported.filter(page => page.sync_status === 'failed').length,
+  });
+};
 
 const isWithinSyncPollWindow = () =>
   syncPollStartedAt.value &&
@@ -207,11 +234,8 @@ function stopSyncPolling() {
 }
 
 async function pollSyncDocuments() {
-  try {
-    await refreshDocumentsPage();
-  } catch (error) {
-    // Keep the existing polling decision based on the last known sync state.
-  }
+  await refreshDocumentsPage();
+  documentSectionsPanel.value?.load();
 
   if (!shouldContinueSyncPolling()) {
     stopSyncPolling();
@@ -338,6 +362,15 @@ const hasActiveDocumentFilters = computed(
     sourceFilter.value !== 'all'
 );
 
+const isFirstUse = computed(
+  () =>
+    hasLoaded.value &&
+    !loadError.value &&
+    !documents.value.length &&
+    !websiteSources.value.length &&
+    !hasActiveDocumentFilters.value
+);
+
 const shopifyHook = ref(null);
 
 // Hosts of the connected Shopify store, without "www.", for the add-document form's defaults.
@@ -379,6 +412,12 @@ watch(
     searchQuery.value = '';
     sourceFilter.value = 'all';
     selection.clear();
+    loadError.value = false;
+    hasLoaded.value = false;
+    store.dispatch('captainDocuments/setRecords', {
+      records: [],
+      meta: { page: 1, total_count: 0 },
+    });
     syncIntervalHours.value = null;
     stopSyncPolling();
     await fetchDocuments(1);
@@ -396,18 +435,14 @@ onUnmounted(() => {
 <template>
   <PageLayout
     :header-title="$t('CAPTAIN.AGENT_UX.SECTIONS.KNOWLEDGE')"
-    :button-label="$t('CAPTAIN.DOCUMENTS.ADD_NEW')"
+    :button-label="isFirstUse ? '' : $t('CAPTAIN.DOCUMENTS.ADD_NEW')"
     :button-policy="['administrator']"
     :show-know-more="false"
     :total-count="documentsMeta.totalCount"
     :current-page="documentsMeta.page"
     :show-pagination-footer="!isFetching && documentsMeta.totalCount > 25"
     :is-fetching="isFetching"
-    :is-empty="
-      !documents.length &&
-      !discoveringWebsites.length &&
-      !hasActiveDocumentFilters
-    "
+    :is-empty="isFirstUse"
     :feature-flag="FEATURE_FLAGS.CAPTAIN"
     @update:current-page="onPageChange"
     @click="handleCreateDocument"
@@ -431,13 +466,17 @@ onUnmounted(() => {
         v-model:source="sourceFilter"
         :assistant-id="selectedAssistantId"
         :can-manage="canManageDocuments"
+        :active-filter-count="
+          (documentFilter?.activeFilterCount || 0) +
+          Number(sourceFilter !== 'all')
+        "
         @manage="websitePagesDialog.open($event)"
         @websites-loaded="websiteSources = $event"
       >
         <Input
           v-model="searchQuery"
           :placeholder="$t('CAPTAIN.DOCUMENTS.FILTERS.SEARCH_PLACEHOLDER')"
-          class="max-w-64 min-w-0 w-full"
+          class="min-w-0 flex-1 sm:max-w-64"
           size="sm"
           type="search"
           @input="debouncedSearch"
@@ -453,10 +492,16 @@ onUnmounted(() => {
     </template>
 
     <template #body>
+      <KnowledgeLoadError
+        v-if="loadError"
+        :stale="documents.length > 0"
+        :title="$t('CAPTAIN.DOCUMENTS.LOAD_ERROR')"
+        @retry="fetchDocuments(requestedPage)"
+      />
       <LimitBanner class="mb-5" />
 
       <div
-        v-if="!documents.length && hasActiveDocumentFilters"
+        v-if="!loadError && !documents.length && hasActiveDocumentFilters"
         class="flex flex-col items-center justify-center min-h-80 gap-2 text-center"
       >
         <span class="text-base font-medium text-n-slate-12">
@@ -473,13 +518,13 @@ onUnmounted(() => {
         />
       </div>
 
-      <template v-else>
+      <template v-else-if="hasLoaded || discoveringWebsites.length">
         <div
-          v-if="sourceFilter === 'all' && discoveringWebsites.length"
+          v-if="sourceFilter === 'all' && websiteSources.length"
           class="flex flex-col gap-2 mb-4"
         >
           <div
-            v-for="site in discoveringWebsites"
+            v-for="site in websiteSources"
             :key="`discovering-${site.id}`"
             class="flex items-center justify-between p-3.5 rounded-xl border border-n-weak bg-n-alpha-1 gap-3"
           >
@@ -488,7 +533,12 @@ onUnmounted(() => {
                 class="flex items-center justify-center size-8 rounded-lg shrink-0 bg-n-blue-3 text-n-blue-11 dark:bg-n-blue-3/20"
               >
                 <span
-                  class="i-lucide-loader-circle size-4 animate-spin"
+                  class="size-4"
+                  :class="
+                    ['pending', 'discovering'].includes(site.status)
+                      ? 'i-lucide-loader-circle animate-spin'
+                      : 'i-lucide-globe'
+                  "
                   aria-hidden="true"
                 />
               </div>
@@ -497,7 +547,7 @@ onUnmounted(() => {
                   {{ hostOf(site.url) }}
                 </span>
                 <span class="text-xs text-n-slate-11">
-                  {{ $t('CAPTAIN.DOCUMENTS.KNOWLEDGE_STATE.FINDING_PAGES') }}
+                  {{ websiteProgress(site) }}
                 </span>
               </div>
             </div>
@@ -513,14 +563,16 @@ onUnmounted(() => {
         </div>
 
         <section
+          v-if="documents.length"
           :aria-label="$t('PLATFORM_NAV.DATA_SOURCES')"
           class="rounded-card bg-n-solid-2 shadow-card outline outline-1 -outline-offset-1 outline-n-container overflow-hidden"
         >
           <ListHeader
             :selection="selection"
-            :selectable="canManageDocuments"
+            :selectable="canManageDocuments && !loadError"
             :label="$t('KNOWLEDGE_LIST.COLUMNS.NAME')"
             :columns="['status', 'updated', 'actions']"
+            stack-status
           >
             <Button
               v-if="hasActiveDocumentFilters"
@@ -541,6 +593,7 @@ onUnmounted(() => {
             :syncable="doc.syncable"
             :assistant="doc.assistant"
             :created-at="doc.created_at"
+            :updated-at="doc.updated_at"
             :status="doc.status"
             :enabled="doc.enabled !== false"
             :sync-status="doc.sync_status"
@@ -550,7 +603,7 @@ onUnmounted(() => {
             :sync-stale-after-hours="syncIntervalHours"
             :responses-count="doc.responses_count"
             :knowledge-state="doc.knowledge_state"
-            :selectable="canManageDocuments"
+            :selectable="canManageDocuments && !loadError"
             :is-selected="selection.isSelected(doc.id)"
             @action="handleAction"
             @select="selection.toggle"
@@ -558,7 +611,7 @@ onUnmounted(() => {
           />
         </section>
         <KnowledgeBulkActions
-          v-if="canManageDocuments"
+          v-if="canManageDocuments && !loadError"
           type="AssistantDocument"
           :selection="selection"
           :total="documentsMeta.totalCount || 0"

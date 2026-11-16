@@ -37,7 +37,12 @@ const reset = (nextStatus = null) => {
   sort.value = 'recently_updated';
 };
 
-defineExpose({ buildParams, reset, hasActiveFilters });
+const activeFilterCount = computed(
+  () =>
+    Number(Boolean(status.value)) + Number(sort.value !== 'recently_updated')
+);
+
+defineExpose({ buildParams, reset, hasActiveFilters, activeFilterCount });
 </script>
 
 <template>

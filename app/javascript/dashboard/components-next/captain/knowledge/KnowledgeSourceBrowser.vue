@@ -13,6 +13,7 @@ const props = defineProps({
   assistantId: { type: Number, required: true },
   // Administrators can choose which discovered pages become knowledge.
   canManage: { type: Boolean, default: false },
+  activeFilterCount: { type: Number, default: 0 },
 });
 const emit = defineEmits(['loaded', 'manage', 'websitesLoaded']);
 // 'all', 'pdf', 'text', or a website host.
@@ -24,6 +25,7 @@ const sections = ref([]);
 const websiteSources = ref([]);
 const error = ref(false);
 const menuOpen = ref(false);
+const filtersOpen = ref(false);
 const websitesOpen = ref(false);
 
 const FILE_SOURCES = [
@@ -161,8 +163,7 @@ const loadSources = async () => {
       emit('websitesLoaded', response.data);
     }
   } catch {
-    websiteSources.value = [];
-    emit('websitesLoaded', []);
+    error.value = true;
   }
 };
 const load = async () => {
@@ -196,25 +197,47 @@ defineExpose({ load });
   <div class="flex flex-col gap-3 mb-3">
     <div class="flex flex-wrap items-center gap-2">
       <slot />
-      <div v-on-click-outside="() => (menuOpen = false)" class="relative">
-        <Button
-          icon="i-lucide-layers"
-          slate
-          size="sm"
-          :class="{ 'bg-n-slate-9/10': menuOpen }"
-          @click="menuOpen = !menuOpen"
+      <Button
+        class="sm:hidden"
+        icon="i-lucide-sliders-horizontal"
+        size="sm"
+        variant="faded"
+        color="slate"
+        :aria-expanded="filtersOpen"
+        aria-controls="knowledge-filters"
+        :label="`${t('CAPTAIN.DOCUMENTS.FILTERS.MOBILE')}${activeFilterCount ? ` (${activeFilterCount})` : ''}`"
+        @click="filtersOpen = !filtersOpen"
+      />
+      <div
+        id="knowledge-filters"
+        class="flex-wrap items-center gap-2 sm:flex"
+        :class="filtersOpen ? 'flex w-full sm:w-auto' : 'hidden'"
+      >
+        <div
+          v-on-click-outside="() => (menuOpen = false)"
+          class="relative min-w-0"
         >
-          <span class="min-w-0 truncate max-w-56">{{ selectedLabel }}</span>
-          <Icon icon="i-lucide-chevron-down" class="shrink-0 size-4" />
-        </Button>
-        <DropdownMenu
-          v-if="menuOpen"
-          :menu-sections="menuSections"
-          class="z-30 mt-2 top-full min-w-72 max-h-96 overflow-y-auto ltr:left-0 rtl:right-0"
-          @action="pick"
-        />
+          <Button
+            icon="i-lucide-layers"
+            slate
+            size="sm"
+            :class="{ 'bg-n-slate-9/10': menuOpen }"
+            @click="menuOpen = !menuOpen"
+          >
+            <span class="min-w-0 truncate max-w-40 sm:max-w-56">{{
+              selectedLabel
+            }}</span>
+            <Icon icon="i-lucide-chevron-down" class="shrink-0 size-4" />
+          </Button>
+          <DropdownMenu
+            v-if="menuOpen"
+            :menu-sections="menuSections"
+            class="z-30 mt-2 top-full w-64 sm:w-auto sm:min-w-72 max-h-96 overflow-y-auto ltr:left-0 rtl:right-0"
+            @action="pick"
+          />
+        </div>
+        <slot name="filters" />
       </div>
-      <slot name="filters" />
       <div
         v-if="canManage && websiteSources.length && !discoveringWebsites.length"
         v-on-click-outside="() => (websitesOpen = false)"
@@ -231,7 +254,7 @@ defineExpose({ load });
         <DropdownMenu
           v-if="websitesOpen"
           :menu-items="websiteItems"
-          class="z-30 mt-2 top-full min-w-72 max-h-96 overflow-y-auto ltr:right-0 rtl:left-0"
+          class="z-30 mt-2 top-full w-64 sm:w-auto sm:min-w-72 max-h-96 overflow-y-auto ltr:right-0 rtl:left-0"
           @action="manageWebsite"
         />
       </div>

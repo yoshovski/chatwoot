@@ -1,56 +1,23 @@
 <script setup>
-import { useAccount } from 'dashboard/composables/useAccount';
-import { useBranding } from 'shared/composables/useBranding';
-import EmptyStateLayout from 'dashboard/components-next/EmptyStateLayout.vue';
-import Button from 'dashboard/components-next/button/Button.vue';
-import DocumentCard from 'dashboard/components-next/captain/assistant/DocumentCard.vue';
-import FeatureSpotlight from 'dashboard/components-next/feature-spotlight/FeatureSpotlight.vue';
-import { documentsList } from 'dashboard/components-next/captain/pageComponents/emptyStates/captainEmptyStateContent.js';
+import EmptyState from 'dashboard/components-next/kit/EmptyState.vue';
+import Button from 'next/button/Button.vue';
+import Policy from 'dashboard/components/policy.vue';
 
-const emit = defineEmits(['click']);
-const { isOnChatwootCloud } = useAccount();
-
-const { replaceInstallationName } = useBranding();
-
-const onClick = () => {
-  emit('click');
-};
+defineEmits(['click']);
 </script>
 
 <template>
-  <FeatureSpotlight
-    :title="$t('CAPTAIN.DOCUMENTS.EMPTY_STATE.FEATURE_SPOTLIGHT.TITLE')"
-    :note="$t('CAPTAIN.DOCUMENTS.EMPTY_STATE.FEATURE_SPOTLIGHT.NOTE')"
-    fallback-thumbnail="/assets/images/dashboard/captain/document-light.svg"
-    fallback-thumbnail-dark="/assets/images/dashboard/captain/document-dark.svg"
-    learn-more-url="https://chwt.app/captain-document"
-    :hide-actions="!isOnChatwootCloud"
-    class="mb-8"
-  />
-  <EmptyStateLayout
+  <EmptyState
     :title="$t('CAPTAIN.DOCUMENTS.EMPTY_STATE.TITLE')"
-    :subtitle="$t('CAPTAIN.DOCUMENTS.EMPTY_STATE.SUBTITLE')"
-    :action-perms="['administrator']"
+    :description="$t('CAPTAIN.DOCUMENTS.EMPTY_STATE.SUBTITLE')"
+    icon="i-lucide-book-open"
   >
-    <template #empty-state-item>
-      <div class="grid grid-cols-1 gap-4 p-px overflow-hidden">
-        <DocumentCard
-          v-for="(document, index) in documentsList.slice(0, 5)"
-          :id="document.id"
-          :key="`document-${index}`"
-          :name="replaceInstallationName(document.name)"
-          :assistant="document.assistant"
-          :external-link="document.external_link"
-          :created-at="document.created_at"
-        />
-      </div>
-    </template>
-    <template #actions>
+    <Policy :permissions="['administrator']">
       <Button
         :label="$t('CAPTAIN.DOCUMENTS.ADD_NEW')"
         icon="i-lucide-plus"
-        @click="onClick"
+        @click="$emit('click')"
       />
-    </template>
-  </EmptyStateLayout>
+    </Policy>
+  </EmptyState>
 </template>

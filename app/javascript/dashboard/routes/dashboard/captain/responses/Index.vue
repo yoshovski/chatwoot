@@ -16,6 +16,8 @@ import Icon from 'dashboard/components-next/icon/Icon.vue';
 import Input from 'dashboard/components-next/input/Input.vue';
 import DeleteDialog from 'dashboard/components-next/captain/pageComponents/DeleteDialog.vue';
 import PageLayout from 'dashboard/components-next/captain/PageLayout.vue';
+import EmptyState from 'dashboard/components-next/kit/EmptyState.vue';
+import KnowledgeLoadError from 'dashboard/components-next/captain/knowledge/KnowledgeLoadError.vue';
 import TestAgentButton from 'dashboard/components-next/captain/TestAgentButton.vue';
 import CaptainPaywall from 'dashboard/components-next/captain/pageComponents/Paywall.vue';
 import FaqRow from 'dashboard/components-next/captain/list/FaqRow.vue';
@@ -35,6 +37,9 @@ const uiFlags = useMapGetter('captainResponses/getUIFlags');
 const responseMeta = useMapGetter('captainResponses/getMeta');
 const responses = useMapGetter('captainResponses/getRecords');
 const isFetching = computed(() => uiFlags.value.fetchingList);
+const loadError = ref(false);
+const hasLoaded = ref(false);
+const requestedPage = ref(1);
 
 const selectedResponse = ref(null);
 const usageResponse = ref(null);
@@ -215,6 +220,7 @@ const updateURLWithFilters = (page, search, docId, sourceType) => {
 const { run: runListRequest, abort: abortListRequest } = useAbortableRequest();
 
 const fetchResponses = async (page = 1) => {
+  requestedPage.value = page;
   const filterParams = { page };
 
   if (selectedAssistantId.value) {
@@ -247,13 +253,16 @@ const fetchResponses = async (page = 1) => {
 
     if (!response) return;
 
+    loadError.value = false;
+    hasLoaded.value = true;
     store.dispatch('captainResponses/setRecords', {
       records: response.data.payload,
       meta: response.data.meta,
     });
     store.dispatch('captainResponses/setFetchingList', false);
   } catch (error) {
-    useAlert(error?.message || t('CAPTAIN.RESPONSES.ERRORS.LOAD'));
+    loadError.value = true;
+    selection.clear();
     store.dispatch('captainResponses/setFetchingList', false);
   }
 };
@@ -282,6 +291,14 @@ const hasActiveFilters = computed(
     Boolean(searchQuery.value) ||
     Boolean(documentIdFilter.value) ||
     Boolean(sourceTypeFilter.value)
+);
+
+const isFirstUse = computed(
+  () =>
+    hasLoaded.value &&
+    !loadError.value &&
+    !responses.value.length &&
+    !hasActiveFilters.value
 );
 
 const clearFilters = () => {
@@ -349,6 +366,8 @@ const navigateToFaqSuggestions = () => {
 watch(
   selectedAssistantId,
   () => {
+    loadError.value = false;
+    hasLoaded.value = false;
     selectedResponse.value = null;
     usageResponse.value = null;
     showResponseUsage.value = false;
@@ -378,9 +397,9 @@ onUnmounted(() => {
     :button-policy="['administrator']"
     :header-title="$t('CAPTAIN.AGENT_UX.SECTIONS.KNOWLEDGE')"
     :show-know-more="false"
-    :button-label="$t('CAPTAIN.RESPONSES.ADD_NEW')"
+    :button-label="isFirstUse ? '' : $t('CAPTAIN.RESPONSES.ADD_NEW')"
     :is-fetching="isFetching"
-    :is-empty="!responses.length && !hasActiveFilters"
+    :is-empty="isFirstUse"
     :show-pagination-footer="
       !isFetching && (responseMeta?.totalCount || 0) > 25
     "
@@ -391,7 +410,7 @@ onUnmounted(() => {
     <template #headerActions>
       <TestAgentButton :assistant-id="selectedAssistantId" />
     </template>
-    <template #subHeader>
+    <template #controls>
       <div class="flex flex-wrap items-center gap-2 mb-3">
         <Input
           v-model="searchQuery"
@@ -432,6 +451,7 @@ onUnmounted(() => {
           </span>
           <button
             type="button"
+            :aria-label="$t('PLATFORM_NAV.CLEAR_FILTERS')"
             class="hover:opacity-75"
             @click="clearDocumentFilter"
           >
@@ -450,6 +470,23 @@ onUnmounted(() => {
     </template>
 
     <template #body>
+      <KnowledgeLoadError
+        v-if="loadError"
+        :stale="responses.length > 0"
+        :title="$t('CAPTAIN.RESPONSES.ERRORS.LOAD')"
+        @retry="fetchResponses(requestedPage)"
+      />
+      <EmptyState
+        v-else-if="hasLoaded && !responses.length && hasActiveFilters"
+        :title="$t('CAPTAIN.RESPONSES.EMPTY_STATE.FILTERED_TITLE')"
+        :description="$t('CAPTAIN.RESPONSES.EMPTY_STATE.FILTERED_SUBTITLE')"
+        icon="i-lucide-search"
+      >
+        <Button
+          :label="$t('PLATFORM_NAV.CLEAR_FILTERS')"
+          @click="clearFilters"
+        />
+      </EmptyState>
       <LimitBanner class="mb-5" />
       <Banner
         v-if="suggestionCount > 0"
@@ -462,12 +499,13 @@ onUnmounted(() => {
       </Banner>
 
       <section
+        v-if="responses.length"
         :aria-label="$t('PLATFORM_NAV.FAQS')"
         class="border rounded-xl border-n-weak bg-n-solid-1"
       >
         <ListHeader
           :selection="selection"
-          :selectable="canManage"
+          :selectable="canManage && !loadError"
           :label="$t('KNOWLEDGE_LIST.COLUMNS.QUESTION')"
           :columns="['from', 'updated', 'inUse', 'actions']"
         >
@@ -489,7 +527,7 @@ onUnmounted(() => {
           :enabled="response.enabled !== false"
           :updated-at="response.updated_at || response.created_at"
           :used-in-conversations-count="response.used_in_conversations_count"
-          :can-manage="canManage"
+          :can-manage="canManage && !loadError"
           :is-selected="selection.isSelected(response.id)"
           @action="handleAction"
           @navigate="handleNavigationAction"
@@ -499,7 +537,7 @@ onUnmounted(() => {
         />
       </section>
       <KnowledgeBulkActions
-        v-if="canManage"
+        v-if="canManage && !loadError"
         type="AssistantResponse"
         :selection="selection"
         :total="responseMeta.totalCount || 0"

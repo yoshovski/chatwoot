@@ -18,6 +18,7 @@ vi.mock('dashboard/composables/store', async () => {
   mocks.getterValues = {
     'captainResponses/getRecords': ref([]),
     'captainResponses/getMeta': ref({ totalCount: 0, page: 1 }),
+    'captainFaqSuggestions/getOpenCount': ref(0),
     'captainResponses/getUIFlags': ref({
       fetchingList: false,
       updatingItem: false,
@@ -69,8 +70,9 @@ vi.mock('vue-router', async importOriginal => {
 });
 
 const PageLayoutStub = {
+  props: ['isEmpty', 'isFetching'],
   template:
-    '<div><slot name="controls" /><slot name="subHeader" /><slot name="body" /></div>',
+    '<div><slot name="controls" /><div v-if="isFetching">Loading</div><slot v-else-if="isEmpty" name="emptyState" /><slot v-else name="body" /></div>',
 };
 
 const mountPage = () =>
@@ -93,6 +95,16 @@ const mountPage = () =>
 describe('Captain Responses Index', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mocks.dispatch.mockImplementation((action, payload) => {
+      if (action.endsWith('/setFetchingList'))
+        mocks.getterValues['captainResponses/getUIFlags'].value.fetchingList =
+          payload;
+      if (action === 'captainResponses/setRecords') {
+        mocks.getterValues['captainResponses/getRecords'].value =
+          payload.records;
+      }
+      return Promise.resolve([]);
+    });
     mocks.route.params = { accountId: 1, assistantId: 2 };
     mocks.route.query = {};
     mocks.getterValues['captainResponses/getRecords'].value = [];
@@ -125,6 +137,53 @@ describe('Captain Responses Index', () => {
     // Check that source filter chip is displayed
     expect(wrapper.text()).toContain('From: Refund policy');
 
+    wrapper.unmount();
+  });
+  it('shows an error for HTTP 503 and retries with search and source filters intact', async () => {
+    mocks.route.query = { search: 'shipping', source_type: 'file' };
+    mocks.apiGet.mockRejectedValueOnce({ response: { status: 503 } });
+    const wrapper = mountPage();
+    await flushPromises();
+    expect(
+      wrapper.findComponent({ name: 'ResponsePageEmptyState' }).exists()
+    ).toBe(false);
+    wrapper.findComponent({ name: 'KnowledgeLoadError' }).vm.$emit('retry');
+    await flushPromises();
+    expect(mocks.apiGet).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        search: 'shipping',
+        origin: 'file',
+        assistantId: 2,
+      })
+    );
+    expect(wrapper.findComponent({ name: 'KnowledgeLoadError' }).exists()).toBe(
+      false
+    );
+    expect(wrapper.findComponent({ name: 'EmptyState' }).props('title')).toBe(
+      'CAPTAIN.RESPONSES.EMPTY_STATE.FILTERED_TITLE'
+    );
+    wrapper.unmount();
+  });
+
+  it('retains FAQs and labels them stale after a failed refresh', async () => {
+    mocks.apiGet.mockResolvedValueOnce({
+      data: {
+        payload: [{ id: 1, question: 'Returns?', answer: 'Within 30 days.' }],
+        meta: { page: 1, total_count: 1 },
+      },
+    });
+    const wrapper = mountPage();
+    await flushPromises();
+    mocks.apiGet.mockRejectedValueOnce(new Error('Unavailable'));
+    await wrapper.vm.fetchResponses();
+    await flushPromises();
+    expect(
+      wrapper.findComponent({ name: 'KnowledgeLoadError' }).props('stale')
+    ).toBe(true);
+    expect(wrapper.findAllComponents({ name: 'FaqRow' })).toHaveLength(1);
+    expect(
+      wrapper.findComponent({ name: 'KnowledgeBulkActions' }).exists()
+    ).toBe(false);
     wrapper.unmount();
   });
 });
