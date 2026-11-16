@@ -16,12 +16,14 @@ import {
 import { LOADERS, useAnalyticsData } from './useAnalyticsData';
 
 // Overview: four numbers, conversations by day for the AI agent and the team, then topics and the busiest people.
-const props = defineProps({ period: { type: Number, required: true } });
+const props = defineProps({
+  period: { type: [Number, String], required: true },
+});
 
 const { t } = useI18n();
 const store = useStore();
 const agents = useMapGetter('agents/getAgents');
-const { data, isLoading, hasError, reload } = useAnalyticsData(
+const { data, isLoading, hasError, failures, reload } = useAnalyticsData(
   toRef(props, 'period'),
   LOADERS
 );
@@ -65,6 +67,7 @@ onMounted(() => store.dispatch('agents/get'));
     :tiles="tiles"
     :is-loading="isLoading"
     :has-error="hasError"
+    :has-partial-error="Object.values(failures).some(Boolean) && !hasError"
     @retry="reload"
   />
   <SectionCard
@@ -79,7 +82,7 @@ onMounted(() => store.dispatch('agents/get'));
       :note="t('ANALYTICS.CHART.NOTE')"
       :empty-text="t('ANALYTICS.CHART.EMPTY')"
       :is-loading="isLoading"
-      :has-error="hasError"
+      :has-error="failures.activity"
       @retry="reload"
     />
   </SectionCard>
@@ -87,7 +90,7 @@ onMounted(() => store.dispatch('agents/get'));
     <TopicsCard
       :topics="data.activity?.topics || []"
       :is-loading="isLoading"
-      :has-error="hasError"
+      :has-error="failures.activity"
       @retry="reload"
     />
     <SectionCard
@@ -99,7 +102,7 @@ onMounted(() => store.dispatch('agents/get'));
         :rows="people"
         :empty-text="t('ANALYTICS.PEOPLE.EMPTY')"
         :is-loading="isLoading"
-        :has-error="hasError"
+        :has-error="failures.agents"
         @retry="reload"
       />
     </SectionCard>

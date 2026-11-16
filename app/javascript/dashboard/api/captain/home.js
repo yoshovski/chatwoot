@@ -6,11 +6,12 @@ class CaptainHome extends ApiClient {
     super('captain/home', { accountScoped: true });
   }
 
-  // period: 7 or 30 days. timezoneOffset: the viewer's UTC offset in hours, so days follow their calendar.
-  get({ signal, period, timezoneOffset } = {}) {
+  // Home uses period (7 or 30 calendar days); Analytics uses range (Overview rolling/calendar windows).
+  // timezoneOffset is the viewer's UTC offset in hours.
+  get({ signal, period, range, timezoneOffset } = {}) {
     return axios.get(this.url, {
       signal,
-      params: { period, timezone_offset: timezoneOffset },
+      params: { period, range, timezone_offset: timezoneOffset },
     });
   }
 }

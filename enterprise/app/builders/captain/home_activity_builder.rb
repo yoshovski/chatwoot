@@ -1,5 +1,6 @@
 # How the AI agent did over the last 7 or 30 days, compared with the period before, for the Home page.
 # Account-wide: a fixed number of grouped queries, whatever the number of AI agents.
+# Analytics can supply an AssistantStatsWindow range; Home retains its existing calendar-day periods.
 #
 # The current period is the last `period` calendar days in the viewer's time zone, today included; the previous
 # period is the `period` days before it. Every metric returns its current value, the previous one and one point per day.
@@ -14,7 +15,8 @@ class Captain::HomeActivityBuilder
   BOT_RESOLVED_EVENT = Captain::AssistantStatsBuilder::BOT_RESOLVED_EVENT_NAME
   PRODUCT_SOURCE_USED = [{ kind: 'product', used: true }].to_json.freeze
 
-  def initialize(account, period:, timezone_offset: nil)
+  def initialize(account, period:, timezone_offset: nil, range: nil)
+    @window = Captain::AssistantStatsWindow.new(range, timezone_offset) if range.present?
     @account = account
     @period = period
     @zone = ActiveSupport::TimeZone[timezone_name_from_offset(timezone_offset)] || Time.zone
@@ -22,7 +24,7 @@ class Captain::HomeActivityBuilder
 
   def activity
     {
-      period: period,
+      period: @window ? @window.range : period,
       metrics: metrics,
       days: dates.zip(points(:ai), points(:team)).map { |date, ai, team| { date: date.iso8601, ai: ai, team: team } },
       topics: topics
@@ -100,14 +102,16 @@ class Captain::HomeActivityBuilder
   # Customer ratings (1 to 5). Sums and counts add up across days, so one grouped query gives both windows and the points.
   def rating_metric
     rows = daily_ratings
-    current, previous = rows.partition { |date, _| date >= dates.first }.map { |pairs| average(pairs.map(&:last)) }
-    metric(current, previous, dates.map { |date| rows[date] && average([rows[date]]) })
+    current, previous = rows.partition { |(_, current), _| current }.map { |pairs| average(pairs.map(&:last)) }
+    metric(current, previous, dates.map { |date| rows[[date, true]] && average([rows[[date, true]]]) })
   end
 
-  # { date => [sum of ratings, count] } over both periods.
+  # { [date, in_current_window] => [sum of ratings, count] } over both comparison windows.
   def daily_ratings
-    account.csat_survey_responses.where(created_at: full_span).reorder(nil).group(Arel.sql(day_sql))
-           .pluck(Arel.sql(day_sql), Arel.sql('SUM(rating)'), Arel.sql('COUNT(*)')).to_h { |date, sum, count| [date, [sum, count]] }
+    scope = account.csat_survey_responses.where(created_at: [current_range, previous_range]).reorder(nil)
+    scope.group(Arel.sql(day_sql), Arel.sql(in_window(current_range)))
+         .pluck(Arel.sql(day_sql), Arel.sql(in_window(current_range)), Arel.sql('SUM(rating)'), Arel.sql('COUNT(*)'))
+         .to_h { |date, current, sum, count| [[date, current], [sum, count]] }
   end
 
   def average(sums_and_counts)
@@ -150,7 +154,11 @@ class Captain::HomeActivityBuilder
   end
 
   def dates
-    @dates ||= (0...period).map { |offset| today - (period - 1 - offset) }
+    @dates ||= if @window
+                 (current_range.first.to_date..current_range.last.to_date).to_a
+               else
+                 (0...period).map { |offset| today - (period - 1 - offset) }
+               end
   end
 
   def today
@@ -158,10 +166,14 @@ class Captain::HomeActivityBuilder
   end
 
   def current_range
+    return @window.current if @window
+
     @current_range ||= zone.local(dates.first.year, dates.first.month, dates.first.day)..Time.current
   end
 
   def previous_range
+    return @window.previous if @window
+
     @previous_range ||= (current_range.first - period.days)...current_range.first
   end
 

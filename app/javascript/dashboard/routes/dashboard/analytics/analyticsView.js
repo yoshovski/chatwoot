@@ -3,23 +3,49 @@ import { metricChange, metricValue } from '../home/homeView';
 // Turns the Home activity (Captain::HomeActivityBuilder), the conversation report summary and the per-agent summary
 // into what the Analytics tabs show. Pure, so it is tested on its own.
 
-export const PERIODS = [7, 30];
+export const PERIODS = [7, 30, 90];
+export const CALENDAR_PERIODS = [
+  'this_week',
+  'last_week',
+  'this_month',
+  'last_month',
+];
 export const DEFAULT_PERIOD = PERIODS[0];
 
-// The period in the URL (?period=30); anything else falls back to the default.
 export const periodFromQuery = value => {
-  const days = Number(value);
-  return PERIODS.includes(days) ? days : DEFAULT_PERIOD;
+  if (CALENDAR_PERIODS.includes(value)) return value;
+  return PERIODS.includes(Number(value)) ? Number(value) : DEFAULT_PERIOD;
 };
 
-// The same window as the Home activity: the last `days` calendar days, today included, as unix seconds.
-export const periodWindow = (days, now = new Date()) => {
+export const isSupportedPeriod = value =>
+  value === undefined ||
+  [...PERIODS.map(String), ...CALENDAR_PERIODS].includes(value);
+
+// Matches Captain::AssistantStatsWindow, including Sunday-based calendar weeks.
+export const periodWindow = (period, now = new Date()) => {
   const start = new Date(now);
-  start.setHours(0, 0, 0, 0);
-  start.setDate(start.getDate() - (days - 1));
+  const end = new Date(now);
+  if (CALENDAR_PERIODS.includes(period)) {
+    start.setHours(0, 0, 0, 0);
+    if (period.endsWith('week')) {
+      start.setDate(start.getDate() - start.getDay());
+      if (period === 'last_week') {
+        end.setTime(start.getTime() - 1);
+        start.setDate(start.getDate() - 7);
+      }
+    } else {
+      start.setDate(1);
+      if (period === 'last_month') {
+        end.setTime(start.getTime() - 1);
+        start.setMonth(start.getMonth() - 1);
+      }
+    }
+  } else {
+    start.setDate(start.getDate() - Number(period));
+  }
   return {
     since: Math.floor(start.getTime() / 1000),
-    until: Math.floor(now.getTime() / 1000),
+    until: Math.floor(end.getTime() / 1000),
   };
 };
 
@@ -28,7 +54,7 @@ const HOUR = 60 * MINUTE;
 
 // "45 s", "4 min", "2 h 10 min"; a dash when there is nothing to average.
 export const durationText = (seconds, t) => {
-  if (!seconds) return '–';
+  if (seconds === null || seconds === undefined) return '–';
   if (seconds < MINUTE) {
     return t('ANALYTICS.DURATION.SECONDS', { count: Math.round(seconds) });
   }
@@ -45,10 +71,37 @@ export const durationText = (seconds, t) => {
 };
 
 // The span of the same length right before a window.
-export const previousWindow = ({ since, until }) => ({
-  since: since - (until - since),
-  until: since,
-});
+export const previousWindow = ({ since, until }, period) => {
+  const start = new Date(since * 1000);
+  const end = new Date(until * 1000);
+  if (period === 'this_month' || period === 'last_month') {
+    const monthStart = new Date(start.getFullYear(), start.getMonth(), 1);
+    const previousStart = new Date(
+      start.getFullYear(),
+      start.getMonth() - 1,
+      1
+    );
+    const previousEnd = new Date(monthStart.getTime() - 1);
+    return {
+      since: Math.floor(previousStart.getTime() / 1000),
+      until: Math.floor(
+        (period === 'last_month'
+          ? previousEnd.getTime()
+          : Math.min(
+              previousStart.getTime() + end.getTime() - start.getTime(),
+              previousEnd.getTime()
+            )) / 1000
+      ),
+    };
+  }
+  if (period) {
+    const days = CALENDAR_PERIODS.includes(period) ? 7 : Number(period);
+    start.setDate(start.getDate() - days);
+    end.setDate(end.getDate() - days);
+    return { since: Math.floor(start / 1000), until: Math.floor(end / 1000) };
+  }
+  return { since: since - (until - since), until: since };
+};
 
 // How each number looks and is compared with the period before.
 export const METRICS = {
@@ -68,7 +121,7 @@ export const METRICS = {
     icon: 'i-lucide-users',
     tone: 'amber',
     change: 'count',
-    lowerIsBetter: true,
+    neutralTrend: true,
   },
   product_answers: {
     icon: 'i-lucide-shopping-bag',
@@ -94,7 +147,12 @@ export const METRICS = {
     tone: 'teal',
     change: 'percent',
   },
-  rating: { icon: 'i-lucide-star', tone: 'amber', change: 'decimal' },
+  rating: {
+    icon: 'i-lucide-star',
+    tone: 'amber',
+    change: 'decimal',
+    unit: '/5',
+  },
   ratings_count: {
     icon: 'i-lucide-message-square-heart',
     tone: 'blue',
@@ -113,6 +171,21 @@ export const METRICS = {
     unit: '%',
   },
 };
+
+const metricDefinitions = t => ({
+  conversations: t('ANALYTICS.DEFINITIONS.CONVERSATIONS'),
+  ai_conversations: t('ANALYTICS.DEFINITIONS.AI_CONVERSATIONS'),
+  resolved: t('ANALYTICS.DEFINITIONS.RESOLVED'),
+  handed: t('ANALYTICS.DEFINITIONS.HANDED'),
+  product_answers: t('ANALYTICS.DEFINITIONS.PRODUCT_ANSWERS'),
+  first_reply: t('ANALYTICS.DEFINITIONS.FIRST_REPLY'),
+  resolution_time: t('ANALYTICS.DEFINITIONS.RESOLUTION_TIME'),
+  team_solved: t('ANALYTICS.DEFINITIONS.TEAM_SOLVED'),
+  rating: t('ANALYTICS.DEFINITIONS.RATING'),
+  ratings_count: t('ANALYTICS.DEFINITIONS.RATINGS_COUNT'),
+  happy_share: t('ANALYTICS.DEFINITIONS.HAPPY_SHARE'),
+  reply_share: t('ANALYTICS.DEFINITIONS.REPLY_SHARE'),
+});
 
 const EMPTY = { value: null, previous: null, points: [] };
 
@@ -148,7 +221,10 @@ export const analyticsMetrics = ({
       points: days.map(day => day.ai + day.team),
     },
     ai_conversations: home.ai_conversations || EMPTY,
-    resolved: home.resolved || EMPTY,
+    resolved:
+      home.ai_conversations?.value === 0
+        ? { ...EMPTY, previous: home.resolved?.previous }
+        : home.resolved || EMPTY,
     handed: home.handed || EMPTY,
     product_answers: home.product_answers || EMPTY,
     first_reply: pair(report, report?.previous, 'avg_first_response_time'),
@@ -188,8 +264,13 @@ export const metricView = (key, metric, label, t) => {
     value: config.duration
       ? durationText(metric.value, t)
       : metricValue(config, metric.value),
-    change: change.text,
-    changeTone: change.tone,
+    change:
+      change.text ||
+      (metric.value !== null && metric.value !== undefined
+        ? t('ANALYTICS.NO_COMPARISON')
+        : ''),
+    changeTone: config.neutralTrend ? 'neutral' : change.tone,
+    hint: metricDefinitions(t)[key],
     points: (metric.points || []).filter(point => point !== null),
   };
 };

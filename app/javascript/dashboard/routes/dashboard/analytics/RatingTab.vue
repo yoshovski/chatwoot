@@ -16,11 +16,13 @@ import { LOADERS, useAnalyticsData } from './useAnalyticsData';
 
 // Customer rating: the average and how many rated, against the period before; how the ratings split; the latest
 // comments.
-const props = defineProps({ period: { type: Number, required: true } });
+const props = defineProps({
+  period: { type: [Number, String], required: true },
+});
 
 const { t } = useI18n();
 
-const { data, isLoading, hasError, reload } = useAnalyticsData(
+const { data, isLoading, hasError, failures, reload } = useAnalyticsData(
   toRef(props, 'period'),
   {
     activity: LOADERS.activity,
@@ -64,6 +66,7 @@ const comments = computed(() => commentRows(data.value.responses));
     :tiles="tiles"
     :is-loading="isLoading"
     :has-error="hasError"
+    :has-partial-error="Object.values(failures).some(Boolean) && !hasError"
     @retry="reload"
   />
   <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
@@ -75,7 +78,7 @@ const comments = computed(() => commentRows(data.value.responses));
       <RatingBars
         :rows="ratings"
         :is-loading="isLoading"
-        :has-error="hasError"
+        :has-error="failures.csat"
         @retry="reload"
       />
     </SectionCard>
@@ -87,7 +90,7 @@ const comments = computed(() => commentRows(data.value.responses));
       <CommentList
         :comments="comments"
         :is-loading="isLoading"
-        :has-error="hasError"
+        :has-error="failures.responses"
         @retry="reload"
       />
     </SectionCard>

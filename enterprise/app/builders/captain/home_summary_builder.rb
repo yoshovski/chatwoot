@@ -9,18 +9,19 @@ class Captain::HomeSummaryBuilder
       account.conversations.exists?(inbox_id: widget_inboxes.select(:id))
   end
 
-  def initialize(account, user, period: Captain::HomeActivityBuilder::PERIODS.first, timezone_offset: nil)
+  def initialize(account, user, period: Captain::HomeActivityBuilder::PERIODS.first, timezone_offset: nil, range: nil)
     @account = account
     @user = user
     @period = period
     @timezone_offset = timezone_offset
+    @range = range
   end
 
   def summary
     {
       status: status,
       site: site,
-      **Captain::HomeActivityBuilder.new(account, period: period, timezone_offset: timezone_offset).activity,
+      **Captain::HomeActivityBuilder.new(account, period: period, timezone_offset: timezone_offset, range: @range).activity,
       needs: needs_builder.needs,
       leads: needs_builder.leads,
       setup: setup_steps,

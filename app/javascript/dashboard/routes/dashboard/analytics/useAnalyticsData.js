@@ -10,7 +10,10 @@ const TIMEZONE_OFFSET = -new Date().getTimezoneOffset() / 60;
 export const LOADERS = {
   // The AI agent's activity per day against the period before (Captain::HomeActivityBuilder, via Home).
   activity: ({ period }) =>
-    CaptainHomeAPI.get({ period, timezoneOffset: TIMEZONE_OFFSET }),
+    CaptainHomeAPI.get({
+      range: String(period),
+      timezoneOffset: TIMEZONE_OFFSET,
+    }),
   // Conversation numbers with the same span before (`previous`).
   report: ({ since, until }) => ReportsAPI.getSummary(since, until, 'account'),
   agents: ({ since, until }) =>
@@ -18,11 +21,12 @@ export const LOADERS = {
 };
 
 // Loads what one view needs for the period, in parallel: `loaders` maps a name to a request (see LOADERS). A newer
-// period wins over a slower one; any failure shows the view's error state with a retry.
+// period wins over a slower one; independent failures retain successful sections and expose a retry.
 export function useAnalyticsData(period, loaders) {
   const data = ref({});
   const isLoading = ref(true);
   const hasError = ref(false);
+  const failures = ref({});
   let token = 0;
 
   const load = async () => {
@@ -30,21 +34,34 @@ export function useAnalyticsData(period, loaders) {
     const current = token;
     isLoading.value = true;
     hasError.value = false;
+    failures.value = {};
+    data.value = {};
     const window = periodWindow(period.value);
     const request = {
       ...window,
-      previous: previousWindow(window),
+      previous: previousWindow(window, period.value),
       period: period.value,
     };
     try {
       const names = Object.keys(loaders);
-      const responses = await Promise.all(
+      const responses = await Promise.allSettled(
         names.map(name => loaders[name](request))
       );
       if (current !== token) return;
       data.value = Object.fromEntries(
-        names.map((name, index) => [name, responses[index].data])
+        responses.flatMap((response, index) =>
+          response.status === 'fulfilled'
+            ? [[names[index], response.value.data]]
+            : []
+        )
       );
+      failures.value = Object.fromEntries(
+        names.map((name, index) => [
+          name,
+          responses[index].status === 'rejected',
+        ])
+      );
+      hasError.value = names.every(name => failures.value[name]);
     } catch {
       if (current === token) hasError.value = true;
     } finally {
@@ -54,5 +71,5 @@ export function useAnalyticsData(period, loaders) {
 
   watch(period, load, { immediate: true });
 
-  return { data, isLoading, hasError, reload: load };
+  return { data, isLoading, hasError, failures, reload: load };
 }
