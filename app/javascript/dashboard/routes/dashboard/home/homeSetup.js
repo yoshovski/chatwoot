@@ -14,7 +14,7 @@ export const GUIDED_STEPS = SETUP_STEPS.filter(step => step.guided).map(
   step => step.key
 );
 
-// uiSettings keys. `finished` holds steps the server can't see, like testing the agent.
+// uiSettings keys. `finished` holds steps finished in the guided setup; the server's `setup` facts count too.
 export const SKIPPED_SETTING = 'home_setup_skipped';
 export const FINISHED_SETTING = 'home_setup_finished';
 export const GUIDED_SHOWN_SETTING = 'guided_setup_shown';

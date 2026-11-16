@@ -571,12 +571,14 @@
         "SCHEDULE_OUTSIDE_HOURS": "Outside working hours",
         "EDIT_CHANNELS": "Edit in Channels",
         "EDIT_AUDIENCE": "Audience",
-        "EDIT_SCHEDULE": "Working hours"
+        "EDIT_SCHEDULE": "Working hours",
+        "UNKNOWN": "Couldn't load channels"
       },
       "READINESS": {
         "TITLE": "Get your AI agent ready",
         "DESCRIPTION": "Finish these setup steps before going live with customers.",
         "PROGRESS": "{completed} of {total} complete",
+        "UNKNOWN": "Couldn't check this right now.",
         "STEPS": {
           "KNOWLEDGE": {
             "TITLE": "Knowledge ready",
@@ -615,6 +617,10 @@
       "NEEDS_ATTENTION": {
         "TITLE": "Needs attention",
         "ALL_CLEAR": "Everything looks good — no failed sources, unanswered questions, or paused actions.",
+        "FAILED": {
+          "TITLE": "Couldn't load what needs attention",
+          "DESCRIPTION": "Failed sources, unanswered questions and paused actions are unknown until this loads."
+        },
         "FAILED_SOURCES": {
           "TITLE": "{count} source failed to sync | {count} sources failed to sync",
           "DESCRIPTION": "The AI agent cannot use failed sources until they are fixed or removed.",
@@ -751,7 +757,8 @@
           "SUGGESTED": "Suggested FAQs",
           "REVIEW": "Review FAQs"
         }
-      }
+      },
+      "RETRY": "Retry"
     },
     "ASSISTANT_SWITCHER": {
       "ASSISTANTS": "AI agents",

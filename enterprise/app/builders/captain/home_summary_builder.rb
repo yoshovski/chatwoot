@@ -69,11 +69,20 @@ class Captain::HomeSummaryBuilder
     @setup_steps ||= {
       ai_agent: account.captain_assistants.exists?,
       knowledge: account.captain_assistant_responses.approved.exists? || account.captain_documents.exists?,
+      test_agent: agent_tested?,
       agent_inbox: CaptainInbox.joins(:captain_assistant).exists?(captain_assistants: { account_id: account.id }),
       chat_widget: widget_installed?,
       mailbox: mailbox_connected?,
       teammate: account.account_users.count > 1
     }
+  end
+
+  # The same fact as the AI agent Overview's "Tested" step (Captain::AssistantStatsBuilder#faq_stats), for any AI agent.
+  def agent_tested?
+    assistants = account.captain_assistants
+    assistants.exists?(["config ->> 'tested' = 'true'"]) ||
+      Captain::AgentSession.exists?(assistant_id: assistants.select(:id)) ||
+      account.messages.exists?(sender_type: 'Captain::Assistant', sender_id: assistants.select(:id))
   end
 
   def project_status

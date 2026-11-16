@@ -16,7 +16,8 @@ RSpec.describe 'Api::V1::Accounts::Captain::Home', type: :request do
     expect(body).to include('status' => 'needs_attention', 'site' => nil, 'period' => 7, 'needs' => [], 'leads' => [], 'topics' => [])
     expect(body['metrics'].keys).to contain_exactly('ai_conversations', 'resolved', 'handed', 'rating', 'product_answers')
     expect(body['days'].size).to eq(7)
-    expect(body['setup']).to include('ai_agent' => false, 'knowledge' => false, 'chat_widget' => false, 'mailbox' => false)
+    expect(body['setup']).to include('ai_agent' => false, 'knowledge' => false, 'test_agent' => false, 'chat_widget' => false,
+                                     'mailbox' => false)
     expect(body['project_status']).to include('widget_installed' => false, 'domain' => 'none')
   end
 
@@ -59,13 +60,25 @@ RSpec.describe 'Api::V1::Accounts::Captain::Home', type: :request do
 
       body = response.parsed_body
       expect(body).to include('status' => 'live', 'site' => 'forma-store.com')
-      expect(body['setup']).to include('ai_agent' => true, 'knowledge' => true, 'agent_inbox' => true, 'chat_widget' => true,
-                                       'teammate' => true)
+      expect(body['setup']).to include('ai_agent' => true, 'knowledge' => true, 'test_agent' => true, 'agent_inbox' => true,
+                                       'chat_widget' => true, 'teammate' => true)
       expect(body['needs'].pluck('key')).to eq(%w[handoff gap])
       expect(body['needs'].last).to include('question' => 'Do you ship to Spain?', 'count' => 1)
       expect(body['leads'].pluck('id')).to eq([conversation.display_id])
       expect(body['metrics']['product_answers']['value']).to eq(1)
       expect(body['project_status']).to eq('widget_installed' => true, 'mailbox_connected' => false, 'domain' => 'verified')
+    end
+
+    it 'counts an AI agent tested in the playground, like its Overview' do
+      Captain::AgentSession.delete_all
+      other = create(:captain_assistant, account: account, config: { 'tested' => true })
+
+      get url, headers: agent.create_new_auth_token, as: :json
+
+      expect(response.parsed_body['setup']['test_agent']).to be(true)
+      other.update!(config: {})
+      get url, headers: agent.create_new_auth_token, as: :json
+      expect(response.parsed_body['setup']['test_agent']).to be(false)
     end
 
     it 'shows a paused AI agent' do

@@ -43,6 +43,14 @@ describe('buildSetupProgress', () => {
     expect(step).toMatchObject({ done: true, skipped: false });
   });
 
+  it('takes testing from the server, like the AI agent Overview', () => {
+    const progress = buildSetupProgress({ test_agent: true });
+
+    expect(progress.steps.find(step => step.key === 'test_agent').done).toBe(
+      true
+    );
+  });
+
   it('treats a missing summary as nothing done', () => {
     const progress = buildSetupProgress(undefined);
 

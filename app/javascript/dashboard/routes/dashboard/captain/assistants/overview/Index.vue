@@ -5,7 +5,14 @@ import { RouterLink, useRoute, useRouter } from 'vue-router';
 import { FEATURE_FLAGS } from 'dashboard/featureFlags';
 import { usePolicy } from 'dashboard/composables/usePolicy';
 import { useMapGetter, useStore } from 'dashboard/composables/store';
+import { useAbortableRequest } from 'dashboard/composables/useAbortableRequest';
 import CaptainAssistant from 'dashboard/api/captain/assistant';
+import {
+  STEP_STATES,
+  attentionCounts,
+  readinessStates,
+  readinessSummary,
+} from './overviewReadiness';
 
 import Button from 'dashboard/components-next/button/Button.vue';
 import PageLayout from 'dashboard/components-next/captain/PageLayout.vue';
@@ -32,17 +39,18 @@ const assistant = computed(() =>
 const assistantConfig = computed(() => assistant.value?.config || {});
 
 const inboxes = useMapGetter('captainInboxes/getRecords');
-const inboxesUIFlags = useMapGetter('captainInboxes/getUIFlags');
 
 const metricStats = ref(null);
 const faqStats = ref(null);
 const isFetchingMetrics = ref(false);
-const isFetchingFaqStats = ref(false);
+const faqStatsFailed = ref(false);
+// loading | loaded | failed: a failed channel list is unknown, not "not live".
+const channelsStatus = ref('loading');
 
 let metricsFetchToken = 0;
-let faqStatsFetchToken = 0;
 let metricsAbortController = null;
-let faqStatsAbortController = null;
+const { run: runFaqStats, isPending: isFetchingFaqStats } =
+  useAbortableRequest();
 
 const fetchMetrics = async () => {
   metricsFetchToken += 1;
@@ -78,32 +86,37 @@ const fetchMetrics = async () => {
 };
 
 const fetchFaqStats = async () => {
-  faqStatsFetchToken += 1;
-  const token = faqStatsFetchToken;
-  faqStatsAbortController?.abort();
-  faqStatsAbortController = new AbortController();
-  const { signal } = faqStatsAbortController;
   faqStats.value = null;
-  isFetchingFaqStats.value = true;
-
+  faqStatsFailed.value = false;
   try {
-    const { data } = await CaptainAssistant.getFaqStats({
-      assistantId: assistantId.value,
-      signal,
-    });
-    if (token === faqStatsFetchToken && !signal.aborted) faqStats.value = data;
+    const response = await runFaqStats(signal =>
+      CaptainAssistant.getFaqStats({ assistantId: assistantId.value, signal })
+    );
+    if (response) faqStats.value = response.data;
   } catch {
-    if (token === faqStatsFetchToken && !signal.aborted) faqStats.value = null;
-  } finally {
-    if (token === faqStatsFetchToken && !signal.aborted) {
-      isFetchingFaqStats.value = false;
-    }
+    faqStatsFailed.value = true;
   }
+};
+
+const fetchChannels = async () => {
+  channelsStatus.value = 'loading';
+  try {
+    await store.dispatch('captainInboxes/get', {
+      assistantId: assistantId.value,
+    });
+    channelsStatus.value = 'loaded';
+  } catch {
+    channelsStatus.value = 'failed';
+  }
+};
+
+const retryStatus = () => {
+  if (faqStatsFailed.value) fetchFaqStats();
+  if (channelsStatus.value === 'failed') fetchChannels();
 };
 
 onUnmounted(() => {
   metricsAbortController?.abort();
-  faqStatsAbortController?.abort();
 });
 
 watch(
@@ -119,7 +132,7 @@ watch(
   id => {
     if (!id) return;
     fetchFaqStats();
-    store.dispatch('captainInboxes/get', { assistantId: id });
+    fetchChannels();
     if (!assistant.value) {
       store.dispatch('captainAssistants/show', id);
     }
@@ -169,98 +182,105 @@ const knowledgeDoneSummary = computed(() => {
   return docs > 0 ? sourcesText : faqsText;
 });
 
+const stepStates = computed(() =>
+  readinessStates({
+    faqStats: faqStats.value,
+    config: assistantConfig.value,
+    channelCount: inboxes.value.length,
+    channelsKnown: channelsStatus.value === 'loaded',
+  })
+);
+const readiness = computed(() => readinessSummary(stepStates.value));
+
+const stepSummary = (key, doneSummary, todoSummary) =>
+  ({
+    [STEP_STATES.DONE]: doneSummary,
+    [STEP_STATES.TODO]: todoSummary,
+    [STEP_STATES.UNKNOWN]: t('CAPTAIN.OVERVIEW.READINESS.UNKNOWN'),
+  })[stepStates.value[key]];
+
 const readinessSteps = computed(() => {
-  const docs = faqStats.value?.documents || 0;
-  const approved = faqStats.value?.approved || 0;
-  const knowledgeReady = docs > 0 || approved > 0;
-
-  const handoffSet = Boolean(
-    assistantConfig.value.handoff_when_online ||
-      assistantConfig.value.handoff_fallback_team_id ||
-      assistantConfig.value.handoff_fallback_agent_id ||
-      assistantConfig.value.handoff_rules?.length
-  );
-
-  const tested = Boolean(faqStats.value?.tested);
-  const channelLive = inboxes.value.length > 0;
   const firstChannelName = inboxes.value[0]?.name || '';
 
   return [
     {
       key: 'knowledge',
-      done: knowledgeReady,
       title: t('CAPTAIN.OVERVIEW.READINESS.STEPS.KNOWLEDGE.TITLE'),
-      summary: knowledgeReady
-        ? knowledgeDoneSummary.value
-        : t('CAPTAIN.OVERVIEW.READINESS.STEPS.KNOWLEDGE.TODO'),
+      summary: stepSummary(
+        'knowledge',
+        knowledgeDoneSummary.value,
+        t('CAPTAIN.OVERVIEW.READINESS.STEPS.KNOWLEDGE.TODO')
+      ),
       actionLabel: t('CAPTAIN.OVERVIEW.READINESS.STEPS.KNOWLEDGE.ACTION'),
       editLabel: t('CAPTAIN.OVERVIEW.READINESS.STEPS.KNOWLEDGE.EDIT'),
       to: routeTo('captain_assistants_documents_index'),
     },
     {
       key: 'handoff',
-      done: handoffSet,
       title: t('CAPTAIN.OVERVIEW.READINESS.STEPS.HANDOFF.TITLE'),
-      summary: handoffSet
-        ? handoffDoneSummary.value
-        : t('CAPTAIN.OVERVIEW.READINESS.STEPS.HANDOFF.TODO'),
+      summary: stepSummary(
+        'handoff',
+        handoffDoneSummary.value,
+        t('CAPTAIN.OVERVIEW.READINESS.STEPS.HANDOFF.TODO')
+      ),
       actionLabel: t('CAPTAIN.OVERVIEW.READINESS.STEPS.HANDOFF.ACTION'),
       editLabel: t('CAPTAIN.OVERVIEW.READINESS.STEPS.HANDOFF.EDIT'),
       to: routeTo('captain_assistants_settings_system_index'),
     },
     {
       key: 'tested',
-      done: tested,
       title: t('CAPTAIN.OVERVIEW.READINESS.STEPS.TESTED.TITLE'),
-      summary: tested
-        ? t('CAPTAIN.OVERVIEW.READINESS.STEPS.TESTED.DONE')
-        : t('CAPTAIN.OVERVIEW.READINESS.STEPS.TESTED.TODO'),
+      summary: stepSummary(
+        'tested',
+        t('CAPTAIN.OVERVIEW.READINESS.STEPS.TESTED.DONE'),
+        t('CAPTAIN.OVERVIEW.READINESS.STEPS.TESTED.TODO')
+      ),
       actionLabel: t('CAPTAIN.OVERVIEW.READINESS.STEPS.TESTED.ACTION'),
       editLabel: t('CAPTAIN.OVERVIEW.READINESS.STEPS.TESTED.EDIT'),
       to: routeTo('captain_assistants_playground_index'),
     },
     {
       key: 'channel',
-      done: channelLive,
       title: t('CAPTAIN.OVERVIEW.READINESS.STEPS.CHANNEL.TITLE'),
-      summary: channelLive
-        ? t('CAPTAIN.OVERVIEW.READINESS.STEPS.CHANNEL.DONE', {
-            channel: firstChannelName,
-          })
-        : t('CAPTAIN.OVERVIEW.READINESS.STEPS.CHANNEL.TODO'),
+      summary: stepSummary(
+        'channel',
+        t('CAPTAIN.OVERVIEW.READINESS.STEPS.CHANNEL.DONE', {
+          channel: firstChannelName,
+        }),
+        t('CAPTAIN.OVERVIEW.READINESS.STEPS.CHANNEL.TODO')
+      ),
       actionLabel: t('CAPTAIN.OVERVIEW.READINESS.STEPS.CHANNEL.ACTION'),
       editLabel: t('CAPTAIN.OVERVIEW.READINESS.STEPS.CHANNEL.EDIT'),
       to: routeTo('captain_assistants_inboxes_index'),
     },
-  ];
+  ].map(step => ({ ...step, state: stepStates.value[step.key] }));
 });
 
-const completedStepsCount = computed(
-  () => readinessSteps.value.filter(step => step.done).length
-);
-const nextUnfinishedStep = computed(() =>
-  readinessSteps.value.find(step => !step.done)
-);
-const allStepsComplete = computed(
-  () => completedStepsCount.value === readinessSteps.value.length
-);
 const hasHandledConversations = computed(
   () => (metricStats.value?.conversations_handled?.current || 0) > 0
 );
 const isInitialLoading = computed(
-  () => isFetchingFaqStats.value || Boolean(inboxesUIFlags.value?.fetchingList)
-);
-const showReadinessChecklist = computed(
-  () => !isInitialLoading.value && !allStepsComplete.value
+  () => isFetchingFaqStats.value || channelsStatus.value === 'loading'
 );
 const isRunningAgent = computed(
   () =>
-    allStepsComplete.value ||
+    readiness.value.completed === readiness.value.total ||
     inboxes.value.length > 0 ||
     hasHandledConversations.value
 );
+// A known open step shows the checklist; unknown steps alone show it only when nothing else would, so a failed
+// status request never turns a running agent back into setup and never leaves the page blank.
+const showReadinessChecklist = computed(
+  () =>
+    !isInitialLoading.value &&
+    (readiness.value.hasOpenStep ||
+      (readiness.value.hasUnknownStep && !isRunningAgent.value))
+);
 
 const channelStatusLabel = computed(() => {
+  if (channelsStatus.value === 'failed') {
+    return t('CAPTAIN.OVERVIEW.STATUS_LINE.UNKNOWN');
+  }
   const count = inboxes.value.length;
   if (count === 0) return t('CAPTAIN.OVERVIEW.STATUS_LINE.NOT_LIVE');
   const first = inboxes.value[0]?.name || '';
@@ -343,36 +363,24 @@ const primaryMetrics = computed(() => [
   },
 ]);
 
-const attentionItems = computed(() => {
-  const stats = faqStats.value;
-  if (!stats) return [];
-
-  const items = [];
-  if (stats.failed_sources > 0) {
-    items.push({
-      key: 'failedSources',
-      icon: 'i-lucide-circle-alert text-n-ruby-11',
+const attentionText = (key, count) =>
+  ({
+    failedSources: {
       title: t(
         'CAPTAIN.OVERVIEW.NEEDS_ATTENTION.FAILED_SOURCES.TITLE',
-        { count: stats.failed_sources },
-        stats.failed_sources
+        { count },
+        count
       ),
       description: t(
         'CAPTAIN.OVERVIEW.NEEDS_ATTENTION.FAILED_SOURCES.DESCRIPTION'
       ),
       actionLabel: t('CAPTAIN.OVERVIEW.NEEDS_ATTENTION.FAILED_SOURCES.ACTION'),
-      to: routeTo('captain_assistants_documents_index', { filter: 'failed' }),
-    });
-  }
-
-  if (stats.unanswered_questions > 0) {
-    items.push({
-      key: 'unansweredQuestions',
-      icon: 'i-lucide-circle-help text-n-amber-11',
+    },
+    unansweredQuestions: {
       title: t(
         'CAPTAIN.OVERVIEW.NEEDS_ATTENTION.UNANSWERED_QUESTIONS.TITLE',
-        { count: stats.unanswered_questions },
-        stats.unanswered_questions
+        { count },
+        count
       ),
       description: t(
         'CAPTAIN.OVERVIEW.NEEDS_ATTENTION.UNANSWERED_QUESTIONS.DESCRIPTION'
@@ -380,28 +388,47 @@ const attentionItems = computed(() => {
       actionLabel: t(
         'CAPTAIN.OVERVIEW.NEEDS_ATTENTION.UNANSWERED_QUESTIONS.ACTION'
       ),
-      to: routeTo('captain_assistants_faq_suggestions'),
-    });
-  }
-
-  if (stats.paused_actions > 0) {
-    items.push({
-      key: 'pausedActions',
-      icon: 'i-lucide-circle-pause text-n-amber-11',
+    },
+    pausedActions: {
       title: t(
         'CAPTAIN.OVERVIEW.NEEDS_ATTENTION.PAUSED_ACTIONS.TITLE',
-        { count: stats.paused_actions },
-        stats.paused_actions
+        { count },
+        count
       ),
       description: t(
         'CAPTAIN.OVERVIEW.NEEDS_ATTENTION.PAUSED_ACTIONS.DESCRIPTION'
       ),
       actionLabel: t('CAPTAIN.OVERVIEW.NEEDS_ATTENTION.PAUSED_ACTIONS.ACTION'),
-      to: routeTo('captain_tools_index'),
-    });
-  }
+    },
+  })[key];
 
-  return items;
+const ATTENTION_LINKS = {
+  failedSources: {
+    icon: 'i-lucide-circle-alert text-n-ruby-11',
+    to: () =>
+      routeTo('captain_assistants_documents_index', { filter: 'failed' }),
+  },
+  unansweredQuestions: {
+    icon: 'i-lucide-circle-help text-n-amber-11',
+    to: () => routeTo('captain_assistants_faq_suggestions'),
+  },
+  pausedActions: {
+    icon: 'i-lucide-circle-pause text-n-amber-11',
+    to: () => routeTo('captain_tools_index'),
+  },
+};
+
+// null while the attention facts are unknown (loading or failed).
+const attentionItems = computed(() => {
+  const counts = attentionCounts(faqStats.value);
+  if (!counts) return null;
+
+  return counts.map(({ key, count }) => ({
+    key,
+    icon: ATTENTION_LINKS[key].icon,
+    to: ATTENTION_LINKS[key].to(),
+    ...attentionText(key, count),
+  }));
 });
 
 const openReportPage = () =>
@@ -474,8 +501,8 @@ const closeDrilldown = () => {
                 >
                   {{
                     $t('CAPTAIN.OVERVIEW.READINESS.PROGRESS', {
-                      completed: completedStepsCount,
-                      total: readinessSteps.length,
+                      completed: readiness.completed,
+                      total: readiness.total,
                     })
                   }}
                 </span>
@@ -494,14 +521,18 @@ const closeDrilldown = () => {
             >
               <div class="flex items-start gap-3 min-w-0">
                 <span
-                  v-if="step.done"
+                  v-if="step.state === STEP_STATES.DONE"
                   class="mt-0.5 shrink-0 size-5 i-lucide-check-circle-2 text-n-teal-11"
+                />
+                <span
+                  v-else-if="step.state === STEP_STATES.UNKNOWN"
+                  class="mt-0.5 shrink-0 size-5 i-lucide-circle-dashed text-n-slate-10"
                 />
                 <span
                   v-else
                   class="mt-0.5 grid shrink-0 size-5 place-content-center rounded-full border text-xs font-medium tabular-nums"
                   :class="
-                    nextUnfinishedStep?.key === step.key
+                    readiness.nextOpenKey === step.key
                       ? 'border-n-brand bg-n-brand/10 text-n-brand'
                       : 'border-n-strong text-n-slate-11'
                   "
@@ -518,7 +549,16 @@ const closeDrilldown = () => {
                 </div>
               </div>
               <Button
-                v-if="nextUnfinishedStep?.key === step.key"
+                v-if="step.state === STEP_STATES.UNKNOWN"
+                type="button"
+                size="sm"
+                variant="faded"
+                color="slate"
+                :label="$t('CAPTAIN.OVERVIEW.RETRY')"
+                @click="retryStatus"
+              />
+              <Button
+                v-else-if="readiness.nextOpenKey === step.key"
                 type="button"
                 size="sm"
                 icon="i-lucide-arrow-right"
@@ -531,7 +571,11 @@ const closeDrilldown = () => {
                 :to="step.to"
                 class="text-sm font-medium shrink-0 text-n-slate-11 hover:text-n-slate-12"
               >
-                {{ step.done ? step.editLabel : step.actionLabel }}
+                {{
+                  step.state === STEP_STATES.DONE
+                    ? step.editLabel
+                    : step.actionLabel
+                }}
               </RouterLink>
             </div>
           </div>
@@ -548,7 +592,13 @@ const closeDrilldown = () => {
             >
               <span
                 class="shrink-0 size-2 rounded-full"
-                :class="inboxes.length > 0 ? 'bg-n-teal-9' : 'bg-n-amber-9'"
+                :class="
+                  channelsStatus === 'failed'
+                    ? 'bg-n-slate-8'
+                    : inboxes.length > 0
+                      ? 'bg-n-teal-9'
+                      : 'bg-n-amber-9'
+                "
               />
               <RouterLink
                 :to="routeTo('captain_assistants_inboxes_index')"
@@ -623,7 +673,49 @@ const closeDrilldown = () => {
             </div>
 
             <div
-              v-if="attentionItems.length === 0"
+              v-if="isFetchingFaqStats"
+              class="flex flex-col gap-3 px-5 py-4"
+              aria-busy="true"
+            >
+              <span
+                v-for="n in 2"
+                :key="n"
+                class="h-8 w-full animate-pulse rounded bg-n-alpha-2"
+              />
+            </div>
+
+            <div
+              v-else-if="!attentionItems"
+              role="alert"
+              class="flex flex-wrap items-center justify-between gap-3 px-5 py-4"
+            >
+              <div class="flex items-start gap-2.5 min-w-0 text-sm">
+                <span
+                  class="mt-0.5 shrink-0 size-4 i-lucide-circle-alert text-n-ruby-11"
+                />
+                <div class="min-w-0">
+                  <div class="font-medium text-n-slate-12">
+                    {{ $t('CAPTAIN.OVERVIEW.NEEDS_ATTENTION.FAILED.TITLE') }}
+                  </div>
+                  <div class="text-n-slate-11">
+                    {{
+                      $t('CAPTAIN.OVERVIEW.NEEDS_ATTENTION.FAILED.DESCRIPTION')
+                    }}
+                  </div>
+                </div>
+              </div>
+              <Button
+                type="button"
+                variant="faded"
+                color="slate"
+                size="sm"
+                :label="$t('CAPTAIN.OVERVIEW.RETRY')"
+                @click="fetchFaqStats"
+              />
+            </div>
+
+            <div
+              v-else-if="attentionItems.length === 0"
               class="flex items-center gap-2.5 px-5 py-4 text-sm text-n-slate-11"
             >
               <span
