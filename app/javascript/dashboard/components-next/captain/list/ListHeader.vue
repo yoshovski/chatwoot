@@ -22,7 +22,7 @@ const COLUMN_LABELS = {
 
 <template>
   <div
-    class="flex items-center gap-3 px-4 py-2.5 text-xs font-medium border-b rounded-t-xl border-n-weak text-n-slate-11 bg-n-alpha-1"
+    class="flex items-center gap-3 px-4 py-2.5 text-xs font-semibold border-b border-n-weak text-n-slate-11 bg-n-slate-2"
   >
     <Checkbox
       v-if="selectable"

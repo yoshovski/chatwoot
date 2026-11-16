@@ -42,7 +42,6 @@ const items = [
     name: 'Settings',
     label: 'Settings',
     icon: 'i-lucide-settings',
-    to: { name: 'settings_home' },
     children: [
       { name: 'Settings Agents', label: 'Teammates', to: { name: 'agents' } },
     ],
@@ -138,18 +137,24 @@ describe('SidebarNavigation', () => {
     expect(push).not.toHaveBeenCalled();
   });
 
-  it('opens the settings home with no panel, also from a settings page', async () => {
+  it('shows the hideable subsection panel on settings pages and toggles it like other sections', async () => {
     Object.assign(route, { name: 'agents', path: '/agents' });
     const wrapper = mountNavigation();
 
-    expect(wrapper.find('#co-section-panel').exists()).toBe(false);
+    expect(wrapper.find('#co-section-panel').exists()).toBe(true);
     expect(railButton(wrapper, 'Settings').attributes('aria-current')).toBe(
       'true'
     );
 
-    await railButton(wrapper, 'Settings').trigger('click');
+    await wrapper
+      .find('button[aria-label="PLATFORM_NAV.HIDE_MENU"]')
+      .trigger('click');
+    await flushPromises();
 
-    expect(push).toHaveBeenCalledWith({ name: 'settings_home' });
+    expect(wrapper.find('#co-section-panel').exists()).toBe(false);
+    await railButton(wrapper, 'Settings').trigger('click');
+    expect(wrapper.find('#co-section-panel').exists()).toBe(true);
+    expect(push).not.toHaveBeenCalled();
   });
 
   it('opens another section on its first page', async () => {

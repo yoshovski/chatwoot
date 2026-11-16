@@ -44,6 +44,7 @@ describe('platform navigation', () => {
         children: [{ name: 'Companies list', to: route('companies') }],
       },
       { name: 'Billing', to: route('billing') },
+      { name: 'Usage', to: route('usage') },
       {
         name: 'Settings',
         children: [{ name: 'Settings Account Settings', to: route('general') }],
@@ -62,10 +63,10 @@ describe('platform navigation', () => {
       'contacts',
       'companies',
     ]);
-    expect(navigationLeaves(grouped[2]).map(item => item.to.name)).toContain(
-      'billing'
+    expect(navigationLeaves(grouped[2]).map(item => item.to.name)).toEqual(
+      expect.arrayContaining(['billing', 'usage', 'general'])
     );
-    expect(items).toHaveLength(5);
+    expect(items).toHaveLength(6);
   });
 
   it('selects an agent behavior page through the last-active-agent redirect', () => {

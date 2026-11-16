@@ -188,7 +188,7 @@ onMounted(loadAiAgent);
 
 <template>
   <div
-    class="grid grid-cols-1 items-start gap-6 lg:gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,26rem)]"
+    class="grid grid-cols-1 items-start gap-6 lg:gap-8 lg:grid-cols-[minmax(0,1fr)_25rem]"
   >
     <div class="flex flex-col min-w-0 gap-6">
       <WidgetEssentials
@@ -209,7 +209,7 @@ onMounted(loadAiAgent);
         :description="
           $t('INBOX_MGMT.ADD.WEBSITE_CHANNEL.CHANNEL_GREETING_TOGGLE.HELP_TEXT')
         "
-        class="bg-n-solid-1"
+        class="rounded-card bg-n-solid-2 shadow-card !outline-n-container"
       >
         <template v-if="form.greetingEnabled" #editor>
           <GreetingsEditor
@@ -229,13 +229,6 @@ onMounted(loadAiAgent);
         </template>
       </SettingsToggleSection>
 
-      <WidgetInstallation
-        v-model:form="form"
-        :inbox-id="inbox.id"
-        :snippet="snippet"
-        :has-unsaved-snippet="hasUnsavedSnippet"
-      />
-
       <WidgetAdvanced
         v-model:form="form"
         :inbox="inbox"
@@ -244,6 +237,13 @@ onMounted(loadAiAgent);
         :is-continuity-disabled="isContinuityDisabled"
         :continuity-description="continuityDescription"
         @open-pre-chat-form="emit('openPreChatForm')"
+      />
+
+      <WidgetInstallation
+        v-model:form="form"
+        :inbox-id="inbox.id"
+        :snippet="snippet"
+        :has-unsaved-snippet="hasUnsavedSnippet"
       />
 
       <SettingsSaveBar

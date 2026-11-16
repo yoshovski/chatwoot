@@ -514,7 +514,7 @@ onUnmounted(() => {
 
         <section
           :aria-label="$t('PLATFORM_NAV.DATA_SOURCES')"
-          class="border rounded-xl border-n-weak bg-n-solid-1"
+          class="rounded-card bg-n-solid-2 shadow-card outline outline-1 -outline-offset-1 outline-n-container overflow-hidden"
         >
           <ListHeader
             :selection="selection"

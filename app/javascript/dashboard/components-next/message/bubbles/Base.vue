@@ -10,12 +10,7 @@ import { useI18n } from 'vue-i18n';
 
 import MessageFormatter from 'shared/helpers/MessageFormatter.js';
 import { BUS_EVENTS } from 'shared/constants/busEvents';
-import {
-  CONTENT_TYPES,
-  MESSAGE_VARIANTS,
-  ORIENTATION,
-  SENDER_TYPES,
-} from '../constants';
+import { MESSAGE_VARIANTS, ORIENTATION, SENDER_TYPES } from '../constants';
 
 const props = defineProps({
   hideMeta: { type: Boolean, default: false },
@@ -29,8 +24,7 @@ const {
   id,
   sender,
   senderType,
-  contentType,
-  additionalAttributes,
+  contentAttributes,
 } = useMessageContext();
 const { t } = useI18n();
 
@@ -53,7 +47,8 @@ const varaintBaseMap = {
   [MESSAGE_VARIANTS.AGENT]: 'bg-n-solid-blue text-n-slate-12',
   [MESSAGE_VARIANTS.PRIVATE]:
     'bg-n-solid-amber text-n-amber-12 [&_.prosemirror-mention-node]:font-semibold',
-  [MESSAGE_VARIANTS.USER]: 'bg-n-slate-4 text-n-slate-12',
+  [MESSAGE_VARIANTS.USER]:
+    'bg-n-slate-3 text-n-slate-12 ring-1 ring-inset ring-n-weak/60',
   [MESSAGE_VARIANTS.ACTIVITY]: 'bg-n-alpha-1 text-n-slate-11 text-sm',
   [MESSAGE_VARIANTS.BOT]: 'bg-n-solid-iris text-n-slate-12',
   [MESSAGE_VARIANTS.TEMPLATE]: 'bg-n-solid-iris text-n-slate-12',
@@ -106,25 +101,12 @@ const shouldShowMeta = computed(
     variant.value !== MESSAGE_VARIANTS.ACTIVITY
 );
 
-// Captain replies record how many sources their searches found, so the Sources button sits
-// on that reply even when product cards or a form follow it. Earlier replies recorded only
-// the sources they cited; the oldest have no count and keep the button with the footer,
-// except on cards and forms.
+// Only show Sources when citations are enabled and sources were actually attached to this reply.
 const showCaptainSources = computed(() => {
-  // Private notes (handoff, resolution) are for the team; sources belong on customer answers.
   if (!isCaptainMessage.value || variant.value === MESSAGE_VARIANTS.PRIVATE) {
     return false;
   }
-
-  const { captainSourcesFound, captainSourcesUsed } =
-    additionalAttributes.value || {};
-  const sourcesCount = captainSourcesFound ?? captainSourcesUsed;
-  if (sourcesCount !== undefined) return sourcesCount > 0;
-
-  return (
-    shouldShowMeta.value &&
-    ![CONTENT_TYPES.CARDS, CONTENT_TYPES.FORM].includes(contentType.value)
-  );
+  return Boolean(contentAttributes.value?.captainSources?.length);
 });
 
 const replyToPreview = computed(() => {

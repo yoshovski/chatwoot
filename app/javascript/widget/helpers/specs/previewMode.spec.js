@@ -78,7 +78,7 @@ describe('widget preview mode', () => {
     });
     expect(question.message_type).toBe(0);
     expect(answer.content_type).toBe('input_select');
-    expect(answer.content_attributes.captain_sources).toHaveLength(1);
+    expect(answer.content_attributes.captain_sources).toBeUndefined();
     expect(answer.content_attributes.items).toHaveLength(2);
     expect(store.getters['conversation/getUnreadMessageCount']).toBe(0);
     expect(window.parent.postMessage).toHaveBeenCalledWith(

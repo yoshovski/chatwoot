@@ -3,7 +3,6 @@ import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import Button from 'dashboard/components-next/button/Button.vue';
 import Checkbox from 'dashboard/components-next/checkbox/Checkbox.vue';
-import ColorPicker from 'dashboard/components-next/colorpicker/ColorPicker.vue';
 import Input from 'dashboard/components-next/input/Input.vue';
 import OrderedTextList from 'dashboard/components-next/ordered-text-list/OrderedTextList.vue';
 import SelectInput from 'dashboard/components-next/select/Select.vue';
@@ -122,7 +121,7 @@ const setFeature = (flag, enabled) => {
 
 <template>
   <section
-    class="rounded-xl bg-n-solid-1 px-5 outline outline-1 -outline-offset-1 outline-n-weak [&>button:first-child]:border-t-0"
+    class="rounded-card bg-n-solid-2 px-6 py-1 shadow-card outline outline-1 -outline-offset-1 outline-n-container [&>button:first-child]:border-t-0"
   >
     <SettingsAccordion
       :title="$t('INBOX_MGMT.WIDGET_SETTINGS.ADVANCED.TITLE')"
@@ -277,26 +276,6 @@ const setFeature = (flag, enabled) => {
         </div>
       </SettingsFieldSection>
 
-      <SettingsFieldSection
-        :label="
-          $t('INBOX_MGMT.WIDGET_BUILDER.WIDGET_OPTIONS.WIDGET_TEXT_COLOR')
-        "
-      >
-        <ColorPicker
-          v-model="form.widgetTextColor"
-          @update:model-value="form.isWidgetTextColorCustom = true"
-        />
-      </SettingsFieldSection>
-      <SettingsFieldSection
-        :label="
-          $t('INBOX_MGMT.WIDGET_BUILDER.WIDGET_OPTIONS.WIDGET_ICON_COLOR')
-        "
-      >
-        <ColorPicker
-          v-model="form.widgetIconColor"
-          @update:model-value="form.isWidgetIconColorCustom = true"
-        />
-      </SettingsFieldSection>
       <SettingsFieldSection
         :label="$t('INBOX_MGMT.WIDGET_BUILDER.WIDGET_OPTIONS.WIDGET_HEIGHT')"
         :help-text="

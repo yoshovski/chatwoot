@@ -83,8 +83,7 @@ const toggleCollapsed = name => {
 
 const panelItems = computed(() => activeModule.value?.children || []);
 // A section without pages (Home) is the page itself: no panel, full width.
-// Settings has its own home with cards and search, so it needs no panel either.
-const PANEL_LESS = ['Settings'];
+const PANEL_LESS = [];
 const hasPanel = item =>
   Boolean(item?.children) && !PANEL_LESS.includes(item.name);
 const showPanel = computed(

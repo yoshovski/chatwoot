@@ -6,7 +6,6 @@ import Input from 'dashboard/components-next/input/Input.vue';
 import Editor from 'dashboard/components-next/Editor/Editor.vue';
 import ColorPicker from 'dashboard/components-next/colorpicker/ColorPicker.vue';
 import SelectInput from 'dashboard/components-next/select/Select.vue';
-import SettingsFieldSection from 'dashboard/components-next/Settings/SettingsFieldSection.vue';
 import WidgetSection from './WidgetSection.vue';
 
 defineProps({
@@ -73,65 +72,86 @@ const bubbleTypeOptions = computed(() => [
       />
     </div>
 
-    <SettingsFieldSection
-      :label="$t('INBOX_MGMT.ADD.WEBSITE_CHANNEL.WIDGET_COLOR.LABEL')"
-    >
-      <ColorPicker v-model="form.widgetColor" />
-    </SettingsFieldSection>
+    <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+      <div class="flex flex-col gap-1.5">
+        <label class="text-sm font-medium text-n-slate-12">
+          {{ $t('INBOX_MGMT.ADD.WEBSITE_CHANNEL.WIDGET_COLOR.LABEL') }}
+        </label>
+        <ColorPicker v-model="form.widgetColor" />
+      </div>
+      <div class="flex flex-col gap-1.5">
+        <label class="text-sm font-medium text-n-slate-12">
+          {{ $t('INBOX_MGMT.WIDGET_BUILDER.WIDGET_OPTIONS.WIDGET_TEXT_COLOR') }}
+        </label>
+        <ColorPicker
+          v-model="form.widgetTextColor"
+          @update:model-value="form.isWidgetTextColorCustom = true"
+        />
+      </div>
+      <div class="flex flex-col gap-1.5">
+        <label class="text-sm font-medium text-n-slate-12">
+          {{ $t('INBOX_MGMT.WIDGET_BUILDER.WIDGET_OPTIONS.WIDGET_ICON_COLOR') }}
+        </label>
+        <ColorPicker
+          v-model="form.widgetIconColor"
+          @update:model-value="form.isWidgetIconColorCustom = true"
+        />
+      </div>
+    </div>
 
-    <SettingsFieldSection
-      :label="$t('INBOX_MGMT.WIDGET_SETTINGS.ESSENTIALS.POSITION')"
-    >
-      <SelectInput v-model="form.position" :options="positionOptions" />
-    </SettingsFieldSection>
+    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+      <div class="flex flex-col gap-1.5">
+        <label class="text-sm font-medium text-n-slate-12">
+          {{ $t('INBOX_MGMT.WIDGET_SETTINGS.ESSENTIALS.POSITION') }}
+        </label>
+        <SelectInput v-model="form.position" :options="positionOptions" />
+      </div>
+      <div class="flex flex-col gap-1.5">
+        <label class="text-sm font-medium text-n-slate-12">
+          {{ $t('INBOX_MGMT.WIDGET_SETTINGS.ESSENTIALS.LAUNCHER_STYLE.LABEL') }}
+        </label>
+        <SelectInput v-model="form.bubbleType" :options="bubbleTypeOptions" />
+      </div>
+    </div>
 
-    <SettingsFieldSection
-      :label="$t('INBOX_MGMT.ADD.WEBSITE_CHANNEL.CHANNEL_WELCOME_TITLE.LABEL')"
-    >
+    <Input
+      v-if="form.bubbleType === 'expanded_bubble'"
+      v-model="form.launcherTitle"
+      :label="$t('INBOX_MGMT.WIDGET_SETTINGS.ESSENTIALS.LAUNCHER_TEXT')"
+      :placeholder="
+        $t(
+          'INBOX_MGMT.WIDGET_BUILDER.WIDGET_OPTIONS.WIDGET_BUBBLE_LAUNCHER_TITLE.PLACE_HOLDER'
+        )
+      "
+    />
+
+    <div class="flex flex-col gap-4 border-t border-n-weak pt-4">
       <Input
         v-model="form.welcomeTitle"
+        :label="
+          $t('INBOX_MGMT.ADD.WEBSITE_CHANNEL.CHANNEL_WELCOME_TITLE.LABEL')
+        "
         :placeholder="
           $t('INBOX_MGMT.ADD.WEBSITE_CHANNEL.CHANNEL_WELCOME_TITLE.PLACEHOLDER')
         "
       />
-    </SettingsFieldSection>
-
-    <SettingsFieldSection
-      :label="
-        $t('INBOX_MGMT.ADD.WEBSITE_CHANNEL.CHANNEL_WELCOME_TAGLINE.LABEL')
-      "
-      class="[&>div]:!items-start [&>div>label]:mt-1"
-    >
-      <Editor
-        v-model="form.welcomeTagline"
-        :placeholder="
-          $t(
-            'INBOX_MGMT.ADD.WEBSITE_CHANNEL.CHANNEL_WELCOME_TAGLINE.PLACEHOLDER'
-          )
-        "
-        :max-length="255"
-        channel-type="Context::InboxSettings"
-      />
-    </SettingsFieldSection>
-
-    <SettingsFieldSection
-      :label="$t('INBOX_MGMT.WIDGET_SETTINGS.ESSENTIALS.LAUNCHER_STYLE.LABEL')"
-    >
-      <SelectInput v-model="form.bubbleType" :options="bubbleTypeOptions" />
-    </SettingsFieldSection>
-
-    <SettingsFieldSection
-      v-if="form.bubbleType === 'expanded_bubble'"
-      :label="$t('INBOX_MGMT.WIDGET_SETTINGS.ESSENTIALS.LAUNCHER_TEXT')"
-    >
-      <Input
-        v-model="form.launcherTitle"
-        :placeholder="
-          $t(
-            'INBOX_MGMT.WIDGET_BUILDER.WIDGET_OPTIONS.WIDGET_BUBBLE_LAUNCHER_TITLE.PLACE_HOLDER'
-          )
-        "
-      />
-    </SettingsFieldSection>
+      <div class="flex flex-col gap-1.5">
+        <label class="text-sm font-medium text-n-slate-12">
+          {{
+            $t('INBOX_MGMT.ADD.WEBSITE_CHANNEL.CHANNEL_WELCOME_TAGLINE.LABEL')
+          }}
+        </label>
+        <Editor
+          v-model="form.welcomeTagline"
+          :placeholder="
+            $t(
+              'INBOX_MGMT.ADD.WEBSITE_CHANNEL.CHANNEL_WELCOME_TAGLINE.PLACEHOLDER'
+            )
+          "
+          :max-length="255"
+          channel-type="Context::InboxSettings"
+        />
+      </div>
+    </div>
   </WidgetSection>
 </template>

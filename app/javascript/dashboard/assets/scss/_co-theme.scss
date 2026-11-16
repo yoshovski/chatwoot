@@ -1,6 +1,6 @@
 // scss-lint:disable PropertySortOrder
-// ChatOctave look: crisp SaaS surfaces on a neutral-cool canvas, 1px hairline borders,
-// refined 12px card radius, and Plus Jakarta Sans across all headings, tables, and body text.
+// ChatOctave look: crisp white SaaS surfaces on a subtle cool canvas, 1px hairline borders,
+// high-contrast Slate typography, refined 12px card radius, and Plus Jakarta Sans.
 //
 // The dashboard (through `_woot.scss`) and the sign-up and log-in screens (`v3/App.vue`) import this file.
 // `_next-colors.scss` is shared with the help-centre portal and the survey page, so overrides live here.
@@ -17,20 +17,24 @@
     --co-display-tracking: -0.02em;
     --co-brand: 32 92 240;
 
-    --background-color: 245 247 250;
-    --surface-1: 245 247 250;
+    --background-color: 248 250 252;
+    --surface-1: 255 255 255;
     --surface-2: 255 255 255;
     --surface-active: 241 245 249;
 
-    --solid-1: 248 250 252;
+    --solid-1: 255 255 255;
     --solid-2: 255 255 255;
     --solid-3: 241 245 249;
     --solid-active: 255 255 255;
     --button-color: 255 255 255;
 
-    --slate-11: 84 92 120;
-    --slate-12: 20 24 45;
-    --border-weak: 230 235 242;
+    --slate-2: 248 250 252;
+    --slate-3: 241 245 249;
+    --slate-4: 226 232 240;
+    --slate-10: 100 116 139;
+    --slate-11: 51 65 85;
+    --slate-12: 15 23 42;
+    --border-weak: 226 232 240;
     --border-container: 226 232 240;
     --border-strong: 203 213 225;
     --alpha-1: 15, 23, 42, 0.04;
@@ -44,11 +48,12 @@
     --blue-9: 32 92 240;
     --blue-10: 24 78 214;
     --blue-11: 24 72 196;
-    --solid-blue: 222 233 255;
+    --solid-blue: 235 243 255;
+    --solid-iris: 238 242 255;
 
     [data-co-shell] {
       --background-color: 255 255 255;
-      --border-weak: 230 235 242;
+      --border-weak: 226 232 240;
     }
   }
 
@@ -92,18 +97,8 @@
   }
 }
 
-// Contextual surface step-down: secondary buttons and inputs placed inside a primary
-// card keep clear contrast without forcing grey backgrounds on standalone controls.
-:root .bg-n-solid-2 {
-  --button-color: 248 250 252;
-}
-
 .dark .bg-n-solid-2 {
   --button-color: 30 35 52;
-}
-
-.bg-n-solid-2 .bg-n-solid-2:where(input, select, textarea) {
-  background-color: rgb(var(--solid-1));
 }
 
 // Upgrade unmigrated legacy settings tables/sections without touching per-route templates.
@@ -122,7 +117,7 @@
     overflow: hidden;
 
     thead th {
-      background-color: rgb(var(--solid-1));
+      background-color: rgb(var(--slate-2));
       border-bottom: 1px solid rgb(var(--border-weak));
       padding: 0.75rem 1rem;
       font-size: 0.75rem;

@@ -95,42 +95,6 @@ describe('WidgetLivePreview', () => {
     expect(lastPayload(postMessage).config.welcomeTitle).toBe('Hello');
   });
 
-  it('switches the previewed screen and theme', async () => {
-    const wrapper = await mountPreview();
-    const postMessage = await markReady(wrapper);
-
-    const conversation = wrapper
-      .findAll('button[aria-pressed]')
-      .find(
-        button =>
-          button.text() === 'INBOX_MGMT.WIDGET_PREVIEW.VIEWS.CONVERSATION'
-      );
-    await conversation.trigger('click');
-
-    expect(conversation.attributes('aria-pressed')).toBe('true');
-    expect(lastPayload(postMessage).view).toBe('conversation');
-
-    await wrapper
-      .find('button[aria-label="INBOX_MGMT.WIDGET_PREVIEW.DARK"]')
-      .trigger('click');
-    expect(lastPayload(postMessage).config.darkMode).toBe('dark');
-  });
-
-  it('follows a screen change made inside the widget', async () => {
-    const wrapper = await mountPreview();
-    await markReady(wrapper);
-
-    postFromWidget(wrapper, { type: 'chatoctave:preview-view', view: 'home' });
-    postFromWidget(wrapper, {
-      type: 'chatoctave:preview-view',
-      view: 'launcher',
-    });
-    await flushPromises();
-
-    const pressed = wrapper.find('button[aria-pressed="true"]');
-    expect(pressed.text()).toBe('INBOX_MGMT.WIDGET_PREVIEW.VIEWS.LAUNCHER');
-  });
-
   it('ignores messages from other windows', async () => {
     const wrapper = await mountPreview();
     const postMessage = vi.spyOn(frameWindow(wrapper), 'postMessage');

@@ -99,6 +99,18 @@ export const SETTINGS_SECTIONS = [
     icon: 'i-lucide-briefcase',
     pages: [
       {
+        key: 'BILLING',
+        route: 'billing_settings_index',
+        icon: 'i-lucide-credit-card',
+        activeOn: ['billing_settings_index'],
+      },
+      {
+        key: 'USAGE',
+        route: 'billing_settings_usage',
+        icon: 'i-lucide-chart-no-axes-column',
+        activeOn: ['billing_settings_usage'],
+      },
+      {
         key: 'ACCOUNT',
         route: 'general_settings_index',
         icon: 'i-lucide-briefcase',
@@ -128,6 +140,12 @@ export const SETTINGS_SECTIONS = [
     key: 'INTEGRATIONS',
     icon: 'i-lucide-blocks',
     pages: [
+      {
+        key: 'CHANNELS',
+        route: 'settings_inbox_list',
+        icon: 'i-lucide-inbox',
+        activeOn: ['settings_inbox_list'],
+      },
       {
         key: 'APPS',
         route: 'settings_applications',

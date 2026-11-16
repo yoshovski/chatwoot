@@ -25,20 +25,19 @@ const routeKey = computed(() => {
   return route.meta.reuseOnQueryChange ? route.path : route.fullPath;
 });
 
-// The settings frame: a page listed on the settings home links back to it; a page under it
-// (such as editing a team) links back to that page. Billing and Channels have no back link.
+// Nested sub-pages (such as editing a team) link back to their parent settings page.
+// Top-level settings pages rely on the Settings subsection panel for navigation.
 const back = computed(() => {
   const page = findSettingsPage(route.name);
-  if (!page) return null;
-  if (page.route === route.name) {
-    return { to: { name: 'settings_home' }, label: t('SETTINGS_HOME.BACK') };
-  }
+  if (!page || page.route === route.name) return null;
   return {
     to: { name: page.route },
     // eslint-disable-next-line @intlify/vue-i18n/no-dynamic-keys -- Key from the fixed settings list.
     label: t(`SETTINGS_HOME.PAGES.${page.key}.LABEL`),
   };
 });
+
+const isWideLayout = computed(() => route.name === 'settings_inbox_show');
 </script>
 
 <template>
@@ -46,7 +45,10 @@ const back = computed(() => {
     class="flex min-h-0 w-full h-full flex-col overflow-auto bg-n-background pb-8 pt-4"
     :class="{ 'overscroll-contain': containScroll }"
   >
-    <div class="mx-auto flex w-full max-w-[64rem] flex-col gap-2 px-4 sm:px-6">
+    <div
+      class="mx-auto flex w-full flex-col gap-2 px-4 sm:px-6"
+      :class="isWideLayout ? 'max-w-[80rem]' : 'max-w-[64rem]'"
+    >
       <router-link
         v-if="back"
         :to="back.to"

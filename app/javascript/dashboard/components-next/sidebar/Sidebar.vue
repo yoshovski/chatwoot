@@ -736,16 +736,20 @@ const menuItems = computed(() => {
         ? t('SIDEBAR.BILLING')
         : t('ACCOUNT_SUBSCRIPTION.TITLE'),
       icon: 'i-lucide-credit-card',
-      activeOn: ['billing_settings_index', 'billing_settings_usage'],
+      activeOn: ['billing_settings_index'],
       to: accountScopedRoute('billing_settings_index'),
+    },
+    {
+      name: 'Usage',
+      label: t('ACCOUNT_SUBSCRIPTION.USAGE_PAGE.TITLE'),
+      icon: 'i-lucide-chart-no-axes-column',
+      activeOn: ['billing_settings_usage'],
+      to: accountScopedRoute('billing_settings_usage'),
     },
     {
       name: 'Settings',
       label: t('SIDEBAR.SETTINGS'),
       icon: 'i-lucide-settings',
-      // The rail opens the settings home (cards and search, T31); the pages below
-      // only tell the rail which section is current.
-      to: accountScopedRoute('settings_home'),
       children: [
         {
           name: 'Settings Account Settings',

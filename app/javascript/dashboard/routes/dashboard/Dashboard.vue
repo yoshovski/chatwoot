@@ -3,6 +3,7 @@ import { defineAsyncComponent, ref, computed } from 'vue';
 
 import NextSidebar from 'next/sidebar/Sidebar.vue';
 import AccountBillingNotice from './settings/billing/AccountBillingNotice.vue';
+import TopBarUsageIndicator from './settings/billing/components/TopBarUsageIndicator.vue';
 import WootKeyShortcutModal from 'dashboard/components/widgets/modal/WootKeyShortcutModal.vue';
 import AddAccountModal from 'dashboard/components/app/AddAccountModal.vue';
 import UpgradePage from 'dashboard/routes/dashboard/upgrade/UpgradePage.vue';
@@ -33,6 +34,7 @@ export default {
   components: {
     NextSidebar,
     AccountBillingNotice,
+    TopBarUsageIndicator,
     CommandBar,
     WootKeyShortcutModal,
     AddAccountModal,
@@ -144,6 +146,7 @@ export default {
     />
 
     <div class="flex min-w-0 flex-1 flex-col overflow-hidden">
+      <TopBarUsageIndicator />
       <AccountBillingNotice />
       <main
         class="flex flex-1 w-full min-h-0 px-0 overflow-hidden bg-n-surface-1"

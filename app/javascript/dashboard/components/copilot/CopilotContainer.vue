@@ -144,7 +144,7 @@ onMounted(() => {
   <div
     v-if="shouldShowCopilotPanel"
     v-on-click-outside="() => closeCopilotPanel()"
-    class="bg-n-surface-2 h-full overflow-hidden flex-col fixed top-0 ltr:right-0 rtl:left-0 z-40 w-full max-w-sm transition-transform duration-300 ease-in-out md:static md:w-[320px] md:min-w-[320px] ltr:border-l rtl:border-r border-n-weak 2xl:min-w-[360px] 2xl:w-[360px] shadow-lg md:shadow-none"
+    class="bg-n-background h-full overflow-hidden flex-col fixed top-0 ltr:right-0 rtl:left-0 z-40 w-full max-w-sm p-3 transition-transform duration-300 ease-in-out md:static md:w-[21.75rem] md:min-w-[21.75rem] xl:w-[22.75rem] xl:min-w-[22.75rem] md:py-3 md:pe-3 md:ps-0 shadow-lg md:shadow-none"
     :class="[
       {
         'md:flex': shouldShowCopilotPanel,
@@ -152,16 +152,20 @@ onMounted(() => {
       },
     ]"
   >
-    <Copilot
-      :messages="messages"
-      :support-agent="currentUser"
-      :assistants="assistants"
-      :active-assistant="activeAssistant"
-      :can-suggest-reply="canSuggestReply"
-      :on-send-message="sendMessage"
-      @set-assistant="setAssistant"
-      @reset="handleReset"
-    />
+    <div
+      class="flex h-full min-h-0 w-full flex-col overflow-hidden rounded-card bg-n-solid-2 shadow-card outline outline-1 -outline-offset-1 outline-n-container"
+    >
+      <Copilot
+        :messages="messages"
+        :support-agent="currentUser"
+        :assistants="assistants"
+        :active-assistant="activeAssistant"
+        :can-suggest-reply="canSuggestReply"
+        :on-send-message="sendMessage"
+        @set-assistant="setAssistant"
+        @reset="handleReset"
+      />
+    </div>
   </div>
   <template v-else />
 </template>

@@ -16,6 +16,16 @@
     "RETRY": "Try again",
     "LIMIT_REACHED_NOTICE": "Monthly conversation allowance reached.",
     "LIMIT_NEAR_NOTICE": "You are approaching your monthly conversation allowance.",
+    "TOP_BAR": {
+      "LIMIT_REACHED": "Limit reached",
+      "USAGE_PILL": "{used} / {limit} AI chats",
+      "UNLIMITED": "Unlimited AI",
+      "TRIAL_TAG": "Trial",
+      "MANAGE_PLAN": "Manage plan",
+      "VIEW_USAGE": "Usage details",
+      "VIEW_BILLING": "Billing & plans",
+      "POPOVER_LABEL": "AI usage and plan details"
+    },
     "USAGE_PAGE": {
       "TITLE": "Usage",
       "DESCRIPTION": "Daily activity for the last 30 days. Days are in UTC.",

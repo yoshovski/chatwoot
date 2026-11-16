@@ -87,6 +87,9 @@ describe('settingsSections', () => {
     expect(findSettingsPage('settings_teams_edit_members').route).toBe(
       'settings_teams_list'
     );
-    expect(findSettingsPage('billing_settings_index')).toBeUndefined();
+    expect(findSettingsPage('billing_settings_index').route).toBe(
+      'billing_settings_index'
+    );
+    expect(findSettingsPage('settings_home')).toBeUndefined();
   });
 });

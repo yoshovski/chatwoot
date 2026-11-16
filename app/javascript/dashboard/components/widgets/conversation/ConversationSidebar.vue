@@ -52,7 +52,7 @@ const closeContactPanel = () => {
         ],
       },
     ]"
-    class="bg-n-background h-full overflow-hidden flex flex-col fixed top-0 z-40 w-full max-w-sm p-3 transition-transform duration-300 ease-in-out ltr:right-0 rtl:left-0 shadow-lg md:static md:w-[20rem] md:min-w-[20rem] md:p-0 md:bg-transparent md:shadow-none"
+    class="bg-n-background h-full overflow-hidden flex flex-col fixed top-0 z-40 w-full max-w-sm p-3 transition-transform duration-300 ease-in-out ltr:right-0 rtl:left-0 shadow-lg md:static md:w-[21rem] md:min-w-[21rem] xl:w-[22rem] xl:min-w-[22rem] md:p-0 md:bg-transparent md:shadow-none"
     :class="[
       {
         'md:flex': activeTab === 0,
@@ -60,7 +60,7 @@ const closeContactPanel = () => {
       },
     ]"
   >
-    <div class="flex flex-1 overflow-auto">
+    <div class="flex flex-col flex-1 min-h-0 overflow-hidden">
       <ContactPanel
         v-show="activeTab === 0"
         :conversation-id="currentChat.id"
