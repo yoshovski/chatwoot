@@ -713,7 +713,7 @@ export default {
         />
       </woot-tabs>
     </SettingIntroBanner>
-    <section class="w-full" :class="{ 'overflow-auto py-8': !embedded }">
+    <section class="w-full" :class="{ 'py-6': !embedded }">
       <div class="max-w-7xl mx-auto w-full">
         <template v-if="!embedded || section === 'configuration'">
           <MicrosoftReauthorize
@@ -793,7 +793,6 @@ export default {
         <WidgetSettings
           v-if="isAWebWidgetInbox"
           v-show="selectedTabKey === 'inbox-settings'"
-          class="mx-6"
           :inbox="inbox"
           :inbox-icon="inboxIcon"
           @open-pre-chat-form="openTab('pre-chat-form')"

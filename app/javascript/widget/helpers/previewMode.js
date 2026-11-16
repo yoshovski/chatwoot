@@ -40,8 +40,6 @@ const LAUNCHER_KEYS = [
   'testMode',
 ];
 
-const SAMPLE_SOURCE_URL = 'https://example.com/help/delivery';
-
 export const isPreviewMode = () => window.chatwootWebChannel?.preview === true;
 
 export const previewState = reactive({
@@ -95,9 +93,6 @@ export const buildSampleMessages = (t, agentName) => {
       content: t('PREVIEW.SAMPLE.ANSWER'),
       content_type: 'input_select',
       content_attributes: {
-        captain_sources: [
-          { title: t('PREVIEW.SAMPLE.SOURCE_TITLE'), url: SAMPLE_SOURCE_URL },
-        ],
         items: [
           {
             title: t('PREVIEW.SAMPLE.SUGGESTIONS.TRACK.TITLE'),

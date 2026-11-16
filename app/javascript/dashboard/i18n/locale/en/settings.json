@@ -1158,10 +1158,10 @@
     "LOAD_ERROR": "Could not load websites. Try again.",
     "RETRY": "Try again",
     "FOLDER_COUNT": "{folder} ({count})",
-    "WORKSPACE": "Workspace",
-    "SERVICES": "Channels & services",
-    "WORKFLOWS": "Workflows",
-    "ADMINISTRATION": "Data & administration",
+    "WORKSPACE": "Team & workspace",
+    "SERVICES": "Channels & apps",
+    "WORKFLOWS": "Inbox & workflows",
+    "ADMINISTRATION": "Account & billing",
     "ADVANCED_OPTIONS": "Advanced options",
     "SOURCE_COUNT": "{count} source | {count} sources",
     "WEBSITE_DISCOVERING": "Finding pages",
@@ -1327,6 +1327,21 @@
         "LABEL": "Message templates",
         "HINT": "Approved WhatsApp templates.",
         "KEYWORDS": "whatsapp template"
+      },
+      "CHANNELS": {
+        "LABEL": "Channels",
+        "HINT": "Website widget, email, WhatsApp and more.",
+        "KEYWORDS": "inboxes channels widget email whatsapp"
+      },
+      "BILLING": {
+        "LABEL": "Billing",
+        "HINT": "Plan, payment method, top-ups and invoices.",
+        "KEYWORDS": "billing plan subscription invoices upgrade card"
+      },
+      "USAGE": {
+        "LABEL": "Usage",
+        "HINT": "AI conversation and inbox usage over time.",
+        "KEYWORDS": "usage quota limit conversations"
       },
       "DATA": {
         "LABEL": "Import and export",

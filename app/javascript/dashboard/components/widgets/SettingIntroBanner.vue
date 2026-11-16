@@ -17,7 +17,7 @@ defineProps({
 
 <template>
   <div class="border-b border-solid border-n-weak/60">
-    <div class="max-w-7xl w-full mx-auto pt-4 pb-0 px-6">
+    <div class="w-full pt-2 pb-0 px-0">
       <h2 class="text-2xl text-n-slate-12 mb-1 font-medium min-w-0">
         <span :title="headerTitle" class="block truncate">
           {{ headerTitle }}

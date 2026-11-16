@@ -4,7 +4,7 @@ export const navigationLeaves = item =>
 export const groupPlatformNavigation = (items, t) => {
   const byName = Object.fromEntries(items.map(item => [item.name, item]));
   return items
-    .filter(item => !['Companies', 'Billing'].includes(item.name))
+    .filter(item => !['Companies', 'Billing', 'Usage'].includes(item.name))
     .map(item => {
       if (item.name === 'Contacts') {
         return {
@@ -20,29 +20,25 @@ export const groupPlatformNavigation = (items, t) => {
       if (item.name === 'Settings') {
         const settings = [
           ...item.children,
-          { ...byName.Billing, icon: 'i-lucide-credit-card' },
+          ...(byName.Billing
+            ? [{ ...byName.Billing, icon: 'i-lucide-credit-card' }]
+            : []),
+          ...(byName.Usage
+            ? [{ ...byName.Usage, icon: 'i-lucide-chart-no-axes-column' }]
+            : []),
         ];
+        const bySettingsName = Object.fromEntries(
+          settings.map(child => [child.name, child])
+        );
         const sections = [
-          [
-            'Workspace',
-            'PLATFORM_NAV.WORKSPACE',
-            'i-lucide-building-2',
-            [
-              'Settings Account Settings',
-              'Settings Agents',
-              'Settings Teams',
-              'Settings Custom Roles',
-              'Settings Security',
-            ],
-          ],
           [
             'Services',
             'PLATFORM_NAV.SERVICES',
             'i-lucide-plug',
             [
               'Settings Inboxes',
-              'Settings Templates',
               'Settings Integrations',
+              'Settings Templates',
               'Settings Agent Bots',
             ],
           ],
@@ -51,32 +47,55 @@ export const groupPlatformNavigation = (items, t) => {
             'PLATFORM_NAV.WORKFLOWS',
             'i-lucide-workflow',
             [
-              'Settings Automation',
-              'Settings Agent Assignment',
-              'Settings Macros',
               'Settings Canned Responses',
-              'Settings Sla',
+              'Settings Macros',
+              'Settings Automation',
+              'Settings Labels',
+              'Settings Custom Attributes',
+              'Settings Agent Assignment',
               'Conversation Workflow',
+              'Settings Sla',
+            ],
+          ],
+          [
+            'Workspace',
+            'PLATFORM_NAV.WORKSPACE',
+            'i-lucide-building-2',
+            ['Settings Agents', 'Settings Teams', 'Settings Custom Roles'],
+          ],
+          [
+            'Administration',
+            'PLATFORM_NAV.ADMINISTRATION',
+            'i-lucide-briefcase',
+            [
+              'Billing',
+              'Usage',
+              'Settings Account Settings',
+              'Settings Security',
+              'Settings Audit Logs',
+              'Settings Data',
             ],
           ],
         ];
         const assigned = new Set(sections.flatMap(section => section[3]));
         return {
           ...item,
-          children: [
-            ...sections.map(([name, label, icon, names]) => ({
+          children: sections.map(([name, label, icon, names]) => {
+            const groupItems = names
+              .map(leafName => bySettingsName[leafName])
+              .filter(Boolean);
+            if (name === 'Administration') {
+              groupItems.push(
+                ...settings.filter(child => !assigned.has(child.name))
+              );
+            }
+            return {
               name,
               label: t(label),
               icon,
-              children: settings.filter(child => names.includes(child.name)),
-            })),
-            {
-              name: 'Administration',
-              label: t('PLATFORM_NAV.ADMINISTRATION'),
-              icon: 'i-lucide-database',
-              children: settings.filter(child => !assigned.has(child.name)),
-            },
-          ],
+              children: groupItems,
+            };
+          }),
         };
       }
       return item;

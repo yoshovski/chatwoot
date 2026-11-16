@@ -10,7 +10,7 @@ defineProps({
 
 <template>
   <section
-    class="flex flex-wrap items-center gap-4 rounded-xl bg-n-solid-1 p-5 outline outline-1 -outline-offset-1 outline-n-weak"
+    class="flex flex-wrap items-center gap-4 rounded-card bg-n-solid-2 p-6 shadow-card outline outline-1 -outline-offset-1 outline-n-container"
   >
     <Avatar
       :src="assistant.avatar_url"

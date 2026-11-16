@@ -63,6 +63,7 @@ const isScrollable = computed(() => {
   return (
     props.isExpanded &&
     isSubGroupExpanded.value &&
+    !props.name.startsWith('Settings:') &&
     accessibleItems.value.length > 7
   );
 });

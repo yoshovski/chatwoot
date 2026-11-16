@@ -1,9 +1,7 @@
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
-import { useI18n } from 'vue-i18n';
 import { useDebounceFn, useEventListener } from '@vueuse/core';
 import InboxesAPI from 'dashboard/api/inboxes';
-import Button from 'dashboard/components-next/button/Button.vue';
 import Spinner from 'dashboard/components-next/spinner/Spinner.vue';
 
 // The real widget, loaded in preview mode in an iframe and kept in sync with the settings form through postMessage.
@@ -17,7 +15,7 @@ const props = defineProps({
   // AI agent test: the visitor can type, and the widget shows the AI agent typing.
   testMode: { type: Boolean, default: false },
   typing: { type: Boolean, default: false },
-  // Without the toolbar and the grey stage, for a page that draws its own frame.
+  // Without the stage frame, for a page that draws its own container.
   bare: { type: Boolean, default: false },
 });
 
@@ -32,37 +30,21 @@ const SEND_DEBOUNCE_MS = 250;
 // A fresh token is fetched this long before the current one expires.
 const TOKEN_REFRESH_MARGIN_MS = 60 * 1000;
 
-const { t } = useI18n();
-
 const iframe = ref(null);
 const token = ref('');
 const hasError = ref(false);
 const isReady = ref(false);
 const view = ref('home');
-const theme = ref('light');
-const device = ref('desktop');
-
-const views = computed(() => [
-  { value: 'home', label: t('INBOX_MGMT.WIDGET_PREVIEW.VIEWS.HOME') },
-  {
-    value: 'conversation',
-    label: t('INBOX_MGMT.WIDGET_PREVIEW.VIEWS.CONVERSATION'),
-  },
-  { value: 'launcher', label: t('INBOX_MGMT.WIDGET_PREVIEW.VIEWS.LAUNCHER') },
-]);
 
 const previewUrl = computed(() =>
   token.value ? `/widget/preview?token=${encodeURIComponent(token.value)}` : ''
 );
 
-const isDark = computed(() => theme.value === 'dark');
-const isMobile = computed(() => device.value === 'mobile');
-
 const send = ({ withView = true } = {}) => {
   if (!isReady.value) return;
   const payload = {
     type: PREVIEW_MESSAGE,
-    config: { ...props.config, darkMode: theme.value },
+    config: { ...props.config, darkMode: 'light' },
   };
   if (props.testMode) {
     payload.config.testMode = true;
@@ -122,7 +104,6 @@ watch(
   () => (props.testMode ? send({ withView: false }) : sendDebounced()),
   { deep: true }
 );
-watch([view, theme], () => send());
 watch(
   () => props.inboxId,
   () => fetchToken()
@@ -145,84 +126,27 @@ onBeforeUnmount(() => clearTimeout(refreshTimer));
     :class="{ 'size-full': bare }"
     :aria-label="$t('INBOX_MGMT.WIDGET_PREVIEW.TITLE')"
   >
-    <div v-if="!bare" class="flex flex-wrap items-center justify-between gap-2">
-      <div
-        class="flex items-center gap-1 rounded-lg bg-n-solid-1 p-1 outline outline-1 -outline-offset-1 outline-n-container"
-        role="group"
-        :aria-label="$t('INBOX_MGMT.WIDGET_PREVIEW.VIEW_LABEL')"
+    <div v-if="!bare" class="flex items-center justify-between px-1">
+      <span
+        class="text-xs font-semibold uppercase tracking-wider text-n-slate-11"
       >
-        <button
-          v-for="option in views"
-          :key="option.value"
-          type="button"
-          class="rounded-md px-2.5 py-1 text-xs font-medium transition-colors"
-          :class="
-            view === option.value
-              ? 'bg-n-solid-active text-n-slate-12 shadow-sm outline outline-1 -outline-offset-1 outline-n-container'
-              : 'text-n-slate-11 hover:text-n-slate-12'
-          "
-          :aria-pressed="view === option.value"
-          @click="view = option.value"
-        >
-          {{ option.label }}
-        </button>
-      </div>
-      <div class="flex items-center gap-1">
-        <Button
-          :icon="isDark ? 'i-lucide-moon' : 'i-lucide-sun'"
-          :aria-label="
-            isDark
-              ? $t('INBOX_MGMT.WIDGET_PREVIEW.LIGHT')
-              : $t('INBOX_MGMT.WIDGET_PREVIEW.DARK')
-          "
-          :title="
-            isDark
-              ? $t('INBOX_MGMT.WIDGET_PREVIEW.LIGHT')
-              : $t('INBOX_MGMT.WIDGET_PREVIEW.DARK')
-          "
-          variant="ghost"
-          color="slate"
-          size="sm"
-          @click="theme = isDark ? 'light' : 'dark'"
-        />
-        <Button
-          :icon="isMobile ? 'i-lucide-smartphone' : 'i-lucide-monitor'"
-          :aria-label="
-            isMobile
-              ? $t('INBOX_MGMT.WIDGET_PREVIEW.DESKTOP')
-              : $t('INBOX_MGMT.WIDGET_PREVIEW.MOBILE')
-          "
-          :title="
-            isMobile
-              ? $t('INBOX_MGMT.WIDGET_PREVIEW.DESKTOP')
-              : $t('INBOX_MGMT.WIDGET_PREVIEW.MOBILE')
-          "
-          variant="ghost"
-          color="slate"
-          size="sm"
-          @click="device = isMobile ? 'desktop' : 'mobile'"
-        />
-      </div>
+        {{ $t('INBOX_MGMT.WIDGET_PREVIEW.TITLE') }}
+      </span>
     </div>
 
     <div
       :class="
         bare
           ? 'relative size-full overflow-hidden'
-          : 'flex justify-center rounded-card bg-n-solid-1 p-6 outline outline-1 -outline-offset-1 outline-n-container'
+          : 'flex justify-center rounded-card bg-n-slate-2 p-5 outline outline-1 -outline-offset-1 outline-n-container'
       "
     >
       <div
-        class="relative overflow-hidden bg-n-solid-1"
+        class="relative overflow-hidden bg-n-solid-2"
         :class="
           bare
             ? 'size-full'
-            : [
-                'w-full h-[40rem] shadow-lg',
-                isMobile
-                  ? 'max-w-[22.5rem] rounded-3xl'
-                  : 'max-w-[25rem] rounded-2xl',
-              ]
+            : 'w-full max-w-[24rem] h-[40rem] rounded-2xl shadow-lg'
         "
       >
         <iframe
@@ -235,7 +159,7 @@ onBeforeUnmount(() => clearTimeout(refreshTimer));
         />
         <div
           v-if="!isReady"
-          class="absolute inset-0 flex items-center justify-center bg-n-solid-1 text-center text-sm text-n-slate-11 p-6"
+          class="absolute inset-0 flex items-center justify-center bg-n-solid-2 text-center text-sm text-n-slate-11 p-6"
         >
           <span v-if="hasError">
             {{ $t('INBOX_MGMT.WIDGET_PREVIEW.ERROR') }}
