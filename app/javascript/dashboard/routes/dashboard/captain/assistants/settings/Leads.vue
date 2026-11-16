@@ -12,15 +12,18 @@ const { assistant, updateAssistant } = useAssistantSettings();
 
 <template>
   <SettingsPageLayout
-    :heading="t('CAPTAIN.AGENT_UX.SECTIONS.SCENARIOS')"
+    :heading="t('CAPTAIN.ASSISTANTS.SETTINGS.LEADS.TITLE')"
     :description="t('CAPTAIN.ASSISTANTS.SETTINGS.LEADS.DESCRIPTION')"
   >
     <AssistantLeadsForm
-      v-if="assistant?.id"
+      v-if="isAdmin && assistant?.id"
       :key="assistant.id"
       :assistant="assistant"
       :save="updateAssistant"
       :can-manage-integrations="isAdmin"
     />
+    <p v-else-if="!isAdmin" class="text-sm text-n-slate-11">
+      {{ t('LEADS.CAPTURE.NO_ACCESS') }}
+    </p>
   </SettingsPageLayout>
 </template>

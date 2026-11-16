@@ -51,10 +51,16 @@ const CELL = 'block px-4 py-2 align-middle sm:table-cell sm:py-3';
             <div class="flex min-w-0 items-center gap-3">
               <Avatar :name="lead.name" :size="32" rounded-full />
               <div class="flex min-w-0 flex-col">
-                <span class="truncate text-sm font-medium text-n-slate-12">
+                <span
+                  class="truncate text-sm font-medium text-n-slate-12"
+                  :title="lead.name"
+                >
                   {{ lead.name }}
                 </span>
-                <span class="truncate text-xs text-n-slate-11">
+                <span
+                  class="truncate text-xs text-n-slate-11"
+                  :title="lead.email"
+                >
                   {{ lead.email }}
                 </span>
               </div>
@@ -62,10 +68,18 @@ const CELL = 'block px-4 py-2 align-middle sm:table-cell sm:py-3';
           </td>
           <td :class="CELL" class="col-span-2 sm:max-w-[20rem]">
             <p class="m-0 line-clamp-2 text-sm text-n-slate-12">
-              {{ lead.wants }}
+              {{ lead.wants || t('LEADS.INCOMPLETE') }}
             </p>
             <span class="text-xs text-n-slate-11">
-              {{ [lead.company, lead.type].filter(Boolean).join(' · ') }}
+              {{
+                [
+                  lead.company,
+                  lead.type,
+                  t('LEADS.CONVERSATION', { id: lead.conversation_id }),
+                ]
+                  .filter(Boolean)
+                  .join(' · ')
+              }}
             </span>
           </td>
           <td :class="CELL">
@@ -129,7 +143,12 @@ const CELL = 'block px-4 py-2 align-middle sm:table-cell sm:py-3';
             <span class="mb-1 block text-xs text-n-slate-11 sm:hidden">{{
               t('LEADS.COLUMNS.DATE')
             }}</span>
-            {{ capturedAgo(lead.captured_at) }}
+            <time
+              :datetime="lead.captured_at"
+              :title="new Date(lead.captured_at).toLocaleString()"
+            >
+              {{ capturedAgo(lead.captured_at) }}
+            </time>
           </td>
         </tr>
       </tbody>

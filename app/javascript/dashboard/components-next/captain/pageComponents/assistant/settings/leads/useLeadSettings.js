@@ -56,6 +56,7 @@ export function createLeadSettings({
   const savedSnapshot = ref('');
   const saving = ref(false);
   const attempted = ref(false);
+  const activating = ref(false);
   const scenarioDialog = ref(null);
 
   const setup = useLeadSetup(
@@ -112,6 +113,7 @@ export function createLeadSettings({
     lockedFields = new WeakSet(settings.value.lead_fields.map(toRaw));
     savedSnapshot.value = snapshot();
     attempted.value = false;
+    activating.value = false;
   };
 
   watch(
@@ -121,25 +123,6 @@ export function createLeadSettings({
     },
     { immediate: true }
   );
-
-  const enableCapture = value => {
-    settings.value.leads_enabled = value;
-    if (
-      value &&
-      !assistant.value.config?.leads_enabled &&
-      !settings.value.lead_fields.length
-    ) {
-      settings.value.lead_fields = ['use_case', 'audience_size', 'company'].map(
-        key => ({ key, label: label(`COMMON_FIELDS.${key}`) })
-      );
-    }
-    if (value && !settings.value.lead_types.length) {
-      settings.value.lead_types.push({
-        name: 'business_inquiry',
-        rule: label('DEFAULT_TYPE_RULE'),
-      });
-    }
-  };
 
   const fieldErrorFor = (field, ignoreIndex = -1) => {
     if (!KEY_PATTERN.test(field.key) || RESERVED_KEYS.includes(field.key))
@@ -195,14 +178,16 @@ export function createLeadSettings({
   // Every error lives in "What to ask": fields and lead types.
   const hasErrors = computed(
     () =>
-      (settings.value.leads_enabled && !settings.value.lead_types.length) ||
+      ((settings.value.leads_enabled || activating.value) &&
+        !settings.value.lead_types.length) ||
       settings.value.lead_fields.some(fieldError) ||
       settings.value.lead_types.some(typeError)
   );
 
-  const save = async formElement => {
+  const save = async (formElement, enabled = settings.value.leads_enabled) => {
     if (saving.value || loading.value || setup.scenarioError.value)
       return false;
+    activating.value = enabled;
     attempted.value = true;
     if (hasErrors.value) {
       await nextTick();
@@ -213,14 +198,18 @@ export function createLeadSettings({
     try {
       const config = {
         ...JSON.parse(snapshot()),
+        leads_enabled: enabled,
         lead_guided_setup: guidedSetup.value,
       };
       const result = await saveConfig({ config });
       if (result === false) return false;
       store.dispatch('attributes/get');
       setup.refresh();
+      settings.value = config;
+      lockedFields = new WeakSet(settings.value.lead_fields.map(toRaw));
       savedSnapshot.value = snapshot();
       attempted.value = false;
+      activating.value = false;
       return true;
     } finally {
       saving.value = false;
@@ -261,7 +250,6 @@ export function createLeadSettings({
   );
 
   const statusLabel = computed(() => {
-    if (isDirty.value) return label('STATUS.UNSAVED');
     if (!settings.value.leads_enabled) return label('STATUS.OFF');
     if (loading.value) return label('STATUS.CHECKING');
     if (setup.scenarioError.value) return label('STATUS.UNKNOWN');
@@ -316,14 +304,15 @@ export function createLeadSettings({
           }
         )
       : t('CAPTAIN.AGENT_UX.LEADS.CUSTOM_SCENARIO'),
-    where: listFormatter.format(
-      [
-        t(`${S}.SAVED`),
-        selectedTeamName.value &&
-          t(`${S}.EMAIL_TEAM`, { team: selectedTeamName.value }),
-        hubspotSyncEnabled.value && t(`${S}.HUBSPOT`),
-      ].filter(Boolean)
-    ),
+    where: [
+      t(`${S}.SAVED`),
+      selectedTeamName.value
+        ? `${t(`${S}.EMAIL_TEAM`, { team: selectedTeamName.value })}: ${label(`NOTIFICATION_STATUS.${notificationStatus.value.toUpperCase()}`)}`
+        : t(teamsError.value ? `${S}.EMAIL_UNAVAILABLE` : `${S}.EMAIL_OFF`),
+      t(`${S}.HUBSPOT_STATUS`, {
+        status: label(`HUBSPOT.${hubspotState.value.toUpperCase()}`),
+      }),
+    ].join(' · '),
   }));
 
   const state = {
@@ -339,7 +328,7 @@ export function createLeadSettings({
     hasErrors,
     reset,
     save,
-    enableCapture,
+    activating,
     fieldErrorFor,
     fieldError,
     typeErrorFor,

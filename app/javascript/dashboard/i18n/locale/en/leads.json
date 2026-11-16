@@ -40,6 +40,22 @@
     "OWNER_FOR": "Owner for {name}",
     "PREVIOUS": "Previous",
     "NEXT": "Next",
-    "PAGE": "Page {page} · {total} leads"
+    "PAGE": "Page {page} · {total} leads",
+    "CAPTURE": {
+      "NO_ACCESS": "Ask a workspace administrator to configure lead capture.",
+      "LOADING": "Checking lead capture setup…",
+      "ERROR": "AI agent setup could not be loaded. Try again.",
+      "CHOOSE": "Choose an AI agent",
+      "CHOOSE_HELP": "Choose the agent whose lead capture you want to configure.",
+      "CREATE_HELP": "Create an AI agent to set up lead capture. You will return directly to its capture setup.",
+      "ENABLED": "Capture is enabled in this agent’s settings. No leads have been captured yet. Check its trigger, scenario and connected channels in setup.",
+      "PAUSED": "Capture is paused for this agent. Review its saved setup and enable capture when ready.",
+      "UNCONFIGURED": "Lead capture has not been configured for this agent.",
+      "OPEN_SETUP": "Open capture setup",
+      "CREATE": "Create AI agent",
+      "UNAVAILABLE": "AI agent lead capture is not available on your current plan."
+    },
+    "INCOMPLETE": "No capture summary recorded",
+    "CONVERSATION": "Conversation #{id}"
   }
 }

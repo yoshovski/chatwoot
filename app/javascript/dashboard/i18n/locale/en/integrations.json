@@ -1499,7 +1499,7 @@
           }
         },
         "LEADS": {
-          "TITLE": "Business leads",
+          "TITLE": "Lead capture",
           "DESCRIPTION": "Help interested businesses, collect useful details and offer email follow-up.",
           "ENABLE": "Capture business leads",
           "VERIFICATION": "Email format is checked, but mailbox ownership is not verified. Saving, CRM delivery and sales notification are separate steps.",
@@ -1595,7 +1595,7 @@
           "HUBSPOT": {
             "LOADING": "Checking connection…",
             "UNAVAILABLE": "Connection status unavailable. An administrator can check the integration.",
-            "NOT_CONNECTED": "Not connected · leads stay in Chatwoot Contacts",
+            "NOT_CONNECTED": "Not connected",
             "RECONNECT": "Reconnect HubSpot to resume syncing",
             "SYNC_OFF": "Connected · contact sync is off",
             "MAPPING_NEEDED": "Contact sync is on · map unmapped lead fields",
@@ -1735,7 +1735,10 @@
               "WHEN_HANDOFF": "Offers follow-up to: {who} Also when handing over to your team.",
               "SAVED": "Saved in Leads",
               "EMAIL_TEAM": "emailed to {team}",
-              "HUBSPOT": "sent to HubSpot"
+              "HUBSPOT": "sent to HubSpot",
+              "EMAIL_OFF": "Email alerts off",
+              "EMAIL_UNAVAILABLE": "Email alert setup unavailable",
+              "HUBSPOT_STATUS": "HubSpot: {status}"
             },
             "WHERE": {
               "LIST": "Leads list",
@@ -1755,6 +1758,14 @@
               "TO_TEAM": "Email to {team}",
               "TO_HUBSPOT": "Sent to HubSpot"
             }
+          },
+          "ACTIVATION": {
+            "SUMMARY": "Capture summary",
+            "ENABLE": "Enable capture",
+            "PAUSE": "Pause capture",
+            "ENABLED_HELP": "Capture is enabled. Saved changes apply to your live agent.",
+            "PAUSED_HELP": "Capture is paused. You can edit and save this setup before enabling it.",
+            "SAVE_FIRST": "Save your changes before enabling or pausing capture."
           }
         }
       },
