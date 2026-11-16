@@ -43,7 +43,10 @@ const validationRules = {
 
 const v$ = useVuelidate(validationRules, state);
 
-const isLoading = computed(() => formState.uiFlags.value.creatingItem);
+const isLoading = computed(
+  () =>
+    formState.uiFlags.value.creatingItem || formState.uiFlags.value.updatingItem
+);
 
 const getErrorMessage = (field, errorKey) => {
   return v$.value[field].$error
@@ -113,6 +116,20 @@ watch(
       :max-length="10000"
       :message-type="formErrors.answer ? 'error' : 'info'"
     />
+    <label class="flex flex-col gap-2 text-sm text-n-slate-12">
+      {{ t('CAPTAIN.RESPONSES.FORM.SCOPE_LABEL') }}
+      <select
+        v-model="state.agentsOnly"
+        class="w-full rounded-lg border border-n-weak bg-n-solid-1 p-2"
+      >
+        <option :value="false">
+          {{ t('CAPTAIN.RESPONSES.FORM.SCOPE_ALL') }}
+        </option>
+        <option :value="true">
+          {{ t('CAPTAIN.RESPONSES.FORM.SCOPE_TEAM') }}
+        </option>
+      </select>
+    </label>
     <div class="flex items-center justify-between w-full gap-3">
       <Button
         type="button"

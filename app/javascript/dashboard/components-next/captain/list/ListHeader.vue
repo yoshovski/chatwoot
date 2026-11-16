@@ -8,6 +8,7 @@ defineProps({
   label: { type: String, required: true },
   // Keys of LIST_COLUMNS shown after the first column, in row order.
   columns: { type: Array, required: true },
+  stackStatus: { type: Boolean, default: false },
   selectable: { type: Boolean, default: true },
 });
 
@@ -35,7 +36,14 @@ const COLUMN_LABELS = {
       <span class="truncate">{{ label }}</span>
       <slot />
     </span>
-    <span v-for="column in columns" :key="column" :class="LIST_COLUMNS[column]">
+    <span
+      v-for="column in columns"
+      :key="column"
+      :class="[
+        LIST_COLUMNS[column],
+        { 'hidden sm:block': stackStatus && column === 'status' },
+      ]"
+    >
       <span v-if="COLUMN_LABELS[column]" class="truncate">
         {{ $t(COLUMN_LABELS[column]) }}
       </span>

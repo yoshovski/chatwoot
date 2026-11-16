@@ -284,6 +284,13 @@ onUnmounted(closeUsage);
       <Spinner />
     </div>
     <div v-else class="flex flex-col gap-6 min-h-48">
+      <p class="m-0 text-sm text-n-slate-11">
+        {{
+          documentDetails.agents_only
+            ? $t('CAPTAIN.RESPONSES.FORM.SCOPE_TEAM')
+            : $t('CAPTAIN.RESPONSES.FORM.SCOPE_ALL')
+        }}
+      </p>
       <section class="flex flex-col gap-3">
         <div
           class="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-n-weak"

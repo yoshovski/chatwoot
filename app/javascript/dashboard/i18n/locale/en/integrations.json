@@ -2459,7 +2459,8 @@
           "RECENTLY_CREATED": "Recently added",
           "MOST_USED": "Most used in conversations"
         },
-        "SEARCH_PLACEHOLDER": "Search sources..."
+        "SEARCH_PLACEHOLDER": "Search sources...",
+        "MOBILE": "Filters"
       },
       "SYNC_STATUS": {
         "SYNCED": "Updated {time}",
@@ -2517,7 +2518,7 @@
       "FORM_DESCRIPTION": "Add a website, upload a file, or paste text for your AI agent to answer from.",
       "CREATE": {
         "TITLE": "Add knowledge",
-        "SUCCESS_MESSAGE": "Knowledge source added",
+        "SUCCESS_MESSAGE": "Knowledge submitted. Processing may take a few minutes; check source readiness before testing your AI agent.",
         "ERROR_MESSAGE": "Could not add knowledge source. Please try again."
       },
       "FORM": {
@@ -2591,15 +2592,19 @@
         "MORE": "More actions"
       },
       "EMPTY_STATE": {
-        "TITLE": "No knowledge sources yet",
-        "SUBTITLE": "Add your website, help articles, files, or text notes so your AI agent can answer customer questions accurately.",
+        "TITLE": "Add the information your AI agent should use",
+        "SUBTITLE": "Add website pages, upload a file or write text. Sources become usable after processing finishes.",
         "FILTERED_TITLE": "No matching sources",
         "FILTERED_SUBTITLE": "Try changing the source, status, or search term.",
         "FEATURE_SPOTLIGHT": {
           "TITLE": "Knowledge sources",
           "NOTE": "Add your website, files, or text notes so your AI agent can answer customer inquiries from your real policies and guides."
         }
-      }
+      },
+      "LOAD_ERROR": "Could not load knowledge sources",
+      "IMPORT_REVIEW": "Review page selection and import progress",
+      "IMPORT_FAILED": "Page discovery interrupted. Manage pages to review or retry.",
+      "IMPORT_PROGRESS": "{ready} of {total} imported pages ready · {failed} failed"
     },
     "MCP_SERVERS": {
       "TITLE": "MCP servers",
@@ -2990,7 +2995,10 @@
         "AGENTS_ONLY": {
           "LABEL": "Agents only",
           "HELP": "Captain won't use this FAQ to answer customers. Copilot and reply suggestions still can."
-        }
+        },
+        "SCOPE_LABEL": "Who can use this answer?",
+        "SCOPE_ALL": "AI agent and team",
+        "SCOPE_TEAM": "Team only"
       },
       "EDIT": {
         "TITLE": "Update the FAQ",
@@ -3005,12 +3013,14 @@
       },
       "EMPTY_STATE": {
         "TITLE": "No FAQs Found",
-        "SUBTITLE": "FAQs help your AI agent provide quick and accurate answers to questions from your customers. They can be generated automatically from your content or can be added manually.",
+        "SUBTITLE": "Add answers to common questions and choose whether each answer is for your team only or also available to the AI agent.",
         "CLEAR_SEARCH": "Clear active filters",
         "FEATURE_SPOTLIGHT": {
           "TITLE": "Captain FAQ",
           "NOTE": "Captain FAQs detects common customer questions—whether missing from your knowledge base or frequently asked—and generates relevant FAQs to improve support. You can review each suggestion and decide whether to approve or reject it."
-        }
+        },
+        "FILTERED_TITLE": "No FAQs match your filters",
+        "FILTERED_SUBTITLE": "Try another search or clear your filters to see more answers."
       }
     },
     "FAQ_SUGGESTIONS": {
@@ -3660,6 +3670,10 @@
         "DEFAULT_MESSAGES": "Default confirmation, success and failure messages",
         "MESSAGES_DESC": "What {agent} says when it asks to confirm, and after the call succeeds or fails."
       }
+    },
+    "KNOWLEDGE_LOAD": {
+      "STALE": "Showing the last loaded results. They may not match your current filters. Retry to refresh them.",
+      "FAILED": "We could not load this list. Your filters are saved. Try again."
     }
   }
 }

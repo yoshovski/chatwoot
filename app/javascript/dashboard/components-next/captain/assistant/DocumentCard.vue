@@ -57,6 +57,7 @@ const props = defineProps({
     type: Number,
     required: true,
   },
+  updatedAt: { type: Number, default: null },
   status: {
     type: String,
     default: null,
@@ -135,7 +136,9 @@ const KNOWLEDGE_STATE_CHIPS = {
 };
 
 const exactTimestamp = useExactTimestamp();
-const timestamp = computed(() => props.lastSyncedAt || props.createdAt);
+const timestamp = computed(
+  () => props.lastSyncedAt || props.updatedAt || props.createdAt
+);
 const route = useRoute();
 
 const { checkPermissions } = usePolicy();
@@ -294,7 +297,7 @@ const handleRetry = () => {
 
 <template>
   <div
-    class="group flex items-center gap-3 px-4 py-2.5 border-b border-n-weak last:border-b-0 last:rounded-b-xl transition-colors hover:bg-n-alpha-1"
+    class="group flex flex-wrap sm:flex-nowrap items-center gap-3 px-4 py-2.5 border-b border-n-weak last:border-b-0 last:rounded-b-xl transition-colors hover:bg-n-alpha-1"
     :class="{ 'bg-n-brand/5': isSelected }"
   >
     <div
@@ -315,21 +318,39 @@ const handleRetry = () => {
       >
         <Icon :icon="typeIcon" class="size-3.5" />
       </div>
-      <button
-        type="button"
-        class="p-0 text-sm font-medium text-start bg-transparent border-0 outline-transparent truncate max-w-xs md:max-w-md underline-offset-2 hover:underline focus-visible:underline"
-        :class="enabled ? 'text-n-slate-12' : 'text-n-slate-11'"
-        @click="handleViewDetails"
-      >
-        {{ name }}
-      </button>
+      <div class="flex flex-col flex-1 min-w-0">
+        <button
+          type="button"
+          class="min-w-0 p-0 text-sm font-medium text-start bg-transparent border-0 outline-transparent truncate max-w-xs md:max-w-md underline-offset-2 hover:underline focus-visible:underline"
+          :class="enabled ? 'text-n-slate-12' : 'text-n-slate-11'"
+          @click="handleViewDetails"
+        >
+          {{ name }}
+        </button>
+        <span class="text-xs text-n-slate-11">
+          {{
+            isPdf
+              ? $t('KNOWLEDGE_LIST.SOURCE.FILES')
+              : isMarkdown
+                ? $t('KNOWLEDGE_LIST.SOURCE.TEXT')
+                : $t('KNOWLEDGE_LIST.SOURCE.WEBSITES')
+          }}
+          <time
+            class="block sm:inline lg:hidden"
+            :datetime="new Date(timestamp * 1000).toISOString()"
+            :title="exactTimestamp(timestamp)"
+          >
+            {{ dynamicTime(timestamp) }}
+          </time>
+        </span>
+      </div>
       <a
         v-if="!isPdf && !isMarkdown && hasSafeLink"
         :href="externalLink"
         :title="externalLink"
         target="_blank"
         rel="noopener noreferrer"
-        class="hidden sm:inline-flex min-w-0 shrink-[4] items-center gap-1 text-xs text-n-slate-10 hover:text-n-slate-12 truncate"
+        class="hidden xl:inline-flex max-w-36 min-w-0 shrink-[4] items-center gap-1 text-xs text-n-slate-10 hover:text-n-slate-12 truncate"
         @click.stop
       >
         <span class="truncate">{{ displayLink }}</span>
@@ -338,13 +359,15 @@ const handleRetry = () => {
       <router-link
         v-if="showFaqPill"
         :to="faqsFilteredRoute"
-        class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-n-alpha-2 hover:bg-n-alpha-3 text-n-slate-11 shrink-0"
+        class="hidden sm:inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-n-alpha-2 hover:bg-n-alpha-3 text-n-slate-11 shrink-0"
         @click.stop
       >
         {{ responsesCountLabel }}
       </router-link>
     </div>
-    <div class="flex items-center" :class="LIST_COLUMNS.status">
+    <div
+      class="flex items-center order-last w-full ps-9 sm:ps-0 sm:order-none sm:w-32 shrink-0"
+    >
       <DocumentSyncStatus
         v-if="showSyncStatus"
         class="!text-xs"
@@ -381,16 +404,18 @@ const handleRetry = () => {
         <span>{{ t(knowledgeChip.label) }}</span>
       </span>
     </div>
-    <span
+    <time
       v-tooltip.top="{
         content: exactTimestamp(timestamp),
         delay: { show: 500, hide: 0 },
       }"
+      :datetime="new Date(timestamp * 1000).toISOString()"
+      :title="exactTimestamp(timestamp)"
       class="text-xs truncate text-n-slate-10"
       :class="LIST_COLUMNS.updated"
     >
       {{ dynamicTime(timestamp) }}
-    </span>
+    </time>
     <div v-if="showInUse" :class="LIST_COLUMNS.inUse">
       <Policy v-if="canManage" :permissions="['administrator']">
         <Switch
@@ -405,8 +430,8 @@ const handleRetry = () => {
     </div>
     <div
       v-on-clickaway="() => (showMenu = false)"
-      class="relative"
-      :class="LIST_COLUMNS.actions"
+      class="relative !w-6 sm:!w-16"
+      :class="[LIST_COLUMNS.actions]"
     >
       <Button
         v-if="menuItems.length"
