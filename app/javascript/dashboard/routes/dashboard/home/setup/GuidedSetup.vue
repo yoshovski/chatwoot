@@ -138,7 +138,7 @@ const continueStep = async () => {
   const ok = await runStepAction(key, primary.value);
   isBusy.value = false;
   if (!ok) return;
-  // Testing leaves no trace the server can count, so finishing it is remembered here.
+  // The server counts a playground test (setup.test_agent); this also remembers a test finished here before that.
   if (key === 'test_agent' && !finished.value.includes(key)) {
     updateUISettings({ [FINISHED_SETTING]: [...finished.value, key] });
   }
