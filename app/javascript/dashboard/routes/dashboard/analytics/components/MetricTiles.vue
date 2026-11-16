@@ -27,25 +27,16 @@ const emit = defineEmits(['retry']);
     <CardError @retry="emit('retry')" />
   </div>
   <div v-else class="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
-    <div v-for="tile in tiles" :key="tile.key" class="flex min-w-0 flex-col">
-      <MetricTile
-        class="flex-1"
-        :label="tile.label"
-        :value="tile.value"
-        :icon="tile.icon"
-        :tone="tile.tone"
-        :change="tile.change"
-        :change-tone="tile.changeTone"
-        :is-loading="isLoading"
-      />
-      <details v-if="tile.hint" class="mt-2 px-1 text-xs text-n-slate-11">
-        <summary
-          class="cursor-pointer rounded py-2 focus-visible:outline focus-visible:outline-n-brand"
-        >
-          {{ $t('ANALYTICS.METRIC_DEFINITION', { metric: tile.label }) }}
-        </summary>
-        <p class="mb-0 py-2">{{ tile.hint }}</p>
-      </details>
-    </div>
+    <MetricTile
+      v-for="tile in tiles"
+      :key="tile.key"
+      :label="tile.label"
+      :value="tile.value"
+      :icon="tile.icon"
+      :tone="tile.tone"
+      :change="tile.change"
+      :change-tone="tile.changeTone"
+      :is-loading="isLoading"
+    />
   </div>
 </template>

@@ -278,7 +278,7 @@ describe('calendar report windows', () => {
   });
 });
 
-it('treats increased handoffs neutrally and explains the denominator', () => {
+it('treats increased handoffs neutrally', () => {
   const view = metricView(
     'handed',
     { value: 8, previous: 3 },
@@ -286,7 +286,6 @@ it('treats increased handoffs neutrally and explains the denominator', () => {
     t
   );
   expect(view.changeTone).toBe('neutral');
-  expect(view.hint).toBe('ANALYTICS.DEFINITIONS.HANDED');
 });
 
 it('distinguishes no handled conversations, missing ratings and zero counts', () => {
