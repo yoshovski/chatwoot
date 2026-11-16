@@ -57,7 +57,7 @@ const matches = computed(() =>
         <ul class="m-0 flex list-none flex-col divide-y divide-n-weak p-0">
           <li v-for="page in matches" :key="page.key">
             <router-link
-              :to="{ name: page.route }"
+              :to="page.to"
               class="-mx-2 flex items-center gap-3 rounded-lg px-2 py-2.5 hover:bg-n-alpha-1"
             >
               <span
@@ -102,7 +102,7 @@ const matches = computed(() =>
         <ul class="mb-0 flex list-none flex-col p-0">
           <li v-for="page in section.pages" :key="page.key">
             <router-link
-              :to="{ name: page.route }"
+              :to="page.to"
               class="-mx-2 flex items-center gap-2 rounded-lg px-2 py-2 text-sm text-n-slate-12 hover:bg-n-alpha-1"
             >
               <span class="me-auto truncate">{{ page.label }}</span>

@@ -4,6 +4,12 @@ import SidebarNavigation from '../SidebarNavigation.vue';
 
 const route = reactive({ name: 'home', path: '/home', params: {} });
 const push = vi.fn();
+const layout = reactive({ isMobile: false, isCompact: false });
+
+vi.mock('../useNavigationLayout', async () => {
+  const { toRefs } = await import('vue');
+  return { useNavigationLayout: () => toRefs(layout) };
+});
 
 vi.mock('vue-router', () => ({
   useRoute: () => route,
@@ -42,6 +48,7 @@ const items = [
     name: 'Settings',
     label: 'Settings',
     icon: 'i-lucide-settings',
+    to: { name: 'settings_home' },
     children: [
       { name: 'Settings Agents', label: 'Teammates', to: { name: 'agents' } },
     ],
@@ -72,6 +79,7 @@ describe('SidebarNavigation', () => {
   beforeEach(() => {
     localStorage.clear();
     push.mockClear();
+    Object.assign(layout, { isMobile: false, isCompact: false });
     Object.assign(route, { name: 'home', path: '/home' });
   });
 
@@ -137,24 +145,45 @@ describe('SidebarNavigation', () => {
     expect(push).not.toHaveBeenCalled();
   });
 
-  it('shows the hideable subsection panel on settings pages and toggles it like other sections', async () => {
+  it('returns to searchable Settings from a settings page without a permanent panel', async () => {
     Object.assign(route, { name: 'agents', path: '/agents' });
     const wrapper = mountNavigation();
-
-    expect(wrapper.find('#co-section-panel').exists()).toBe(true);
+    expect(wrapper.find('#co-section-panel').exists()).toBe(false);
     expect(railButton(wrapper, 'Settings').attributes('aria-current')).toBe(
       'true'
     );
-
-    await wrapper
-      .find('button[aria-label="PLATFORM_NAV.HIDE_MENU"]')
-      .trigger('click');
-    await flushPromises();
-
-    expect(wrapper.find('#co-section-panel').exists()).toBe(false);
     await railButton(wrapper, 'Settings').trigger('click');
+    expect(push).toHaveBeenCalledWith({ name: 'settings_home' });
+  });
+
+  it('temporarily collapses at tablet widths and restores the desktop choice', async () => {
+    const wrapper = mountNavigation();
+    layout.isCompact = true;
+    await flushPromises();
+    expect(wrapper.find('#co-section-panel').exists()).toBe(false);
+    await railButton(wrapper, 'Conversations').trigger('click');
     expect(wrapper.find('#co-section-panel').exists()).toBe(true);
-    expect(push).not.toHaveBeenCalled();
+    expect(localStorage.getItem('co-nav-collapsed')).toBeNull();
+    layout.isCompact = false;
+    await flushPromises();
+    expect(wrapper.find('#co-section-panel').exists()).toBe(true);
+  });
+
+  it('offers the mobile panel without overwriting a collapsed desktop preference', async () => {
+    localStorage.setItem(
+      'co-nav-collapsed',
+      JSON.stringify({ Conversation: true })
+    );
+    const wrapper = mountNavigation();
+    layout.isMobile = true;
+    await flushPromises();
+    expect(wrapper.find('#co-section-panel').exists()).toBe(true);
+    layout.isMobile = false;
+    await flushPromises();
+    expect(wrapper.find('#co-section-panel').exists()).toBe(false);
+    expect(JSON.parse(localStorage.getItem('co-nav-collapsed'))).toEqual({
+      Conversation: true,
+    });
   });
 
   it('opens another section on its first page', async () => {

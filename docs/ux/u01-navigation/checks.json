@@ -1,0 +1,22 @@
+[
+  "Search alias and back: invoices",
+  "Search alias and back: subscription",
+  "Search alias and back: inbox",
+  "Search alias and back: connection",
+  "settings at 320: no document overflow or menu overlap",
+  "conversations at 320: no document overflow or menu overlap",
+  "settings at 360: no document overflow or menu overlap",
+  "conversations at 360: no document overflow or menu overlap",
+  "settings at 768: no document overflow or menu overlap",
+  "conversations at 768: no document overflow or menu overlap",
+  "settings at 1024: no document overflow or menu overlap",
+  "conversations at 1024: no document overflow or menu overlap",
+  "settings at 1280: no document overflow or menu overlap",
+  "conversations at 1280: no document overflow or menu overlap",
+  "settings at 1440: no document overflow or menu overlap",
+  "conversations at 1440: no document overflow or menu overlap",
+  "Tablet panel override restores the saved desktop preference",
+  "Mobile menu is available from a selected conversation; navigating to Settings returns focus to the menu trigger.",
+  "Every registry destination resolves with an explicit account in the actual app router.",
+  "A restricted agent cannot find Billing or workspace Channels in Settings/search; direct Billing navigation is rejected."
+]

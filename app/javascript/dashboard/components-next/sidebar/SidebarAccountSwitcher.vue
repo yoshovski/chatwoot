@@ -57,8 +57,11 @@ const emitNewAccount = () => {
       <button
         v-if="isCollapsed"
         v-tooltip="{ content: currentAccount.name, theme: 'co-nav' }"
-        :aria-label="currentAccount.name"
-        class="grid size-12 flex-shrink-0 place-content-center rounded-2xl cursor-pointer hover:bg-n-alpha-2"
+        :aria-label="
+          t('PLATFORM_NAV.WORKSPACE_MENU', { account: currentAccount.name })
+        "
+        :aria-expanded="isOpen"
+        class="grid size-12 flex-shrink-0 place-content-center rounded-2xl cursor-pointer hover:bg-n-alpha-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-n-brand"
         :class="{ 'bg-n-alpha-2': isOpen }"
         @click="toggle"
       >

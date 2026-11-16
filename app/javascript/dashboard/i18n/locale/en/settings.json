@@ -324,7 +324,7 @@
     "REPORTS": "Reports",
     "ANALYTICS": "Analytics",
     "SETTINGS": "Settings",
-    "CONTACTS": "Contacts",
+    "CONTACTS": "Customers",
     "ACTIVE": "Active",
     "COMPANIES": "Companies",
     "ALL_COMPANIES": "All Companies",
@@ -347,11 +347,11 @@
     "INBOXES": "Channels",
     "WHATSAPP_TEMPLATES": "Templates",
     "NOTIFICATIONS": "Notifications",
-    "CANNED_RESPONSES": "Canned Responses",
+    "CANNED_RESPONSES": "Saved replies",
     "INTEGRATIONS": "Integrations",
     "DATA": "Data",
     "PROFILE_SETTINGS": "Profile Settings",
-    "ACCOUNT_SETTINGS": "Account Settings",
+    "ACCOUNT_SETTINGS": "Business details",
     "APPLICATIONS": "Applications",
     "LABELS": "Labels",
     "CUSTOM_ATTRIBUTES": "Custom Attributes",
@@ -361,7 +361,7 @@
     "BILLING": "Billing",
     "CUSTOM_VIEWS_FOLDER": "Views",
     "CUSTOM_VIEWS_SEGMENTS": "Segments",
-    "ALL_CONTACTS": "All Contacts",
+    "ALL_CONTACTS": "All customers",
     "LEADS": "Leads",
     "TAGGED_WITH": "Tagged with",
     "NEW_LABEL": "New label",
@@ -834,7 +834,7 @@
       "RESOLVE_CONVERSATION": "Resolve Conversation",
       "GO_TO_CONVERSATION_DASHBOARD": "Go to Conversation Dashboard",
       "ADD_ATTACHMENT": "Add Attachment",
-      "GO_TO_CONTACTS_DASHBOARD": "Go to Contacts Dashboard",
+      "GO_TO_CONTACTS_DASHBOARD": "Go to Customers",
       "TOGGLE_SIDEBAR": "Toggle Sidebar",
       "GO_TO_REPORTS_SIDEBAR": "Go to Reports sidebar",
       "MOVE_TO_NEXT_TAB": "Move to next tab in conversation list",
@@ -1170,7 +1170,11 @@
     "SECTION_NAVIGATION": "Section pages",
     "UNREAD": "{count} unread",
     "HIDE_MENU": "Hide menu",
-    "SHOW_MENU": "Show menu"
+    "SHOW_MENU": "Show menu",
+    "CLOSE_MENU": "Close menu",
+    "PROFILE_MENU": "Profile and preferences",
+    "WORKSPACE_MENU": "Workspace menu: {account}",
+    "MENU": "Menu"
   },
   "KNOWLEDGE_LIST": {
     "BULK_ACTIONS": "Bulk actions",
@@ -1239,7 +1243,7 @@
       },
       "INTEGRATIONS": {
         "TITLE": "Integrations",
-        "HINT": "Connected apps, message templates and data."
+        "HINT": "Workspace channels, connected apps, templates and data."
       }
     },
     "PAGES": {
@@ -1318,6 +1322,11 @@
         "HINT": "Who changed what, and when.",
         "KEYWORDS": "audit logs history"
       },
+      "BOTS": {
+        "LABEL": "Agent bots",
+        "HINT": "Connect external bots to your workspace.",
+        "KEYWORDS": "external bot webhook integration"
+      },
       "APPS": {
         "LABEL": "Connected apps",
         "HINT": "Shopify, Slack, webhooks and more.",
@@ -1330,8 +1339,8 @@
       },
       "CHANNELS": {
         "LABEL": "Channels",
-        "HINT": "Website widget, email, WhatsApp and more.",
-        "KEYWORDS": "inboxes channels widget email whatsapp"
+        "HINT": "Connect workspace channels. Assign them to an AI agent from that agent’s Channels page.",
+        "KEYWORDS": "inbox inboxes channels connection connections widget email whatsapp"
       },
       "BILLING": {
         "LABEL": "Billing",

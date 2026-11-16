@@ -1,63 +1,31 @@
 <script setup>
-import { computed } from 'vue';
-import { useRoute } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import Button from 'dashboard/components-next/button/Button.vue';
-import ButtonGroup from 'dashboard/components-next/buttonGroup/ButtonGroup.vue';
 
 defineProps({
-  isMobileSidebarOpen: {
-    type: Boolean,
-    default: false,
-  },
+  isMobileSidebarOpen: { type: Boolean, default: false },
 });
-
-const emit = defineEmits(['toggle']);
-
-const route = useRoute();
-
-const isConversationRoute = computed(() => {
-  const CONVERSATION_ROUTES = [
-    'inbox_conversation',
-    'conversation_through_inbox',
-    'conversations_through_label',
-    'team_conversations_through_label',
-    'conversations_through_folders',
-    'conversation_through_mentions',
-    'conversation_through_unattended',
-    'conversation_through_participating',
-    'conversation_through_list_view',
-    'inbox_view_conversation',
-  ];
-  return CONVERSATION_ROUTES.includes(route.name);
-});
-
-const toggleSidebar = () => {
-  emit('toggle');
-};
+defineEmits(['toggle']);
+const { t } = useI18n();
 </script>
 
 <template>
+  <!-- Keep the existing bottom menu trigger in a reserved row, including threads.
+       The routed task and its primary action can never sit underneath it. -->
   <div
-    v-if="!isConversationRoute"
     id="mobile-sidebar-launcher"
-    class="fixed bottom-4 ltr:left-4 rtl:right-4 z-40 transition-transform duration-200 ease-out block md:hidden"
-    :class="[
-      {
-        'ltr:translate-x-48 rtl:-translate-x-48': isMobileSidebarOpen,
-      },
-    ]"
+    class="flex min-h-16 shrink-0 items-center border-t border-n-weak bg-n-background px-4 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] md:hidden"
   >
-    <ButtonGroup
-      class="rounded-full bg-n-alpha-2 backdrop-blur-lg p-1 shadow hover:shadow-md"
-    >
-      <Button
-        icon="i-lucide-menu"
-        no-animation
-        class="!rounded-full !bg-n-solid-3 dark:!bg-n-alpha-2 !text-n-slate-12 text-xl transition-all duration-200 ease-out hover:brightness-110"
-        lg
-        @click="toggleSidebar"
-      />
-    </ButtonGroup>
+    <Button
+      icon="i-lucide-menu"
+      :label="t('PLATFORM_NAV.MENU')"
+      :aria-label="t('PLATFORM_NAV.MENU')"
+      :aria-expanded="isMobileSidebarOpen"
+      aria-controls="co-navigation"
+      color="slate"
+      variant="ghost"
+      lg
+      @click="$emit('toggle')"
+    />
   </div>
-  <template v-else />
 </template>

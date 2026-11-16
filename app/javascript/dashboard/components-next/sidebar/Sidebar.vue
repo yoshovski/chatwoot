@@ -1,6 +1,6 @@
 <script setup>
 import { MORE_REPORTS } from 'dashboard/routes/dashboard/settings/reports/moreReports';
-import { h, ref, computed, onMounted, watch } from 'vue';
+import { h, ref, computed, onMounted, watch, nextTick } from 'vue';
 import { useRoute } from 'vue-router';
 import { provideSidebarContext } from './provider';
 import { useAccount } from 'dashboard/composables/useAccount';
@@ -15,7 +15,8 @@ import { BUS_EVENTS } from 'shared/constants/busEvents';
 import { vOnClickOutside } from '@vueuse/components';
 import { FEATURE_FLAGS } from 'dashboard/featureFlags';
 import { AGENT_SECTIONS } from 'dashboard/components-next/captain/agentSections';
-import { useWindowSize } from '@vueuse/core';
+import { useNavigationLayout } from './useNavigationLayout';
+import { useSettingsSections } from 'dashboard/routes/dashboard/settings/useSettingsSections';
 
 import SidebarNavigation from './SidebarNavigation.vue';
 import SidebarProfileMenu from './SidebarProfileMenu.vue';
@@ -53,6 +54,38 @@ const {
 } = useAccount();
 const { isEnterprise } = useConfig();
 const store = useStore();
+const settingsSections = useSettingsSections();
+const drawer = ref(null);
+let drawerTrigger;
+
+watch(
+  () => props.isMobileSidebarOpen,
+  async open => {
+    if (open) {
+      drawerTrigger = document.activeElement;
+      await nextTick();
+      drawer.value.querySelector('[data-drawer-close]')?.focus();
+    } else {
+      await nextTick();
+      drawerTrigger?.focus();
+    }
+  }
+);
+
+const trapDrawerFocus = event => {
+  if (!props.isMobileSidebarOpen || event.key !== 'Tab') return;
+  const controls = [
+    ...drawer.value.querySelectorAll(
+      'button, a[href], input, select, textarea, [tabindex="0"]'
+    ),
+  ].filter(element => !element.disabled && element.getClientRects().length);
+  const target = event.shiftKey ? controls.at(-1) : controls[0];
+  const boundary = event.shiftKey ? controls[0] : controls.at(-1);
+  if (document.activeElement === boundary) {
+    event.preventDefault();
+    target?.focus();
+  }
+};
 
 // Calls run on the enterprise-only API (cloud runs enterprise); hide the entry
 // on community so it doesn't lead to a dashboard/CTA the backend can't serve.
@@ -64,8 +97,7 @@ const isCallsAvailable = computed(
 );
 const { t } = useI18n();
 
-const { width: windowWidth } = useWindowSize();
-const isMobile = computed(() => windowWidth.value < 768);
+const { isMobile } = useNavigationLayout();
 
 const route = useRoute();
 const uiSettings = useMapGetter('getUISettings');
@@ -98,13 +130,6 @@ const currentUserId = useMapGetter('getCurrentUserID');
 const isFeatureEnabledonAccount = useMapGetter(
   'accounts/isFeatureEnabledonAccount'
 );
-
-const hasAdvancedAssignment = computed(() => {
-  return isFeatureEnabledonAccount.value(
-    accountId.value,
-    FEATURE_FLAGS.ADVANCED_ASSIGNMENT
-  );
-});
 
 const hasConversationUnreadCounts = computed(() => {
   return isFeatureEnabledonAccount.value(
@@ -318,6 +343,10 @@ const closeMobileSidebar = () => {
   if (!props.isMobileSidebarOpen) return;
   emit('closeMobileSidebar');
 };
+
+watch(isMobile, mobile => {
+  if (!mobile) closeMobileSidebar();
+});
 
 // Moving between Analytics views keeps the chosen period.
 const analyticsQuery = computed(() =>
@@ -731,179 +760,22 @@ const menuItems = computed(() => {
       ],
     },
     {
-      name: 'Billing',
-      label: isOnChatwootCloud.value
-        ? t('SIDEBAR.BILLING')
-        : t('ACCOUNT_SUBSCRIPTION.TITLE'),
-      icon: 'i-lucide-credit-card',
-      activeOn: ['billing_settings_index'],
-      to: accountScopedRoute('billing_settings_index'),
-    },
-    {
-      name: 'Usage',
-      label: t('ACCOUNT_SUBSCRIPTION.USAGE_PAGE.TITLE'),
-      icon: 'i-lucide-chart-no-axes-column',
-      activeOn: ['billing_settings_usage'],
-      to: accountScopedRoute('billing_settings_usage'),
-    },
-    {
       name: 'Settings',
       label: t('SIDEBAR.SETTINGS'),
       icon: 'i-lucide-settings',
-      children: [
-        {
-          name: 'Settings Account Settings',
-          label: t('SIDEBAR.ACCOUNT_SETTINGS'),
-          icon: 'i-lucide-briefcase',
-          to: accountScopedRoute('general_settings_index'),
-        },
-        // {
-        //   name: 'Settings Captain',
-        //   label: t('SIDEBAR.CAPTAIN_AI'),
-        //   icon: 'i-woot-captain',
-        //   to: accountScopedRoute('captain_settings_index'),
-        // },
-        {
-          name: 'Settings Agents',
-          label: t('SETTINGS_HOME.PAGES.TEAMMATES.LABEL'),
-          icon: 'i-lucide-square-user',
-          to: accountScopedRoute('agent_list'),
-        },
-        {
-          name: 'Settings Teams',
-          label: t('SIDEBAR.TEAMS'),
-          icon: 'i-lucide-users',
-          activeOn: [
-            'settings_teams_list',
-            'settings_teams_new',
-            'settings_teams_finish',
-            'settings_teams_add_agents',
-            'settings_teams_show',
-            'settings_teams_edit',
-            'settings_teams_edit_members',
-            'settings_teams_edit_finish',
-          ],
-          to: accountScopedRoute('settings_teams_list'),
-        },
-        ...(hasAdvancedAssignment.value
-          ? [
-              {
-                name: 'Settings Agent Assignment',
-                label: t('SIDEBAR.AGENT_ASSIGNMENT'),
-                icon: 'i-lucide-user-cog',
-                activeOn: [
-                  'assignment_policy_index',
-                  'agent_assignment_policy_index',
-                  'agent_assignment_policy_create',
-                  'agent_assignment_policy_edit',
-                  'agent_capacity_policy_index',
-                  'agent_capacity_policy_create',
-                  'agent_capacity_policy_edit',
-                ],
-                to: accountScopedRoute('assignment_policy_index'),
-              },
-            ]
-          : []),
-        {
-          name: 'Settings Inboxes',
-          label: t('SIDEBAR.INBOXES'),
-          icon: 'i-lucide-inbox',
-          activeOn: [
-            'settings_inbox_list',
-            'settings_inbox_show',
-            'settings_inbox_new',
-            'settings_inbox_finish',
-            'settings_inboxes_page_channel',
-            'settings_inboxes_add_agents',
-          ],
-          to: accountScopedRoute('settings_inbox_list'),
-        },
-        {
-          name: 'Settings Templates',
-          label: t('SIDEBAR.WHATSAPP_TEMPLATES'),
-          icon: 'i-lucide-layout-template',
-          to: accountScopedRoute('settings_templates'),
-        },
-        {
-          name: 'Settings Labels',
-          label: t('SIDEBAR.LABELS'),
-          icon: 'i-lucide-tags',
-          to: accountScopedRoute('labels_list'),
-        },
-        {
-          name: 'Settings Custom Attributes',
-          label: t('SIDEBAR.CUSTOM_ATTRIBUTES'),
-          icon: 'i-lucide-code',
-          to: accountScopedRoute('attributes_list'),
-        },
-        {
-          name: 'Settings Automation',
-          label: t('SIDEBAR.AUTOMATION'),
-          icon: 'i-lucide-repeat',
-          to: accountScopedRoute('automation_list'),
-        },
-        {
-          name: 'Settings Agent Bots',
-          label: t('SIDEBAR.AGENT_BOTS'),
-          icon: 'i-lucide-bot',
-          to: accountScopedRoute('agent_bots'),
-        },
-        {
-          name: 'Settings Macros',
-          label: t('SIDEBAR.MACROS'),
-          icon: 'i-lucide-toy-brick',
-          to: accountScopedRoute('macros_wrapper'),
-        },
-        {
-          name: 'Settings Canned Responses',
-          label: t('SIDEBAR.CANNED_RESPONSES'),
-          icon: 'i-lucide-message-square-quote',
-          to: accountScopedRoute('canned_list'),
-        },
-        {
-          name: 'Settings Integrations',
-          label: t('SIDEBAR.INTEGRATIONS'),
-          icon: 'i-lucide-blocks',
-          to: accountScopedRoute('settings_applications'),
-        },
-        {
-          name: 'Settings Data',
-          label: t('SIDEBAR.DATA'),
-          icon: 'i-lucide-database',
-          to: accountScopedRoute('settings_data_imports'),
-          activeOn: ['settings_data_exports', 'settings_data_import_show'],
-        },
-        {
-          name: 'Settings Audit Logs',
-          label: t('SIDEBAR.AUDIT_LOGS'),
-          icon: 'i-lucide-briefcase',
-          to: accountScopedRoute('auditlogs_list'),
-        },
-        {
-          name: 'Settings Custom Roles',
-          label: t('SETTINGS_HOME.PAGES.ROLES.LABEL'),
-          icon: 'i-lucide-shield-plus',
-          to: accountScopedRoute('custom_roles_list'),
-        },
-        {
-          name: 'Settings Sla',
-          label: t('SIDEBAR.SLA'),
-          icon: 'i-lucide-clock-alert',
-          to: accountScopedRoute('sla_list'),
-        },
-        {
-          name: 'Conversation Workflow',
-          label: t('SIDEBAR.CONVERSATION_WORKFLOW'),
-          icon: 'i-lucide-workflow',
-          to: accountScopedRoute('conversation_workflow_index'),
-        },
-        {
-          name: 'Settings Security',
-          label: t('SIDEBAR.SECURITY'),
-          icon: 'i-lucide-shield',
-          to: accountScopedRoute('security_settings_index'),
-        },
-      ],
+      to: accountScopedRoute('settings_home'),
+      children: settingsSections.value.map(section => ({
+        name: section.key,
+        label: section.title,
+        icon: section.icon,
+        children: section.pages.map(page => ({
+          name: page.key,
+          label: page.label,
+          icon: page.icon,
+          activeOn: page.activeOn,
+          to: page.to,
+        })),
+      })),
     },
   ];
 });
@@ -911,6 +783,8 @@ const menuItems = computed(() => {
 
 <template>
   <aside
+    id="co-navigation"
+    ref="drawer"
     v-on-click-outside="[
       closeMobileSidebar,
       {
@@ -921,15 +795,31 @@ const menuItems = computed(() => {
         ],
       },
     ]"
+    :inert="isMobile && !isMobileSidebarOpen"
+    :role="isMobile && isMobileSidebarOpen ? 'dialog' : undefined"
+    :aria-modal="isMobile && isMobileSidebarOpen ? true : undefined"
+    :aria-label="t('PLATFORM_NAV.PRODUCT_AREAS')"
     data-co-shell
     class="fixed top-0 z-40 flex h-full w-fit max-w-full shrink-0 border-e border-n-weak bg-n-background transition-transform start-0 md:relative md:translate-x-0"
     :class="{
       'ltr:-translate-x-full rtl:translate-x-full':
         !isMobileSidebarOpen && isMobile,
     }"
+    @keydown.esc="closeMobileSidebar"
+    @keydown="trapDrawerFocus"
   >
     <SidebarNavigation :items="menuItems" @navigate="closeMobileSidebar">
       <template #account>
+        <button
+          v-if="isMobile"
+          type="button"
+          data-drawer-close
+          :aria-label="t('PLATFORM_NAV.CLOSE_MENU')"
+          class="grid size-11 shrink-0 place-items-center rounded-lg text-n-slate-12 focus-visible:outline focus-visible:outline-2 focus-visible:outline-n-brand"
+          @click="closeMobileSidebar"
+        >
+          <span class="i-lucide-x size-5" />
+        </button>
         <SidebarAccountSwitcher
           is-collapsed
           @show-create-account-modal="emit('showCreateAccountModal')"

@@ -145,7 +145,10 @@ export default {
       @close-mobile-sidebar="closeMobileSidebar"
     />
 
-    <div class="flex min-w-0 flex-1 flex-col overflow-hidden">
+    <div
+      class="flex min-w-0 flex-1 flex-col overflow-hidden"
+      :inert="isSmallScreen && isMobileSidebarOpen"
+    >
       <TopBarUsageIndicator />
       <AccountBillingNotice />
       <main
@@ -155,19 +158,10 @@ export default {
           v-show="showUpgradePage"
           ref="upgradePageRef"
           :bypass-upgrade-page="bypassUpgradePage"
-        >
-          <MobileSidebarLauncher
-            :is-mobile-sidebar-open="isMobileSidebarOpen"
-            @toggle="toggleMobileSidebar"
-          />
-        </UpgradePage>
+        />
         <template v-if="!showUpgradePage">
           <router-view />
           <CopilotLauncher />
-          <MobileSidebarLauncher
-            :is-mobile-sidebar-open="isMobileSidebarOpen"
-            @toggle="toggleMobileSidebar"
-          />
           <CopilotContainer />
           <FloatingCallWidget v-if="hasActiveCall || hasIncomingCall" />
         </template>
@@ -182,6 +176,10 @@ export default {
           @clickaway="closeKeyShortcutModal"
         />
       </main>
+      <MobileSidebarLauncher
+        :is-mobile-sidebar-open="isMobileSidebarOpen"
+        @toggle="toggleMobileSidebar"
+      />
     </div>
   </div>
 </template>

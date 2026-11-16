@@ -13,7 +13,7 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock('vue-router', () => ({
   useRoute: () => mocks.route,
-  useRouter: () => ({ resolve: () => ({ href: '/' }) }),
+  useRouter: () => ({ resolve: () => ({ href: '/', meta: {} }) }),
 }));
 
 vi.mock('vue-i18n', () => ({

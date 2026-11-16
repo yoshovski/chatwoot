@@ -26,12 +26,21 @@ const routeKey = computed(() => {
 });
 
 // Nested sub-pages (such as editing a team) link back to their parent settings page.
-// Top-level settings pages rely on the Settings subsection panel for navigation.
+// Top-level pages return to the searchable Settings home.
 const back = computed(() => {
   const page = findSettingsPage(route.name);
-  if (!page || page.route === route.name) return null;
+  if (!page) return null;
+  if (page.route === route.name) {
+    return {
+      to: {
+        name: 'settings_home',
+        params: { accountId: route.params.accountId },
+      },
+      label: t('SETTINGS_HOME.BACK'),
+    };
+  }
   return {
-    to: { name: page.route },
+    to: { name: page.route, params: { accountId: route.params.accountId } },
     // eslint-disable-next-line @intlify/vue-i18n/no-dynamic-keys -- Key from the fixed settings list.
     label: t(`SETTINGS_HOME.PAGES.${page.key}.LABEL`),
   };
