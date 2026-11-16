@@ -1,6 +1,5 @@
 <script setup>
 import { computed, watch, onMounted, ref } from 'vue';
-import SectionCard from 'dashboard/components-next/kit/SectionCard.vue';
 import Icon from 'dashboard/components-next/icon/Icon.vue';
 import {
   useMapGetter,
@@ -197,34 +196,37 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="w-full">
-    <div class="flex flex-col gap-3 pb-3">
-      <SectionCard :title="$t('CONVERSATION_SIDEBAR.PANEL.CUSTOMER')">
-        <template #actions>
-          <button
-            type="button"
-            class="text-n-slate-11 hover:text-n-slate-12"
-            :aria-label="$t('CONVERSATION.SIDEBAR.CONTACT')"
-            @click="closeContactPanel"
-          >
-            <Icon icon="i-lucide-x" class="size-4" />
-          </button>
-        </template>
-        <ContactInfo
-          :contact="contact"
-          :channel-type="channelType"
-          class="-mx-5 -mb-5 -mt-4"
-        />
-      </SectionCard>
+  <div
+    class="w-full overflow-hidden rounded-card bg-n-solid-2 shadow-card outline outline-1 -outline-offset-1 outline-n-container"
+  >
+    <div class="flex flex-col border-b border-n-weak px-4 pt-3.5 pb-4">
+      <div class="mb-1 flex items-center justify-between gap-2">
+        <h2 class="mb-0 text-sm font-semibold text-n-slate-12">
+          {{ $t('CONVERSATION_SIDEBAR.PANEL.CUSTOMER') }}
+        </h2>
+        <button
+          type="button"
+          class="text-n-slate-11 hover:text-n-slate-12"
+          :aria-label="$t('CONVERSATION.SIDEBAR.CONTACT')"
+          @click="closeContactPanel"
+        >
+          <Icon icon="i-lucide-x" class="size-4" />
+        </button>
+      </div>
+      <ContactInfo
+        :contact="contact"
+        :channel-type="channelType"
+        class="-mx-4 -mb-4"
+      />
     </div>
-    <div class="pb-8 list-group">
+    <div class="list-group">
       <Draggable
         :list="conversationSidebarItems"
         animation="200"
         ghost-class="ghost"
         handle=".drag-handle"
         item-key="name"
-        class="flex flex-col gap-3"
+        class="flex flex-col divide-y divide-n-weak"
         @start="dragging = true"
         @end="onDragEnd"
       >

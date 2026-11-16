@@ -129,7 +129,7 @@ onMounted(() => {
 
 <template>
   <div
-    class="flex flex-col justify-between flex-1 h-full m-0 overflow-auto bg-n-surface-1"
+    class="flex flex-col justify-between flex-1 h-full m-0 overflow-auto bg-n-background"
   >
     <ContactsDetailsLayout
       :button-label="$t('CONTACTS_LAYOUT.HEADER.SEND_MESSAGE')"
@@ -156,7 +156,7 @@ onMounted(() => {
           <TabBar
             :tabs="tabs"
             :initial-active-tab="activeTabIndex"
-            class="w-full [&>button]:w-full bg-n-alpha-black2"
+            class="w-fit max-w-full [&>button]:px-3"
             @tab-changed="handleTabChange"
           />
         </div>

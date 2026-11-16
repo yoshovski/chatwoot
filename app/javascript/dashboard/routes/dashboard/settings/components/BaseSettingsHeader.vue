@@ -31,6 +31,10 @@ const props = defineProps({
     type: String,
     default: '',
   },
+  showHelpLink: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 const slots = useSlots();
@@ -53,7 +57,9 @@ const helpURL = getHelpUrlForFeature(props.featureName);
       class="flex items-center justify-between w-full gap-4 min-h-8 mb-2"
     >
       <slot name="title">
-        <h1 class="text-heading-1 text-n-slate-12">
+        <h1
+          class="mb-0 font-display text-2xl font-semibold tracking-display text-n-slate-12"
+        >
           {{ title }}
         </h1>
       </slot>
@@ -66,11 +72,14 @@ const helpURL = getHelpUrlForFeature(props.featureName);
     >
       <p
         v-if="description || $slots.description"
-        class="mb-0 line-clamp-5 sm:line-clamp-none max-w-3xl text-body-main"
+        class="mb-0 line-clamp-5 sm:line-clamp-none max-w-2xl text-sm leading-relaxed"
       >
         <slot name="description">{{ description }}</slot>
       </p>
-      <CustomBrandPolicyWrapper :show-on-custom-branded-instance="false">
+      <CustomBrandPolicyWrapper
+        v-if="showHelpLink"
+        :show-on-custom-branded-instance="false"
+      >
         <a
           v-if="helpURL && linkText"
           :href="helpURL"

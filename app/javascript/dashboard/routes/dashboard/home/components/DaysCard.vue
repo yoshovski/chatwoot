@@ -1,14 +1,13 @@
 <script setup>
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
-import DayBars from 'dashboard/components-next/kit/DayBars.vue';
-import EmptyState from 'dashboard/components-next/kit/EmptyState.vue';
+import DayChart from 'dashboard/routes/dashboard/analytics/components/DayChart.vue';
 import SectionCard from 'dashboard/components-next/kit/SectionCard.vue';
-import CardError from './CardError.vue';
 
 const props = defineProps({
-  // [{ label, ai, team }]
+  // [{ date: 'YYYY-MM-DD', ai, team }]
   days: { type: Array, default: () => [] },
+  period: { type: Number, default: 7 },
   isLoading: { type: Boolean, default: false },
   hasError: { type: Boolean, default: false },
 });
@@ -16,28 +15,30 @@ const props = defineProps({
 const emit = defineEmits(['retry']);
 
 const { t } = useI18n();
-const isEmpty = computed(() => props.days.every(day => !day.ai && !day.team));
+
+const chartDays = computed(() =>
+  props.days.map(day => ({
+    date: day.date,
+    values: [day.ai || 0, day.team || 0],
+  }))
+);
+
+const series = computed(() => [
+  { label: t('HOME.V2.DAYS.AI'), total: t('HOME.V2.DAYS.AI') },
+  { label: t('HOME.V2.DAYS.TEAM'), total: t('HOME.V2.DAYS.TEAM') },
+]);
 </script>
 
 <template>
   <SectionCard :title="t('HOME.V2.DAYS.TITLE')">
-    <span
-      v-if="isLoading"
-      class="h-40 w-full animate-pulse rounded bg-n-alpha-2"
-      aria-busy="true"
-    />
-    <CardError v-else-if="hasError" @retry="emit('retry')" />
-    <EmptyState
-      v-else-if="isEmpty"
-      icon="i-lucide-chart-column"
-      :title="t('HOME.V2.DAYS.EMPTY')"
-    />
-    <DayBars
-      v-else
-      :days="days"
-      :label="t('HOME.V2.DAYS.TITLE')"
-      :ai-label="t('HOME.V2.DAYS.AI')"
-      :team-label="t('HOME.V2.DAYS.TEAM')"
+    <DayChart
+      :days="chartDays"
+      :series="series"
+      :period="period"
+      :empty-text="t('HOME.V2.DAYS.EMPTY')"
+      :is-loading="isLoading"
+      :has-error="hasError"
+      @retry="emit('retry')"
     />
   </SectionCard>
 </template>

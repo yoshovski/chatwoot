@@ -5,17 +5,20 @@ import { computed, onMounted, ref, watch, onBeforeUnmount } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { debounce } from '@chatwoot/utils';
+import { vOnClickOutside } from '@vueuse/components';
 import { useStore } from 'dashboard/composables/store';
 import { useUISettings } from 'dashboard/composables/useUISettings';
 import { useAbortableRequest } from 'dashboard/composables/useAbortableRequest';
 import { useAlert } from 'dashboard/composables';
 import ContactsAPI from 'dashboard/api/contacts';
 import BulkActionsAPI from 'dashboard/api/bulkActions';
+import PageFrame from 'dashboard/components-next/kit/PageFrame.vue';
 import PageHeader from 'dashboard/components-next/kit/PageHeader.vue';
 import SectionCard from 'dashboard/components-next/kit/SectionCard.vue';
+import SearchField from 'dashboard/components-next/kit/SearchField.vue';
+import EmptyState from 'dashboard/components-next/kit/EmptyState.vue';
+import DropdownMenu from 'dashboard/components-next/dropdown-menu/DropdownMenu.vue';
 import Button from 'dashboard/components-next/button/Button.vue';
-import Input from 'dashboard/components-next/input/Input.vue';
-import Icon from 'dashboard/components-next/icon/Icon.vue';
 import Spinner from 'dashboard/components-next/spinner/Spinner.vue';
 import Dialog from 'dashboard/components-next/dialog/Dialog.vue';
 import PaginationFooter from 'dashboard/components-next/pagination/PaginationFooter.vue';
@@ -43,6 +46,8 @@ const segmentsError = ref(false);
 const search = ref(route.query.search || '');
 const selectedIds = ref([]);
 const busy = ref(false);
+const showColumnsMenu = ref(false);
+const showMoreMenu = ref(false);
 const segmentEditor = ref(null);
 const drawer = ref(null);
 const deleteDialog = ref(null);
@@ -64,13 +69,6 @@ const segmentKeys = {
   new: 'CUSTOMERS.SEGMENTS.NEW',
   waiting: 'CUSTOMERS.SEGMENTS.WAITING',
 };
-const segmentIcons = {
-  all: 'i-lucide-users-round',
-  online: 'i-lucide-radio',
-  leads: 'i-lucide-user-round-plus',
-  new: 'i-lucide-calendar-plus',
-  waiting: 'i-lucide-message-circle',
-};
 const activeId = computed(() => {
   if (route.params.segmentId) return `custom:${route.params.segmentId}`;
   if (route.name === 'contacts_dashboard_active') return 'online';
@@ -87,6 +85,30 @@ const title = computed(() => {
     ? segmentLabel(activeSegment.value)
     : t('CUSTOMERS.SEGMENTS.ALL');
 });
+const visibleSegments = computed(() =>
+  segments.value.filter(
+    segment => segment.id !== 'leads' || activeId.value === 'leads'
+  )
+);
+const moreMenuItems = computed(() => [
+  {
+    label: t('CUSTOMERS.IMPORT'),
+    action: 'import',
+    value: 'import',
+    icon: 'i-lucide-upload',
+  },
+  {
+    label: t('CUSTOMERS.EXPORT'),
+    action: 'export',
+    value: 'export',
+    icon: 'i-lucide-download',
+  },
+]);
+const onMoreAction = ({ value }) => {
+  showMoreMenu.value = false;
+  if (value === 'import') importDialog.value.dialogRef.open();
+  if (value === 'export') exportDialog.value.dialogRef.open();
+};
 const page = computed(() => Number(route.query.page) || 1);
 const sort = computed(
   () => uiSettings.value.customers_sort || '-last_activity_at'
@@ -284,10 +306,8 @@ onMounted(() => {
 </script>
 
 <template>
-  <section
-    class="flex h-full min-w-0 flex-1 flex-col overflow-y-auto bg-n-background"
-  >
-    <div class="flex w-full flex-col gap-4 p-4 lg:p-6">
+  <PageFrame size="wide">
+    <template #header>
       <PageHeader :title="t('CUSTOMERS.TITLE')">
         <template #action>
           <Button
@@ -304,229 +324,222 @@ onMounted(() => {
           />
         </template>
       </PageHeader>
-      <div class="flex min-w-0 flex-col gap-4 lg:flex-row lg:items-start">
-        <SectionCard class="shrink-0 !gap-1 !p-2 lg:w-48">
-          <nav
-            :aria-label="t('CUSTOMERS.SEGMENTS_LABEL')"
-            class="flex gap-1 overflow-x-auto lg:flex-col"
-          >
-            <button
-              v-for="segment in segments"
-              :key="segment.id"
-              type="button"
-              :aria-current="activeId === segment.id ? 'page' : undefined"
-              :disabled="busy"
-              class="flex shrink-0 items-center gap-2 rounded-xl px-3 py-2.5 text-start text-xs lg:shrink"
-              :class="
-                activeId === segment.id
-                  ? 'bg-n-blue-3 font-semibold text-n-blue-11'
-                  : 'text-n-slate-11 hover:bg-n-alpha-2'
-              "
-              @click="selectSegment(segment)"
-            >
-              <Icon
-                :icon="segmentIcons[segment.id] || 'i-lucide-bookmark'"
-                class="size-4 shrink-0"
-              />
-              <div class="flex-1 whitespace-nowrap lg:whitespace-normal">
-                {{ segmentLabel(segment) }}
-              </div>
-              <div class="text-xs tabular-nums text-n-slate-10">
-                {{ segment.count.toLocaleString() }}
-              </div>
-            </button>
-          </nav>
-          <div
-            v-if="segmentsError"
-            role="alert"
-            class="p-2 text-xs text-n-ruby-11"
-          >
-            {{ t('CUSTOMERS.LOAD_ERROR')
-            }}<Button
-              size="sm"
-              variant="ghost"
-              :label="t('CUSTOMERS.RETRY')"
-              @click="fetchSegments"
-            />
-          </div>
-        </SectionCard>
-        <SectionCard class="min-w-0 flex-1 !gap-3 !p-3">
-          <div class="flex flex-wrap items-center gap-2 px-1">
-            <h2
-              class="m-0 me-auto flex items-baseline gap-2 text-base font-semibold text-n-slate-12"
-            >
-              {{ title }}
-              <div class="text-sm font-normal tabular-nums text-n-slate-10">
-                {{ total.toLocaleString() }}
-              </div>
-            </h2>
-            <Input
-              v-model="search"
-              type="search"
-              class="order-last w-full shrink-0 sm:order-none sm:w-64"
-              custom-input-class="ltr:!pl-9 rtl:!pr-9 !rounded-xl !bg-n-solid-2"
-              :placeholder="t('CUSTOMERS.SEARCH')"
-              :aria-label="t('CUSTOMERS.SEARCH')"
-              :disabled="busy"
-              @input="updateSearch($event.target.value)"
-            >
-              <template #prefix>
-                <Icon
-                  icon="i-lucide-search"
-                  class="pointer-events-none absolute start-3 top-1/2 size-4 -translate-y-1/2 text-n-slate-10"
-                />
-              </template>
-            </Input>
-            <details class="relative">
-              <summary
-                class="flex h-10 cursor-pointer list-none items-center gap-2 rounded-xl border border-n-weak px-3 text-xs text-n-slate-11"
-              >
-                <Icon icon="i-lucide-columns-3" class="size-4" />{{
-                  t('CUSTOMERS.COLUMNS_LABEL')
-                }}
-              </summary>
-              <div
-                class="absolute end-0 top-12 z-20 w-48 rounded-xl border border-n-weak bg-n-solid-2 p-2 shadow-lg"
-              >
-                <div
-                  v-for="(key, column) in columnKeys"
-                  :key="column"
-                  class="flex items-center gap-2 p-2 text-xs text-n-slate-12"
-                >
-                  <input
-                    :id="'co-' + column"
-                    v-model="columns"
-                    type="checkbox"
-                    :value="column"
-                    class="m-0"
-                  />
-                  <label :for="'co-' + column">{{ t(key) }}</label>
-                </div>
-              </div>
-            </details>
-            <Button
-              v-if="route.params.segmentId"
-              icon="i-lucide-pen-line"
-              color="slate"
-              variant="ghost"
-              :aria-label="t('CUSTOMERS.EDIT_SEGMENT')"
-              @click="segmentEditor.open(activeSegment)"
-            />
-            <Button
-              v-if="route.params.segmentId"
-              icon="i-lucide-trash"
-              color="ruby"
-              variant="ghost"
-              :aria-label="t('CUSTOMERS.DELETE_SEGMENT')"
-              @click="deleteSegmentDialog.open()"
-            />
-            <Button
-              icon="i-lucide-refresh-cw"
-              color="slate"
-              variant="ghost"
-              :aria-label="t('CUSTOMERS.REFRESH')"
-              :disabled="busy"
-              @click="refresh"
-            />
-            <Policy :permissions="['administrator']">
-              <details class="relative">
-                <summary
-                  class="flex h-10 cursor-pointer list-none items-center rounded-xl px-2 text-n-slate-11"
-                  :aria-label="t('CUSTOMERS.MORE')"
-                >
-                  <Icon icon="i-lucide-ellipsis" class="size-4" />
-                </summary>
-                <div
-                  class="absolute end-0 top-12 z-20 flex w-40 flex-col rounded-xl border border-n-weak bg-n-solid-2 p-2 shadow-lg"
-                >
-                  <Button
-                    color="slate"
-                    variant="ghost"
-                    :label="t('CUSTOMERS.IMPORT')"
-                    @click="importDialog.dialogRef.open()"
-                  /><Button
-                    color="slate"
-                    variant="ghost"
-                    :label="t('CUSTOMERS.EXPORT')"
-                    @click="exportDialog.dialogRef.open()"
-                  />
-                </div>
-              </details>
-            </Policy>
-          </div>
-          <ContactsBulkActionBar
-            v-if="selectedIds.length"
-            :visible-contact-ids="contacts.map(contact => contact.id)"
-            :selected-contact-ids="selectedIds"
-            :is-loading="busy"
-            @toggle-all="selectAll"
-            @clear-selection="selectedIds = []"
-            @assign-labels="bulkAction({ labels: { add: $event } })"
-            @remove-labels="bulkAction({ labels: { remove: $event } })"
-            @delete-selected="deleteDialog.open()"
-          />
-          <div
-            v-if="isPending"
-            role="status"
-            class="flex min-h-48 items-center justify-center gap-2 text-sm text-n-slate-11"
-          >
-            <Spinner />{{ t('CUSTOMERS.LOADING') }}
-          </div>
-          <div
-            v-else-if="error"
-            role="alert"
-            class="flex min-h-48 flex-col items-center justify-center gap-3 text-sm text-n-slate-11"
-          >
-            <div>{{ t('CUSTOMERS.LOAD_ERROR') }}</div>
-            <Button
-              variant="outline"
-              :label="t('CUSTOMERS.RETRY')"
-              @click="fetchCustomers"
-            />
-          </div>
-          <div
-            v-else-if="!contacts.length"
-            class="flex min-h-48 flex-col items-center justify-center gap-2 text-sm text-n-slate-11"
-          >
-            <Icon icon="i-lucide-users-round" class="size-8 text-n-slate-8" />
-            <div>
-              {{ search ? t('CUSTOMERS.NO_RESULTS') : t('CUSTOMERS.EMPTY') }}
-            </div>
-            <Button
-              v-if="!search && activeId === 'all'"
-              color="slate"
-              variant="ghost"
-              :label="t('CUSTOMERS.ADD_CUSTOMER')"
-              @click="createDialog.dialogRef.open()"
-            />
-          </div>
-          <CustomerTable
-            v-else
-            :contacts="contacts"
-            :columns="columns"
-            :selected-ids="selectedIds"
-            :sort="sort"
-            :online="activeId === 'online'"
+    </template>
+
+    <SectionCard class="min-w-0 !gap-4">
+      <div
+        v-if="visibleSegments.length || segmentsError"
+        class="flex flex-wrap items-center justify-between gap-2 border-b border-n-weak pb-3"
+      >
+        <nav
+          v-if="visibleSegments.length"
+          :aria-label="t('CUSTOMERS.SEGMENTS_LABEL')"
+          class="inline-flex flex-wrap items-center gap-1 rounded-lg bg-n-solid-1 p-1 outline outline-1 -outline-offset-1 outline-n-container"
+        >
+          <button
+            v-for="segment in visibleSegments"
+            :key="segment.id"
+            type="button"
+            :aria-current="activeId === segment.id ? 'page' : undefined"
             :disabled="busy"
-            @select="select"
-            @select-all="selectAll"
-            @open="drawer.open($event)"
-            @sort="setSort"
-          />
-          <PaginationFooter
-            v-if="!error && total > 0"
-            :current-page="page"
-            :total-items="total"
-            :items-per-page="15"
-            current-page-info="CUSTOMERS.SHOWING"
-            class="relative !h-auto min-h-12 flex-wrap gap-2 !bg-transparent !px-1 !py-2 before:hidden"
-            @update:current-page="
-              router.replace({ query: { ...route.query, page: $event } })
+            class="inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors"
+            :class="
+              activeId === segment.id
+                ? 'bg-n-solid-active text-n-slate-12 shadow-sm outline outline-1 -outline-offset-1 outline-n-container'
+                : 'text-n-slate-11 hover:text-n-slate-12'
             "
+            @click="selectSegment(segment)"
+          >
+            <span>{{ segmentLabel(segment) }}</span>
+            <span class="tabular-nums text-n-slate-10">
+              {{ segment.count.toLocaleString() }}
+            </span>
+          </button>
+        </nav>
+        <div
+          v-if="segmentsError"
+          role="alert"
+          class="flex items-center gap-2 text-xs text-n-ruby-11"
+        >
+          {{ t('CUSTOMERS.LOAD_ERROR') }}
+          <Button
+            size="xs"
+            variant="ghost"
+            :label="t('CUSTOMERS.RETRY')"
+            @click="fetchSegments"
           />
-        </SectionCard>
+        </div>
       </div>
-    </div>
+      <div class="flex flex-wrap items-center gap-2">
+        <h2
+          class="m-0 me-auto flex items-baseline gap-2 text-base font-semibold text-n-slate-12"
+        >
+          {{ title }}
+          <span class="text-sm font-normal tabular-nums text-n-slate-10">
+            {{ total.toLocaleString() }}
+          </span>
+        </h2>
+        <SearchField
+          v-model="search"
+          :placeholder="t('CUSTOMERS.SEARCH')"
+          class="order-last w-full shrink-0 sm:order-none sm:w-64"
+          @update:model-value="updateSearch"
+        />
+        <div
+          v-on-click-outside="() => (showColumnsMenu = false)"
+          class="relative"
+          @keydown.escape="showColumnsMenu = false"
+        >
+          <Button
+            icon="i-lucide-columns-3"
+            color="slate"
+            variant="solid"
+            size="sm"
+            :label="t('CUSTOMERS.COLUMNS_LABEL')"
+            @click="showColumnsMenu = !showColumnsMenu"
+          />
+          <div
+            v-if="showColumnsMenu"
+            class="absolute end-0 top-10 z-20 w-48 rounded-card bg-n-alpha-3 p-2 shadow-lg outline outline-1 -outline-offset-1 outline-n-container backdrop-blur-[100px]"
+          >
+            <div
+              v-for="(key, column) in columnKeys"
+              :key="column"
+              class="flex items-center gap-2 rounded-md px-2 py-1.5 text-xs text-n-slate-12 hover:bg-n-alpha-1"
+            >
+              <input
+                :id="'co-' + column"
+                v-model="columns"
+                type="checkbox"
+                :value="column"
+                class="m-0"
+              />
+              <label :for="'co-' + column" class="cursor-pointer mb-0">{{
+                t(key)
+              }}</label>
+            </div>
+          </div>
+        </div>
+        <Button
+          v-if="route.params.segmentId"
+          icon="i-lucide-pen-line"
+          color="slate"
+          variant="ghost"
+          size="sm"
+          :aria-label="t('CUSTOMERS.EDIT_SEGMENT')"
+          @click="segmentEditor.open(activeSegment)"
+        />
+        <Button
+          v-if="route.params.segmentId"
+          icon="i-lucide-trash"
+          color="ruby"
+          variant="ghost"
+          size="sm"
+          :aria-label="t('CUSTOMERS.DELETE_SEGMENT')"
+          @click="deleteSegmentDialog.open()"
+        />
+        <Button
+          icon="i-lucide-refresh-cw"
+          color="slate"
+          variant="ghost"
+          size="sm"
+          :aria-label="t('CUSTOMERS.REFRESH')"
+          :disabled="busy"
+          @click="refresh"
+        />
+        <Policy :permissions="['administrator']">
+          <div
+            v-on-click-outside="() => (showMoreMenu = false)"
+            class="relative"
+            @keydown.escape="showMoreMenu = false"
+          >
+            <Button
+              icon="i-lucide-ellipsis"
+              color="slate"
+              variant="ghost"
+              size="sm"
+              :aria-label="t('CUSTOMERS.MORE')"
+              @click="showMoreMenu = !showMoreMenu"
+            />
+            <DropdownMenu
+              v-if="showMoreMenu"
+              :menu-items="moreMenuItems"
+              class="end-0 top-10 z-20"
+              @action="onMoreAction"
+            />
+          </div>
+        </Policy>
+      </div>
+      <ContactsBulkActionBar
+        v-if="selectedIds.length"
+        :visible-contact-ids="contacts.map(contact => contact.id)"
+        :selected-contact-ids="selectedIds"
+        :is-loading="busy"
+        @toggle-all="selectAll"
+        @clear-selection="selectedIds = []"
+        @assign-labels="bulkAction({ labels: { add: $event } })"
+        @remove-labels="bulkAction({ labels: { remove: $event } })"
+        @delete-selected="deleteDialog.open()"
+      />
+      <div
+        v-if="isPending"
+        role="status"
+        class="flex min-h-48 items-center justify-center gap-2 text-sm text-n-slate-11"
+      >
+        <Spinner />{{ t('CUSTOMERS.LOADING') }}
+      </div>
+      <EmptyState
+        v-else-if="error"
+        tone="error"
+        icon="i-lucide-triangle-alert"
+        :title="t('CUSTOMERS.LOAD_ERROR')"
+      >
+        <Button
+          variant="outline"
+          size="sm"
+          :label="t('CUSTOMERS.RETRY')"
+          @click="fetchCustomers"
+        />
+      </EmptyState>
+      <EmptyState
+        v-else-if="!contacts.length"
+        icon="i-lucide-users-round"
+        :title="search ? t('CUSTOMERS.NO_RESULTS') : t('CUSTOMERS.EMPTY')"
+      >
+        <Button
+          v-if="!search && activeId === 'all'"
+          color="slate"
+          variant="solid"
+          size="sm"
+          :label="t('CUSTOMERS.ADD_CUSTOMER')"
+          @click="createDialog.dialogRef.open()"
+        />
+      </EmptyState>
+      <CustomerTable
+        v-else
+        :contacts="contacts"
+        :columns="columns"
+        :selected-ids="selectedIds"
+        :sort="sort"
+        :online="activeId === 'online'"
+        :disabled="busy"
+        @select="select"
+        @select-all="selectAll"
+        @open="drawer.open($event)"
+        @sort="setSort"
+      />
+      <PaginationFooter
+        v-if="!error && total > 0"
+        :current-page="page"
+        :total-items="total"
+        :items-per-page="15"
+        current-page-info="CUSTOMERS.SHOWING"
+        class="relative !h-auto min-h-12 flex-wrap gap-2 !bg-transparent !px-1 !py-2 before:hidden"
+        @update:current-page="
+          router.replace({ query: { ...route.query, page: $event } })
+        "
+      />
+    </SectionCard>
     <SegmentEditor ref="segmentEditor" @saved="segmentSaved" />
     <CustomerDrawer ref="drawer" />
     <CreateNewContactDialog ref="createDialog" @create="createCustomer" />
@@ -550,5 +563,5 @@ onMounted(() => {
       :confirm-button-label="t('CUSTOMERS.DELETE')"
       @confirm="deleteSegment"
     />
-  </section>
+  </PageFrame>
 </template>

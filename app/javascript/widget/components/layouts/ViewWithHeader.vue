@@ -6,6 +6,7 @@ import ChatHeaderExpanded from '../ChatHeaderExpanded.vue';
 import configMixin from '../../mixins/configMixin';
 import { mapGetters } from 'vuex';
 import { IFrameHelper } from 'widget/helpers/utils';
+import { isPreviewTestMode } from 'widget/helpers/previewMode';
 
 export default {
   components: {
@@ -43,6 +44,9 @@ export default {
     },
     isOnArticleViewer() {
       return ['article-viewer'].includes(this.$route.name);
+    },
+    isPreviewTest() {
+      return isPreviewTestMode();
     },
     isOnHomeView() {
       return ['home'].includes(this.$route.name);
@@ -169,7 +173,10 @@ export default {
       <Banner />
       <router-view />
 
-      <Branding v-if="!isOnArticleViewer" :disable-branding="disableBranding" />
+      <Branding
+        v-if="!isOnArticleViewer && !isPreviewTest"
+        :disable-branding="disableBranding"
+      />
     </div>
   </div>
 </template>

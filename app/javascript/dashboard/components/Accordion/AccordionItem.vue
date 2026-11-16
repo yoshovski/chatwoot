@@ -38,13 +38,10 @@ const onToggle = () => {
 </script>
 
 <template>
-  <section
-    v-if="card"
-    class="group rounded-card bg-n-solid-2 text-sm shadow-card outline outline-1 -outline-offset-1 outline-n-container"
-  >
+  <section v-if="card" class="group w-full bg-n-solid-2 text-sm">
     <button
       type="button"
-      class="drag-handle relative flex w-full cursor-grab select-none items-center gap-2 px-5 py-3.5 text-start"
+      class="drag-handle relative flex w-full cursor-grab select-none items-center gap-2 px-4 py-3 text-start transition-colors hover:bg-n-alpha-1"
       :aria-expanded="isOpen"
       @click.stop="onToggle"
     >
@@ -62,7 +59,7 @@ const onToggle = () => {
         :class="{ 'rotate-180': isOpen }"
       />
     </button>
-    <div v-if="isOpen" class="px-5 pb-5">
+    <div v-if="isOpen" class="px-4 pb-3.5 pt-1">
       <slot />
     </div>
   </section>

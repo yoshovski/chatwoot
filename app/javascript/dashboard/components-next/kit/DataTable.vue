@@ -16,7 +16,7 @@ defineProps({
   <div class="-mx-5 overflow-x-auto">
     <table class="w-full min-w-[36rem] border-collapse text-sm">
       <thead>
-        <tr class="border-b border-n-weak">
+        <tr class="border-b border-n-weak bg-n-solid-1">
           <th
             v-for="column in columns"
             :key="column.key"

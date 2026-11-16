@@ -4,7 +4,7 @@ import CardError from '../../home/components/CardError.vue';
 
 // The four numbers on top of every Analytics view, each against the period before.
 defineProps({
-  // [{ key, label, value, icon, tone, change, changeTone, points }]
+  // [{ key, label, value, icon, tone, change, changeTone }]
   tiles: { type: Array, required: true },
   isLoading: { type: Boolean, default: false },
   hasError: { type: Boolean, default: false },
@@ -29,7 +29,6 @@ const emit = defineEmits(['retry']);
       :tone="tile.tone"
       :change="tile.change"
       :change-tone="tile.changeTone"
-      :points="tile.points"
       :is-loading="isLoading"
     />
   </div>

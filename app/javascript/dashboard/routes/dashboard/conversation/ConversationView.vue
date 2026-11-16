@@ -192,26 +192,32 @@ export default {
 </script>
 
 <template>
-  <!-- List, thread and side panel are cards on the tinted background, 12px apart. -->
+  <!-- List and thread share one card, split by a line, so the thread gets the
+  width; the customer panel sits beside it on the tinted background. -->
   <section class="flex w-full h-full min-w-0 gap-3 p-3 bg-n-background">
-    <ChatList
-      :show-conversation-list="showConversationList"
-      :conversation-inbox="inboxId"
-      :label="label"
-      :team-id="teamId"
-      :conversation-type="conversationType"
-      :list-view="listView"
-      :folders-id="foldersId"
-      :is-on-expanded-layout="isOnExpandedLayout"
-      @conversation-load="onConversationLoad"
-    />
-    <ConversationBox
-      v-if="showMessageView"
-      :inbox-id="inboxId"
-      :is-on-expanded-layout="isOnExpandedLayout"
+    <div
+      class="flex min-w-0 flex-1 overflow-hidden rounded-card bg-n-solid-2 shadow-card outline outline-1 -outline-offset-1 outline-n-container"
     >
-      <SidepanelSwitch v-if="currentChat.id" />
-    </ConversationBox>
+      <ChatList
+        :show-conversation-list="showConversationList"
+        :conversation-inbox="inboxId"
+        :label="label"
+        :team-id="teamId"
+        :conversation-type="conversationType"
+        :list-view="listView"
+        :folders-id="foldersId"
+        :is-on-expanded-layout="isOnExpandedLayout"
+        @conversation-load="onConversationLoad"
+      />
+      <ConversationBox
+        v-if="showMessageView"
+        class="!rounded-none !shadow-none"
+        :inbox-id="inboxId"
+        :is-on-expanded-layout="isOnExpandedLayout"
+      >
+        <SidepanelSwitch v-if="currentChat.id" />
+      </ConversationBox>
+    </div>
     <ConversationSidebar v-if="shouldShowSidebar" :current-chat="currentChat" />
     <CmdBarConversationSnooze />
   </section>

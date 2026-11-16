@@ -15,7 +15,6 @@ import {
 import {
   METRICS,
   PERIODS,
-  dayLabels,
   metricChange,
   metricValue,
   needItems,
@@ -38,7 +37,7 @@ import UsageCard from './components/UsageCard.vue';
 const STATUS_DONE = 'done';
 const TIMEZONE_OFFSET = -new Date().getTimezoneOffset() / 60;
 
-const { t, locale } = useI18n();
+const { t } = useI18n();
 const router = useRouter();
 const { isAdmin } = useAdmin();
 const { uiSettings, updateUISettings } = useUISettings();
@@ -119,9 +118,6 @@ const metrics = computed(() =>
 );
 
 const needs = computed(() => needItems(summary.value?.needs || [], t));
-const dayBars = computed(() =>
-  dayLabels(summary.value?.days || [], period.value, locale.value)
-);
 
 const projectStatus = computed(() => {
   const project = summary.value?.project_status || {};
@@ -298,7 +294,8 @@ onMounted(loadSummary);
           @retry="loadSummary"
         />
         <DaysCard
-          :days="dayBars"
+          :days="summary?.days || []"
+          :period="period"
           :is-loading="isLoading"
           :has-error="hasError"
           @retry="loadSummary"

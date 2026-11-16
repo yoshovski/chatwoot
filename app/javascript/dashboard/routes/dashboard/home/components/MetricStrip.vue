@@ -1,10 +1,9 @@
 <script setup>
-import Sparkline from 'dashboard/components-next/kit/Sparkline.vue';
 import CardError from './CardError.vue';
 
-// The period's numbers as one slim strip above "Needs you".
+// The period's numbers as one clean strip above "Needs you".
 defineProps({
-  // [{ key, label, value, change, changeTone, points, tone }]
+  // [{ key, label, value, change, changeTone, tone }]
   metrics: { type: Array, default: () => [] },
   // Days in the period, for the "compared with" tooltip.
   period: { type: Number, required: true },
@@ -18,12 +17,6 @@ const CHANGE_TONES = {
   good: 'text-n-teal-11',
   bad: 'text-n-ruby-11',
   neutral: 'text-n-slate-11',
-};
-const LINE_TONES = {
-  blue: 'text-n-blue-9',
-  teal: 'text-n-teal-9',
-  amber: 'text-n-amber-9',
-  violet: 'text-n-violet-9',
 };
 </script>
 
@@ -41,38 +34,31 @@ const LINE_TONES = {
     <div
       v-for="metric in metrics"
       :key="metric.key"
-      class="flex min-w-0 items-center justify-between gap-2 bg-n-solid-2 px-4 py-3 last:col-span-2 lg:last:col-span-1"
+      class="flex min-w-0 flex-col gap-1 bg-n-solid-2 px-4 py-3.5 last:col-span-2 lg:last:col-span-1"
     >
-      <div class="flex min-w-0 flex-col">
-        <span class="truncate text-xs text-n-slate-11">
-          {{ metric.label }}
-        </span>
+      <span class="truncate text-xs font-medium text-n-slate-11">
+        {{ metric.label }}
+      </span>
+      <span
+        v-if="isLoading"
+        class="my-1 h-7 w-14 animate-pulse rounded bg-n-alpha-2"
+        aria-busy="true"
+      />
+      <div v-else class="flex items-baseline justify-between gap-2">
         <span
-          v-if="isLoading"
-          class="my-1 h-6 w-12 animate-pulse rounded bg-n-alpha-2"
-          aria-busy="true"
-        />
-        <span
-          v-else
-          class="font-display text-xl font-semibold tabular-nums text-n-slate-12"
+          class="font-display text-2xl font-semibold tabular-nums tracking-display text-n-slate-12"
         >
           {{ metric.value }}
         </span>
         <span
-          v-if="!isLoading && metric.change"
-          class="text-xs"
+          v-if="metric.change"
+          class="truncate text-xs font-medium"
           :class="CHANGE_TONES[metric.changeTone]"
           :title="$t('HOME.V2.CHANGE.COMPARED', { days: period })"
         >
           {{ metric.change }}
         </span>
       </div>
-      <Sparkline
-        v-if="!isLoading && metric.points.some(Boolean)"
-        :points="metric.points"
-        class="hidden h-8 w-12 shrink-0 sm:block"
-        :class="LINE_TONES[metric.tone]"
-      />
     </div>
   </div>
 </template>
