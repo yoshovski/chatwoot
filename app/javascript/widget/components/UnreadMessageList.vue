@@ -1,131 +1,162 @@
-<script>
-import { mapGetters } from 'vuex';
-import configMixin from '../mixins/configMixin';
-import { ON_UNREAD_MESSAGE_CLICK } from '../constants/widgetBusEvents';
-import FluentIcon from 'shared/components/FluentIcon/Index.vue';
-import UnreadMessage from 'widget/components/UnreadMessage.vue';
-import { isWidgetColorLighter } from 'shared/helpers/colorHelper';
+<script setup>
+import { computed, onMounted, onBeforeUnmount, ref } from 'vue';
+import { useStore } from 'vuex';
+import { useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
+import { useMessageFormatter } from 'shared/composables/useMessageFormatter';
 import { emitter } from 'shared/helpers/mitt';
+import {
+  ON_CAMPAIGN_MESSAGE_CLICK,
+  ON_UNREAD_MESSAGE_CLICK,
+} from 'widget/constants/widgetBusEvents';
+import { IFrameHelper } from 'widget/helpers/utils';
+import { getExtraSpaceToScroll } from 'widget/helpers/IframeEventHelper';
+import { attentionState } from 'widget/helpers/attentionState';
+import { dismissPreview } from 'widget/composables/useWidgetAttention';
+import { previewSender } from 'widget/helpers/notificationPreview';
+import Avatar from 'dashboard/components-next/avatar/Avatar.vue';
+import AttentionOffer from './AttentionOffer.vue';
+import PreviewChoices from './PreviewChoices.vue';
 
-export default {
-  name: 'Unread',
-  components: {
-    FluentIcon,
-    UnreadMessage,
-  },
-  mixins: [configMixin],
-  props: {
-    messages: {
-      type: Array,
-      required: true,
-    },
-  },
-  emits: ['close'],
-  computed: {
-    ...mapGetters({
-      unreadMessageCount: 'conversation/getUnreadMessageCount',
-      widgetColor: 'appConfig/getWidgetColor',
-    }),
-    sender() {
-      const [firstMessage] = this.messages;
-      return firstMessage.sender || {};
-    },
-    isBackgroundLighter() {
-      return isWidgetColorLighter(this.widgetColor);
-    },
-  },
-  methods: {
-    openConversationView() {
-      emitter.emit(ON_UNREAD_MESSAGE_CLICK);
-    },
-    closeFullView() {
-      this.$emit('close');
-    },
-    getMessageContent(message) {
-      const { attachments, content } = message;
-      const hasAttachments = attachments && attachments.length;
+// One card beside the launcher for the latest reply or opener, never a transcript.
+const props = defineProps({ messages: { type: Array, default: () => [] } });
+const emit = defineEmits(['close']);
+const store = useStore();
+const router = useRouter();
+const { t } = useI18n();
+const { getPlainText } = useMessageFormatter();
+const root = ref(null);
+const sending = ref(false);
+const message = computed(() => props.messages.at(-1) || {});
+const sender = computed(() =>
+  previewSender(
+    message.value.sender,
+    window.chatwootWebChannel,
+    t('UNREAD_VIEW.BOT')
+  )
+);
+const excerpt = computed(() => getPlainText(message.value.content || ''));
+const choices = computed(() =>
+  (message.value.suggestedResponses || []).slice(0, 3)
+);
+const muteLabel = computed(() =>
+  attentionState.muted ? t('ATTENTION.UNMUTE') : t('ATTENTION.MUTE')
+);
+let observer;
 
-      if (content) return content;
-
-      if (hasAttachments) return `📑`;
-
-      return '';
-    },
-  },
+const open = () => {
+  if (message.value.campaignId) {
+    emitter.emit(ON_CAMPAIGN_MESSAGE_CLICK, {
+      campaignId: message.value.campaignId,
+    });
+  } else {
+    emitter.emit(ON_UNREAD_MESSAGE_CLICK);
+  }
 };
+const choose = async choice => {
+  if (sending.value) return;
+  sending.value = true;
+  if (message.value.campaignId) {
+    emitter.emit(ON_CAMPAIGN_MESSAGE_CLICK, {
+      campaignId: message.value.campaignId,
+      selectedResponse: choice,
+    });
+  } else {
+    open();
+    await router.replace({ name: 'messages' });
+    await store.dispatch('message/update', {
+      messageId: message.value.choiceMessageId,
+      submittedValues: [choice],
+    });
+  }
+  sending.value = false;
+};
+const dismiss = () => {
+  dismissPreview(
+    message.value.previewKey || `campaign:${message.value.campaignId}`
+  );
+  emit('close');
+};
+const toggleMute = () => {
+  attentionState.muted = !attentionState.muted;
+  IFrameHelper.sendMessage({
+    event: 'setAudioMuted',
+    muted: attentionState.muted,
+  });
+};
+onMounted(() => {
+  observer = new ResizeObserver(() =>
+    IFrameHelper.sendMessage({
+      event: 'updateIframeHeight',
+      isFixedHeight: true,
+      extraHeight: getExtraSpaceToScroll(),
+    })
+  );
+  observer.observe(root.value);
+});
+onBeforeUnmount(() => observer?.disconnect());
 </script>
 
 <template>
-  <div class="unread-wrap" dir="ltr">
-    <div class="close-unread-wrap">
-      <button class="button small close-unread-button" @click="closeFullView">
-        <span class="flex items-center">
-          <FluentIcon class="mr-1" icon="dismiss" size="12" />
-          {{ $t('UNREAD_VIEW.CLOSE_MESSAGES_BUTTON') }}
+  <div ref="root" class="w-full p-6" data-notification-preview>
+    <section
+      class="group relative animate-fade-in-up overflow-hidden rounded-[1.25rem] border border-solid border-n-weak/60 bg-n-solid-1 text-n-slate-12 shadow-[0_0.5rem_1.5rem_-0.5rem_rgba(15,23,42,0.22),0_0.0625rem_0.1875rem_rgba(15,23,42,0.08)]"
+    >
+      <header class="flex h-11 items-center gap-2 pe-2 ps-5 pt-1">
+        <Avatar
+          :src="sender.avatarUrl"
+          :name="sender.name"
+          :size="20"
+          rounded-full
+        />
+        <span class="min-w-0 flex-1 truncate text-xs text-n-slate-11">
+          {{ sender.name }}
         </span>
-      </button>
-    </div>
-    <div class="unread-messages">
-      <UnreadMessage
-        v-for="(message, index) in messages"
-        :key="message.id"
-        :message-type="message.messageType"
-        :message-id="message.id"
-        :show-sender="!index"
-        :sender="message.sender"
-        :message="getMessageContent(message)"
-        :campaign-id="message.campaignId"
-        :suggested-responses="message.suggestedResponses"
-      />
-    </div>
-
-    <div class="open-read-view-wrap">
-      <button
-        v-if="unreadMessageCount"
-        class="button clear-button"
-        @click="openConversationView"
-      >
-        <span
-          class="flex items-center"
-          :class="{
-            '!text-n-slate-12': isBackgroundLighter,
-          }"
-          :style="{
-            color: widgetColor,
-          }"
+        <div
+          class="flex items-center opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100 [@media(hover:none)]:opacity-100"
         >
-          <FluentIcon class="mr-2" size="16" icon="arrow-right" />
-          {{ $t('UNREAD_VIEW.VIEW_MESSAGES_BUTTON') }}
-        </span>
-      </button>
-    </div>
+          <button
+            type="button"
+            class="flex size-8 items-center justify-center rounded-full text-n-slate-10 hover:bg-n-alpha-2 hover:text-n-slate-12"
+            :aria-label="muteLabel"
+            :aria-pressed="attentionState.muted"
+            @click="toggleMute"
+          >
+            <i
+              :class="
+                attentionState.muted ? 'i-lucide-volume-x' : 'i-lucide-volume-2'
+              "
+              class="size-4"
+            />
+          </button>
+          <button
+            type="button"
+            class="flex size-8 items-center justify-center rounded-full text-n-slate-10 hover:bg-n-alpha-2 hover:text-n-slate-12"
+            :aria-label="$t('UNREAD_VIEW.CLOSE_MESSAGES_BUTTON')"
+            @click="dismiss"
+          >
+            <i class="i-lucide-x size-4" />
+          </button>
+        </div>
+      </header>
+      <AttentionOffer v-if="attentionState.offer" variant="card" />
+      <template v-else>
+        <button
+          class="block w-full px-5 pb-4 pt-1 text-start text-[0.9375rem] leading-6 text-n-slate-12"
+          type="button"
+          @click="open"
+        >
+          <span class="line-clamp-4">
+            {{ excerpt || $t('ATTENTION.NEW_REPLY') }}
+          </span>
+        </button>
+        <PreviewChoices
+          v-if="choices.length"
+          :choices="choices"
+          :disabled="sending"
+          @choose="choose"
+        />
+      </template>
+    </section>
   </div>
 </template>
-
-<style lang="scss" scoped>
-.unread-wrap {
-  width: 100%;
-  height: auto;
-  max-height: 100vh;
-  background: transparent;
-  display: flex;
-  flex-direction: column;
-  flex-wrap: nowrap;
-  justify-content: flex-end;
-  overflow: hidden;
-
-  .unread-messages {
-    @apply pb-2;
-  }
-
-  .clear-button {
-    transition: all 0.3s cubic-bezier(0.17, 0.67, 0.83, 0.67);
-    @apply bg-transparent text-n-brand border-none border-0 font-semibold text-base ml-1 py-0 pl-0 pr-2.5 hover:brightness-75 hover:translate-x-1;
-  }
-
-  .close-unread-button {
-    transition: all 0.3s cubic-bezier(0.17, 0.67, 0.83, 0.67);
-    @apply bg-n-slate-3 dark:bg-n-slate-12 text-n-slate-12 dark:text-n-slate-1 hover:brightness-95 border-none border-0 font-medium text-xxs rounded-2xl mb-3;
-  }
-}
-</style>

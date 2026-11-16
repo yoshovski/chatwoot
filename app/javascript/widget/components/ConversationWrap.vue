@@ -3,6 +3,8 @@ import ChatMessage from 'widget/components/ChatMessage.vue';
 import AgentTypingBubble from 'widget/components/AgentTypingBubble.vue';
 import DateSeparator from 'shared/components/DateSeparator.vue';
 import Spinner from 'shared/components/Spinner.vue';
+import AttentionOffer from 'widget/components/AttentionOffer.vue';
+import { attentionState } from 'widget/helpers/attentionState';
 import { useDarkMode } from 'widget/composables/useDarkMode';
 import { MESSAGE_TYPE } from 'shared/constants/messages';
 import { mapActions, mapGetters } from 'vuex';
@@ -15,6 +17,7 @@ const MAX_LIVE_MESSAGES = 3;
 export default {
   name: 'ConversationWrap',
   components: {
+    AttentionOffer,
     ChatMessage,
     AgentTypingBubble,
     DateSeparator,
@@ -28,7 +31,7 @@ export default {
   },
   setup() {
     const { darkMode } = useDarkMode();
-    return { darkMode };
+    return { darkMode, attentionState };
   },
   data() {
     return {
@@ -62,6 +65,9 @@ export default {
   watch: {
     allMessagesLoaded() {
       this.previousScrollHeight = 0;
+    },
+    'attentionState.offer': function scrollToOffer(offer) {
+      if (offer) this.$nextTick(this.scrollToBottom);
     },
   },
   mounted() {
@@ -164,6 +170,7 @@ export default {
           :message="message"
         />
       </div>
+      <AttentionOffer v-if="attentionState.offer" />
       <AgentTypingBubble v-if="showStatusIndicator" />
     </div>
   </div>

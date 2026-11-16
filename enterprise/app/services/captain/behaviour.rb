@@ -21,13 +21,9 @@ module Captain::Behaviour
     (REPLY_PAUSE_BASE_MS + (REPLY_PAUSE_PER_CHAR_MS * text.to_s.length)).clamp(REPLY_PAUSE_MIN_MS, REPLY_PAUSE_MAX_MS)
   end
 
-  # Web widget proactive check-in timing (seconds):
-  # Web widget proactive check-in timing (seconds):
-  # Fast, opinionated defaults for live website visitors on the widget.
-  # 40 seconds when the assistant asked a clarifying / qualification / options question and awaits an answer.
-  # 60 seconds (1 minute) when the assistant gave a complete answer and no question is pending.
-  WIDGET_CHECK_IN_AWAITING_ANSWER_SECONDS = 40
-  WIDGET_CHECK_IN_COMPLETED_ANSWER_SECONDS = 60
+  # Visible, quiet time after the final bubble. The widget adds reading time for long replies.
+  WIDGET_CHECK_IN_AWAITING_ANSWER_SECONDS = 20
+  WIDGET_CHECK_IN_COMPLETED_ANSWER_SECONDS = 35
 
   def self.widget_check_in_awaiting_seconds(assistant)
     resolve_widget_delay(assistant&.config&.dig('widget_check_in_awaiting_seconds'),

@@ -25,6 +25,8 @@ import { emitter } from 'shared/helpers/mitt';
 import { getWidgetForegroundColor } from 'shared/helpers/colorHelper';
 import { recordWebsiteActivity, setArrival } from './api/websiteActivity';
 import PreviewLauncher from './components/PreviewLauncher.vue';
+import { startWidgetAttention } from './composables/useWidgetAttention';
+import { attentionState } from './helpers/attentionState';
 import {
   isPreviewMode,
   previewState,
@@ -142,6 +144,7 @@ export default {
     this.$store.dispatch('conversationAttributes/getAttributes');
     this.registerUnreadEvents();
     this.registerCampaignEvents();
+    startWidgetAttention({ store: this.$store, router: this.router });
   },
   methods: {
     ...mapActions('appConfig', [
@@ -198,13 +201,9 @@ export default {
       }
     },
     registerUnreadEvents() {
-      emitter.on(ON_AGENT_MESSAGE_RECEIVED, () => {
-        const { name: routeName } = this.$route;
-        if ((this.isWidgetOpen || !this.isIFrame) && routeName === 'messages') {
-          this.$store.dispatch('conversation/setUserLastSeen');
-        }
-        this.setUnreadView();
-      });
+      // Read state follows what is on screen; see useWidgetAttention.
+      emitter.on(ON_AGENT_MESSAGE_RECEIVED, () => this.setUnreadView());
+      emitter.on('hide-preview-card', () => this.hidePreviewCard());
       emitter.on(ON_UNREAD_MESSAGE_CLICK, () => {
         this.router
           .replace({ name: 'messages' })
@@ -272,12 +271,21 @@ export default {
         return;
       }
 
-      if (unreadMessageCount > 0 && !this.isWidgetOpen) {
+      const [preview] =
+        this.$store.getters['conversation/getUnreadTextMessages'];
+      const dismissed =
+        preview?.previewKey === attentionState.previewDismissedKey;
+      if (unreadMessageCount > 0 && !this.isWidgetOpen && !dismissed) {
         this.router.replace({ name: 'unread-messages' }).then(() => {
           this.setIframeHeight(true);
           IFrameHelper.sendMessage({ event: 'setUnreadMode' });
         });
       }
+    },
+    // Closing the card keeps the unread badge: the reply is still unread.
+    hidePreviewCard() {
+      this.unsetUnreadView();
+      this.router.replace({ name: 'home' });
     },
     unsetUnreadView() {
       if (this.isIFrame) {
@@ -380,9 +388,16 @@ export default {
           }
 
           const shouldShowMessageView =
-            ['home'].includes(this.$route.name) &&
+            ['home', 'unread-messages'].includes(this.$route.name) &&
             message.isOpen &&
             this.messageCount;
+          // Opening from the launcher while the preview card shows: the card becomes the chat.
+          if (message.isOpen && this.isUnreadOrCampaignView) {
+            this.unsetUnreadView();
+            if (this.$route.name === 'campaigns') {
+              this.router.replace({ name: 'home' });
+            }
+          }
           const shouldShowHomeView =
             !message.isOpen &&
             ['unread-messages', 'campaigns'].includes(this.$route.name);
@@ -390,11 +405,7 @@ export default {
           if (shouldShowMessageView) {
             this.router.replace({ name: 'messages' });
           }
-          if (shouldShowHomeView) {
-            this.$store.dispatch('conversation/setUserLastSeen');
-            this.unsetUnreadView();
-            this.router.replace({ name: 'home' });
-          }
+          if (shouldShowHomeView) this.hidePreviewCard();
           if (!message.isOpen) {
             this.resetCampaign();
           }

@@ -15,20 +15,6 @@ class Captain::Conversation::CheckInRunner
 
   def self.check_in_after(assistant) = Captain::Behaviour.check_in_after_minutes(assistant).minutes
 
-  def self.proactive_check_in_delay(assistant, conversation)
-    if conversation&.inbox&.web_widget?
-      state = Captain::Conversation::CheckInState.new(conversation: conversation, assistant: assistant)
-      seconds = if state.awaiting_customer_answer?
-                  Captain::Behaviour.widget_check_in_awaiting_seconds(assistant)
-                else
-                  Captain::Behaviour.widget_check_in_completed_seconds(assistant)
-                end
-      return seconds.seconds
-    end
-
-    check_in_after(assistant)
-  end
-
   # Auto-resolve waits for a prospect's lead offer while the runner can still send it.
   def self.awaiting_lead_offer?(conversation, assistant)
     return false unless assistant.leads_enabled?
@@ -39,22 +25,19 @@ class Captain::Conversation::CheckInRunner
   end
 
   # A failing check-in never stops the other conversations or the resolution that follows.
-  def check_in(conversation, proactive: false)
-    return false unless eligible?(conversation, proactive: proactive)
-
+  # On the website the widget shows the generic check-in itself (Widget::AttentionService), so the sweep
+  # only sends a deliberate lead offer there. A question still waiting for an answer is never repeated.
+  def check_in(conversation)
     state = check_in_state(conversation)
-
-    # When waiting on customer answer, capture attention via UI/sound nudge broadcast
-    # instead of sending repetitive duplicate questions.
-    return trigger_nudge(conversation, proactive: proactive) if state.awaiting_customer_answer?
+    return false unless sweep_may_check_in?(conversation, state) && eligible?(conversation)
 
     # A prospect's first check-in is a lead offer; when follow-up isn't appropriate, a plain check-in marks the offer skipped.
     if state.lead_guard?
-      return emitted(conversation, Captain::Conversation::CheckInState::LEAD_OFFER) if offer_lead(conversation, proactive: proactive)
+      return emitted(conversation, Captain::Conversation::CheckInState::LEAD_OFFER) if offer_lead(conversation)
 
       lead_offer_skipped = true
     end
-    post_check_in(conversation, lead_offer_skipped: lead_offer_skipped, proactive: proactive)
+    post_check_in(conversation, lead_offer_skipped: lead_offer_skipped)
   rescue ActiveRecord::RecordNotFound
     false
   rescue StandardError => e
@@ -63,6 +46,12 @@ class Captain::Conversation::CheckInRunner
   end
 
   private
+
+  def sweep_may_check_in?(conversation, state)
+    return state.lead_guard? if conversation.inbox.web_widget?
+
+    !state.awaiting_customer_answer?
+  end
 
   def candidates
     now = Time.current
@@ -73,10 +62,7 @@ class Captain::Conversation::CheckInRunner
           .limit(Limits::BULK_ACTIONS_LIMIT)
   end
 
-  def cutoff_time(now = Time.current, conversation: nil)
-    delay = conversation ? self.class.proactive_check_in_delay(@assistant, conversation) : self.class.check_in_after(@assistant)
-    now - delay
-  end
+  def cutoff_time(now = Time.current) = now - self.class.check_in_after(@assistant)
 
   # Conversations whose latest check-in came after the visitor's last message: this quiet period is covered.
   def checked_in_conversation_ids
@@ -88,38 +74,17 @@ class Captain::Conversation::CheckInRunner
            .select(:conversation_id)
   end
 
-  def offer_lead(conversation, proactive: false)
+  def offer_lead(conversation)
     service = Captain::Conversation::LeadOfferService.new(conversation: conversation, assistant: @assistant)
     proposal = service.proposal
     return false unless proposal
 
-    post_locked(conversation, proactive: proactive) { service.deliver!(proposal) if check_in_state(conversation).lead_guard? }.present?
+    post_locked(conversation) { service.deliver!(proposal) if check_in_state(conversation).lead_guard? }.present?
   end
 
-  def trigger_nudge(conversation, proactive: false)
-    delivered = post_locked(conversation, proactive: proactive) do
-      broadcast_nudge(conversation)
-      conversation.update!(
-        additional_attributes: conversation.additional_attributes.to_h.merge('captain_last_nudge_at' => Time.current.iso8601)
-      )
-      true
-    end
-    delivered ? emitted(conversation, 'nudge') : false
-  end
-
-  def broadcast_nudge(conversation)
-    pubsub_token = conversation.contact_inbox&.pubsub_token
-    return if pubsub_token.blank?
-
-    ActionCable.server.broadcast(
-      pubsub_token,
-      { event: 'conversation.nudge', data: { conversation_id: conversation.id, message_id: check_in_state(conversation).last_public_message&.id } }
-    )
-  end
-
-  def post_check_in(conversation, lead_offer_skipped:, proactive: false)
+  def post_check_in(conversation, lead_offer_skipped:)
     payload = check_in_message_payload(conversation, lead_offer_skipped: lead_offer_skipped)
-    message = post_locked(conversation, proactive: proactive) do
+    message = post_locked(conversation) do
       conversation.messages.create!(payload.merge(account_id: conversation.account_id, inbox_id: conversation.inbox_id,
                                                   sender: @assistant, preserve_waiting_since: true))
     end
@@ -156,28 +121,23 @@ class Captain::Conversation::CheckInRunner
 
   # Model calls happen outside the lock; inside it the conversation is reloaded and checked again,
   # so two overlapping runs send one check-in.
-  def post_locked(conversation, proactive: false)
+  def post_locked(conversation)
     conversation.with_lock do
       conversation.reload
-      next unless eligible?(conversation, proactive: proactive)
+      next unless eligible?(conversation)
 
       yield
     end
   end
 
-  def eligible?(conversation, proactive: false)
-    return false unless quiet_enough?(conversation, proactive: proactive)
+  def eligible?(conversation)
+    return false unless conversation.pending? && conversation.last_activity_at <= cutoff_time
 
     state = check_in_state(conversation)
     return false unless state.assistant_spoke_last? && agent_may_reply?(conversation)
     return false if waiting_on_form?(conversation, state)
 
     !state.checked_in_this_quiet_period?
-  end
-
-  def quiet_enough?(conversation, proactive:)
-    cutoff = proactive ? (cutoff_time(Time.current, conversation: conversation) + 2.seconds) : cutoff_time
-    conversation.pending? && conversation.last_activity_at <= cutoff
   end
 
   def waiting_on_form?(conversation, state)

@@ -3,6 +3,7 @@ json.content resource.content
 json.message_type resource.message_type_before_type_cast
 json.content_type resource.content_type
 json.content_attributes resource.content_attributes
+json.additional_attributes resource.additional_attributes.slice('captain_reply_id', 'captain_segment_kinds', 'captain_reply_final', 'captain_attention_intent', 'captain_attention_delays')
 json.created_at resource.created_at.to_i
 json.conversation_id resource.conversation.display_id
 json.campaign_id resource.additional_attributes['campaign_id']

@@ -586,27 +586,13 @@ RSpec.describe Captain::Conversation::ResponseBuilderJob, type: :job do
           .to eq(['You can pause a plan for up to three months.', 'Which plan are you on?'])
       end
 
-      it 'schedules a proactive check-in job for web widget conversations' do
-        expect(Captain::Conversation::CheckInJob).to receive(:set)
-          .with(wait: 60.seconds)
-          .and_call_original
-
+      it 'stamps the widget reply for attention and schedules no check-in message' do
         expect do
           described_class.perform_now(conversation, assistant)
-        end.to have_enqueued_job(Captain::Conversation::CheckInJob).with(conversation.id, assistant.id)
-      end
+        end.not_to have_enqueued_job(Captain::Conversation::CheckInJob)
 
-      it 'schedules a proactive check-in job using assistant-configured delay when present' do
-        assistant.config['widget_check_in_completed_seconds'] = 45
-        assistant.save!
-
-        expect(Captain::Conversation::CheckInJob).to receive(:set)
-          .with(wait: 45.seconds)
-          .and_call_original
-
-        expect do
-          described_class.perform_now(conversation, assistant)
-        end.to have_enqueued_job(Captain::Conversation::CheckInJob).with(conversation.id, assistant.id)
+        expect(conversation.messages.outgoing.last.additional_attributes)
+          .to include('captain_attention_intent' => 'answer_complete', 'captain_reply_final' => true)
       end
 
       context 'with suggested replies' do

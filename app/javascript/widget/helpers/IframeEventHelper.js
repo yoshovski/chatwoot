@@ -8,22 +8,10 @@ export const loadedEventConfig = () => {
   };
 };
 
+// The closed-chat preview is one card; the frame is exactly as tall as it.
 export const getExtraSpaceToScroll = () => {
-  // This function calculates the extra space needed for the view to
-  // accommodate the height of close button + height of
-  // read messages button. So that scrollbar won't appear
-  const unreadMessageWrap = document.querySelector('.unread-messages');
-  const unreadCloseWrap = document.querySelector('.close-unread-wrap');
-  const readViewWrap = document.querySelector('.open-read-view-wrap');
-
-  if (!unreadMessageWrap) return 0;
-
-  // 24px to compensate the paddings
-  let extraHeight = 48 + unreadMessageWrap.scrollHeight;
-  if (unreadCloseWrap) extraHeight += unreadCloseWrap.scrollHeight;
-  if (readViewWrap) extraHeight += readViewWrap.scrollHeight;
-
-  return extraHeight;
+  const preview = document.querySelector('[data-notification-preview]');
+  return preview ? Math.ceil(preview.getBoundingClientRect().height) : 0;
 };
 
 export const shouldTriggerMessageUpdateEvent = message => {

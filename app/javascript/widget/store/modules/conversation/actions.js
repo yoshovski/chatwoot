@@ -31,7 +31,7 @@ const pacerFor = ({ commit, dispatch }) => {
     replyPacer = createReplyPacer({
       reveal: message =>
         dispatch('addOrUpdateMessage', message).then(() =>
-          emitter.emit(ON_AGENT_MESSAGE_RECEIVED)
+          emitter.emit(ON_AGENT_MESSAGE_RECEIVED, message)
         ),
       setTyping: status => commit('setReplyRevealing', status),
     });

@@ -1,6 +1,6 @@
 import { mount, shallowMount } from '@vue/test-utils';
 import AgentMessage from '../AgentMessage.vue';
-import UnreadMessage from '../UnreadMessage.vue';
+import { previewSender } from 'widget/helpers/notificationPreview';
 
 const maliciousName =
   '<img src="https://example.com/tracker.png" onerror="alert(1)">Agent';
@@ -51,34 +51,6 @@ describe('agent identity rendering', () => {
     expect(agentName.text()).toBe(maliciousName);
     expect(agentName.find('img').exists()).toBe(false);
     expect(agentName.html()).toContain('&lt;img');
-  });
-
-  it('renders agent and company names as plain text in unread messages', () => {
-    const wrapper = mount(UnreadMessage, {
-      props: {
-        message: 'Hello',
-        showSender: true,
-        sender: {
-          available_name: maliciousName,
-          avatar_url: '',
-        },
-      },
-      global: {
-        stubs: { Avatar: true },
-        directives: {
-          dompurifyHtml: (element, binding) => {
-            element.textContent = binding.value;
-          },
-        },
-      },
-    });
-    const agentName = wrapper.find('.agent--name');
-    const companyName = wrapper.find('.company--name');
-
-    expect(agentName.text()).toBe(maliciousName);
-    expect(agentName.find('img').exists()).toBe(false);
-    expect(companyName.text()).toContain(maliciousCompanyName);
-    expect(companyName.find('strong').exists()).toBe(false);
   });
 
   it('renders custom captain assistant name and avatar beside widget messages', () => {
@@ -144,65 +116,57 @@ describe('agent identity rendering', () => {
       '/assets/images/dashboard/captain/ai-agent-avatar.svg'
     );
   });
+});
 
-  it('renders custom captain assistant name and avatar in unread messages', () => {
-    const wrapper = mount(UnreadMessage, {
-      props: {
-        message: 'Hello from unread assistant',
-        showSender: true,
-        sender: {
+describe('closed-chat card sender', () => {
+  const channel = {
+    websiteName: 'Scanixx',
+    avatarUrl: '/inbox.png',
+    enabledFeatures: [],
+  };
+
+  it('uses the custom assistant name and avatar', () => {
+    expect(
+      previewSender(
+        {
           available_name: 'Custom Assistant',
           avatar_url: 'https://example.com/custom-assistant.png',
           type: 'captain_assistant',
         },
-      },
-      global: {
-        stubs: { Avatar: true },
-        directives: {
-          dompurifyHtml: (element, binding) => {
-            element.textContent = binding.value;
-          },
-        },
-        mocks: {
-          $t: text => text,
-        },
-      },
+        channel,
+        'Bot'
+      )
+    ).toEqual({
+      name: 'Custom Assistant',
+      avatarUrl: 'https://example.com/custom-assistant.png',
     });
-
-    expect(wrapper.vm.agentName).toBe('Custom Assistant');
-    expect(wrapper.vm.avatarUrl).toBe(
-      'https://example.com/custom-assistant.png'
-    );
   });
 
-  it('falls back to captain logo when captain assistant has no custom avatar in unread messages', () => {
-    const wrapper = mount(UnreadMessage, {
-      props: {
-        message: 'Hello from unread assistant',
-        showSender: true,
-        sender: {
+  it('falls back to the captain logo when the assistant has no avatar', () => {
+    expect(
+      previewSender(
+        {
           available_name: 'Default Assistant',
           avatar_url: '',
           type: 'captain_assistant',
         },
-      },
-      global: {
-        stubs: { Avatar: true },
-        directives: {
-          dompurifyHtml: (element, binding) => {
-            element.textContent = binding.value;
-          },
-        },
-        mocks: {
-          $t: text => text,
-        },
-      },
-    });
+        channel,
+        'Bot'
+      ).avatarUrl
+    ).toBe('/assets/images/dashboard/captain/ai-agent-avatar.svg');
+  });
 
-    expect(wrapper.vm.agentName).toBe('Default Assistant');
-    expect(wrapper.vm.avatarUrl).toBe(
-      '/assets/images/dashboard/captain/ai-agent-avatar.svg'
-    );
+  it('uses the inbox name and avatar for a bot when the inbox asks for it', () => {
+    expect(
+      previewSender(
+        null,
+        { ...channel, enabledFeatures: ['use_inbox_avatar_for_bot'] },
+        'Bot'
+      )
+    ).toEqual({
+      name: 'Scanixx',
+      avatarUrl: '/inbox.png',
+    });
   });
 });
 

@@ -67,6 +67,14 @@
   "MESSAGE_SOURCES": {
     "LABEL": "Sources"
   },
+  "ATTENTION": {
+    "CHECK_IN": "Is there anything else I can help you with?",
+    "ALL_SET": "I'm all set",
+    "OPEN_CHAT": "Open chat",
+    "NEW_REPLY": "You have a new reply",
+    "MUTE": "Mute notification sound",
+    "UNMUTE": "Turn notification sound on"
+  },
   "UNREAD_VIEW": {
     "VIEW_MESSAGES_BUTTON": "See new messages",
     "CLOSE_MESSAGES_BUTTON": "Close",
