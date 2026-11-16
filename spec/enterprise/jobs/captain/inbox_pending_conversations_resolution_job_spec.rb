@@ -489,7 +489,9 @@ RSpec.describe Captain::InboxPendingConversationsResolutionJob, type: :job do
     expect(resolvable_pending_conversation.reload.status).to eq('pending')
   end
 
+  # The sweep posts check-ins on channels like email or the API; on the website the widget shows its own check-in.
   context 'with check-ins' do
+    let!(:inbox) { create(:inbox, :with_email) }
     let(:quiet_conversation) { create(:conversation, inbox: inbox, account: inbox.account, status: :pending) }
 
     before do
@@ -511,6 +513,14 @@ RSpec.describe Captain::InboxPendingConversationsResolutionJob, type: :job do
 
       expect(check_in_count).to eq(1)
       expect(quiet_conversation.reload.status).to eq('pending')
+    end
+
+    it 'posts no plain check-in on a website inbox' do
+      inbox.update!(channel: create(:channel_widget, account: inbox.account))
+
+      described_class.perform_now(inbox.reload)
+
+      expect(check_in_count).to eq(0)
     end
 
     it 'checks in when auto-resolve is disabled' do

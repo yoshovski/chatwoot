@@ -367,71 +367,91 @@ describe('#getters', () => {
       ).toEqual([]);
     });
 
-    it('only unread text messages from agent if there are messages and last seen is before messages created-at', () => {
+    it('one card for a reply split into bubbles, previewing its question', () => {
+      const reply = { captain_reply_id: 'r1' };
       const state = {
         conversations: {
           1: {
             id: 1,
-            content: 'Thanks for the help',
-            created_at: 1574075964,
-            message_type: 1,
-          },
-          2: {
-            id: 2,
-            content: 'Yes, It makes sense',
-            created_at: 1574092218,
+            content: 'Which battery?',
+            created_at: 10,
             message_type: 0,
           },
-        },
-      };
-      expect(
-        getters.getUnreadTextMessages(state, { getUnreadMessageCount: 1 })
-      ).toEqual([
-        {
-          id: 1,
-          content: 'Thanks for the help',
-          created_at: 1574075964,
-          message_type: 1,
-        },
-      ]);
-    });
-
-    it('unread messages omitting seen messages ', () => {
-      const state = {
-        conversations: {
-          1: {
-            id: 1,
-            content: 'Thanks for the help',
-            created_at: 1574075964,
-            message_type: 1,
-          },
           2: {
             id: 2,
-            content: 'Yes, It makes sense',
-            created_at: 1674075965,
+            content: 'The X2 takes the 5000 mAh pack.',
+            created_at: 11,
             message_type: 1,
+            additional_attributes: reply,
           },
           3: {
             id: 3,
-            content: 'Yes, It makes sense',
-            created_at: 1574092218,
-            message_type: 0,
+            content: 'X2 Battery',
+            content_type: 'cards',
+            created_at: 12,
+            message_type: 1,
+            additional_attributes: reply,
+          },
+          4: {
+            id: 4,
+            content: 'Need add-on modules too?',
+            created_at: 13,
+            message_type: 1,
+            additional_attributes: {
+              ...reply,
+              captain_segment_kinds: ['question'],
+            },
+          },
+          5: {
+            id: 5,
+            content: '',
+            content_type: 'input_select',
+            content_attributes: {
+              items: [
+                { title: 'Batteries' },
+                { title: 'Modules' },
+                { title: 'Both' },
+              ],
+            },
+            created_at: 14,
+            message_type: 1,
+            additional_attributes: reply,
           },
         },
-        meta: {
-          userLastSeenAt: 1674075964,
-        },
+        meta: { userLastSeenAt: 10 },
       };
-      expect(
-        getters.getUnreadTextMessages(state, { getUnreadMessageCount: 1 })
-      ).toEqual([
-        {
-          id: 2,
-          content: 'Yes, It makes sense',
-          created_at: 1674075965,
-          message_type: 1,
+
+      const [card, ...rest] = getters.getUnreadTextMessages(state);
+
+      expect(rest).toEqual([]);
+      expect(card).toMatchObject({
+        id: 4,
+        content: 'Need add-on modules too?',
+        previewKey: 'undefined:r1',
+        choiceMessageId: 5,
+        suggestedResponses: [
+          { title: 'Batteries' },
+          { title: 'Modules' },
+          { title: 'Both' },
+        ],
+      });
+      expect(getters.getUnreadMessageCount(state)).toEqual(1);
+    });
+
+    it('nothing once the reply was seen', () => {
+      const state = {
+        conversations: {
+          1: {
+            id: 1,
+            content: 'Thanks for the help',
+            created_at: 1574075964,
+            message_type: 1,
+          },
         },
-      ]);
+        meta: { userLastSeenAt: 1674075964 },
+      };
+
+      expect(getters.getUnreadTextMessages(state)).toEqual([]);
     });
   });
 

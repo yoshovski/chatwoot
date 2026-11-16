@@ -11,9 +11,6 @@ export default {
       groupedMessages: 'conversation/getGroupedConversation',
     }),
   },
-  mounted() {
-    this.$store.dispatch('conversation/setUserLastSeen');
-  },
 };
 </script>
 

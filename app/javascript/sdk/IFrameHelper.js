@@ -30,9 +30,12 @@ import {
 import { SET_USER_ERROR } from '../widget/constants/errorTypes';
 import { getUserCookieName, setCookieWithDomain } from './cookieHelpers';
 import {
-  getAlertAudio,
-  initOnEvents,
-} from 'shared/helpers/AudioNotificationHelper';
+  highlightLauncher,
+  hostAttentionState,
+  playReplySound,
+  setMuted,
+  watchHostAttention,
+} from './attentionHelper';
 import { getWidgetStyle, isFlatWidgetStyle } from './settingsHelper';
 import { popoutChatWindow } from '../widget/helpers/popoutHelper';
 
@@ -46,43 +49,6 @@ const updateCampaignReadStatus = baseDomain => {
   setCookieWithDomain('cw_snooze_campaigns_till', Number(expireBy), {
     expires: expireBy,
     baseDomain,
-  });
-};
-
-let titleNotificationInterval = null;
-let originalDocumentTitle = null;
-
-const flashDocumentTitle = (text = 'Waiting for your reply...') => {
-  if (!document.hidden && document.hasFocus()) {
-    return;
-  }
-  if (titleNotificationInterval) {
-    return;
-  }
-
-  originalDocumentTitle = document.title;
-  let isOriginal = false;
-  titleNotificationInterval = setInterval(() => {
-    document.title = isOriginal ? originalDocumentTitle : `🔴 (1) ${text}`;
-    isOriginal = !isOriginal;
-  }, 1000);
-
-  const clearNotification = () => {
-    if (titleNotificationInterval) {
-      clearInterval(titleNotificationInterval);
-      titleNotificationInterval = null;
-      if (originalDocumentTitle !== null) {
-        document.title = originalDocumentTitle;
-        originalDocumentTitle = null;
-      }
-    }
-    window.removeEventListener('focus', clearNotification);
-    document.removeEventListener('visibilitychange', clearNotification);
-  };
-
-  window.addEventListener('focus', clearNotification, { once: true });
-  document.addEventListener('visibilitychange', clearNotification, {
-    once: true,
   });
 };
 
@@ -126,6 +92,8 @@ export const IFrameHelper = {
     IFrameHelper.preventDefaultScroll();
   },
   getAppFrame: () => document.getElementById('chatwoot_live_chat_widget'),
+  sendHostAttentionState: () =>
+    IFrameHelper.sendMessage('attention-host-state', hostAttentionState()),
   getBubbleHolder: () => document.getElementsByClassName('woot--bubble-holder'),
   sendMessage: (key, value) => {
     const element = IFrameHelper.getAppFrame();
@@ -175,19 +143,6 @@ export const IFrameHelper = {
       iframe.setAttribute('style', `height: ${updatedIframeHeight} !important`);
   },
 
-  setupAudioListeners: () => {
-    const { baseUrl = '' } = window.$chatwoot;
-    getAlertAudio(baseUrl, { type: 'widget', alertTone: 'ding' }).then(() =>
-      initOnEvents.forEach(event => {
-        document.removeEventListener(
-          event,
-          IFrameHelper.setupAudioListeners,
-          false
-        );
-      })
-    );
-  },
-
   events: {
     loaded: message => {
       const { channelConfig } = message.config;
@@ -229,11 +184,8 @@ export const IFrameHelper = {
         IFrameHelper.sendMessage('set-user', window.$chatwoot.user);
       }
 
-      window.playAudioAlert = () => {};
-
-      initOnEvents.forEach(e => {
-        document.addEventListener(e, IFrameHelper.setupAudioListeners, false);
-      });
+      watchHostAttention(IFrameHelper.sendHostAttentionState);
+      IFrameHelper.sendHostAttentionState();
 
       if (!window.$chatwoot.resetTriggered) {
         dispatchWindowEvent({ eventName: CHATWOOT_READY });
@@ -322,10 +274,8 @@ export const IFrameHelper = {
       IFrameHelper.setFrameHeightToFitContent(extraHeight, isFixedHeight);
     },
 
-    setUnreadMode: () => {
-      addUnreadClass();
-      onBubbleClick({ toggleValue: true });
-    },
+    // The preview card shows beside the launcher while the chat itself stays closed.
+    setUnreadMode: () => addUnreadClass(),
 
     resetUnreadMode: () => removeUnreadClass(),
     handleNotificationDot: event => {
@@ -334,12 +284,11 @@ export const IFrameHelper = {
       }
 
       const bubbleElement = document.querySelector('.woot-widget-bubble');
-      if (
-        event.unreadMessageCount > 0 &&
-        !bubbleElement.classList.contains('unread-notification')
-      ) {
+      const count = event.unreadMessageCount;
+      bubbleElement.dataset.unreadCount = count > 9 ? '9+' : String(count);
+      if (count > 0) {
         addClasses(bubbleElement, 'unread-notification');
-      } else if (event.unreadMessageCount === 0) {
+      } else {
         removeClasses(bubbleElement, 'unread-notification');
       }
     },
@@ -348,16 +297,18 @@ export const IFrameHelper = {
       onBubbleClick({ toggleValue: false });
     },
 
-    playAudio: () => {
-      window.playAudioAlert();
+    playAudio: ({ replyKey }) => {
+      playReplySound(replyKey);
     },
 
-    onConversationNudge: message => {
-      if (typeof window.playAudioAlert === 'function') {
-        window.playAudioAlert();
-      }
-      flashDocumentTitle(message?.data?.title || 'Waiting for your reply...');
-      IFrameHelper.events.handleNotificationDot({ unreadMessageCount: 1 });
+    setAudioMuted: ({ muted }) => {
+      setMuted(muted);
+      IFrameHelper.sendHostAttentionState();
+    },
+
+    highlightLauncher: () => {
+      if (window.$chatwoot.isOpen || window.$chatwoot.hideMessageBubble) return;
+      highlightLauncher(chatBubble);
     },
   },
   pushEvent: eventName => {

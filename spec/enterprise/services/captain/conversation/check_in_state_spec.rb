@@ -92,10 +92,15 @@ RSpec.describe Captain::Conversation::CheckInState do
       expect(state.awaiting_customer_answer?).to be(true)
     end
 
-    it 'returns true when the message has input_select content_type' do
-      agent_message(content: 'Choose an option', content_type: :input_select,
-                    content_attributes: { 'items' => [{ 'title' => 'Yes', 'value' => 'yes' }] })
-      expect(state.awaiting_customer_answer?).to be(true)
+    it 'returns false for optional buttons after a complete answer' do
+      agent_message(content: 'Here are some options', content_type: :input_select,
+                    content_attributes: { 'items' => [{ 'title' => 'Battery options', 'value' => 'batteries' }] })
+      expect(state.awaiting_customer_answer?).to be(false)
+    end
+
+    it 'follows the stamped attention intent when present' do
+      agent_message(content: 'Which drone do you have?', additional_attributes: { 'captain_attention_intent' => 'none' })
+      expect(state.awaiting_customer_answer?).to be(false)
     end
 
     it 'returns true when the message has a question segment kind' do

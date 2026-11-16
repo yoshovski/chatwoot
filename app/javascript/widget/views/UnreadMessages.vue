@@ -1,6 +1,6 @@
 <script>
 import { mapGetters } from 'vuex';
-import { IFrameHelper } from 'widget/helpers/utils';
+import { emitter } from 'shared/helpers/mitt';
 import UnreadMessageList from '../components/UnreadMessageList.vue';
 
 export default {
@@ -15,9 +15,7 @@ export default {
   },
   methods: {
     closeFullView() {
-      if (IFrameHelper.isIFrame()) {
-        IFrameHelper.sendMessage({ event: 'toggleBubble' });
-      }
+      emitter.emit('hide-preview-card');
     },
   },
 };

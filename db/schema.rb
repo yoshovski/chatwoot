@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_11_16_090000) do
+ActiveRecord::Schema[7.2].define(version: 2026_11_16_120000) do
   # These extensions should be enabled to support this database
   enable_extension "pg_stat_statements"
   enable_extension "pg_trgm"
@@ -2008,6 +2008,36 @@ ActiveRecord::Schema[7.2].define(version: 2026_11_16_090000) do
     t.index ["account_id", "url"], name: "index_webhooks_on_account_id_and_url", unique: true
   end
 
+  create_table "widget_attention_events", force: :cascade do |t|
+    t.bigint "contact_inbox_id", null: false
+    t.bigint "conversation_id", null: false
+    t.bigint "message_id", null: false
+    t.string "event_key", null: false
+    t.string "kind", null: false
+    t.string "status", default: "claimed", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["contact_inbox_id", "event_key"], name: "index_widget_attention_events_on_claim", unique: true
+    t.index ["contact_inbox_id"], name: "index_widget_attention_events_on_contact_inbox_id"
+    t.index ["conversation_id", "kind"], name: "index_widget_attention_events_on_conversation_id_and_kind"
+    t.index ["conversation_id"], name: "index_widget_attention_events_on_conversation_id"
+    t.index ["message_id"], name: "index_widget_attention_events_on_message_id"
+  end
+
+  create_table "widget_attention_sessions", force: :cascade do |t|
+    t.bigint "contact_inbox_id", null: false
+    t.datetime "started_at", null: false
+    t.datetime "last_activity_at", null: false
+    t.datetime "last_cue_at"
+    t.datetime "last_sound_at"
+    t.integer "question_count", default: 0, null: false
+    t.boolean "checked_in", default: false, null: false
+    t.boolean "snoozed", default: false, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["contact_inbox_id"], name: "index_widget_attention_sessions_on_contact_inbox_id", unique: true
+  end
+
   create_table "working_hours", force: :cascade do |t|
     t.bigint "inbox_id"
     t.bigint "account_id"
@@ -2056,6 +2086,10 @@ ActiveRecord::Schema[7.2].define(version: 2026_11_16_090000) do
   add_foreign_key "conversation_usage_windows", "messages", on_delete: :nullify
   add_foreign_key "inboxes", "portals"
   add_foreign_key "user_sessions", "users"
+  add_foreign_key "widget_attention_events", "contact_inboxes", on_delete: :cascade
+  add_foreign_key "widget_attention_events", "conversations", on_delete: :cascade
+  add_foreign_key "widget_attention_events", "messages", on_delete: :cascade
+  add_foreign_key "widget_attention_sessions", "contact_inboxes", on_delete: :cascade
   create_trigger("accounts_after_insert_row_tr", :generated => true, :compatibility => 1).
       on("accounts").
       after(:insert).

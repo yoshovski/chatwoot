@@ -57,4 +57,25 @@ RSpec.describe Captain::Conversation::CheckInService do
     expect(result).to eq('Did the plan comparison help?')
     expect(chat).to have_received(:with_instructions).with(include('that does this: Ask if the plan comparison helped'))
   end
+
+  describe 'the widget check-in' do
+    let(:widget_service) { described_class.new(conversation: conversation, assistant: assistant, widget: true) }
+
+    it 'writes a line that fits the conversation, with next-step buttons' do
+      output = { 'text' => 'Want a quick guide to exporting them as CSV?',
+                 'suggested_replies' => [{ 'label' => 'CSV guide', 'message' => 'How do I export invoices as CSV?' }] }
+      allow(Captain::Assistant::TieredLlmClient).to receive(:generate).and_return(reply(output))
+
+      expect(widget_service.generated).to eq(text: output['text'], suggested_replies: output['suggested_replies'])
+      expect(chat).to have_received(:with_instructions).with(include('fits this conversation').and(include('At most 120 characters')))
+    end
+
+    it 'returns nothing when the model fails or writes too much, so the widget keeps its own line' do
+      allow(Captain::Assistant::TieredLlmClient).to receive(:generate).and_return(reply({ 'text' => 'a' * 121 }))
+      expect(widget_service.generated).to be_nil
+
+      allow(Captain::Assistant::TieredLlmClient).to receive(:generate).and_raise(Faraday::TimeoutError)
+      expect(widget_service.generated).to be_nil
+    end
+  end
 end

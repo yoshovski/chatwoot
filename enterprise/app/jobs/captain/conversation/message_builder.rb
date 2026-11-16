@@ -30,15 +30,19 @@ module Captain::Conversation::MessageBuilder
     payloads = reply_composer.messages(suppress_suggestions: waiting_for_human? || handoff_active_or_requested?, segment_kinds: true)
     # Buttons-only bubbles may have no text; every text bubble must.
     payloads.each { |payload| validate_message_content!(payload[:content]) if payload[:content_type].in?([nil, 'text']) }
-    if inbox.web_widget?
-      responding_to = responding_to_customer_message
-      early_welcome = Captain::Reply::EarlyWelcome.posted_after(@conversation, responding_to)
-      payloads = Captain::Reply::Pacing.stamp(payloads, responding_to: responding_to, after: early_welcome)
-    end
+    payloads = stamp_widget_reply(payloads) if inbox.web_widget?
     answer, *cards = payloads
     primary_message = create_composed_message(answer, preserve_waiting_since: preserve_waiting_since)
     cards.each { |payload| create_composed_message(payload, preserve_waiting_since: preserve_waiting_since) }
     primary_message
+  end
+
+  def stamp_widget_reply(payloads)
+    responding_to = responding_to_customer_message
+    early_welcome = Captain::Reply::EarlyWelcome.posted_after(@conversation, responding_to)
+    payloads = Captain::Reply::Pacing.stamp(payloads, responding_to: responding_to, after: early_welcome)
+    Captain::Reply::Attention.stamp(payloads, response: @response, assistant: @assistant,
+                                              suppressed: waiting_for_human? || handoff_active_or_requested?)
   end
 
   def reply_composer

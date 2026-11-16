@@ -36,8 +36,9 @@ export default {
         IFrameHelper.sendMessage({
           event: 'setCampaignReadOn',
         });
-        IFrameHelper.sendMessage({ event: 'toggleBubble' });
         emitter.emit('snooze-campaigns');
+        this.$store.dispatch('campaign/resetCampaign');
+        emitter.emit('hide-preview-card');
       }
     },
   },
