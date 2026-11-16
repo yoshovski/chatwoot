@@ -19,6 +19,10 @@ Please delete options that are not relevant.
 Please describe the tests that you ran to verify your changes. Provide instructions so we can reproduce. Please also list any relevant details for your test configuration.
 
 
+## Screenshots
+
+<!-- For visible UI changes, embed actual app screenshots when practical. Include before/after for changed screens and desktop/mobile when responsive behavior changes; label relevant states or themes. Use PR attachments or GitHub-accessible repository image links, not local paths. If capture or attachment is unavailable, briefly explain why. Remove this section when there is no visible UI impact. -->
+
 ## Checklist:
 
 - [ ] My code follows the style guidelines of this project
