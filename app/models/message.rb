@@ -44,6 +44,9 @@ class Message < ApplicationRecord
   include MessageFilterHelpers
   include Liquidable
   NUMBER_OF_PERMITTED_ATTACHMENTS = 15
+  # The reply metadata the website widget reads: grouping, segment kinds and the attention intent and delays.
+  WIDGET_ADDITIONAL_ATTRIBUTES = %w[captain_reply_id captain_segment_kinds captain_reply_final captain_attention_intent
+                                    captain_attention_delays].freeze
 
   TEMPLATE_PARAMS_SCHEMA = {
     'type': 'object',

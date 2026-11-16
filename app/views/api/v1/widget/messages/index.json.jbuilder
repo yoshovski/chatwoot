@@ -5,7 +5,7 @@ json.payload do
     json.message_type message.message_type_before_type_cast
     json.content_type message.content_type
     json.content_attributes message.content_attributes
-    json.additional_attributes message.additional_attributes.slice('captain_reply_id', 'captain_segment_kinds', 'captain_reply_final', 'captain_attention_intent', 'captain_attention_delays')
+    json.additional_attributes message.additional_attributes.slice(*Message::WIDGET_ADDITIONAL_ATTRIBUTES)
     json.created_at message.created_at.to_i
     json.conversation_id message.conversation.display_id
     json.campaign_id message.additional_attributes['campaign_id']
