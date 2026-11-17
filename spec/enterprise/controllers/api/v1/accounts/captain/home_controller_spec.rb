@@ -34,6 +34,25 @@ RSpec.describe 'Api::V1::Accounts::Captain::Home', type: :request do
     expect(response).to have_http_status(:unprocessable_entity)
   end
 
+  describe 'dashboard calendar dates' do
+    it 'returns both inclusive local dates across a clock change' do
+      get url, params: { start_date: '2025-10-25', end_date: '2025-10-27', time_zone: 'Europe/Madrid' },
+               headers: admin.create_new_auth_token
+
+      expect(response).to have_http_status(:success)
+      expect(response.parsed_body['days'].pluck('date')).to eq(%w[2025-10-25 2025-10-26 2025-10-27])
+    end
+
+    it 'rejects invalid dates and ranges longer than 90 calendar days' do
+      { '2025-01-01' => '2025-04-01', '2025-02-30' => '2025-03-01', '2025-04-01' => '2025-03-01' }.each do |start_date, end_date|
+        get url, params: { start_date: start_date, end_date: end_date, time_zone: 'Europe/Madrid' },
+                 headers: admin.create_new_auth_token
+
+        expect(response).to have_http_status(:unprocessable_entity)
+      end
+    end
+  end
+
   describe 'analytics report ranges' do
     it 'preserves every range offered by the assistant Overview' do
       Captain::AssistantStatsWindow::ALLOWED_RANGES.each do |range|

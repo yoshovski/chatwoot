@@ -71,6 +71,11 @@ export default {
     };
   },
   computed: {
+    pageTitle() {
+      return this.$route.name === 'account_home'
+        ? this.$t('HOME.DASHBOARD.HOME')
+        : '';
+    },
     isSmallScreen() {
       return this.windowWidth < wootConstants.SMALL_SCREEN_BREAKPOINT;
     },
@@ -149,7 +154,7 @@ export default {
       class="flex min-w-0 flex-1 flex-col overflow-hidden"
       :inert="isSmallScreen && isMobileSidebarOpen"
     >
-      <TopBarUsageIndicator />
+      <TopBarUsageIndicator :title="pageTitle" />
       <AccountBillingNotice />
       <main
         class="flex flex-1 w-full min-h-0 px-0 overflow-hidden bg-n-surface-1"

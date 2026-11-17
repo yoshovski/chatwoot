@@ -30,13 +30,6 @@ import InstallStep from './steps/InstallStep.vue';
 
 // The setup a new account lands in: full-screen steps with the step on the left and, from "Meet your agent" on, the
 // chat widget on the right to talk to the new AI agent. No step waits for the import; Continue and Skip always work.
-const STEP_NAMES = {
-  knowledge: 'HOME.GUIDED.STEP_NAMES.KNOWLEDGE',
-  test_agent: 'HOME.GUIDED.STEP_NAMES.TEST_AGENT',
-  agent_inbox: 'HOME.GUIDED.STEP_NAMES.AGENT_INBOX',
-  chat_widget: 'HOME.GUIDED.STEP_NAMES.CHAT_WIDGET',
-};
-
 const STEP_COMPONENTS = {
   knowledge: WebsiteStep,
   test_agent: TestStep,
@@ -72,15 +65,21 @@ const currentStep = computed(() =>
     : firstOpenGuidedStep(checklist.value)
 );
 const currentIndex = computed(() => GUIDED_STEPS.indexOf(currentStep.value));
-const segments = computed(() =>
-  GUIDED_STEPS.map((key, index) => ({
+const segments = computed(() => {
+  const stepNames = {
+    knowledge: t('HOME.GUIDED.STEP_NAMES.KNOWLEDGE'),
+    test_agent: t('HOME.GUIDED.STEP_NAMES.TEST_AGENT'),
+    agent_inbox: t('HOME.GUIDED.STEP_NAMES.AGENT_INBOX'),
+    chat_widget: t('HOME.GUIDED.STEP_NAMES.CHAT_WIDGET'),
+  };
+  return GUIDED_STEPS.map((key, index) => ({
     key,
     number: index + 1,
-    label: t(STEP_NAMES[key]),
+    label: stepNames[key],
     current: index === currentIndex.value,
     done: stepState(key)?.done,
-  }))
-);
+  }));
+});
 
 const website = computed(
   () =>
@@ -111,9 +110,23 @@ const primaryLabel = computed(
     })[primary.value] || t('HOME.GUIDED.CONTINUE')
 );
 
+const fromGettingStarted = computed(
+  () => route.query?.from === 'getting-started'
+);
 const openStep = step =>
-  router.replace({ name: 'account_home_setup', params: { step } });
-const closeSetup = () => router.push({ name: 'account_home' });
+  router.replace({
+    name: 'account_home_setup',
+    params: { step },
+    ...(fromGettingStarted.value && { query: route.query }),
+  });
+const closeSetup = () =>
+  router.push(
+    fromGettingStarted.value
+      ? {
+          name: 'account_home_getting_started',
+        }
+      : { name: 'account_home' }
+  );
 // Moves on from `key`, not from the current step: skipping changes which step an open URL resolves to.
 const goNextFrom = key => {
   const next = nextStep(key);

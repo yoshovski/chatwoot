@@ -183,7 +183,9 @@ Rails.application.routes.draw do
               get :action_requests, on: :collection
               post :bulk_dismiss, on: :collection
             end
-            resource :home, only: [:show], controller: 'home'
+            resource :home, only: [:show], controller: 'home' do
+              get :live
+            end
             resource :guided_setup, only: [:show], controller: 'guided_setup' do
               post :website
               post :go_live

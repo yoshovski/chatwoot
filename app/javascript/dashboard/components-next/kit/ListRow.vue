@@ -15,6 +15,7 @@ defineProps({
   meta: { type: String, default: '' },
   actionLabel: { type: String, default: '' },
   primary: { type: Boolean, default: false },
+  wrapText: { type: Boolean, default: false },
 });
 
 const emit = defineEmits(['action']);
@@ -32,10 +33,17 @@ const DOTS = {
   <li class="flex items-center gap-3 py-3 first:pt-0 last:pb-0">
     <span class="size-2 shrink-0 rounded-full" :class="DOTS[tone]" />
     <div class="me-auto flex min-w-0 flex-col">
-      <span class="truncate text-sm font-medium text-n-slate-12">
+      <span
+        class="text-sm font-medium text-n-slate-12"
+        :class="wrapText ? 'break-words' : 'truncate'"
+      >
         {{ title }}
       </span>
-      <span v-if="hint" class="truncate text-xs text-n-slate-11">
+      <span
+        v-if="hint"
+        class="text-xs text-n-slate-11"
+        :class="wrapText ? 'break-words' : 'truncate'"
+      >
         {{ hint }}
       </span>
     </div>

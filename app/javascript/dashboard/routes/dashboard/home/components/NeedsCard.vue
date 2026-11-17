@@ -10,6 +10,11 @@ defineProps({
   items: { type: Array, default: () => [] },
   isLoading: { type: Boolean, default: false },
   hasError: { type: Boolean, default: false },
+  title: { type: String, default: '' },
+  emptyTitle: { type: String, default: '' },
+  to: { type: Object, default: null },
+  linkLabel: { type: String, default: '' },
+  wrapText: { type: Boolean, default: false },
 });
 
 const emit = defineEmits(['action', 'retry']);
@@ -26,10 +31,13 @@ const TONES = {
 <template>
   <SectionCard
     :title="
-      items.length && !isLoading && !hasError
+      title ||
+      (items.length && !isLoading && !hasError
         ? $t('HOME.V2.NEEDS.TITLE_COUNT', { count: items.length })
-        : $t('HOME.V2.NEEDS.TITLE')
+        : $t('HOME.V2.NEEDS.TITLE'))
     "
+    :to="to"
+    :link-label="linkLabel"
   >
     <div v-if="isLoading" class="flex flex-col gap-3" aria-busy="true">
       <span
@@ -51,6 +59,7 @@ const TONES = {
         :tone="TONES[item.key]"
         :action-label="item.action"
         :primary="item.key === 'handoff'"
+        :wrap-text="wrapText"
         @action="emit('action', item)"
       />
     </ul>
@@ -58,7 +67,7 @@ const TONES = {
       v-else
       tone="success"
       icon="i-lucide-circle-check-big"
-      :title="$t('HOME.V2.NEEDS.EMPTY')"
+      :title="emptyTitle || $t('HOME.V2.NEEDS.EMPTY')"
     />
   </SectionCard>
 </template>

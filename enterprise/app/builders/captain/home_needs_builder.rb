@@ -24,6 +24,10 @@ class Captain::HomeNeedsBuilder
     end
   end
 
+  def open_conversation_count
+    accessible_conversations.open.count
+  end
+
   # Channels that lost their connection. The flag lives in Redis, so this costs no database query per inbox.
   def channel_problems
     @channel_problems ||= account.inboxes.includes(:channel).select { |inbox| inbox.channel.try(:reauthorization_required?) }

@@ -10,6 +10,9 @@ const props = defineProps({
   period: { type: Number, default: 7 },
   isLoading: { type: Boolean, default: false },
   hasError: { type: Boolean, default: false },
+  compact: { type: Boolean, default: false },
+  line: { type: Boolean, default: false },
+  to: { type: Object, default: null },
 });
 
 const emit = defineEmits(['retry']);
@@ -30,7 +33,11 @@ const series = computed(() => [
 </script>
 
 <template>
-  <SectionCard :title="t('HOME.V2.DAYS.TITLE')">
+  <SectionCard
+    :title="compact ? t('HOME.DASHBOARD.REPLY_CHART') : t('HOME.V2.DAYS.TITLE')"
+    :to="to"
+    :link-label="to ? t('HOME.DASHBOARD.ANALYTICS') : ''"
+  >
     <DayChart
       :days="chartDays"
       :series="series"
@@ -38,6 +45,9 @@ const series = computed(() => [
       :empty-text="t('HOME.V2.DAYS.EMPTY')"
       :is-loading="isLoading"
       :has-error="hasError"
+      :compact="compact"
+      :line="line"
+      :note="compact ? t('HOME.DASHBOARD.REPLY_CHART_NOTE') : ''"
       @retry="emit('retry')"
     />
   </SectionCard>

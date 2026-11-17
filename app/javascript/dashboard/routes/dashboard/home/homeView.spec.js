@@ -4,7 +4,6 @@ import {
   metricChange,
   metricValue,
   needItems,
-  statusPill,
 } from './homeView';
 
 const t = (key, params = {}) =>
@@ -93,16 +92,6 @@ describe('dayLabels', () => {
       { label: '9', ai: 3, team: 1 },
       { label: '10', ai: 2, team: 0 },
     ]);
-  });
-});
-
-describe('statusPill', () => {
-  it('maps the agent status to the kit pill', () => {
-    expect(statusPill('limit_reached', t)).toEqual({
-      status: 'limit',
-      label: 'HOME.V2.STATUS_PILL.LIMIT',
-    });
-    expect(statusPill('needs_attention', t).status).toBe('attention');
   });
 });
 

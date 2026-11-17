@@ -34,25 +34,6 @@ export const METRICS = [
   },
 ];
 
-const STATUS_PILLS = {
-  live: 'live',
-  learning: 'learning',
-  paused: 'paused',
-  limit_reached: 'limit',
-  needs_attention: 'attention',
-};
-
-export const statusPill = (status, t) => ({
-  status: STATUS_PILLS[status],
-  label: {
-    live: t('HOME.V2.STATUS_PILL.LIVE'),
-    learning: t('HOME.V2.STATUS_PILL.LEARNING'),
-    paused: t('HOME.V2.STATUS_PILL.PAUSED'),
-    limit_reached: t('HOME.V2.STATUS_PILL.LIMIT'),
-    needs_attention: t('HOME.V2.STATUS_PILL.ATTENTION'),
-  }[status],
-});
-
 const changeAmount = (config, value, previous) => {
   if (config.change === 'percent') {
     return previous ? Math.round(((value - previous) / previous) * 100) : null;

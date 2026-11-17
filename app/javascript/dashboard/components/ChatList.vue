@@ -82,6 +82,7 @@ const LIST_VIEW_FILTERS = {
   mine: { assignee: ASSIGNEE_TYPE.ME, status: STATUS_TYPE.OPEN },
   unassigned: { assignee: ASSIGNEE_TYPE.UNASSIGNED, status: STATUS_TYPE.OPEN },
   solved: { assignee: ASSIGNEE_TYPE.ALL, status: STATUS_TYPE.RESOLVED },
+  open: { assignee: ASSIGNEE_TYPE.ALL, status: STATUS_TYPE.OPEN },
 };
 const listViewFilter = computed(() => LIST_VIEW_FILTERS[props.listView]);
 // The sidebar's own views (My open, Unassigned, All, Mentions, …) already say whose
@@ -293,6 +294,7 @@ const pageTitle = computed(() => {
       mine: t('SIDEBAR.MY_OPEN'),
       unassigned: t('SIDEBAR.UNASSIGNED'),
       solved: t('SIDEBAR.SOLVED'),
+      open: t('HOME.DASHBOARD.LIVE_CONVERSATIONS'),
     }[props.listView];
   }
   if (inbox.value.name) {

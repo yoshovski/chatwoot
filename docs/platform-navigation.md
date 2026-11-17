@@ -14,6 +14,10 @@ ChatOctave uses a product rail and a contextual sidebar. The rail remains stable
 
 Selecting a rail icon returns to that area's last visited page during the current session. Account switches clear remembered destinations. Direct links select the correct area and expand its active group. Rail icons have accessible names and tooltips. Mobile navigation remains behind the existing drawer launcher.
 
+## Dashboard
+
+The Dashboard brings live activity, setup progress, performance, project status and usage together. Administrators can use **Finish setup** to open **Getting started**. Skipping the reminder leaves the checklist accessible from Project status. Filters in Performance change the chart and its comparison metrics. Current usage shows billing-period totals and allowances.
+
 ## AI agents
 
 The AI agents destination lists existing agents and offers creation directly. New AI agent is also available next to the sidebar agent selector for administrators. With no agent, the destination shows a clear creation state. Creation opens the new agent's overview; channel assignment remains a separate action. Switching agents preserves the current agent-specific page. Behavior and configuration no longer introduce another navigation column.

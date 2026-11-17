@@ -9,19 +9,17 @@ class Captain::HomeSummaryBuilder
       account.conversations.exists?(inbox_id: widget_inboxes.select(:id))
   end
 
-  def initialize(account, user, period: Captain::HomeActivityBuilder::PERIODS.first, timezone_offset: nil, range: nil)
+  def initialize(account, user, **activity_options)
     @account = account
     @user = user
-    @period = period
-    @timezone_offset = timezone_offset
-    @range = range
+    @activity = Captain::HomeActivityBuilder.new(account, **activity_options)
   end
 
   def summary
     {
       status: status,
       site: site,
-      **Captain::HomeActivityBuilder.new(account, period: period, timezone_offset: timezone_offset, range: @range).activity,
+      **@activity.activity,
       needs: needs_builder.needs,
       leads: needs_builder.leads,
       setup: setup_steps,
@@ -32,7 +30,7 @@ class Captain::HomeSummaryBuilder
 
   private
 
-  attr_reader :account, :user, :period, :timezone_offset
+  attr_reader :account, :user
 
   def needs_builder
     @needs_builder ||= Captain::HomeNeedsBuilder.new(account, user)
@@ -99,7 +97,15 @@ class Captain::HomeSummaryBuilder
   def usage
     products = subscription.product_usage
     ai = products[:ai_conversations].slice(:used, :limit, :extra_left)
-    products.merge(plan: plan_status(subscription), ai_conversations: ai.merge(forecast_date: forecast_date(**ai.slice(:used, :limit))))
+    products.merge(plan: plan_status(subscription), conversations: conversations_usage,
+                   ai_conversations: ai.merge(forecast_date: forecast_date(**ai.slice(:used, :limit))))
+  end
+
+  def conversations_usage
+    {
+      used: account.conversations.where(created_at: subscription.quota_period.first..Time.current).count,
+      limit: subscription.billing_plan&.conversations_limit
+    }
   end
 
   # The day the AI conversation limit is reached at the pace of the billing period so far, or nil when it isn't reached before the reset.
@@ -116,6 +122,7 @@ class Captain::HomeSummaryBuilder
     {
       billing_enabled: subscription.enabled?,
       trial: subscription.trial_active?,
+      ai_trial_cap: subscription.trial_capped?,
       trial_ends_at: (subscription.trial_ends_at&.to_i if subscription.trial_active?),
       ai_replies_paused: !pause_reason.nil?,
       ai_pause_reason: pause_reason,
