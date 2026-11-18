@@ -3,7 +3,7 @@ require 'rails_helper'
 RSpec.describe Captain::Dify::DatasetProvisioningService do
   include_context 'with Dify credential encryption'
   let(:account) do
-    create(:account, dify_base_url: 'https://dify.example.test', dify_knowledge_api_key: 'private-key',
+    create(:account, name: 'Acme', dify_base_url: 'https://dify.example.test', dify_knowledge_api_key: 'private-key',
                      dify_embedding_model: 'example-embedding', dify_embedding_model_provider: 'example/provider')
   end
   let(:assistant) { create(:captain_assistant, account: account, name: 'Octave') }
