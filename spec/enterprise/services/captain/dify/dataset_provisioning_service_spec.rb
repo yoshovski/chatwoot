@@ -7,8 +7,8 @@ RSpec.describe Captain::Dify::DatasetProvisioningService do
                      dify_embedding_model: 'example-embedding', dify_embedding_model_provider: 'example/provider')
   end
   let(:assistant) { create(:captain_assistant, account: account, name: 'Octave') }
-  let(:faq_name) { "##{account.id} #{account.name} · Octave · FAQs" }
-  let(:docs_name) { "##{account.id} #{account.name} · Octave · Documents" }
+  let(:faq_name) { "##{account.id}/#{assistant.id} #{account.name} · Octave · FAQs" }
+  let(:docs_name) { "##{account.id}/#{assistant.id} #{account.name} · Octave · Documents" }
   let(:client) { instance_double(Dify::KnowledgeClient) }
 
   before do
@@ -69,7 +69,7 @@ RSpec.describe Captain::Dify::DatasetProvisioningService do
     expect(assistant.config).not_to have_key('dify_extra_dataset_ids')
   end
 
-  context 'when a deleted agent left a dataset with the same name' do
+  context 'when a dataset with the same name already exists' do
     let(:conflict) { Dify::KnowledgeClient::Error.new('Dify request failed (HTTP 409)', status: 409) }
     let(:orphans) do
       [{ 'id' => 'old-faq-id', 'name' => faq_name, 'embedding_model' => 'example-embedding' },

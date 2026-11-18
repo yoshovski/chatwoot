@@ -18,7 +18,7 @@ RSpec.describe Captain::Dify::DescribeDatasetsJob do
   end
 
   it 'updates the name and description of both datasets and skips one that no longer exists' do
-    allow(client).to receive(:update_dataset).with('faq-id', hash_including(name: "##{account.id} Acme · Octave · FAQs"))
+    allow(client).to receive(:update_dataset).with('faq-id', hash_including(name: "##{account.id}/#{assistant.id} Acme · Octave · FAQs"))
     allow(client).to receive(:update_dataset).with('docs-id', anything)
                                              .and_raise(Dify::KnowledgeClient::Error.new('Dify request failed (HTTP 404)', status: 404))
 
