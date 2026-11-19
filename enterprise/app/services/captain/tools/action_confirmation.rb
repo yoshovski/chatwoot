@@ -48,13 +48,12 @@ module Captain::Tools::ActionConfirmation
 
   def expired?(pending) = Time.zone.parse(pending['expires_at'].to_s).nil? || Time.zone.parse(pending['expires_at']).past?
 
-  def card_payload(confirmation, locale)
-    I18n.with_locale(locale) do
-      items = [{ title: I18n.t('captain.action_confirmation.confirm'), value: CONFIRM },
-               { title: I18n.t('captain.action_confirmation.cancel'), value: CANCEL }]
-      { content: confirmation['content'], content_type: 'input_select',
-        content_attributes: { :items => items, NONCE_ATTRIBUTE => confirmation['nonce'] } }
-    end
+  def card_payload(confirmation, locale, assistant: nil)
+    policy = Captain::Conversation::CustomerLocale
+    items = [{ title: policy.translate('captain.action_confirmation.confirm', locale: locale, assistant: assistant), value: CONFIRM },
+             { title: policy.translate('captain.action_confirmation.cancel', locale: locale, assistant: assistant), value: CANCEL }]
+    { content: confirmation['content'], content_type: 'input_select',
+      content_attributes: { :items => items, NONCE_ATTRIBUTE => confirmation['nonce'] } }
   end
 
   # Renders one of the action's messages (confirm_prompt, success, failure), or the default text when it is blank

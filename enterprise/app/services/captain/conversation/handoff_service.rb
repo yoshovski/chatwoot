@@ -43,10 +43,10 @@ class Captain::Conversation::HandoffService
     end
   end
 
-  def trigger_contact_capture_form!(triggering_message: nil)
+  def trigger_contact_capture_form!(triggering_message: nil, locale: nil)
     return nil if conversation.blank?
 
-    contact_capture_service.post_form_if_needed!(triggering_message: triggering_message)
+    contact_capture_service.post_form_if_needed!(triggering_message: triggering_message, **{ locale: locale }.compact)
   end
 
   def contact_capture_service

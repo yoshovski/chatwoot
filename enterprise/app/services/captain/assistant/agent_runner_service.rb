@@ -5,6 +5,7 @@ class Captain::Assistant::AgentRunnerService # rubocop:disable Metrics/ClassLeng
   prepend Captain::Assistant::ResponseTracing
   include Captain::Assistant::RunnerCallbacksHelper
   include Captain::Assistant::AgentRunResponse
+  include Captain::Assistant::LocalizedResponse
   include Captain::Assistant::RunnerInstrumentationHelper
   include Captain::Assistant::TracePayloadHelper
   include Captain::Assistant::RunnerStateHelper
@@ -38,12 +39,7 @@ class Captain::Assistant::AgentRunnerService # rubocop:disable Metrics/ClassLeng
     validate_agent_result!(@last_run_result)
     Captain::Leads::QuestionBudget.new(@assistant, @conversation).enforce!(@last_run_result) if @assistant.leads_enabled?
 
-    record_turn_start(@last_run_result)
-    @last_run_result = rewrite_oversized_response(@last_run_result) if response_too_long?(@last_run_result)
-
-    raise "Captain response exceeds the channel limit of #{message_length_limit} characters" if response_too_long?(@last_run_result)
-
-    process_agent_result(@last_run_result)
+    finalize_response(@last_run_result)
   rescue StandardError => e
     # In rake/local runs, conversation may not be present, so account is optional here.
     ChatwootExceptionTracker.new(e, account: @conversation&.account).capture_exception
@@ -258,6 +254,13 @@ class Captain::Assistant::AgentRunnerService # rubocop:disable Metrics/ClassLeng
   def run_payload(message_history)
     message_to_process = extract_last_user_message(message_history)
     context = build_context(message_history_without_last_user_message(message_history))
+    if !reply_suggestion? && Captain::Conversation::CustomerLocale.configured?(@assistant)
+      text = message_to_process.is_a?(RubyLLM::Content) ? message_to_process.text : message_to_process
+      history = Captain::Assistant::IntentRouter.recent_history(context)
+      context[:state][Captain::Conversation::CustomerLocale::STATE_KEY] = Captain::Conversation::CustomerLocale.resolve(
+        conversation: @conversation, assistant: @assistant, customer_message: text, history: history
+      )
+    end
     enrich_context_with_trace_payload!(context, message_history, message_to_process)
     [message_to_process, context.merge(captain_memory_source_history: message_history)]
   end

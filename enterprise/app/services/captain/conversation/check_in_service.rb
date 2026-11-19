@@ -65,7 +65,7 @@ class Captain::Conversation::CheckInService
   private
 
   def default_payload
-    default_text = I18n.with_locale(@conversation.account.locale) { I18n.t('captain.check_in.default') }
+    default_text = Captain::Conversation::CustomerLocale.translate('captain.check_in.default', locale: reply_locale, assistant: @assistant)
     { text: default_text, suggested_replies: [] }
   end
 
@@ -77,7 +77,7 @@ class Captain::Conversation::CheckInService
     return unless output.is_a?(Hash)
 
     text = output['text'].to_s.strip
-    return if text.blank? || text.length > max_length
+    return if text.blank? || text.length > max_length || Captain::Conversation::CustomerLocale.mismatch?(text, reply_locale)
 
     { text: text, suggested_replies: Array(output['suggested_replies']) }
   rescue JSON::ParserError, Faraday::Error, RubyLLM::Error => e
@@ -93,7 +93,13 @@ class Captain::Conversation::CheckInService
   def chat
     Captain::Assistant::TieredLlmClient.chat(
       account_id: @assistant.account_id, model: self.class.model, timeout: Captain::Behaviour::CHECK_IN_TIMEOUT_SECONDS
-    ).with_schema(Captain::CheckInSchema).with_params(max_tokens: 300).with_instructions(instructions)
+    ).with_schema(Captain::CheckInSchema).with_params(max_tokens: 300).with_instructions(
+      [instructions, Captain::Conversation::CustomerLocale.instruction(reply_locale)].join("\n")
+    )
+  end
+
+  def reply_locale
+    @reply_locale ||= Captain::Conversation::CustomerLocale.resolve(assistant: @assistant, conversation: @conversation)
   end
 
   def max_length = @widget ? WIDGET_MAX_LENGTH : Captain::Behaviour::CHECK_IN_MAX_LENGTH

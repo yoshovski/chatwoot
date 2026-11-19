@@ -2,6 +2,9 @@
 import { computed, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useShopifyIntegration } from 'dashboard/composables/useShopifyIntegration';
+import { useAccount } from 'dashboard/composables/useAccount';
+import { useConfig } from 'dashboard/composables/useConfig';
+import { useStore } from 'dashboard/composables/store';
 import { useAssistantSettings } from '../settings/useAssistantSettings';
 import Button from 'dashboard/components-next/button/Button.vue';
 import Select from 'dashboard/components-next/select/Select.vue';
@@ -16,13 +19,18 @@ import SettingsPanel from 'dashboard/components-next/captain/pageComponents/assi
 import SummaryRow from 'dashboard/components-next/captain/pageComponents/assistant/settings/SummaryRow.vue';
 import SegmentedChoice from 'dashboard/components-next/captain/pageComponents/assistant/settings/SegmentedChoice.vue';
 import InstructionsPreview from 'dashboard/components-next/captain/pageComponents/assistant/settings/InstructionsPreview.vue';
+import AssistantMessageTranslations from 'dashboard/components-next/captain/pageComponents/assistant/settings/AssistantMessageTranslations.vue';
 
 const { t } = useI18n();
 const { isConnected: isShopifyConnected } = useShopifyIntegration();
 const { assistantId, assistant, updateAssistant } = useAssistantSettings();
+const { currentAccount } = useAccount();
+const { enabledLanguages } = useConfig();
+const store = useStore();
 
 const B = 'CAPTAIN.ASSISTANTS.SETTINGS.BEHAVIOR';
 const U = 'CAPTAIN.AGENT_UX.STYLE';
+const L = `${U}.LANGUAGES`;
 const CUSTOM = 'custom';
 // Mirrors Captain::Assistant::BUSINESS_TYPES; an empty value lets the server detect it.
 const BUSINESS_TYPES = [
@@ -50,9 +58,7 @@ const isDirty = computed(() =>
 const isSaving = ref(false);
 const save = async () => {
   isSaving.value = true;
-  const ok = await updateAssistant({
-    config: { ...saved.value, ...draft.value },
-  });
+  const ok = await updateAssistant({ config: draft.value });
   isSaving.value = false;
   if (ok) draft.value = {};
 };
@@ -67,6 +73,87 @@ const previewAssistant = computed(() => ({
   config: config.value,
 }));
 const presets = computed(() => assistant.value?.prompt_presets || {});
+
+const languagesOpen = ref(false);
+watch(languagesOpen, open => {
+  if (open && assistant.value?.config?.auto_translate_messages) {
+    store.dispatch('captainAssistants/show', assistantId.value).catch(() => {});
+  }
+});
+const languageOptions = computed(() =>
+  (enabledLanguages || []).map(({ iso_639_1_code: value, name: label }) => ({
+    value,
+    label,
+  }))
+);
+const allowedLanguages = computed(
+  () => config.value.allowed_reply_locales || []
+);
+const defaultLanguage = computed({
+  get: () => config.value.default_reply_locale || '',
+  set: value => {
+    set({
+      default_reply_locale: value || null,
+      ...(allowedLanguages.value.length && {
+        allowed_reply_locales: [...new Set([value, ...allowedLanguages.value])],
+      }),
+    });
+  },
+});
+const defaultOptions = computed(() => [
+  ...(allowedLanguages.value.length || config.value.auto_translate_messages
+    ? []
+    : [{ value: '', label: t(`${L}.ACCOUNT_DEFAULT`) }]),
+  ...languageOptions.value,
+]);
+const restrictLanguages = computed({
+  get: () => allowedLanguages.value.length > 0,
+  set: enabled => {
+    if (!enabled) {
+      set({ allowed_reply_locales: [] });
+      return;
+    }
+    const locale =
+      defaultLanguage.value || currentAccount.value?.locale || 'en';
+    set({ default_reply_locale: locale, allowed_reply_locales: [locale] });
+  },
+});
+const toggleLanguage = locale => {
+  const current = allowedLanguages.value;
+  set({
+    allowed_reply_locales: current.includes(locale)
+      ? current.filter(value => value !== locale)
+      : [...current, locale],
+  });
+};
+const languageSummary = computed(() => {
+  if (restrictLanguages.value) {
+    return t(`${L}.RESTRICTED_SUMMARY`, {
+      count: allowedLanguages.value.length,
+    });
+  }
+  const option = languageOptions.value.find(
+    language => language.value === defaultLanguage.value
+  );
+  return option?.label || t(`${L}.AUTOMATIC`);
+});
+const translationLanguages = computed(() =>
+  restrictLanguages.value
+    ? languageOptions.value.filter(option =>
+        allowedLanguages.value.includes(option.value)
+      )
+    : languageOptions.value
+);
+const setMessageTranslations = patch => {
+  if (patch.auto_translate_messages && !defaultLanguage.value) {
+    set({
+      ...patch,
+      default_reply_locale: currentAccount.value?.locale || 'en',
+    });
+  } else {
+    set(patch);
+  }
+};
 
 // Tone and length: presets on the page, exact wording in a panel.
 const presetOptions = (ids, group) => [
@@ -250,6 +337,12 @@ const extrasSummary = computed(() =>
 
       <SettingsCard>
         <SummaryRow
+          icon="i-lucide-languages"
+          :title="t(`${L}.TITLE`)"
+          :summary="languageSummary"
+          @edit="languagesOpen = true"
+        />
+        <SummaryRow
           icon="i-lucide-store"
           :title="t(`${U}.BUSINESS_TITLE`)"
           :summary="businessSummary"
@@ -288,6 +381,58 @@ const extrasSummary = computed(() =>
         </p>
       </template>
     </SettingsSplit>
+
+    <SettingsPanel
+      v-model:open="languagesOpen"
+      :title="t(`${L}.TITLE`)"
+      :description="t(`${L}.DESCRIPTION`)"
+    >
+      <div class="flex flex-col gap-2">
+        <span class="text-sm font-medium text-n-slate-12">
+          {{ t(`${L}.DEFAULT`) }}
+        </span>
+        <Select
+          v-model="defaultLanguage"
+          :options="defaultOptions"
+          :aria-label="t(`${L}.DEFAULT`)"
+        />
+      </div>
+      <SettingsSwitchRow
+        v-model="restrictLanguages"
+        :title="t(`${L}.RESTRICT`)"
+        :description="t(`${L}.RESTRICT_DESCRIPTION`)"
+      />
+      <fieldset
+        v-if="restrictLanguages"
+        class="grid grid-cols-1 gap-2 sm:grid-cols-2"
+      >
+        <legend class="mb-2 text-sm font-medium text-n-slate-12">
+          {{ t(`${L}.ALLOWED`) }}
+        </legend>
+        <label
+          v-for="option in languageOptions"
+          :key="option.value"
+          class="flex items-center gap-2 text-sm text-n-slate-12"
+        >
+          <input
+            type="checkbox"
+            :checked="allowedLanguages.includes(option.value)"
+            :disabled="option.value === defaultLanguage"
+            @change="toggleLanguage(option.value)"
+          />
+          {{ option.label }}
+        </label>
+      </fieldset>
+      <AssistantMessageTranslations
+        v-if="translationLanguages.length"
+        :key="assistantId"
+        :config="config"
+        :generated="assistant?.generated_message_translations"
+        :pending-count="assistant?.pending_message_translations"
+        :languages="translationLanguages"
+        @change="setMessageTranslations"
+      />
+    </SettingsPanel>
 
     <SettingsPanel
       v-model:open="businessOpen"

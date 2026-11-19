@@ -531,6 +531,26 @@ en:
       schedule_follow_up:
         title: 'Schedule a follow-up'
         description: 'Follows up by message or email if the visitor goes quiet'
+    reply_languages:
+      invalid_settings: 'Choose supported reply languages and include the default in the allowed languages.'
+      invalid_translations: 'Choose a supported language and enter up to 2,000 characters for each translation.'
+      retry: 'Could you try asking that another way?'
+    contact_form:
+      handoff_prompt: 'Please share your contact details so our team can follow up if you leave the chat.'
+      handoff_saved: 'Thank you—your contact details have been saved. A team member will continue with you here.'
+      submit: 'Submit'
+      invalid_field: 'Please check this field.'
+      fields:
+        name:
+          label: 'Name'
+          placeholder: 'Please enter your name'
+        email:
+          label: 'Email'
+          placeholder: 'Please enter your email'
+        phone_number:
+          label: 'Phone number'
+          placeholder: '+34612345678'
+          title: 'Include the country code, for example +34612345678'
     leads:
       scenario_title: 'Business lead follow-up'
       followup_tool:

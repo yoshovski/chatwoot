@@ -180,6 +180,9 @@ class Captain::Assistant < ApplicationRecord
   validates :off_limits_message, length: { maximum: OFF_LIMITS_MESSAGE_LENGTH_LIMIT }
   validates :handoff_when_online, :handoff_when_offline, inclusion: { in: Captain::Conversation::HandoffPolicy::ACTIONS }, allow_blank: true
   validates :offline_handoff_message, :no_handoff_message, :handoff_form_message, length: { maximum: HANDOFF_MESSAGE_LENGTH_LIMIT }
+  validate :validate_reply_locales
+  validate :validate_localized_messages
+  after_save_commit :schedule_message_translations, if: :saved_change_to_config?
   validate :validate_handoff_rules
   validate :validate_limits
   validate :validate_email_templates
@@ -530,6 +533,30 @@ class Captain::Assistant < ApplicationRecord
 
   def set_knowledge_processing_version
     self.config = { 'knowledge_processing_version' => 3 }.merge(config)
+  end
+
+  def validate_reply_locales
+    available = I18n.available_locales.map(&:to_s)
+    default = config['default_reply_locale']
+    allowed = config.fetch('allowed_reply_locales', [])
+    return if [nil, *available].include?(default) && allowed.is_a?(Array) && allowed.intersection(available) == allowed &&
+              (allowed.empty? || allowed.include?(default))
+
+    errors.add(:config, I18n.t('captain.reply_languages.invalid_settings'))
+  end
+
+  def validate_localized_messages
+    return if Captain::LocalizedMessages.new(config).valid_settings?
+
+    errors.add(:config, I18n.t('captain.reply_languages.invalid_translations'))
+  end
+
+  def schedule_message_translations
+    before, after = saved_change_to_config
+    inputs = Captain::LocalizedMessages.new(after).generation_inputs
+    return if (inputs - Captain::LocalizedMessages.new(before || {}).generation_inputs).empty?
+
+    Captain::TranslateAssistantMessagesJob.perform_later(id)
   end
 
   def validate_email_templates

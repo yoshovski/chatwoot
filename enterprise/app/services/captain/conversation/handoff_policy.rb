@@ -4,9 +4,10 @@
 class Captain::Conversation::HandoffPolicy
   ACTIONS = %w[transfer keep].freeze
 
-  def initialize(assistant:, conversation:)
+  def initialize(assistant:, conversation:, locale: nil)
     @assistant = assistant
     @conversation = conversation
+    @resolved_locale = locale
   end
 
   def team_online?
@@ -18,12 +19,12 @@ class Captain::Conversation::HandoffPolicy
 
   def keep? = action == 'keep'
 
-  def keep_message = @assistant.config['no_handoff_message'].presence || I18n.t('conversations.captain.no_handoff')
+  def keep_message = custom_message('no_handoff_message') || default_message('no_handoff')
 
   # The message sent when the conversation moves to the team.
   def handoff_message
-    offline_message = @assistant.config['offline_handoff_message'].presence unless team_online?
-    offline_message || @assistant.config['handoff_message'].presence || I18n.t('conversations.captain.handoff')
+    offline_message = custom_message('offline_handoff_message') unless team_online?
+    offline_message || custom_message('handoff_message') || default_message('handoff')
   end
 
   def prompt_instruction
@@ -31,13 +32,25 @@ class Captain::Conversation::HandoffPolicy
       "No colleague can take over this conversation right now. Don't hand off or promise that a colleague will reply. " \
         "When a colleague would be needed, tell the customer this, in their language: #{keep_message} Then keep helping where you can."
     elsif !team_online?
-      offline_message = @assistant.config['offline_handoff_message'].presence
+      offline_message = custom_message('offline_handoff_message')
       ['Your team is offline right now. When you hand off, say a colleague will reply when they are back, not right away.',
        ("Use this message, in the customer's language: #{offline_message}" if offline_message)].compact.join(' ')
     end
   end
 
   private
+
+  def default_message(key)
+    Captain::Conversation::CustomerLocale.translate("conversations.captain.#{key}", locale: resolved_locale, assistant: @assistant)
+  end
+
+  def custom_message(key)
+    Captain::LocalizedMessages.new(@assistant.config).text(key, resolved_locale)
+  end
+
+  def resolved_locale
+    @resolved_locale ||= Captain::Conversation::CustomerLocale.resolve(conversation: @conversation, assistant: @assistant)
+  end
 
   def action
     key = team_online? ? 'handoff_when_online' : 'handoff_when_offline'

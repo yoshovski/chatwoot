@@ -20,7 +20,9 @@ class Captain::Playground::CustomerView
     return { messages: messages, handoff: nil, sources: used_sources } unless source
 
     capture = Captain::Conversation::ContactCaptureService
-    messages << capture.form_payload(capture.requested_fields(@assistant), assistant: @assistant)
+    locale = @run_result&.context&.dig(:state, Captain::Conversation::CustomerLocale::STATE_KEY) ||
+             Captain::Conversation::CustomerLocale.resolve(assistant: @assistant, customer_message: @customer_message)
+    messages << capture.form_payload(capture.requested_fields(@assistant), assistant: @assistant, locale: locale)
     { messages: messages, handoff: { source: source, reason: @handoff_reason }, sources: used_sources }
   end
 

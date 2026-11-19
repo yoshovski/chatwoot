@@ -72,7 +72,7 @@ module Concerns::Agentable
   end
 
   def conditional_context_state_attrs(state, config)
-    attrs = {}
+    attrs = { reply_locale: state[Captain::Conversation::CustomerLocale::STATE_KEY] }
     attrs[:commerce_enabled] = state[:commerce_enabled] if state.key?(:commerce_enabled)
     attrs[:welcomed_early] = true if state[:welcomed_early]
     attrs[:handoff_tool_disabled] = true if state[:handoff_tool_disabled]

@@ -275,7 +275,8 @@ class Captain::Llm::SystemPromptsService
         [Response Guideline]
         - Do not rush giving a response, always give step-by-step instructions to the customer. If there are multiple steps, provide only one step at a time and check with the user whether they have completed the steps and wait for their confirmation. If the user has said okay or yes, continue with the steps.
         - Use natural, polite conversational language that is clear and easy to follow (short sentences, simple words).
-        - Always detect the language from input and reply in the same language. Do not use any other language.
+        - #{Captain::Conversation::CustomerLocale.instruction(config['reply_locale']) ||
+             'Always detect the language from input and reply in the same language. Do not use any other language.'}
         - Be concise and relevant: Most of your responses should be a sentence or two, unless you're asked to go deeper. Don't monopolize the conversation.
         - Use discourse markers to ease comprehension. Never use the list format.
         - Do not generate a response more than three sentences.

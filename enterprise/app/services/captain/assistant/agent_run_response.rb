@@ -6,6 +6,15 @@ module Captain::Assistant::AgentRunResponse
     raise TypeError, 'Captain agent returned invalid structured output' unless run_result.output.is_a?(Hash)
   end
 
+  def finalize_response(run_result)
+    enforce_reply_locale(run_result)
+    record_turn_start(run_result)
+    run_result = rewrite_oversized_response(run_result) if response_too_long?(run_result)
+    raise "Captain response exceeds the channel limit of #{message_length_limit} characters" if response_too_long?(run_result)
+
+    process_agent_result(run_result)
+  end
+
   def process_agent_result(run_result)
     log_agent_result(run_result)
     model_output = run_result.output
@@ -50,7 +59,8 @@ module Captain::Assistant::AgentRunResponse
     response_text_limit = message_length_limit - citation_markup_length
     raise 'Captain citation links exceed the channel limit' unless response_text_limit.positive?
 
-    response_rewriter.rewrite(run_result, response_parts: response_parts, response_text_limit: response_text_limit)
+    locale = run_result.context&.dig(:state, Captain::Conversation::CustomerLocale::STATE_KEY)
+    response_rewriter.rewrite(run_result, response_parts: response_parts, response_text_limit: response_text_limit, **{ locale: locale }.compact)
   end
 
   def response_rewriter

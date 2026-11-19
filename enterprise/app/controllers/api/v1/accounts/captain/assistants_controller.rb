@@ -176,8 +176,19 @@ class Api::V1::Accounts::Captain::AssistantsController < Api::V1::Accounts::Base
     permit_audience_config(permitted)
     permit_reply_label_keywords(permitted)
     permit_email_templates(permitted)
+    permit_reply_locales(permitted)
 
     permitted
+  end
+
+  def permit_reply_locales(permitted)
+    config = params.dig(:assistant, :config)
+    %i[default_reply_locale allowed_reply_locales auto_translate_messages localized_messages].each do |key|
+      next unless config&.key?(key)
+
+      value = config[key]
+      permitted[:config][key] = value.is_a?(ActionController::Parameters) ? value.to_unsafe_h : value
+    end
   end
 
   def permit_rule_segments(permitted)

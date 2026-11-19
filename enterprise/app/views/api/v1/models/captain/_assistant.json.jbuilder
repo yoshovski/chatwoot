@@ -1,5 +1,5 @@
 json.account_id resource.account_id
-json.config resource.client_config.merge(
+json.config resource.client_config.except('generated_localized_messages').merge(
   'auto_resolve_mode' => resource.auto_resolve_mode,
   'auto_resolve_after' => resource.inactivity_threshold_minutes,
   'send_inactivity_resolution_message' => resource.send_inactivity_resolution_message?,
@@ -10,6 +10,13 @@ json.config resource.client_config.merge(
   'image_allowlist' => resource.image_allowlist,
   'limits' => resource.limits
 )
+localized_messages = Captain::LocalizedMessages.new(resource.config)
+translation_inputs = localized_messages.generation_inputs
+json.pending_message_translations(translation_inputs.count { |locale, field, _| localized_messages.generated_text(field, locale).blank? })
+json.generated_message_translations translation_inputs.each_with_object({}) { |(locale, field, _), result|
+  text = localized_messages.generated_text(field, locale)
+  (result[field] ||= {})[locale] = text if text && Captain::LocalizedMessages::FIELDS.include?(field)
+}
 json.created_at resource.created_at.to_i
 json.detected_business_type resource.detected_business_type
 json.description resource.description
