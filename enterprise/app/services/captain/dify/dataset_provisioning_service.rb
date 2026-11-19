@@ -40,8 +40,8 @@ class Captain::Dify::DatasetProvisioningService
     matches.first
   end
 
-  # Dify rejects a second dataset with the same name (HTTP 409). An agent recreated with the name of a
-  # deleted one gets the deleted agent's dataset name; that dataset is taken over when nothing uses it.
+  # Dify rejects a second dataset with the same name (HTTP 409). Reuse a matching dataset only
+  # when it uses the expected embedding model and has no Chatwoot references.
   def create_dataset(attributes)
     @client.create_dataset(**attributes)
   rescue Dify::KnowledgeClient::Error => e

@@ -1,5 +1,5 @@
 # Name and description of an AI agent's Dify datasets, so the Dify Knowledge list shows which account and agent
-# each one belongs to. The account (tenant) id leads the name and survives renames; names refresh on rename.
+# each one belongs to. The account and assistant ids keep names unique even when the labels are truncated.
 class Captain::Dify::DatasetIdentity
   # Dify rejects dataset names over 40 characters.
   MAX_NAME_LENGTH = 40
@@ -26,7 +26,7 @@ class Captain::Dify::DatasetIdentity
   private
 
   def name(label)
-    prefix = "##{@account.id} "
+    prefix = "##{@account.id}/#{@assistant.id} "
     suffix = " · #{label}"
     names = [@account.name, agent_name].compact_blank.join(' · ')
     "#{prefix}#{names.truncate(MAX_NAME_LENGTH - prefix.length - suffix.length, omission: '…')}#{suffix}"
