@@ -101,6 +101,28 @@ RSpec.describe Captain::Conversation::ContactCaptureService, type: :service do
   end
 
   describe '#post_form_if_needed!' do
+    it 'renders available translations and uses the posted form language on submission' do
+      localized = I18n::Backend::Simple.new
+      localized.store_translations(:it, captain: { contact_form: {
+                                     handoff_prompt: 'Dove possiamo contattarti?',
+                                     handoff_saved: 'I tuoi recapiti sono stati salvati.',
+                                     submit: 'Invia',
+                                     fields: { email: { label: 'Indirizzo email', placeholder: 'Inserisci la tua email' } }
+                                   } })
+      allow(I18n.config).to receive(:backend).and_return(I18n::Backend::Chain.new(localized, I18n.backend))
+      triggering_message = build(:message, message_type: :incoming, content: 'Potete aiutarmi con la spedizione del mio ordine?')
+      form = service.post_form_if_needed!(triggering_message: triggering_message)
+
+      expect(form.content).to eq('Dove possiamo contattarti?')
+      expect(form.content_attributes).to include('contact_form_locale' => 'it', 'button_label' => 'Invia')
+      expect(form.items.last).to include('name' => 'email', 'label' => 'Indirizzo email', 'placeholder' => 'Inserisci la tua email')
+
+      form.update!(submitted_values: [{ 'name' => 'email', 'value' => 'ada@example.com' }])
+      I18n.with_locale(:en) { service.handle_form_submission!(form) }
+
+      expect(conversation.messages.outgoing.last.content).to eq('I tuoi recapiti sono stati salvati.')
+    end
+
     context 'with configured contact fields' do
       before do
         assistant.update!(config: {
@@ -252,7 +274,7 @@ RSpec.describe Captain::Conversation::ContactCaptureService, type: :service do
       expect(contact.phone_number).to eq('+34612345678')
 
       acknowledgement = conversation.messages.outgoing.last
-      expect(acknowledgement.content).to eq(described_class::ACKNOWLEDGEMENT_TEXT)
+      expect(acknowledgement.content).to eq(I18n.t('captain.contact_form.handoff_saved', locale: :en))
       expect(conversation.reload.waiting_since).to be_within(1.second).of(waiting_since)
       expect(form_message.reload.content_attributes['contact_details_saved']).to be true
     end

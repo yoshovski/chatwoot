@@ -22,6 +22,7 @@ class Captain::Llm::AssistantChatService < Llm::BaseAiService
   # NOTE: Parameters are provided as keyword arguments to improve clarity and avoid relying on
   # positional ordering.
   def generate_response(additional_message: nil, message_history: [], role: 'user')
+    @messages[0] = system_message(reply_locale(additional_message, message_history)) if Captain::Conversation::CustomerLocale.configured?(@assistant)
     @messages += message_history
     @messages << { role: role, content: additional_message } if additional_message.present?
     request_chat_completion
@@ -38,10 +39,17 @@ class Captain::Llm::AssistantChatService < Llm::BaseAiService
     end
   end
 
-  def system_message
+  def reply_locale(additional_message, history)
+    recent = history.reverse.find { |item| item[:role].to_s == 'user' }
+    text = @conversation ? recent&.dig(:content) : additional_message.presence || recent&.dig(:content)
+    Captain::Conversation::CustomerLocale.resolve(conversation: @conversation, assistant: @assistant, customer_message: text, history: history)
+  end
+
+  def system_message(locale = nil)
     config = @assistant.config.merge(
       'timezone' => inbox_timezone,
-      'ownership_instruction' => ownership_instruction
+      'ownership_instruction' => ownership_instruction,
+      'reply_locale' => locale
     )
 
     {

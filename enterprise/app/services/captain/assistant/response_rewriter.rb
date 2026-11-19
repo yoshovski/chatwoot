@@ -5,7 +5,7 @@ class Captain::Assistant::ResponseRewriter
   include Integrations::LlmInstrumentationConstants
 
   AGENT_NAME = 'captain_response_rewriter'.freeze
-  INSTRUCTIONS = 'Shorten customer support responses without changing their meaning or adding information.'.freeze
+  INSTRUCTIONS = 'Revise customer support responses without changing their meaning or adding information.'.freeze
   AGENT_DECISION_KEYS = %w[suggested_replies product_handles handoff_requested lead_qualification_question follow_up].freeze
 
   def initialize(assistant:, attribute_provider:)
@@ -13,8 +13,8 @@ class Captain::Assistant::ResponseRewriter
     @attribute_provider = attribute_provider
   end
 
-  def rewrite(run_result, response_parts:, response_text_limit:)
-    rewrite_prompt = build_rewrite_prompt(response_parts, response_text_limit)
+  def rewrite(run_result, response_parts:, response_text_limit: nil, locale: nil)
+    rewrite_prompt = build_rewrite_prompt(response_parts, response_text_limit, locale)
     rewrite_context = {
       session_id: run_result.context[:session_id],
       state: run_result.context[:state],
@@ -44,12 +44,10 @@ class Captain::Assistant::ResponseRewriter
     end
   end
 
-  def build_rewrite_prompt(response_parts, response_text_limit)
-    response_text = response_parts.plain_text
-
-    "The response text below is #{response_text.length} characters, but it must be at most #{response_text_limit} characters " \
-      'so the complete customer message fits this channel. ' \
-      'Shorten the text in each response part so the joined customer message fits the limit. ' \
+  def build_rewrite_prompt(response_parts, response_text_limit, locale)
+    locale_instruction = "Use locale #{locale} for each response part. " if locale
+    length_instruction = "The joined customer message must be at most #{response_text_limit} characters. Shorten it to fit. " if response_text_limit
+    "#{locale_instruction}#{length_instruction}" \
       'Keep the same number and order of response parts. Change only each text field. ' \
       'Preserve names, numbers, dates, links, warnings, and completed actions. Keep Markdown valid within each text field. Do not add facts. ' \
       "Return the complete structured response.\n\nResponse parts:\n#{response_parts.to_a.to_json}"

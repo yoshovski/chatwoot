@@ -172,6 +172,26 @@ RSpec.describe Captain::Assistant::AgentRunnerService do
   describe '#generate_response' do
     subject(:service) { described_class.new(assistant: assistant, conversation: conversation) }
 
+    it 'repairs wrong-language prose without running the agent and its tools again' do
+      assistant.update!(config: assistant.config.merge('default_reply_locale' => 'it', 'allowed_reply_locales' => ['it']))
+      expect(mock_runner).to receive(:run).once do |_input, context:, max_turns:|
+        expect(context.dig(:state, :customer_reply_locale)).to eq('it')
+        expect(max_turns).to eq(10)
+        Agents::RunResult.new(
+          output: { 'response' => 'Your package is ready. You can collect it at the front desk.' },
+          context: context, messages: [], usage: Agents::RunContext::Usage.new
+        )
+      end
+      rewriter = instance_double(Captain::Assistant::ResponseRewriter)
+      allow(Captain::Assistant::ResponseRewriter).to receive(:new).and_return(rewriter)
+      expect(rewriter).to receive(:rewrite).with(an_instance_of(Agents::RunResult), response_parts: anything, locale: 'it') do |result|
+        result.output = { 'response_parts' => [{ 'text' => 'Il pacco è pronto. Puoi ritirarlo alla reception.', 'citation_indexes' => [] }] }
+        result
+      end
+
+      expect(service.generate_response(message_history: message_history)['response']).to eq('Il pacco è pronto. Puoi ritirarlo alla reception.')
+    end
+
     it 'builds agents and wires them together' do
       expect(assistant).to receive(:agent).and_return(mock_agent)
       scenarios_relation = instance_double(Captain::Scenario)

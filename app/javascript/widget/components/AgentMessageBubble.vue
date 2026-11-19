@@ -169,6 +169,7 @@ export default {
       :title="message"
       :items="messageContentAttributes.items"
       :button-label="messageContentAttributes.button_label"
+      :language="messageContentAttributes.contact_form_locale"
       :submitted-values="messageContentAttributes.submitted_values"
       @submit="onFormSubmit"
     />

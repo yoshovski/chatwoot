@@ -4,7 +4,10 @@ class Captain::Reply::Policies::LeadForm < Captain::Reply::Policies::Base
   def apply
     return unless context.followup_form_requested
 
-    form = Captain::Reply::Segment.from_payload('form', Captain::Leads::FollowupFormService.new(assistant, conversation).payload)
+    payload = Captain::Leads::FollowupFormService.new(assistant, conversation).payload(
+      customer_message: context.customer_message, locale: context.reply_locale
+    )
+    form = Captain::Reply::Segment.from_payload('form', payload)
     answer_left = workspace.question.nil? || workspace.remove_question!
     workspace.segments = answer_left ? [*workspace.segments, form] : [form]
   end

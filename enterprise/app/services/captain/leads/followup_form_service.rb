@@ -1,18 +1,21 @@
 class Captain::Leads::FollowupFormService
+  CUSTOM_COPY_FIELDS = { 'form' => 'lead_form_message', 'submit' => 'lead_form_submit' }.freeze
+
   def initialize(assistant, conversation)
     @assistant = assistant
     @conversation = conversation
   end
 
-  def payload
+  def payload(customer_message: nil, locale: nil)
     contact = @conversation&.contact
     missing = []
     missing << 'name' if Captain::Conversation::ContactCaptureService.missing_name?(contact)
     missing << 'email' if contact&.email.blank?
-    form = Captain::Conversation::ContactCaptureService.form_payload(missing, assistant: @assistant)
-    form.merge(content: I18n.t('captain.leads.followup_form'),
+    locale ||= Captain::Conversation::CustomerLocale.resolve(conversation: @conversation, assistant: @assistant, customer_message: customer_message)
+    form = Captain::Conversation::ContactCaptureService.form_payload(missing, locale: locale, assistant: @assistant)
+    form.merge(content: followup_copy('form', locale),
                content_attributes: form[:content_attributes].merge('purpose' => 'business_followup',
-                                                                   'button_label' => I18n.t('captain.leads.followup_submit')),
+                                                                   'button_label' => followup_copy('submit', locale)),
                additional_attributes: { agent_name: @assistant.agent_name })
   end
 
@@ -36,13 +39,24 @@ class Captain::Leads::FollowupFormService
 
       message.update!(content_attributes: message.content_attributes.merge('contact_details_saved' => true))
     end
-    post_reply(I18n.t('captain.leads.followup_saved', name: @conversation.contact.name))
+    acknowledge(message)
     true
   rescue ActiveRecord::RecordInvalid, ArgumentError => e
     recover(message, submitted, e)
   end
 
   private
+
+  def followup_copy(key, locale, **)
+    field = CUSTOM_COPY_FIELDS[key]
+    text = Captain::LocalizedMessages.new(@assistant.config).text(field, locale) if field
+    text || Captain::Conversation::CustomerLocale.translate("captain.leads.followup_#{key}", locale: locale, assistant: @assistant, **)
+  end
+
+  def acknowledge(message)
+    locale = message.content_attributes[Captain::Conversation::ContactCaptureService::LOCALE_KEY] || I18n.locale
+    post_reply(followup_copy('saved', locale, name: @conversation.contact.name))
+  end
 
   def recover(message, submitted, error)
     state = { conversation: { id: @conversation.id }, contact: { id: @conversation.contact_id } }
@@ -52,7 +66,8 @@ class Captain::Leads::FollowupFormService
       context, details: details.merge(submitted: submitted, error: error.class.name)
     )
     message.update!(content_attributes: message.content_attributes.merge('followup_needs_review' => true))
-    policy = Captain::Conversation::HandoffPolicy.new(assistant: @assistant, conversation: @conversation)
+    locale = message.content_attributes[Captain::Conversation::ContactCaptureService::LOCALE_KEY]
+    policy = Captain::Conversation::HandoffPolicy.new(assistant: @assistant, conversation: @conversation, locale: locale)
     post_reply(state[:lead_failure_handoff] ? policy.handoff_message : policy.keep_message)
     true
   end

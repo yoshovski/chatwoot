@@ -515,8 +515,10 @@ RSpec.describe 'Captain reply golden payloads' do # rubocop:disable RSpec/Descri
                                                        'label' => 'Name',
                                                        'type' => 'text',
                                                        'placeholder' => 'Please enter your name',
+                                                       'pattern_error' => 'Please check this field.',
                                                        'required' => true }],
                                          'button_label' => 'Request email follow-up',
+                                         'contact_form_locale' => 'en',
                                          'purpose' => 'business_followup' },
                    additional_attributes: { agent_name: :assistant_agent_name } }]
     },
@@ -531,8 +533,10 @@ RSpec.describe 'Captain reply golden payloads' do # rubocop:disable RSpec/Descri
                                                        'label' => 'Name',
                                                        'type' => 'text',
                                                        'placeholder' => 'Please enter your name',
+                                                       'pattern_error' => 'Please check this field.',
                                                        'required' => true }],
                                          'button_label' => 'Request email follow-up',
+                                         'contact_form_locale' => 'en',
                                          'purpose' => 'business_followup' },
                    additional_attributes: { agent_name: :assistant_agent_name } }]
     },

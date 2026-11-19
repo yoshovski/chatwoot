@@ -90,10 +90,25 @@ class Captain::Conversation::ResponseBuilderJob < ApplicationJob # rubocop:disab
 
     @v2_handoff_tool_completed = runner_service.handoff_completed?
     @v2_response_discarded = runner_service.response_discarded?
-    return process_response if v2_handoff_tool_completed?
-    return if @v2_response_discarded || newer_customer_message_arrived?
+    deliver_v2_response
+  end
+
+  def deliver_v2_response
+    completed_handoff = v2_handoff_tool_completed?
+    return if !completed_handoff && (@v2_response_discarded || newer_customer_message_arrived?)
+
+    Captain::Conversation::CustomerLocale.record(@conversation, @responding_to_message_id, reply_locale) unless @v2_response_discarded
+    return if !completed_handoff && reply_language_unavailable?
 
     process_response
+  end
+
+  def reply_language_unavailable?
+    @run_result&.context&.dig(:state, :reply_language_unavailable)
+  end
+
+  def reply_locale
+    @run_result&.context&.dig(:state, Captain::Conversation::CustomerLocale::STATE_KEY)
   end
 
   def v2_runner_service
@@ -148,7 +163,7 @@ class Captain::Conversation::ResponseBuilderJob < ApplicationJob # rubocop:disab
   end
 
   def handoff_policy
-    @handoff_policy ||= Captain::Conversation::HandoffPolicy.new(assistant: @assistant, conversation: @conversation)
+    @handoff_policy ||= Captain::Conversation::HandoffPolicy.new(assistant: @assistant, conversation: @conversation, locale: reply_locale)
   end
 
   def process_v1_handoff_while_waiting
@@ -311,9 +326,9 @@ class Captain::Conversation::ResponseBuilderJob < ApplicationJob # rubocop:disab
   end
 
   def process_v2_empty_response_handoff
-    handoff_text = I18n.with_locale(@assistant.account.locale) do
-      I18n.t('conversations.captain.empty_response_handoff')
-    end
+    handoff_text = Captain::Conversation::CustomerLocale.translate(
+      'conversations.captain.empty_response_handoff', locale: reply_locale || @assistant.account.locale, assistant: @assistant
+    )
     process_v2_declared_handoff(custom_message: handoff_text)
   end
 
@@ -446,7 +461,7 @@ class Captain::Conversation::ResponseBuilderJob < ApplicationJob # rubocop:disab
     Captain::Conversation::HandoffService.new(
       conversation: @conversation,
       assistant: @assistant
-    ).trigger_contact_capture_form!(triggering_message: responding_to_customer_message)
+    ).trigger_contact_capture_form!(triggering_message: responding_to_customer_message, locale: reply_locale)
   end
 
   def responding_to_customer_message

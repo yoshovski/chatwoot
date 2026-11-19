@@ -215,6 +215,34 @@ RSpec.describe 'Api::V1::Accounts::Captain::Assistants', type: :request do
         expect(assistant.reload.config).to include(handoff.stringify_keys)
       end
 
+      it 'saves reply languages and per-language copy and schedules generation' do
+        config = {
+          default_reply_locale: 'en', allowed_reply_locales: %w[en it], auto_translate_messages: true,
+          localized_messages: { handoff_form_message: { it: 'Lascia i tuoi recapiti.' } }
+        }
+
+        expect do
+          patch "/api/v1/accounts/#{account.id}/captain/assistants/#{assistant.id}",
+                params: { assistant: { config: config } }, headers: admin.create_new_auth_token, as: :json
+        end.to have_enqueued_job(Captain::TranslateAssistantMessagesJob).with(assistant.id)
+
+        expect(response).to have_http_status(:success)
+        expect(json_response[:config]).to include(config)
+        expect(json_response).to include(generated_message_translations: {})
+      end
+
+      it 'rejects a default outside the allowed list and an invalid locale list shape' do
+        original = assistant.config
+        [%w[it es], 'it'].each do |allowed|
+          patch "/api/v1/accounts/#{account.id}/captain/assistants/#{assistant.id}",
+                params: { assistant: { config: { default_reply_locale: 'en', allowed_reply_locales: allowed } } },
+                headers: admin.create_new_auth_token, as: :json
+
+          expect(response).to have_http_status(:unprocessable_content)
+          expect(assistant.reload.config).to eq(original)
+        end
+      end
+
       it 'saves what the agent cannot do and ignores the removed behaviour settings' do
         limits = [{ cannot: 'issue refunds', offer: 'handoff' }, { cannot: 'give legal advice', offer: 'link', value: 'https://example.com/legal' }]
 

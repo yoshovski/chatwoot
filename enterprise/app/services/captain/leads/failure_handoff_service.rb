@@ -6,10 +6,9 @@ class Captain::Leads::FailureHandoffService
   end
 
   def perform(tool_context, details:)
-    @conversation.messages.create!(account: @assistant.account, inbox: @conversation.inbox, sender: @assistant,
-                                   message_type: :outgoing, private: true,
-                                   content: I18n.t('captain.leads.intake_review', details: details.to_json))
-    policy = Captain::Conversation::HandoffPolicy.new(assistant: @assistant, conversation: @conversation)
+    post_review_note(details)
+    locale = tool_context.state[Captain::Conversation::CustomerLocale::STATE_KEY]
+    policy = Captain::Conversation::HandoffPolicy.new(assistant: @assistant, conversation: @conversation, locale: locale)
     if policy.keep?
       tool_context.state[:lead_capture_recovery_message] = policy.keep_message
       return policy.keep_message
@@ -23,5 +22,13 @@ class Captain::Leads::FailureHandoffService
     tool_context.state[:lead_failure_handoff] = tool_context.state[:captain_v2_handoff_tool_completed] == true
     tool_context.state[:lead_capture_recovery_message] = policy.handoff_message if tool_context.state[:lead_failure_handoff]
     result
+  end
+
+  private
+
+  def post_review_note(details)
+    @conversation.messages.create!(account: @assistant.account, inbox: @conversation.inbox, sender: @assistant,
+                                   message_type: :outgoing, private: true,
+                                   content: I18n.t('captain.leads.intake_review', details: details.to_json))
   end
 end

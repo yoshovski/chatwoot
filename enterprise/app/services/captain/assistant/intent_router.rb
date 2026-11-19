@@ -37,7 +37,7 @@ class Captain::Assistant::IntentRouter # rubocop:disable Metrics/ClassLength
       'classify', @assistant, chat.with_instructions(instructions), router_input(message, context).to_json
     )
     parsed = response.content.is_a?(Hash) ? response.content : JSON.parse(response.content)
-    normalize(parsed)
+    normalize(parsed, context.dig(:state, Captain::Conversation::CustomerLocale::STATE_KEY))
   rescue StandardError => e
     # Do not log provider error bodies: gateways can echo request headers or customer text.
     Rails.logger.warn "[Captain][IntentRouter] fallback=action_agent error=#{e.class.name}"
@@ -105,7 +105,8 @@ class Captain::Assistant::IntentRouter # rubocop:disable Metrics/ClassLength
   def router_input(message, context)
     history = self.class.recent_history(context).map { |entry| entry.slice(:role, :content) }
     { conversation_memory: context.dig(:state, :conversation_memory), recent_history: history, customer_message: message,
-      visitor_context: Captain::Assistant::VisitorContext.from_state(context[:state] || {}) }
+      visitor_context: Captain::Assistant::VisitorContext.from_state(context[:state] || {}),
+      reply_locale: context.dig(:state, Captain::Conversation::CustomerLocale::STATE_KEY) }
   end
 
   def routing_instructions
@@ -157,7 +158,7 @@ class Captain::Assistant::IntentRouter # rubocop:disable Metrics/ClassLength
 
   def welcome_instruction
     'This is the first reply to this visitor. Also return "welcome": one short, warm welcome sentence in the customer\'s ' \
-      "language, sent right away while the answer is prepared. You may name #{@assistant.product_name || @assistant.name}. " \
+      "language (use reply_locale when provided). It is sent ahead of the answer. You may name #{@assistant.product_name || @assistant.name}. " \
       'Use the customer\'s name only when they gave it. Do not answer, promise or ask anything in it. When visitor_context marks a ' \
       'returning visitor, it may say welcome back.'
   end
@@ -176,17 +177,18 @@ class Captain::Assistant::IntentRouter # rubocop:disable Metrics/ClassLength
     policy
   end
 
-  def normalize(parsed)
+  def normalize(parsed, locale)
     return ACTION.merge('reason' => 'invalid_classifier_output') unless valid_classified_route?(parsed)
 
     result = parsed.slice('intent', 'queries').merge('queries' => parsed['queries'].map(&:strip).uniq, 'reason' => 'classified')
     result['mode'] = parsed['mode'] if valid_overview_mode?(parsed)
-    result['welcome'] = parsed['welcome'].strip if valid_welcome?(parsed['welcome'])
+    result['welcome'] = parsed['welcome'].strip if valid_welcome?(parsed['welcome'], locale)
     result
   end
 
-  def valid_welcome?(welcome)
-    @welcome && welcome.is_a?(String) && welcome.strip.present? && welcome.length <= MAX_WELCOME_CHARS && welcome.exclude?("\n")
+  def valid_welcome?(welcome, locale)
+    @welcome && welcome.is_a?(String) && welcome.strip.present? && welcome.length <= MAX_WELCOME_CHARS && welcome.exclude?("\n") &&
+      !Captain::Conversation::CustomerLocale.mismatch?(welcome, locale)
   end
 
   def valid_classified_route?(parsed)

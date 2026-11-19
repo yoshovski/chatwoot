@@ -1,6 +1,6 @@
 class Captain::Conversation::ContactCaptureService # rubocop:disable Metrics/ClassLength
   FORM_TEXT = 'Please share your contact details so our team can follow up if you leave the chat.'.freeze
-  ACKNOWLEDGEMENT_TEXT = 'Thank you—your contact details have been saved. A team member will continue with you here.'.freeze
+  LOCALE_KEY = 'contact_form_locale'.freeze
 
   EMAIL_PATTERN = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/
   PLACEHOLDER_NAMES = %w[visitor guest anonymous unknown contact customer].freeze
@@ -8,17 +8,11 @@ class Captain::Conversation::ContactCaptureService # rubocop:disable Metrics/Cla
   PLACEHOLDER_PATTERN = /\A(visitor|guest|anonymous|unknown|contact|customer)(\s*#?\d+)?\z/i
   GUARD_TTL = 7.days.to_i
 
-  NAME_FORM_ITEM = {
-    'name' => 'name', 'label' => 'Name', 'type' => 'text', 'placeholder' => 'Please enter your name', 'required' => true
-  }.freeze
-  EMAIL_FORM_ITEM = {
-    'name' => 'email', 'label' => 'Email', 'type' => 'email', 'placeholder' => 'Please enter your email', 'required' => true
-  }.freeze
-
-  PHONE_FORM_ITEM = {
-    'name' => 'phone_number', 'label' => 'Phone number', 'type' => 'tel', 'placeholder' => '+34612345678',
-    'required' => true, 'pattern' => '\\+[1-9][0-9]{1,14}', 'title' => 'Include the country code, for example +34612345678'
-  }.freeze
+  FORM_ITEMS = [
+    { 'name' => 'name', 'type' => 'text', 'required' => true },
+    { 'name' => 'email', 'type' => 'email', 'required' => true },
+    { 'name' => 'phone_number', 'type' => 'tel', 'required' => true, 'pattern' => '\\+[1-9][0-9]{1,14}' }
+  ].freeze
 
   attr_reader :conversation, :assistant
 
@@ -28,18 +22,30 @@ class Captain::Conversation::ContactCaptureService # rubocop:disable Metrics/Cla
   end
 
   # The form a customer sees when a handoff needs their details; the playground shows it without a conversation.
-  def self.form_payload(missing_fields, assistant: nil)
-    items = []
-    items << NAME_FORM_ITEM if missing_fields.include?('name')
-    items << EMAIL_FORM_ITEM if missing_fields.include?('email')
-    items << PHONE_FORM_ITEM if missing_fields.include?('phone_number')
+  def self.form_payload(missing_fields, locale:, assistant: nil)
+    invalid_field = form_copy('invalid_field', locale, assistant)
+    items = FORM_ITEMS.filter_map do |item|
+      field = item.fetch('name')
+      next unless missing_fields.include?(field)
 
+      copy_keys = field == 'phone_number' ? %w[label placeholder title] : %w[label placeholder]
+      item.merge(copy_keys.index_with { |key| form_copy("fields.#{field}.#{key}", locale, assistant) }, 'pattern_error' => invalid_field)
+    end
+
+    content = Captain::LocalizedMessages.new(assistant&.config || {}).text('handoff_form_message', locale)
     {
-      content: assistant&.config&.dig('handoff_form_message').presence || FORM_TEXT,
+      content: content || form_copy('handoff_prompt', locale, assistant),
       content_type: 'form',
-      content_attributes: { 'type' => 'contact_capture', 'items' => items, 'button_label' => 'Submit' }
+      content_attributes: {
+        'type' => 'contact_capture', 'items' => items, 'button_label' => form_copy('submit', locale, assistant), LOCALE_KEY => locale
+      }
     }
   end
+
+  def self.form_copy(key, locale, assistant)
+    Captain::Conversation::CustomerLocale.translate("captain.contact_form.#{key}", locale: locale, assistant: assistant)
+  end
+  private_class_method :form_copy
 
   def self.requested_fields(assistant)
     config = assistant&.config || {}
@@ -107,7 +113,7 @@ class Captain::Conversation::ContactCaptureService # rubocop:disable Metrics/Cla
     contact.update(email: email)
   end
 
-  def post_form_if_needed!(triggering_message: nil)
+  def post_form_if_needed!(triggering_message: nil, locale: nil)
     return nil if conversation.blank?
 
     contact = conversation.contact
@@ -120,7 +126,8 @@ class Captain::Conversation::ContactCaptureService # rubocop:disable Metrics/Cla
     reset_form_guard! if unsubmitted_turns_count >= 4
     return nil unless guard_form_posting!(missing_fields)
 
-    post_form_message!(missing_fields)
+    locale ||= Captain::Conversation::CustomerLocale.resolve(conversation: conversation, assistant: assistant, customer_message: triggering_message)
+    post_form_message!(missing_fields, locale)
   end
 
   def handle_form_submission!(message)
@@ -222,12 +229,12 @@ class Captain::Conversation::ContactCaptureService # rubocop:disable Metrics/Cla
     true
   end
 
-  def post_form_message!(missing_fields)
+  def post_form_message!(missing_fields, locale)
     sender = assistant || conversation.inbox&.captain_assistant
     additional_attrs = sender ? { 'agent_name' => sender.agent_name } : {}
 
     conversation.messages.create!(
-      self.class.form_payload(missing_fields, assistant: assistant).merge(
+      self.class.form_payload(missing_fields, assistant: assistant, locale: locale).merge(
         message_type: :outgoing,
         account_id: conversation.account_id,
         inbox_id: conversation.inbox_id,
@@ -290,13 +297,14 @@ class Captain::Conversation::ContactCaptureService # rubocop:disable Metrics/Cla
   def post_acknowledgement_reply!(message)
     sender = assistant || message.conversation.inbox&.captain_assistant
     additional_attrs = sender ? { 'agent_name' => sender.agent_name } : {}
+    locale = message.content_attributes[LOCALE_KEY] || 'en'
 
     message.conversation.messages.create!(
       message_type: :outgoing,
       account_id: message.account_id,
       inbox_id: message.inbox_id,
       sender: sender,
-      content: ACKNOWLEDGEMENT_TEXT,
+      content: Captain::Conversation::CustomerLocale.translate('captain.contact_form.handoff_saved', locale: locale, assistant: assistant),
       additional_attributes: additional_attrs,
       preserve_waiting_since: true
     )

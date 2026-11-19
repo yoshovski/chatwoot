@@ -180,6 +180,7 @@ class Captain::Assistant::DirectResponseService
     end
     base.merge(
       message_length_limit: context.dig(:state, :message_length_limit),
+      reply_locale: context.dig(:state, Captain::Conversation::CustomerLocale::STATE_KEY),
       ownership_instruction: context.dig(:state, :ownership_instruction),
       suggested_replies_enabled: context.dig(:state, :suggested_replies_enabled),
       max_suggested_replies: @assistant.max_suggested_replies,

@@ -23,4 +23,6 @@ Captain::Reply::Context = Data.define(:assistant, :conversation, :run_result, :c
   def email? = channel == :email
 
   def state = run_result&.context&.dig(:state)
+
+  def reply_locale = state&.dig(Captain::Conversation::CustomerLocale::STATE_KEY)
 end

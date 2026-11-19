@@ -22,17 +22,17 @@ class Captain::Reply::Policies::Answer < Captain::Reply::Policies::Base
   end
 
   def fallback_text
-    I18n.with_locale(assistant.account.locale) do
-      if catalog_searches_empty?
-        I18n.t('conversations.captain.empty_response_catalog_empty')
-      elsif customer_message_has_attachments?
-        I18n.t('conversations.captain.empty_response_attachments')
-      elsif model_returned_answer?
-        I18n.t('conversations.captain.empty_response_unusable')
-      else
-        I18n.t('conversations.captain.empty_response_handoff')
-      end
-    end
+    key = if catalog_searches_empty?
+            'empty_response_catalog_empty'
+          elsif customer_message_has_attachments?
+            'empty_response_attachments'
+          elsif model_returned_answer?
+            'empty_response_unusable'
+          else
+            'empty_response_handoff'
+          end
+    Captain::Conversation::CustomerLocale.translate("conversations.captain.#{key}",
+                                                    locale: context.reply_locale || assistant.account.locale, assistant: assistant)
   end
 
   def catalog_searches_empty?

@@ -49,6 +49,7 @@ class Captain::Conversation::LeadOfferService
 
     offer = output['offer'].to_s.strip
     return if offer.blank? || offer.length > Captain::Behaviour::CHECK_IN_MAX_LENGTH
+    return if Captain::Conversation::CustomerLocale.mismatch?(offer, reply_locale)
     return unless lead_types.include?(output['lead_type']) && output['summary'].to_s.strip.present?
 
     output.slice('lead_type', 'summary').merge('offer' => offer)
@@ -65,7 +66,7 @@ class Captain::Conversation::LeadOfferService
   end
 
   def form_payload
-    form = Captain::Leads::FollowupFormService.new(@assistant, @conversation).payload
+    form = Captain::Leads::FollowupFormService.new(@assistant, @conversation).payload(locale: reply_locale)
     form.merge(additional_attributes: form[:additional_attributes].merge(initiated_attributes))
   end
 
@@ -85,7 +86,13 @@ class Captain::Conversation::LeadOfferService
     Captain::Assistant::TieredLlmClient.chat(
       account_id: @assistant.account_id, model: Captain::Conversation::CheckInService.model,
       timeout: Captain::Behaviour::CHECK_IN_TIMEOUT_SECONDS
-    ).with_schema(Captain::LeadOfferSchema.for(lead_types)).with_params(max_tokens: 400).with_instructions(INSTRUCTIONS)
+    ).with_schema(Captain::LeadOfferSchema.for(lead_types)).with_params(max_tokens: 400).with_instructions(
+      [INSTRUCTIONS, Captain::Conversation::CustomerLocale.instruction(reply_locale)].join("\n")
+    )
+  end
+
+  def reply_locale
+    @reply_locale ||= Captain::Conversation::CustomerLocale.resolve(assistant: @assistant, conversation: @conversation)
   end
 
   def lead_types = @assistant.lead_types.pluck('name')
