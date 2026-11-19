@@ -9,7 +9,10 @@ class Captain::Tools::RequestLeadFollowupTool < Captain::Tools::BasePublicTool
     return typed_identity_instruction unless web_chat?(tool_context)
 
     conversation = find_conversation(tool_context.state)
-    instruction = prepare_followup(tool_context, conversation, lead_type, summary, fields_json)
+    fields = JSON.parse(fields_json)
+    raise ArgumentError, 'Use a JSON object for lead fields' unless fields.is_a?(Hash)
+
+    instruction = prepare_followup(tool_context, conversation, lead_type, summary, fields)
     return instruction if instruction
 
     form_instruction(tool_context)
@@ -23,7 +26,7 @@ class Captain::Tools::RequestLeadFollowupTool < Captain::Tools::BasePublicTool
 
   private
 
-  def prepare_followup(tool_context, conversation, lead_type, summary, fields_json)
+  def prepare_followup(tool_context, conversation, lead_type, summary, fields)
     return failure_result('Conversation not found', tool_context.state) unless conversation || preview?(tool_context)
     if Captain::Leads::CaptureState.new(@assistant, conversation).captured?
       return 'Email follow-up is already captured. Do not show another form or restart intake. Continue helping with the current question.'
@@ -31,10 +34,24 @@ class Captain::Tools::RequestLeadFollowupTool < Captain::Tools::BasePublicTool
     if Captain::Leads::FollowupFormService.new(@assistant, conversation).pending?
       return 'The follow-up form is already waiting for submission. Do not show another form, save a lead or repeat the invitation. Continue helping.'
     end
-    return not_ready_instruction unless Captain::Leads::FollowupReadiness.new(@assistant, tool_context).ready?
+
+    rejection = qualification_rejection(tool_context, lead_type, fields)
+    return rejection if rejection
     return if preview?(tool_context)
 
-    start_followup(tool_context, conversation, lead_type, summary, fields_json)
+    start_followup(tool_context, conversation, lead_type, summary, fields)
+  end
+
+  def qualification_rejection(tool_context, lead_type, fields)
+    missing = @assistant.required_lead_fields.reject { |field| fields[field['key']].is_a?(String) && fields[field['key']].present? }
+    if missing.any?
+      return "No form was shown or lead saved. Ask for the next missing required detail: #{missing.pluck('label').join(', ')}. Do not hand off."
+    end
+
+    configured_type = @assistant.lead_types.find { |type| type['name'] == lead_type }
+    raise ArgumentError, 'Use a configured lead type' unless configured_type
+
+    not_ready_instruction unless Captain::Leads::FollowupReadiness.new(@assistant, tool_context).ready?(lead_type: configured_type)
   end
 
   def captured_instruction(tool_context)
@@ -62,13 +79,13 @@ class Captain::Tools::RequestLeadFollowupTool < Captain::Tools::BasePublicTool
 
   def web_chat?(tool_context) = tool_context.state[:channel_type].in?([nil, 'Channel::WebWidget'])
 
-  def start_followup(tool_context, conversation, lead_type, summary, fields_json)
+  def start_followup(tool_context, conversation, lead_type, summary, fields)
     if newer_customer_message_arrived?(tool_context.state)
       return failure_result('Tool skipped because a newer customer message arrived', tool_context.state)
     end
 
     Captain::Leads::FollowupCaptureService.new(conversation, @assistant).stage!(
-      lead_type: lead_type, summary: summary, fields: JSON.parse(fields_json)
+      lead_type: lead_type, summary: summary, fields: fields
     )
     captured_instruction(tool_context) if conversation.reload.additional_attributes['business_lead_captured']
   end

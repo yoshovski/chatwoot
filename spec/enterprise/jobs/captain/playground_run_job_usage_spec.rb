@@ -23,7 +23,7 @@ RSpec.describe Captain::PlaygroundRunJob do
     allow(assistant).to receive(:agent).and_return(mock_agent)
     allow(mock_agent).to receive(:register_handoffs)
     allow(Agents::Runner).to receive(:with_agents).and_return(mock_runner)
-    allow(mock_runner).to receive_messages(run: run_result, on_tool_complete: mock_runner, on_run_complete: mock_runner)
+    allow(mock_runner).to receive_messages(run: run_result, on_tool_complete: mock_runner, on_run_complete: mock_runner, on_chat_created: mock_runner)
     allow(Redis::Alfred).to receive(:setex) { |key, value, _ttl| stored[key] = value }
   end
 

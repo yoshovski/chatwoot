@@ -11,6 +11,7 @@ module Captain::LeadSettings
 
   def leads_enabled? = config['leads_enabled'] == true
   def lead_fields = config.fetch('lead_fields', [])
+  def required_lead_fields = lead_fields.select { |field| field['required'] == true }
   def lead_types = config.fetch('lead_types', [])
   def lead_max_questions = config.fetch('lead_max_questions', 2)
 
@@ -62,8 +63,15 @@ module Captain::LeadSettings
   end
 
   def valid_lead_collections?
-    valid_lead_entries?(lead_fields, %w[key label]) && valid_lead_entries?(lead_types, %w[name rule]) &&
+    valid_lead_fields? && valid_lead_entries?(lead_types, %w[name rule]) &&
       valid_lead_field_keys? && unique_lead_entries? && valid_guided_lead_settings?
+  end
+
+  def valid_lead_fields?
+    boolean_values = [true, false]
+    lead_fields.is_a?(Array) && lead_fields.size <= 10 && lead_fields.all? do |field|
+      field.is_a?(Hash) && boolean_values.include?(field.fetch('required', false)) && valid_lead_entry?(field.except('required'), %w[key label])
+    end
   end
 
   def valid_lead_questions? = lead_max_questions.is_a?(Integer) && lead_max_questions.between?(0, 5)

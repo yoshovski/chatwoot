@@ -247,6 +247,7 @@ class Captain::Assistant::AgentRunnerService # rubocop:disable Metrics/ClassLeng
   def runner
     @runner ||= begin
       configured_runner = Agents::Runner.with_agents(*build_and_wire_agents)
+      prevent_scenario_reentry(configured_runner)
       configured_runner = add_usage_metadata_callback(configured_runner)
       configured_runner = add_callbacks_to_runner(configured_runner) if @callbacks.any?
       install_instrumentation(configured_runner)

@@ -24,13 +24,16 @@ class Captain::Leads::CaptureReceipt
   end
 
   def self.payload(assistant, contact)
+    configuration = assistant.config.slice('lead_fields', 'lead_types')
+    # Required fields govern new intake. They do not change the meaning of already captured data.
+    configuration['lead_fields'] = assistant.lead_fields.map { |field| field.except('required') } if configuration.key?('lead_fields')
     {
       'assistant_id' => assistant.id, 'account_id' => assistant.account_id, 'contact_id' => contact.id,
       'email' => contact.email, 'name' => contact.name,
       'attributes' => contact.custom_attributes.slice('lead_type', 'lead_summary', 'lead_source',
                                                       'lead_visitor_city', 'lead_visitor_country', 'lead_visitor_country_code',
                                                       *assistant.lead_fields.map { |field| "lead_#{field['key']}" }),
-      'configuration' => assistant.config.slice('lead_fields', 'lead_types')
+      'configuration' => configuration
     }
   end
 
