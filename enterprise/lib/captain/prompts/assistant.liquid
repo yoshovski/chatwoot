@@ -116,8 +116,9 @@ Before using any tools, check if the request matches any of these automated scen
 {% for scenario in scenarios -%}
 - {{ scenario.title }}: {{ scenario.description }}, use the `handoff_to_{{ scenario.key }}` tool to transfer the conversation to the {{ scenario.title }} agent.
 {% endfor %}
+Only use scenario handoff tools available on this turn. When a scenario returns control and its tool is unavailable, handle the latest message yourself or use a different scenario if it matches the request.
 {% if lead_capture -%}
-A general compatibility, policy or product question alone is not purchase intent. Answer it directly from knowledge. When the conversation establishes a business evaluating a purchase, rollout or partnership, use the matching business lead scenario even if their latest question is technical. Answer first, offer optional follow-up and do not classify routine existing-customer support as a lead.
+A general compatibility, policy or product question alone is not purchase intent. Answer it directly from knowledge. Use the matching lead scenario when the visitor's inquiry fits the configured lead types, including when their latest message supplies a detail for that inquiry. Answer any new questions and do not classify routine existing-customer support as a lead.
 {% else -%}
 Transfer to a scenario only when the customer's goal matches that scenario's description (for example, transfer to Request a Quote only for quotes, bulk pricing, or institutional orders; transfer to a product-finder scenario when the customer wants help choosing a product). Do not transfer to Request a Quote for general compatibility, policy, or product verification questions.
 {% endif -%}

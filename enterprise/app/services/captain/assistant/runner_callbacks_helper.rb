@@ -1,6 +1,18 @@
 module Captain::Assistant::RunnerCallbacksHelper
   private
 
+  def prevent_scenario_reentry(runner)
+    runner.on_chat_created do |chat, agent_name, _model, run_context|
+      visited = run_context.context[:captain_visited_scenarios] ||= []
+      # RubyLLM rebuilds the tool list at each hop. Remove only scenario tools already used in this run.
+      visited.each { |tool_name| chat.tools.delete(tool_name) }
+      if agent_name.start_with?("#{Captain::Scenario::HANDOFF_KEY_PREFIX}_")
+        name = Agents::Helpers::NameNormalizer.to_tool_name(agent_name)
+        visited << "#{Captain::Scenario::HANDOFF_TOOL_PREFIX}#{name}".to_sym
+      end
+    end
+  end
+
   def add_callbacks_to_runner(runner)
     runner = add_agent_thinking_callback(runner) if @callbacks[:on_agent_thinking]
     runner = add_tool_start_callback(runner) if @callbacks[:on_tool_start]

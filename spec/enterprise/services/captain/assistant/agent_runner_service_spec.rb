@@ -47,6 +47,7 @@ RSpec.describe Captain::Assistant::AgentRunnerService do
     allow(mock_runner).to receive(:run).and_return(mock_result)
     allow(mock_runner).to receive(:on_tool_complete).and_return(mock_runner)
     allow(mock_runner).to receive(:on_run_complete).and_return(mock_runner)
+    allow(mock_runner).to receive(:on_chat_created).and_return(mock_runner)
     allow(mock_agent).to receive(:register_handoffs)
     allow(mock_scenario_agent).to receive(:register_handoffs)
   end
@@ -187,6 +188,30 @@ RSpec.describe Captain::Assistant::AgentRunnerService do
       expect(Agents::Runner).to receive(:with_agents).with(mock_agent, mock_scenario_agent)
 
       service.generate_response(message_history: message_history)
+    end
+
+    it 'blocks re-entry after a scenario returns control and allows scenario entry on the next user turn' do
+      callback = nil
+      allow(mock_runner).to receive(:on_chat_created) { |&block| callback = block }
+      service.generate_response(message_history: message_history)
+
+      active_scenario = 'scenario_13_business_lead_follow-up_agent'
+      scenario_tool = :handoff_to_scenario_13_business_lead_followup_agent
+      assistant_tool = :handoff_to_rental_assistant
+      options = { scenario_tool => :lead_intake, :handoff_to_scenario_14_support_agent => :support, :handoff => :human }
+      scenario_chat = instance_double(RubyLLM::Chat, tools: { assistant_tool => :return })
+      assistant_chat = instance_double(RubyLLM::Chat, tools: options.dup)
+      run_context = Agents::RunContext.new({})
+
+      callback.call(scenario_chat, active_scenario, 'model', run_context)
+      expect(scenario_chat.tools).to have_key(assistant_tool)
+
+      callback.call(assistant_chat, 'rental_assistant', 'model', run_context)
+      expect(assistant_chat.tools).to eq(options.except(scenario_tool))
+
+      next_chat = instance_double(RubyLLM::Chat, tools: options.dup)
+      callback.call(next_chat, 'rental_assistant', 'model', Agents::RunContext.new({}))
+      expect(next_chat.tools).to eq(options)
     end
 
     it 'runs agent with extracted user message and context' do
