@@ -77,7 +77,12 @@ const presets = computed(() => assistant.value?.prompt_presets || {});
 const languagesOpen = ref(false);
 watch(languagesOpen, open => {
   if (open && assistant.value?.config?.auto_translate_messages) {
-    store.dispatch('captainAssistants/show', assistantId.value).catch(() => {});
+    store
+      .dispatch(
+        'captainAssistants/refreshMessageTranslations',
+        assistantId.value
+      )
+      .catch(() => {});
   }
 });
 const languageOptions = computed(() =>

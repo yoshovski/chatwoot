@@ -5,6 +5,8 @@ class Captain::Conversation::CustomerLocale
   MINIMUM_CONFIDENCE = 0.95
   STATE_KEY = :customer_reply_locale
   COUNTRY_LOCALES = { 'IT' => 'it', 'ES' => 'es', 'FR' => 'fr' }.freeze
+  GREETING_LOCALES = { 'ciao' => 'it', 'buongiorno' => 'it', 'buonasera' => 'it', 'hola' => 'es', 'bonjour' => 'fr',
+                       'hello' => 'en', 'hi' => 'en', 'hey' => 'en' }.freeze
   LANGUAGE_REQUESTS = {
     'en' => /english|inglese|inglés|anglais/,
     'it' => /italian[oa]?|italien/,
@@ -87,7 +89,7 @@ class Captain::Conversation::CustomerLocale
     current = requested_or_detected_locale(current_text)
     return allowed?(current) ? current : default_locale if current
 
-    candidates = [saved_locale, recent_message_locale, browser_locale, location_locale]
+    candidates = [saved_locale, recent_message_locale, greeting_locale, browser_locale, location_locale]
     candidates.find { |locale| locale && allowed?(locale) } || default_locale
   end
 
@@ -141,6 +143,12 @@ class Captain::Conversation::CustomerLocale
     request = text.match(LANGUAGE_REQUEST)
     requested = LANGUAGE_REQUESTS.find { |_locale, name| request && request[1].downcase.match?(/\A(?:#{name})\z/) }&.first
     requested || normalized(self.class.detect(text))
+  end
+
+  def greeting_locale
+    return unless @config.key?('default_reply_locale') || @config['allowed_reply_locales'].present?
+
+    GREETING_LOCALES[current_text.to_s.strip.downcase.gsub(/\A[¡¿]+|[.!?]+\z/, '')]
   end
 
   def browser_locale

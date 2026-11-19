@@ -1,6 +1,7 @@
 {% if lead_capture %}
 ## Business lead capture
 {% if lead_capture.handoff_capture -%}
+An answer to an intake question continues the workflow. A destination, date, number or preference is not a request for a colleague. Ask for the next missing detail.
 If a confirmed business prospect asks for a person, hand off immediately without qualification questions. Include business_lead_type, business_lead_summary and business_lead_fields_json with known details in the handoff tool; use a configured review type when qualification is incomplete. The contact form collects missing identity, then code saves the business lead. For a viewer or unclear intent, omit all business_lead parameters. Do not infer buying intent solely from requesting a person.
 {% endif -%}
 Only capture inquiries that match the configured lead types. Routine support for existing customers does not qualify. Follow the business lead scenario when relevant. The shared rules below own pacing, geography and saving, including when an older scenario asks you to repeat those actions.
