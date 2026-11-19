@@ -10,7 +10,12 @@ import { useI18n } from 'vue-i18n';
 
 import MessageFormatter from 'shared/helpers/MessageFormatter.js';
 import { BUS_EVENTS } from 'shared/constants/busEvents';
-import { MESSAGE_VARIANTS, ORIENTATION, SENDER_TYPES } from '../constants';
+import {
+  CONTENT_TYPES,
+  MESSAGE_VARIANTS,
+  ORIENTATION,
+  SENDER_TYPES,
+} from '../constants';
 
 const props = defineProps({
   hideMeta: { type: Boolean, default: false },
@@ -24,7 +29,8 @@ const {
   id,
   sender,
   senderType,
-  contentAttributes,
+  contentType,
+  additionalAttributes,
 } = useMessageContext();
 const { t } = useI18n();
 
@@ -101,12 +107,22 @@ const shouldShowMeta = computed(
     variant.value !== MESSAGE_VARIANTS.ACTIVITY
 );
 
-// Only show Sources when citations are enabled and sources were actually attached to this reply.
+// Dashboard Sources uses the recorded search results independently of widget citations.
 const showCaptainSources = computed(() => {
   if (!isCaptainMessage.value || variant.value === MESSAGE_VARIANTS.PRIVATE) {
     return false;
   }
-  return Boolean(contentAttributes.value?.captainSources?.length);
+
+  const { captainSourcesFound, captainSourcesUsed } =
+    additionalAttributes.value || {};
+  const sourcesCount = captainSourcesFound ?? captainSourcesUsed;
+  if (sourcesCount !== undefined) return sourcesCount > 0;
+
+  // Older replies without a count keep the button with the message footer.
+  return (
+    shouldShowMeta.value &&
+    ![CONTENT_TYPES.CARDS, CONTENT_TYPES.FORM].includes(contentType.value)
+  );
 });
 
 const replyToPreview = computed(() => {
