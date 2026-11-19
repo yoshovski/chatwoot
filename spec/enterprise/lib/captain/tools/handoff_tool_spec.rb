@@ -47,6 +47,33 @@ RSpec.describe Captain::Tools::HandoffTool, type: :model do
         )
     end
 
+    context 'with required lead details' do
+      let(:responding_to_message) { create(:message, conversation: conversation, account: account, inbox: inbox, message_type: :incoming) }
+      let(:tool_context) { Struct.new(:state).new({ conversation: { id: conversation.id }, responding_to_message_id: responding_to_message.id }) }
+      let(:classifier) { instance_double(Captain::Llm::AssistantActionClassifierService) }
+
+      before do
+        account.enable_features!(:captain_integration_v2)
+        allow(assistant).to receive_messages(leads_enabled?: true, required_lead_fields: [{ 'key' => 'destination' }])
+        allow(Captain::Llm::AssistantActionClassifierService).to receive(:new).and_return(classifier)
+      end
+
+      it 'keeps an ordinary answer in chat even if the agent labels it a customer request' do
+        responding_to_message.update!(content: 'Lisbon')
+        expect(classifier).to receive(:classify).with(message_history: [{ role: 'user', content: 'Lisbon' }], assistant_response: '')
+                                                .and_return({ 'action' => 'continue', 'action_reason' => 'clarifying_question_needed' })
+        expect(tool.perform(tool_context, reason_category: 'customer_request')).to include('next missing detail')
+        expect(conversation.reload).to be_pending
+        expect(tool_context.state[:captain_v2_handoff_tool_completed]).to be_nil
+      end
+
+      it 'allows a confirmed human request while details are still missing' do
+        allow(classifier).to receive(:classify).and_return({ 'action' => 'handoff', 'action_reason' => 'human_offer_accepted' })
+        expect(tool.perform(tool_context, reason_category: 'customer_request')).to include('Conversation handed off')
+        expect(conversation.reload).to be_open
+      end
+    end
+
     context 'when conversation exists' do
       context 'when Captain is responding to a customer message' do
         let(:responding_to_message) do

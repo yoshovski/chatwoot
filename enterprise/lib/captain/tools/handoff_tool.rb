@@ -24,10 +24,14 @@ class Captain::Tools::HandoffTool < Captain::Tools::BasePublicTool
   ATTACHMENT_HANDOFF_ERROR = 'Cannot hand off for an attachment without a customer question. ' \
                              'Please ask the customer what they need help with regarding this attachment first.'.freeze
 
+  CONTINUE_INTAKE = 'No live transfer was confirmed. Keep helping in chat. Use the visitor’s answer and ask for the next missing detail.'.freeze
+
   def perform(tool_context, reason: nil, reason_category: nil, **business_details)
     conversation = find_conversation(tool_context.state)
     return failure_result('Conversation not found', tool_context.state) unless conversation
-    return failure_result(ATTACHMENT_HANDOFF_ERROR, tool_context.state) if attachment_only_request?(tool_context, conversation)
+
+    rejection = handoff_rejection(tool_context, conversation, reason_category)
+    return rejection if rejection
 
     # Log the handoff with reason
     log_tool_usage('tool_handoff', {
@@ -106,11 +110,16 @@ class Captain::Tools::HandoffTool < Captain::Tools::BasePublicTool
     conversation.messages.incoming.last
   end
 
-  def attachment_only_request?(tool_context, conversation)
+  def handoff_rejection(tool_context, conversation, category)
     message = find_triggering_message(tool_context.state, conversation)
-    return false if message.blank?
+    return failure_result(ATTACHMENT_HANDOFF_ERROR, tool_context.state) if attachment_only_request?(message)
+    return unless category == 'customer_request' && @assistant.leads_enabled? && @assistant.required_lead_fields.any?
 
-    message.incoming? && message.content.to_s.strip.blank? && message.attachments.exists?
+    CONTINUE_INTAKE unless Captain::Leads::CustomerHandoffRequest.new(@assistant, conversation).confirmed?(message)
+  end
+
+  def attachment_only_request?(message)
+    message&.incoming? && message.content.to_s.strip.blank? && message.attachments.exists?
   end
 
   def trigger_legacy_handoff(tool_context, conversation, reason_category, reason)

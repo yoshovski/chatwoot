@@ -11,6 +11,13 @@ RSpec.describe Captain::Conversation::CustomerLocale, type: :service do
     expect(described_class.resolve(conversation: conversation, customer_message: 'Ciao')).to eq('es')
   end
 
+  it 'recognizes an opening greeting for an assistant with reply languages configured' do
+    assistant = build(:captain_assistant, config: { default_reply_locale: 'it' })
+    expect(described_class.resolve(conversation: conversation, assistant: assistant, customer_message: 'Ciao!')).to eq('it')
+    described_class.record(conversation.reload, 1, 'en')
+    expect(described_class.resolve(conversation: conversation, assistant: assistant, customer_message: 'ciao')).to eq('en')
+  end
+
   it 'keeps the language of an earlier customer turn for a short reply and ignores later messages' do
     create(:message, conversation: conversation, message_type: :incoming, content: 'Vorrei richiedere una dimostrazione per la mia azienda.')
     replying_to = create(:message, conversation: conversation, message_type: :incoming, content: 'Sì')
