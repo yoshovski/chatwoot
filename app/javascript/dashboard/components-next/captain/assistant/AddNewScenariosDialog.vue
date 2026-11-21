@@ -160,7 +160,9 @@ const saveDraftScenario = () => {
     title: previewState.title.trim(),
     description: previewState.description.trim(),
     instruction: previewState.instruction.trim(),
-    localized_reply_copy: previewState.localizedReplyCopy,
+    ...(Object.keys(previewState.localizedReplyCopy).length && {
+      localized_reply_copy: previewState.localizedReplyCopy,
+    }),
   });
   close();
 };
@@ -182,7 +184,9 @@ const onClickAddManual = async () => {
     title: manualState.title.trim(),
     description: manualState.description.trim(),
     instruction: manualState.instruction.trim(),
-    localized_reply_copy: manualState.localizedReplyCopy,
+    ...(Object.keys(manualState.localizedReplyCopy).length && {
+      localized_reply_copy: manualState.localizedReplyCopy,
+    }),
   });
 
   manualState.title = '';

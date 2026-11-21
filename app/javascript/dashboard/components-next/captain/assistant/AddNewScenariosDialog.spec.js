@@ -137,7 +137,7 @@ describe('AddNewScenariosDialog', () => {
     ]);
   });
 
-  it('emits add when saving draft scenario from preview', async () => {
+  it('includes localized reply copy when saving a scenario draft', async () => {
     const wrapper = createWrapper();
     await wrapper.find('button').trigger('click');
 
@@ -145,6 +145,7 @@ describe('AddNewScenariosDialog', () => {
     wrapper.vm.previewState.title = 'AI Draft Title';
     wrapper.vm.previewState.description = 'AI Draft Description';
     wrapper.vm.previewState.instruction = 'AI Draft Instruction';
+    wrapper.vm.previewState.localizedReplyCopy = { it: 'Come posso aiutarti?' };
     await wrapper.vm.$nextTick();
 
     wrapper.vm.saveDraftScenario();
@@ -155,6 +156,7 @@ describe('AddNewScenariosDialog', () => {
           title: 'AI Draft Title',
           description: 'AI Draft Description',
           instruction: 'AI Draft Instruction',
+          localized_reply_copy: { it: 'Come posso aiutarti?' },
         },
       ],
     ]);

@@ -56,6 +56,8 @@ RSpec.describe Email::SenderNameBuilder do
     it 'falls back to the account locale when the sender name translation is missing' do
       account.update!(locale: :de)
       sender.update!(ui_settings: { 'locale' => 'sr' })
+      allow(I18n).to receive(:exists?).and_call_original
+      allow(I18n).to receive(:exists?).with(described_class::TRANSLATION_KEY, 'sr', fallback: false).and_return(false)
 
       expect(builder.build).to eq('Ivan von Juvigo <care@example.com>')
     end
