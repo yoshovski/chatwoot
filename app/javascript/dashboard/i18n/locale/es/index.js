@@ -1,3 +1,12 @@
+import yearInReview from './yearInReview.json';
+import contentTemplates from './contentTemplates.json';
+import snooze from './snooze.json';
+import leads from './leads.json';
+import home from './home.json';
+import analytics from './analytics.json';
+import knowledge from './knowledge.json';
+import accountSubscription from './accountSubscription.json';
+import channels from './channels.json';
 import advancedFilters from './advancedFilters.json';
 import agentBots from './agentBots.json';
 import agentMgmt from './agentMgmt.json';
@@ -43,6 +52,15 @@ import whatsappTemplates from './whatsappTemplates.json';
 import whatsappTemplateMgmt from './whatsappTemplateMgmt.json';
 
 export default {
+  ...yearInReview,
+  ...contentTemplates,
+  ...snooze,
+  ...leads,
+  ...home,
+  ...analytics,
+  ...knowledge,
+  ...accountSubscription,
+  ...channels,
   ...advancedFilters,
   ...agentBots,
   ...agentMgmt,

@@ -34,7 +34,8 @@ RSpec.describe Captain::Tools::ActionConfirmation do
   end
 
   def card_message
-    payload = Captain::Tools::ActionConfirmation.card_payload(state[Captain::Tools::ActionConfirmation::STATE_KEY], 'en')
+    locale = state[Captain::Conversation::CustomerLocale::STATE_KEY] || 'en'
+    payload = Captain::Tools::ActionConfirmation.card_payload(state[Captain::Tools::ActionConfirmation::STATE_KEY], locale)
     create(:message, account: account, inbox: inbox, conversation: conversation, sender: assistant, message_type: :outgoing, **payload)
   end
 
@@ -116,6 +117,21 @@ RSpec.describe Captain::Tools::ActionConfirmation do
     click(card_message, 'confirm')
 
     expect(conversation.messages.where(private: false).last.content).to eq('That order could not be cancelled.')
+  end
+
+  it 'keeps the card language when acknowledging cancellation after the conversation language changes' do
+    tool.update!(messages: {})
+    state[Captain::Conversation::CustomerLocale::STATE_KEY] = 'es'
+    http_tool.perform(tool_context, order_number: '1042')
+    message = card_message
+    conversation.update!(additional_attributes: conversation.reload.additional_attributes.merge('browser_language' => 'it'))
+
+    expect(message.content).to eq('¿Quieres que ejecute esta acción: cancel order?')
+    expect(message.content_attributes['items'].pluck('title')).to eq(%w[Confirmar Cancelar])
+
+    click(message.reload, 'cancel')
+
+    expect(conversation.messages.where(private: false).last.content).to eq('De acuerdo, he cancelado la acción.')
   end
 
   it 'does nothing on Cancel' do

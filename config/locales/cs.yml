@@ -420,6 +420,26 @@ cs:
       short_description: 'Sync your contacts and conversations with LeadSquared CRM.'
       description: 'Sync your contacts and conversations with LeadSquared CRM. This integration automatically creates leads in LeadSquared when new contacts are added, and logs conversation activity to provide your sales team with complete context.'
   captain:
+    contact_form:
+      handoff_prompt: 'Zanechte nám své kontaktní údaje, aby se vám náš tým mohl ozvat, pokud opustíte chat.'
+      handoff_saved: 'Děkujeme. Vaše kontaktní údaje jsme uložili. Někdo z našeho týmu vám zde bude dál pomáhat.'
+      submit: 'Odeslat'
+      invalid_field: 'Zkontrolujte toto pole.'
+      fields:
+        name:
+          label: 'Jméno'
+          placeholder: 'Jméno'
+        email:
+          label: 'E-mailová adresa'
+          placeholder: 'E-mailová adresa'
+        phone_number:
+          label: 'Telefonní číslo'
+          placeholder: '+34612345678'
+          title: 'Uveďte předvolbu země, například +34612345678'
+    leads:
+      followup_form: 'Na jakou e-mailovou adresu vám může náš tým odpovědět?'
+      followup_submit: 'Požádat o odpověď e-mailem'
+      followup_saved: 'Děkujeme, %{name}. Vaši žádost o odpověď e-mailem jsme přijali.'
     copilot_message_required: Message is required
     copilot_error: 'Please connect an assistant to this inbox to use Copilot'
     copilot_limit: 'You are out of Copilot credits. You can buy more credits from the billing section.'

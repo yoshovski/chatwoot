@@ -42,7 +42,7 @@
   },
   "FEATURE_SPOTLIGHT": {
     "LEARN_MORE": "Más información",
-    "WATCH_VIDEO": "Watch video"
+    "WATCH_VIDEO": "Ver vídeo"
   },
   "DURATION_INPUT": {
     "MINUTES": "Minutos",
@@ -61,8 +61,8 @@
     "ITALIC": "Italic",
     "STRIKETHROUGH": "Strikethrough",
     "CODE": "Code",
-    "BULLET_LIST": "Bullet List",
-    "ORDERED_LIST": "Ordered List",
+    "BULLET_LIST": "Lista de Balas",
+    "ORDERED_LIST": "Lista ordenada",
     "TABLE": "Table",
     "IMAGE": "Imagen",
     "VIDEO": "Vídeo",

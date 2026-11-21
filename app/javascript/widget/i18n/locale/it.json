@@ -10,6 +10,10 @@
     "MESSAGE_BUBBLE": {
       "RETRY": "Invia di nuovo il messaggio",
       "ERROR_MESSAGE": "Impossibile inviare, riprova"
+    },
+    "CARD_CAROUSEL": {
+      "PREVIOUS": "Prodotti precedenti",
+      "NEXT": "Altri prodotti"
     }
   },
   "THUMBNAIL": {
@@ -31,7 +35,8 @@
     "BACK_AT_TIME": "Torneremo online alle {time}",
     "BACK_ON_DAY": "Torneremo online il {day}",
     "BACK_TOMORROW": "Torneremo online domani",
-    "BACK_IN_SOME_TIME": "Torneremo online a breve"
+    "BACK_IN_SOME_TIME": "Torneremo online a breve",
+    "IMMEDIATELY": "Rispondiamo subito"
   },
   "DAY_NAMES": {
     "SUNDAY": "Domenica",
@@ -107,8 +112,8 @@
     "ARIA_LABEL": "Selettore emoji"
   },
   "EMOJI_ICON_PICKER": {
-    "SEARCH_EMOJI": "Search emoji…",
-    "FREQUENTLY_USED": "Frequently used",
+    "SEARCH_EMOJI": "Cerca emoji...",
+    "FREQUENTLY_USED": "Spesso usato",
     "NO_EMOJI": "Nessuna emoji corrisponde alla tua ricerca"
   },
   "CSAT": {
@@ -150,9 +155,53 @@
     },
     "fallback": {
       "CONTENT": "ha condiviso un url"
-    }
+    },
+    "REMOVE": "Rimuovi allegato"
   },
   "FOOTER_REPLY_TO": {
     "REPLY_TO": "Rispondendo a:"
-  }
+  },
+  "WELCOME": {
+    "TITLE": "Ciao 👋",
+    "DESCRIPTION": "Come possiamo aiutarti oggi?",
+    "CHAT_DESCRIPTION": "Hai una domanda? Siamo qui per aiutarti.",
+    "NAVIGATION": "Navigazione dell’assistenza",
+    "HOME": "Home",
+    "CHAT": "Chat"
+  },
+  "MESSAGE_VIDEO": {
+    "PLAY": "Riproduci il video"
+  },
+  "MESSAGE_SOURCES": {
+    "LABEL": "Fonti"
+  },
+  "ATTENTION": {
+    "CHECK_IN": "Posso aiutarti con altro?",
+    "ALL_SET": "Sono a posto",
+    "OPEN_CHAT": "Apri la chat",
+    "NEW_REPLY": "Hai ricevuto una nuova risposta",
+    "MUTE": "Disattiva il suono delle notifiche",
+    "UNMUTE": "Attiva il suono delle notifiche"
+  },
+  "PREVIEW": {
+    "COMPOSER_HINT": "Anteprima",
+    "SAMPLE": {
+      "AGENT_NAME": "Agente IA",
+      "GREETING": "Ciao! Posso aiutarti con ordini, consegne e resi. Di cosa hai bisogno?",
+      "QUESTION": "Quanto tempo ci vuole per la consegna?",
+      "ANSWER": "In genere gli ordini arrivano in 2–4 giorni lavorativi. Ti invieremo un link di tracciamento via email appena il pacco sarà spedito.",
+      "SOURCE_TITLE": "Consegne e spedizioni",
+      "SUGGESTIONS": {
+        "TRACK": {
+          "TITLE": "Traccia il mio ordine",
+          "VALUE": "Come posso tracciare il mio ordine?"
+        },
+        "RETURNS": {
+          "TITLE": "Resi",
+          "VALUE": "Come posso restituire un articolo?"
+        }
+      }
+    }
+  },
+  "SEND_MESSAGE": "Invia messaggio"
 }

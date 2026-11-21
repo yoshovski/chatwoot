@@ -1,0 +1,61 @@
+{
+  "LEADS": {
+    "SUBTITLE": "Gente que pidió a su agente de inteligencia artificial para que lo hiciera, con lo que quieren.",
+    "EXPORT": "Exportación CSV",
+    "ALL": "Todos",
+    "NO_OWNER": "No propietario",
+    "COLUMNS": {
+      "NAME": "Nombre",
+      "WANTS": "Lo que quieren",
+      "STATUS": "Situación",
+      "OWNER": "Propietario",
+      "DATE": "Fecha",
+      "HUBSPOT": "HubSpot"
+    },
+    "STATUS": {
+      "NEW": "Nuevo",
+      "CONTACTED": "Contactado",
+      "LOST": "Perdidos",
+      "WON": "Confirmado"
+    },
+    "HUBSPOT": {
+      "SYNCED": "Sincronizado",
+      "PENDING": "Enviar",
+      "FAILED": "No enviado",
+      "OFF": "Desactivado",
+      "NOT_SYNCED": "No sincronizado"
+    },
+    "LOADING": "Cargando perspectivas de ventas...",
+    "LOAD_ERROR": "Las perspectivas de venta no se pueden cargar. Inténtalo de nuevo.",
+    "SAVE_ERROR": "Tu cambio no podría ser salvado. Inténtalo de nuevo.",
+    "EXPORT_ERROR": "No se pueden exportar perspectivas de venta. Inténtalo de nuevo.",
+    "OWNERS_ERROR": "Los miembros del equipo no pueden ser cargados. Retira para cambiar de dueño.",
+    "RETRY": "Inténtalo de nuevo.",
+    "EMPTY": "Sus perspectivas de ventas capturadas aparecerán aquí.",
+    "EMPTY_HELP": "Activar la captura de perspectiva de ventas en la configuración de un agente de inteligencia artificial. Por ejemplo, ofrecer seguimiento a alguien preguntando acerca de los precios al por mayor.",
+    "EMPTY_FILTER": "Todavía no hay perspectivas de venta.",
+    "SHOW_ALL": "Mostrar todas las pistas",
+    "OPEN_AGENTS": "Agentes de IA abiertos",
+    "OWNER_FOR": "Propietario para {name}",
+    "PREVIOUS": "Anterior",
+    "NEXT": "Siguiente",
+    "PAGE": "Página {page} · {total} prospectos de ventas",
+    "CAPTURE": {
+      "NO_ACCESS": "Pregúntele a un administrador del espacio de trabajo que configure la captura de perspectiva de ventas.",
+      "LOADING": "Comprobando la configuración de la perspectiva de ventas...",
+      "ERROR": "La configuración de agentes de inteligencia artificial no se podía cargar. Inténtalo de nuevo.",
+      "CHOOSE": "Elija un agente de IA",
+      "CHOOSE_HELP": "Elija el agente cuya captura de perspectiva de ventas desea configurar.",
+      "CREATE_HELP": "Crear un agente de IA para configurar la captura de perspectiva de ventas. Volverás directamente a su configuración de captura.",
+      "ENABLED": "La captura está habilitada en la configuración de este agente. Todavía no se han capturado perspectivas de venta. Revise su gatillo, escenario y canales conectados en la configuración.",
+      "PAUSED": "Capture se detiene para este agente. Revise su configuración guardada y active la captura cuando esté listo.",
+      "UNCONFIGURED": "La captura de prospecto de ventas no ha sido configurada para este agente.",
+      "OPEN_SETUP": "Configuración de captura abierta",
+      "CREATE": "Crear agente de IA",
+      "UNAVAILABLE": "La captura de prospecto de ventas de agentes de inteligencia artificial no está disponible en su plan actual."
+    },
+    "INCOMPLETE": "No se ha registrado ningún resumen de captura",
+    "CONVERSATION": "Conversación # {id}",
+    "TITLE": "Clientes potenciales"
+  }
+}

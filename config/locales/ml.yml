@@ -420,6 +420,26 @@ ml:
       short_description: 'Sync your contacts and conversations with LeadSquared CRM.'
       description: 'Sync your contacts and conversations with LeadSquared CRM. This integration automatically creates leads in LeadSquared when new contacts are added, and logs conversation activity to provide your sales team with complete context.'
   captain:
+    contact_form:
+      handoff_prompt: 'നിങ്ങൾ ചാറ്റിൽ നിന്ന് പുറത്തുപോയാൽ ഞങ്ങളുടെ ടീമിന് നിങ്ങളെ ബന്ധപ്പെടാൻ, ദയവായി നിങ്ങളുടെ സമ്പർക്ക വിവരങ്ങൾ നൽകുക.'
+      handoff_saved: 'നന്ദി. നിങ്ങളുടെ സമ്പർക്ക വിവരങ്ങൾ സൂക്ഷിച്ചു. ഞങ്ങളുടെ ടീമിലെ ഒരാൾ ഇവിടെ നിങ്ങളെ തുടർന്നും സഹായിക്കും.'
+      submit: 'അയയ്ക്കുക'
+      invalid_field: 'ഈ ഫീൽഡ് പരിശോധിക്കുക.'
+      fields:
+        name:
+          label: 'പേര്'
+          placeholder: 'നിങ്ങളുടെ പേര് നൽകുക'
+        email:
+          label: 'ഇമെയിൽ വിലാസം'
+          placeholder: 'നിങ്ങളുടെ ഇമെയിൽ വിലാസം നൽകുക'
+        phone_number:
+          label: 'ഫോൺ നമ്പർ'
+          placeholder: '+34612345678'
+          title: 'രാജ്യ കോഡ് ഉൾപ്പെടുത്തുക, ഉദാഹരണത്തിന് +34612345678'
+    leads:
+      followup_form: 'ഏത് ഇമെയിൽ വിലാസത്തിലേക്ക് ഞങ്ങളുടെ ടീം മറുപടി അയയ്ക്കണം?'
+      followup_submit: 'ഇമെയിൽ വഴി മറുപടി അഭ്യർത്ഥിക്കുക'
+      followup_saved: 'നന്ദി, %{name}. ഇമെയിൽ വഴി മറുപടി ലഭിക്കാനുള്ള നിങ്ങളുടെ അഭ്യർത്ഥന ഞങ്ങൾക്ക് ലഭിച്ചു.'
     copilot_message_required: സന്ദേശം ആവശ്യമാണ്
     copilot_error: 'Please connect an assistant to this inbox to use Copilot'
     copilot_limit: 'You are out of Copilot credits. You can buy more credits from the billing section.'

@@ -1,0 +1,257 @@
+{
+  "ACCOUNT_SUBSCRIPTION": {
+    "TITLE": "Uso y facturación",
+    "AI_PAUSED": {
+      "TITLE": "AI pausado",
+      "LIMIT_REACHED": "Su subsidio de conversación AI para este período se utiliza. Nuevas conversaciones van a su equipo.",
+      "TRIAL_ENDED": "Su juicio ha terminado. Elija un plan para volver a poner al agente de IA en marcha.",
+      "PAYMENT_FAILED": "Su último pago falló. Actualice su método de pago para volver a activar el agente de AI.",
+      "PAUSED": "Su suscripción se detuvo. Resuélvelo para volver a activar el agente de IA.",
+      "NO_PLAN": "Su cuenta no tiene plan con conversaciones de IA. Elija un plan para activar el agente de IA.",
+      "EMAIL_UNCONFIRMED": "Confirme su dirección de correo electrónico para activar el agente de IA. Compruebe su buzón de entrada para el enlace."
+    },
+    "VIEW_USAGE": "Ver el uso",
+    "LOADING": "Cargando uso y facturación...",
+    "LOAD_ERROR": "No podemos refrescar su uso. Por favor, intente de nuevo.",
+    "RETRY": "Inténtalo de nuevo.",
+    "LIMIT_REACHED_NOTICE": "Se alcanzó el subsidio de conversación mensual.",
+    "LIMIT_NEAR_NOTICE": "Se está acercando a su subsidio de conversación mensual.",
+    "TOP_BAR": {
+      "LIMIT_REACHED": "Límite alcanzado",
+      "USAGE_PILL": "{used} / {limit} chats AI",
+      "UNLIMITED": "IA ilimitada",
+      "TRIAL_TAG": "Ensayo",
+      "MANAGE_PLAN": "Plan de gestión",
+      "VIEW_USAGE": "Detalles de uso",
+      "VIEW_BILLING": "Facturación y planes",
+      "POPOVER_LABEL": "Detalles del uso de IA y del plan"
+    },
+    "USAGE_PAGE": {
+      "TITLE": "Uso",
+      "DESCRIPTION": "Actividad diaria de los últimos 30 días. Los días están en UTC.",
+      "TOTAL": "{count} en 30 días",
+      "EMPTY": "Aún no se ha registrado nada. Los días aparecen aquí a medida que llegan las conversaciones.",
+      "AI_HELP": "Una conversación con IA es una conversación con un cliente respondida por su agente de IA dentro de 24 horas.",
+      "ALL_HELP": "Cada nueva conversación en sus buzones de entrada, respondida por el agente de IA o por su equipo."
+    },
+    "PRODUCTS": {
+      "AI_CONVERSATIONS": "Conversaciones con IA",
+      "ALL_CONVERSATIONS": "Todas las conversaciones"
+    },
+    "PLAN_FEATURES": {
+      "captain_integration": "Agente de IA",
+      "captain_integration_v2": "Escenarios y acciones",
+      "native_ai_knowledge": "Biblioteca de conocimientos",
+      "help_center": "Centro de ayuda",
+      "campaigns": "Campañas",
+      "reports": "Informes",
+      "channel_voice": "Canal de voz",
+      "calls": "Panel de control de llamadas",
+      "crm_integration": "Integración CRM",
+      "disable_branding": "Eliminar la marca",
+      "shopify_integration": "Shopify"
+    },
+    "ADD_ONS": {
+      "TITLE": "Complementos",
+      "ACTIVE": "Activo",
+      "AVAILABLE": "Pregunta a tu equipo de cuentas",
+      "PRICE": "{price} / mes"
+    }
+  },
+  "DATA_EXPORTS": {
+    "TITLE": "Exportación de datos",
+    "DESCRIPTION": "Obtén un ZIP con hojas de cálculo que puedes abrir en Excel, Google Sheets o Numbers, transcripciones de conversaciones legibles y archivos originales. Los descargas están disponibles durante 7 días.",
+    "EXCLUSIONS": "El catálogo de productos Shopify, credenciales, instrucciones del asistente y la estrategia interna están excluidos.",
+    "TYPE": "Exportar datos",
+    "CREATE": "Crear exportación",
+    "DOWNLOAD": "Descargar",
+    "ERROR": "Exportación no disponible. Por favor, inténtelo de nuevo.",
+    "TYPES": {
+      "all": "Todos los datos exportables",
+      "conversations": "Conversaciones",
+      "contacts": "Contactos",
+      "knowledge": "Bases de conocimiento"
+    },
+    "STATUS": {
+      "pending": "Pendiente",
+      "processing": "Preparación del archivo",
+      "completed": "Listo para descargar",
+      "failed": "El exportación falló. Por favor, inténtelo de nuevo.",
+      "expired": "Descarga expirada"
+    },
+    "PAGE_DESCRIPTION": "Descarga una copia de tus contactos, conversaciones y conocimientos. Elige lo que quieres incluir, sigue la preparación y descárgala cuando esté lista.",
+    "FORMAT_TITLE": "Tus datos, listos para usar",
+    "DIALOG_DESCRIPTION": "Elija lo que incluir. Prepararemos su ZIP en segundo plano; puede seguir trabajando mientras se está creando.",
+    "EMPTY": "Aún no hay exportaciones",
+    "EMPTY_DESCRIPTION": "Crea una exportación para conservar una copia de tus contactos, conversaciones o biblioteca de conocimientos.",
+    "LOADING": "Cargando exportaciones...",
+    "ACTIVE": "Una exportación ya se está preparando. Puedes crear otra cuando termine.",
+    "EXPIRES": "Disponible hasta {date}",
+    "DOWNLOAD_ERROR": "No pudimos descargar esta exportación. Actualice la lista e inténtelo de nuevo.",
+    "CONTENTS": {
+      "all": "Contactos, conversaciones con notas y archivos adjuntos privados, y tu biblioteca de conocimientos.",
+      "contacts": "Una hoja de cálculo de contactos con nombres, direcciones de correo electrónico, números de teléfono y campos personalizados.",
+      "conversations": "Hojas de cálculo de conversaciones y mensajes, transcripciones legibles, notas privadas y archivos adjuntos originales.",
+      "knowledge": "Artículos, documentos y preguntas frecuentes como hojas de cálculo, además de documentos originales y archivos de conocimientos nativos."
+    },
+    "ITEM": "{type} · {date}",
+    "FILE_SIZE": " · {size}"
+  },
+  "BILLING_PAGE": {
+    "TITLE": "Facturación",
+    "LOADING": "Cargando...",
+    "LOAD_ERROR": "No se ha podido cargar la facturación.",
+    "RETRY": "Inténtalo de nuevo.",
+    "PAYMENT_ERROR": "Eso no funcionó. No se cobró nada.",
+    "BACK_TO_BILLING": "Facturación",
+    "CUSTOM_PLAN": "Plan personalizado",
+    "FOUNDER": "Miembro fundador",
+    "PER_MONTH": "/mes",
+    "PER_YEAR": "/año",
+    "TRIAL_THEN_FREE": "El ensayo termina {date}, luego gratis",
+    "RENEWS_ON": "Renueva {date}",
+    "ENDS_ON": "Termina {date}",
+    "RESETS_ON": "Restablece {date}",
+    "TRIAL_ENDS": "El ensayo termina {date}",
+    "NO_AI": "Chat de equipo, sin agente de IA",
+    "UPDATE": "Actualización",
+    "PENDING_CHANGE": "Se mueve a {plan} en {date}",
+    "UNDO": "Deshacer",
+    "CHANGE_PLAN": "Cambiar plan",
+    "CHOOSE_PLAN": "Elige un plan",
+    "CONTACT_TO_CHANGE": "Contáctanos para cambiar",
+    "UPDATE_PAYMENT": "Actualizar tarjeta",
+    "CANCEL_PLAN": "Cancelar plan",
+    "RESUME": "Resumen",
+    "STATUS": {
+      "TRIAL": "{count} días restantes | {count} días restantes",
+      "PAST_DUE": "Vencido",
+      "PAUSED": "Pausado"
+    },
+    "AI": "Conversaciones con IA",
+    "AI_IN_TRIAL": "Conversaciones con IA en prueba",
+    "EXTRA": "+ {count} extra",
+    "BUY_PACK": "Comprar {count} · {price}",
+    "DAILY_USAGE": "Uso diario",
+    "PACE": {
+      "PROJECTED": "Alcanza {limit} alrededor de {date}",
+      "ON_EXTRA": "Usando extra · {count} a la izquierda",
+      "REACHED": "Límite alcanzado"
+    },
+    "AUTO": {
+      "TITLE": "Recarga automática",
+      "ON": "Añade conversaciones {count} para {price} cuando se agoten.",
+      "OFF": "Fuera de servicio. Al límite la IA se detiene y tu equipo toma el control.",
+      "MAX_LABEL": "Como máximo",
+      "MAX_OPTION": "{count} paquete por mes | {count} contiene un mes",
+      "SWITCHED_OFF": "Desactivado después de un pago fallido.",
+      "SAVE_ERROR": "No se pudo guardar. Inténtalo de nuevo."
+    },
+    "TOP_UP": {
+      "PAID": "Pago recibido. Conversaciones añadidas.",
+      "PROCESSING": "El pago ha comenzado. Las conversaciones aparecen una vez que se confirme.",
+      "DECLINED": "Tarjeta rechazada. Actualice su tarjeta e inténtelo de nuevo.",
+      "ERROR": "Algo salió mal. No se ha cobrado nada."
+    },
+    "ALERT": {
+      "SYNC_FAILED": "No se pudo actualizar desde Stripe. Los detalles pueden estar desactualizados.",
+      "PAST_DUE": "El pago ha fallado. Actualiza tu tarjeta con {date} para mantener la IA activa.",
+      "PAST_DUE_NO_DATE": "El pago falló. Actualiza tu tarjeta para mantener la IA activa.",
+      "LIMIT": "La IA se detuvo hasta {date}: límite alcanzado.",
+      "TRIAL_LIMIT": "IA pausada: se ha alcanzado el límite de prueba.",
+      "TRIAL_ENDED": "El ensayo terminó. La IA se pausó.",
+      "CANCELS": "Tu plan termina en {date}."
+    },
+    "CUSTOMIZATION": "Configuración y personalización",
+    "PAY_NOW": "Pagar ahora",
+    "INVOICES": {
+      "TITLE": "Facturas",
+      "ERROR": "No se pudieron cargar las facturas.",
+      "PAY": "Pagar",
+      "PDF": "Descargar PDF",
+      "ALL": "Todas las facturas"
+    },
+    "PICKER": {
+      "INTERVAL": "Período de facturación",
+      "MONTHLY": "Mensual",
+      "ANNUAL": "Anual",
+      "MONTHS_FREE": "{count} mes gratis | {count} meses gratis",
+      "SAVE": "Guarda {amount} un año",
+      "CHOOSE": "Elija",
+      "UPGRADE": "Actualización",
+      "DOWNGRADE": "Desgrabar",
+      "SWITCH_ANNUAL": "Cambiar a anual",
+      "SWITCH_MONTHLY": "Cambiar a mensual",
+      "FROM_DATE": "De {date}",
+      "CURRENT": "Actual",
+      "IN_TRIAL": "Tu prueba",
+      "CLOSE": "Cerrar",
+      "AI": "Sin agente de IA | Conversación con IA {count} durante un mes | Conversaciones con IA {count} al mes",
+      "TEAM": "Miembros del equipo {agents} · Canales {inboxes}",
+      "FOUNDER_NOTE": "Su precio de fundación solo permanece en su plan actual.",
+      "SCHEDULED": "Hecho. El cambio se aplica al final de este período.",
+      "CHANGED": "Hecho. Tu nuevo plan está activo."
+    },
+    "KEEP_PLAN": "Mantener {plan}",
+    "CANCEL_FLOW": {
+      "TITLE": "Antes de irte",
+      "DESCRIPTION": "¿Qué podríamos haber hecho mejor? Elija una razón o cancele de inmediato.",
+      "BACK": "Volver a la facturación",
+      "KEEP": "Mantén mi plan",
+      "CANCEL": "Cancelar de todos modos",
+      "REASON": "Tu razón",
+      "OFFER": "Una opción para ti",
+      "END_NOTE": "Tu plan permanece activo hasta {date}. Después de eso, la facturación se detiene y tu agente de IA deja de responder.",
+      "FEATURE_LABEL": "¿Qué característica esperabas?",
+      "FEATURE_PLACEHOLDER": "Dinos qué te ayudaría a tu equipo...",
+      "PAUSE_LABEL": "¿Cuánto tiempo te gustaría pausar?",
+      "MONTHS": "{count} mes | {count} meses",
+      "SUCCESS_TITLE": "Su cancelación está programada",
+      "SUCCESS_DESCRIPTION": "Puedes cambiar de opinión y evitar que tu plan se facture antes de {date}.",
+      "ACCEPTED_TITLE": "Gracias por darnos otra oportunidad",
+      "REASONS": {
+        "expensive": "Demasiado caro",
+        "unused": "No lo está usando",
+        "feature": "Falta una función",
+        "quality": "Las respuestas no son lo suficientemente buenas",
+        "other": "Otro"
+      },
+      "OFFERS": {
+        "expensive": {
+          "TITLE": "Un poco más de espacio en tu presupuesto",
+          "DESCRIPTION": "Mantén tu plan actual con un descuento del 0% 30% durante los próximos meses 3. Tu precio habitual se restablece después de eso. Disponible una vez por cuenta.",
+          "ACTION": "Acepta el descuento del 20% 30%"
+        },
+        "unused": {
+          "TITLE": "Tómate un descanso, mantén tu configuración",
+          "DESCRIPTION": "Pausa durante hasta 3 meses. Tu agente de IA también se pausa, y tu plan se reanuda automáticamente. Las fechas de facturación permanecen iguales; los pagos ya realizados no se reembolsan.",
+          "ACTION": "Pausa mi plan"
+        },
+        "feature": {
+          "TITLE": "Cuéntanos qué falta",
+          "DESCRIPTION": "Comparte la función que necesitas. Si un plan más pequeño te conviene mejor por ahora, puedes revisar tus opciones.",
+          "ACTION": "Muévanse a este plan"
+        },
+        "quality": {
+          "TITLE": "Vamos a ayudar a su agente de inteligencia.",
+          "DESCRIPTION": "Solicite una sesión de configuración gratuita para trabajar a través de sus conocimientos e instrucciones con nuestro equipo. Su plan permanece activo.",
+          "ACTION": "Solicitar un período de sesiones libre"
+        },
+        "other": {
+          "TITLE": "Gracias por avisarnos",
+          "DESCRIPTION": "Puede cancelar a continuación. Su plan permanece activo hasta el final del período pagado."
+        }
+      },
+      "ERROR": "No podíamos actualizar su suscripción. Por favor, inténtalo de nuevo.",
+      "UNAVAILABLE": "Esta oferta no está disponible para su suscripción actual. Todavía puede cancelar a continuación.",
+      "SMALLER_PLAN": "Elija un plan más pequeño",
+      "DISCOUNTED": "30 % de descuento se ha aplicado para 3 meses. Su precio regular se reanudará después de eso.",
+      "PAUSED": "Su plan y agente de IA se detienen. Billing se reanuda automáticamente en la fecha mostrada en Billing.",
+      "DOWNGRADED": "Su plan más pequeño comienza al final de su período de pago actual.",
+      "SETUP_REQUESTED": "Su solicitud de una sesión de configuración gratuita ha sido guardada para nuestro equipo. Su plan permanece activo.",
+      "PAUSED_UNTIL": "Plan se detuvo hasta {date}. Su agente AI también se detiene.",
+      "RESUME": "Reanude mi plan"
+    },
+    "CARD_ENDING": "{brand} •••• {last4}"
+  }
+}

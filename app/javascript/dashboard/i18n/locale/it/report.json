@@ -23,14 +23,14 @@
         "NAME": "Tempo di prima risposta",
         "DESC": "( Media )",
         "INFO_TEXT": "Numero totale di conversazioni utilizzate per il calcolo:",
-        "TOOLTIP_DESCRIPTION": "Based on {count} conversation | Based on {count} conversations",
+        "TOOLTIP_DESCRIPTION": "Sulla base di {count} conversazione | Sulla base di {count} conversazioni",
         "TOOLTIP_TEXT": "Il tempo di prima risposta è {metricValue} (basato su {conversationCount} conversazioni)"
       },
       "RESOLUTION_TIME": {
         "NAME": "Tempo di Risoluzione",
         "DESC": "( Media )",
         "INFO_TEXT": "Numero totale di conversazioni utilizzate per il calcolo:",
-        "TOOLTIP_DESCRIPTION": "Based on {count} conversation | Based on {count} conversations",
+        "TOOLTIP_DESCRIPTION": "Sulla base di {count} conversazione | Sulla base di {count} conversazioni",
         "TOOLTIP_TEXT": "Il tempo di risoluzione è {metricValue} (basato su {conversationCount} conversazioni)"
       },
       "RESOLUTION_COUNT": {
@@ -47,8 +47,8 @@
       },
       "REPLY_TIME": {
         "NAME": "Tempo di attesa del cliente",
-        "TOOLTIP_LABEL": "Waiting time",
-        "TOOLTIP_DESCRIPTION": "Based on {count} reply | Based on {count} replies",
+        "TOOLTIP_LABEL": "Tempo di attesa",
+        "TOOLTIP_DESCRIPTION": "Sulla base della risposta {count} | Sulla base di {count} risposte",
         "TOOLTIP_TEXT": "Il tempo di attesa è {metricValue} (basato su {conversationCount} risposte)",
         "DESC": ""
       }
@@ -127,22 +127,22 @@
     },
     "DRILLDOWN": {
       "TITLE": "{metric} details",
-      "RESULT_COUNT_CONVERSATION": "{count} conversation | {count} conversations",
-      "RESULT_COUNT_MESSAGE": "{count} message | {count} messages",
-      "EMPTY": "No records found for this bar.",
-      "ERROR": "Could not load records. Please try again.",
-      "ADMIN_ONLY": "Only administrators can drill down into report records.",
+      "RESULT_COUNT_CONVERSATION": "{count} conversazione | {count} conversazioni",
+      "RESULT_COUNT_MESSAGE": "{count} messaggio | {count} messaggi",
+      "EMPTY": "Nessun record trovato per questo bar.",
+      "ERROR": "Non poteva caricare i dischi. Per favore, riprovate.",
+      "ADMIN_ONLY": "Solo gli amministratori possono effettuare un'esercitazione nei registri dei report.",
       "LOAD_MORE": "Carica altro",
-      "PREVIOUS_BUCKET": "Previous bar",
-      "NEXT_BUCKET": "Next bar",
-      "UNKNOWN_CONTACT": "Unknown contact",
-      "UNKNOWN_INBOX": "Unknown inbox",
+      "PREVIOUS_BUCKET": "Precedente bar",
+      "NEXT_BUCKET": "Prossimo bar",
+      "UNKNOWN_CONTACT": "Contatto sconosciuto",
+      "UNKNOWN_INBOX": "Posta in arrivo",
       "UNASSIGNED_AGENT": "Non assegnate",
-      "NO_MESSAGE_CONTENT": "No message content",
-      "MESSAGE_CREATED_AT": "Message created at {time}",
-      "EVENT_OCCURRED_AT": "Event occurred at {time}",
-      "INCOMING_MESSAGE": "Incoming message",
-      "OUTGOING_MESSAGE": "Outgoing message"
+      "NO_MESSAGE_CONTENT": "Nessun contenuto di messaggi",
+      "MESSAGE_CREATED_AT": "Messaggio creato al {time}",
+      "EVENT_OCCURRED_AT": "Evento avvenuto al {time}",
+      "INCOMING_MESSAGE": "Messaggio in arrivo",
+      "OUTGOING_MESSAGE": "Messaggio in uscita"
     },
     "PAGINATION": {
       "RESULTS": "Mostrando da {start} a {end} di {total} risultati",
@@ -548,7 +548,7 @@
   "OVERVIEW_REPORTS": {
     "HEADER": "Panoramica",
     "LIVE": "Live",
-    "HEATMAP_ARIA_LABEL": "{metric} by day and hour",
+    "HEATMAP_ARIA_LABEL": "{metric} giorno e ora",
     "ACCOUNT_CONVERSATIONS": {
       "HEADER": "Conversazioni aperte",
       "LOADING_MESSAGE": "Caricamento metriche conversazioni...",
@@ -639,7 +639,7 @@
     "WITH": "con",
     "METRICS": {
       "HIT_RATE": {
-        "LABEL": "Hit Rate",
+        "LABEL": "Tasso di inattività",
         "TOOLTIP": "Percentuale di SLA creati completata con successo"
       },
       "NO_OF_MISSES": {

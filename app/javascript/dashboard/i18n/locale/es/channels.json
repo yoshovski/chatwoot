@@ -1,0 +1,63 @@
+{
+  "CHANNELS": {
+    "TITLE": "Canales",
+    "SUBTITLE": "Vea dónde los clientes le llegan y mantenga todas las conexiones funcionando.",
+    "ADD": "Añadir canal",
+    "SEARCH": "Buscar canales...",
+    "LOADING": "Cargando canales...",
+    "LOAD_ERROR": "No se pudieron cargar los canales. Inténtalo de nuevo.",
+    "RETRY": "Intentar de nuevo",
+    "EMPTY": "Conecta tu primer canal",
+    "EMPTY_HELP": "Añade un sitio web, correo electrónico o canal de mensajería para empezar a hablar con tus clientes.",
+    "NO_RESULTS": "No hay canales que coincidan con su búsqueda.",
+    "NO_AGENT": "Sin agente de IA",
+    "FIX": "Reparar la conexión",
+    "MANAGE": "Gestionar el canal",
+    "MANAGE_NAME": "Gestionar {name}",
+    "BACK": "Todos los canales",
+    "NOT_FOUND": "Este canal no se pudo encontrar.",
+    "SETTINGS": "Configuración del canal",
+    "DELETE": "Eliminar canal",
+    "STATUS": {
+      "CONNECTED": "Conectado",
+      "ATTENTION": "Necesita atención",
+      "SETUP": "No configurado"
+    },
+    "HEALTH": {
+      "REAUTHORIZE": "La conexión debe renovarse. Abre Conexión para volver a conectarte.",
+      "EMAIL_CONFIGURED": "Conexión de correo electrónico configurada. Envíe un mensaje de prueba para confirmar la entrega.",
+      "EMAIL_FORWARDING": "El reenviado de correos electrónicos está disponible. Confirme el reenviado con su proveedor de correo electrónico.",
+      "EMAIL_SETUP": "Configura el reenviamiento de correos electrónicos o conecta un servidor de correo entrante.",
+      "WHATSAPP_SETUP": "Termina de conectar tu cuenta WhatsApp.",
+      "CHECK_FAILED": "No se pudo comprobar la salud del proveedor. Abra la conexión para volver a intentarlo.",
+      "WHATSAPP_RESTRICTED": "El último comprobación del proveedor informó de un problema de cuenta o de calidad.",
+      "REGISTRATION": "El registro de WhatsApp está incompleto. Compruebe los detalles de la conexión.",
+      "WHATSAPP_CHECKED": "Conectado en la última comprobación del proveedor. Abre la conexión para ver los detalles actuales.",
+      "WHATSAPP_CONFIGURED": "Se han configurado las credenciales WhatsApp. Abra la conexión para comprobar el estado del proveedor.",
+      "CONFIGURED": "Canal configurado. Comprueba sus ajustes para confirmar la entrega."
+    },
+    "GROUPS": {
+      "CONNECTION": "Conexión",
+      "MESSAGES": "Miradas y mensajes",
+      "TEAM": "Equipo y horas"
+    },
+    "CUSTOMER_RATING": "Valoración del cliente",
+    "TEAM": "Los miembros del equipo",
+    "HOURS": "Horario de atención al cliente",
+    "OAUTH_EMAIL": "El correo electrónico está conectado a través de {provider}. Renueva la conexión aquí si el acceso expira.",
+    "AI_AGENT": "Agente de IA",
+    "AGENT_HELP": "Conécte al agente de IA que debe responder en este canal. Desconécte al agente actual antes de elegir otro.",
+    "LOADING_AGENTS": "Cargando agentes de IA…",
+    "AGENT_LOAD_ERROR": "No se pudieron cargar los agentes de IA. Inténtalo de nuevo.",
+    "AGENT_ERROR": "No se pudo cambiar la conexión del agente de IA. Inténtalo de nuevo.",
+    "AGENT_SAVED": "Conexión del agente de IA actualizada.",
+    "SELECT_AGENT": "Seleccione un agente de IA",
+    "CONNECT": "Conectar el agente de IA",
+    "DISCONNECT": "Desconectar al agente de IA",
+    "NO_AGENTS": "Crea un agente de IA para conectarlo a este canal.",
+    "AGENT_CHANNELS_HELP": "Las conexiones de los agentes de IA se gestionan en la pestaña Conexión de cada canal.",
+    "MANAGE_ALL": "Gestionar canales",
+    "NO_CONNECTED": "Este agente de IA no tiene canales conectados.",
+    "CHECK_CONNECTION": "Comprobar la conexión"
+  }
+}

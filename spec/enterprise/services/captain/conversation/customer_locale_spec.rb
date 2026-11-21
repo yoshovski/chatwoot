@@ -47,6 +47,20 @@ RSpec.describe Captain::Conversation::CustomerLocale, type: :service do
     expect(described_class.resolve(conversation: visitor, customer_message: '1234')).to eq('it')
   end
 
+  it 'uses a supported regional Portuguese variant and handles explicit requests beyond the first four languages' do
+    assistant = build(:captain_assistant, config: { default_reply_locale: 'en', allowed_reply_locales: %w[en de pt_BR] })
+
+    expect(described_class.resolve(assistant: assistant, customer_message: 'Please reply in German.')).to eq('de')
+    expect(described_class.resolve(assistant: assistant, customer_message: 'Please reply in Brazilian Portuguese.')).to eq('pt_BR')
+    expect(described_class.resolve(assistant: assistant, customer_message: 'Pode me ajudar com o rastreamento do meu pedido?')).to eq('pt_BR')
+  end
+
+  it 'uses the browser script for Chinese before a location fallback' do
+    conversation.additional_attributes['browser_language'] = 'zh-Hant-TW'
+
+    expect(described_class.resolve(conversation: conversation, customer_message: '123')).to eq('zh_TW')
+  end
+
   it 'keeps a late response from overwriting the language of a more recent turn' do
     conversation.reload
     described_class.record(conversation, 20, 'it')

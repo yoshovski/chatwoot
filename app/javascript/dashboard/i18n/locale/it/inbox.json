@@ -23,9 +23,9 @@
       "CONVERSATION_ASSIGNMENT": "Ti è stata assegnata una conversazione",
       "ASSIGNED_CONVERSATION_NEW_MESSAGE": "Nuovo messaggio in una conversazione assegnata",
       "PARTICIPATING_CONVERSATION_NEW_MESSAGE": "Nuovo messaggio in una conversazione a cui partecipi",
-      "SLA_MISSED_FIRST_RESPONSE": "SLA target first response missed for conversation",
-      "SLA_MISSED_NEXT_RESPONSE": "SLA target next response missed for conversation",
-      "SLA_MISSED_RESOLUTION": "SLA target resolution missed for conversation"
+      "SLA_MISSED_FIRST_RESPONSE": "SLA obiettivo prima risposta mancata per conversazione",
+      "SLA_MISSED_NEXT_RESPONSE": "SLA bersaglio risposta successiva mancata per la conversazione",
+      "SLA_MISSED_RESOLUTION": "SLA risoluzione di destinazione persa per conversazione"
     },
     "TYPES_NEXT": {
       "CONVERSATION_MENTION": "Menzioni",

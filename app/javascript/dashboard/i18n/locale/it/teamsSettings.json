@@ -119,6 +119,47 @@
         "LABEL": "Consenti l'assegnazione automatica per questo team."
       },
       "SUBMIT_CREATE": "Crea un nuovo team"
+    },
+    "PAGE": {
+      "TITLE": "Squadre",
+      "SUBTITLE": "Compagni di gruppo, ad esempio vendite e supporto, e inviare conversazioni al gruppo giusto.",
+      "NEW": "Nuova squadra",
+      "SEARCH": "Squadre di ricerca",
+      "COLUMNS": {
+        "ASSIGNMENT": "Nuove conversazioni",
+        "ACTIONS": "Azioni",
+        "NAME": "Team"
+      },
+      "AUTO_ASSIGN": "Assegnato automaticamente",
+      "MANUAL_ASSIGN": "Preso a mano",
+      "LOADING": "Squadre di carico...",
+      "LOAD_ERROR": "Le squadre non potevano essere caricate.",
+      "RETRY": "Prova ancora.",
+      "EMPTY_TITLE": "Ancora nessuna squadra",
+      "EMPTY_DESCRIPTION": "Creare un team per inviare conversazioni a un gruppo di compagni di squadra.",
+      "NO_RESULTS": "Nessuna squadra corrisponde alla tua ricerca.",
+      "EDIT": "Modifica squadra",
+      "DELETE": "Eliminare il team",
+      "COUNT": "{n} team | {n} team"
+    },
+    "WIZARD": {
+      "NEW_TITLE": "Nuova squadra",
+      "NEW_SUBTITLE": "Chiama la squadra, quindi scegli chi c'è dentro.",
+      "EDIT_TITLE": "Modifica squadra",
+      "EDIT_SUBTITLE": "Cambia i dettagli, poi chi è nella squadra.",
+      "STEPS": {
+        "DETAILS": "Dettagli",
+        "MEMBERS": "compagni di squadra",
+        "DONE": "Fatto"
+      },
+      "DETAILS_CARD": "Dettagli del team",
+      "MEMBERS_CARD": "Chi è in {teamName}",
+      "MEMBERS_HINT": "Tutti nella squadra vengono notificati quando viene assegnata una conversazione.",
+      "SELECTED_COUNT": "{selected} dei {total} compagni di squadra selezionati",
+      "SELECT_ALL": "Seleziona tutti i compagni di squadra",
+      "DONE_TITLE": "La tua squadra è pronta",
+      "DONE_MESSAGE": "Le conversazioni possono ora essere assegnate a questa squadra.",
+      "DONE_BUTTON": "Torna alle squadre"
     }
   }
 }

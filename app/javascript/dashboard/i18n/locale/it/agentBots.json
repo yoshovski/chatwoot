@@ -7,14 +7,14 @@
     "COUNT": "{n} bot | {n} bot",
     "SEARCH_PLACEHOLDER": "Cerca bot...",
     "NO_RESULTS": "Nessun bot trovato corrispondente alla tua ricerca",
-    "GLOBAL_BOT": "System bot",
+    "GLOBAL_BOT": "Sistemazione robot",
     "GLOBAL_BOT_BADGE": "System",
     "AVATAR": {
       "SUCCESS_DELETE": "Avatar del bot eliminato con successo",
       "ERROR_DELETE": "Errore nell'eliminare l'avatar del bot, riprova"
     },
     "BOT_CONFIGURATION": {
-      "TITLE": "Select an agent bot",
+      "TITLE": "Selezionare un agente bot",
       "DESC": "Assegna un agent bot alla tua inbox. Potrà gestire le nuove conversazioni e trasferirle a un operatore umano quando necessario.",
       "SUBMIT": "Aggiorna",
       "DISCONNECT": "Disconnetti bot",
@@ -64,7 +64,7 @@
       }
     },
     "SECRET": {
-      "LABEL": "Webhook Secret",
+      "LABEL": "Webhook Segreto",
       "COPY": "Copia secret negli appunti",
       "COPY_SUCCESS": "Secret copiato negli appunti",
       "TOGGLE": "Cambia visibilità secret",

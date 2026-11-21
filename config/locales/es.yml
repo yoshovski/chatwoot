@@ -280,6 +280,11 @@ es:
     no_content: 'Sin contenido'
   conversations:
     captain:
+      no_handoff: 'Nuestro equipo no puede unirse al chat ahora mismo. Puedo seguir ayudándote aquí. Si nos dejas tu correo electrónico, te escribiremos.'
+      empty_response_catalog_empty: 'No he encontrado ningún producto que coincida en el catálogo actual.'
+      empty_response_attachments: 'Envía un mensaje breve indicando qué quieres que revise.'
+      empty_response_unusable: '¿Puedes decirlo de otra forma?'
+      empty_response_handoff: 'No he podido completar la solicitud. Una persona de nuestro equipo seguirá ayudándote en este chat.'
       handoff: 'Transferring to another agent for further assistance.'
     messages:
       instagram_story_content: '%{story_sender} te mencionó en la historia: '
@@ -420,6 +425,92 @@ es:
       short_description: 'Sync your contacts and conversations with LeadSquared CRM.'
       description: 'Sync your contacts and conversations with LeadSquared CRM. This integration automatically creates leads in LeadSquared when new contacts are added, and logs conversation activity to provide your sales team with complete context.'
   captain:
+    product_card:
+      view_product: 'Ver producto'
+      recommendation: 'Aquí tienes el producto:'
+      recommendations: 'Aquí tienes los productos recomendados:'
+    order_card:
+      date_format: '%d/%m/%Y'
+      arrival_date_format: '%d/%m'
+      title: 'Pedido %{order} · %{date}'
+      item: '%{quantity}× %{name}'
+      more_items:
+        one: '+%{count} artículo más'
+        other: '+%{count} artículos más'
+      arrives: 'Llegada prevista: %{date}'
+      track_package: 'Seguir el paquete'
+      view_order: 'Ver pedido'
+    order_status:
+      cancelled: 'Cancelado'
+      payment:
+        authorized: 'Pago autorizado'
+        expired: 'Pago caducado'
+        paid: 'Pagado'
+        partially_paid: 'Pagado parcialmente'
+        partially_refunded: 'Reembolsado parcialmente'
+        pending: 'Pago pendiente'
+        refunded: 'Reembolsado'
+        voided: 'Pago anulado'
+      fulfillment:
+        fulfilled: 'Enviado'
+        in_progress: 'En preparación'
+        on_hold: 'En espera'
+        open: 'Aún sin enviar'
+        partially_fulfilled: 'Enviado parcialmente'
+        pending_fulfillment: 'En preparación'
+        request_declined: 'Aún sin enviar'
+        restocked: 'Devuelto al inventario'
+        scheduled: 'Programado'
+        unfulfilled: 'Aún sin enviar'
+      shipment:
+        attempted_delivery: 'Intento de entrega'
+        canceled: 'Envío cancelado'
+        carrier_picked_up: 'Recogido por el transportista'
+        confirmed: 'Envío confirmado'
+        delivered: 'Entregado'
+        failure: 'Entrega fallida'
+        fulfilled: 'Enviado'
+        in_transit: 'En tránsito'
+        label_printed: 'Etiqueta impresa'
+        label_purchased: 'Etiqueta creada'
+        label_voided: 'Etiqueta anulada'
+        marked_as_fulfilled: 'Enviado'
+        not_delivered: 'No entregado'
+        out_for_delivery: 'En reparto'
+        picked_up: 'Recogido'
+        ready_for_pickup: 'Listo para recoger'
+        submitted: 'Envío registrado'
+    check_in:
+      default: '¿Puedo ayudarte con algo más?'
+    contact_form:
+      handoff_prompt: 'Comparte tus datos de contacto para que nuestro equipo pueda escribirte si sales del chat.'
+      handoff_saved: 'Gracias, hemos guardado tus datos de contacto. Una persona de nuestro equipo seguirá ayudándote aquí.'
+      submit: 'Enviar'
+      invalid_field: 'Revisa este campo.'
+      fields:
+        name:
+          label: 'Nombre'
+          placeholder: 'Escribe tu nombre'
+        email:
+          label: 'Correo electrónico'
+          placeholder: 'Escribe tu correo electrónico'
+        phone_number:
+          label: 'Número de teléfono'
+          placeholder: '+34612345678'
+          title: 'Incluye el prefijo del país, por ejemplo +34612345678'
+    leads:
+      followup_form: '¿A qué correo podemos escribirte?'
+      followup_submit: 'Solicitar seguimiento por correo'
+      followup_saved: 'Gracias, %{name}. Hemos recibido tu solicitud de seguimiento por correo.'
+    reply_languages:
+      retry: '¿Puedes reformular la pregunta?'
+    action_confirmation:
+      confirm_prompt: '¿Quieres que ejecute esta acción: %{title}?'
+      success: 'Acción completada: %{title}.'
+      failure: 'No he podido completar la acción (%{title}). Nuestro equipo puede ayudarte.'
+      cancelled: 'De acuerdo, he cancelado la acción.'
+      confirm: 'Confirmar'
+      cancel: 'Cancelar'
     copilot_message_required: El mensaje es obligatorio
     copilot_error: 'Conecte un asistente a esta bandeja de entrada para utilizar Copilot'
     copilot_limit: 'Te quedaste sin créditos de Copilot. Puedes comprar más créditos desde la sección de facturación.'

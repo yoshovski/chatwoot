@@ -420,6 +420,26 @@ is:
       short_description: 'Sync your contacts and conversations with LeadSquared CRM.'
       description: 'Sync your contacts and conversations with LeadSquared CRM. This integration automatically creates leads in LeadSquared when new contacts are added, and logs conversation activity to provide your sales team with complete context.'
   captain:
+    contact_form:
+      handoff_prompt: 'Vinsamlegast gefðu upp samskiptaupplýsingar þínar svo teymið okkar geti haft samband ef þú yfirgefur spjallið.'
+      handoff_saved: 'Takk. Samskiptaupplýsingarnar þínar hafa verið vistaðar. Einhver úr teyminu heldur áfram að aðstoða þig hér.'
+      submit: 'Senda'
+      invalid_field: 'Athugaðu þennan reit.'
+      fields:
+        name:
+          label: 'Nafn'
+          placeholder: 'Sláðu inn nafnið þitt'
+        email:
+          label: 'Netfang'
+          placeholder: 'Sláðu inn netfangið þitt'
+        phone_number:
+          label: 'Símanúmer'
+          placeholder: '+34612345678'
+          title: 'Láttu landsnúmerið fylgja, til dæmis +34612345678'
+    leads:
+      followup_form: 'Á hvaða netfang á teymið okkar að senda þér svar?'
+      followup_submit: 'Óska eftir svari í tölvupósti'
+      followup_saved: 'Takk, %{name}. Við höfum fengið beiðnina um svar í tölvupósti.'
     copilot_message_required: Message is required
     copilot_error: 'Please connect an assistant to this inbox to use Copilot'
     copilot_limit: 'You are out of Copilot credits. You can buy more credits from the billing section.'

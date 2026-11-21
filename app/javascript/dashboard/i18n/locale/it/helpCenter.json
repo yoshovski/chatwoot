@@ -1,6 +1,6 @@
 {
   "HELP_CENTER": {
-    "TITLE": "Help Center",
+    "TITLE": "Centro assistenza",
     "NEW_PAGE": {
       "DESCRIPTION": "Crea portali di assistenza self-service per i tuoi clienti. Aiutali a trovare rapidamente le risposte che cercano, senza attese. Semplifica le richieste, migliora l'efficienza degli operatori e migliora l'assistenza clienti.",
       "CREATE_PORTAL_BUTTON": "Crea Portale"
@@ -45,14 +45,14 @@
         "TITLE": "Carica immagine",
         "UPLOADING": "Caricamento...",
         "SUCCESS": "Immagine caricata correttamente",
-        "UPLOAD_FAILED": "Upload failed",
-        "RATE_LIMITED": "Upload limit reached. Try again in a few minutes.",
+        "UPLOAD_FAILED": "Caricamento fallito",
+        "RATE_LIMITED": "Limite di carico raggiunto. Riprova in pochi minuti.",
         "RETRY": "Riprova",
         "REMOVE": "Rimuovi",
-        "CANCEL": "Cancel upload",
+        "CANCEL": "Annullare il caricamento",
         "ERROR_FILE_SIZE": "La dimensione dell'immagine deve essere inferiore a {size}MB",
-        "ERROR_ATTACHMENT_FILE_SIZE": "File size should be less than {size}MB",
-        "ERROR_UNSUPPORTED_TYPE": "This file type is not supported",
+        "ERROR_ATTACHMENT_FILE_SIZE": "Dimensione del file dovrebbe essere inferiore a {size} MB",
+        "ERROR_UNSUPPORTED_TYPE": "Questo tipo di file non è supportato",
         "ERROR_FILE_FORMAT": "Il formato immagine deve essere jpg, jpeg o png",
         "ERROR_FILE_DIMENSIONS": "Le dimensioni dell'immagine dovrebbero essere inferiori a 2000 x 2000"
       }
@@ -324,14 +324,14 @@
       },
       "DRAFT_LOCALE": {
         "API": {
-          "SUCCESS_MESSAGE": "Locale moved to draft successfully",
-          "ERROR_MESSAGE": "Unable to move locale to draft. Try again."
+          "SUCCESS_MESSAGE": "Locale si è trasferito a bozza con successo",
+          "ERROR_MESSAGE": "Incapace di spostare locale abbozzo. Riprova."
         }
       },
       "PUBLISH_LOCALE": {
         "API": {
-          "SUCCESS_MESSAGE": "Locale published successfully",
-          "ERROR_MESSAGE": "Unable to publish locale. Try again."
+          "SUCCESS_MESSAGE": "Locale pubblicato con successo",
+          "ERROR_MESSAGE": "Incapace di pubblicare locale. Riprova."
         }
       }
     },
@@ -430,7 +430,7 @@
         "SLUG": {
           "LABEL": "Slug",
           "PLACEHOLDER": "Slug categoria per url",
-          "HELP_TEXT": "app.chatwoot.com/hc/my-portal/en-US/categories/my-slug",
+          "HELP_TEXT": "app.chatwoot.com/hc/my-portal/en-US/categorie/my-slug",
           "ERROR": "Slug è obbligatorio"
         },
         "DESCRIPTION": {
@@ -461,7 +461,7 @@
         "SLUG": {
           "LABEL": "Slug",
           "PLACEHOLDER": "Slug categoria per url",
-          "HELP_TEXT": "app.chatwoot.com/hc/my-portal/en-US/categories/my-slug",
+          "HELP_TEXT": "app.chatwoot.com/hc/my-portal/en-US/categorie/my-slug",
           "ERROR": "Slug è obbligatorio"
         },
         "DESCRIPTION": {
@@ -501,7 +501,7 @@
       "BACK_RESULTS": "Torna ai risultati"
     },
     "UPGRADE_PAGE": {
-      "TITLE": "Help Center",
+      "TITLE": "Centro assistenza",
       "DESCRIPTION": "Crea portali self-service user-friendly. Aiuta i tuoi utenti ad accedere agli articoli e ottieni supporto 24/7. Aggiorna il tuo abbonamento per abilitare questa funzionalità.",
       "SELF_HOSTED_DESCRIPTION": "Crea portali self-service user-friendly. Aiuta i tuoi utenti ad accedere agli articoli e ottieni supporto 24/7. Contatta l'amministratore per abilitare questa funzione.",
       "BUTTON": {
@@ -544,8 +544,8 @@
             "PUBLISHED": "Pubblicato",
             "ARCHIVED": "Archiviato"
           },
-          "PENDING_EDITS": "Unpublished edits",
-          "PENDING_EDITS_TOOLTIP": "This published article has unpublished edits",
+          "PENDING_EDITS": "Edizioni inedite",
+          "PENDING_EDITS_TOOLTIP": "Questo articolo pubblicato ha modifiche inedite",
           "CATEGORY": {
             "UNCATEGORISED": "Senza categoria"
           }
@@ -595,8 +595,8 @@
           "SUBTITLE": "Gli articoli in questa categoria appariranno qui"
         },
         "SEARCH": {
-          "TITLE": "No matching articles",
-          "SUBTITLE": "We couldn't find any articles matching your search. Try a different term."
+          "TITLE": "Nessun articolo corrispondente",
+          "SUBTITLE": "Non abbiamo trovato articoli che corrispondono alla tua ricerca. Prova un termine diverso."
         }
       },
       "BULK_TRANSLATE": {
@@ -629,8 +629,8 @@
         "DELETE": "Elimina",
         "STATUS_SUCCESS": "Articoli aggiornati correttamente",
         "STATUS_ERROR": "Impossibile aggiornare gli articoli",
-        "STATUS_SKIPPED": "1 article with unpublished edits was skipped — open it to publish or discard. | {count} articles with unpublished edits were skipped — open them to publish or discard.",
-        "STATUS_SKIPPED_ALL": "These articles have unpublished edits — open each to publish or discard.",
+        "STATUS_SKIPPED": "1 articolo con modifiche inedite è stato saltato — aprirlo per pubblicare o scartare. | {count} articoli con modifiche inedite sono stati saltati — aprirli per pubblicare o scartare.",
+        "STATUS_SKIPPED_ALL": "Questi articoli hanno modifiche inedite — aprire ciascuno per pubblicare o scartare.",
         "CATEGORY_SUCCESS": "Articoli spostati correttamente",
         "CATEGORY_ERROR": "Impossibile spostare gli articoli",
         "DELETE_CONFIRM_TITLE": "Elimina articolo | Elimina {count} articoli",
@@ -644,7 +644,7 @@
       "CATEGORY_HEADER": {
         "NEW_CATEGORY": "Nuova categoria",
         "EDIT_CATEGORY": "Modifica categoria",
-        "SEARCH_PLACEHOLDER": "Search categories...",
+        "SEARCH_PLACEHOLDER": "Le categorie di ricerca...",
         "CATEGORIES_COUNT": "{n} categoria | {n} categorie",
         "BREADCRUMB": {
           "CATEGORY_LOCALE": "Categorie ({localeCode})",
@@ -656,8 +656,8 @@
         "SUBTITLE": "Le categorie appariranno qui. Puoi aggiungere una categoria cliccando sul pulsante 'Nuova Categoria'."
       },
       "SEARCH_EMPTY_STATE": {
-        "TITLE": "No matching categories",
-        "SUBTITLE": "We couldn't find any categories matching your search. Try a different term."
+        "TITLE": "Nessuna categoria di corrispondenza",
+        "SUBTITLE": "Non siamo riusciti a trovare nessuna categoria corrispondente alla tua ricerca. Prova un termine diverso."
       },
       "CATEGORY_CARD": {
         "ARTICLES_COUNT": "{count} articolo | {count} articoli"
@@ -698,7 +698,7 @@
             "LABEL": "Slug",
             "PLACEHOLDER": "Slug categoria per url",
             "ERROR": "Slug è obbligatorio",
-            "HELP_TEXT": "app.chatwoot.com/hc/{portalSlug}/{localeCode}/categories/{categorySlug}"
+            "HELP_TEXT": "app.chatwoot.com/hc/{portalSlug} / {localeCode} /categorie/{categorySlug}"
           },
           "DESCRIPTION": {
             "LABEL": "Descrizione",
@@ -716,10 +716,10 @@
     "LOCALES_PAGE": {
       "LOCALES_COUNT": "Nessuna lingua disponibile | {n} lingua | {n} lingue",
       "NEW_LOCALE_BUTTON_TEXT": "Nuova lingua",
-      "SEARCH_PLACEHOLDER": "Search locales...",
+      "SEARCH_PLACEHOLDER": "Cercare locali...",
       "SEARCH_EMPTY_STATE": {
-        "TITLE": "No matching locales",
-        "SUBTITLE": "We couldn't find any locales matching your search. Try a different term."
+        "TITLE": "Nessuna corrispondenza locale",
+        "SUBTITLE": "Non abbiamo trovato nessun locale che corrisponde alla tua ricerca. Prova un termine diverso."
       },
       "LOCALE_CARD": {
         "ARTICLES_COUNT": "{count} articolo | {count} articoli",
@@ -728,34 +728,34 @@
         "DRAFT": "Bozza",
         "DROPDOWN_MENU": {
           "MAKE_DEFAULT": "Imposta predefinito",
-          "MOVE_TO_DRAFT": "Move to draft",
-          "PUBLISH_LOCALE": "Publish locale",
+          "MOVE_TO_DRAFT": "Spostare il progetto",
+          "PUBLISH_LOCALE": "Pubblicare locale",
           "CUSTOMIZE_CONTENT": "Localizza/traduci il contenuto",
-          "SELECT_POPULAR_CONTENT": "Select recommended content",
+          "SELECT_POPULAR_CONTENT": "Seleziona il contenuto raccomandato",
           "DELETE": "Elimina"
         }
       },
       "POPULAR_CONTENT_DIALOG": {
-        "TITLE": "Recommended content",
-        "DESCRIPTION": "Pick up to 3 categories and 6 articles to feature on this locale's help center home page. Drag them into the order you want visitors to see.",
+        "TITLE": "Contenuto consigliato",
+        "DESCRIPTION": "Raccogli fino a 3 categorie e 6 articoli da inserire nella home page del centro di aiuto di questa locale. Trascinali nell'ordine che vuoi che i visitatori vedano.",
         "SEARCH": "Cerca...",
-        "EMPTY": "No matching results",
-        "ADD_ANOTHER": "Add another...",
-        "SLOTS_LEFT": "{count} slots left",
-        "OVERRIDING_DEFAULTS": "Overriding defaults for this locale",
-        "CONFIRM": "Save recommendations",
+        "EMPTY": "Nessun risultato corrispondente",
+        "ADD_ANOTHER": "Aggiungi un altro...",
+        "SLOTS_LEFT": "{count} slot sinistra",
+        "OVERRIDING_DEFAULTS": "Overriding defaults per questo locale",
+        "CONFIRM": "Salvare le raccomandazioni",
         "CATEGORIES": {
-          "LABEL": "Recommended categories",
-          "ARTICLES_COUNT": "No articles | {count} article | {count} articles"
+          "LABEL": "Categorie raccomandate",
+          "ARTICLES_COUNT": "Nessun articolo | {count} articolo | {count} articoli"
         },
         "ARTICLES": {
-          "LABEL": "Recommended articles",
+          "LABEL": "Articoli consigliati",
           "IN_CATEGORY": "in {category}",
           "UNCATEGORIZED": "Senza categoria"
         },
         "API": {
-          "SUCCESS_MESSAGE": "Recommended content updated successfully",
-          "ERROR_MESSAGE": "Unable to update recommended content. Try again."
+          "SUCCESS_MESSAGE": "Contenuto consigliato aggiornato con successo",
+          "ERROR_MESSAGE": "Non è possibile aggiornare i contenuti consigliati. Riprova."
         }
       },
       "CONTENT_DIALOG": {
@@ -802,29 +802,30 @@
         },
         "PREVIEW": "Anteprima",
         "PUBLISH": "Pubblica",
-        "PUBLISH_CHANGES": "Publish changes",
-        "PUBLISH_CHANGES_SUCCESS": "Changes published successfully",
-        "PUBLISH_CHANGES_ERROR": "Could not publish changes",
-        "SAVE_IN_PROGRESS": "Still saving your latest changes. Please try again in a moment.",
-        "UPLOAD_IN_PROGRESS": "A file upload is unfinished. Wait for it to finish or remove it first.",
-        "DISCARD_CHANGES": "Discard changes",
-        "DISCARD_CHANGES_SUCCESS": "Changes discarded",
-        "DISCARD_CHANGES_ERROR": "Could not discard changes",
-        "PENDING_CHANGES": "Pending changes",
-        "VIEW_CHANGES": "View unpublished changes",
+        "PUBLISH_CHANGES": "Pubblicare modifiche",
+        "PUBLISH_CHANGES_SUCCESS": "Modifiche pubblicate con successo",
+        "PUBLISH_CHANGES_ERROR": "Non è possibile pubblicare modifiche",
+        "SAVE_IN_PROGRESS": "Risparmia ancora le tue ultime modifiche. Si prega di riprovare in un momento.",
+        "UPLOAD_IN_PROGRESS": "Un caricamento di file non è finito. Attendere che finisca o lo rimuovi prima.",
+        "DISCARD_CHANGES": "Disattivare le modifiche",
+        "DISCARD_CHANGES_SUCCESS": "Modifiche scartate",
+        "DISCARD_CHANGES_ERROR": "Non poteva scartare i cambiamenti",
+        "PENDING_CHANGES": "Cambiamenti di pagamento",
+        "VIEW_CHANGES": "Visualizza modifiche inedite",
         "DRAFT": "Bozza",
         "ARCHIVE": "Archivia",
-        "BACK_TO_ARTICLES": "Torna agli articoli"
+        "BACK_TO_ARTICLES": "Torna agli articoli",
+        "CREATE_IN_PROGRESS": "L'articolo è ancora in fase di creazione. Aggiungere i file di nuovo in un momento."
       },
       "PENDING_CHANGES_POPOVER": {
-        "TITLE": "Unpublished changes",
-        "DESCRIPTION": "This article has draft changes that aren't live yet. Apply them before changing the status, or discard them?",
-        "APPLY": "Apply changes",
-        "DISCARD": "Discard changes"
+        "TITLE": "Modifiche inedite",
+        "DESCRIPTION": "Questo articolo ha bozze di modifiche che non sono ancora in vita. Applicare prima di cambiare lo stato, o scartare loro?",
+        "APPLY": "Applicare le modifiche",
+        "DISCARD": "Disattivare le modifiche"
       },
       "DIFF_DIALOG": {
-        "TITLE": "Unpublished changes",
-        "DESCRIPTION": "Compare your draft against the version that's currently live.",
+        "TITLE": "Modifiche inedite",
+        "DESCRIPTION": "Confronta la tua bozza contro la versione che è attualmente in diretta.",
         "TITLE_LABEL": "Titolo"
       },
       "EDIT_ARTICLE": {
@@ -865,7 +866,7 @@
       },
       "SLUG": {
         "LABEL": "Slug",
-        "PLACEHOLDER": "user-guide",
+        "PLACEHOLDER": "guida utente",
         "ERROR": "Slug è obbligatorio",
         "FORMAT_ERROR": "Inserisci uno slug valido, ad esempio: guida-utente"
       }
@@ -980,61 +981,61 @@
       },
       "INTEGRATIONS": {
         "HEADER": "Integrazioni",
-        "DESCRIPTION": "Connect tools that extend what your help center can do.",
+        "DESCRIPTION": "Collegare gli strumenti che estendono ciò che il vostro centro di aiuto può fare.",
         "LIVE_CHAT": {
-          "TITLE": "Live chat with Chatwoot",
-          "DESCRIPTION": "Show a live chat widget on your help center so visitors can reach you while they read.",
+          "TITLE": "Live chat con Chatwoot",
+          "DESCRIPTION": "Mostra un widget di chat dal vivo sul tuo centro di aiuto in modo che i visitatori possono raggiungere mentre leggono.",
           "PLACEHOLDER": "Seleziona widget live chat",
           "NONE_OPTION": "Nessun widget"
         },
         "GTM": {
           "TITLE": "Google Tag Manager",
-          "DESCRIPTION": "Add analytics and marketing tags by connecting your Tag Manager container.",
-          "PLACEHOLDER": "GTM-XXXXXXX",
-          "HELP": "Find this in your Google Tag Manager workspace. Leave empty to disable.",
-          "INVALID": "Enter a valid container ID, for example GTM-XXXXXXX."
+          "DESCRIPTION": "Aggiungi i tag di analisi e marketing collegando il tuo container Tag Manager.",
+          "PLACEHOLDER": "GTM-XXXXXXXXX",
+          "HELP": "Trova questo nel tuo spazio di lavoro Tag Manager Google. Lascia vuoto per disabilitare.",
+          "INVALID": "Immettere un documento valido del contenitore, ad esempio GTM-XXXXXXXXXX."
         },
         "GA4": {
           "TITLE": "Google Analytics 4",
-          "DESCRIPTION": "Measure traffic and visitor behavior on your help center with Google Analytics.",
+          "DESCRIPTION": "Misura il traffico e il comportamento dei visitatori sul tuo centro di assistenza con Google Analytics.",
           "PLACEHOLDER": "G-XXXXXXXXXX",
-          "HELP": "Find the measurement ID under Admin → Data streams in Google Analytics. Leave empty to disable.",
-          "INVALID": "Enter a valid measurement ID, for example G-XXXXXXXXXX."
+          "HELP": "Trova l'ID di misura sotto Admin → Flussi di dati in Google Analytics. Lascia vuoto per disabilitare.",
+          "INVALID": "Immettere un ID di misura valido, ad esempio G-XXXXXXXXXXXXXXXXX."
         },
         "HOTJAR": {
           "TITLE": "Hotjar",
-          "DESCRIPTION": "Understand how visitors use your help center with heatmaps and session recordings.",
+          "DESCRIPTION": "Capire come i visitatori utilizzano il vostro centro di assistenza con le mappe di calore e le registrazioni di sessione.",
           "PLACEHOLDER": "1234567",
-          "HELP": "Find your site ID under Sites & organizations in Hotjar. Leave empty to disable.",
-          "INVALID": "Enter a numeric Hotjar site ID."
+          "HELP": "Trova il tuo ID sito sotto Siti e organizzazioni in Hotjar. Lascia vuoto per disabilitare.",
+          "INVALID": "Inserisci un ID del sito Hotjar numerico."
         },
         "PLAUSIBLE": {
           "TITLE": "Plausible",
-          "DESCRIPTION": "Track help center traffic with privacy-friendly Plausible Analytics.",
-          "PLACEHOLDER": "example.com",
-          "HELP": "Enter the domain configured in your Plausible site settings. Leave empty to disable.",
-          "INVALID": "Enter a valid domain, for example example.com."
+          "DESCRIPTION": "Tracciare il traffico del centro con la privacy-friendly Plausible Analytics.",
+          "PLACEHOLDER": "esempio.com",
+          "HELP": "Inserisci il dominio configurato nelle impostazioni del sito Plausible. Lascia vuoto per disabilitare.",
+          "INVALID": "Inserisci un dominio valido, ad esempio.com."
         },
         "AMPLITUDE": {
           "TITLE": "Amplitude",
-          "DESCRIPTION": "Analyze visitor behavior on your help center with Amplitude.",
+          "DESCRIPTION": "Analizzare il comportamento dei visitatori sul vostro centro di aiuto con Amplitude.",
           "PLACEHOLDER": "0123456789abcdef0123456789abcdef",
-          "HELP": "Find the API key in your Amplitude project settings. Leave empty to disable.",
-          "INVALID": "Enter a valid Amplitude API key."
+          "HELP": "Trova la chiave API nelle impostazioni del tuo progetto Amplitude. Lascia vuota per disabilitare.",
+          "INVALID": "Inserisci una chiave valida Amplitude API."
         },
         "CLARITY": {
           "TITLE": "Microsoft Clarity",
-          "DESCRIPTION": "Capture heatmaps and session recordings with Microsoft Clarity.",
+          "DESCRIPTION": "Cattura le mappe di calore e le registrazioni di sessione con Microsoft Clarity.",
           "PLACEHOLDER": "abcd1234ef",
-          "HELP": "Find the project ID in your Clarity project settings. Leave empty to disable.",
-          "INVALID": "Enter a valid Clarity project ID."
+          "HELP": "Trova l'ID del progetto nelle impostazioni del tuo progetto Clarity. Lascia vuoto per disabilitare.",
+          "INVALID": "Immettere un documento valido di progetto Clarity."
         },
         "META_PIXEL": {
           "TITLE": "Meta Pixel",
-          "DESCRIPTION": "Measure ad conversions and build audiences from help center visits with Meta Pixel.",
+          "DESCRIPTION": "Misurare le conversioni ad e costruire il pubblico dalle visite di help center con Meta Pixel.",
           "PLACEHOLDER": "123456789012345",
-          "HELP": "Find the pixel ID in Meta Events Manager. Leave empty to disable.",
-          "INVALID": "Enter a numeric pixel ID."
+          "HELP": "Trova l'ID pixel in Meta Events Manager. Lascia vuoto per disabilitare.",
+          "INVALID": "Inserisci un ID pixel numerico."
         },
         "SAVE": "Salva modifiche"
       },

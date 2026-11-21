@@ -420,6 +420,26 @@ he:
       short_description: 'סנכרן את אנשי הקשר והשיחות שלך עם LeadSquared CRM.'
       description: 'סנכרן את אנשי הקשר והשיחות שלך עם LeadSquared CRM. אינטגרציה זו יוצרת אוטומטית לידים ב-LeadSquared כאשר אנשי קשר חדשים מתווספים, ומתעדת פעילות שיחות כדי לספק לצוות המכירות שלך הקשר מלא.'
   captain:
+    contact_form:
+      handoff_prompt: 'השאירו פרטי קשר כדי שהצוות שלנו יוכל ליצור איתכם קשר אם תעזבו את השיחה.'
+      handoff_saved: 'תודה. שמרנו את פרטי הקשר שלכם. אחד מחברי הצוות שלנו ימשיך לעזור לכם כאן.'
+      submit: 'שליחה'
+      invalid_field: 'יש לבדוק את השדה הזה.'
+      fields:
+        name:
+          label: 'שם'
+          placeholder: 'שם'
+        email:
+          label: 'כתובת דוא״ל'
+          placeholder: 'כתובת דוא״ל'
+        phone_number:
+          label: 'מספר טלפון'
+          placeholder: '+34612345678'
+          title: 'יש לכלול את קידומת המדינה, לדוגמה +34612345678'
+    leads:
+      followup_form: 'לאיזו כתובת דוא״ל הצוות שלנו יכול לשלוח תשובה?'
+      followup_submit: 'בקשת תשובה בדוא״ל'
+      followup_saved: 'תודה, %{name}. קיבלנו את בקשתך לקבל תשובה בדוא״ל.'
     copilot_message_required: הודעה נדרשת
     copilot_error: 'אנא חבר עוזר לתיבת דואר נכנס זו כדי להשתמש ב-Copilot'
     copilot_limit: 'נגמרו לך זיכויי Copilot. אתה יכול לקנות זיכויים נוספים מסעיף החיובים.'

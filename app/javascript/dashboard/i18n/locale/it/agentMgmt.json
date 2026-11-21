@@ -122,6 +122,28 @@
           "INPUT": "Cerca operatori"
         }
       }
+    },
+    "PAGE": {
+      "TITLE": "compagni di squadra",
+      "SUBTITLE": "Le persone che rispondono ai vostri clienti. Invitali via e-mail e scegliere il loro ruolo.",
+      "INVITE": "Invita il compagno di squadra",
+      "SEARCH": "Ricerca per nome o e-mail",
+      "COUNT": "{n} compagno di squadra | {n} compagni di squadra",
+      "COLUMNS": {
+        "NAME": "nome",
+        "STATUS": "Stato",
+        "ACTIONS": "Azioni",
+        "ROLE": "Ruolo"
+      },
+      "ACTIVE": "attivo",
+      "INVITED": "Invitato",
+      "YOU": "Sei tu.",
+      "LOADING": "Caricamento di compagni di squadra...",
+      "LOAD_ERROR": "I compagni di squadra non potevano essere caricati.",
+      "RETRY": "Prova ancora.",
+      "EMPTY_TITLE": "Nessun compagno di squadra ancora",
+      "EMPTY_DESCRIPTION": "Invita le persone che rispondono ai tuoi clienti.",
+      "NO_RESULTS": "Nessun compagno di squadra corrisponde alla tua ricerca."
     }
   }
 }

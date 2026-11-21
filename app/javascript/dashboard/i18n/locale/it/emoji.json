@@ -9,15 +9,15 @@
       "ICONS": "Icons",
       "EMOJIS": "Emojis"
     },
-    "SEARCH_EMOJI": "Search emoji…",
-    "SEARCH_ICON": "Search icons…",
-    "FREQUENTLY_USED": "Frequently used",
+    "SEARCH_EMOJI": "Cerca emoji...",
+    "SEARCH_ICON": "Icone di ricerca...",
+    "FREQUENTLY_USED": "Spesso usato",
     "NO_EMOJI": "Nessuna emoji corrisponde alla tua ricerca",
-    "NO_ICON": "No icons match your search",
+    "NO_ICON": "Nessuna icona corrisponde alla tua ricerca",
     "REMOVE": "Rimuovi",
     "STYLE": {
-      "OUTLINE": "Outline icons",
-      "FILLED": "Filled icons"
+      "OUTLINE": "Icone di Outline",
+      "FILLED": "Icone riempite"
     },
     "COLORS": {
       "SLATE": "Slate",

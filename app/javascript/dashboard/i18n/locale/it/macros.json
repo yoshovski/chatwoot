@@ -61,7 +61,7 @@
     },
     "EDITOR": {
       "START_FLOW": "Inizia Flow",
-      "END_FLOW": "End Flow",
+      "END_FLOW": "Flusso finale",
       "LOADING": "Recupero macro",
       "ADD_BTN_TOOLTIP": "Aggiungi nuova azione",
       "DELETE_BTN_TOOLTIP": "Rimuovi Azione",
@@ -83,7 +83,7 @@
       "BUTTON_TOOLTIP": "Esegui",
       "PREVIEW": "Anteprima Macro",
       "EXECUTED_SUCCESSFULLY": "Macro eseguita correttamente",
-      "EXECUTED_WITHOUT_RESOLVING": "Macro executed. The conversation was not resolved because required attributes are missing."
+      "EXECUTED_WITHOUT_RESOLVING": "Macro eseguito. La conversazione non è stata risolta perché gli attributi necessari sono mancanti."
     },
     "ERRORS": {
       "ATTRIBUTE_KEY_REQUIRED": "Chiave dell'attributo richiesta",
@@ -99,13 +99,13 @@
       "ASSIGN_AGENT": "Assegna un Operatore",
       "ADD_LABEL": "Aggiungi Etichetta",
       "REMOVE_LABEL": "Rimuovi Etichetta",
-      "REMOVE_ASSIGNED_AGENT": "Remove Assigned Agent",
+      "REMOVE_ASSIGNED_AGENT": "Rimuovi l'agente Assegnato",
       "REMOVE_ASSIGNED_TEAM": "Rimuovi Team Assegnato",
       "SEND_EMAIL_TRANSCRIPT": "Invia una Trascrizione Email",
       "MUTE_CONVERSATION": "Silenzia Conversazione",
       "SNOOZE_CONVERSATION": "Posticipa Conversazione",
       "RESOLVE_CONVERSATION": "Risolvi Conversazione",
-      "CHANGE_STATUS": "Change Status",
+      "CHANGE_STATUS": "Cambiare lo stato",
       "SEND_ATTACHMENT": "Invia Allegato",
       "SEND_MESSAGE": "Invia un Messaggio",
       "CHANGE_PRIORITY": "Cambia Priorità",

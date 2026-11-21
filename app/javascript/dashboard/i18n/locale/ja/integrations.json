@@ -1441,6 +1441,18 @@
         "TITLE": "接続された受信トレイがありません",
         "SUBTITLE": "受信トレイに接続すると、アシスタントがお客様からの最初の質問を対応し、その後あなたに引き継ぐことができます。"
       }
+    },
+    "AGENT_UX": {
+      "SECTIONS": {
+        "OVERVIEW": "概要",
+        "KNOWLEDGE": "ナレッジ",
+        "BEHAVIOR": "応答設定",
+        "HANDOFF": "引き継ぎ",
+        "CHANNELS": "チャネル",
+        "PROFILE": "プロフィール",
+        "SCENARIOS": "シナリオ",
+        "ACTIONS": "アクション"
+      }
     }
   }
 }

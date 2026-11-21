@@ -1441,6 +1441,18 @@
         "TITLE": "Ühendatud postkaste pole",
         "SUBTITLE": "Postkasti ühendamine võimaldab assistendil käsitleda klientide esialgseid küsimusi enne nende teie juurde suunamist."
       }
+    },
+    "AGENT_UX": {
+      "SECTIONS": {
+        "OVERVIEW": "Ülevaade",
+        "KNOWLEDGE": "Teadmised",
+        "BEHAVIOR": "Käitumine",
+        "HANDOFF": "Üleandmine",
+        "CHANNELS": "Kanalid",
+        "PROFILE": "Profiil",
+        "SCENARIOS": "Stsenaariumid",
+        "ACTIONS": "Toimingud"
+      }
     }
   }
 }

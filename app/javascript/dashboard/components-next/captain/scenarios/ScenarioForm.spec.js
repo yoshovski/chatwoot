@@ -1,5 +1,6 @@
 import { mount } from '@vue/test-utils';
 import { createStore } from 'vuex';
+import Select from 'dashboard/components-next/select/Select.vue';
 import ScenarioForm from './ScenarioForm.vue';
 
 const tools = [
@@ -61,6 +62,34 @@ describe('ScenarioForm', () => {
     expect(wrapper.emitted('update:instruction').at(-1)).toEqual([
       '1. Check Search knowledge.\n2. Use [@Hand off to a person](tool://handoff).',
     ]);
+  });
+
+  it('edits approved wording for one of the agent’s reply languages', async () => {
+    vi.stubGlobal('chatwootConfig', {
+      enabledLanguages: [
+        { iso_639_1_code: 'en', name: 'English' },
+        { iso_639_1_code: 'it', name: 'Italiano' },
+        { iso_639_1_code: 'es', name: 'Español' },
+      ],
+    });
+    try {
+      const wrapper = mountForm({
+        replyLocales: ['it', 'es'],
+        localizedReplyCopy: { it: 'Ciao', es: 'Hola' },
+      });
+      const languageSelect = wrapper.getComponent(Select);
+      expect(languageSelect.props('options').map(({ value }) => value)).toEqual(
+        ['it', 'es']
+      );
+      const wording = wrapper.get('details textarea');
+      expect(wording.element.value).toBe('Ciao');
+      await wording.setValue('Come possiamo aiutarti?');
+      expect(wrapper.emitted('update:localizedReplyCopy').at(-1)).toEqual([
+        { it: 'Come possiamo aiutarti?', es: 'Hola' },
+      ]);
+    } finally {
+      vi.unstubAllGlobals();
+    }
   });
 
   it('fails validation without steps', () => {

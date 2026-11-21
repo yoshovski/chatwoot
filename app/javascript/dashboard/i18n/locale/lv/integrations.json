@@ -1441,6 +1441,18 @@
         "TITLE": "Nav Pievienotu Iesūtņu",
         "SUBTITLE": "Iesūtnes pievienošana ļauj asistentam apstrādāt Jūsu klientu sākotnējos jautājumus, pirms tos pārsūtīt Jums."
       }
+    },
+    "AGENT_UX": {
+      "SECTIONS": {
+        "OVERVIEW": "Pārskats",
+        "KNOWLEDGE": "Zināšanas",
+        "BEHAVIOR": "Uzvedība",
+        "HANDOFF": "Nodošana",
+        "CHANNELS": "Kanāli",
+        "PROFILE": "Profils",
+        "SCENARIOS": "Scenāriji",
+        "ACTIONS": "Darbības"
+      }
     }
   }
 }

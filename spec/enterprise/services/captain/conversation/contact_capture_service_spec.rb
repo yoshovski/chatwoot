@@ -13,6 +13,17 @@ RSpec.describe Captain::Conversation::ContactCaptureService, type: :service do
     allow(Redis::Alfred).to receive(:set).and_return('OK')
   end
 
+  it 'ships the handoff and business follow-up form copy in every enabled language' do
+    keys = Captain::LocalizedMessages::FORM_COPY_KEYS + %w[
+      captain.leads.followup_form captain.leads.followup_submit captain.leads.followup_saved
+    ]
+    missing = I18n.available_locales.flat_map do |locale|
+      keys.reject { |key| I18n.exists?(key, locale, fallback: false) }.map { |key| "#{locale}: #{key}" }
+    end
+
+    expect(missing).to be_empty
+  end
+
   describe '.extract_email' do
     it 'extracts and normalizes a valid email from text' do
       expect(described_class.extract_email('Hello, my email is User@Example.COM please contact me')).to eq('user@example.com')
@@ -101,26 +112,24 @@ RSpec.describe Captain::Conversation::ContactCaptureService, type: :service do
   end
 
   describe '#post_form_if_needed!' do
-    it 'renders available translations and uses the posted form language on submission' do
-      localized = I18n::Backend::Simple.new
-      localized.store_translations(:it, captain: { contact_form: {
-                                     handoff_prompt: 'Dove possiamo contattarti?',
-                                     handoff_saved: 'I tuoi recapiti sono stati salvati.',
-                                     submit: 'Invia',
-                                     fields: { email: { label: 'Indirizzo email', placeholder: 'Inserisci la tua email' } }
-                                   } })
-      allow(I18n.config).to receive(:backend).and_return(I18n::Backend::Chain.new(localized, I18n.backend))
-      triggering_message = build(:message, message_type: :incoming, content: 'Potete aiutarmi con la spedizione del mio ordine?')
-      form = service.post_form_if_needed!(triggering_message: triggering_message)
+    {
+      it: ['Potete aiutarmi con la spedizione del mio ordine?', 'Invia', 'Indirizzo email', 'Grazie, abbiamo salvato i tuoi recapiti.'],
+      es: ['¿Puedes ayudarme con la entrega de mi pedido?', 'Enviar', 'Correo electrónico', 'Gracias, hemos guardado tus datos de contacto.']
+    }.each do |locale, (text, submit, email_label, acknowledgement)|
+      it "uses the #{locale} catalog for handoff and acknowledges in the posted form language" do
+        triggering_message = build(:message, message_type: :incoming, content: text)
+        form = service.post_form_if_needed!(triggering_message: triggering_message)
 
-      expect(form.content).to eq('Dove possiamo contattarti?')
-      expect(form.content_attributes).to include('contact_form_locale' => 'it', 'button_label' => 'Invia')
-      expect(form.items.last).to include('name' => 'email', 'label' => 'Indirizzo email', 'placeholder' => 'Inserisci la tua email')
+        expect(form.content).to eq(I18n.t('captain.contact_form.handoff_prompt', locale: locale))
+        expect(form.content_attributes).to include('contact_form_locale' => locale.to_s, 'button_label' => submit)
+        expect(form.items.last).to include('name' => 'email', 'label' => email_label)
+        expect(form.items.last['pattern_error']).to eq(I18n.t('captain.contact_form.invalid_field', locale: locale))
 
-      form.update!(submitted_values: [{ 'name' => 'email', 'value' => 'ada@example.com' }])
-      I18n.with_locale(:en) { service.handle_form_submission!(form) }
+        form.update!(submitted_values: [{ 'name' => 'email', 'value' => 'ada@example.com' }])
+        I18n.with_locale(:en) { service.handle_form_submission!(form) }
 
-      expect(conversation.messages.outgoing.last.content).to eq('I tuoi recapiti sono stati salvati.')
+        expect(conversation.messages.outgoing.last.content).to start_with(acknowledgement)
+      end
     end
 
     context 'with configured contact fields' do

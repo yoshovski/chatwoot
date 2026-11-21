@@ -29,41 +29,41 @@
           "ERROR": "Evento richiesto"
         },
         "RUN_TYPE": {
-          "LABEL": "When should this rule run?",
+          "LABEL": "Quando dovrebbe funzionare questa regola?",
           "OPTIONS": {
             "INSTANT": {
-              "LABEL": "Run instantly",
-              "DESCRIPTION": "Runs the moment an event happens, as long as the conditions match."
+              "LABEL": "Correre istantaneamente",
+              "DESCRIPTION": "Esegue il momento in cui un evento accade, fino a quando le condizioni si abbinano."
             },
             "WAIT": {
-              "LABEL": "Run after a wait",
-              "DESCRIPTION": "Waits for a set time and runs only if things are still the same. If they change, the rule is skipped."
+              "LABEL": "Correre dopo un'attesa",
+              "DESCRIPTION": "Attende un tempo impostato e corre solo se le cose sono ancora le stesse. Se cambiano, la regola viene ignorata."
             }
           }
         },
         "WAIT": {
-          "LABEL": "Wait condition",
+          "LABEL": "Stato di attesa",
           "WHEN_LABEL": "When",
-          "STATUS_LABEL": "Status is",
+          "STATUS_LABEL": "Lo stato è",
           "FOR_LABEL": "For",
           "INBOX_LABEL": "Inbox",
-          "ERROR": "The wait must be between 10 minutes and 30 days",
+          "ERROR": "L'attesa deve essere compresa tra 10 minuti e 30 giorni",
           "OPTIONS": {
-            "CONVERSATION_STATUS": "Conversation stays in a status",
-            "CUSTOMER_UNRESPONSIVE": "Customer hasn't replied",
-            "AGENT_UNRESPONSIVE": "No teammate has replied"
+            "CONVERSATION_STATUS": "La conversazione rimane in uno stato",
+            "CUSTOMER_UNRESPONSIVE": "Il cliente non ha risposto",
+            "AGENT_UNRESPONSIVE": "Nessun compagno di squadra ha risposto"
           },
           "DURATION": {
-            "MINUTES": "{count} minute | {count} minutes",
-            "HOURS": "{count} hour | {count} hours",
-            "DAYS": "{count} day | {count} days"
+            "MINUTES": "{count} minuto | {count} minuti",
+            "HOURS": "{count} ora | {count} ore",
+            "DAYS": "{count} giorno | {count} giorni"
           },
           "EXPLANATION": {
-            "CONVERSATION_STATUS": "The clock starts when a conversation moves into this status. If it is still there {duration} later, the actions below run. If the status changes before then, nothing happens.",
-            "CUSTOMER_UNRESPONSIVE": "The clock starts when a teammate replies. If the customer hasn't written back {duration} later, the actions below run. If they do reply, nothing happens, and the next teammate reply starts the clock again.",
-            "AGENT_UNRESPONSIVE": "The clock starts when a customer sends a message. If no teammate has replied {duration} later, the actions below run. If someone replies before then, nothing happens."
+            "CONVERSATION_STATUS": "L'orologio inizia quando una conversazione si sposta in questo stato. Se è ancora lì {duration} più tardi, le azioni seguenti eseguire. Se lo stato cambia prima di allora, nulla accade.",
+            "CUSTOMER_UNRESPONSIVE": "L'orologio inizia quando un compagno di squadra risponde. Se il cliente non ha scritto indietro {duration} più tardi, le azioni sottostanti eseguire. Se rispondono, non succede nulla, e la prossima risposta del compagno di squadra ricomincia l'orologio.",
+            "AGENT_UNRESPONSIVE": "L'orologio inizia quando un cliente invia un messaggio. Se nessun compagno di squadra ha risposto {duration} più tardi, le azioni seguenti eseguire. Se qualcuno risponde prima di allora, nulla accade."
           },
-          "FOOTNOTE": "Only new activity starts a clock. Conversations already sitting in this state are picked up the next time something happens on them."
+          "FOOTNOTE": "Solo una nuova attività inizia un orologio. Conversazioni già seduti in questo stato sono raccolti la prossima volta che qualcosa accade su di loro."
         },
         "CONDITIONS": {
           "LABEL": "Condizioni"
@@ -87,13 +87,13 @@
         "ACTIONS": "Azioni"
       },
       "404": "Nessuna regola di automazione trovata",
-      "404_DELAYED": "No rules run after a wait yet",
+      "404_DELAYED": "Nessuna regola viene eseguita dopo un'attesa ancora",
       "TABS": {
-        "INSTANT": "Runs instantly",
-        "DELAYED": "Runs after a wait"
+        "INSTANT": "Corre istantaneamente",
+        "DELAYED": "Corre dopo un'attesa"
       },
-      "DELAY_BADGE": "Runs after {delay}",
-      "DELAY_DISABLED_BANNER": "Delayed execution is turned off for this account, so the rules below that run after a wait are paused until it is turned back on."
+      "DELAY_BADGE": "Corre dopo {delay}",
+      "DELAY_DISABLED_BANNER": "L'esecuzione differita è disattivata per questo account, quindi le regole qui sotto che funzionano dopo un'attesa sono interrotte fino a quando non è riacceso."
     },
     "DELETE": {
       "TITLE": "Elimina Regola Di Automazione",
@@ -144,7 +144,7 @@
       "TEAM_DROPDOWN_PLACEHOLDER": "Seleziona i team",
       "EMAIL_INPUT_PLACEHOLDER": "Inserisci email",
       "URL_INPUT_PLACEHOLDER": "Inserisci URL",
-      "INSERT_CONTACT_EMAIL": "Use contact's email"
+      "INSERT_CONTACT_EMAIL": "Utilizzare l'e-mail del contatto"
     },
     "TOGGLE": {
       "ACTIVATION_TITLE": "Attiva Regola di Automazione",
@@ -186,7 +186,7 @@
     "ACTIONS": {
       "ASSIGN_AGENT": "Assegna a un Operatore",
       "ASSIGN_TEAM": "Assegna a un Team",
-      "REMOVE_ASSIGNED_AGENT": "Remove Assigned Agent",
+      "REMOVE_ASSIGNED_AGENT": "Rimuovi l'agente Assegnato",
       "REMOVE_ASSIGNED_TEAM": "Rimuovi Team Assegnato",
       "ADD_LABEL": "Aggiungi Etichetta",
       "REMOVE_LABEL": "Rimuovi Etichetta",
@@ -218,7 +218,7 @@
     "ATTRIBUTES": {
       "MESSAGE_TYPE": "Tipo di Messaggio",
       "PRIVATE_NOTE": "Nota Privata",
-      "MESSAGE_CONTAINS": "Message Content",
+      "MESSAGE_CONTAINS": "Contenuto del messaggio",
       "EMAIL": "Email",
       "INBOX": "Inbox",
       "CONVERSATION_LANGUAGE": "Lingua Conversazione",

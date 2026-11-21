@@ -384,7 +384,7 @@ class Captain::Conversation::ResponseBuilderJob < ApplicationJob # rubocop:disab
     # serves as the initial outreach, and OOO would be confusing in that context.
     return if @conversation.campaign.present?
 
-    ::MessageTemplates::Template::OutOfOffice.perform_if_applicable(@conversation)
+    ::MessageTemplates::Template::OutOfOffice.perform_if_applicable(@conversation, locale: reply_locale)
   end
 
   def create_handoff_message(preserve_waiting_since: false)

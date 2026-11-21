@@ -596,7 +596,13 @@ en:
       docs:
         label: 'Documents'
         description: 'Websites, files and pages the AI agent "%{agent}" of %{account} learns from (Chatwoot account %{account_id}, AI agent %{agent_id}). Managed by Chatwoot: add or edit sources there; changes made here are overwritten.'
+    product_card:
+      view_product: 'View product'
+      recommendation: 'Here is the product:'
+      recommendations: 'Here are the recommended products:'
     order_card:
+      date_format: '%b %-d, %Y'
+      arrival_date_format: '%b %-d'
       title: 'Order %{order} · %{date}'
       item: '%{quantity}× %{name}'
       more_items:

@@ -1,6 +1,6 @@
 {
   "SLA": {
-    "HEADER": "Service Level Agreements",
+    "HEADER": "Accordi di livello di servizio",
     "ADD_ACTION": "Aggiungi SLA",
     "ADD_ACTION_LONG": "Crea una nuova policy SLA",
     "DESCRIPTION": "I Service Level Agreement (SLA) sono contratti che definiscono chiare aspettative tra il team e i clienti. Stabiliscono norme per i tempi di risposta e di risoluzione, creando un quadro per la responsabilità e garantendo un'esperienza coerente e di alta qualità.",
@@ -52,7 +52,7 @@
       "NAME": {
         "LABEL": "Nome SLA",
         "PLACEHOLDER": "Nome SLA",
-        "REQUIRED_ERROR": "SLA name is required",
+        "REQUIRED_ERROR": "SLA nome è richiesto",
         "MINIMUM_LENGTH_ERROR": "È richiesta una lunghezza minima di 2",
         "VALID_ERROR": "Sono ammessi solo lettere, numeri, trattino e underscore"
       },

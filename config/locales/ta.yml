@@ -420,6 +420,26 @@ ta:
       short_description: 'Sync your contacts and conversations with LeadSquared CRM.'
       description: 'Sync your contacts and conversations with LeadSquared CRM. This integration automatically creates leads in LeadSquared when new contacts are added, and logs conversation activity to provide your sales team with complete context.'
   captain:
+    contact_form:
+      handoff_prompt: 'நீங்கள் அரட்டையிலிருந்து வெளியேறினால் எங்கள் குழு உங்களைத் தொடர்புகொள்ள, உங்கள் தொடர்பு விவரங்களைப் பகிரவும்.'
+      handoff_saved: 'நன்றி. உங்கள் தொடர்பு விவரங்கள் சேமிக்கப்பட்டன. எங்கள் குழுவில் ஒருவர் இங்கே தொடர்ந்து உங்களுக்கு உதவுவார்.'
+      submit: 'அனுப்பு'
+      invalid_field: 'இந்தப் புலத்தைச் சரிபார்க்கவும்.'
+      fields:
+        name:
+          label: 'பெயர்'
+          placeholder: 'உங்கள் பெயரை உள்ளிடவும்'
+        email:
+          label: 'மின்னஞ்சல் முகவரி'
+          placeholder: 'உங்கள் மின்னஞ்சல் முகவரியை உள்ளிடவும்'
+        phone_number:
+          label: 'தொலைபேசி எண்'
+          placeholder: '+34612345678'
+          title: 'நாட்டுக் குறியீட்டையும் சேர்க்கவும், எடுத்துக்காட்டாக +34612345678'
+    leads:
+      followup_form: 'எங்கள் குழு எந்த மின்னஞ்சல் முகவரிக்கு பதில் அனுப்ப வேண்டும்?'
+      followup_submit: 'மின்னஞ்சல் மூலம் பதில் கோரவும்'
+      followup_saved: 'நன்றி, %{name}. மின்னஞ்சல் பதிலுக்கான உங்கள் கோரிக்கை எங்களுக்குக் கிடைத்தது.'
     copilot_message_required: Message is required
     copilot_error: 'Please connect an assistant to this inbox to use Copilot'
     copilot_limit: 'You are out of Copilot credits. You can buy more credits from the billing section.'

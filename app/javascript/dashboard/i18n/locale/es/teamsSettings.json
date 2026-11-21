@@ -5,9 +5,9 @@
     "LOADING": "Obteniendo equipos",
     "DESCRIPTION": "Los equipos te permiten organizar a los agentes en grupos basados en sus responsabilidades. Un agente puede pertenecer a varios equipos. Cuando trabajas en colaboración, puedes asignar conversaciones a equipos específicos.",
     "LEARN_MORE": "Aprende más sobre los equipos",
-    "COUNT": "{n} team | {n} teams",
+    "COUNT": "Equipo {n} | Equipos {n}",
     "SEARCH_PLACEHOLDER": "Buscar equipos...",
-    "NO_RESULTS": "No teams found matching your search",
+    "NO_RESULTS": "No se encontraron equipos que coincidan con su búsqueda",
     "LIST": {
       "404": "No hay equipos creados en ésta cuenta.",
       "EDIT_TEAM": "Editar equipo",
@@ -119,6 +119,47 @@
         "LABEL": "Permitir auto asignar para este equipo."
       },
       "SUBMIT_CREATE": "Crear equipo"
+    },
+    "PAGE": {
+      "TITLE": "Equipos",
+      "SUBTITLE": "Compañeros de grupo, por ejemplo Ventas y Apoyo, y enviar conversaciones al grupo adecuado.",
+      "NEW": "Nuevo equipo",
+      "SEARCH": "Equipos de búsqueda",
+      "COUNT": "Equipo {n} | Equipos {n}",
+      "COLUMNS": {
+        "NAME": "Equipo",
+        "ASSIGNMENT": "Nuevas conversaciones",
+        "ACTIONS": "Acciones"
+      },
+      "AUTO_ASSIGN": "Asignado automáticamente",
+      "MANUAL_ASSIGN": "Recogido a mano",
+      "LOADING": "Equipos de carga...",
+      "LOAD_ERROR": "Los equipos no podían ser cargados.",
+      "RETRY": "Inténtalo de nuevo.",
+      "EMPTY_TITLE": "Aún no hay equipos.",
+      "EMPTY_DESCRIPTION": "Cree un equipo para enviar conversaciones a un grupo de compañeros de equipo.",
+      "NO_RESULTS": "Ningún equipo coincide con tu búsqueda.",
+      "EDIT": "Equipo de edición",
+      "DELETE": "Eliminar el equipo"
+    },
+    "WIZARD": {
+      "NEW_TITLE": "Nuevo equipo",
+      "NEW_SUBTITLE": "Nombra al equipo, entonces elige quién está en él.",
+      "EDIT_TITLE": "Equipo de edición",
+      "EDIT_SUBTITLE": "Cambia los detalles, entonces quién está en el equipo.",
+      "STEPS": {
+        "DETAILS": "Detalles",
+        "MEMBERS": "Compañeros de equipo",
+        "DONE": "Hecho"
+      },
+      "DETAILS_CARD": "Detalles del equipo",
+      "MEMBERS_CARD": "¿Quién es en {teamName}",
+      "MEMBERS_HINT": "Todos en el equipo son notificados cuando se le asigna una conversación.",
+      "SELECTED_COUNT": "{selected} de {total} compañeros seleccionados",
+      "SELECT_ALL": "Seleccione a todos los compañeros de equipo",
+      "DONE_TITLE": "Tu equipo está listo.",
+      "DONE_MESSAGE": "Ahora se pueden asignar conversaciones a este equipo.",
+      "DONE_BUTTON": "Volver a los equipos"
     }
   }
 }

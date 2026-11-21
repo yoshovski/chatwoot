@@ -87,20 +87,20 @@
         "MFA_BUTTON": "Gestisci Autenticazione A Due Fattori"
       },
       "SESSIONS_SECTION": {
-        "TITLE": "Active Sessions",
-        "NOTE": "These are the devices currently logged in to your account.",
-        "CURRENT": "Current session",
+        "TITLE": "Sessioni attive",
+        "NOTE": "Questi sono i dispositivi attualmente connessi al tuo account.",
+        "CURRENT": "Sessione attuale",
         "REVOKE": "Revoke",
-        "REVOKE_SUCCESS": "Session revoked successfully",
-        "REVOKE_ERROR": "Unable to revoke session. Please try again.",
-        "FETCH_ERROR": "Unable to fetch sessions. Please try again.",
-        "LAST_ACTIVE": "Last active",
-        "UNKNOWN_DEVICE": "Unknown device"
+        "REVOKE_SUCCESS": "Sessione revocata con successo",
+        "REVOKE_ERROR": "Non è possibile revocare la sessione. Si prega di riprovare.",
+        "FETCH_ERROR": "Incapace di prendere le sessioni. Per favore, riprovate.",
+        "LAST_ACTIVE": "Ultimo attivo",
+        "UNKNOWN_DEVICE": "Dispositivo sconosciuto"
       },
       "ACCESS_TOKEN": {
         "TITLE": "Token di accesso",
         "NOTE": "Questo token può essere usato se stai costruendo un'integrazione basata su API",
-        "PAID_PLAN_NOTE": "API access tokens are available on paid plans.",
+        "PAID_PLAN_NOTE": "API access tokens sono disponibili su piani a pagamento.",
         "COPY": "Copia",
         "RESET": "Reset",
         "CONFIRM_RESET": "Sei sicuro?",
@@ -247,7 +247,7 @@
     "CONTACT_SUPPORT": "Contatta il supporto",
     "SELECTOR_SUBTITLE": "Seleziona un account dall'elenco",
     "PROFILE_SETTINGS": "Impostazioni profilo",
-    "YEAR_IN_REVIEW": "Year in Review",
+    "YEAR_IN_REVIEW": "Anno in recensione",
     "KEYBOARD_SHORTCUTS": "Scorciatoie da tastiera",
     "APPEARANCE": "Personalizza aspetto",
     "SUPER_ADMIN_CONSOLE": "Console SuperAdmin",
@@ -265,7 +265,7 @@
     "ACCOUNT_SUSPENDED": {
       "TITLE": "Account Sospeso",
       "MESSAGE": "Il tuo account è sospeso. Contatta il team di supporto per ulteriori informazioni.",
-      "MANAGE_BILLING": "Manage billing"
+      "MANAGE_BILLING": "Gestione della fatturazione"
     },
     "NO_ACCOUNTS": {
       "TITLE": "Nessun account trovato",
@@ -278,7 +278,8 @@
     "CODE": {
       "BUTTON_TEXT": "Copia",
       "CODEPEN": "Apri in CodePen",
-      "COPY_SUCCESSFUL": "Copiato negli appunti"
+      "COPY_SUCCESSFUL": "Copiato negli appunti",
+      "COPY_ERROR": "Non è possibile copiare a clipboard. Si prega di riprovare."
     },
     "SHOW_MORE_BLOCK": {
       "SHOW_MORE": "Mostra di più",
@@ -363,7 +364,7 @@
     "NEW_INBOX": "Nuova Inbox",
     "REPORTS_CONVERSATION": "Conversazioni",
     "CSAT": "CSAT",
-    "LIVE_CHAT": "Live Chat",
+    "LIVE_CHAT": "Chat in diretta",
     "SMS": "SMS",
     "WHATSAPP": "WhatsApp",
     "CAMPAIGNS": "Campagne",
@@ -384,7 +385,7 @@
     "REPORTS_OVERVIEW": "Panoramica",
     "REAUTHORIZE": "La tua connessione alla Inbox è scaduta, ricollegati per continuare a ricevere e inviare messaggi",
     "HELP_CENTER": {
-      "TITLE": "Help Center",
+      "TITLE": "Centro assistenza",
       "ARTICLES": "Articoli",
       "CATEGORIES": "Categorie",
       "LOCALES": "Lingue",
@@ -399,31 +400,39 @@
     "SORT_TOOLTIP": "Ordina",
     "SORT_BY": "Ordina per",
     "SORT_GROUPS": {
-      "CREATED": "Sort by date of creation",
-      "ALPHABETICAL": "Sort in alphabetical order",
-      "UNREAD_COUNT": "Sort by unread count"
+      "CREATED": "Ordina per data di creazione",
+      "ALPHABETICAL": "Ordina in ordine alfabetico",
+      "UNREAD_COUNT": "Ordina per conteggio non letto"
     },
     "SORT_OPTIONS": {
-      "CREATED_DESC": "Newest first",
-      "CREATED_ASC": "Oldest first",
+      "CREATED_DESC": "Nuovo primo",
+      "CREATED_ASC": "Il primo vecchio",
       "ALPHABETICAL_ASC": "Ascending (A - Z)",
       "ALPHABETICAL_DESC": "Descending (Z - A)",
-      "UNREAD_COUNT_DESC": "Highest first",
-      "UNREAD_COUNT_ASC": "Lowest first"
+      "UNREAD_COUNT_DESC": "Primo",
+      "UNREAD_COUNT_ASC": "Il primo più basso"
     },
     "DOCS": "Leggi i documenti",
     "SECURITY": "Sicurezza",
     "CAPTAIN_AI": "Captain",
-    "CONVERSATION_WORKFLOW": "Workflow Conversazione"
+    "CONVERSATION_WORKFLOW": "Workflow Conversazione",
+    "MY_OPEN": "La mia apertura",
+    "UNASSIGNED": "Non firmata",
+    "SOLVED": "Sollevato",
+    "BOT_CONVERSATIONS": "Agente IA",
+    "ANALYTICS": "Analisi",
+    "CAPTAIN_KNOWLEDGE": "conoscenza",
+    "KNOWLEDGE": "conoscenza",
+    "LEADS": "Lead"
   },
   "DATA_IMPORTS": {
     "HEADER": "Data",
-    "DESCRIPTION": "Bring your existing contacts and past conversations into this account from another support tool. Each import runs in the background, so you can keep working while it finishes, track its progress, and review anything that was skipped along the way.",
-    "LOADING": "Fetching imports",
-    "DEFAULT_IMPORT_NAME": "Intercom import",
+    "DESCRIPTION": "Porta i contatti esistenti e le conversazioni passate in questo account da un altro strumento di supporto. Ogni importazione funziona in background, in modo da poter continuare a lavorare mentre finisce, monitorare i suoi progressi e rivedere tutto ciò che è stato saltato lungo la strada.",
+    "LOADING": "Importazione delle importazioni",
+    "DEFAULT_IMPORT_NAME": "Importazione Intercom",
     "DEFAULT_IMPORT_NAMES": {
-      "INTERCOM": "Intercom import",
-      "FRESHDESK": "Freshdesk import"
+      "INTERCOM": "Importazione Intercom",
+      "FRESHDESK": "Importazione di prodotti freschi"
     },
     "TABS": {
       "IMPORT": "Importa",
@@ -435,40 +444,40 @@
       "MESSAGES": "Messaggi"
     },
     "DRAWER": {
-      "TITLE": "New import",
+      "TITLE": "Nuova importazione",
       "SOURCE": "Source",
-      "NAME": "Import name",
-      "NAME_PLACEHOLDER": "July support migration",
-      "ACCESS_KEY": "Intercom access key",
-      "ACCESS_KEY_PLACEHOLDER": "Paste your Intercom access key",
-      "INTERCOM_ACCESS_KEY": "Intercom access key",
-      "INTERCOM_ACCESS_KEY_PLACEHOLDER": "Paste your Intercom access key",
-      "FRESHDESK_API_KEY": "Freshdesk API key",
-      "FRESHDESK_API_KEY_PLACEHOLDER": "Paste your Freshdesk API key",
-      "FRESHDESK_DOMAIN": "Freshdesk domain",
+      "NAME": "Nome dell'importazione",
+      "NAME_PLACEHOLDER": "Luglio supporto migrazione",
+      "ACCESS_KEY": "Chiave di accesso all'interfono",
+      "ACCESS_KEY_PLACEHOLDER": "Incollare la chiave di accesso Intercom",
+      "INTERCOM_ACCESS_KEY": "Chiave di accesso all'interfono",
+      "INTERCOM_ACCESS_KEY_PLACEHOLDER": "Incollare la chiave di accesso Intercom",
+      "FRESHDESK_API_KEY": "Tasto di ricambio API",
+      "FRESHDESK_API_KEY_PLACEHOLDER": "Incolla la tua chiave Freshdesk API",
+      "FRESHDESK_DOMAIN": "dominio di Freshdesk",
       "FRESHDESK_DOMAIN_PLACEHOLDER": "acme.freshdesk.com",
-      "DATA_TYPES": "Data to import",
-      "VALIDATING": "Validating access key...",
-      "VALID_KEY": "Access key validated.",
-      "INVALID_KEY": "Could not validate this access key.",
-      "ACTIVE_IMPORT": "Wait for the active import to finish before starting another one.",
+      "DATA_TYPES": "Dati da importare",
+      "VALIDATING": "Convalida chiave di accesso...",
+      "VALID_KEY": "Chiave di accesso validata.",
+      "INVALID_KEY": "Non è possibile convalidare questa chiave di accesso.",
+      "ACTIVE_IMPORT": "Attendere che l'importazione attiva finisca prima di iniziare un altro.",
       "CANCEL": "Annulla",
       "IMPORT": "Importa"
     },
     "EXPORT": {
-      "TITLE": "Exports are on the way",
-      "DESCRIPTION": "Export your contacts and conversations out of this account. This workflow is coming soon.",
+      "TITLE": "Le esportazioni stanno arrivando",
+      "DESCRIPTION": "Esporta i contatti e le conversazioni da questo account. Questo flusso di lavoro sta arrivando presto.",
       "COMING_SOON": "In arrivo"
     },
     "TABLE": {
-      "TITLE": "Recent imports",
-      "EMPTY": "No imports yet",
-      "EMPTY_DESCRIPTION": "Start an import to bring your existing customer history into this account.",
+      "TITLE": "Importazioni recenti",
+      "EMPTY": "Non importa ancora",
+      "EMPTY_DESCRIPTION": "Inizia un'importazione per portare la tua cronologia dei clienti esistente in questo account.",
       "NEW_IMPORT": "Importa",
       "COUNT": "{count} imports",
-      "UNNAMED": "Untitled import",
+      "UNNAMED": "Importazione senza titolo",
       "IMPORTED_COUNT": "{count} imported",
-      "VIEW": "View import",
+      "VIEW": "Visualizza l'importazione",
       "NAME": "Nome",
       "TYPE": "Tipo",
       "STATUS": "Stato",
@@ -478,53 +487,53 @@
       "ABANDON": "Abandon"
     },
     "DETAIL": {
-      "BACK": "Back to imports",
+      "BACK": "Ritorno alle importazioni",
       "ERRORS": "Errors",
-      "SKIP_LOGS": "Skip logs",
+      "SKIP_LOGS": "Salta i logs",
       "SOURCE": "Source",
-      "IMPORT_TYPES": "Import types",
+      "IMPORT_TYPES": "Tipi di importazione",
       "CREATED": "Creato il",
       "DURATION": "Durata",
-      "INITIATED_BY": "Started by",
-      "PROGRESS": "Import progress",
-      "PROGRESS_WITH_TOTAL": "{imported} of {total} imported",
+      "INITIATED_BY": "Iniziato da",
+      "PROGRESS": "Progressi dell'importazione",
+      "PROGRESS_WITH_TOTAL": "{imported}, importazioni {total}",
       "PROGRESS_WITHOUT_TOTAL": "{imported} imported",
-      "PROGRESS_OF_TOTAL": "of {total} imported",
+      "PROGRESS_OF_TOTAL": "di {total} importato",
       "PROGRESS_IMPORTED": "imported",
       "LAST_UPDATED_TOOLTIP": "Ultimo aggiornamento {time}",
-      "NO_SKIP_LOGS": "No skipped or failed records recorded.",
+      "NO_SKIP_LOGS": "Nessun record saltato o fallito registrato.",
       "DOWNLOAD_SKIP_LOGS": "Download CSV",
       "DOWNLOAD_ERROR_LOGS": "Download CSV",
       "ALL_SKIP_LOGS": "Tutte",
       "KIND": "Kind",
-      "NO_ERRORS": "No errors recorded.",
+      "NO_ERRORS": "Nessun errore registrato.",
       "ERROR_CODE": "Code",
-      "SOURCE_OBJECT": "Source object",
+      "SOURCE_OBJECT": "Oggetto sorgente",
       "MESSAGE": "Messaggio"
     },
     "MONITOR": {
-      "LIVE": "Live updates every {seconds}s",
+      "LIVE": "Aggiornamenti dal vivo ogni {seconds} s",
       "LAST_UPDATED": "Ultimo aggiornamento {time}",
       "REFRESH": "Aggiorna",
       "REFRESHING": "Refreshing",
       "STAGES": {
-        "unknown": "Waiting for update",
+        "unknown": "Attendere l'aggiornamento",
         "queued": "Queued",
-        "contacts": "Importing contacts",
-        "conversations": "Importing conversations",
-        "finalizing": "Finalizing import",
+        "contacts": "Importazione dei contatti",
+        "conversations": "Importare conversazioni",
+        "finalizing": "Importazione finale",
         "completed": "Completata",
-        "completed_with_errors": "Completed with errors",
+        "completed_with_errors": "Completato con errori",
         "failed": "Non Riuscito",
         "abandoned": "Abandoned"
       }
     },
     "ALERTS": {
-      "IMPORT_STARTED": "Import has started.",
-      "IMPORT_RETRIED": "Import has been queued to resume.",
-      "IMPORT_RETRY_FAILED": "Could not retry the import.",
-      "IMPORT_ABANDONED": "Import has been abandoned.",
-      "IMPORT_FAILED": "Could not start the import."
+      "IMPORT_STARTED": "L'importazione è iniziata.",
+      "IMPORT_RETRIED": "L'importazione è stata messa in coda per riprendere.",
+      "IMPORT_RETRY_FAILED": "Non poteva riprovare l'importazione.",
+      "IMPORT_ABANDONED": "L'importazione è stata abbandonata.",
+      "IMPORT_FAILED": "Non potrebbe iniziare l'importazione."
     }
   },
   "CAPTAIN_SETTINGS": {
@@ -548,7 +557,7 @@
         "DESCRIPTION": "Gestisce risposte automatizzate, riassunti delle conversazioni e suggerimenti di risposta intelligenti per le interazioni con i clienti."
       },
       "COPILOT": {
-        "TITLE": "Co-pilot",
+        "TITLE": "Copilota",
         "DESCRIPTION": "Fornisce suggerimenti contestuali in tempo reale, consigli sulla knowledge base e insight proattivi durante le conversazioni."
       }
     },
@@ -558,8 +567,8 @@
       "AUDIO_TRANSCRIPTION": {
         "TITLE": "Trascrizione Audio",
         "DESCRIPTION": "Converte automaticamente i messaggi vocali e le registrazioni delle chiamate in trascrizioni di testo ricercabili.",
-        "MODEL_TITLE": "Audio Transcription Model",
-        "MODEL_DESCRIPTION": "Select the AI model to use for converting audio messages into text transcripts"
+        "MODEL_TITLE": "Modello di trascrizione audio",
+        "MODEL_DESCRIPTION": "Selezionare il modello AI da utilizzare per convertire i messaggi audio in trascrizioni di testo"
       },
       "HELP_CENTER_SEARCH": {
         "TITLE": "Indicizzazione Ricerca Help Center",
@@ -585,16 +594,17 @@
       "PLAN_NOTE": "Sei attualmente abbonato al piano **{plan}** con **{quantity}** licenze",
       "SEAT_COUNT": "Numero di seat",
       "RENEWS_ON": "Si rinnova il",
-      "CURRENCY": "Currency"
+      "CURRENCY": "Currency",
+      "CANCELS_ON": "Annullamento"
     },
     "CURRENCY": {
       "SELECT": {
-        "TITLE": "Choose your billing currency",
-        "DESCRIPTION": "Select the currency you'd like to be billed in. This can't be changed once your subscription is created."
+        "TITLE": "Scegli la tua valuta di fatturazione",
+        "DESCRIPTION": "Selezionare la valuta in cui si desidera essere fatturati. Questo non può essere cambiato una volta che l'abbonamento è stato creato."
       },
       "OPTIONS": {
-        "USD": "US Dollar (USD)",
-        "BRL": "Brazilian Real (BRL)"
+        "USD": "Dollaro americano (USD)",
+        "BRL": "Real brasiliano (BRL)"
       }
     },
     "VIEW_PRICING": "Visualizza Prezzi",
@@ -641,6 +651,38 @@
         "GO_BACK": "Torna Indietro",
         "CONFIRM_PURCHASE": "Conferma Acquisto"
       }
+    },
+    "SHOPIFY": {
+      "TITLE": "Billing attraverso Shopify",
+      "DESCRIPTION": "L'abbonamento Chatwoot viene fatturato e gestito in modo sicuro attraverso Shopify.",
+      "UNAVAILABLE": "Shopify fatturazione non è disponibile in questo momento. Si prega di contattare il supporto se questo continua.",
+      "LOADING": "Controlla il tuo abbonamento Shopify...",
+      "PLAN_TITLE": "Shopify abbonamento",
+      "PLAN_DESCRIPTION": "Scegli o gestisci il tuo piano Chatwoot in modo sicuro nel Shopify.",
+      "CURRENT_PLAN": "Piano attuale",
+      "SUBSCRIPTION_STATUS": "Stato",
+      "PRICE": "Prezzo",
+      "PER_MONTH": "{price} / mese",
+      "PER_YEAR": "{price} / anno",
+      "TRIAL_ENDS_ON": "La prova finisce su",
+      "RENEWS_ON": "Rinnovi su",
+      "ACCESS_UNTIL": "Accesso fino a quando",
+      "LAST_VERIFIED": "Ultimo aggiornamento",
+      "VIEW_PLANS": "Visualizza i piani in Shopify",
+      "MANAGE_PLAN": "Gestione in Shopify",
+      "RETRY": "Prova ancora.",
+      "ERROR_TITLE": "Non possiamo verificare il tuo abbonamento Shopify",
+      "ERROR_DESCRIPTION": "Riprova in un momento. Il tuo ultimo accesso verificato non è stato cambiato.",
+      "STALE_TITLE": "Mostrare l'ultimo abbonamento verificato",
+      "STALE_DESCRIPTION": "Shopify non poteva essere raggiunto. Il vostro accesso non è stato modificato.",
+      "STATUS": {
+        "PENDING": "Finanziamenti",
+        "ACTIVE": "attivo",
+        "CANCELLED": "Cancellazione programmata",
+        "EXPIRED": "Scadenza",
+        "MISSING": "Nessun piano attivo",
+        "TRIALING": "Prova"
+      }
     }
   },
   "SECURITY_SETTINGS": {
@@ -663,7 +705,7 @@
       "CERTIFICATE": {
         "LABEL": "Certificato di firma in formato PEM",
         "HELP": "Il certificato pubblico del provider di identità utilizzato per verificare le risposte SAML",
-        "PLACEHOLDER": "-----BEGIN CERTIFICATE-----\nMIIC..."
+        "PLACEHOLDER": "-----BEGIN CERTIFICATO----\nMIIC..."
       },
       "FINGERPRINT": {
         "LABEL": "Fingerprint",
@@ -671,7 +713,7 @@
       },
       "COPY_SUCCESS": "Copiato negli appunti",
       "SP_ENTITY_ID": {
-        "LABEL": "SP Entity ID",
+        "LABEL": "ID ingresso SP",
         "HELP": "Identificatore univoco per questa applicazione come Service Provider (generato automaticamente).",
         "TOOLTIP": "Identificatore univoco di Chatwoot come Service Provider — configuralo nelle impostazioni del tuo IdP"
       },
@@ -786,7 +828,7 @@
     }
   },
   "KEYBOARD_SHORTCUTS": {
-    "TOGGLE_MODAL": "View all shortcuts",
+    "TOGGLE_MODAL": "Visualizza tutti i collegamenti",
     "TITLE": {
       "OPEN_CONVERSATION": "Apri conversazione",
       "RESOLVE_AND_NEXT": "Risolvi e vai alla prossima",
@@ -801,7 +843,8 @@
       "GO_TO_SETTINGS": "Vai alle Impostazioni",
       "SWITCH_TO_PRIVATE_NOTE": "Passa alle Note Private",
       "SWITCH_TO_REPLY": "Passa a Risposta",
-      "TOGGLE_SNOOZE_DROPDOWN": "Attiva/Disattiva menu a discesa per la Sospensione"
+      "TOGGLE_SNOOZE_DROPDOWN": "Attiva/Disattiva menu a discesa per la Sospensione",
+      "NEW_MESSAGE": "Nuovo messaggio"
     }
   },
   "ASSIGNMENT_POLICY": {
@@ -906,7 +949,7 @@
         "ASSIGNMENT_ORDER": {
           "LABEL": "Ordine di assegnazione",
           "ROUND_ROBIN": {
-            "LABEL": "Round robin",
+            "LABEL": "Robin tondo",
             "DESCRIPTION": "Assegna le conversazioni in modo uniforme tra gli operatori."
           },
           "BALANCED": {
@@ -934,8 +977,8 @@
           "DURATION": "Conversazioni per operatore ogni"
         },
         "EXCLUDE_OLDER_THAN": {
-          "LABEL": "Skip stale conversations",
-          "DESCRIPTION": "Skip unassigned conversations older than this. Defaults to 7 days; clear to disable."
+          "LABEL": "Skip stale conversazioni",
+          "DESCRIPTION": "Salta conversazioni non firmate più di questo. Predefinite a 7 giorni; chiaro per disabilitare."
         },
         "INBOXES": {
           "LABEL": "Inbox aggiunte",
@@ -1080,5 +1123,242 @@
       "CONFIRM_BUTTON_LABEL": "Elimina",
       "CANCEL_BUTTON_LABEL": "Annulla"
     }
+  },
+  "PLATFORM_NAV": {
+    "PRODUCT_AREAS": "Aree di produzione",
+    "CUSTOMERS": "Clienti",
+    "AI_AGENT": "Agente IA",
+    "AI_AGENTS": "Agenti dell'AI",
+    "SELECT_AGENT": "Seleziona un agente IA",
+    "KNOWLEDGE": "conoscenza",
+    "DATA_SOURCES": "Fonti di dati",
+    "FAQS": "Domande frequenti",
+    "SUGGESTIONS": "Suggerimenti",
+    "BEHAVIOR": "Comportamento",
+    "INSTRUCTIONS": "Istruzioni",
+    "BOUNDARIES": "Mazzi di fiori",
+    "HANDOFF": "Trasferimento",
+    "AFTER_CHAT": "Dopo la chat",
+    "ACTIONS": "Azioni",
+    "TEST_AGENT": "Test AI agente",
+    "CHANNELS": "Canali",
+    "CONFIGURE": "Configurazione",
+    "IDENTITY": "Identità",
+    "MANAGE": "gestire",
+    "AUDIENCE": "pubblico",
+    "GROW": "Crescere",
+    "MANAGE_AGENT": "Configurare l'agente",
+    "NO_AGENT": "Crea il tuo primo agente AI",
+    "NO_AGENT_DESCRIPTION": "Dare al vostro agente un nome, aggiungere la conoscenza e testare le sue risposte prima di collegare un canale.",
+    "PAGES": "{count} pagina | {count} pagine",
+    "MANAGE_PAGES": "Gestione delle pagine",
+    "MANAGE_WEBSITES": "Gestire le pagine del sito",
+    "WEBSITE_PAGES_USED": "{host} · {count} pagina utilizzata | {host} · {count} pagine utilizzate",
+    "WEBSITE_FINDING": "{host} · pagine di ricerca",
+    "ALL_SOURCES": "Tutte le fonti",
+    "CLEAR_FILTERS": "Cancella filtri",
+    "LOAD_ERROR": "Non poteva caricare i siti web. Riprova.",
+    "RETRY": "Prova ancora.",
+    "WORKSPACE": "Team &amp; workspace",
+    "SERVICES": "Canali e applicazioni",
+    "WORKFLOWS": "Inbox & workflow",
+    "ADMINISTRATION": "Account & fatturazione",
+    "ADVANCED_OPTIONS": "Opzioni avanzate",
+    "SOURCE_COUNT": "{count} sorgente | {count} fonti",
+    "WEBSITE_DISCOVERING": "Trovare pagine",
+    "WEBSITE_NOT_ADDED": "Nessuna pagina selezionata",
+    "CHOOSE_PAGES_HINT": "Scegli quali pagine di questo sito web il tuo agente AI impara da",
+    "SECTION_NAVIGATION": "Pagine di sezione",
+    "UNREAD": "{count} illeggibile",
+    "HIDE_MENU": "Menu Nascondi",
+    "SHOW_MENU": "Mostra menu",
+    "CLOSE_MENU": "Chiudi menu",
+    "PROFILE_MENU": "Profilo e preferenze",
+    "WORKSPACE_MENU": "Menù spazi di lavoro: {account}",
+    "FOLDER_COUNT": "{folder} ({count})",
+    "MENU": "Menu"
+  },
+  "KNOWLEDGE_LIST": {
+    "BULK_ACTIONS": "Azioni Bulk",
+    "SELECTED": "{count} selezionato",
+    "ALL_SELECTED": "Tutti {count} selezionati",
+    "USE_IN_ANSWERS": "Includi le risposte",
+    "USE_IN_ANSWERS_HINT": "In caso di attivazione, il tuo agente AI può rispondere agli elementi selezionati. Spegnere per escluderli senza cancellarli.",
+    "SOME_OFF": "Alcuni esclusi",
+    "REFRESH": "aggiornare",
+    "DELETE": "Cancella",
+    "EDIT": "editare",
+    "MORE_ACTIONS": "Altre azioni",
+    "CLEAR": "Selezione chiara",
+    "OFF": "Escluso",
+    "SELECT_PAGE": "Seleziona tutto in questa pagina",
+    "SELECT_MATCHING": "Seleziona tutto {count}",
+    "COLUMNS": {
+      "NAME": "Fonte",
+      "QUESTION": "domanda",
+      "STATUS": "Stato",
+      "FROM": "Da",
+      "UPDATED": "Aggiornato",
+      "DEMAND": "Domanda",
+      "IN_USE": "attivo"
+    },
+    "TURNED_ON": "{count} incluso in risposte.",
+    "TURNED_OFF": "{count} escluso dalle risposte.",
+    "UPDATE_ERROR": "Non è possibile aggiornare la selezione. Riprova.",
+    "REFRESH_QUEUED": "Aggiornamento {count} pagine.",
+    "SOURCE": {
+      "WEBSITES": "Siti web",
+      "OTHER": "altro",
+      "FILES": "File",
+      "TEXT": "Testo",
+      "WEBSITE_COUNT": "{host} ({count})"
+    },
+    "ORIGIN": {
+      "FROM_PAGE": "Dalle pagine del sito",
+      "FROM_FILE": "Da file",
+      "BY_HAND": "Scritto a mano",
+      "FROM_CONVERSATION": "Dalle conversazioni"
+    }
+  },
+  "SETTINGS_HOME": {
+    "SUBTITLE": "Il vostro team, le risposte, l'automazione e il conto in un unico luogo.",
+    "SEARCH_PLACEHOLDER": "Impostazioni di ricerca, ad esempio \"aggiungere un compagno di squadra\" o \"password\"",
+    "NO_RESULTS": "Nessuna impostazione corrisponde a \" {query} \".",
+    "SECTIONS": {
+      "TEAM": {
+        "HINT": "Chi risponde, in quali squadre, con quali diritti.",
+        "TITLE": "Team"
+      },
+      "REPLIES": {
+        "TITLE": "Risposte",
+        "HINT": "Risposte salvate, macro, etichette e campi extra."
+      },
+      "AUTOMATION": {
+        "TITLE": "Automazione",
+        "HINT": "Regole, incarico e obiettivi di risposta."
+      },
+      "ACCOUNT": {
+        "TITLE": "Conto",
+        "HINT": "Dettagli aziendali, il tuo profilo e la sicurezza."
+      },
+      "INTEGRATIONS": {
+        "TITLE": "Integrazioni",
+        "HINT": "Canali dello spazio di lavoro, applicazioni connesse, modelli e dati."
+      }
+    },
+    "PAGES": {
+      "TEAMMATES": {
+        "LABEL": "compagni di squadra",
+        "HINT": "Invitare le persone e impostare il loro ruolo.",
+        "KEYWORDS": "aggiungere un compagno di squadra invitare gli utenti dell'agente"
+      },
+      "TEAMS": {
+        "LABEL": "Squadre",
+        "HINT": "Compagni di gruppo, ad esempio. Vendite e supporto.",
+        "KEYWORDS": "dipartimento di gruppo"
+      },
+      "ROLES": {
+        "HINT": "Decidi cosa ogni ruolo può vedere e fare.",
+        "KEYWORDS": "autorizzazioni diritti accesso ruolo personalizzato",
+        "LABEL": "Ruoli"
+      },
+      "CANNED": {
+        "LABEL": "Risposte salvate",
+        "HINT": "Risposte che invii spesso, con una scorciatoia.",
+        "KEYWORDS": "risposta in scatola modello di scelta rapida risposta"
+      },
+      "MACROS": {
+        "HINT": "Diverse azioni con un clic.",
+        "KEYWORDS": "azioni scorciatoia",
+        "LABEL": "Macro"
+      },
+      "LABELS": {
+        "LABEL": "Etichette",
+        "HINT": "Tag conversazioni e clienti.",
+        "KEYWORDS": "tags tags"
+      },
+      "ATTRIBUTES": {
+        "LABEL": "Campi extra",
+        "HINT": "I vostri campi su clienti e conversazioni.",
+        "KEYWORDS": "campi di attributi personalizzati"
+      },
+      "RULES": {
+        "LABEL": "Regole",
+        "HINT": "Quando succede qualcosa, fallo.",
+        "KEYWORDS": "attivazione regola di automazione"
+      },
+      "ASSIGNMENT": {
+        "LABEL": "Assegnazione",
+        "HINT": "Chi riceve nuove conversazioni.",
+        "KEYWORDS": "assegnare la politica di capacità di robinaggio tondo"
+      },
+      "WORKFLOW": {
+        "LABEL": "Flusso di conversazione",
+        "HINT": "Campi richiesti prima che una conversazione sia chiusa.",
+        "KEYWORDS": "il flusso di lavoro risolve la chiusura"
+      },
+      "TARGETS": {
+        "LABEL": "Obiettivi di risposta-tempo",
+        "HINT": "Quanto velocemente la tua squadra dovrebbe rispondere.",
+        "KEYWORDS": "bersaglio del tempo di risposta"
+      },
+      "ACCOUNT": {
+        "LABEL": "Dettagli aziendali",
+        "HINT": "Nome, lingua e opzioni generali.",
+        "KEYWORDS": "nome dell'account società di lingua generale"
+      },
+      "PROFILE": {
+        "LABEL": "Il tuo profilo",
+        "HINT": "Nome, foto, firma e password.",
+        "KEYWORDS": "modificare la mia password foto avatar firma notifiche email"
+      },
+      "SECURITY": {
+        "LABEL": "Sicurezza",
+        "HINT": "Opzioni di accesso per la tua squadra.",
+        "KEYWORDS": "saml sso accesso a due fattori"
+      },
+      "AUDIT_LOG": {
+        "LABEL": "Diario di attività",
+        "HINT": "Chi ha cambiato cosa, e quando.",
+        "KEYWORDS": "cronologia dei registri di audit"
+      },
+      "BOTS": {
+        "LABEL": "Agente bots",
+        "HINT": "Collegare i bot esterni allo spazio di lavoro.",
+        "KEYWORDS": "integrazione di bot esterno webhook"
+      },
+      "APPS": {
+        "LABEL": "Applicazioni connesse",
+        "HINT": "Shopify, Slack, webhooks e altro ancora.",
+        "KEYWORDS": "integrazioni shopify slack webhook api"
+      },
+      "TEMPLATES": {
+        "LABEL": "Modelli di messaggio",
+        "HINT": "Modelli approvati WhatsApp.",
+        "KEYWORDS": "modello whatsapp"
+      },
+      "CHANNELS": {
+        "LABEL": "Canali",
+        "HINT": "Collegare i canali dello spazio di lavoro. Assegnali ad un agente AI dalla pagina dei canali di quell'agente.",
+        "KEYWORDS": "casella di posta in arrivo canali connessione widget email whatsapp"
+      },
+      "BILLING": {
+        "LABEL": "fatturazione",
+        "HINT": "Piano, metodo di pagamento, piani e fatture.",
+        "KEYWORDS": "fatturazione piano abbonamento fatture carta di aggiornamento"
+      },
+      "USAGE": {
+        "LABEL": "uso",
+        "HINT": "conversazione AI e utilizzo di posta in arrivo nel tempo.",
+        "KEYWORDS": "utilizzo contingente limite conversazioni"
+      },
+      "DATA": {
+        "LABEL": "Importazione ed esportazione",
+        "HINT": "Portare i clienti o portarli fuori.",
+        "KEYWORDS": "importazione esportazione dati csv"
+      }
+    },
+    "TITLE": "Impostazioni",
+    "BACK": "Impostazioni"
   }
 }

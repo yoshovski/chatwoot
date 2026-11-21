@@ -50,6 +50,7 @@ class Captain::Scenario < ApplicationRecord
   validates :assistant_id, presence: true
   validates :account_id, presence: true
   validate :validate_instruction_tools
+  validate :validate_localized_reply_copy
 
   scope :enabled, -> { where(enabled: true) }
 
@@ -84,6 +85,22 @@ class Captain::Scenario < ApplicationRecord
   end
 
   private
+
+  def context_state_context(context)
+    attrs = super
+    copy = localized_reply_copy[attrs[:reply_locale].to_s]
+    attrs.merge(localized_reply_copy: copy)
+  end
+
+  def validate_localized_reply_copy
+    return if localized_reply_copy.is_a?(Hash) && localized_reply_copy.all? { |locale, copy| valid_reply_copy?(locale, copy) }
+
+    errors.add(:localized_reply_copy, :invalid)
+  end
+
+  def valid_reply_copy?(locale, copy)
+    I18n.locale_available?(locale) && copy.is_a?(String) && copy.present? && copy.length <= Captain::LocalizedMessages::MAX_LENGTH
+  end
 
   def agent_name
     handoff_key

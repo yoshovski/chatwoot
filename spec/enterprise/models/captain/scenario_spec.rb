@@ -14,6 +14,27 @@ RSpec.describe Captain::Scenario, type: :model do
     it { is_expected.to validate_presence_of(:account_id) }
   end
 
+  describe 'localized customer wording' do
+    let(:scenario) do
+      build(:captain_scenario, localized_reply_copy: { 'it' => 'Posso aiutarti con il tuo ordine?', 'es' => '¿Necesitas ayuda con tu pedido?' })
+    end
+
+    it 'includes only the selected language alongside the canonical scenario instructions' do
+      context = Agents::RunContext.new({ state: { Captain::Conversation::CustomerLocale::STATE_KEY => 'it' } })
+      prompt = scenario.agent_instructions(context)
+
+      expect(prompt).to include(scenario.instruction, 'Posso aiutarti con il tuo ordine?')
+      expect(prompt).not_to include('¿Necesitas ayuda con tu pedido?')
+    end
+
+    it 'rejects an unsupported locale or a non-text entry' do
+      scenario.localized_reply_copy = { 'xx' => 'Hello' }
+      expect(scenario).not_to be_valid
+      scenario.localized_reply_copy = { 'it' => ['Ciao'] }
+      expect(scenario).not_to be_valid
+    end
+  end
+
   describe 'scopes' do
     let(:account) { create(:account) }
     let(:assistant) { create(:captain_assistant, account: account) }

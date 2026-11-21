@@ -13,7 +13,10 @@ class Captain::LocalizedMessages
     captain.reply_languages.retry captain.check_in.default conversations.captain.handoff conversations.captain.no_handoff
     conversations.captain.empty_response_catalog_empty conversations.captain.empty_response_attachments
     conversations.captain.empty_response_unusable conversations.captain.empty_response_handoff
-    captain.action_confirmation.confirm captain.action_confirmation.cancel conversations.activity.auto_resolution_message
+    captain.product_card.view_product captain.product_card.recommendation captain.product_card.recommendations
+    captain.action_confirmation.confirm captain.action_confirmation.cancel captain.action_confirmation.confirm_prompt
+    captain.action_confirmation.success captain.action_confirmation.failure captain.action_confirmation.cancelled
+    conversations.activity.auto_resolution_message
   ]).freeze
   PROTECTED_TOKEN = %r{https?://[^\s)]+|%?\{[\w.]+\}|\{\{.*?\}\}|`[^`]+`|\+?\d[\d.,:/-]*}
   MAX_LENGTH = 2_000

@@ -84,6 +84,7 @@ const examplePrompts = computed(() => [
 ]);
 
 const previewState = reactive({
+  localizedReplyCopy: {},
   title: '',
   description: '',
   instruction: '',
@@ -92,6 +93,7 @@ const previewState = reactive({
 
 // 2. Manual form state
 const manualState = reactive({
+  localizedReplyCopy: {},
   title: '',
   description: '',
   instruction: '',
@@ -138,6 +140,7 @@ const generateDraft = async () => {
     previewState.title = data.title || '';
     previewState.description = data.description || '';
     previewState.instruction = data.instruction || '';
+    previewState.localizedReplyCopy = {};
     previewState.notes = data.notes || [];
   } catch {
     useAlert(t('CAPTAIN.ASSISTANTS.SCENARIOS.ADD.NEW.BUILDER.DESCRIBE.ERROR'));
@@ -157,6 +160,7 @@ const saveDraftScenario = () => {
     title: previewState.title.trim(),
     description: previewState.description.trim(),
     instruction: previewState.instruction.trim(),
+    localized_reply_copy: previewState.localizedReplyCopy,
   });
   close();
 };
@@ -178,11 +182,13 @@ const onClickAddManual = async () => {
     title: manualState.title.trim(),
     description: manualState.description.trim(),
     instruction: manualState.instruction.trim(),
+    localized_reply_copy: manualState.localizedReplyCopy,
   });
 
   manualState.title = '';
   manualState.description = '';
   manualState.instruction = '';
+  manualState.localizedReplyCopy = {};
   manualFormRef.value.reset();
   close();
 };
@@ -339,6 +345,8 @@ defineExpose({
             v-model:title="previewState.title"
             v-model:description="previewState.description"
             v-model:instruction="previewState.instruction"
+            v-model:localized-reply-copy="previewState.localizedReplyCopy"
+            :reply-locales="assistant?.config?.allowed_reply_locales || []"
           />
         </div>
       </div>
@@ -367,6 +375,8 @@ defineExpose({
           v-model:title="manualState.title"
           v-model:description="manualState.description"
           v-model:instruction="manualState.instruction"
+          v-model:localized-reply-copy="manualState.localizedReplyCopy"
+          :reply-locales="assistant?.config?.allowed_reply_locales || []"
         />
       </div>
 

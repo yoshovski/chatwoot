@@ -26,7 +26,7 @@
       "CREATE": "Aggiungi azienda"
     },
     "SELECTOR": {
-      "PLACEHOLDER": "Select company",
+      "PLACEHOLDER": "Selezionare l'azienda",
       "CREATE_OPTION": "Add \"{name}\""
     },
     "CREATE": {

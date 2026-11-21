@@ -420,6 +420,26 @@ hu:
       short_description: 'Sync your contacts and conversations with LeadSquared CRM.'
       description: 'Sync your contacts and conversations with LeadSquared CRM. This integration automatically creates leads in LeadSquared when new contacts are added, and logs conversation activity to provide your sales team with complete context.'
   captain:
+    contact_form:
+      handoff_prompt: 'Adja meg elérhetőségeit, hogy csapatunk kapcsolatba léphessen Önnel, ha kilép a csevegésből.'
+      handoff_saved: 'Köszönjük. Elmentettük elérhetőségeit. Egy munkatársunk itt folytatja a segítségnyújtást.'
+      submit: 'Küldés'
+      invalid_field: 'Ellenőrizze ezt a mezőt.'
+      fields:
+        name:
+          label: 'Név'
+          placeholder: 'Név'
+        email:
+          label: 'E-mail-cím'
+          placeholder: 'E-mail-cím'
+        phone_number:
+          label: 'Telefonszám'
+          placeholder: '+34612345678'
+          title: 'Adja meg az országkódot is, például +34612345678'
+    leads:
+      followup_form: 'Melyik e-mail-címre küldhet választ a csapatunk?'
+      followup_submit: 'Válasz kérése e-mailben'
+      followup_saved: 'Köszönjük, %{name}. Megkaptuk az e-mailes válaszra vonatkozó kérését.'
     copilot_message_required: Üzenet kötelező
     copilot_error: 'Please connect an assistant to this inbox to use Copilot'
     copilot_limit: 'You are out of Copilot credits. You can buy more credits from the billing section.'

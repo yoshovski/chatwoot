@@ -420,6 +420,26 @@ ar:
       short_description: 'Sync your contacts and conversations with LeadSquared CRM.'
       description: 'Sync your contacts and conversations with LeadSquared CRM. This integration automatically creates leads in LeadSquared when new contacts are added, and logs conversation activity to provide your sales team with complete context.'
   captain:
+    contact_form:
+      handoff_prompt: 'اترك بيانات الاتصال حتى يتمكن فريقنا من التواصل معك إذا غادرت المحادثة.'
+      handoff_saved: 'شكرًا. حفظنا بيانات الاتصال بك، وسيتابع أحد أعضاء فريقنا مساعدتك هنا.'
+      submit: 'إرسال'
+      invalid_field: 'يرجى التحقق من هذا الحقل.'
+      fields:
+        name:
+          label: 'الاسم'
+          placeholder: 'الاسم'
+        email:
+          label: 'البريد الإلكتروني'
+          placeholder: 'البريد الإلكتروني'
+        phone_number:
+          label: 'رقم الهاتف'
+          placeholder: '+34612345678'
+          title: 'أضف رمز البلد، مثل +34612345678'
+    leads:
+      followup_form: 'إلى أي عنوان بريد إلكتروني يرسل فريقنا الرد؟'
+      followup_submit: 'طلب الرد بالبريد الإلكتروني'
+      followup_saved: 'شكرًا، %{name}. تلقينا طلبك للرد عليك بالبريد الإلكتروني.'
     copilot_message_required: الرسالة مطلوبة
     copilot_error: 'Please connect an assistant to this inbox to use Copilot'
     copilot_limit: 'You are out of Copilot credits. You can buy more credits from the billing section.'

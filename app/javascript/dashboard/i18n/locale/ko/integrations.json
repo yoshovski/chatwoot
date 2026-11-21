@@ -1441,6 +1441,18 @@
         "TITLE": "연결된 받은 편지함이 없습니다",
         "SUBTITLE": "받은 편지함을 연결하면 어시스턴트가 고객의 초기 질문을 처리한 후 상담원에게 전환할 수 있습니다."
       }
+    },
+    "AGENT_UX": {
+      "SECTIONS": {
+        "OVERVIEW": "개요",
+        "KNOWLEDGE": "지식",
+        "BEHAVIOR": "응답 방식",
+        "HANDOFF": "인계",
+        "CHANNELS": "채널",
+        "PROFILE": "프로필",
+        "SCENARIOS": "시나리오",
+        "ACTIONS": "작업"
+      }
     }
   }
 }

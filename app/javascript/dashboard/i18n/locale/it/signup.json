@@ -21,8 +21,13 @@
     },
     "EMAIL": {
       "LABEL": "Email di lavoro",
-      "PLACEHOLDER": "Inserisci il tuo indirizzo email di lavoro. es.: bruce{'@'}wayne{'.'}enterprises",
-      "ERROR": "Inserisci un indirizzo email di lavoro valido."
+      "PLACEHOLDER": "tu {'@'} tuoshop.com",
+      "ERROR": "Inserisci un indirizzo email valido, ad esempio {'@'} yourshop.com.",
+      "PERSONAL": "Utilizzare la posta elettronica di lavoro. Gmail, Outlook e indirizzi simili non sono accettati.",
+      "TAKEN": "Un account con questa email esiste già.",
+      "BLOCKED": "Questo dominio email non è accettato. Se pensi che questo sia un errore, il supporto di contatto.",
+      "DISPOSABLE": "Utilizzare un indirizzo e-mail permanente, non temporaneo.",
+      "LOG_IN_INSTEAD": "Accedi invece"
     },
     "PASSWORD": {
       "LABEL": "Password",
@@ -51,7 +56,38 @@
       "DESCRIPTION": "Abbiamo inviato un link di verifica a {email}. Clicca sul link per verificare la tua email e iniziare.",
       "RESEND": "Invia nuovamente email di verifica",
       "RESEND_SUCCESS": "Email di verifica inviata. Controlla la tua casella di posta.",
-      "RESEND_ERROR": "Impossibile inviare l'email di verifica. Riprova."
-    }
+      "RESEND_ERROR": "Impossibile inviare l'email di verifica. Riprova.",
+      "WRONG_ADDRESS": "Indirizzo sbagliato?",
+      "SIGN_UP_AGAIN": "Registrati di nuovo",
+      "SPAM_HINT": "Nessun messaggio dopo pochi minuti? Controllare la cartella spam."
+    },
+    "DESCRIPTION": "Il tuo agente AI risponde ai tuoi clienti dal tuo negozio, tra pochi minuti.",
+    "PLAN_TRIAL": "{plan} prova · 14 giorni · nessuna carta",
+    "PANEL": {
+      "TITLE": "Il tuo agente dell'AI, vivi sul tuo sito",
+      "DESCRIPTION": "Risponde ai vostri prodotti e pagine, nella lingua del vostro cliente, giorno e notte."
+    },
+    "WEBSITE": {
+      "LABEL": "Indirizzo del sito",
+      "PLACEHOLDER": "tuoshop.com",
+      "ERROR": "Inserisci il tuo indirizzo del sito web, ad esempio il tuoshop.com."
+    },
+    "LOG_IN": "Accedi"
+  },
+  "AUTH_WIDGET_PREVIEW": {
+    "EXAMPLE": "Esempio",
+    "SHOP": "Il tuo negozio",
+    "REPLY_TIME": "Rispondiamo subito",
+    "TODAY": "Oggi",
+    "QUESTION": "Ciao! Il Trail Jacket è di taglia M, e può arrivare entro venerdì?",
+    "ANSWER": "Sì, il Trail Jacket è in magazzino in M. Ordine prima 3 pm oggi e arriva il giovedì.",
+    "PRODUCT": {
+      "TITLE": "Giacca Trail",
+      "DESCRIPTION": "€ 129.00 · Disponibile",
+      "CTA": "Visualizza prodotto"
+    },
+    "AGENT": "Il tuo agente AI",
+    "COMPOSER": "Digitare il messaggio",
+    "POWERED_BY": "Alimentato da {name}"
   }
 }

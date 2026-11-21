@@ -6,14 +6,14 @@ class Captain::Conversation::OrderCardBuilder
   MAX_DESCRIPTION_LENGTH = 200
 
   def initialize(assistant:, run_result:)
-    @assistant = assistant
+    @locale = run_result&.context&.dig(:state, Captain::Conversation::CustomerLocale::STATE_KEY) || assistant.account.locale
     @order = assistant.run_result_order(run_result)
   end
 
   def build_messages
     return [] if @order.blank?
 
-    I18n.with_locale(@assistant.account.locale) do
+    I18n.with_locale(@locale) do
       item = { 'title' => title, 'description' => description, 'actions' => actions }
       [{ content: item['title'], content_type: 'cards', content_attributes: { items: [item] } }]
     end
@@ -22,9 +22,9 @@ class Captain::Conversation::OrderCardBuilder
   private
 
   def title
-    date = @order['created_at'].present? ? I18n.l(Time.zone.parse(@order['created_at']).to_date, format: '%b %-d, %Y') : nil
+    date = format_date(@order['created_at'], 'date_format', '%Y-%m-%d') if @order['created_at'].present?
     order = @order['order_number'].to_s.delete_prefix('#')
-    date ? I18n.t('captain.order_card.title', order: order, date: date) : order
+    date ? card_copy('title', order: order, date: date) : order
   end
 
   def description
@@ -48,13 +48,23 @@ class Captain::Conversation::OrderCardBuilder
   def arrival(estimated_delivery_at)
     return if estimated_delivery_at.blank?
 
-    I18n.t('captain.order_card.arrives', date: I18n.l(Time.zone.parse(estimated_delivery_at).to_date, format: '%b %-d'))
+    card_copy('arrives', date: format_date(estimated_delivery_at, 'arrival_date_format', '%m-%d'))
+  end
+
+  def format_date(timestamp, key, fallback)
+    format = I18n.t("captain.order_card.#{key}", default: nil, fallback: false) || fallback
+    I18n.l(Time.zone.parse(timestamp).to_date, format: format)
+  end
+
+  def card_copy(key, **)
+    path = "captain.order_card.#{key}"
+    I18n.t(path, default: nil, **) || I18n.t(path, locale: :en, **)
   end
 
   def item_lines
     items = Array(@order['items'])
-    lines = items.first(MAX_ITEMS).map { |item| I18n.t('captain.order_card.item', quantity: item['quantity'], name: item['name']) }
-    lines << I18n.t('captain.order_card.more_items', count: items.size - MAX_ITEMS) if items.size > MAX_ITEMS
+    lines = items.first(MAX_ITEMS).map { |item| card_copy('item', quantity: item['quantity'], name: item['name']) }
+    lines << card_copy('more_items', count: items.size - MAX_ITEMS) if items.size > MAX_ITEMS
     lines
   end
 
@@ -66,7 +76,7 @@ class Captain::Conversation::OrderCardBuilder
   end
 
   def link(label_key, uri)
-    { 'type' => 'link', 'text' => I18n.t("captain.order_card.#{label_key}"), 'uri' => uri }
+    { 'type' => 'link', 'text' => card_copy(label_key), 'uri' => uri }
   end
 
   def latest_fulfillment

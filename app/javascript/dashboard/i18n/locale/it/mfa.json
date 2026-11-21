@@ -50,9 +50,9 @@
       "DISABLE_BUTTON": "Disattiva Autenticazione A Due Fattori"
     },
     "LOW_BACKUP_CODES": {
-      "MESSAGE": "You have {n} backup code remaining. Generate new codes to avoid getting locked out if you lose access to your authenticator. | You have {n} backup codes remaining. Generate new codes to avoid getting locked out if you lose access to your authenticator.",
-      "NONE_LEFT": "You have no backup codes remaining. Generate new codes now to avoid getting locked out if you lose access to your authenticator.",
-      "ACTION": "Generate codes"
+      "MESSAGE": "Avete ancora {n} codice di backup. Genera nuovi codici per evitare di essere bloccati se si perde l'accesso al vostro autenticatore. | Avete ancora {n} codici di backup. Generare nuovi codici per evitare di essere bloccati se si perde l'accesso al vostro autenticatore.",
+      "NONE_LEFT": "Non hai ancora codici di backup. Generare nuovi codici ora per evitare di essere bloccati se si perde l'accesso al vostro autenticatore.",
+      "ACTION": "Codici generati"
     },
     "DISABLE": {
       "TITLE": "Disattiva Autenticazione A Due Fattori",

@@ -1,6 +1,7 @@
 <script>
 import { mapGetters } from 'vuex';
 import { useAlert } from 'dashboard/composables';
+import { useConfig } from 'dashboard/composables/useConfig';
 import inboxMixin from 'shared/mixins/inboxMixin';
 import SettingsToggleSection from 'dashboard/components-next/Settings/SettingsToggleSection.vue';
 import SettingsFieldSection from 'dashboard/components-next/Settings/SettingsFieldSection.vue';
@@ -40,6 +41,8 @@ export default {
     return {
       isBusinessHoursEnabled: false,
       unavailableMessage: '',
+      unavailableMessageTranslations: {},
+      selectedLocale: '',
       timeZone: DEFAULT_TIMEZONE,
       dayNames: {
         0: 'Sunday',
@@ -55,6 +58,22 @@ export default {
   },
   computed: {
     ...mapGetters({ uiFlags: 'inboxes/getUIFlags' }),
+    languageOptions() {
+      const { enabledLanguages } = useConfig();
+      return (enabledLanguages || []).map(
+        ({ iso_639_1_code: value, name: label }) => ({ value, label })
+      );
+    },
+    localizedMessage: {
+      get() {
+        return this.unavailableMessageTranslations[this.selectedLocale] || '';
+      },
+      set(value) {
+        if (value.trim())
+          this.unavailableMessageTranslations[this.selectedLocale] = value;
+        else delete this.unavailableMessageTranslations[this.selectedLocale];
+      },
+    },
     hasError() {
       if (!this.isBusinessHoursEnabled) return false;
       return this.timeSlots.filter(slot => slot.from && !slot.valid).length > 0;
@@ -94,6 +113,7 @@ export default {
       const {
         working_hours_enabled: isEnabled = false,
         out_of_office_message: unavailableMessage,
+        out_of_office_message_translations: translations,
         working_hours: timeSlots = [],
         timezone: timeZone,
       } = this.inbox;
@@ -102,6 +122,8 @@ export default {
         : defaultTimeSlot;
       this.isBusinessHoursEnabled = isEnabled;
       this.unavailableMessage = unavailableMessage || '';
+      this.unavailableMessageTranslations = { ...translations };
+      this.selectedLocale ||= this.languageOptions[0]?.value || '';
       this.timeSlots = slots;
       this.timeZone =
         this.timeZones.find(item => timeZone === item.value) ||
@@ -119,6 +141,8 @@ export default {
           formData: false,
           working_hours_enabled: this.isBusinessHoursEnabled,
           out_of_office_message: this.unavailableMessage,
+          out_of_office_message_translations:
+            this.unavailableMessageTranslations,
           working_hours: timeSlotTransform(this.timeSlots),
           timezone: this.timeZone.value,
           channel: {},
@@ -154,6 +178,38 @@ export default {
           />
           <textarea v-else v-model="unavailableMessage" type="text" />
         </div>
+        <details v-if="languageOptions.length" class="mb-4">
+          <summary class="cursor-pointer">
+            {{ $t('INBOX_MGMT.BUSINESS_HOURS.TRANSLATIONS.TITLE') }}
+          </summary>
+          <div class="mt-2 flex flex-col gap-2">
+            <ComboBox
+              v-model="selectedLocale"
+              :options="languageOptions"
+              :aria-label="
+                $t('INBOX_MGMT.BUSINESS_HOURS.TRANSLATIONS.LANGUAGE')
+              "
+            />
+            <WootMessageEditor
+              v-if="isRichEditorEnabled"
+              v-model="localizedMessage"
+              enable-variables
+              is-format-mode
+              :placeholder="
+                $t('INBOX_MGMT.BUSINESS_HOURS.TRANSLATIONS.PLACEHOLDER')
+              "
+              :min-height="4"
+            />
+            <textarea
+              v-else
+              v-model="localizedMessage"
+              :aria-label="$t('INBOX_MGMT.BUSINESS_HOURS.TRANSLATIONS.TITLE')"
+              :placeholder="
+                $t('INBOX_MGMT.BUSINESS_HOURS.TRANSLATIONS.PLACEHOLDER')
+              "
+            />
+          </div>
+        </details>
       </template>
     </SettingsToggleSection>
 

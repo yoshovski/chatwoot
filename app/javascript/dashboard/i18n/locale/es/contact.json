@@ -23,13 +23,14 @@
     "CALL_FAILED": "No se puede iniciar la llamada. Por favor, inténtelo de nuevo.",
     "WHATSAPP_CALL_PERMISSION_REQUESTED": "Solicitud de permiso de llamada al contacto enviada. Inténtalo de nuevo una vez que acepten.",
     "WHATSAPP_CALL_PERMISSION_PENDING": "Solicitud de permiso de llamada ya enviada recientemente. Inténtelo de nuevo una vez que el contacto acepte.",
-    "CLICK_TO_EDIT": "Click to edit",
+    "CLICK_TO_EDIT": "Haga clic para editar",
     "VOICE_INBOX_PICKER": {
       "TITLE": "Seleccionar un buzón de entrada"
     },
     "CONVERSATIONS": {
       "NO_RECORDS_FOUND": "No hay conversaciones previas asociadas a este contacto.",
-      "TITLE": "Conversaciones anteriores"
+      "TITLE": "Conversaciones anteriores",
+      "VIEW_ALL": "Ver todas las conversaciones"
     },
     "LABELS": {
       "CONTACT": {
@@ -60,6 +61,15 @@
       "CONTACT_LABELS": "Etiqueta de Contacto",
       "PREVIOUS_CONVERSATIONS": "Conversaciones anteriores",
       "NO_RECORDS_FOUND": "No se encontraron atributos"
+    },
+    "WEBSITE_ACTIVITY": {
+      "TITLE": "Actividad web",
+      "CURRENT_PAGE": "Página actual (última observación)",
+      "LAST_SEEN": "Visto por última vez: {time}",
+      "HISTORY": "Visitas recientes de la página ( {count} )",
+      "LOADING": "Cargando visitas de página...",
+      "RETRY": "No podía cargar visitas de página. Haga clic para volver a entrar.",
+      "EMPTY": "Todavía no se han registrado visitas de página."
     }
   },
   "EDIT_CONTACT": {
@@ -276,7 +286,7 @@
       "ATTRIBUTE_WARNING": "Los datos de contacto de <strong>{primaryContactName}</strong> se copiarán en <strong>{parentContactName}</strong>."
     },
     "SEARCH": {
-      "ERROR_MESSAGE": "Something went wrong. Please try again later."
+      "ERROR_MESSAGE": "Algo salió mal. Por favor, inténtalo de nuevo más tarde."
     },
     "FORM": {
       "SUBMIT": " Combinar contactos",
@@ -570,12 +580,12 @@
         "WROTE": "escribió",
         "YOU": "Tú",
         "SAVE": "Guardar nota",
-        "ADD_NOTE": "Add contact note",
+        "ADD_NOTE": "Agregar nota de contacto",
         "EXPAND": "Expandir",
         "COLLAPSE": "Contraer",
         "NO_NOTES": "No hay notas, puede agregar notas desde la página de detalles de contacto.",
         "EMPTY_STATE": "No hay notas asociadas a este contacto. Puede añadir una nota escribiendo en el recuadro superior.",
-        "CONVERSATION_EMPTY_STATE": "There are no notes yet. Use the Add note button to create one."
+        "CONVERSATION_EMPTY_STATE": "No hay notas todavía. Utilice el botón Añadir nota para crear uno."
       }
     },
     "EMPTY_STATE": {
@@ -592,23 +602,23 @@
     "ASSIGN_LABELS": "Asignar etiquetas",
     "REMOVE_LABELS": "Quitar etiquetas",
     "ASSIGN_LABELS_SUCCESS": "Etiquetas asignadas correctamente.",
-    "ASSIGN_LABELS_FAILED": "Failed to assign labels",
+    "ASSIGN_LABELS_FAILED": "No se asignaron etiquetas",
     "REMOVE_LABELS_SUCCESS": "Etiquetas removidas con éxito.",
     "REMOVE_LABELS_FAILED": "Error al eliminar las etiquetas",
-    "DESCRIPTION": "Select the labels you want to add to the selected contacts.",
-    "NO_LABELS_FOUND": "No labels available yet.",
+    "DESCRIPTION": "Seleccione las etiquetas que desea añadir a los contactos seleccionados.",
+    "NO_LABELS_FOUND": "Todavía no hay etiquetas disponibles.",
     "SELECTED_COUNT": "{count} selected",
     "CLEAR_SELECTION": "Clear selection",
     "SELECT_ALL": "Select all ({count})",
     "DELETE_CONTACTS": "Eliminar",
-    "DELETE_SUCCESS": "Contacts deleted successfully.",
-    "DELETE_FAILED": "Failed to delete contacts.",
+    "DELETE_SUCCESS": "Los contactos se eliminan con éxito.",
+    "DELETE_FAILED": "Falló en eliminar contactos.",
     "DELETE_DIALOG": {
-      "TITLE": "Delete selected contacts",
-      "SINGULAR_TITLE": "Delete selected contact",
-      "DESCRIPTION": "This will permanently delete {count} selected contacts. This action cannot be undone.",
-      "SINGULAR_DESCRIPTION": "This will permanently delete the selected contact. This action cannot be undone.",
-      "CONFIRM_MULTIPLE": "Delete contacts",
+      "TITLE": "Eliminar contactos seleccionados",
+      "SINGULAR_TITLE": "Eliminar el contacto seleccionado",
+      "DESCRIPTION": "Esto eliminará permanentemente {count} contactos seleccionados. Esta acción no se puede deshacer.",
+      "SINGULAR_DESCRIPTION": "Esto eliminará permanentemente el contacto seleccionado. Esta acción no se puede deshacer.",
+      "CONFIRM_MULTIPLE": "Eliminar contactos",
       "CONFIRM_SINGLE": "Eliminar contacto"
     }
   },
@@ -626,7 +636,7 @@
       "NO_INBOX_ALERT": "No hay bandejas de entrada disponibles para iniciar una conversación con este contacto.",
       "CONTACT_SELECTOR": {
         "LABEL": "Para:",
-        "TAG_INPUT_PLACEHOLDER": "Enter at least 2 characters to search by name, email, or phone number",
+        "TAG_INPUT_PLACEHOLDER": "Introduzca al menos 2 caracteres para buscar por nombre, correo electrónico o número de teléfono",
         "CONTACT_CREATING": "Creando contacto..."
       },
       "INBOX_SELECTOR": {
@@ -637,9 +647,9 @@
         "SUBJECT_LABEL": "Asunto :",
         "SUBJECT_PLACEHOLDER": "Introduzca el asunto de correo electrónico aquí",
         "CC_LABEL": "Cc:",
-        "CC_PLACEHOLDER": "Enter at least 2 characters to search by email",
+        "CC_PLACEHOLDER": "Introduzca al menos 2 caracteres para buscar por email",
         "BCC_LABEL": "Bcc:",
-        "BCC_PLACEHOLDER": "Enter at least 2 characters to search by email",
+        "BCC_PLACEHOLDER": "Introduzca al menos 2 caracteres para buscar por email",
         "BCC_BUTTON": "Bcc"
       },
       "MESSAGE_EDITOR": {
@@ -670,5 +680,69 @@
         "SEND": "Enviar ({keyCode})"
       }
     }
+  },
+  "CUSTOMERS": {
+    "TITLE": "Clientes",
+    "AI_AGENT": "Agente de IA",
+    "NEW_SEGMENT": "Nuevo segmento",
+    "EDIT_SEGMENT": "Serie de sesiones de edición",
+    "SAVE_SEGMENT": "Guardar segmento",
+    "ADD_CUSTOMER": "Agregar cliente",
+    "SEGMENTS_LABEL": "Segmentos",
+    "SEGMENTS": {
+      "ALL": "Todos",
+      "ONLINE": "En línea ahora",
+      "NEW": "Nueva esta semana",
+      "WAITING": "Esperando la respuesta",
+      "LEADS": "Clientes potenciales"
+    },
+    "COLUMNS": {
+      "NAME": "Nombre",
+      "EMAIL": "Correo electrónico",
+      "LAST_SEEN": "Última vista",
+      "CONVERSATIONS": "Conversaciones",
+      "LABELS": "Etiquetas",
+      "SOURCE": "Fuente",
+      "CURRENT_PAGE": "Página actual"
+    },
+    "COLUMNS_LABEL": "Columnas",
+    "SEARCH": "Buscar clientes",
+    "SELECT_PAGE": "Seleccione esta página",
+    "SELECT_CUSTOMER": "Seleccionar {name}",
+    "VISITOR": "Visitante # {id}",
+    "CREATE_SEGMENT": "Crear segmento",
+    "SEGMENT_NAME": "Nombre",
+    "SEGMENT_PLACEHOLDER": "e.g. Clientes devolventes",
+    "ADD_CONDITION": "Añada condición",
+    "SAVE_ERROR": "No podía salvar el segmento. Inténtalo de nuevo.",
+    "PROFILE": "Cliente",
+    "FULL_PROFILE": "Perfil completo",
+    "RECENT_CONVERSATIONS": "Conversaciones recientes",
+    "NO_CONVERSATIONS": "Todavía no hay conversaciones.",
+    "CONVERSATION_ID": "Conversación # {id}",
+    "LOAD_ERROR": "No podía cargar clientes.",
+    "RETRY": "Inténtalo de nuevo.",
+    "ACTION_QUEUED": "Acción frustrada. Los cambios aparecen después del procesamiento.",
+    "ACTION_ERROR": "La acción falló. Inténtalo de nuevo.",
+    "DELETE_SEGMENT": "Suprímase el segmento",
+    "DELETE_SEGMENT_WARNING": "Los clientes se quedan en su cuenta. Las reglas que utilizan este segmento dejarán de coincidir.",
+    "IMPORT": "Importación",
+    "EXPORT": "Exportación",
+    "MORE": "Más acciones",
+    "REFRESH": "Actualizar",
+    "LOADING": "Cargando clientes...",
+    "EMPTY": "No hay clientes en este segmento.",
+    "NO_RESULTS": "No hay clientes iguales.",
+    "SHOWING": "Mostrando {startItem} – {endItem} de {totalItems} clientes",
+    "DELETE_CUSTOMERS": "Eliminar {count} clientes?",
+    "DELETE_WARNING": "Esto elimina permanentemente a los clientes seleccionados y sus conversaciones. Los clientes en línea no pueden ser eliminados.",
+    "DELETE": "Suprímase",
+    "AUDIENCE": "Segmento",
+    "RULE_AUDIENCE": "Segmento para: {rule}",
+    "EVERYONE": "Todos",
+    "SEGMENT_LOAD_ERROR": "No podía cargar segmentos.",
+    "MISSING_SEGMENT": "Serie de sesiones indisponible",
+    "UNKNOWN": "—",
+    "CUSTOMER_ID": "#{id}"
   }
 }

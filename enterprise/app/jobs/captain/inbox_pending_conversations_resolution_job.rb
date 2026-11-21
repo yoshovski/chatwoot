@@ -172,7 +172,10 @@ class Captain::InboxPendingConversationsResolutionJob < ApplicationJob
   end
 
   def send_out_of_office_message_if_applicable(conversation)
-    ::MessageTemplates::Template::OutOfOffice.perform_if_applicable(conversation) if conversation.campaign.blank?
+    return if conversation.campaign.present?
+
+    locale = Captain::Conversation::CustomerLocale.resolve(conversation: conversation, assistant: captain_assistant)
+    ::MessageTemplates::Template::OutOfOffice.perform_if_applicable(conversation, locale: locale)
   end
 
   def create_resolution_message(conversation)

@@ -1486,7 +1486,12 @@
         "VALIDATION_ERROR": "Starting time should be before closing time.",
         "CHOOSE": "Choose"
       },
-      "ALL_DAY": "All-Day"
+      "ALL_DAY": "All-Day",
+      "TRANSLATIONS": {
+        "TITLE": "After-hours translations",
+        "LANGUAGE": "Message language",
+        "PLACEHOLDER": "Enter a translation. Leave blank to use the default message."
+      }
     },
     "IMAP": {
       "TITLE": "IMAP",

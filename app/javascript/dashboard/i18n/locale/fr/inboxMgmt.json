@@ -1327,7 +1327,12 @@
         "VALIDATION_ERROR": "L'heure de début doit être avant l'heure de fermeture.",
         "CHOOSE": "Sélectionner"
       },
-      "ALL_DAY": "Toute la journée"
+      "ALL_DAY": "Toute la journée",
+      "TRANSLATIONS": {
+        "TITLE": "Traductions du message d’absence",
+        "LANGUAGE": "Langue du message",
+        "PLACEHOLDER": "Saisissez une traduction. Laissez le champ vide pour utiliser le message par défaut."
+      }
     },
     "IMAP": {
       "TITLE": "IMAP",

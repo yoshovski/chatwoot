@@ -66,6 +66,15 @@
           "API": {
             "SUCCESS_MESSAGE": "Campagna live chat creata con successo",
             "ERROR_MESSAGE": "Si è verificato un errore, riprova."
+          },
+          "SUGGESTIONS": {
+            "LABEL": "Risposte suggerite",
+            "HELP": "Aggiungi pulsanti opzionali i visitatori possono usare per rispondere. I pulsanti abilitati appaiono in questo ordine.",
+            "ADD": "Aggiungi risposta",
+            "EMPTY": "Non ci sono ancora risposte suggerite. La campagna invierà come un messaggio regolare.",
+            "PLACEHOLDER": "Inserisci una risposta suggerita",
+            "REORDER": "Riordinare la risposta suggerita",
+            "DELETE": "Eliminare la risposta suggerita"
           }
         }
       },
@@ -146,7 +155,7 @@
         "SUBTITLE": "Avvia una campagna WhatsApp per raggiungere direttamente i tuoi clienti. Invia offerte o fai annunci con facilità. Clicca su 'Crea campagna' per iniziare."
       },
       "CARD": {
-        "ANALYTICS": "View analytics",
+        "ANALYTICS": "Visualizza analisi",
         "STATUS": {
           "PROCESSING": "Elaborazione",
           "COMPLETED": "Completata",
@@ -204,36 +213,36 @@
         }
       },
       "ANALYTICS": {
-        "LOADING": "Loading analytics...",
-        "EMPTY": "No delivery records found.",
-        "EMPTY_FILTER": "No {status} delivery records found.",
-        "DELIVERIES_ERROR": "Delivery records couldn't be loaded. Refresh the page to try again.",
+        "LOADING": "Caricamento di analisi...",
+        "EMPTY": "Nessun record di consegna trovato.",
+        "EMPTY_FILTER": "No {status} record di consegna trovati.",
+        "DELIVERIES_ERROR": "I documenti di consegna non potevano essere caricati. Rifiutare la pagina per riprovarci.",
         "EMPTY_STATE": {
           "ERROR": {
-            "TITLE": "Analytics couldn't be loaded",
-            "DESCRIPTION": "Refresh the page to try again."
+            "TITLE": "L'analisi non poteva essere caricata",
+            "DESCRIPTION": "Aggiorna la pagina per riprovare."
           },
           "PENDING": {
-            "TITLE": "Delivery data will appear once sending begins",
-            "DESCRIPTION": "There are no delivery records for this campaign yet."
+            "TITLE": "I dati di consegna verranno visualizzati una volta che l'invio inizia",
+            "DESCRIPTION": "Non ci sono ancora documenti di consegna per questa campagna."
           },
           "UNAVAILABLE": {
-            "TITLE": "Analytics aren't available for this campaign",
-            "DESCRIPTION": "No delivery data was recorded for this campaign. This can happen for campaigns sent before campaign analytics were introduced."
+            "TITLE": "Gli analytics non sono disponibili per questa campagna",
+            "DESCRIPTION": "Nessun dato di consegna è stato registrato per questa campagna. Questo può accadere per le campagne inviate prima che vengano introdotte le analisi delle campagne."
           }
         },
         "PROCESSING_BANNER": {
-          "DEFAULT": "This campaign is still processing. Analytics will update automatically.",
-          "BOTH": "This campaign is still processing. {queued} messages are queued, and {awaitingUpdate} are awaiting a delivery update from WhatsApp.",
-          "BOTH_SINGLE": "This campaign is still processing. {queued} message is queued, and {awaitingUpdate} is awaiting a delivery update from WhatsApp.",
-          "BOTH_QUEUED_SINGLE": "This campaign is still processing. {queued} message is queued, and {awaitingUpdate} are awaiting a delivery update from WhatsApp.",
-          "BOTH_AWAITING_SINGLE": "This campaign is still processing. {queued} messages are queued, and {awaitingUpdate} is awaiting a delivery update from WhatsApp.",
-          "QUEUED": "This campaign is still processing. {count} message is queued. | This campaign is still processing. {count} messages are queued.",
-          "AWAITING_UPDATE": "This campaign is still processing. {count} message is awaiting a delivery update from WhatsApp. | This campaign is still processing. {count} messages are awaiting a delivery update from WhatsApp.",
-          "COMPLETING": "This campaign is completing. Analytics will update automatically."
+          "DEFAULT": "Questa campagna è ancora in fase di elaborazione. Analytics si aggiornerà automaticamente.",
+          "BOTH": "{queued} messaggi sono in coda, e {awaitingUpdate} sono in attesa di un aggiornamento di consegna da WhatsApp.",
+          "BOTH_SINGLE": "{queued} messaggio è in coda, e {awaitingUpdate} è in attesa di un aggiornamento di consegna da WhatsApp.",
+          "BOTH_QUEUED_SINGLE": "{queued} messaggio è in coda, e {awaitingUpdate} sono in attesa di un aggiornamento di consegna da WhatsApp.",
+          "BOTH_AWAITING_SINGLE": "{queued} messaggi sono in coda, e {awaitingUpdate} è in attesa di un aggiornamento di consegna da WhatsApp.",
+          "QUEUED": "Questa campagna è ancora in fase di elaborazione. {count} messaggio è in coda. | Questa campagna è ancora in fase di elaborazione. {count} messaggi sono in coda.",
+          "AWAITING_UPDATE": "{count} messaggio è in attesa di un aggiornamento di consegna da WhatsApp. | {count} messaggi sono in attesa di un aggiornamento di consegna da WhatsApp.",
+          "COMPLETING": "Questa campagna sta completando. Analytics si aggiornerà automaticamente."
         },
-        "RATE": "{value}% of audience",
-        "SENT_ON": "Sent on {date}",
+        "RATE": "{value} % del pubblico",
+        "SENT_ON": "Inviato il {date}",
         "PAGE_INFO": "Mostrando {startItem} - {endItem} di {totalItems} contatti",
         "BREADCRUMB": {
           "CAMPAIGNS": "Campagne",
@@ -245,46 +254,46 @@
         "METRICS": {
           "AUDIENCE": {
             "LABEL": "Pubblico",
-            "HINT": "Contacts included in this campaign."
+            "HINT": "Contatti inclusi in questa campagna."
           },
           "SENT": {
-            "LABEL": "Submitted to WhatsApp",
-            "HINT": "Messages accepted by WhatsApp for delivery."
+            "LABEL": "Inviato a WhatsApp",
+            "HINT": "Messaggi accettati da WhatsApp per la consegna."
           },
           "DELIVERED": {
             "LABEL": "Delivered",
-            "HINT": "Messages that reached the contact's device. Read messages are included."
+            "HINT": "Messaggi che hanno raggiunto il dispositivo del contatto. I messaggi di lettura sono inclusi."
           },
           "READ": {
             "LABEL": "Letto",
-            "HINT": "Messages opened by the contact."
+            "HINT": "Messaggi aperti dal contatto."
           },
           "FAILED": {
             "LABEL": "Non Riuscito",
-            "HINT": "Messages WhatsApp could not deliver."
+            "HINT": "I messaggi WhatsApp non potevano consegnare."
           },
           "SKIPPED": {
             "LABEL": "Skipped",
-            "HINT": "Contacts skipped before sending, usually because of a missing or invalid phone number."
+            "HINT": "Contatti saltati prima di inviare, di solito a causa di un numero di telefono mancante o non valido."
           }
         },
         "STATUS": {
           "QUEUED": "Queued",
-          "SENT": "Awaiting delivery update",
+          "SENT": "Aggiornamento di consegna in attesa",
           "DELIVERED": "Delivered",
           "READ": "Letto",
           "FAILED": "Non Riuscito",
           "SKIPPED": "Skipped"
         },
         "BREAKDOWN": {
-          "TITLE": "Delivery breakdown",
+          "TITLE": "Ripartizione della consegna",
           "DELIVERY_RATE": "{value}% delivered",
           "LEGEND": {
             "READ": "Letto",
             "DELIVERED": "Delivered",
             "FAILED": "Non Riuscito",
             "SKIPPED": "Skipped",
-            "PENDING": "Queued or awaiting update"
+            "PENDING": "Accogliato o in attesa di aggiornamento"
           }
         },
         "TABLE": {
@@ -292,7 +301,7 @@
           "CONTACT": "Contatto",
           "STATUS": "Stato",
           "MESSAGE": "Messaggio",
-          "MESSAGE_NOT_GENERATED": "Not generated",
+          "MESSAGE_NOT_GENERATED": "Non generato",
           "REASON": "Reason",
           "ERROR_CODE": "Code {code}"
         }

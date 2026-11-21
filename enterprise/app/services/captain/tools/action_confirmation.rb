@@ -24,10 +24,10 @@ module Captain::Tools::ActionConfirmation
   end
 
   # One pending action per conversation; a new one replaces the old, so the old card's nonce no longer matches.
-  def store!(conversation, tool:, params:, outputs:, start_at:)
+  def store!(conversation, tool:, values:, start_at:, locale: nil)
     nonce = SecureRandom.hex(16)
-    pending = { 'nonce' => nonce, 'tool_id' => tool.id, 'params' => params, 'outputs' => outputs, 'start_at' => start_at,
-                'expires_at' => TTL.from_now.iso8601 }
+    pending = { 'nonce' => nonce, 'tool_id' => tool.id, 'params' => values[:params], 'outputs' => values[:outputs], 'start_at' => start_at,
+                'expires_at' => TTL.from_now.iso8601, 'locale' => locale }.compact
     conversation.with_lock do
       attributes = conversation.additional_attributes.to_h.merge(PENDING_KEY => pending)
       conversation.update_columns(additional_attributes: attributes) # rubocop:disable Rails/SkipsModelValidations
@@ -58,16 +58,18 @@ module Captain::Tools::ActionConfirmation
 
   # Renders one of the action's messages (confirm_prompt, success, failure), or the default text when it is blank
   # or fails to render.
-  def message(tool, key, params:, outputs:, locale:)
-    I18n.with_locale(locale) do
-      default = I18n.t("captain.action_confirmation.#{key}", title: tool.title.to_s.sub(/\A[[:upper:]](?![[:upper:]])/, &:downcase))
-      template = tool.messages.to_h[key]
-      next default if template.blank?
+  def message(tool, key, values:, locale:, assistant: nil)
+    title = tool.title.to_s.sub(/\A[[:upper:]](?![[:upper:]])/, &:downcase)
+    default = Captain::Conversation::CustomerLocale.translate(
+      "captain.action_confirmation.#{key}", locale: locale, assistant: assistant, title: title
+    )
+    template = tool.messages.to_h[key]
+    return default if template.blank?
 
-      context = params.to_h.merge('outputs' => tool.outputs.to_h { |output| [output['key'], nil] }.merge(outputs.to_h))
-      tool.send(:render_template, template, context).presence || default
-    rescue StandardError
-      default
-    end
+    outputs = tool.outputs.to_h { |output| [output['key'], nil] }.merge(values[:outputs].to_h)
+    context = values[:params].to_h.merge('outputs' => outputs)
+    I18n.with_locale(locale) { tool.send(:render_template, template, context) }.presence || default
+  rescue StandardError
+    default
   end
 end

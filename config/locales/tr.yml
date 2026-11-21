@@ -420,6 +420,26 @@ tr:
       short_description: 'Kişilerinizi ve sohbetlerinizi LeadSquared CRM ile senkronize edin.'
       description: 'Kişilerinizi ve sohbetlerinizi LeadSquared CRM ile senkronize edin. Bu entegrasyon, yeni kişiler eklendiğinde otomatik olarak LeadSquared''da potansiyel müşteri oluşturur ve satış ekibinize tam bağlam sağlamak için sohbet etkinliğini kaydeder.'
   captain:
+    contact_form:
+      handoff_prompt: 'Sohbetten ayrılırsanız ekibimizin size ulaşabilmesi için iletişim bilgilerinizi bırakın.'
+      handoff_saved: 'Teşekkürler. İletişim bilgilerinizi kaydettik. Ekibimizden biri burada size yardımcı olmaya devam edecek.'
+      submit: 'Gönder'
+      invalid_field: 'Bu alanı kontrol edin.'
+      fields:
+        name:
+          label: 'Ad'
+          placeholder: 'Ad'
+        email:
+          label: 'E-posta adresi'
+          placeholder: 'E-posta adresi'
+        phone_number:
+          label: 'Telefon numarası'
+          placeholder: '+34612345678'
+          title: 'Ülke kodunu da yazın, örneğin +34612345678'
+    leads:
+      followup_form: 'Ekibimiz yanıtı hangi e-posta adresine göndersin?'
+      followup_submit: 'E-postayla yanıt iste'
+      followup_saved: 'Teşekkürler, %{name}. E-postayla yanıt talebinizi aldık.'
     copilot_message_required: Mesaj gerekli
     copilot_error: 'Please connect an assistant to this inbox to use Copilot'
     copilot_limit: 'You are out of Copilot credits. You can buy more credits from the billing section.'
