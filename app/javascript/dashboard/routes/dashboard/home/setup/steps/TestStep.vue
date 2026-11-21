@@ -60,7 +60,7 @@ const retryImport = async () => {
                 @click="retryImport"
               />
               <Button
-                :label="$t('HOME.GUIDED.TEST.REVIEW_WEBSITE')"
+                :label="$t('HOME.GUIDED.STEP_NAMES.KNOWLEDGE')"
                 size="sm"
                 variant="ghost"
                 color="slate"
