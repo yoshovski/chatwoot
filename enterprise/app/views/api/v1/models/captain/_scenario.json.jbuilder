@@ -2,6 +2,7 @@ json.id scenario.id
 json.title scenario.title
 json.description scenario.description
 json.instruction scenario.instruction
+json.localized_reply_copy scenario.localized_reply_copy
 json.tools scenario.tools
 json.enabled scenario.enabled
 json.assistant_id scenario.assistant_id

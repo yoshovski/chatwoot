@@ -420,6 +420,26 @@ zh_CN:
       short_description: '与 LeadSquared CRM 同步您的联系人和对话。'
       description: '与 LeadSquared CRM 同步您的联系人和对话。 当添加新联系人时，这种集成会自动在潜在客户创建线索，并记录对话活动，为您的销售团队提供完整的上下文。'
   captain:
+    contact_form:
+      handoff_prompt: '请留下联系方式，以便您离开聊天后我们的团队仍能联系到您。'
+      handoff_saved: '谢谢，您的联系方式已保存。我们的团队成员会在这里继续为您提供帮助。'
+      submit: '提交'
+      invalid_field: '请检查此字段。'
+      fields:
+        name:
+          label: '姓名'
+          placeholder: '姓名'
+        email:
+          label: '电子邮件地址'
+          placeholder: '电子邮件地址'
+        phone_number:
+          label: '电话号码'
+          placeholder: '+34612345678'
+          title: '请包含国家代码，例如 +34612345678'
+    leads:
+      followup_form: '我们的团队可以将答复发到哪个邮箱？'
+      followup_submit: '请求通过电子邮件回复'
+      followup_saved: '谢谢，%{name}。我们已收到您通过电子邮件获取答复的请求。'
     copilot_message_required: 消息是必填项
     copilot_error: '请为该收件箱连接一个助手以使用 Copilot'
     copilot_limit: '您的 Copilot 积分已用完。您可以从计费部分购买更多积分。'

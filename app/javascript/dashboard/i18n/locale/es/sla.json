@@ -9,7 +9,7 @@
     "LOADING": "Obteniendo SLAs",
     "SEARCH_PLACEHOLDER": "Search SLA...",
     "SEARCH": {
-      "NO_RESULTS": "No SLA found matching your search"
+      "NO_RESULTS": "No SLA encontrado que coincida con su búsqueda"
     },
     "PAYWALL": {
       "TITLE": "Actualiza para crear SLAs",
@@ -27,7 +27,7 @@
       "404": "No hay SLAs disponibles en esta cuenta.",
       "TABLE_HEADER": {
         "SLA": "SLA",
-        "BUSINESS_HOURS": "Business hours"
+        "BUSINESS_HOURS": "Horario de atención al cliente"
       },
       "EMPTY": {
         "TITLE_1": "Empresa P0",
@@ -35,8 +35,8 @@
         "TITLE_2": "Empresa P1",
         "DESC_2": "Problemas planteados por los clientes empresariales, deben reconocerse con rapidez."
       },
-      "BUSINESS_HOURS_ON": "Turned on",
-      "BUSINESS_HOURS_OFF": "Turned off",
+      "BUSINESS_HOURS_ON": "Encendido",
+      "BUSINESS_HOURS_OFF": "Apagado",
       "RESPONSE_TYPES": {
         "FRT": "Umbral de tiempo de primera respuesta",
         "NRT": "Umbral de tiempo de siguiente respuesta",

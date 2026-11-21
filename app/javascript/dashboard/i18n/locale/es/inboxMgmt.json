@@ -8,8 +8,8 @@
     "NO_RESULTS": "No inboxes found matching your search",
     "RECONNECTION_REQUIRED": "Tu bandeja de entrada está desconectada. No recibirás mensajes nuevos hasta que lo vuelvas a autorizar.",
     "CLICK_TO_RECONNECT": "Haga clic aquí para volver a conectar.",
-    "WHATSAPP_REGISTRATION_INCOMPLETE": "Your WhatsApp Business registration isn’t complete. Please check your display name status in Meta Business Manager before reconnecting.",
-    "COMPLETE_REGISTRATION": "Complete Registration",
+    "WHATSAPP_REGISTRATION_INCOMPLETE": "Su WhatsApp Registro de negocios no está completo. Por favor, compruebe su estado de nombre de pantalla en Meta Business Manager antes de volver a conectar.",
+    "COMPLETE_REGISTRATION": "Registro completo",
     "LIST": {
       "404": "No hay entradas adjuntas a esta cuenta."
     },
@@ -54,11 +54,11 @@
         "STATUS_LINK": "Ver actualizaciones de estado"
       },
       "INSTAGRAM": {
-        "CONTINUE_WITH_INSTAGRAM": "Continue with Instagram",
-        "CONNECT_YOUR_INSTAGRAM_PROFILE": "Connect your Instagram Profile",
-        "HELP": "To add your Instagram profile as a channel, you need to authenticate your Instagram Profile by clicking on 'Continue with Instagram' ",
-        "ERROR_MESSAGE": "There was an error connecting to Instagram, please try again",
-        "ERROR_AUTH": "There was an error connecting to Instagram, please try again",
+        "CONTINUE_WITH_INSTAGRAM": "Continuar con Instagram",
+        "CONNECT_YOUR_INSTAGRAM_PROFILE": "Conecta tu perfil Instagram",
+        "HELP": "Para añadir su perfil Instagram como canal, debe autenticar su perfil Instagram haciendo clic en 'Continúe con Instagram '",
+        "ERROR_MESSAGE": "Hubo un error que se conecta a Instagram, por favor inténtelo de nuevo",
+        "ERROR_AUTH": "Hubo un error que se conecta a Instagram, por favor inténtelo de nuevo",
         "NEW_INBOX_SUGGESTION": "This Instagram account was previously linked to a different inbox and has now been migrated here. All new messages will appear here. The old inbox will no longer be able to send or receive messages for this account.",
         "DUPLICATE_INBOX_BANNER": "This Instagram account was migrated to the new Instagram channel inbox. You won’t be able to send/receive Instagram messages from this inbox anymore.",
         "RESTRICTED_WARNING": "La creación de bandejas de entrada de Instagram no está disponible temporalmente debido a un problema en la API de Meta, no de Chatwoot. Estamos colaborando estrechamente con Meta para resolverlo cuanto antes.",
@@ -66,11 +66,11 @@
         "STATUS_LINK": "Ver actualizaciones de estado"
       },
       "TIKTOK": {
-        "CONTINUE_WITH_TIKTOK": "Continue with TikTok",
-        "CONNECT_YOUR_TIKTOK_PROFILE": "Connect your TikTok Profile",
-        "HELP": "To add your TikTok profile as a channel, you need to authenticate your TikTok Profile by clicking on 'Continue with TikTok' ",
-        "ERROR_MESSAGE": "There was an error connecting to TikTok, please try again",
-        "ERROR_AUTH": "There was an error connecting to TikTok, please try again",
+        "CONTINUE_WITH_TIKTOK": "Continuar con TikTok",
+        "CONNECT_YOUR_TIKTOK_PROFILE": "Conecta tu perfil de TikTok",
+        "HELP": "Para agregar su perfil TikTok como canal, debe autenticar su perfil TikTok haciendo clic en 'Continúe con TikTok'",
+        "ERROR_MESSAGE": "Hubo un error conectado a TikTok, por favor intente de nuevo",
+        "ERROR_AUTH": "Hubo un error conectado a TikTok, por favor intente de nuevo",
         "NORTH_AMERICA_WARNING": "Las conexiones de TikTok para cuentas norteamericanas no están disponibles temporalmente mientras esperamos una actualización del equipo de TikTok."
       },
       "TWITTER": {
@@ -94,11 +94,11 @@
         },
         "CHANNEL_WEBHOOK_SECRET": {
           "LABEL": "Webhook Secret",
-          "COPY": "Copy secret to clipboard",
-          "COPY_SUCCESS": "Secret copied to clipboard",
-          "TOGGLE": "Toggle secret visibility",
-          "RESET_SUCCESS": "Webhook secret regenerated successfully",
-          "RESET_ERROR": "Unable to regenerate webhook secret. Please try again"
+          "COPY": "Copiar secreto para el portapapeles",
+          "COPY_SUCCESS": "Secreto copiado para el portapapeles",
+          "TOGGLE": "Toggle secret visibilidad",
+          "RESET_SUCCESS": "Webhook secret regenerado con éxito",
+          "RESET_ERROR": "Incapaz de regenerar webhook secreto. Por favor, intente de nuevo"
         },
         "CHANNEL_DOMAIN": {
           "LABEL": "Dominio del sitio web",
@@ -127,7 +127,11 @@
           "IN_A_FEW_MINUTES": "En algunos minutos",
           "IN_A_FEW_HOURS": "En unas horas",
           "IN_A_DAY": "En un día",
-          "HELP_TEXT": "Éste tiempo se mostrará en el widget del chat"
+          "HELP_TEXT": "Éste tiempo se mostrará en el widget del chat",
+          "IMMEDIATELY": "Respondemos inmediatamente",
+          "CUSTOM_MESSAGE_LABEL": "Texto del tiempo de respuesta personalizada",
+          "CUSTOM_MESSAGE_PLACEHOLDER": "Deja en blanco para usar el tiempo de respuesta seleccionado",
+          "CUSTOM_MESSAGE_HELP_TEXT": "Opcionalmente, reemplace el tiempo de respuesta seleccionado con su propio mensaje."
         },
         "WIDGET_COLOR": {
           "LABEL": "Color del widget",
@@ -197,7 +201,8 @@
         "PROVIDERS": {
           "LABEL": "Proveedor de API",
           "TWILIO": "Twilio",
-          "BANDWIDTH": "Ancho de banda"
+          "BANDWIDTH": "Ancho de banda",
+          "TELNYX": "Telnyx"
         },
         "API": {
           "ERROR_MESSAGE": "No pudimos guardar el canal SMS"
@@ -241,6 +246,41 @@
             "TITLE": "URL de devolución de llamada",
             "SUBTITLE": "Tienes que configurar la URL de devolución de llamada de mensaje en Bandwidth con la URL mencionada aquí."
           }
+        },
+        "TELNYX": {
+          "INBOX_NAME": {
+            "LABEL": "Nombre del canal",
+            "PLACEHOLDER": "Por favor ingrese un nombre de canal",
+            "ERROR": "Este campo es necesario"
+          },
+          "API_KEY": {
+            "LABEL": "Clave API",
+            "PLACEHOLDER": "Ingrese la tecla Telnyx API (KEY...)",
+            "ERROR": "Este campo es necesario"
+          },
+          "MESSAGING_PROFILE_ID": {
+            "LABEL": "ID del perfil de mensajería",
+            "PLACEHOLDER": "Introduzca su perfil de mensajería Telnyx ID",
+            "HELP": "Señalamos el webhook de este perfil en Chatwoot y se le asigna el número.",
+            "ERROR": "Este campo es necesario"
+          },
+          "ACCOUNT_SID": {
+            "LABEL": "ID de cuenta",
+            "PLACEHOLDER": "Introduzca su ID de cuenta de Telnyx",
+            "HELP": "Se muestra bajo Configuración de Cuentas en el portal Telnyx. Necesitado para colocar y terminar llamadas.",
+            "ERROR": "Este campo es necesario"
+          },
+          "OUTBOUND_VOICE_PROFILE_ID": {
+            "LABEL": "ID de perfil de voz (opcional)",
+            "PLACEHOLDER": "Ingrese su perfil de voz de salida de Telnyx ID",
+            "HELP": "Requerido por Telnyx para llamadas salientes. Dejar vacío para adjuntar uno en el portal más tarde."
+          },
+          "PUBLIC_KEY": {
+            "LABEL": "Webhook Clave pública (opcional)",
+            "PLACEHOLDER": "Ingrese su llave pública de Telnyx",
+            "HELP": "De Keys &quot; Credenciales en el portal Telnyx. Cuando se establece, se rechazan los juegos web no firmados."
+          },
+          "SUBMIT_BUTTON": "Crear el canal Telnyx"
         }
       },
       "WHATSAPP": {
@@ -251,14 +291,14 @@
           "WHATSAPP_EMBEDDED": "WhatsApp Business",
           "TWILIO": "Twilio",
           "WHATSAPP_CLOUD": "Nube de WhatsApp",
-          "WHATSAPP_CLOUD_DESC": "Quick setup through Meta",
+          "WHATSAPP_CLOUD_DESC": "Configuración rápida a través de Meta",
           "WHATSAPP_CLOUD_MANUAL_SETUP_DESC": "Configuración manual con credenciales de la API de Cloud",
-          "TWILIO_DESC": "Connect via Twilio credentials",
+          "TWILIO_DESC": "Conéctate mediante credenciales Twilio",
           "360_DIALOG": "360dialog"
         },
         "SELECT_PROVIDER": {
-          "TITLE": "Select your API provider",
-          "DESCRIPTION": "Choose your WhatsApp provider. You can connect directly through Meta which requires no setup, or connect through Twilio using your account credentials.",
+          "TITLE": "Seleccione su proveedor API",
+          "DESCRIPTION": "Elija su proveedor WhatsApp. Puede conectarse directamente a través de Meta que no requiere configuración, o conectarse a través de Twilio utilizando las credenciales de su cuenta.",
           "RESTRICTION_DESCRIPTION": "Elige tu proveedor de WhatsApp. Puedes conectar WhatsApp Cloud manualmente con tus credenciales de la API de Cloud o conectarte mediante Twilio con las credenciales de tu cuenta."
         },
         "INBOX_NAME": {
@@ -400,35 +440,40 @@
           "DESC": "Usa la configuración rápida con Meta para conectar un número nuevo o uno existente de la aplicación WhatsApp Business. Se te redirigirá a Meta para iniciar sesión en tu cuenta de WhatsApp Business. Disponer de acceso de administrador facilitará la configuración.",
           "BENEFITS": {
             "TITLE": "Ventajas de WhatsApp Embedded Signup:",
-            "EASY_SETUP": "No manual configuration required",
-            "SECURE_AUTH": "Secure OAuth based authentication",
-            "AUTO_CONFIG": "Automatic webhook and phone number configuration"
+            "EASY_SETUP": "No se requiere configuración manual",
+            "SECURE_AUTH": "Segura OAuth autenticación basada",
+            "AUTO_CONFIG": "Configuración automática de webhook y número de teléfono"
           },
           "LEARN_MORE": {
             "TEXT": "Para obtener más información sobre la configuración rápida, los precios y las limitaciones, visita {link}.",
-            "LINK_TEXT": "this link"
+            "LINK_TEXT": "este enlace"
           },
-          "SUBMIT_BUTTON": "Connect with WhatsApp Business",
-          "AUTH_PROCESSING": "Authenticating with Meta",
-          "WAITING_FOR_BUSINESS_INFO": "Please complete business setup in the Meta window...",
-          "PROCESSING": "Setting up your WhatsApp Business Account",
+          "SUBMIT_BUTTON": "Conectar con WhatsApp Negocios",
+          "AUTH_PROCESSING": "Autenticar con Meta",
+          "WAITING_FOR_BUSINESS_INFO": "Por favor, complete la configuración de negocios en la ventana Meta...",
+          "PROCESSING": "Configuración de su cuenta comercial WhatsApp",
           "ENABLING_CALLING": "Activando llamadas de WhatsApp en tu número…",
           "LOADING_SDK": "Loading Facebook SDK...",
-          "CANCELLED": "WhatsApp Signup was cancelled",
-          "SUCCESS_TITLE": "WhatsApp Business Account Connected!",
-          "WAITING_FOR_AUTH": "Waiting for authentication...",
-          "INVALID_BUSINESS_DATA": "Invalid business data received from Facebook. Please try again.",
+          "CANCELLED": "WhatsApp Se canceló la suscripción",
+          "SUCCESS_TITLE": "WhatsApp Cuenta de Negocios Conectado!",
+          "WAITING_FOR_AUTH": "Esperando la autenticación...",
+          "INVALID_BUSINESS_DATA": "Datos de negocios inválidos recibidos de Facebook. Por favor, inténtelo de nuevo.",
           "UNSUPPORTED_COMPLETION": "La configuración Meta terminó sin un número de teléfono WhatsApp que se puede conectar. Por favor, ejecute la configuración de nuevo y añada un número de teléfono.",
-          "SIGNUP_ERROR": "Signup error occurred",
-          "AUTH_NOT_COMPLETED": "Authentication not completed. Please restart the process.",
-          "SUCCESS_FALLBACK": "WhatsApp Business Account has been successfully configured",
-          "MANUAL_FALLBACK": "If your number is already connected to the WhatsApp Business Platform (API), or if you’re a tech provider onboarding your own number, please use the {link} flow",
+          "SIGNUP_ERROR": "Error de registro ocurrido",
+          "AUTH_NOT_COMPLETED": "Autenticación no terminada. Por favor reinicie el proceso.",
+          "SUCCESS_FALLBACK": "WhatsApp Cuenta de Negocios se ha configurado con éxito",
+          "MANUAL_FALLBACK": "Si su número ya está conectado a la Plataforma de Negocios WhatsApp ( API ), o si usted es un proveedor de tecnología a bordo de su propio número, por favor utilice el flujo {link}",
           "MANUAL_LINK_TEXT": "configuración manual",
           "ACCESS_REQUEST": {
             "TITLE": "Configuración rápida con Meta",
             "DESCRIPTION": "Conecta un número nuevo o uno existente de la aplicación WhatsApp Business sin configuración manual. Para solicitar esta opción, cuéntanos a qué se dedica tu empresa, cómo usarás WhatsApp y qué cuenta de Chatwoot necesita acceso.",
             "FOOTNOTE": "Revisaremos tu solicitud y te informaremos si podemos habilitar esta opción. También puedes continuar con la configuración manual que aparece a continuación.",
-            "BUTTON": "Solicitar acceso"
+            "BUTTON": "Solicitar acceso",
+            "FORM_DESCRIPTION": "Cuéntanos sobre tu negocio y cómo planeas usar WhatsApp. Presenta tu caso de uso para habilitar la configuración rápida de tu cuenta.",
+            "USE_CASE_LABEL": "Caso de uso empresarial",
+            "USE_CASE_PLACEHOLDER": "Por ejemplo, vendemos muebles para el hogar y utilizamos WhatsApp para responder preguntas de producto y ayudar a los clientes con sus pedidos.",
+            "SUBMIT": "Enviar",
+            "ERROR": "No podíamos permitir el acceso. Por favor, intente de nuevo."
           },
           "RESTRICTED_WARNING": "El registro integrado de WhatsApp no está disponible temporalmente debido a un problema en la API de Meta, no de Chatwoot. Puedes usar la configuración manual para los números compatibles con la API de Cloud. Estamos colaborando estrechamente con Meta para resolverlo cuanto antes.",
           "STATUS_LINK": "Ver actualizaciones de estado",
@@ -441,44 +486,49 @@
         }
       },
       "VOICE": {
-        "TITLE": "Voice Channel",
+        "TITLE": "Canal de voz",
         "DESC": "Integrate Twilio Voice and start supporting your customers via phone calls.",
         "PHONE_NUMBER": {
           "LABEL": "Número telefónico",
-          "PLACEHOLDER": "Enter your phone number (e.g. +1234567890)",
-          "ERROR": "Please provide a valid phone number in E.164 format (e.g. +1234567890)"
+          "PLACEHOLDER": "Introduzca su número de teléfono (por ejemplo, +1234567890)",
+          "ERROR": "Por favor, proporcione un número de teléfono válido en formato E. 164 (por ejemplo, +1234567890 )"
         },
         "TWILIO": {
           "ACCOUNT_SID": {
             "LABEL": "Cuenta SID",
-            "PLACEHOLDER": "Enter your Twilio Account SID",
-            "REQUIRED": "Account SID is required"
+            "PLACEHOLDER": "Ingrese su cuenta Twilio SID",
+            "REQUIRED": "Cuenta SID es necesaria"
           },
           "AUTH_TOKEN": {
             "LABEL": "Token de Auth",
-            "PLACEHOLDER": "Enter your Twilio Auth Token",
-            "REQUIRED": "Auth Token is required"
+            "PLACEHOLDER": "Entra en tu Token de Auth Twilio",
+            "REQUIRED": "Auth Token es necesario"
           },
           "API_KEY_SID": {
             "LABEL": "API Key SID",
-            "PLACEHOLDER": "Enter your Twilio API Key SID",
-            "REQUIRED": "API Key SID is required"
+            "PLACEHOLDER": "Introduzca su Twilio API Key SID",
+            "REQUIRED": "API Se requiere SID clave"
           },
           "API_KEY_SECRET": {
             "LABEL": "Clave API secreta",
-            "PLACEHOLDER": "Enter your Twilio API Key Secret",
-            "REQUIRED": "API Key Secret is required"
+            "PLACEHOLDER": "Ingrese su Twilio API Secreto Clave",
+            "REQUIRED": "API El secreto clave es necesario"
           }
         },
         "CONFIGURATION": {
           "TWILIO_VOICE_URL_TITLE": "Twilio Voice URL",
-          "TWILIO_VOICE_URL_SUBTITLE": "Configure this URL as the Voice URL on your Twilio phone number and TwiML App.",
+          "TWILIO_VOICE_URL_SUBTITLE": "Configure este URL como la Voz URL en su número de teléfono Twilio y la aplicación TwiML.",
           "TWILIO_STATUS_URL_TITLE": "Twilio Status Callback URL",
           "TWILIO_STATUS_URL_SUBTITLE": "Configure this URL as the Status Callback URL on your Twilio phone number."
         },
-        "SUBMIT_BUTTON": "Create Voice Channel",
+        "SUBMIT_BUTTON": "Crear canal de voz",
         "API": {
-          "ERROR_MESSAGE": "We were not able to create the voice channel"
+          "ERROR_MESSAGE": "No pudimos crear el canal de voz"
+        },
+        "PROVIDERS": {
+          "LABEL": "Proveedor de voz",
+          "TWILIO": "Twilio",
+          "TELNYX": "Telnyx"
         }
       },
       "API_CHANNEL": {
@@ -518,9 +568,9 @@
         },
         "FINISH_MESSAGE": "Empieze a reenviar su emails a la siguiente dirección de email.",
         "FINISH_MESSAGE_NO_FORWARDING": "Your email inbox has been created successfully! You need to configure SMTP and IMAP credentials to send and receive emails. Without these settings, no emails will be processed.",
-        "FORWARDING_ADDRESS_LABEL": "Forward emails to this address:",
+        "FORWARDING_ADDRESS_LABEL": "E-mails directos a esta dirección:",
         "CONFIGURE_SMTP_IMAP_LINK": "Haz clic aquí",
-        "CONFIGURE_SMTP_IMAP_TEXT": " to configure IMAP and SMTP settings"
+        "CONFIGURE_SMTP_IMAP_TEXT": "para configurar la configuración IMAP y SMTP"
       },
       "LINE_CHANNEL": {
         "TITLE": "Canal LÍNEA",
@@ -567,20 +617,20 @@
       "AUTH": {
         "TITLE": "Elija un canal",
         "DESC": "Chatwoot soporta widgets de Live Chat, Facebook Messenger, perfiles de Twitter, WhatsApp, correos electrónicos, etc., como canales. Si quieres construir un canal personalizado, puedes crearlo usando el canal API. Para empezar, elige uno de los canales a continuación.",
-        "TITLE_NEXT": "Complete the setup",
+        "TITLE_NEXT": "Completar la configuración",
         "TITLE_FINISH": "Voilà!",
         "CHANNEL": {
           "WEBSITE": {
             "TITLE": "Sitio web",
-            "DESCRIPTION": "Create a live-chat widget"
+            "DESCRIPTION": "Crear un widget en vivo"
           },
           "FACEBOOK": {
             "TITLE": "Facebook",
-            "DESCRIPTION": "Connect your Facebook page"
+            "DESCRIPTION": "Conecta tu página Facebook"
           },
           "WHATSAPP": {
             "TITLE": "WhatsApp",
-            "DESCRIPTION": "Support your customers on WhatsApp"
+            "DESCRIPTION": "Apoya a tus clientes en WhatsApp"
           },
           "WHATSAPP_CALL": {
             "TITLE": "Llamada de WhatsApp",
@@ -588,7 +638,7 @@
           },
           "EMAIL": {
             "TITLE": "E-mail",
-            "DESCRIPTION": "Connect with Gmail, Outlook, or other providers"
+            "DESCRIPTION": "Conectar con Gmail, Outlook u otros proveedores"
           },
           "SMS": {
             "TITLE": "SMS",
@@ -596,23 +646,23 @@
           },
           "API": {
             "TITLE": "API",
-            "DESCRIPTION": "Make a custom channel using our API"
+            "DESCRIPTION": "Haga un canal personalizado usando nuestro API"
           },
           "TELEGRAM": {
             "TITLE": "Telegram",
-            "DESCRIPTION": "Configure Telegram channel using Bot token"
+            "DESCRIPTION": "Configurar el canal Telegram utilizando Bot token"
           },
           "LINE": {
             "TITLE": "Line",
-            "DESCRIPTION": "Integrate your Line channel"
+            "DESCRIPTION": "Integra tu canal de línea"
           },
           "INSTAGRAM": {
             "TITLE": "Instagram",
-            "DESCRIPTION": "Connect your instagram account"
+            "DESCRIPTION": "Conecta tu cuenta de instagram"
           },
           "TIKTOK": {
             "TITLE": "TikTok",
-            "DESCRIPTION": "Connect your TikTok account",
+            "DESCRIPTION": "Conecta tu cuenta de TikTok",
             "ACCESS_REQUEST_DESCRIPTION": "Póngase en contacto con nuestro equipo de soporte para solicitar acceso a TikTok"
           },
           "VOICE": {
@@ -677,7 +727,10 @@
       "WEBSITE_SUCCESS": "Has terminado de crear un canal del sitio web. Copia el código que se muestra a continuación y pégalo en tu sitio web. La próxima vez que un cliente use el chat en vivo, la conversación aparecerá automáticamente en su bandeja de entrada.",
       "WHATSAPP_QR_INSTRUCTION": "Scan the QR code above to quickly test your WhatsApp inbox",
       "MESSENGER_QR_INSTRUCTION": "Scan the QR code above to quickly test your Facebook Messenger inbox",
-      "TELEGRAM_QR_INSTRUCTION": "Scan the QR code above to quickly test your Telegram inbox"
+      "TELEGRAM_QR_INSTRUCTION": "Scan the QR code above to quickly test your Telegram inbox",
+      "SMS_QR_INSTRUCTION": "Escríbase el código QR arriba para probar rápidamente su canal SMS",
+      "SMS_QR_ALT": "Código QR para probar el canal SMS",
+      "TWILIO_CALLBACK_FALLBACK": "Webhooks se configuran automáticamente. Si los mensajes entrantes no llegan, utilice este callback URL en Twilio."
     },
     "REAUTH": "Reautorizar",
     "VIEW": "Ver",
@@ -723,10 +776,10 @@
         "DISABLED": "Deshabilitado"
       },
       "LOCK_TO_SINGLE_CONVERSATION": {
-        "ENABLED": "Reopen same conversation",
-        "DISABLED": "Create new conversations",
-        "ENABLED_DESCRIPTION": "When a contact messages again, the previous conversation will be reopened.",
-        "DISABLED_DESCRIPTION": "A new conversation will be created each time after the previous one is resolved."
+        "ENABLED": "Repite la misma conversación.",
+        "DISABLED": "Crear nuevas conversaciones",
+        "ENABLED_DESCRIPTION": "Cuando un mensaje de contacto de nuevo, la conversación anterior será reabierta.",
+        "DISABLED_DESCRIPTION": "Una nueva conversación se creará cada vez después de que se resuelva el anterior."
       },
       "ENABLE_HMAC": {
         "LABEL": "Habilitar"
@@ -758,7 +811,7 @@
       "BUSINESS_HOURS": "Horarios",
       "WIDGET_BUILDER": "Constructor de Widget",
       "BOT_CONFIGURATION": "Configuración del bot",
-      "ACCOUNT_HEALTH": "Account Health",
+      "ACCOUNT_HEALTH": "Cuenta de salud",
       "CSAT": "Encuestas de Satisfacción",
       "VOICE": "Voz",
       "CALLS": "Llamadas"
@@ -804,13 +857,13 @@
         "PLACEHOLDER": "Nos gustaría llamarte en relación con tu conversación."
       }
     },
-    "CHANNEL_PREFERENCES": "Channel Preferences",
+    "CHANNEL_PREFERENCES": "Preferencias del Canal",
     "WIDGET_FEATURES": "Widget features",
     "ACCOUNT_HEALTH": {
-      "TITLE": "Manage your WhatsApp account",
+      "TITLE": "Administrar su cuenta WhatsApp",
       "DESCRIPTION": "Revisa el estado de tu número de teléfono de WhatsApp, la capacidad de mensajería y los datos de la empresa de Meta vinculada.",
-      "GO_TO_SETTINGS": "Go to Meta Business Manager",
-      "NO_DATA": "Health data is not available",
+      "GO_TO_SETTINGS": "Vaya a Meta Business Manager",
+      "NO_DATA": "No se dispone de datos de salud",
       "ERRORS": {
         "AUTHORIZATION": {
           "EMBEDDED_TITLE": "Es necesario actualizar la conexión de WhatsApp",
@@ -846,8 +899,8 @@
           "TOOLTIP": "Enlaces web mostrados en el perfil de negocio de WhatsApp"
         },
         "DISPLAY_PHONE_NUMBER": {
-          "LABEL": "Display phone number",
-          "TOOLTIP": "Phone number displayed to customers"
+          "LABEL": "Mostrar número de teléfono",
+          "TOOLTIP": "Número de teléfono mostrado a los clientes"
         },
         "VERIFIED_NAME": {
           "LABEL": "Nombre visible en WhatsApp",
@@ -862,7 +915,7 @@
           "TOOLTIP": "Este número está conectado tanto a la aplicación WhatsApp Business como a la API de Cloud"
         },
         "DISPLAY_NAME_STATUS": {
-          "LABEL": "Display name status",
+          "LABEL": "Mostrar el estado de nombre",
           "TOOLTIP": "Si Meta ha revisado y aprobado el nombre para mostrar WhatsApp",
           "DESCRIPTIONS": {
             "APPROVED": "El nombre mostrado está aprobado y puede aparecer en la parte superior de los chats de WhatsApp. En su lugar puede aparecer un nombre guardado por el destinatario.",
@@ -883,7 +936,7 @@
           "TOOLTIP": "Estado actual de conexión de este número de teléfono en WhatsApp"
         },
         "QUALITY_RATING": {
-          "LABEL": "Quality rating",
+          "LABEL": "Valoración de calidad",
           "TOOLTIP": "Calificación de calidad que Meta asigna a este número de teléfono según las señales recientes de mensajería"
         },
         "MESSAGING_LIMIT_TIER": {
@@ -892,7 +945,7 @@
           "DESCRIPTION": "Este límite es compartido por todos los números de teléfono de WhatsApp en el portafolio de negocios."
         },
         "ACCOUNT_MODE": {
-          "LABEL": "Account mode",
+          "LABEL": "Modo de cuenta",
           "TOOLTIP": "Modo de funcionamiento actual de este número de teléfono de WhatsApp"
         },
         "CODE_VERIFICATION_STATUS": {
@@ -923,14 +976,14 @@
       "VALUES": {
         "NOT_AVAILABLE": "No disponible",
         "TIERS": {
-          "TIER_250": "250 customers per 24h",
-          "TIER_1000": "1K customers per 24h",
-          "TIER_1K": "1K customers per 24h",
+          "TIER_250": "250 clientes por 24 h",
+          "TIER_1000": "1 K clientes por 24 h",
+          "TIER_1K": "1 K clientes por 24 h",
           "TIER_2K": "2000 clientes cada 24 h",
-          "TIER_10K": "10K customers per 24h",
-          "TIER_100K": "100K customers per 24h",
-          "TIER_UNLIMITED": "Unlimited customers per 24h",
-          "UNKNOWN": "Rating not available"
+          "TIER_10K": "10 K clientes por 24 h",
+          "TIER_100K": "100 K clientes por 24 h",
+          "TIER_UNLIMITED": "Clientes ilimitados por 24 h",
+          "UNKNOWN": "Valoración no disponible"
         },
         "STATUSES": {
           "APPROVED": "Approved",
@@ -948,7 +1001,7 @@
           "AVAILABLE_WITHOUT_REVIEW": "Aún no revisado",
           "REJECTED": "No aprobado",
           "DECLINED": "No aprobado",
-          "NON_EXISTS": "Non exists"
+          "NON_EXISTS": "No existe"
         },
         "MODES": {
           "SANDBOX": "Sandbox",
@@ -959,14 +1012,14 @@
         "PREVIEW_LABEL": "Perfil de negocio de WhatsApp"
       },
       "WEBHOOK": {
-        "TITLE": "Webhook Configuration",
-        "DESCRIPTION": "Webhook URL is required for your WhatsApp Business Account to receive messages from customers",
-        "ACTION_REQUIRED": "Webhook not configured",
-        "REGISTER_BUTTON": "Register Webhook",
-        "REGISTER_SUCCESS": "Webhook registered successfully",
-        "REGISTER_ERROR": "Failed to register webhook. Please try again.",
-        "CONFIGURED_SUCCESS": "Webhook configured successfully",
-        "URL_MISMATCH": "Webhook URL mismatch",
+        "TITLE": "Configuración Webhook",
+        "DESCRIPTION": "Webhook URL es necesario para que su cuenta comercial WhatsApp reciba mensajes de clientes",
+        "ACTION_REQUIRED": "Webhook no configurado",
+        "REGISTER_BUTTON": "Registro Webhook",
+        "REGISTER_SUCCESS": "Webhook registrado con éxito",
+        "REGISTER_ERROR": "Failed to register webhook. Por favor, inténtelo de nuevo.",
+        "CONFIGURED_SUCCESS": "Webhook configurado con éxito",
+        "URL_MISMATCH": "Webhook URL desajusttch",
         "CONFIGURED_URL": "URL configurada",
         "EXPECTED_URL": "URL esperada",
         "COPY_URL": "Copiar URL del webhook",
@@ -985,21 +1038,32 @@
       "MESSENGER_HEADING": "Script de Messenger",
       "MESSENGER_SUB_HEAD": "Coloca este botón dentro de tu etiqueta cuerpo",
       "ALLOWED_DOMAINS": {
-        "TITLE": "Allowed Domains",
-        "DESCRIPTION": "Restrict which websites can embed your chat widget. For security, only add domains you own and trust. Add one or more domains separated by commas. Leave blank to allow all domains (not recommended for production).",
+        "TITLE": "Permanos permitidos",
+        "DESCRIPTION": "Restringir qué sitios web pueden incrustar su widget de chat. Para seguridad, sólo agregue dominios que posee y confíe. Agregue uno o más dominios separados por comas. Deja en blanco para permitir todos los dominios (no recomendado para la producción).",
         "PLACEHOLDER": "example.com, www.example.com, app.example.com"
       },
       "ALLOW_MOBILE_WEBVIEW": {
-        "LABEL": "Enable widget in mobile apps",
-        "SUBTITLE": "Check this if you embed the widget in iOS or Android apps. Mobile apps don't send domain information, so they would be blocked by domain restrictions unless this is enabled."
+        "LABEL": "Enable widget en aplicaciones móviles",
+        "SUBTITLE": "Revise esto si usted incrusta el widget en aplicaciones iOS o Android. Las aplicaciones móviles no envían información de dominio, por lo que serían bloqueadas por restricciones de dominio a menos que esto esté habilitado."
       },
       "IDENTITY_VALIDATION": {
-        "TITLE": "Identity Validation",
-        "DESCRIPTION": "Verify user authenticity by generating secure tokens. This prevents unauthorized users from impersonating others in your chat.",
+        "TITLE": "Validación de identidad",
+        "DESCRIPTION": "Verifica la autenticidad del usuario generando fichas seguras. Esto evita que los usuarios no autorizados infecten a otros en su chat.",
         "SECRET_KEY": "Secret Key",
-        "VIEW_DOCS": "View documentation",
-        "REQUIRE_LABEL": "Require identity validation for all conversations",
-        "REQUIRE_DESCRIPTION": "When enabled, users must provide a valid identity token to start conversations. Requests without valid tokens will be rejected."
+        "VIEW_DOCS": "Ver documentación",
+        "REQUIRE_LABEL": "Exigir la validación de identidad para todas las conversaciones",
+        "REQUIRE_DESCRIPTION": "Cuando esté habilitado, los usuarios deben proporcionar un token de identidad válido para iniciar conversaciones. Las solicitudes sin tokens válidos serán rechazadas.",
+        "ROTATE": {
+          "BUTTON": "Clave rotatoria",
+          "TITLE": "¿Rotar la llave secreta?",
+          "WARNING": "La llave actual es revocada al instante que la gira.",
+          "WARNING_DETAIL": "No hay periodo de solapamiento y no puede ser restaurado.",
+          "IMPACT": "Sus servidores deben firmar a los usuarios con la nueva llave. Cualquiera que se haya firmado con el viejo falla en la verificación. Si se requiere validación de identidad, no pueden iniciar una conversación.",
+          "CONFIRM": "Clave rotatoria",
+          "CANCEL": "Cancelar",
+          "SUCCESS": "La clave secreta rota con éxito",
+          "ERROR": "No podía girar la llave secreta, por favor intente de nuevo"
+        }
       },
       "INBOX_AGENTS": "Agentes",
       "INBOX_AGENTS_SUB_TEXT": "Añadir o quitar agentes de esta bandeja de entrada",
@@ -1015,7 +1079,7 @@
       "ENABLE_CONTINUITY_VIA_EMAIL_SUB_TEXT": "Las conversaciones continuarán por correo electrónico si la dirección de correo electrónico de contacto está disponible.",
       "ENABLE_CONTINUITY_VIA_EMAIL_DISABLED_TEXT": "Esta función está disponible en un plan de pago. Actualiza para habilitar la continuidad de la conversación por correo electrónico.",
       "LOCK_TO_SINGLE_CONVERSATION": "Conversation Routing",
-      "LOCK_TO_SINGLE_CONVERSATION_SUB_TEXT": "Configure conversation creation for existing contacts",
+      "LOCK_TO_SINGLE_CONVERSATION_SUB_TEXT": "Configurar la creación de conversaciones para contactos existentes",
       "INBOX_UPDATE_TITLE": "Ajustes de la Bandeja de Entrada",
       "INBOX_UPDATE_SUB_TEXT": "Actualizar la configuración de tu bandeja de entrada",
       "AUTO_ASSIGNMENT_SUB_TEXT": "Activar o desactivar la asignación automática de nuevas conversaciones a los agentes añadidos a esta bandeja de entrada.",
@@ -1047,7 +1111,7 @@
       "WHATSAPP_BUSINESS_MANAGEMENT_TOKEN_UPDATE_SUCCESS": "El token de administración empresarial de WhatsApp se actualizó correctamente.",
       "WHATSAPP_BUSINESS_MANAGEMENT_TOKEN_UPDATE_ERROR": "No se pudo actualizar el token de administración empresarial. Verifica su permiso de administración de WhatsApp Business y el acceso a la cuenta e inténtalo de nuevo.",
       "WHATSAPP_BUSINESS_MANAGEMENT_TOKEN_GUIDE_LINK": "Aprende a generar un token de administración de WhatsApp Business",
-      "WHATSAPP_EMBEDDED_SIGNUP_TITLE": "WhatsApp Embedded Signup",
+      "WHATSAPP_EMBEDDED_SIGNUP_TITLE": "WhatsApp Incrustado",
       "WHATSAPP_EMBEDDED_SIGNUP_SUBHEADER": "Esta bandeja de entrada está conectada mediante WhatsApp Embedded Signup.",
       "WHATSAPP_EMBEDDED_SIGNUP_DESCRIPTION": "Puedes reconfigurar esta bandeja de entrada para actualizar los ajustes de WhatsApp Business.",
       "WHATSAPP_RECONFIGURE_BUTTON": "Reconfigurar",
@@ -1060,17 +1124,17 @@
       "WHATSAPP_MANUAL_TRANSFER_BUTTON": "Cambiar a Configuración Manual",
       "WHATSAPP_MANUAL_TRANSFER_SUCCESS": "La bandeja de entrada cambió a la configuración manual con éxito.",
       "WHATSAPP_MANUAL_TRANSFER_ERROR": "No se pudo cambiar a la configuración manual. Por favor, compruebe las credenciales e inténtelo de nuevo.",
-      "WHATSAPP_CONNECT_TITLE": "Connect to WhatsApp Business",
-      "WHATSAPP_CONNECT_SUBHEADER": "Upgrade to WhatsApp embedded signup for easier management.",
+      "WHATSAPP_CONNECT_TITLE": "Conectar a WhatsApp Negocios",
+      "WHATSAPP_CONNECT_SUBHEADER": "Actualizar a WhatsApp incrustado de registro para una gestión más fácil.",
       "WHATSAPP_CONNECT_DESCRIPTION": "Connect this inbox to WhatsApp Business for enhanced features and easier management.",
       "WHATSAPP_CONNECT_BUTTON": "Conectar",
-      "WHATSAPP_CONNECT_SUCCESS": "Successfully connected to WhatsApp Business!",
-      "WHATSAPP_CONNECT_ERROR": "Failed to connect to WhatsApp Business. Please try again.",
+      "WHATSAPP_CONNECT_SUCCESS": "Con éxito conectado a WhatsApp Negocios!",
+      "WHATSAPP_CONNECT_ERROR": "Failed to connect to WhatsApp Business. Por favor, inténtelo de nuevo.",
       "WHATSAPP_RECONFIGURE_SUCCESS": "WhatsApp Business se reconfiguró correctamente.",
       "WHATSAPP_RECONFIGURE_ERROR": "No se pudo reconfigurar WhatsApp Business. Inténtalo de nuevo.",
-      "WHATSAPP_APP_ID_MISSING": "WhatsApp App ID is not configured. Please contact your administrator.",
-      "WHATSAPP_CONFIG_ID_MISSING": "WhatsApp Configuration ID is not configured. Please contact your administrator.",
-      "WHATSAPP_LOGIN_CANCELLED": "WhatsApp login was cancelled. Please try again.",
+      "WHATSAPP_APP_ID_MISSING": "WhatsApp No está configurado el ID de aplicación. Por favor, contacte con su administrador.",
+      "WHATSAPP_CONFIG_ID_MISSING": "WhatsApp El ID de configuración no está configurado. Contacte con su administrador.",
+      "WHATSAPP_LOGIN_CANCELLED": "WhatsApp login fue cancelado. Por favor inténtelo de nuevo.",
       "WHATSAPP_WEBHOOK_TITLE": "Token de verificación del Webhook",
       "WHATSAPP_WEBHOOK_SUBHEADER": "Este token se utiliza para verificar la autenticidad del extremo del webhook.",
       "WHATSAPP_TEMPLATES_SYNC_TITLE": "Sincronizar plantillas",
@@ -1095,7 +1159,7 @@
           "PRESERVED_DESCRIPTION": "Conversaciones, contactos, colaboradores, enrutamiento, horas de trabajo y ajustes de bandeja de entrada.",
           "UPDATED_TITLE": "Actualizado",
           "UPDATED_DESCRIPTION": "WABA ID, número de teléfono ID, token de acceso y configuración de webhook.",
-          "WABA_ID": "WABA ID",
+          "WABA_ID": "ID de WABA",
           "WABA_PLACEHOLDER": "Introduzca ID de WABA",
           "WABA_HELP": "La cuenta de negocios de WhatsApp que posee este número de teléfono.",
           "PHONE_NUMBER_ID": "ID de número de teléfono",
@@ -1145,7 +1209,13 @@
         "LABEL": "Habilitar llamadas de voz",
         "DESCRIPTION": "Permitir a los agentes iniciar y recibir llamadas de voz de WhatsApp en esta bandeja de entrada. Disponible sólo en canales de registro embebido de WhatsApp Cloud con permiso de llamada concedido por Meta."
       },
-      "UPDATE_PRE_CHAT_FORM_SETTINGS": "Actualizar configuración de Formulario de Chat"
+      "UPDATE_PRE_CHAT_FORM_SETTINGS": "Actualizar configuración de Formulario de Chat",
+      "ENABLE_DEMO_MODE": "página de demostración",
+      "ENABLE_DEMO_MODE_SUB_TEXT": "Publique una página de compartir con el widget de este canal abierto, para mostrar al asistente a un cliente. Cualquier persona con el enlace puede iniciar una conversación.",
+      "DEMO_SLUG": "Nombre del enlace de demostración",
+      "DEMO_SLUG_HINT": "Rellenado desde el nombre de la cuenta cuando enciendas esto. Cámbialo si quieres un enlace diferente.",
+      "DEMO_SLUG_PLACEHOLDER": "Generado en el nombre de la cuenta",
+      "DEMO_SLUG_ERROR": "Usar letras minúsculas, números e hifénes."
     },
     "HELP_CENTER": {
       "LABEL": "Centro de ayuda",
@@ -1162,50 +1232,50 @@
     },
     "ASSIGNMENT": {
       "TITLE": "Asignación de conversación",
-      "DESCRIPTION": "Automatically assign incoming conversations to available agents based on assignment policies",
-      "ENABLE_AUTO_ASSIGNMENT": "Enable automatic conversation assignment",
-      "DEFAULT_RULES_TITLE": "Default assignment rules",
-      "DEFAULT_RULES_DESCRIPTION": "Using the default assignment behavior for all conversations",
-      "DEFAULT_RULE_1": "Earliest created conversations first",
-      "DEFAULT_RULE_2": "Round robin distribution",
-      "CUSTOMIZE_WITH_POLICY": "Customize with assignment policy",
+      "DESCRIPTION": "Asignar automáticamente conversaciones entrantes a los agentes disponibles sobre la base de las políticas de asignación",
+      "ENABLE_AUTO_ASSIGNMENT": "Activar la asignación de conversación automática",
+      "DEFAULT_RULES_TITLE": "Reglas de asignación por defecto",
+      "DEFAULT_RULES_DESCRIPTION": "Usando el comportamiento de asignación predeterminado para todas las conversaciones",
+      "DEFAULT_RULE_1": "Las conversaciones creadas más tempranamente primero",
+      "DEFAULT_RULE_2": "Distribución de la robinería redonda",
+      "CUSTOMIZE_WITH_POLICY": "Personalizar con la política de asignación",
       "USING_POLICY": "Using custom assignment policy for this inbox",
-      "CUSTOMIZE_POLICY": "Customize with assignment policy",
-      "DELETE_POLICY": "Delete policy",
-      "POLICY_LABEL": "Assignment policy",
-      "ASSIGNMENT_ORDER_LABEL": "Assignment Order",
-      "ASSIGNMENT_METHOD_LABEL": "Assignment Method",
+      "CUSTOMIZE_POLICY": "Personalizar con la política de asignación",
+      "DELETE_POLICY": "Eliminar la política",
+      "POLICY_LABEL": "Política de asignación",
+      "ASSIGNMENT_ORDER_LABEL": "Orden de asignación",
+      "ASSIGNMENT_METHOD_LABEL": "Método de asignación",
       "POLICY_STATUS": {
         "ACTIVE": "Activo",
         "INACTIVE": "Inactive"
       },
       "PRIORITY": {
-        "EARLIEST_CREATED": "Earliest created",
-        "LONGEST_WAITING": "Longest waiting"
+        "EARLIEST_CREATED": "Creado con anterioridad",
+        "LONGEST_WAITING": "La espera más larga"
       },
       "METHOD": {
-        "ROUND_ROBIN": "Round robin",
-        "BALANCED": "Balanced assignment"
+        "ROUND_ROBIN": "Robinto redondo",
+        "BALANCED": "Asignación equilibrada"
       },
-      "UPGRADE_PROMPT": "Custom assignment policies are available on the Business plan",
-      "UPGRADE_TO_BUSINESS": "Upgrade to Business",
-      "DEFAULT_POLICY_LINKED": "Default policy linked",
+      "UPGRADE_PROMPT": "Las políticas de asignación personalizadas están disponibles en el plan de negocios",
+      "UPGRADE_TO_BUSINESS": "Actualización a los negocios",
+      "DEFAULT_POLICY_LINKED": "Política predeterminada vinculada",
       "DEFAULT_POLICY_DESCRIPTION": "Link a custom assignment policy to customize how conversations are assigned to agents in this inbox.",
-      "LINK_EXISTING_POLICY": "Link existing policy",
-      "CREATE_NEW_POLICY": "Create new policy",
-      "NO_POLICIES": "No assignment policies found",
-      "VIEW_ALL_POLICIES": "View all policies",
-      "CURRENT_BEHAVIOR": "Currently using default assignment behavior:",
-      "LINK_SUCCESS": "Assignment policy linked successfully",
-      "LINK_ERROR": "Failed to link assignment policy"
+      "LINK_EXISTING_POLICY": "Vínculos de la política existente",
+      "CREATE_NEW_POLICY": "Crear una nueva política",
+      "NO_POLICIES": "No se han encontrado políticas de asignación",
+      "VIEW_ALL_POLICIES": "Ver todas las políticas",
+      "CURRENT_BEHAVIOR": "Actualmente usando el comportamiento de asignación predeterminado:",
+      "LINK_SUCCESS": "Política de asignación vinculada con éxito",
+      "LINK_ERROR": "Falta de vinculación de la política de asignación"
     },
     "ASSIGNMENT_POLICY": {
-      "DELETE_CONFIRM_TITLE": "Delete assignment policy?",
+      "DELETE_CONFIRM_TITLE": "¿Supir la política de asignación?",
       "DELETE_CONFIRM_MESSAGE": "Are you sure you want to remove this assignment policy from this inbox? The inbox will revert to default assignment rules.",
       "CANCEL": "Cancelar",
       "CONFIRM_DELETE": "Eliminar",
-      "DELETE_SUCCESS": "Assignment policy removed successfully",
-      "DELETE_ERROR": "Failed to remove assignment policy"
+      "DELETE_SUCCESS": "Política de asignación eliminada con éxito",
+      "DELETE_ERROR": "Falta para eliminar la política de asignación"
     },
     "FACEBOOK_REAUTHORIZE": {
       "TITLE": "Reautorizar",
@@ -1243,64 +1313,64 @@
       "TITLE": "Habilitar Encuesta de Satisfacción",
       "SUBTITLE": "Automatically trigger CSAT surveys at the end of conversations to understand how customers feel about their support experience. Track satisfaction trends and identify areas for improvement over time.",
       "DISPLAY_TYPE": {
-        "LABEL": "Display type"
+        "LABEL": "Tipo de pantalla"
       },
       "MESSAGE": {
         "LABEL": "Mensaje",
-        "PLACEHOLDER": "Please enter a message to show users with the form"
+        "PLACEHOLDER": "Introduzca un mensaje para mostrar a los usuarios con el formulario"
       },
       "BUTTON_TEXT": {
-        "LABEL": "Button text",
-        "PLACEHOLDER": "Please rate us"
+        "LABEL": "Texto de Button",
+        "PLACEHOLDER": "Por favor llámanos."
       },
       "LANGUAGE": {
         "LABEL": "Idioma",
-        "PLACEHOLDER": "Select template language"
+        "PLACEHOLDER": "Seleccionar idioma de plantilla"
       },
       "MESSAGE_PREVIEW": {
-        "LABEL": "Message preview",
-        "TOOLTIP": "This may vary slightly when rendered on WhatsApp's platform."
+        "LABEL": "Previsualización del mensaje",
+        "TOOLTIP": "Esto puede variar ligeramente cuando se renderiza en la plataforma WhatsApp 's."
       },
       "TEMPLATE_STATUS": {
-        "APPROVED": "Approved by WhatsApp",
-        "PENDING": "Pending WhatsApp approval",
-        "REJECTED": "Meta rejected the template",
-        "DEFAULT": "Needs WhatsApp approval",
-        "NOT_FOUND": "The template does not exist in the Meta platform."
+        "APPROVED": "Aprobado por WhatsApp",
+        "PENDING": "Aprobación pendiente de aprobación WhatsApp",
+        "REJECTED": "Meta rechazó la plantilla",
+        "DEFAULT": "Necesidades WhatsApp aprobación",
+        "NOT_FOUND": "La plantilla no existe en la plataforma Meta."
       },
       "TEMPLATE_CREATION": {
-        "SUCCESS_MESSAGE": "WhatsApp template created successfully and sent for approval",
+        "SUCCESS_MESSAGE": "WhatsApp plantilla creada con éxito y enviada para su aprobación",
         "ERROR_MESSAGE": "Failed to create WhatsApp template"
       },
       "TEMPLATE_UPDATE_DIALOG": {
-        "TITLE": "Edit survey details",
-        "DESCRIPTION": "We will delete the previous template and make a new one which will be sent again for WhatsApp approval",
-        "CONFIRM": "Create new template",
+        "TITLE": "Editar detalles de la encuesta",
+        "DESCRIPTION": "Borraremos la plantilla anterior y haremos una nueva que se enviará de nuevo para la aprobación WhatsApp",
+        "CONFIRM": "Crear nueva plantilla",
         "CANCEL": "Volver"
       },
       "UTILITY_ANALYZER": {
-        "ACTION": "Check utility fit",
+        "ACTION": "Comprobación de la utilidad",
         "HELPER_NOTE": "Check this message before submission to improve Utility fit. The system creates a dedicated CSAT template with buttons for reporting and submits it as Utility; Meta may still reclassify it as Marketing based on content.",
-        "RESULT_LABEL": "Meta category prediction",
-        "GUIDANCE_NOTE": "This is a guidance check, not a guarantee of Meta approval.",
-        "SUGGESTION_LABEL": "Suggested utility-safe rewrite",
-        "APPLY": "Use this rewrite",
-        "ERROR_MESSAGE": "Couldn't analyze the message. Please try again.",
+        "RESULT_LABEL": "Predicción de la categoría meta",
+        "GUIDANCE_NOTE": "Este es un cheque de guía, no una garantía de aprobación de Meta.",
+        "SUGGESTION_LABEL": "Reescritura sugerida de seguridad de la utilidad",
+        "APPLY": "Usa esta reescritura",
+        "ERROR_MESSAGE": "No pude analizar el mensaje. Por favor, inténtalo de nuevo.",
         "CLASSIFICATION": {
-          "LIKELY_UTILITY": "Likely Utility",
-          "LIKELY_MARKETING": "Likely Marketing",
-          "UNCLEAR": "Needs clarification"
+          "LIKELY_UTILITY": "Utilidad.",
+          "LIKELY_MARKETING": "Mercadeo",
+          "UNCLEAR": "Necesidades de aclaración"
         }
       },
       "SURVEY_RULE": {
-        "LABEL": "Survey rule",
-        "DESCRIPTION_PREFIX": "Send the survey if the conversation",
-        "DESCRIPTION_SUFFIX": "any of the labels",
+        "LABEL": "Regla de estudio",
+        "DESCRIPTION_PREFIX": "Enviar la encuesta si la conversación",
+        "DESCRIPTION_SUFFIX": "cualquiera de las etiquetas",
         "OPERATOR": {
           "CONTAINS": "contiene",
           "DOES_NOT_CONTAINS": "no contiene"
         },
-        "SELECT_PLACEHOLDER": "select labels"
+        "SELECT_PLACEHOLDER": "Etiquetas selectas"
       },
       "NOTE": "Note: CSAT surveys are sent only once per conversation",
       "WHATSAPP_NOTE": "Note: When you save, the system creates a dedicated CSAT template in WhatsApp (used to capture rating and feedback in reports) and submits it as Utility for approval. Meta may still classify it as Marketing based on content. After approval, surveys are sent only once per conversation as per the survey rule.",
@@ -1327,7 +1397,12 @@
         "VALIDATION_ERROR": "La hora de inicio debe ser antes de la hora de cierre.",
         "CHOOSE": "Elegir"
       },
-      "ALL_DAY": "Todo el día"
+      "ALL_DAY": "Todo el día",
+      "TRANSLATIONS": {
+        "TITLE": "Traducciones del mensaje fuera de horario",
+        "LANGUAGE": "Idioma del mensaje",
+        "PLACEHOLDER": "Introduce una traducción. Deja el campo en blanco para usar el mensaje predeterminado."
+      }
     },
     "IMAP": {
       "TITLE": "IMAP",
@@ -1428,7 +1503,8 @@
           "LABEL": "Tiempo de respuesta",
           "IN_A_FEW_MINUTES": "En algunos minutos",
           "IN_A_FEW_HOURS": "En unas horas",
-          "IN_A_DAY": "En un día"
+          "IN_A_DAY": "En un día",
+          "IMMEDIATELY": "Respondemos inmediatamente"
         },
         "WIDGET_COLOR_LABEL": "Color del widget",
         "WIDGET_BUBBLE": "Bubble",
@@ -1457,7 +1533,27 @@
         "WIDGET_BUBBLE_TYPE": {
           "STANDARD": "Estándar",
           "EXPANDED_BUBBLE": "Burbuja expandida"
-        }
+        },
+        "WIDGET_TEXT_COLOR": "Color de texto",
+        "WIDGET_ICON_COLOR": "Lanzador Icon Color",
+        "WIDGET_HEIGHT": "Widget Altura (px)",
+        "WIDGET_HEIGHT_HELP": "Controla la altura del widget abierto en el escritorio. El móvil permanece en pantalla completa.",
+        "CONVERSATION_STARTERS": {
+          "LABEL": "Comienzos de conversación",
+          "HELP": "Los visitantes ven las preguntas habilitadas en este orden por encima del botón de chat.",
+          "ADD": "Añadir starter",
+          "EMPTY": "Todavía no hay conversaciones.",
+          "PLACEHOLDER": "Introduzca el título del botón",
+          "ACTIONS": {
+            "MESSAGE": "Enviar mensaje (AI/Agent)",
+            "URL": "Enlace externo abierto",
+            "CANNED": "Respuesta predefinida"
+          },
+          "URL_PLACEHOLDER": "Introduzca URL (por ejemplo, https://wa.me/123456789)",
+          "CANNED_PLACEHOLDER": "Introduzca el texto de respuesta predefinido..."
+        },
+        "REORDER": "Artículo de reordenamiento",
+        "DELETE": "Suprímase el tema"
       },
       "WIDGET_SCREEN": {
         "DEFAULT": "Predeterminado",
@@ -1486,15 +1582,15 @@
     "EMAIL_PROVIDERS": {
       "MICROSOFT": {
         "TITLE": "Microsoft",
-        "DESCRIPTION": "Connect with Microsoft"
+        "DESCRIPTION": "Conectar con Microsoft"
       },
       "GOOGLE": {
         "TITLE": "Google",
-        "DESCRIPTION": "Connect with Google"
+        "DESCRIPTION": "Conectar con Google"
       },
       "OTHER_PROVIDERS": {
         "TITLE": "Otros proveedores",
-        "DESCRIPTION": "Connect with Other Providers"
+        "DESCRIPTION": "Conéctate con otros proveedores"
       }
     },
     "CHANNELS": {
@@ -1511,6 +1607,155 @@
       "INSTAGRAM": "Instagram",
       "TIKTOK": "TikTok",
       "VOICE": "Voice"
+    },
+    "TWILIO_HEALTH": {
+      "TITLE": "Administra tu número de Twilio",
+      "DESCRIPTION": "Revise la cuenta Twilio, remitente y webhooks que respaldan este canal. Cualquier cosa Chatwoot no puede recibir está marcado aquí",
+      "GO_TO_SETTINGS": "Ve a la consola Twilio",
+      "NO_DATA": "No se dispone de datos de salud",
+      "LOADING": "Obtener datos de salud de Twilio...",
+      "ERROR_TITLE": "No pude llegar a Twilio.",
+      "STATUS": {
+        "HEALTHY": "Todos los cheques aprobados",
+        "MISCONFIGURED": "Necesita atención"
+      },
+      "FIELDS": {
+        "ACCOUNT_NAME": {
+          "LABEL": "Cuenta Twilio",
+          "TOOLTIP": "La cuenta Twilio estas credenciales pertenecen a"
+        },
+        "ACCOUNT_STATUS": {
+          "LABEL": "Situación de la cuenta",
+          "TOOLTIP": "Una cuenta Twilio suspendida o cerrada no puede enviar ni recibir nada"
+        },
+        "ACCOUNT_TYPE": {
+          "LABEL": "Tipo de cuenta",
+          "TOOLTIP": "Cuentas de prueba sólo pueden enviar mensajes o llamar al número de teléfono que ha verificado con Twilio"
+        },
+        "SENDER": {
+          "TOOLTIP": "El número de teléfono o servicio de mensajería que lleva este canal",
+          "LABEL": "Remitente"
+        },
+        "CAPABILITIES": {
+          "LABEL": "Capacidades de números",
+          "TOOLTIP": "Capacidades Twilio ha habilitado en este número. Una capacidad que este canal necesita pero no tiene nunca funcionará"
+        },
+        "VOICE_CALLING": {
+          "LABEL": "Voz llamando",
+          "TOOLTIP": "Ya sea que la llamada se encienda para este canal"
+        }
+      },
+      "VALUES": {
+        "ACCOUNT_STATUSES": {
+          "ACTIVE": "Activo",
+          "CLOSED": "Cerrado",
+          "SUSPENDED": "Suspendido"
+        },
+        "ACCOUNT_TYPES": {
+          "TRIAL": "Ensayo",
+          "FULL": "Completo"
+        },
+        "CAPABILITIES": {
+          "VOICE": "Voz",
+          "SMS": "SMS"
+        },
+        "SENDER_TYPES": {
+          "PHONE_NUMBER": "Número de teléfono",
+          "MESSAGING_SERVICE": "Servicio de mensajería"
+        },
+        "ENABLED": "Habilitado",
+        "DISABLED": "Discapacitado"
+      },
+      "WEBHOOKS": {
+        "DESCRIPTION": "Twilio llama a estas URL cuando llega un mensaje o llamada. Regístrelas de nuevo después de cambiar su instalación URL",
+        "REGISTER_ALL": "Registro webhooks",
+        "VOICE_STATUS": "Voz de estado de llamada",
+        "VOICE_APP": "Llamadas de salida (Popción TwiML)",
+        "TITLE": "Webhooks",
+        "MESSAGING": "Webhook de mensajería",
+        "VOICE": "Webhook de voz"
+      },
+      "WEBHOOK": {
+        "CONFIGURED_SUCCESS": "Webhook configurado con éxito",
+        "NOT_SET": "no fijados",
+        "EXPECTED": "Se prevé",
+        "CURRENT": "En la actualidad",
+        "REASONS": {
+          "NOT_SET": "Webhook no configurado",
+          "URL_MISMATCH": "Webhook URL desajusttch",
+          "WRONG_HTTP_METHOD": "Webhook utiliza el método HTTP incorrecto",
+          "OVERRIDDEN_BY_NUMBER": "El servicio de mensajería se diferirá al número",
+          "OVERRIDDEN_BY_APPLICATION": "Sobrecargado por una aplicación TwiML",
+          "OVERRIDDEN_BY_TRUNK": "Arreglado por un tronco de SIP",
+          "MISSING_TWIML_APP": "Aplicación TwiML no creada"
+        },
+        "HINTS": {
+          "NOT_SET": "Twilio no tiene webhook en este remitente, así que nada alcanza Chatwoot.",
+          "URL_MISMATCH": "Twilio está llamando a un URL diferente, por lo que el tráfico va a otro lugar.",
+          "WRONG_HTTP_METHOD": "El URL es correcto pero Twilio lo llama con {method} en lugar de POST, y Chatwoot sólo respuestas POST.",
+          "OVERRIDDEN_BY_NUMBER": "Este servicio de mensajería tiene \"Use webhook on number\" activado, por lo que Twilio ignora el Webhook de servicio.",
+          "OVERRIDDEN_BY_APPLICATION": "Una aplicación TwiML se adjunta a este número, y Twilio utiliza las URL de la aplicación en lugar de la cantidad. Desbloquearla en la consola Twilio.",
+          "OVERRIDDEN_BY_TRUNK": "Este número se adjunta a un tronco de SIP, por lo que las rutas Twilio llaman al maletero e ignoran completamente las teclas de voz. Destaque el tronco en la consola Twilio.",
+          "MISSING_TWIML_APP": "Chatwoot no tiene ninguna aplicación TwiML para este número, por lo que no se pueden colocar llamadas salientes."
+        }
+      }
+    },
+    "WIDGET_SETTINGS": {
+      "ESSENTIALS": {
+        "TITLE": "Esenciales",
+        "DESCRIPTION": "Lo que los visitantes ven primero en su sitio web.",
+        "POSITION": "Posición de lanzamiento",
+        "LAUNCHER_STYLE": {
+          "LABEL": "Estilo de lanza",
+          "STANDARD": "Icon sólo",
+          "EXPANDED": "Icono y texto"
+        },
+        "LAUNCHER_TEXT": "Texto del lanzamiento"
+      },
+      "INSTALLATION": {
+        "TITLE": "Instalación",
+        "DESCRIPTION": "Pruebe este snippet antes de la etiqueta del cuerpo de cierre en cada página donde debe aparecer el chat.",
+        "COPY": "Copiado",
+        "SNIPPET_CHANGED": "La configuración del lanzador cambió. Guardar, luego copiar el snippet de nuevo y reemplazarlo en su sitio web.",
+        "CHECK": "Instalación de comprobación",
+        "COPIED": "Fragmento copiado"
+      },
+      "AI_AGENT": {
+        "TITLE": "Agente de IA",
+        "DESCRIPTION": "Su agente de AI saluda a los visitantes y respuestas. Su comportamiento se establece en el agente de AI → Instrucciones.",
+        "LINK": "Instrucciones abiertas"
+      },
+      "ADVANCED": {
+        "TITLE": "Avances",
+        "HOME_SCREEN": {
+          "TITLE": "Mostrar la pantalla de inicio",
+          "DESCRIPTION": "Los visitantes aterrizan en su mensaje de bienvenida y los inicios de conversación. Apágalo para abrir directamente a la conversación. Parte del snippet de instalación."
+        },
+        "PRE_CHAT": {
+          "TITLE": "Forma de pre-chat",
+          "DESCRIPTION": "Pida a los visitantes sus detalles antes de que comience la conversación.",
+          "LINK": "Editar el formulario"
+        }
+      },
+      "PREVIEW_TOGGLE": {
+        "SHOW": "Vista previa",
+        "HIDE": "Ocultar vista previa"
+      }
+    },
+    "WIDGET_PREVIEW": {
+      "TITLE": "Widget de previsualización",
+      "FRAME_TITLE": "Avance en vivo de tu widget de chat",
+      "VIEW_LABEL": "Pantalla de vista previa",
+      "VIEWS": {
+        "HOME": "Inicio",
+        "CONVERSATION": "Conversación",
+        "LAUNCHER": "Lanzamiento cerrado"
+      },
+      "LIGHT": "Mostrar en el modo de luz",
+      "DARK": "Mostrar en modo oscuro",
+      "MOBILE": "Mostrar a la anchura móvil",
+      "DESKTOP": "Mostrar en el ancho del escritorio",
+      "ERROR": "La vista previa no podía cargar. Recarga la página para intentarlo de nuevo."
     }
   }
 }

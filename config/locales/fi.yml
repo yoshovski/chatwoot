@@ -420,6 +420,26 @@ fi:
       short_description: 'Sync your contacts and conversations with LeadSquared CRM.'
       description: 'Sync your contacts and conversations with LeadSquared CRM. This integration automatically creates leads in LeadSquared when new contacts are added, and logs conversation activity to provide your sales team with complete context.'
   captain:
+    contact_form:
+      handoff_prompt: 'Jätä yhteystietosi, jotta tiimimme voi ottaa sinuun yhteyttä, jos poistut keskustelusta.'
+      handoff_saved: 'Kiitos. Tallensimme yhteystietosi. Tiimimme jäsen jatkaa auttamistasi täällä.'
+      submit: 'Lähetä'
+      invalid_field: 'Tarkista tämä kenttä.'
+      fields:
+        name:
+          label: 'Nimi'
+          placeholder: 'Nimi'
+        email:
+          label: 'Sähköpostiosoite'
+          placeholder: 'Sähköpostiosoite'
+        phone_number:
+          label: 'Puhelinnumero'
+          placeholder: '+34612345678'
+          title: 'Lisää maakoodi, esimerkiksi +34612345678'
+    leads:
+      followup_form: 'Mihin sähköpostiosoitteeseen tiimimme voi vastata?'
+      followup_submit: 'Pyydä vastaus sähköpostitse'
+      followup_saved: 'Kiitos, %{name}. Olemme saaneet pyyntösi saada vastaus sähköpostitse.'
     copilot_message_required: Message is required
     copilot_error: 'Please connect an assistant to this inbox to use Copilot'
     copilot_limit: 'You are out of Copilot credits. You can buy more credits from the billing section.'

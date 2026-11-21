@@ -1,0 +1,61 @@
+{
+  "LEADS": {
+    "SUBTITLE": "Persone che hanno chiesto al tuo agente dell'AI di seguire, con quello che vogliono.",
+    "ALL": "Tutti",
+    "NO_OWNER": "Nessun proprietario",
+    "COLUMNS": {
+      "NAME": "nome",
+      "WANTS": "Che cosa vogliono",
+      "STATUS": "Stato",
+      "OWNER": "Proprietario",
+      "DATE": "Data",
+      "HUBSPOT": "HubSpot"
+    },
+    "STATUS": {
+      "NEW": "Nuovo",
+      "CONTACTED": "Contattato",
+      "WON": "Voce",
+      "LOST": "Perdita"
+    },
+    "HUBSPOT": {
+      "SYNCED": "Traduzione:",
+      "PENDING": "Inviare",
+      "FAILED": "Non inviato",
+      "OFF": "Fuori",
+      "NOT_SYNCED": "Non sincronizzato"
+    },
+    "LOADING": "Caricamento in corso...",
+    "LOAD_ERROR": "Le prospettive di vendita non potrebbero essere caricate. Riprova.",
+    "SAVE_ERROR": "Il tuo cambiamento non potrebbe essere salvato. Riprova.",
+    "EXPORT_ERROR": "Le prospettive di vendita non potrebbero essere esportate. Riprova.",
+    "OWNERS_ERROR": "I membri del team non potevano essere caricati. Cercate di cambiare i proprietari.",
+    "RETRY": "Prova ancora.",
+    "EMPTY": "Le tue prospettive di vendita catturate compariranno qui.",
+    "EMPTY_HELP": "Abilita la cattura della prospettiva di vendita nelle impostazioni di un agente AI. Per esempio, offrire follow-up a qualcuno che chiede circa i prezzi all'ingrosso.",
+    "EMPTY_FILTER": "Nessuna prospettiva di vendita ha ancora questo status.",
+    "SHOW_ALL": "Mostra tutte le piste",
+    "OPEN_AGENTS": "Agenti di AI aperti",
+    "OWNER_FOR": "Proprietario per {name}",
+    "PREVIOUS": "Precedente",
+    "NEXT": "Il prossimo",
+    "PAGE": "{page} · {total} prospettive di vendita",
+    "CAPTURE": {
+      "NO_ACCESS": "Chiedere a un amministratore dello spazio di lavoro di configurare la cattura della prospettiva di vendita.",
+      "ERROR": "La configurazione dell'agente dell'IA non poteva essere caricata. Riprova.",
+      "CHOOSE": "Scegli un agente AI",
+      "CHOOSE_HELP": "Scegliere l'agente la cui prospettiva di vendita cattura si desidera configurare.",
+      "CREATE_HELP": "Creare un agente AI per impostare la cattura di prospettiva di vendita. Tornerai direttamente alla sua configurazione di cattura.",
+      "ENABLED": "La cattura è attivata nelle impostazioni di questo agente. Non sono ancora state catturate prospettive di vendita. Controllare il suo trigger, scenario e canali collegati in configurazione.",
+      "PAUSED": "La cattura viene messa in pausa per questo agente. Verificare la sua configurazione salvata e abilitare la cattura quando pronto.",
+      "UNCONFIGURED": "La cattura di prospettive di vendita non è stata configurata per questo agente.",
+      "OPEN_SETUP": "Configurazione di cattura aperta",
+      "CREATE": "Creare agente AI",
+      "UNAVAILABLE": "AI agente di vendita prospettiva cattura non è disponibile sul vostro piano attuale.",
+      "LOADING": "Verifica della configurazione di acquisizione dei lead…"
+    },
+    "INCOMPLETE": "Nessun sommario di cattura registrato",
+    "CONVERSATION": "Conversazione # {id}",
+    "TITLE": "Lead",
+    "EXPORT": "Esporta CSV"
+  }
+}

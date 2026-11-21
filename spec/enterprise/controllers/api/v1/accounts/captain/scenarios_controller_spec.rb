@@ -97,6 +97,7 @@ RSpec.describe 'Api::V1::Accounts::Captain::Scenarios', type: :request do
           description: 'Test description',
           instruction: 'Test instruction',
           enabled: true,
+          localized_reply_copy: { it: 'Come posso aiutarti?' },
           tools: %w[tool1 tool2]
         }
       }
@@ -131,6 +132,7 @@ RSpec.describe 'Api::V1::Accounts::Captain::Scenarios', type: :request do
         expect(response).to have_http_status(:success)
         expect(json_response[:title]).to eq('Test Scenario')
         expect(json_response[:description]).to eq('Test description')
+        expect(json_response[:localized_reply_copy]).to eq(it: 'Come posso aiutarti?')
         expect(json_response[:enabled]).to be(true)
         expect(json_response[:assistant_id]).to eq(assistant.id)
       end

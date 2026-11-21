@@ -108,7 +108,10 @@ module Enterprise::MessageTemplates::HookExecutionService
     # serves as the initial outreach, and OOO would be confusing in that context.
     return if conversation.campaign.present?
 
-    ::MessageTemplates::Template::OutOfOffice.perform_if_applicable(conversation)
+    locale = Captain::Conversation::CustomerLocale.resolve(
+      conversation: conversation, assistant: inbox.captain_assistant, customer_message: message
+    )
+    ::MessageTemplates::Template::OutOfOffice.perform_if_applicable(conversation, locale: locale)
   end
 
   def captain_handling_conversation?

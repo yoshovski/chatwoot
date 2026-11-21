@@ -280,6 +280,11 @@ it:
     no_content: 'Nessun contenuto'
   conversations:
     captain:
+      no_handoff: 'Al momento il nostro team non può unirsi alla chat. Posso continuare ad aiutarti qui. Se ci lasci il tuo indirizzo email, ti ricontatteremo.'
+      empty_response_catalog_empty: 'Non ho trovato un prodotto corrispondente nel catalogo attuale.'
+      empty_response_attachments: 'Scrivi un breve messaggio per spiegare cosa vuoi che controlli.'
+      empty_response_unusable: 'Puoi dirlo in un altro modo?'
+      empty_response_handoff: 'Non sono riuscito a completare la richiesta. Una persona del nostro team continuerà ad aiutarti in questa chat.'
       handoff: 'Trasferendo ad un altro operatore per ulteriore assistenza.'
     messages:
       instagram_story_content: '%{story_sender} ti ha menzionato nella storia: '
@@ -420,6 +425,92 @@ it:
       short_description: 'Sincronizza contatti e conversazioni con LeadSquared CRM.'
       description: 'Sincronizza i contatti e conversazioni con il CRM LeadSquared. Questa integrazione crea automaticamente i lead in LeadSquared quando vengono aggiunti nuovi contatti e registra l''attività di conversazione per fornire al team di vendita un contesto completo.'
   captain:
+    product_card:
+      view_product: 'Vedi prodotto'
+      recommendation: 'Ecco il prodotto:'
+      recommendations: 'Ecco i prodotti consigliati:'
+    order_card:
+      date_format: '%d/%m/%Y'
+      arrival_date_format: '%d/%m'
+      title: 'Ordine %{order} · %{date}'
+      item: '%{quantity}× %{name}'
+      more_items:
+        one: '+%{count} altro articolo'
+        other: '+%{count} altri articoli'
+      arrives: 'Arrivo previsto: %{date}'
+      track_package: 'Traccia il pacco'
+      view_order: 'Vedi ordine'
+    order_status:
+      cancelled: 'Annullato'
+      payment:
+        authorized: 'Pagamento autorizzato'
+        expired: 'Pagamento scaduto'
+        paid: 'Pagato'
+        partially_paid: 'Pagato in parte'
+        partially_refunded: 'Rimborsato in parte'
+        pending: 'Pagamento in attesa'
+        refunded: 'Rimborsato'
+        voided: 'Pagamento annullato'
+      fulfillment:
+        fulfilled: 'Spedito'
+        in_progress: 'In preparazione'
+        on_hold: 'In sospeso'
+        open: 'Non ancora spedito'
+        partially_fulfilled: 'Spedito in parte'
+        pending_fulfillment: 'In preparazione'
+        request_declined: 'Non ancora spedito'
+        restocked: 'Rimesso a magazzino'
+        scheduled: 'Programmato'
+        unfulfilled: 'Non ancora spedito'
+      shipment:
+        attempted_delivery: 'Tentativo di consegna'
+        canceled: 'Spedizione annullata'
+        carrier_picked_up: 'Ritirato dal corriere'
+        confirmed: 'Spedizione confermata'
+        delivered: 'Consegnato'
+        failure: 'Consegna non riuscita'
+        fulfilled: 'Spedito'
+        in_transit: 'In transito'
+        label_printed: 'Etichetta stampata'
+        label_purchased: 'Etichetta creata'
+        label_voided: 'Etichetta annullata'
+        marked_as_fulfilled: 'Spedito'
+        not_delivered: 'Non consegnato'
+        out_for_delivery: 'In consegna'
+        picked_up: 'Ritirato'
+        ready_for_pickup: 'Pronto per il ritiro'
+        submitted: 'Spedizione inoltrata'
+    check_in:
+      default: 'Posso aiutarti con altro?'
+    contact_form:
+      handoff_prompt: 'Puoi lasciarci i tuoi recapiti? Così il nostro team potrà ricontattarti se esci dalla chat.'
+      handoff_saved: 'Grazie, abbiamo salvato i tuoi recapiti. Una persona del nostro team continuerà ad aiutarti qui.'
+      submit: 'Invia'
+      invalid_field: 'Controlla questo campo.'
+      fields:
+        name:
+          label: 'Nome'
+          placeholder: 'Inserisci il tuo nome'
+        email:
+          label: 'Indirizzo email'
+          placeholder: 'Inserisci il tuo indirizzo email'
+        phone_number:
+          label: 'Numero di telefono'
+          placeholder: '+34612345678'
+          title: 'Includi il prefisso internazionale, ad esempio +34612345678'
+    leads:
+      followup_form: 'A quale indirizzo email possiamo ricontattarti?'
+      followup_submit: 'Richiedi un ricontatto via email'
+      followup_saved: 'Grazie, %{name}. Abbiamo ricevuto la tua richiesta di ricontatto via email.'
+    reply_languages:
+      retry: 'Puoi riformulare la domanda?'
+    action_confirmation:
+      confirm_prompt: 'Vuoi che esegua questa azione: %{title}?'
+      success: 'Azione completata: %{title}.'
+      failure: 'Non sono riuscito a completare l’azione (%{title}). Il nostro team può aiutarti.'
+      cancelled: 'Va bene, ho annullato l’azione.'
+      confirm: 'Conferma'
+      cancel: 'Annulla'
     copilot_message_required: Messaggio richiesto
     copilot_error: 'Connetti un assistente a questa Inbox per usare Copilot'
     copilot_limit: 'Hai terminato i crediti Copilot. Puoi acquistare altri crediti dalla sezione fatturazione.'

@@ -14,7 +14,7 @@
       "TITLE": "Gestisci le risposte predefinite",
       "DESC": "Le risposte predefinite sono modelli di risposte preparate che possono essere utilizzate per rispondere rapidamente alle conversazioni.",
       "TABLE_HEADER": {
-        "SHORT_CODE": "Short code",
+        "SHORT_CODE": "Codice breve",
         "CONTENT": "Contenuto",
         "ACTIONS": "Azioni"
       }
@@ -25,7 +25,7 @@
       "CANCEL_BUTTON_TEXT": "Annulla",
       "FORM": {
         "SHORT_CODE": {
-          "LABEL": "Short code",
+          "LABEL": "Codice breve",
           "PLACEHOLDER": "Inserisci uno short code.",
           "ERROR": "Short Code richiesto."
         },
@@ -46,7 +46,7 @@
       "CANCEL_BUTTON_TEXT": "Annulla",
       "FORM": {
         "SHORT_CODE": {
-          "LABEL": "Short code",
+          "LABEL": "Codice breve",
           "PLACEHOLDER": "Inserisci uno shortcode.",
           "ERROR": "Short code richiesto."
         },

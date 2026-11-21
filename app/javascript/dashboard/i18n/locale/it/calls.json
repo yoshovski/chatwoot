@@ -1,24 +1,24 @@
 {
   "CALLS_PAGE": {
     "HEADER": "Chiamate",
-    "ALL_CALLS": "All Calls",
-    "ALL_CALLS_COUNT": "All Calls ({count})",
-    "EMPTY_STATE": "No calls found",
+    "ALL_CALLS": "Tutte le chiamate",
+    "ALL_CALLS_COUNT": "Tutte le chiamate ({count} )",
+    "EMPTY_STATE": "Nessuna chiamata trovata",
     "SETUP": {
-      "TITLE": "Make and receive calls in one place",
-      "SUBTITLE": "Set up a voice channel to start handling calls with your team. Every call, along with its recording, will appear here.",
-      "ACTION": "Set up voice channel"
+      "TITLE": "Fare e ricevere chiamate in un unico luogo",
+      "SUBTITLE": "Impostare un canale vocale per iniziare a gestire le chiamate con il vostro team. Ogni chiamata, insieme alla sua registrazione, apparirà qui.",
+      "ACTION": "Impostare il canale vocale"
     },
     "FILTERS": {
       "MISSED": "Missed",
-      "NO_REPLY": "No reply",
-      "OTHER_ACTIVITY": "Other activity",
+      "NO_REPLY": "Nessuna risposta",
+      "OTHER_ACTIVITY": "Altre attività",
       "INCOMING": "Incoming",
       "OUTGOING": "Outgoing",
-      "IN_PROGRESS": "In progress",
+      "IN_PROGRESS": "In corso",
       "ASSIGNEE": "Assegnatario",
-      "ALL_ASSIGNEES": "All assignees",
-      "MORE_FILTERS": "More filters",
+      "ALL_ASSIGNEES": "Tutti gli assegnatori",
+      "MORE_FILTERS": "Altri filtri",
       "INBOX": "Inbox",
       "ALL_INBOXES": "Tutte le caselle di posta"
     },
@@ -27,20 +27,20 @@
       "INCOMING": "Incoming",
       "OUTGOING": "Outgoing",
       "MISSED": "Missed",
-      "NO_REPLY": "No reply",
+      "NO_REPLY": "Nessuna risposta",
       "FAILED": "Non Riuscito"
     },
     "ROW": {
-      "PICKED_BY": "Picked by",
-      "DIALED_BY": "Dialed by",
+      "PICKED_BY": "Preso da",
+      "DIALED_BY": "Quadrante:",
       "ANSWERED": "Answered",
       "RINGING": "Ringing",
-      "IN_PROGRESS": "In progress",
-      "NO_AGENT": "No agent answered this call",
-      "NO_CONTACT_ANSWER": "Contact did not answer",
-      "FAILED": "This call could not be connected",
+      "IN_PROGRESS": "In corso",
+      "NO_AGENT": "Nessun agente ha risposto a questa chiamata",
+      "NO_CONTACT_ANSWER": "Contatto non ha risposto",
+      "FAILED": "Questa chiamata non potrebbe essere collegata",
       "YESTERDAY": "Ieri",
-      "DELETED_CONTACT": "Deleted contact"
+      "DELETED_CONTACT": "Contatto cancellato"
     }
   }
 }

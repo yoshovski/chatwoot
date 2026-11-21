@@ -9,12 +9,53 @@
       "STORE_URL": {
         "TITLE": "Connetti Store Shopify",
         "LABEL": "URL Store",
-        "PLACEHOLDER": "your-store.myshopify.com",
+        "PLACEHOLDER": "il tuo negozio.myshopify.com",
         "HELP": "Inserisci l'URL del tuo store Shopify myshopify.com",
         "CANCEL": "Annulla",
-        "SUBMIT": "Connetti Store"
+        "SUBMIT": "Connetti Store",
+        "INVALID_URL": "Si prega di inserire un valido Shopify negozio URL (ad esempio, il vostro-store.myshopify.com)"
       },
-      "ERROR": "Si è verificato un errore nella connessione a Shopify. Si prega di riprovare o contattare il supporto se il problema persiste."
+      "ERROR": "Si è verificato un errore nella connessione a Shopify. Si prega di riprovare o contattare il supporto se il problema persiste.",
+      "HELP_TEXT": {
+        "TITLE": "Come utilizzare l'integrazione Shopify?",
+        "BODY": "Con questa integrazione, il tuo negozio Shopify *** {storeDomain} ******* è collegato al tuo spazio di lavoro Chatwoot. Ecco cosa puoi fare:\n\n**Track ordini in conversazioni:** Quando si apre una conversazione, la barra laterale Shopify visualizzerà automaticamente gli ordini recenti per il cliente in base al loro indirizzo email. Questo dà il vostro contesto istantaneo del team di supporto senza cambiare le schede.\n\n** Dettagli dell'ordine di accesso:** Visualizza lo stato dell'ordine, lo stato di adempimento e l'importo totale direttamente all'interno del pannello di conversazione."
+      },
+      "STATE": {
+        "REQUESTED_TITLE": "Setup in Progresso",
+        "REQUESTED_DESCRIPTION": "La vostra richiesta di collegare {shopDomain} è in corso. La configurazione è in fase di preparazione e sarà pronta entro 24 ore.",
+        "REQUESTED_HELP": "Una volta pronto, un pulsante 'Install on Shopify ' apparirà qui per completare la connessione.",
+        "REQUEST_SUBMITTED_SUCCESS": "Richiesta di connessione presentata! La configurazione è in corso e sarà pronta entro 24 ore.",
+        "PENDING_INSTALL_TITLE": "Pronti per l'installazione",
+        "PENDING_INSTALL_DESCRIPTION": "Il collegamento personalizzato dell'app è pronto! Clicca sul pulsante qui sotto per completare l'installazione sul tuo negozio Shopify.",
+        "INSTALL_BUTTON": "Installazione su Shopify",
+        "IMPORTING_TITLE": "Catalogo di sincronizzazione",
+        "IMPORTING_DESCRIPTION": "Shopify Agent Tools sta importando il catalogo e i dati del prodotto.",
+        "CONNECTED_TITLE": "Shopify Connesso",
+        "CONNECTED_DESCRIPTION": "Il vostro negozio {shopDomain} è collegato e pronto per Captain AI strumenti e citazioni di prodotto.",
+        "NEEDS_RECONNECT_TITLE": "Reconnessione richiesta",
+        "NEEDS_RECONNECT_DESCRIPTION": "La connessione Shopify ha bisogno di riautorizzazione. Si prega di riconnettere o reinstallare.",
+        "CHECK_STATUS": "Controllare lo stato",
+        "REFRESH": "Stato di aggiornamento",
+        "STATUS_REFRESHED": "Shopify stato rinfrescato con successo",
+        "DISCONNECT": "Scollegamento",
+        "DISCONNECT_TITLE": "Scollegare Shopify Store",
+        "DISCONNECT_MESSAGE": "Sei sicuro di voler scollegare questo negozio Shopify? Questo rimuoverà anche la connessione app personalizzata e l'accesso agli strumenti."
+      },
+      "CATALOG": {
+        "TITLE": "Catalogo prodotti Sync",
+        "DESCRIPTION": "La conoscenza del prodotto viene ricercata insieme ai vostri documenti e FAQ quando sono collegati.",
+        "STATUS_TITLE": "Sincronizzazione del catalogo",
+        "PAUSE_BUTTON": "Traduzione e synch:",
+        "RESUME_BUTTON": "Riprendi la sincronizzazione",
+        "PAUSED_SUCCESS": "Shopify catalogo sincronizzazione pausa con successo",
+        "RESUMED_SUCCESS": "Shopify catalogo sincronizzazione ripresa con successo",
+        "STATUS": {
+          "ON": "su",
+          "IMPORTING": "Importazione",
+          "NEEDS_RECONNECT": "Necessità di ricollegamento",
+          "OFF": "Fuori"
+        }
+      }
     },
     "HEADER": "Integrazioni",
     "DESCRIPTION": "Chatwoot si integra con più strumenti e servizi per migliorare l'efficienza del tuo team. Esplora l'elenco qui sotto per configurare le tue app preferite.",
@@ -32,11 +73,11 @@
       "SUBSCRIBED_EVENTS": "Eventi Sottoscritti",
       "LEARN_MORE": "Scopri di più sui webhooks",
       "PAYWALL": {
-        "TITLE": "Webhooks are available on paid plans",
-        "AVAILABLE_ON": "Use webhooks to receive real-time events from your Chatwoot account.",
-        "UPGRADE_PROMPT": "Upgrade to the Startups, Business, or Enterprise plan to use webhooks.",
+        "TITLE": "Webhooks sono disponibili su piani a pagamento",
+        "AVAILABLE_ON": "Usa webhooks per ricevere eventi in tempo reale dal tuo account Chatwoot.",
+        "UPGRADE_PROMPT": "Aggiornamento alle Startups, Business, o Enterprise piano per utilizzare webhooks.",
         "UPGRADE_NOW": "Aggiorna ora",
-        "CANCEL_ANYTIME": "Change or cancel your plan anytime."
+        "CANCEL_ANYTIME": "Cambia o cancella il tuo piano in qualsiasi momento."
       },
       "SECRET": {
         "LABEL": "Secret",
@@ -139,19 +180,19 @@
         "SELECTED": "selezionato"
       },
       "MESSAGE_MODE": {
-        "TITLE": "Slack thread behaviour",
-        "DESCRIPTION": "Decide whether replies in the Slack thread reach the customer or stay internal.",
+        "TITLE": "Slack comportamento del thread",
+        "DESCRIPTION": "Decidi se le risposte nel thread Slack raggiungono il cliente o rimangono interne.",
         "OPTIONS": {
           "TWO_WAY": {
-            "LABEL": "Two-way sync",
-            "DESCRIPTION": "Replies in the Slack thread are sent to the customer. Start a message with `note:` to keep it internal."
+            "LABEL": "Sincronizzazione a due vie",
+            "DESCRIPTION": "Risposte nel thread Slack vengono inviate al cliente. Inizia un messaggio con `note:` per tenerlo interno."
           },
           "ALERT": {
-            "LABEL": "Alerts only",
-            "DESCRIPTION": "Conversations are posted to Slack for internal discussion only. Nothing in the thread reaches the customer."
+            "LABEL": "Avvisi solo",
+            "DESCRIPTION": "Le conversazioni sono inviate a Slack solo per la discussione interna. Nulla nel thread raggiunge il cliente."
           }
         },
-        "UPDATE_SUCCESS": "The Slack thread behaviour is updated successfully"
+        "UPDATE_SUCCESS": "Il comportamento del thread Slack viene aggiornato con successo"
       },
       "SELECT_CHANNEL": {
         "OPTION_LABEL": "Seleziona un canale",
@@ -173,7 +214,7 @@
       "CREATE_ERROR": "Si è verificato un errore durante la creazione di un link alla riunione, riprova"
     },
     "OPEN_AI": {
-      "AI_ASSIST": "AI Assist",
+      "AI_ASSIST": "AI Assistente",
       "WITH_AI": " {option} con l'AI ",
       "OPTIONS": {
         "REPLY_SUGGESTION": "Suggerimenti di Risposta",
@@ -410,6 +451,51 @@
         "CONFIRM": "Sì, elimina",
         "CANCEL": "Annulla"
       }
+    },
+    "HUBSPOT": {
+      "CONNECT": "Collegamento HubSpot",
+      "RECONNECT": "Ricollegamento HubSpot",
+      "DISCONNECT": "Scollegamento",
+      "CONNECT_ERROR": "Non poteva collegare HubSpot. Provare di nuovo, e approvare tutte le autorizzazioni richieste.",
+      "PORTAL": {
+        "TITLE": "Connesso account HubSpot",
+        "DETAILS": "{domain} · ID del portale {portalId}"
+      },
+      "SAVE": "Salva impostazioni HubSpot",
+      "SAVE_SUCCESS": "HubSpot impostazioni salvate",
+      "SAVE_ERROR": "Non poteva salvare le impostazioni HubSpot. Riprova.",
+      "SYNC_CONTACTS": {
+        "TITLE": "Contatti Sync",
+        "DESCRIPTION": "Creare o aggiornare i contatti idonei quando i loro dettagli cambiano. L'ambito sotto i controlli che i contatti si qualificano. Campi vuoti non sovrascrivere HubSpot. I contatti esistenti sincronizzano la prossima volta che cambiano."
+      },
+      "SAVE_TRANSCRIPTS": {
+        "TITLE": "Salvare le trascrizioni di conversazione come note",
+        "DESCRIPTION": "Quando una conversazione viene risolta, aggiungere la sua trascrizione come una nota sul contatto HubSpot. Le note private sono lasciate fuori."
+      },
+      "MAPPING": {
+        "TITLE": "Mappatura del campo",
+        "NOT_MAPPED": "Non mappato",
+        "SEARCH": "Ricerca HubSpot strutture",
+        "ADD": "Aggiungi un altro campo di contatto",
+        "REMOVE": "Rimuovere la mappatura",
+        "DUPLICATE": "Questa proprietà HubSpot è già mappata in un altro campo.",
+        "LOAD_ERROR": "Non poteva caricare HubSpot proprietà. Riprova in un momento.",
+        "DESCRIPTION": "Tutti i campi dei lead configurati appaiono qui automaticamente. Scegli una proprietà del contatto HubSpot per ogni campo. Vengono inviati i campi associati, solo per i lead acquisiti da un agente IA."
+      },
+      "DELETE": {
+        "TITLE": "Scollegare HubSpot?",
+        "MESSAGE": "Contatti e trascrizioni smettere di sincronizzare. Dati già nel HubSpot rimane lì."
+      },
+      "SCOPE": {
+        "TITLE": "Quali contatti possono raggiungere HubSpot?",
+        "ALL": "Tutti i contatti con un'email",
+        "LEADS": "Prospettive commerciali catturate solo",
+        "DESCRIPTION": "Si applica alla sincronizzazione dei contatti e alle note di trascrizione. La modalità lead commerciali esclude l’assistenza ai visitatori e i normali passaggi al team, salvo quando è stato acquisito un lead commerciale. I record HubSpot esistenti vengono conservati."
+      },
+      "REFRESH_PROPERTIES": "Refresh HubSpot immobili",
+      "ACCOUNT_SCOPE": "Queste impostazioni si applicano a tutti gli agenti in questo account.",
+      "HEADER": "HubSpot",
+      "REAUTHORIZE": "HubSpot non accetta più questa connessione e la sincronizzazione è in pausa. Ricollega HubSpot per riprenderla."
     }
   },
   "CAPTAIN": {
@@ -419,62 +505,65 @@
       "HEADER": "Panoramica",
       "WELCOME": {
         "LABEL": "Captain summary",
-        "LOADING": "Generating summary…"
+        "LOADING": "Generando sommario..."
       },
       "INBOX_BANNER": {
         "TEXT": "This assistant isn't connected to any inbox yet, so it won't respond to conversations.",
-        "ACTION": "Connect inbox",
+        "ACTION": "Collegare la casella di posta",
         "DISMISS": "Ignora"
       },
       "COVERAGE_BANNER": {
         "TEXT": "{count} FAQ suggestions are ready for review, keeping coverage at {coverage}%. Approve them so your assistant can resolve more on its own.",
-        "ACTION": "Review suggestions",
+        "ACTION": "Suggerimenti di recensione",
         "DISMISS": "Ignora"
       },
       "RANGES": {
-        "LAST_DAYS": "Last {count} days",
+        "LAST_DAYS": "Ultimi {count} giorni",
         "THIS_MONTH": "Questo mese",
-        "LAST_MONTH": "Il mese scorso"
+        "LAST_MONTH": "Il mese scorso",
+        "INSUFFICIENT_HISTORY": "Non basta riportare la storia",
+        "THIS_WEEK": "Questa settimana",
+        "LAST_WEEK": "La settimana scorsa"
       },
       "METRICS": {
         "HANDLED": {
-          "LABEL": "Conversations handled",
+          "LABEL": "Conversazioni gestite",
           "HINT": "Conversations where Captain replied to the customer or handed the conversation to your team."
         },
         "AUTO_RESOLUTION": {
-          "LABEL": "Auto-resolution rate",
+          "LABEL": "Tasso di risoluzione automatica",
           "HINT": "The share of handled conversations Captain resolved without help from your team. Higher means Captain resolved more on its own."
         },
         "HANDOFF": {
-          "LABEL": "Handoff rate",
+          "LABEL": "Tasso di consegna",
           "HINT": "The share of handled conversations Captain passed to your team. Lower means fewer conversations needed an agent."
         },
         "HOURS_SAVED": {
-          "LABEL": "Time saved",
+          "LABEL": "Tempo salvato",
           "HINT": "An estimate of how much agent reply time Captain saved.",
           "NOTE": "Based on two minutes saved for each public Captain reply."
         },
         "REOPEN": {
-          "LABEL": "Reopen rate",
+          "LABEL": "Tasso di riapertura",
           "HINT": "The share of Captain-resolved conversations that customers returned to later.",
-          "NOTE": "Lower means more resolutions stayed resolved."
+          "NOTE": "Più in basso significa che più risoluzioni sono state risolte."
         },
         "DEPTH": {
-          "LABEL": "Messages / conversation",
+          "LABEL": "Messaggi / conversazione",
           "HINT": "The average number of replies Captain sent in each conversation it handled.",
-          "NOTE": "A lower number can mean quicker answers, but complex questions may need more replies."
+          "NOTE": "Un numero più basso può significare risposte più veloci, ma domande complesse possono avere bisogno di più risposte."
         }
       },
       "DRILLDOWN": {
-        "EMPTY": "No records found for this metric.",
-        "ERROR": "Could not load records. Please try again.",
+        "EMPTY": "Nessun record trovato per questa metrica.",
+        "ERROR": "Non poteva caricare i dischi. Per favore, riprovate.",
         "LOAD_MORE": "Carica altro",
-        "RESULT_COUNT_CONVERSATION": "{count} conversation | {count} conversations"
+        "RESULT_COUNT_CONVERSATION": "{count} conversazione | {count} conversazioni"
       },
       "KNOWLEDGE": {
-        "TITLE": "Knowledge coverage",
+        "TITLE": "Copertura della conoscenza",
         "COVERAGE": "{pct}% approved",
-        "APPROVED": "Approved FAQs",
+        "APPROVED": "Domande frequenti approvate",
         "SUGGESTIONS": "FAQ suggestions",
         "DOCUMENTS": "Documenti"
       },
@@ -489,17 +578,17 @@
         },
         "BILLING": {
           "TITLE": "Fatturazione",
-          "DESCRIPTION": "Manage credits and plan"
+          "DESCRIPTION": "Gestire crediti e piani"
         }
       },
       "V2": {
-        "EMPTY": "No data available for this period.",
+        "EMPTY": "Nessun dato disponibile per questo periodo.",
         "SUMMARY": {
           "GREETING": "Hello, {name}!",
           "DEFAULT_NAME": "there",
           "EMPTY": "Captain's performance summary will appear here when enough activity is available.",
-          "PREVIOUS": "Previous summary point",
-          "NEXT": "Next summary point"
+          "PREVIOUS": "Precedente punto di sintesi",
+          "NEXT": "Prossimo punto di sintesi"
         },
         "UNITS": {
           "DAYS": "{value}d",
@@ -513,15 +602,16 @@
           "DURABLE": {
             "LABEL": "Captain resolutions remained closed",
             "HINT": "The share of Captain-resolved conversations that were still closed seven days later.",
-            "NOTE": "Only resolutions old enough to observe for seven days are included."
+            "NOTE": "Sono incluse solo le risoluzioni abbastanza vecchie da osservare per sette giorni.",
+            "NOT_APPLICABLE_HINT": "Nessuna risoluzione in questo periodo ha sette giorni di follow-up ancora. La durata non è disponibile."
           },
           "MEDIAN_RESOLUTION": {
-            "LABEL": "Median resolution time",
+            "LABEL": "Tempo di risoluzione mediana",
             "HINT": "The typical time from when a conversation reached Captain until it was resolved.",
-            "NOTE": "Lower means customers generally got resolved sooner."
+            "NOTE": "Inferiore significa che i clienti generalmente sono stati risolti prima."
           },
           "DEPTH": {
-            "LABEL": "Messages per conversation"
+            "LABEL": "Messaggi per conversazione"
           },
           "OF_TOTAL": "of {total}"
         },
@@ -530,35 +620,38 @@
           "NODES": {
             "HANDLED": "Handled",
             "RESOLVED_BY_CAPTAIN": "Resolved by Captain",
-            "HANDED_OFF": "Handed off",
-            "CLOSED_WITH_TEAM": "Closed with team",
-            "REOPENED": "Reopened in 7d",
-            "STAYED_CLOSED": "Stayed closed",
-            "OTHER_REASONS": "Other reasons"
+            "HANDED_OFF": "Spegnitoso",
+            "CLOSED_WITH_TEAM": "Chiuso con il team",
+            "REOPENED": "Riaperto nel 7 d",
+            "STAYED_CLOSED": "Rimani chiuso",
+            "OTHER_REASONS": "Altri motivi"
           }
         },
         "HANDOFF_REASONS": {
-          "TITLE": "Handoff reasons",
-          "CUSTOMER_REQUEST": "Customer requested",
-          "MISSING_KNOWLEDGE": "Missing knowledge",
-          "UNSUPPORTED_REQUEST": "Unsupported request",
-          "POLICY_RESTRICTION": "Policy restriction",
-          "TOOL_FAILURE": "Tool failure",
-          "PENDING_CLARIFICATION": "Pending customer clarification",
+          "TITLE": "Motivi di consegna",
+          "CUSTOMER_REQUEST": "Cliente richiesto",
+          "MISSING_KNOWLEDGE": "Mancanza di conoscenza",
+          "UNSUPPORTED_REQUEST": "Richiesta non supportata",
+          "POLICY_RESTRICTION": "Restrizione della politica",
+          "TOOL_FAILURE": "Insufficienza di utensili",
+          "PENDING_CLARIFICATION": "Prestito chiarificazione del cliente",
           "PERCENTAGE": "({value}%)",
-          "USAGE_LIMIT": "Usage limit",
+          "USAGE_LIMIT": "Limite di utilizzo",
           "UNCLASSIFIED": "Unclassified"
         },
         "RESOLUTION_TREND": {
-          "TITLE": "Resolution trend",
-          "CONVERSATION_COUNT": "Conversation count",
-          "RESOLUTION_RATE": "Resolution rate",
-          "CURRENT_PERIOD": "Current period",
+          "TITLE": "Motivazione della risoluzione",
+          "CONVERSATION_COUNT": "Conto di conversazione",
+          "RESOLUTION_RATE": "Tasso di risoluzione",
+          "CURRENT_PERIOD": "Periodo attuale",
           "PREVIOUS_PERIOD": "Periodo precedente",
           "HANDLED": "Handled",
           "RESOLVED": "Resolved by Captain",
           "ARIA_LABEL": "Handled and Captain-resolved conversations by reporting period",
-          "RATE_ARIA_LABEL": "Current and previous Captain resolution rates"
+          "RATE_ARIA_LABEL": "Current and previous Captain resolution rates",
+          "COMPARISON_LABEL": "Confronto settimanale allineato",
+          "COMPARISON_HINT": "Confronta i tassi di risoluzione sui giorni feriali corrispondenti, come Lunedi con Lunedi.",
+          "COMPARISON_NOTE": "Oggi è paragonato allo stesso tempo del giorno."
         },
         "CSAT": {
           "TITLE": "Captain CSAT",
@@ -566,7 +659,7 @@
           "AUTONOMOUS_HINT": "The average customer rating for conversations Captain resolved without help from your team.",
           "ASSISTED": "Captain-assisted conversations",
           "ASSISTED_HINT": "The average customer rating when Captain helped before your team resolved the conversation.",
-          "VS_HUMANS": "{value} vs humans"
+          "VS_HUMANS": "{value} vs umani"
         },
         "USAGE": {
           "TITLE": "Usage",
@@ -574,13 +667,98 @@
           "DOCUMENTS": "Documenti",
           "USED": "({percentage}% used)",
           "VALUE": "{used}/{total}",
-          "REFRESH": "Refresh usage",
+          "REFRESH": "Uso raffinato",
           "BUY_MORE": "Acquista più crediti"
         },
         "KNOWLEDGE": {
-          "REVIEW": "Review FAQs"
+          "REVIEW": "Recensione FAQs",
+          "SUGGESTED": "FAQ consigliate"
         }
-      }
+      },
+      "VIEW_REPORT": "Visualizza relazione",
+      "REPORT_PANEL": {
+        "TITLE": "Rapporto sulle prestazioni",
+        "DESCRIPTION": "Risultati dettagliati, tendenze di risoluzione e copertura della conoscenza per questo agente AI.",
+        "OUTCOMES_TITLE": "Ulteriori risultati"
+      },
+      "STATUS_LINE": {
+        "LIVE_MULTIPLE": "Live on {channel} + {extra}",
+        "NOT_LIVE": "Non vivere su qualsiasi canale",
+        "AUDIENCE_ALL": "Tutti i visitatori",
+        "AUDIENCE_FILTERED": "Audience selezionato",
+        "SCHEDULE_ALWAYS": "Sempre disponibile",
+        "SCHEDULE_BUSINESS_HOURS": "Durante l'orario di lavoro",
+        "SCHEDULE_OUTSIDE_HOURS": "Ore lavorative esterne",
+        "EDIT_CHANNELS": "Modifica nei canali",
+        "EDIT_AUDIENCE": "pubblico",
+        "EDIT_SCHEDULE": "Orari di lavoro",
+        "UNKNOWN": "Non è possibile caricare i canali",
+        "LIVE_SINGLE": "Attivo su {channel}"
+      },
+      "READINESS": {
+        "TITLE": "Prepara il tuo agente AI",
+        "DESCRIPTION": "Finire questi passaggi di configurazione prima di andare in diretta con i clienti.",
+        "PROGRESS": "{completed} del {total} completo",
+        "UNKNOWN": "Non potevo controllare.",
+        "STEPS": {
+          "KNOWLEDGE": {
+            "TITLE": "Conoscenza pronta",
+            "SOURCES_COUNT": "{count} sorgente | {count} fonti",
+            "TODO": "Aggiungi il tuo sito web, file o FAQ in modo che l'agente AI possa rispondere alle domande.",
+            "ACTION": "Aggiungi la conoscenza",
+            "EDIT": "editare",
+            "DONE_BOTH": "{sources} · {faqs}",
+            "FAQS_COUNT": "{count} FAQ | {count} FAQ"
+          },
+          "HANDOFF": {
+            "TITLE": "Set di maniglie",
+            "DONE_TRANSFER": "Trasferimenti alla tua squadra quando è necessario una persona",
+            "DONE_EMAIL": "Raccogliere e-mail per un follow-up di squadra",
+            "DONE_NEVER": "Risposte da sole senza trasferimento",
+            "TODO": "Scegli come le conversazioni raggiungono la tua squadra quando è necessario una persona.",
+            "ACTION": "Impostare il handoff",
+            "EDIT": "editare"
+          },
+          "TESTED": {
+            "TITLE": "Testato",
+            "DONE": "Testato nel parco giochi",
+            "TODO": "Fai alcune domande campione per verificare come risponde l'agente AI.",
+            "ACTION": "Test AI agente",
+            "EDIT": "Prova di nuovo"
+          },
+          "CHANNEL": {
+            "TITLE": "Canale live",
+            "TODO": "Scegliere quali canali collegati questo agente AI risponde su.",
+            "ACTION": "Scegli i canali",
+            "EDIT": "editare",
+            "DONE": "Attivo su {channel}"
+          }
+        }
+      },
+      "NEEDS_ATTENTION": {
+        "TITLE": "Ha bisogno di attenzione",
+        "ALL_CLEAR": "Tutto sembra buono — nessuna fonte fallita, domande senza risposta, o azioni in sospeso.",
+        "FAILED": {
+          "TITLE": "Non poteva caricare ciò che ha bisogno di attenzione",
+          "DESCRIPTION": "Fonti fallite, domande senza risposta e azioni sospese sono sconosciute fino a quando questo carico."
+        },
+        "FAILED_SOURCES": {
+          "TITLE": "{count} sorgente non sincronizzato | {count} fonti non riuscite a sincronizzare",
+          "DESCRIPTION": "L'agente AI non può utilizzare fonti fallite fino a quando non vengono riparate o rimosse.",
+          "ACTION": "Fonti di valutazione"
+        },
+        "UNANSWERED_QUESTIONS": {
+          "TITLE": "{count} interrogazione senza risposta | {count} domande senza risposta",
+          "DESCRIPTION": "I clienti delle domande hanno chiesto che l'agente AI non poteva rispondere dalle vostre conoscenze.",
+          "ACTION": "Rispondi alle domande"
+        },
+        "PAUSED_ACTIONS": {
+          "TITLE": "{count} azione interrotta o disconnessa | {count} azioni interrotte o disconnesse",
+          "DESCRIPTION": "Paused API azioni e MCP server disconnessi sono saltati durante le conversazioni.",
+          "ACTION": "Azioni di revisione"
+        }
+      },
+      "RETRY": "rifare"
     },
     "ASSISTANT_SWITCHER": {
       "ASSISTANTS": "Assistenti",
@@ -630,7 +808,136 @@
       "MESSAGE_PLACEHOLDER": "Scrivi il tuo messaggio...",
       "HEADER": "Area di prova",
       "DESCRIPTION": "Usa questo playground per inviare messaggi al tuo assistente e controllare se risponde correttamente, rapidamente e con il tono che ti aspetti.",
-      "CREDIT_NOTE": "I messaggi inviati qui vengono scalati dai crediti Captain."
+      "CREDIT_NOTE": "I messaggi inviati qui vengono scalati dai crediti Captain.",
+      "RESPONSE_ERROR": "Captain non poteva completare questa prova. Rivedere la configurazione e riprovare.",
+      "CUSTOMER_VIEW": {
+        "HANDOFF": "Sono stata consegnata alla tua squadra. In una live chat sarebbero stati informati ora.",
+        "HANDOFF_REASON": {
+          "TOOL": "L'agente dell'AI si e' consegnato da solo.",
+          "TOOL_WITH_REASON": "L'agente dell'AI ha consegnato: {reason}",
+          "DECLARED": "La risposta ha promesso a un collega, quindi sarebbe stato avviato un decollo.",
+          "SAFETY_NET": "La rete di sicurezza del handoff corrispondeva a questo messaggio o risposta.",
+          "EMPTY_RESPONSE": "L'agente dell'AI non aveva nulla da dire, quindi sarebbe stato avviato un decollo."
+        }
+      },
+      "SETUP": {
+        "TITLE": "Configurazione test",
+        "DESCRIPTION": "Le modifiche qui si applicano solo a questa sessione di parco giochi a meno che non si salva esplicitamente un oggetto.",
+        "TOGGLE": "Configurazione del test",
+        "CLOSE": "Configurazione del test",
+        "RESET": "Impostazione del test di ripristino",
+        "TEMPORARY": "Temporaneo",
+        "SESSION_ONLY": "Sessione solo",
+        "INCLUDE_IN_TEST": "Includere in questo test",
+        "ADD_TO_TEST": "Aggiungi alla prova (↵)",
+        "LOAD_ERROR": "La configurazione dell'agente AI salvata non poteva essere caricata.",
+        "INVALID_CONFIGURATION": "Completare o rimuovere gli scenari temporanei inclusi prima di inviare un messaggio.",
+        "SAVE_SCENARIO_SUCCESS": "Lo scenario è stato salvato e rimane incluso in questo test.",
+        "SAVE_SCENARIO_ERROR": "Lo scenario non poteva essere salvato.",
+        "SAVE_RULE_SUCCESS": "La regola è stata salvata e rimane inclusa in questo test.",
+        "SAVE_RULE_ERROR": "La regola non poteva essere salvata.",
+        "RULE_ALREADY_SAVED": "Quella regola esatta è già salvata, quindi non è stato creato nessun duplicato.",
+        "SCENARIOS": {
+          "TAB_TITLE": "Scenario",
+          "CREATE_TITLE": "Aggiungi uno scenario temporaneo",
+          "CREATE_HINT": "Prova un nuovo comportamento senza cambiare la configurazione dell'agente AI.",
+          "SAVED_SUMMARY": "Scenari esistenti ({count} )",
+          "ADD_PERMANENTLY": "Aggiungere lo scenario in modo permanente",
+          "DISABLED": "disabile",
+          "EMPTY": "Questo agente dell'AI non ha scenari salvati.",
+          "COMPOSER_PLACEHOLDER": "Digitare un titolo di scenario temporaneo...",
+          "COLLAPSE": "Scenario temporaneo di ricaduta",
+          "EXPAND": "Espandere scenario temporaneo",
+          "REMOVE": "Rimuovere lo scenario temporaneo"
+        },
+        "GUIDELINES": {
+          "TAB_TITLE": "Linee guida",
+          "CREATE_TITLE": "Aggiungi una guida temporanea",
+          "CREATE_HINT": "Provare una preferenza di risposta prima di aggiungerlo all'agente AI.",
+          "SAVED_SUMMARY": "Linee guida esistenti ({count} )",
+          "ADD_PERMANENTLY": "Aggiungere la guida in modo permanente",
+          "EMPTY": "Questo agente dell'AI non ha linee guida di risposta salvate.",
+          "COMPOSER_PLACEHOLDER": "Digitare una guida temporanea...",
+          "PLACEHOLDER": "Aggiungi una guida di risposta",
+          "REMOVE": "Rimuovere la guida di risposta temporanea"
+        },
+        "GUARDRAILS": {
+          "TAB_TITLE": "Regime di protezione",
+          "CREATE_TITLE": "Aggiungi una guardia temporanea",
+          "CREATE_HINT": "Testare un limite di sicurezza prima di aggiungerlo all'agente AI.",
+          "SAVED_SUMMARY": "Ritiri di guardia esistenti ({count} )",
+          "ADD_PERMANENTLY": "Aggiungere guardrail in modo permanente",
+          "EMPTY": "Questo agente dell'AI non ha conservato i guardrails.",
+          "COMPOSER_PLACEHOLDER": "Digitare un guardrail temporaneo...",
+          "PLACEHOLDER": "Aggiungi una guardrail",
+          "REMOVE": "Rimuovere il guardrail temporaneo"
+        },
+        "KNOWLEDGE": {
+          "TAB_TITLE": "conoscenza",
+          "AVAILABLE_TITLE": "Conoscenza disponibile a Captain",
+          "AVAILABLE_DESCRIPTION": "Le fonti salvate sono riassunte qui e gestite fuori dal parco giochi.",
+          "DOCUMENTS": "Documenti",
+          "FAQS": "Domande frequenti",
+          "TEMPORARY_TITLE": "Conoscenza temporanea",
+          "ADD_PERMANENTLY": "Aggiungi documento in modo permanente",
+          "LABEL": "Testo di riferimento",
+          "PLACEHOLDER": "Incolla o scrivi nuove conoscenze per questo test",
+          "HINT": "Questo testo è allegato solo alle richieste del parco giochi a meno che non lo aggiungi come documento."
+        },
+        "SAVE_KNOWLEDGE_SUCCESS": "Conoscenza aggiunta come documento.",
+        "SAVE_KNOWLEDGE_ERROR": "Incapace di aggiungere la conoscenza come documento."
+      },
+      "STARTER_QUESTIONS": {
+        "EXAMPLE_1": "Cosa offri?",
+        "EXAMPLE_2": "Come posso contattare la tua squadra?",
+        "EXAMPLE_3": "Dove posso trovare i tuoi prezzi?"
+      },
+      "WIDGET_TEST": {
+        "TITLE": "Testare il vostro agente AI",
+        "NOT_COUNTED": "Le chat di test sono gratuite: non contano verso il tuo utilizzo o si presentano in Conversazioni.",
+        "WIDGET_LABEL": "Chat del sito web per testare",
+        "START_OVER": "Avvicinati",
+        "REPLY_FAILED": "Mi dispiace, qualcosa e' andato storto. Per favore, riprovate.",
+        "NO_WIDGET": {
+          "TITLE": "Collegare prima una chat del sito web",
+          "DESCRIPTION": "Il test utilizza la tua vera chat sul sito web, quindi il tuo agente AI ne ha bisogno.",
+          "ACTION": "Collegare una chat del sito web"
+        },
+        "TABS": {
+          "CUSTOMER": "Come cliente",
+          "BEHIND": "Dietro la risposta"
+        },
+        "WHY": {
+          "TITLE": "Perché questa risposta",
+          "EMPTY": "Chiedi qualcosa nella chat come un cliente avrebbe. Ogni risposta si presenta qui con quello su cui si basava.",
+          "MAIN_AGENT": "Agente principale dell'AI",
+          "ANSWERED_BY": "Rispondi da",
+          "SOURCES": "Fonti",
+          "NO_SOURCES": "Nessuno",
+          "ACTIONS": "Azioni",
+          "NO_ACTIONS": "Nessuno",
+          "FIX": "Risolvere questa risposta",
+          "FIXED": "Riparazione salvata",
+          "SECONDS": "{seconds} s"
+        },
+        "LOAD_ERROR": "Non ho potuto caricare la chat del tuo sito web.",
+        "RETRY": "Prova ancora.",
+        "FIX": {
+          "TITLE": "Risolvere questa risposta",
+          "DESCRIPTION": "Insegna al tuo agente dell'IA la risposta giusta. È usato dalla prossima domanda su.",
+          "AS_FAQ": "Salva come FAQ",
+          "AS_RULE": "Aggiungi una regola",
+          "FAQ_HINT": "Scrivi la risposta che vuoi che i clienti arrivino a questa domanda.",
+          "QUESTION": "domanda",
+          "ANSWER": "risposta",
+          "RULE_HINT": "Una regola cambia come il vostro agente AI risponde a ogni domanda, non solo questo.",
+          "RULE": "Articolo",
+          "RULE_PLACEHOLDER": "Per esempio: menzionare sempre l'etichetta di ritorno gratuita quando qualcuno chiede di ritorni.",
+          "SAVE": "salvare",
+          "SAVED": "Salvata. Chiedi di nuovo di vedere la nuova risposta.",
+          "ERROR": "Non ho potuto salvare. Per favore, riprovate."
+        }
+      }
     },
     "PAYWALL": {
       "TITLE": "Aggiorna per usare Captain AI",
@@ -674,7 +981,7 @@
         "UPDATE": "Aggiorna",
         "SECTIONS": {
           "BASIC_INFO": "Informazioni di Base",
-          "SYSTEM_MESSAGES": "System Messages",
+          "SYSTEM_MESSAGES": "Messaggi di sistema",
           "INSTRUCTIONS": "Istruzioni",
           "FEATURES": "Funzionalità",
           "TOOLS": "Strumenti "
@@ -682,7 +989,10 @@
         "NAME": {
           "LABEL": "Nome",
           "PLACEHOLDER": "Inserisci il nome dell'assistente",
-          "ERROR": "Il nome è richiesto"
+          "ERROR": "Il nome è richiesto",
+          "HELP_TEXT": "Il nome e i clienti fotografici vedono. Puoi cambiarli quando vuoi.",
+          "AI_BADGE_NOTE": "I clienti vedono questo nome con \"agente AI\" nell'intestazione della chat.",
+          "DEFAULT": "{accountName} Assistente"
         },
         "DESCRIPTION": {
           "LABEL": "Descrizione",
@@ -709,10 +1019,10 @@
         "INACTIVITY_RESOLUTION": {
           "TITLE": "When customers stop replying",
           "DESCRIPTION": "Choose how Captain handles the conversation.",
-          "MODE_LABEL": "Action when the customer stops replying",
+          "MODE_LABEL": "Azione quando il cliente smette di rispondere",
           "REVIEW_AFTER": "Review after",
           "RESOLVE_AFTER": "Resolve after",
-          "ALWAYS_WARNING": "Captain will resolve every conversation after the selected time without reviewing it. Some conversations that still need help may be closed.",
+          "ALWAYS_WARNING": "{name} chiuderà ogni conversazione dopo l'orario selezionato, anche quelli che ancora hanno bisogno di aiuto.",
           "PENDING_INFO": "The conversation remains pending until the customer replies.",
           "RESOLUTION_MESSAGE": {
             "TITLE": "Send a message when resolving",
@@ -721,19 +1031,19 @@
           "MODES": {
             "DISABLED": {
               "LABEL": "Wait for the customer",
-              "DESCRIPTION": "Captain does not resolve the conversation. Captain can still hand it off if the customer asks."
+              "DESCRIPTION": "{name} può ancora consegnarlo se lo chiedono."
             },
             "LEGACY": {
               "LABEL": "Always resolve",
               "DESCRIPTION": "Captain resolves every conversation after the selected time."
             },
             "EVALUATED": {
-              "LABEL": "Let Captain review it (recommended)",
+              "LABEL": "Let {name} decidere (consigliato)",
               "DESCRIPTION": "Captain decides whether to resolve the conversation or hand it off."
             }
           },
-          "DURATION_HOURS_ARIA_LABEL": "Hours before action",
-          "DURATION_MINUTES_ARIA_LABEL": "Minutes before action",
+          "DURATION_HOURS_ARIA_LABEL": "Ore prima dell'azione",
+          "DURATION_MINUTES_ARIA_LABEL": "Verbale prima dell'azione",
           "DURATION_HOURS_SHORT": "{count} h",
           "DURATION_MINUTES_SHORT": "{count} min"
         },
@@ -746,49 +1056,61 @@
           "ALLOW_CONVERSATION_FAQS": "Genera FAQ dalle conversazioni risolte",
           "ALLOW_MEMORIES": "Salva memorie e dettagli chiave dalle interazioni con i clienti.",
           "ALLOW_CITATIONS": "Includi citazioni alle fonti nelle risposte",
-          "ALLOW_CONTACT_ATTRIBUTES": "Consenti accesso alle informazioni di contatto"
+          "ALLOW_CONTACT_ATTRIBUTES": "Consenti accesso alle informazioni di contatto",
+          "CONTINUE_WHILE_WAITING": "Continua a rispondere mentre aspetta un essere umano fino all'acquisizione",
+          "HANDOFF_SAFETY_NET": "Spegni quando la risposta non può aiutare",
+          "REPLY_LABELS": "Etichetta conversazioni per argomento",
+          "OUTCOME_LABELS": "Etichetta risolta conversazioni con un risultato"
         },
         "AUDIENCE": {
           "EVERYONE": {
             "LABEL": "Everyone",
-            "DESC": "Captain responds to every conversation in connected inboxes."
+            "DESC": "{name} aiuta ogni cliente in canali collegati."
           },
           "SPECIFIC": {
             "LABEL": "Specific audience",
-            "DESC": "Captain responds only to customers who match the conditions below."
+            "DESC": "{name} aiuta solo i clienti che soddisfano le condizioni di seguito."
           },
-          "ADD_CONDITION": "Add condition",
-          "ADD_GROUP": "Add condition group",
-          "EMPTY_TITLE": "No conditions yet",
-          "EMPTY_BODY": "Add a condition to target specific customers, or a condition group to combine conditions with different and/or logic.",
-          "EMPTY_ERROR": "Add at least one condition for a specific audience.",
+          "ADD_CONDITION": "Aggiungi condizione",
+          "ADD_GROUP": "Aggiungi il gruppo di condizione",
+          "EMPTY_TITLE": "Nessuna condizione ancora",
+          "EMPTY_BODY": "Aggiungi una condizione per indirizzare clienti specifici, o un gruppo di condizioni per combinare le condizioni con diverse e/o logica.",
+          "EMPTY_ERROR": "Aggiungere almeno una condizione per un pubblico specifico.",
           "MATCH_PREFIX": "Match",
           "MATCH_SUFFIX": "of the following",
           "MATCH_ALL": "tutte",
           "MATCH_ANY": "any",
-          "GROUP_CONTACT": "Contact attributes",
+          "GROUP_CONTACT": "attributi di contatto",
           "GROUP_CONVERSATION": "Conversazione",
           "GROUP_CUSTOM": "Attributi personalizzati",
           "BROWSER_LANGUAGE": "Lingua del browser",
-          "CONVERSATION_LANGUAGE": "First message language",
-          "LOGGED_IN": "Logged-in user",
+          "CONVERSATION_LANGUAGE": "Lingua del primo messaggio",
+          "LOGGED_IN": "utente registrato",
           "LOGGED_IN_TRUE": "Sì",
           "LOGGED_IN_FALSE": "No"
         },
         "SCHEDULE": {
           "ALWAYS": {
             "LABEL": "Anytime",
-            "DESC": "Captain responds to every conversation, regardless of time."
+            "DESC": "{name} risponde a ogni conversazione, giorno e notte."
           },
           "BUSINESS_HOURS": {
-            "LABEL": "During business hours",
-            "DESC": "Captain responds only within each inbox's business hours."
+            "LABEL": "Durante le ore di lavoro",
+            "DESC": "{name} lavora al fianco del vostro team, entro le ore di lavoro di ogni canale."
           },
           "OUTSIDE_BUSINESS_HOURS": {
             "LABEL": "Outside business hours",
-            "DESC": "Captain responds only when each inbox is closed."
+            "DESC": "{name} copre le ore quando ogni canale è chiuso."
           },
           "HINT": "Inboxes without business hours configured are always covered."
+        },
+        "AVATAR": {
+          "HELP_TEXT": "Carica una foto per questo agente AI"
+        },
+        "FALLBACK_ASSIGNMENTS": {
+          "AGENT_LABEL": "Agente",
+          "NONE": "Nessuno",
+          "TEAM_LABEL": "Team"
         }
       },
       "EDIT": {
@@ -834,6 +1156,660 @@
           "TITLE": "Elimina Assistente",
           "DESCRIPTION": "Questa azione è permanente. L'eliminazione di questo assistente la rimuoverà da tutte le inbox connesse e cancellerà definitivamente tutte le knowledge generate.",
           "BUTTON_TEXT": "Elimina {assistantName}"
+        },
+        "SAVE": "Salva modifiche",
+        "GROUPS": {
+          "IDENTITY": "Chi è {name}",
+          "WHEN": "Quando e per chi",
+          "HOW": "Come funziona {name}"
+        },
+        "TABS": {
+          "IDENTITY": "Identità",
+          "BEHAVIOR": "Comportamento",
+          "WORKING_HOURS": "Orari di lavoro",
+          "AUDIENCE": "Chi aiuta {name}",
+          "SCENARIOS": "Scenari",
+          "BOUNDARIES": "Limiti",
+          "HANDOVER": "Passaggio al team",
+          "AFTER_CHAT": "Dopo la chat"
+        },
+        "PROFILE": {
+          "WORKS_FOR": "Lavora per {product}",
+          "CHAT_WITH": "Chatta con {name}",
+          "HOURS": {
+            "ALWAYS": "Risponde a qualsiasi ora",
+            "BUSINESS_HOURS": "Risponde durante gli orari di lavoro",
+            "OUTSIDE_BUSINESS_HOURS": "Risponde quando il team non è disponibile"
+          }
+        },
+        "IDENTITY": {
+          "TITLE": "Identità pubblica",
+          "DESCRIPTION": "Nome, foto e azienda che i clienti vedono nel widget della chat.",
+          "WORKS_FOR": "Lavora per",
+          "WORKS_FOR_PLACEHOLDER": "Nome del negozio o del prodotto",
+          "ABOUT": "Informazioni sulla tua attività",
+          "ABOUT_PLACEHOLDER": "Cosa vendi, chi sono i tuoi clienti e cosa {name} dovrebbe tenere sempre presente.",
+          "PREVIEW_LABEL": "Anteprima nella finestra della chat",
+          "PREVIEW_GREETING": "Ciao, sono {name}. Come posso aiutarti?",
+          "PREVIEW_QUESTION": "Spedite in Germania?",
+          "DANGER_ZONE_TITLE": "Zona di pericolo",
+          "REMOVE_TITLE": "Elimina agente IA",
+          "REMOVE_DESCRIPTION": "Elimina definitivamente {name}, lo scollega da tutte le caselle di posta e cancella le conoscenze acquisite."
+        },
+        "BEHAVIOR": {
+          "TITLE": "Come risponde {name}",
+          "DESCRIPTION": "Tono e contenuti che i clienti vedono nei messaggi di {name}.",
+          "BUSINESS_TYPE": {
+            "TITLE": "Tipo di attività",
+            "DETECTED": "· rilevato",
+            "USE_DETECTED": "Rileva automaticamente",
+            "WHAT_CHANGES": "Cosa cambia",
+            "OPTIONS": {
+              "COMMERCE": "Negozio online",
+              "SOFTWARE": "Software e SaaS",
+              "SUBSCRIPTION": "Abbonamenti e contenuti",
+              "SERVICES": "Servizi e prenotazioni",
+              "GENERAL": "Altro"
+            },
+            "HINTS": {
+              "COMMERCE": "Risposte brevi su prodotti, ordini e spedizioni.",
+              "SOFTWARE": "Risposte passo passo con link alla documentazione.",
+              "SUBSCRIPTION": "Risposte chiare su piani, fatturazione e accesso.",
+              "SERVICES": "Spiega cosa offri e come prenotare.",
+              "GENERAL": "Risposte equilibrate basate sulle tue fonti."
+            },
+            "DETAILS": {
+              "COMMERCE": "Le risposte occupano una o due frasi e i dettagli dei prodotti appaiono nelle schede. Ordini danneggiati, mancanti o in ritardo e richieste di rimborso vengono passati al team.",
+              "SOFTWARE": "Le guide includono passaggi numerati, nomi esatti di schermate, impostazioni e campi API e link alle fonti. Le contestazioni di fatturazione, i problemi di accesso e le richieste di cancellazione dei dati vengono passati al team.",
+              "SUBSCRIPTION": "Le risposte spiegano passo passo accesso, dispositivi, piani e fatturazione. Se cambia la procedura, l’agente chiede dove è stato sottoscritto l’abbonamento. La fatturazione di un app store viene indirizzata allo store e le contestazioni al team.",
+              "SERVICES": "Le risposte spiegano cosa offri e quale passo compiere. L’agente usa uno strumento per confermare prenotazioni, orari e preventivi. Le modifiche alle prenotazioni vengono passate al team.",
+              "GENERAL": "Frasi semplici, con passaggi o elenchi brevi quando servono e link alle tue pagine. Le regole restano generiche."
+            }
+          },
+          "ANSWER_LENGTH": {
+            "TITLE": "Lunghezza della risposta",
+            "SHORT": {
+              "LABEL": "Breve",
+              "DESC": "Una o due frasi"
+            },
+            "BALANCED": {
+              "LABEL": "Equilibrata",
+              "DESC": "Breve per le domande semplici, con qualche passaggio per le guide"
+            },
+            "DETAILED": {
+              "LABEL": "Dettagliata",
+              "DESC": "Tutti i passaggi e le opzioni per i prodotti complessi"
+            }
+          },
+          "CUSTOM_PROMPT": {
+            "LABEL": "Personalizzata",
+            "DESC": "Scrivi le tue istruzioni",
+            "SHOW": "Istruzioni",
+            "VIEW": "Mostra istruzioni",
+            "HIDE": "Nascondi istruzioni",
+            "EDIT": "Personalizza",
+            "EDITOR": "Le tue istruzioni",
+            "HINT": "Scrivi istruzioni per l’agente IA. Ad esempio, «Usa parole semplici e mantieni un tono calmo e rassicurante».",
+            "SAVE": "Salva",
+            "CANCEL": "Annulla"
+          },
+          "TONE": {
+            "TITLE": "Tono",
+            "FRIENDLY": {
+              "LABEL": "Amichevole",
+              "DESC": "Cordiale e colloquiale"
+            },
+            "PROFESSIONAL": {
+              "LABEL": "Professionale",
+              "DESC": "Chiaro e professionale"
+            },
+            "SHORT": {
+              "LABEL": "Diretto",
+              "DESC": "Va dritto al punto"
+            }
+          },
+          "CARDS": {
+            "TITLE": "Formato della risposta",
+            "FOLLOW_UP": {
+              "TITLE": "Fai domande di approfondimento",
+              "NOTE": "Conclude con una domanda precisa quando la risposta dipende, ad esempio, dalla piattaforma o dal piano del cliente."
+            },
+            "QUICK_REPLIES": {
+              "TITLE": "Risposte rapide",
+              "BUTTON_1": "Confronta i prodotti",
+              "BUTTON_2": "Traccia il mio ordine",
+              "BUTTON_3": "Parla con una persona",
+              "MAX": "Numero massimo di pulsanti per messaggio",
+              "FEWER": "Meno pulsanti",
+              "MORE": "Più pulsanti",
+              "DESC": "Suggerisce risposte pertinenti quando sono utili.",
+              "BUTTON_4": "Tempi di spedizione",
+              "BUTTON_5": "Restituisci un articolo"
+            },
+            "PRODUCT_CARDS": {
+              "TITLE": "Schede prodotto",
+              "PREVIEW_NAME": "Prodotto di esempio",
+              "PREVIEW_PRICE": "49,00 € · Disponibile",
+              "NOTE": "Prezzi e disponibilità sono aggiornati in tempo reale da Shopify."
+            },
+            "HELPFUL_LINKS": {
+              "TITLE": "Link utili",
+              "NOTE": "Scegli quando inserire link a prodotti, guide e approfondimenti. I link richiesti e quelli indispensabili per l’assistenza sono sempre consentiti.",
+              "AUTOMATIC": "Automatico",
+              "ON_REQUEST": "Su richiesta"
+            },
+            "SOURCES": {
+              "TITLE": "Mostra le fonti",
+              "NOTE": "Mostra le fonti consultate in una scheda espandibile. I link utili nella risposta restano disponibili."
+            }
+          },
+          "RULES": {
+            "TITLE": "Regole di stile",
+            "EXPLAINER": "L’agente si adatta a clienti, potenziali clienti e acquirenti, saluta i nuovi visitatori e invia le domande di approfondimento in un messaggio separato. Usa in modo discreto la pagina visitata, la posizione approssimativa e le eventuali visite precedenti. Aggiungi qui le regole specifiche della tua attività."
+          }
+        },
+        "SAVE_BAR": {
+          "UNSAVED": "Modifiche non salvate",
+          "DISCARD": "Scarta",
+          "LEAVE": "Hai modifiche non salvate. Vuoi uscire senza salvare?"
+        },
+        "AUDIENCE_PAGE": {
+          "TITLE": "Chi aiuta {name}",
+          "DESCRIPTION": "Gli altri visitatori contattano direttamente il tuo team.",
+          "SUMMARY_TITLE": "Pubblico",
+          "SUMMARY_EVERYONE": "Tutti i visitatori. {name} aiuta ogni cliente sui canali collegati.",
+          "SUMMARY_SPECIFIC": "Visitatori specifici con {count} condizione | Visitatori specifici con {count} condizioni",
+          "PANEL_TITLE": "Modifica il pubblico",
+          "PANEL_DESC": "Scegli chi riceve le risposte dell’agente IA sui canali collegati.",
+          "ACTIVE_RULES": "Regole di filtro attive",
+          "MATCHING_VISITORS": "Solo i visitatori che soddisfano queste condizioni ricevono le risposte dell’agente IA."
+        },
+        "WORKING_HOURS": {
+          "TITLE": "Quando {name} funziona",
+          "DESCRIPTION": "Fuori da queste ore, le conversazioni vanno direttamente alla tua squadra.",
+          "SUMMARY_TITLE": "Orari di lavoro",
+          "PANEL_TITLE": "Modifica delle ore di lavoro",
+          "PANEL_DESC": "Scegliere quando {name} risponde alle conversazioni in arrivo.",
+          "WEEK": "Una settimana tipica",
+          "LEGEND_TEAM": "La tua squadra",
+          "NOTE": "Assume 09: 00 a 17: 00 nei giorni feriali, a seguito delle ore di lavoro configurate su ogni canale collegato."
+        },
+        "BOUNDARIES": {
+          "TITLE": "Quello che {name} non farà",
+          "DESCRIPTION": "Gli argomenti {name} rimangono lontani da ciò che {name} può vedere.",
+          "LIST_TITLE": "Sta lontano da",
+          "CONTACT_ACCESS": {
+            "TITLE": "Può vedere i dettagli del cliente",
+            "DESC": "Nome, email e cronologia degli ordini, così {name} può rispondere “Dove è il mio ordine?”"
+          },
+          "OFF_LIMITS": {
+            "TITLE": "Quando una domanda è off-limits, {name} dice",
+            "DESC": "Usato ogni volta che un guardrail o una domanda al di fuori del tuo business rende l'agente AI declino. Tradotto dalla lingua del cliente.",
+            "PLACEHOLDER": "Posso solo aiutare con domande sui nostri prodotti e ordini. C'è qualcosa che posso aiutarvi con lì?"
+          },
+          "LIMITS": {
+            "TITLE": "Quello che {name} non può fare",
+            "DESC": "Quando un cliente chiede uno di questi, l'agente AI dice chiaramente che non può e offre il passo successivo che si sceglie.",
+            "EMPTY": "Non ci sono limiti. Aggiungete cose che il vostro agente dell'AI non può fare, come emettere rimborsi.",
+            "CANNOT": "Non posso.",
+            "OFFER": "Offrire invece",
+            "ADD": "Aggiungere un limite",
+            "REMOVE": "Limite di rimozione",
+            "TEXT_PLACEHOLDER": "Cosa dice l'agente dell'AI?",
+            "EXAMPLES": {
+              "REFUNDS": "rimborso emissione",
+              "PLAN_CHANGE": "modificare un piano di abbonamento",
+              "LEGAL": "dare consulenza legale"
+            },
+            "OFFERS": {
+              "HANDOFF": "Passa alla squadra",
+              "EMAIL_FOLLOWUP": "Seguito email",
+              "LINK": "Un link",
+              "TEXT": "Un messaggio"
+            },
+            "ERRORS": {
+              "CANNOT_REQUIRED": "Descrivi cosa l'agente dell'AI non puo' fare.",
+              "LINK": "Inserisci un link a partire da http:// o https://.",
+              "TEXT": "Inserire il messaggio per inviare invece.",
+              "TOO_LONG": "Tenere questo sotto {max} caratteri."
+            },
+            "LINK_PLACEHOLDER": "https://example.com/help"
+          }
+        },
+        "HANDOVER": {
+          "TITLE": "Passare alla tua squadra",
+          "DESCRIPTION": "I clienti possono sempre chiedere una persona. Ecco come {name} passa la conversazione.",
+          "MESSAGE_TITLE": "Ciò che {name} dice quando consegna",
+          "CONTACT_FORM": {
+            "TITLE": "Contattare i dettagli a handoff",
+            "DESC": "Scegli quali dettagli il modulo richiede quando trasferisci il tuo team. Richiede solo i dettagli mancanti dal contatto.",
+            "MESSAGE_LABEL": "Messaggio del modulo",
+            "DEFAULT_MESSAGE": "Si prega di condividere i tuoi dati di contatto in modo che il nostro team possa seguire se si lascia la chat.",
+            "EMAIL_REQUIRED": "L'email è sempre necessaria quando manca, quindi la tua squadra può seguire.",
+            "NAME": "nome",
+            "EMAIL": "e-mail",
+            "PHONE": "Numero di telefono",
+            "FIELD_DESC": "Richiedete un nome quando manca.",
+            "PHONE_DESC": "Richiedete un numero di telefono quando manca, incluso il codice paese.",
+            "PREVIEW": "Anteprima del modulo di contatto",
+            "SUBMIT": "Inviare"
+          },
+          "FALLBACK_PREFIX": "Chi ottiene la conversazione se non è disponibile un compagno di squadra.",
+          "KEEP_HELPING": {
+            "TITLE": "Continua ad aiutare fino a quando un compagno di squadra risponde",
+            "DESC": "{name} continua a rispondere a domande semplici mentre il cliente aspetta."
+          },
+          "SAFETY_NET": {
+            "TITLE": "Passare la mano quando {name} non può aiutare",
+            "DESC": "Invece di una vaga risposta, {name} passa la conversazione alla tua squadra."
+          },
+          "FALLBACK_TITLE": "Quando nessuno è online",
+          "WHEN": {
+            "TITLE": "Quando una persona è necessaria",
+            "DESC": "Scegli quello che {name} fa quando un cliente ha bisogno del tuo team. Il tuo team è offline fuori dalle ore di lavoro della posta in arrivo o quando nessuno nella casella di posta in arrivo è online.",
+            "ONLINE": "Quando il tuo team è online",
+            "OFFLINE": "Quando il tuo team è offline",
+            "TRANSFER": "Trasferisci la conversazione al tuo team",
+            "KEEP": "Tenere la conversazione con {name}"
+          },
+          "EMAIL_ONLY": {
+            "TITLE": "Nessun team dal vivo? Invia i clienti all'email",
+            "DESC": "Se nessuno risponde alle chat nella tua casella di posta, {name} mantiene ogni conversazione e dice ai clienti di e-mail quando hanno bisogno di una persona. Rivedere il messaggio qui sotto, quindi salvare.",
+            "PLACEHOLDER": "supporto {'@'} tuo business.com",
+            "APPLY": "Utilizzare e-mail invece",
+            "MESSAGE": "La nostra squadra non risponde alle chat dal vivo. Per qualsiasi cosa non possa fare a meno, per favore e-mail {email} e ti risponderemo."
+          },
+          "OFFLINE_MESSAGE": {
+            "LABEL": "Che cosa dice quando si consegna mentre il vostro team è offline",
+            "PLACEHOLDER": "Il nostro team è offline in questo momento. Risponderemo qui appena torniamo."
+          },
+          "KEEP_MESSAGE": {
+            "LABEL": "Ciò che {name} dice quando mantiene la conversazione",
+            "PLACEHOLDER": "La nostra squadra non puo' partecipare a questa chiacchierata, ma continuero' ad aiutarti qui. Puoi anche lasciare la tua email e ti risponderemo."
+          },
+          "RULES": {
+            "TITLE": "Regole di consegna",
+            "DESC": "Di' a {name} quando portare la tua squadra, in cima a un cliente che chiede una persona.",
+            "PLACEHOLDER": "Ad esempio: Spegni quando il cliente chiede un rimborso su 100 euro.",
+            "ADD": "Aggiungi regola",
+            "REMOVE": "Rimuovi la regola",
+            "PRESETS": {
+              "LEGAL": {
+                "LABEL": "Escalation consulenza legale",
+                "TEXT": "Consegnare quando il cliente chiede consulenza legale o menziona un avvocato, una controversia contrattuale o un'azione legale."
+              },
+              "FRUSTRATED": {
+                "LABEL": "Escalate se il cliente è frustrato",
+                "TEXT": "Spegnere quando il cliente è chiaramente frustrato o arrabbiato, o si lamenta del servizio."
+              },
+              "EMAIL": {
+                "LABEL": "Chiedi prima un'email",
+                "TEXT": "Prima di consegnare, chiedere l'indirizzo e-mail del cliente se non lo avete, in modo che il team può rispondere più tardi."
+              },
+              "BILLING": {
+                "LABEL": "Escalate contenzioso di fatturazione",
+                "TEXT": "Spegnere le controversie di fatturazione, le richieste di rimborso e i problemi di pagamento che hanno bisogno del conto del cliente."
+              },
+              "REPEATED": {
+                "LABEL": "Offrire una persona dopo due mancanze",
+                "TEXT": "Se non riuscisse a rispondere due volte alla stessa domanda, offrisse di portare un collega."
+              }
+            }
+          },
+          "FLOW": {
+            "TITLE": "Cosa succede?",
+            "TRIGGER": "Il cliente chiede una persona",
+            "TRIGGER_OR_STUCK": "Il cliente chiede una persona, o {name} non può aiutare",
+            "SAYS": "{name} ha detto",
+            "DEFAULT_MESSAGE": "Ora ti colleghiamo con la nostra squadra.",
+            "ASSIGN": "La conversazione si sposta nella tua squadra",
+            "NO_FALLBACK": "Il solito incarico della tua casella di posta si applica.",
+            "FALLBACK": "Se nessuno è online: {assignee}",
+            "KEEPS_HELPING": "{name} continua a rispondere a semplici domande mentre il cliente aspetta",
+            "WAITS": "{name} rimane tranquillo fino a quando un compagno di squadra risponde",
+            "KEPT_ONLINE": "Mentre il tuo team è online, {name} mantiene la conversazione invece",
+            "KEPT_OFFLINE": "Mentre il tuo team è offline, {name} mantiene la conversazione invece",
+            "KEPT_ALWAYS": "{name} mantiene la conversazione e non la consegna sopra"
+          }
+        },
+        "AFTER_CHAT": {
+          "TITLE": "Dopo la chat",
+          "DESCRIPTION": "Che cosa succede quando una conversazione termina o il cliente va in silenzio.",
+          "QUIET_TITLE": "Quando il cliente smette di rispondere",
+          "ORGANIZE": "Mantenere le cose organizzate",
+          "TOPIC_LABELS": {
+            "TITLE": "Etichetta l'argomento",
+            "DESC": "Aggiunge un'etichetta di argomento, come la domanda di prodotto o l'ordine-status."
+          },
+          "OUTCOME_LABELS": {
+            "TITLE": "Tag come è finita",
+            "DESC": "Aggiunge un'etichetta di esito, come risolta o consegnata."
+          },
+          "LEARN": "Impara dalle conversazioni",
+          "FAQS": {
+            "TITLE": "Suggerisci nuove risposte da chat risolte",
+            "DESC": "Suggerimenti attendere in Conoscenza fino a quando non li approvate."
+          },
+          "MEMORIES": {
+            "TITLE": "Ricordare i clienti ricorrenti",
+            "DESC": "{name} mantiene i dettagli chiave, come quello che un cliente ha acquistato, per la prossima volta."
+          },
+          "FLOW": {
+            "TITLE": "Cosa succede?",
+            "QUIET": "Il cliente smette di rispondere",
+            "WAIT": "{duration} pass senza risposta",
+            "MINUTES": "{count} min.",
+            "REVIEWS": "{name} verifica se è stato risolto",
+            "SOLVED": "Risolto: la conversazione si chiude",
+            "UNSOLVED": "Non risolto: consegnato al vostro team",
+            "CLOSES": "La conversazione si chiude",
+            "STAYS_OPEN": "La conversazione rimane aperta",
+            "SAYS_GOODBYE": "Quando si chiude, {name} dice",
+            "DEFAULT_GOODBYE": "Grazie per aver parlato con noi. Messaggioci in qualsiasi momento se avete bisogno di più aiuto.",
+            "CHECK_IN": "Dopo {duration}, {name} assegni in una sola volta",
+            "CHECK_IN_DETAIL": "Un breve messaggio che si adatta alla conversazione, per esempio chiedendo di nuovo ciò che il cliente non ha risposto.",
+            "LEAD_OFFER": "I prospetti ricevono invece un'offerta di follow-up e-mail",
+            "LEAD_OFFER_DETAIL": "Quando il cliente sembra una prospettiva di vendita di affari che non è stato ancora catturato. La conversazione rimane aperta fino a quando l'offerta è stata fatta.",
+            "WAIT_AFTER_CHECK_IN": "{duration} passa senza risposta dopo il check-in",
+            "CONTINUITY_HINT": "Accendere la continuità e-mail in {inbox} così i clienti che hanno lasciato ottenere il check-in via e-mail.",
+            "CONTINUITY_LINK": "Impostazioni aperte della casella di posta",
+            "HOURS": "{count} h"
+          }
+        },
+        "PREVIEW": {
+          "READ_MORE": "Leggi tutto: {title}",
+          "LABEL": "Anteprima del cliente · esempio",
+          "AI_AGENT": "Agente IA",
+          "EXAMPLE_TYPE": "Esempio di anteprima",
+          "EXAMPLE_TYPES": {
+            "simple": "Domanda semplice",
+            "howTo": "Come..."
+          },
+          "COMPOSER": "Digitare un messaggio...",
+          "QUESTION": "Nasce in Germania?",
+          "OFF_TOPIC_QUESTION": "Puoi aiutarmi con il mio rientro fiscale?",
+          "REPLY": {
+            "FRIENDLY": "Ottima domanda! Sì, spediamo in Germania 🙂 La consegna di solito richiede 3 – 5 giorni.",
+            "PROFESSIONAL": "Sì, spediamo in Germania. La consegna richiede 3 – 5 giorni lavorativi.",
+            "SHORT": "Sì, nel 3 – 5 giorni."
+          },
+          "HANDOFF_QUESTION": "Vorrei parlare con una persona, per favore.",
+          "HOW_TO": {
+            "QUESTION": "Come posso cambiare il mio indirizzo di consegna?",
+            "SHORT": "Apri il tuo account, vai agli indirizzi e modifica l'indirizzo di consegna.",
+            "BALANCED": "Puoi cambiarlo nel tuo account.\n1. Accedi e apri Account.\n2. Vai agli indirizzi.\n3. Modificare l'indirizzo di consegna e salvare.",
+            "DETAILED": "Puoi cambiarlo nel tuo account prima che le navi dell'ordine.\nHai bisogno di: i tuoi dettagli di accesso.\n1. Accedi e apri Account.\n2. Vai agli indirizzi.\n3. Scegli l'indirizzo per cambiare, o aggiungere un nuovo.\n4. Modificare i dettagli e salvare.\n5. Impostare come predefinito per utilizzarlo per nuovi ordini."
+          }
+        },
+        "LEADS": {
+          "TITLE": "Cattura del lead",
+          "DESCRIPTION": "Aiuta le imprese interessate, raccogliere i dettagli utili e offrire il follow-up e-mail.",
+          "ENABLE": "Acquisire prospettive di vendita aziendale",
+          "VERIFICATION": "Il formato di posta elettronica è controllato, ma la proprietà della casella di posta non è verificata. Risparmio, CRM la consegna e la notifica di vendita sono passi separati.",
+          "MAX_QUESTIONS": "Massimo domande facoltative",
+          "NONE_QUESTIONS": "Nessuno",
+          "FIELDS": "Cosa vorresti imparare?",
+          "FIELDS_HELP": "Scegli i dettagli utili. Il tuo agente salta qualcosa già condiviso e i visitatori possono rifiutare.",
+          "ALWAYS_NAME_EMAIL": "Nome e email",
+          "ALWAYS_SUMMARY": "Riepilogo dell'AI",
+          "FIELD_KEY": "chiave dell'attributo di contatto",
+          "FIELD_LABEL": "Dettaglio di raccolta",
+          "ADD_FIELD": "Un altro dettaglio",
+          "EDIT_FIELD_TITLE": "Modifica attributo personalizzato",
+          "APPLY": "Applicare",
+          "CLOSE": "chiudere",
+          "LIST_ATTRIBUTE_BADGE": "Elenco attributo",
+          "TYPE_RULE": "Quando usare questo tipo",
+          "ADD_TYPE": "Aggiungi il tipo",
+          "TYPE_PRESETS": {
+            "ENTERPRISE": {
+              "LABEL": "Vendite aziendali",
+              "RULE": "Azienda che chiede circa i prezzi del volume, SLA personalizzati, API integrazione o onboarding dedicato.",
+              "NAME": "enterprise_sales"
+            },
+            "PARTNERSHIP": {
+              "LABEL": "Partenariato / B 2 B",
+              "RULE": "Brand, agenzia o partner che chiedono di sponsorizzazione, distribuzione o collaborazione commerciale.",
+              "NAME": "partnership"
+            },
+            "NEEDS_REVIEW": {
+              "LABEL": "Ha bisogno di revisione",
+              "RULE": "Una vera e propria indagine aziendale che non si adatta chiaramente ad un'altra categoria. Esclude il supporto dello spettatore personale.",
+              "NAME": "needs_review"
+            }
+          },
+          "ENABLE_FIRST": "Abilitare le prospettive di vendita e configurare i campi e i tipi nelle impostazioni dell'agente prima di aggiungere questo scenario.",
+          "ENABLE_DESCRIPTION": "Offri il follow-up e-mail alle aziende interessate mentre il tuo agente AI continua ad aiutare in chat.",
+          "INCLUDED": "Sempre incluso: nome, e-mail, tipo di prospettiva di vendita, sommario e fonte di chatbot.",
+          "FIELD_PLACEHOLDER": "Ad esempio, sito web aziendale",
+          "KEY_HELP": "Utilizzare lettere minuscole, numeri e sottolineature, a partire da una lettera. Salvata sul contatto con un prefisso lead_.",
+          "KEY_LOCKED": "Questa chiave è già salvata. Per proteggere le mappe esistenti, aggiungere un nuovo campo per utilizzare una chiave diversa.",
+          "NO_FIELDS": "Non ci sono domande extra necessarie? Nome, email e il riassunto può essere sufficiente.",
+          "REMOVE_FIELD": "Rimuovi {name}",
+          "TYPES_HELP": "Categorie facoltative per l'organizzazione delle prospettive di vendita. La categoria di indagine aziendale di default è sufficiente per iniziare.",
+          "TYPE_PLACEHOLDER": "Ad esempio, l'impresa",
+          "RULE_PLACEHOLDER": "Descrivere l'interesse aziendale o requisiti che si adattano a questo tipo.",
+          "NO_TYPES": "Aggiungere almeno un tipo di prospettiva di vendita prima di consentire la cattura.",
+          "REMOVE_TYPE": "Rimuovi {name}",
+          "FALLBACK_HELP": "Includere un “ needs_review ” tipo per indagini reali che non si adattano chiaramente ad un altro tipo. L'AI non salverà una prospettiva di vendita se non corrisponde alcun tipo.",
+          "DEFAULT_TYPE_RULE": "Un business vuole seguire i prodotti, i prezzi, una demo o un'integrazione. Esclude gli spettatori che cercano aiuto con il proprio abbonamento o account.",
+          "CONVERSATION": "Impostare la conversazione",
+          "CONVERSATION_HELP": "Rispondi prima, chiedi solo quello che manca, quindi offri di raccogliere i dettagli di contatto. I visitatori possono rifiutare.",
+          "QUESTIONS_HELP": "Ne ha chiesto uno alla volta, saltando tutto ciò che è già menzionato.",
+          "FEWER_QUESTIONS": "Fai meno domande facoltative",
+          "MORE_QUESTIONS": "Fai ulteriori domande facoltative",
+          "SCENARIO_TITLE": "Impostazioni di conversazione avanzate",
+          "SCENARIO_FOUND": "Conversazione attiva: {name}.",
+          "SCENARIO_MISSING": "Salvare queste impostazioni per creare automaticamente la conversazione guidata.",
+          "SCENARIO_ERROR": "Non è possibile controllare gli scenari. Aggiornare lo stato di configurazione per riprovare.",
+          "MANAGE_SCENARIO": "Scenari di valutazione",
+          "ADD_SCENARIO": "Aggiungi scenario di cattura prospettiva di vendita",
+          "SAVE_ADD_SCENARIO": "Salvare e aggiungere lo scenario",
+          "FOLLOW_UP": "Dove dovrebbero andare le prospettive di vendita?",
+          "FOLLOW_UP_HELP": "Le prospettive di vendita vengono salvate automaticamente ai Contatti. Scegli un team per avvisi e-mail o collega HubSpot.",
+          "HUBSPOT_TITLE": "HubSpot CRM & trascrizioni",
+          "HUBSPOT_DETAILS": "Dettagli",
+          "HUBSPOT_ACTION": "Gestione HubSpot",
+          "OPTIONAL_BADGE": "opzionale",
+          "UNMAPPED_COUNT": "{count} non mappato",
+          "FIELD_MAPPED": "Maschera",
+          "FIELD_UNMAPPED": "Non mappato",
+          "REFRESH": "Situazione del refrigerante",
+          "LIMIT": "Puoi aggiungere fino a {count} articoli.",
+          "STATUS": {
+            "OFF": "In pausa",
+            "UNSAVED": "Cambiamenti non rilevati",
+            "CHECKING": "Controllare la configurazione...",
+            "UNKNOWN": "Stato dello scenario non disponibile",
+            "READY": "Attivo · Scenario pronto",
+            "NEEDS_SCENARIO": "Bisogno scenario di cattura",
+            "PAUSED_SCENARIO": "Scenario sospeso"
+          },
+          "COMMON_FIELDS": {
+            "company": "Società",
+            "country": "Paese d'affari",
+            "audience_size": "Dimensioni dell'udience",
+            "use_case": "Le esigenze di business"
+          },
+          "HUBSPOT": {
+            "LOADING": "Controllare la connessione...",
+            "UNAVAILABLE": "Lo stato di connessione non è disponibile. Un amministratore può controllare l'integrazione.",
+            "NOT_CONNECTED": "Non collegato",
+            "RECONNECT": "Ricollegare HubSpot per riprendere la sincronizzazione",
+            "SYNC_OFF": "Collegato · la sincronizzazione dei contatti è spenta",
+            "MAPPING_NEEDED": "Contatto sincronizzazione è su · mappa campi di vendita non mappati",
+            "MAPPED": "Tutti i campi di prospettiva di vendita configurati mappati"
+          },
+          "ERRORS": {
+            "KEY": "Utilizzare una chiave unica di 1 – 40 caratteri. Iniziare con una lettera minuscola; utilizzare lettere, numeri e underscore. Tipo, sommario, fonte e stato sono riservati.",
+            "DUPLICATE_KEY": "Ogni dettaglio ha bisogno di una chiave di attributo diversa.",
+            "FIELD": "Inserisci un'etichetta di dettaglio fino a 300 caratteri.",
+            "TYPE": "Inserisci un tipo di prospettiva di vendita e una regola corrispondente, ciascuno fino a 300 caratteri.",
+            "DUPLICATE_TYPE": "Ogni tipo di prospettiva di vendita ha bisogno di un nome diverso.",
+            "FORM": "Controllare i dettagli evidenziati e aggiungere almeno un tipo di prospettiva di vendita quando la cattura è abilitata."
+          },
+          "PREVIEW": {
+            "FLOW": "Anteprima del flusso live",
+            "MODES": {
+              "CHAT": "chat",
+              "HANDOFF": "Trasferimento",
+              "VIEWER": "Visualizzatore"
+            },
+            "CHAT": {
+              "VISITOR_QUESTION": "Vorrei usare il tuo servizio per i miei affari.",
+              "BOT_ANSWER": "Per cosa vorresti usarlo?",
+              "BOT_QUALIFY": "Puoi condividere il tuo {field}?",
+              "VISITOR_DETAILS": "Ecco i dettagli per il nostro business.",
+              "BOT_FOLLOW_UP": "Vorresti che il nostro team seguisse via e-mail?",
+              "VISITOR_CONSENT": "Si', per favore.",
+              "BOT_ASK_CONTACT": "Quale nome ed e-mail dovrebbero usare il team?",
+              "BOT_SAVED": "Grazie, i tuoi dati sono stati salvati per il follow-up e-mail.",
+              "VISITOR_FIELD": "Condividi dal visitatore",
+              "DETECTED_LOCATION": "Città dei visitatori e paese inclusi quando rilevati"
+            },
+            "HANDOFF_SIM": {
+              "VISITOR": "Vogliamo discutere di una sponsorizzazione del Q 4. Posso parlare con qualcuno adesso?",
+              "BOT": "Connettiti con il nostro team ora. Si prega di condividere la tua email nel modulo di contatto.",
+              "STAGED": "Fascetta a mano",
+              "DISABLED": "Togliere la mano"
+            },
+            "VIEWER_SIM": {
+              "VISITOR": "Non posso iscrivermi al mio abbonamento personale. Ti prego, collegami a supporto.",
+              "BOT": "Collegarti subito con il supporto clienti.",
+              "NOTE": "Supporto del visualizzatore rilevato — nessuna prospettiva di vendita aziendale creata o inviata alle vendite."
+            },
+            "RECORD": "Guida salvata",
+            "EXAMPLE": "Prospettive di vendita catturate",
+            "EXCLUDED_BADGE": "Escluso",
+            "NO_LEAD_SAVED": "Nessun attributo lead_* salvato per questa conversazione.",
+            "TEAM_ALERT": "Avviso di posta elettronica",
+            "OFF": "Solo l'anteprima. La cattura è attualmente in pausa in questa bozza.",
+            "NAME_EMAIL": "Contatto",
+            "CONTACT_EXAMPLE": "Alex · alex {'@'} company.example",
+            "CUSTOMER_VALUE": "Fornito dal visitatore, quando conosciuto",
+            "SUMMARY": "Riepilogo delle chat",
+            "SUMMARY_EXAMPLE": "Interessato alla vostra offerta di affari e vuole il follow-up e-mail.",
+            "RECORD_HELP": "Il tipo effettivo e il riassunto provengono dalla conversazione. I campi sconosciuti sono lasciati vuoti.",
+            "BOUNDARY": "Il supporto del visualizzatore è escluso. le prospettive di vendita salvare a Chatwoot Contatti prima; gli avvisi di posta elettronica del team e HubSpot sincronizzazione sono facoltativi.",
+            "TYPE": "Tipo di lead",
+            "NO_TYPE": "business_inquiry"
+          },
+          "SCENARIO_PAUSED": "Pausa: {name}. Rivedere i vostri scenari e permettergli di catturare le prospettive di vendita.",
+          "TRANSCRIPT_TITLE": "Trascrizione di conversazione → HubSpot nota",
+          "TRANSCRIPT_HELP": "Separato dal breve riassunto delle prospettive di vendita: messaggi pubblici, timestamp e un link di conversazione. Aggiunto quando la chat viene risolta e il contatto ha un indirizzo e-mail. Questa impostazione a livello di account si applica anche ai handoff dal vivo.",
+          "TRANSCRIPT": {
+            "ON": "Attivato · salvato come una nota quando la chat viene risolta",
+            "OFF": "Off · abilitare le note trascritte nelle impostazioni HubSpot",
+            "LOADING": "Controllare l'impostazione della trascrizione...",
+            "UNAVAILABLE": "Impostazione trascrizione non disponibile. Chiedi ad un amministratore di controllare HubSpot.",
+            "NOT_CONNECTED": "Collegare HubSpot per salvare le note di trascrizione",
+            "RECONNECT": "Ricollegare HubSpot per riprendere le note di trascrizione"
+          },
+          "HANDOFF_TITLE": "Capture attraverso il handoff umano",
+          "HANDOFF_HELP": "Quando una prospettiva chiede per una persona, i dettagli aziendali noti di fase e salvare la prospettiva di vendita una volta che il modulo di consegna raccoglie la loro e-mail.",
+          "PRICING_TITLE": "Quota dei servizi pubblicati",
+          "PRICING_HELP": "Quotazioni coerenti di servizi pubblicati dalla Conoscenza prima di offrire il follow-up delle vendite.",
+          "NOTIFICATION_TITLE": "Avviso di posta elettronica alla squadra",
+          "NOTIFICATION_OFF": "Nessun avviso di e-mail",
+          "NOTIFICATION_HELP": "Scegliere chi riceve un riassunto quando viene catturato un prospetto di vendita. Le risposte vanno direttamente al visitatore.",
+          "NOTIFICATION_ERROR": "Non poteva caricare le squadre. Ricarica questa pagina per cambiarla.",
+          "TRANSCRIPT_LEADS_HELP": "Sono incluse solo le conversazioni in cui è stata catturata una prospettiva di vendita aziendale. Messaggi pubblici, timestamp e un link di conversazione vengono aggiunti dopo la risoluzione. Le chat degli spettatori sono escluse anche se quel contatto era in precedenza una prospettiva di vendita di affari.",
+          "GUIDED": {
+            "TITLE": "Quando dovrebbe funzionare?",
+            "TRIGGER": "A chi dovrebbe essere il vostro agente di seguire?",
+            "DEFAULT_TRIGGER": "Aziende interessate all'acquisto, ai prezzi, a demo, all'integrazione o a una partnership. Escludi il supporto personale dell'utente finale.",
+            "NOTES": "Qualcosa di specifico per la vostra attività? (opzionale)",
+            "NOTES_PLACEHOLDER": "Per i partenariati, chiedi cosa vogliono integrare.",
+            "HELP": "Salvare per creare una conversazione preriempita di follow-up. Il tuo agente gestisce domande, consenso, dati di contatto e salvataggio automaticamente.",
+            "CUSTOM_HELP": "Hai uno scenario di vendita personalizzato. Tenere, o passare alla configurazione guidata qui sotto.",
+            "SWITCH": "Utilizzare la configurazione guidata",
+            "SWITCH_HELP": "Quando si salva, i vostri scenari di prospettiva di vendita attuali saranno fermati e tenuti in Scenarios. Il flusso guidato utilizzerà i dettagli selezionati qui. Copiare le preferenze specifiche del business che si desidera mantenere nelle note facoltative.",
+            "LOCATION_INCLUDED": "Posizione dei visitatori, quando disponibile",
+            "LOCATION_HELP": "Città e paese rilevati sono inclusi automaticamente. Seleziona Paese Business solo se hai anche bisogno di sapere dove si basa l'azienda.",
+            "PACING": "Regolare la lunghezza della conversazione",
+            "CATEGORIES": "Prospettive di vendita (facoltativo)",
+            "ATTRIBUTE_SETTINGS": "Impostazioni di campo avanzate",
+            "CONVERSATION_ON_SAVE": "La conversazione di follow-up viene creata o aggiornata quando si salva.",
+            "CONVERSATION_READY": "La tua conversazione di follow-up è pronta.",
+            "VIEW_CONVERSATION": "Visualizza scenario",
+            "SETUP_EXPLANATION": "La configurazione guidata crea e mantiene lo scenario di prospettiva di vendita e consente di risparmiare automaticamente le prospettive di vendita vengono memorizzate in Contatti. Gli avvisi e-mail del team e HubSpot sono facoltativi; il loro stato è mostrato in destinazioni successive."
+          },
+          "CREATE_TEAM": "Creare un team",
+          "MANAGE_TEAM": "Aggiungi i membri del team",
+          "NOTIFICATION_STATUS": {
+            "OFF": "Gli avvisi via e-mail sono facoltativi. le prospettive di vendita sono ancora salvate ai contatti.",
+            "SAVE_TO_CHECK": "Salva per controllare la consegna e-mail per questo team.",
+            "READY": "Gli avvisi via email sono pronti per questa squadra.",
+            "EMAIL_UNAVAILABLE": "La consegna e-mail non è impostata. Chiedi all'amministratore dello spazio di lavoro di abilitarlo.",
+            "EMPTY_TEAM": "Questa squadra non ha membri. Aggiungi qualcuno per ricevere avvisi prospettici di vendita.",
+            "RATE_LIMITED": "Il limite di posta elettronica dello spazio di lavoro è stato raggiunto. le prospettive di vendita saranno ancora salvate a Contatti.",
+            "MISSING_TEAM": "Questa squadra non è più disponibile. Scegli un'altra squadra.",
+            "UNAVAILABLE": "Le squadre non potrebbero essere caricate. Ricaricare la pagina per riprovare."
+          },
+          "SETUP": {
+            "STEP_N": "Articolo {n}",
+            "BACK": "Indietro",
+            "NEXT": "Il prossimo: {step}",
+            "MORE_OPTIONS": "Altre opzioni",
+            "STEPS": {
+              "ASK": {
+                "TITLE": "Cosa chiedere",
+                "HINT": "Il nome e l'e-mail sono sempre richiesti. Scegli cos'altro il tuo team ha bisogno di seguire."
+              },
+              "WHEN": {
+                "TITLE": "Quando chiedere",
+                "HINT": "Il tuo agente AI risponde prima e offre il follow-up solo alle persone che descrivi qui."
+              },
+              "WHERE": {
+                "TITLE": "Dove va",
+                "HINT": "Ogni prospettiva di vendita è salvata nelle prospettive di vendita. Aggiungi un'email al tuo team o HubSpot se lo usi."
+              }
+            },
+            "SUMMARY": {
+              "NAME_EMAIL": "nome, email",
+              "ASK": "Rivolgersi a {details} · al massimo {count} domande extra",
+              "WHEN": "Offerte follow-up a: {who}",
+              "WHEN_HANDOFF": "Offre follow-up a: {who} Anche quando si consegna alla vostra squadra.",
+              "EMAIL_TEAM": "email a {team}",
+              "HUBSPOT": "inviato a HubSpot",
+              "EMAIL_OFF": "Avvisi via e-mail",
+              "EMAIL_UNAVAILABLE": "Impostazione di avviso e-mail non disponibile",
+              "SAVED": "Salvato in Lead",
+              "HUBSPOT_STATUS": "HubSpot: {status}"
+            },
+            "WHERE": {
+              "LIST": "Elenco dei lead",
+              "LIST_HELP": "Ogni prospettiva di vendita con il suo riassunto, stato e proprietario.",
+              "ALWAYS": "Sempre su",
+              "CONNECT": "Collegamento HubSpot",
+              "HUBSPOT": "HubSpot"
+            },
+            "WIDGET": {
+              "LABEL": "Anteprima della chat del sito web",
+              "ONLINE": "Solitamente risponde in secondi",
+              "OFF": "La cattura delle prospettive di vendita è spenta. I vostri clienti non vedono ancora queste domande.",
+              "ANSWER": "La loro risposta",
+              "TYPE_HERE": "Scrivi un messaggio...",
+              "THEN": "Allora",
+              "TO_LIST": "Salvataggio delle prospettive di vendita con un riassunto AI",
+              "TO_TEAM": "E-mail a {team}",
+              "TO_HUBSPOT": "Inviato a HubSpot"
+            },
+            "TITLE": "Configurazione dei lead",
+            "FIELD_COUNT": "{count} / {max}"
+          },
+          "ACTIVATION": {
+            "SUMMARY": "Riepilogo della cattura",
+            "ENABLE": "Abilita la cattura",
+            "PAUSE": "Bloccare la cattura dello schermo",
+            "ENABLED_HELP": "La registrazione è abilitata. Le modifiche salvate si applicano al tuo agente in diretta.",
+            "PAUSED_HELP": "La cattura è in pausa. Puoi modificare e salvare questa configurazione prima di abilitarla.",
+            "SAVE_FIRST": "Salva le modifiche prima di abilitare o mettere in pausa la cattura."
+          },
+          "TYPES": "Tipi di lead",
+          "TYPE_NAME": "Tipo di lead",
+          "EDIT_TYPE_TITLE": "Modifica tipo di lead",
+          "KEY_PLACEHOLDER": "company_website"
         }
       },
       "OPTIONS": {
@@ -864,7 +1840,12 @@
             "ADD": "Aggiungi tutto",
             "ADD_SINGLE": "Aggiungi questo",
             "SAVE": "Aggiungi e salva (↵)",
-            "PLACEHOLDER": "Digita un altro guardrail..."
+            "PLACEHOLDER": "Digita un altro guardrail...",
+            "EXAMPLES": {
+              "EXAMPLE_1": "Bloccare richieste che condividono o richiedano informazioni personali sensibili (ad esempio numeri di telefono, password).",
+              "EXAMPLE_2": "Rifiutare le query che includono linguaggio offensivo, discriminatorio o minaccioso.",
+              "EXAMPLE_3": "Sconfiggere quando l'assistente è chiesto di diagnosi o trattamento legale o medico."
+            }
           },
           "NEW": {
             "TITLE": "Aggiungi un guardrail",
@@ -909,7 +1890,12 @@
             "ADD": "Aggiungi tutto",
             "ADD_SINGLE": "Aggiungi questo",
             "SAVE": "Aggiungi e salva (↵)",
-            "PLACEHOLDER": "Digita un'altra linea guida di risposta..."
+            "PLACEHOLDER": "Digita un'altra linea guida di risposta...",
+            "EXAMPLES": {
+              "EXAMPLE_1": "Mantenere le risposte concise: utilizzare i paragrafi brevi e offrire più dettagli solo quando il cliente chiede.",
+              "EXAMPLE_2": "Rispondi nella lingua del cliente ogni volta che possibile.",
+              "EXAMPLE_3": "Mantenere un tono empatico e utile durante la conversazione."
+            }
           },
           "NEW": {
             "TITLE": "Aggiungi una linea guida per le risposte",
@@ -976,6 +1962,27 @@
               },
               "CREATE": "Crea",
               "CANCEL": "Annulla"
+            },
+            "BUILDER": {
+              "CHOICES": {
+                "DESCRIBE": "Descrivilo.",
+                "TEMPLATE": "Avviare da un modello",
+                "MANUAL": "Scrivere da solo"
+              },
+              "DESCRIBE": {
+                "PROMPT_LABEL": "Cosa dovrebbe fare il tuo agente dell'AI?",
+                "PROMPT_PLACEHOLDER": "Descrivi lo scenario (ad esempio guida i clienti attraverso i ritorni dei prodotti e le richieste di garanzia dei registri)...",
+                "EXAMPLES_LABEL": "Provare un prompt di esempio:",
+                "EXAMPLE_1": "Guidare i clienti che cercano di restituire un prodotto e registrare un reclamo",
+                "EXAMPLE_2": "Raccogliere i requisiti di citazione personalizzati e passare alle vendite",
+                "EXAMPLE_3": "Rispondere alle domande di dimensionamento e consigliare i migliori prodotti",
+                "BUILD_BUTTON": "Creare uno scenario",
+                "BUILDING": "Sceneggiatura di progettazione con AI...",
+                "REGENERATE": "Rigenerare",
+                "ADD_SCENARIO": "Aggiungi scenario",
+                "EDIT_PROMPT": "Modifica del prompt",
+                "ERROR": "Non potrebbe generare scenario. Si prega di provare una descrizione diversa."
+              }
             }
           }
         },
@@ -1003,22 +2010,395 @@
             "ERROR": "Si è verificato un errore durante l'aggiornamento degli scenari, riprova."
           },
           "TOGGLE": {
-            "ENABLED": "Scenario enabled successfully",
-            "DISABLED": "Scenario disabled successfully",
-            "ERROR": "There was an error updating the scenario status, please try again."
+            "ENABLED": "Scenario abilitato con successo",
+            "DISABLED": "Scenario disabilitato con successo",
+            "ERROR": "C'è stato un errore che aggiorna lo stato dello scenario, si prega di riprovare."
           },
           "DELETE": {
             "SUCCESS": "Scenari eliminati correttamente",
             "ERROR": "Si è verificato un errore durante l'eliminazione degli scenari, riprova."
           }
+        },
+        "FORM": {
+          "REPLY_COPY": {
+            "TITLE": "Testo per il cliente per lingua",
+            "HELP": "Aggiungi un testo facoltativo per questa lingua. Se lasci il campo vuoto, l’agente formulerà la risposta automaticamente. Lo scenario continua a determinare le azioni da eseguire."
+          },
+          "TITLE": {
+            "LABEL": "nome",
+            "PLACEHOLDER": "Richiedi un preventivo",
+            "ERROR": "Dare lo scenario un nome"
+          },
+          "DESCRIPTION": {
+            "LABEL": "Quando usarlo",
+            "PLACEHOLDER": "Utilizzare quando il cliente chiede un preventivo o prezzi di massa.",
+            "HELP": "Il vostro agente dell'AI legge questo per decidere quando iniziare lo scenario.",
+            "ERROR": "Di' quando il tuo agente AI dovrebbe usare questo scenario"
+          },
+          "INSTRUCTION": {
+            "LABEL": "Passi e regole",
+            "PLACEHOLDER": "1. Chiedere il numero di ordine. 2. Controllare l'ordine. 3. Consegnare se è tardi.",
+            "HELP": "Scrivi i passaggi in ordine. Aggiungi strumenti con i pulsanti sopra o digitare {'@'}.",
+            "ERROR": "Aggiungere almeno un passo"
+          },
+          "TOOLS": {
+            "LABEL": "Strumenti in questo scenario:",
+            "NONE": "Non c'e' legame. Il vostro agente AI può ancora utilizzare tutti i suoi strumenti.",
+            "REMOVE": "Rimuovere {tool} dai passaggi"
+          }
+        },
+        "TOOLS": {
+          "INHERITED": "Utilizza gli strumenti dell'agente AI",
+          "INHERITED_ALL": "Utilizza tutti gli strumenti dell'agente AI",
+          "UNAVAILABLE": "Questo strumento non è disponibile per questo agente AI",
+          "NAMED": "Utilizza gli strumenti dell'agente dell'AI. Nominato nell'istruzione: {tools}"
+        },
+        "PALETTE": {
+          "TITLE": "Aggiungi un'azione:",
+          "MORE": "Altre azioni",
+          "SEARCH": "Azioni di ricerca e dettagli del cliente...",
+          "NO_RESULTS": "Nessun strumento trovato",
+          "GROUPS": {
+            "BUILT_IN": "Azioni integrate",
+            "CUSTOM": "Il tuo API",
+            "MCP": "Da MCP server",
+            "CONTACT_PROPERTIES": "Proprietà di contatto",
+            "REPLY_SHAPE": "Rispondi a forma"
+          },
+          "PROPERTY": {
+            "READ": "Leggi {name}",
+            "UPDATE": "Aggiornamento {name}",
+            "READ_TEXT": "il contatto {name} ({key} )"
+          },
+          "REPLY_SHAPE": {
+            "SEPARATE": "Invia come messaggio separato",
+            "SEPARATE_DESCRIPTION": "La risposta mette questa parte nella propria bolla di chat"
+          }
+        },
+        "TEMPLATES": {
+          "GALLERY_TITLE": "Avviare da un modello",
+          "GALLERY_DESCRIPTION": "Rispondi a qualche domanda e ottieni uno scenario pronto che puoi ancora modificare.",
+          "NEEDS_SHOPIFY": "Necessità Shopify",
+          "NEEDS_SHOPIFY_TOOLTIP": "Collegare Shopify per utilizzare questo modello. Ha bisogno dello strumento Trova prodotti.",
+          "COLLAPSE": "Nascondi modelli",
+          "EXPAND": "Mostra modelli",
+          "STEPPER": {
+            "STEP_OF": "Fase {current} del {total}",
+            "NEXT": "Il prossimo",
+            "BACK": "Indietro",
+            "SKIP": "Salta!",
+            "ADD_SCENARIO": "Aggiungi scenario",
+            "ALLOWLIST_CONFIRM": {
+              "TITLE": "Consentire collegamenti a {host} in risposte?",
+              "MESSAGE": "Il tuo agente AI invia solo link ai siti consentiti. Senza questo, il link di prenotazione viene rimosso dalle sue risposte.",
+              "CONFIRM": "Consentire e aggiungere lo scenario",
+              "CANCEL": "Aggiungere senza consentire"
+            },
+            "URL_ERROR": "Inserisci un link che inizia con https://",
+            "LABEL_PLACEHOLDER": "citazione",
+            "LABEL_ERROR": "Utilizzare lettere, numeri, - o _ solo",
+            "LABEL_EXISTS": "Etichetta esistente",
+            "LABEL_NEW": "Nuova etichetta. È creato quando si aggiunge lo scenario.",
+            "SAVE_ERROR": "Non ho potuto salvare lo scenario. Riprova.",
+            "CUSTOM": {
+              "PLACEHOLDER": "Aggiungi il tuo campo",
+              "ADD": "Aggiungi",
+              "REMOVE": "Rimuovi {field}",
+              "DUPLICATE": "Quel campo e' gia' nella lista.",
+              "LENGTH": "Utilizzare 2 per {max} caratteri"
+            }
+          },
+          "DESCRIBE": {
+            "TITLE": "Descrivi il tuo",
+            "TAGLINE": "Di' cosa dovrebbe succedere e l'IA prepara i passi."
+          },
+          "REQUEST_A_QUOTE": {
+            "TITLE": "Richiedi un preventivo",
+            "TAGLINE": "Raccogliere ciò che le vendite hanno bisogno, quindi passare il preventivo al vostro team.",
+            "QUESTIONS": {
+              "QUOTES_FOR": {
+                "LABEL": "Per cosa i clienti chiedono preventivi?",
+                "HELP": "Opzionale. Aiuta l'agente AI a riconoscere una richiesta di preventivo.",
+                "PLACEHOLDER": "Ordini Bulk, dimensioni personalizzate, installazione"
+              },
+              "DETAILS": {
+                "LABEL": "Cosa dovrebbe raccogliere l'agente AI?",
+                "HELP": "Ne chiede uno alla volta e salta tutto ciò che il cliente ha già detto.",
+                "CUSTOM_PLACEHOLDER": "Aggiungi il tuo, come le ore di accesso al sito"
+              },
+              "MIN_QUANTITY": {
+                "LABEL": "Ordine minimo per un preventivo",
+                "HELP": "Facoltativo. Di seguito, l'agente AI indica la normale pagina del prodotto.",
+                "PLACEHOLDER": "10"
+              },
+              "REPLY_TIME": {
+                "LABEL": "Quando risponde il tuo team?",
+                "HELP": "L'agente AI dice al cliente quando aspettarsi la citazione.",
+                "OTHER_PLACEHOLDER": "entro 3 ore nei giorni feriali"
+              },
+              "AFTER_SUMMARY": {
+                "LABEL": "Cosa succede dopo il riassunto?",
+                "HELP": "Scegli nota solo se il tuo team invia preventivi via e-mail e la chat può rimanere con l'agente AI."
+              },
+              "LABEL": {
+                "LABEL": "Quale etichetta segna queste chat?",
+                "HELP": "Scegli una delle tue etichette o digita una nuova."
+              }
+            }
+          },
+          "BOOK_A_CALL": {
+            "TITLE": "Prenota una chiamata",
+            "TAGLINE": "Condividi il tuo link di prenotazione quando un cliente vuole parlare.",
+            "QUESTIONS": {
+              "BOOKING_URL": {
+                "LABEL": "Qual è il tuo link di prenotazione?",
+                "HELP": "Cal.com, Calendly o qualsiasi pagina di prenotazione. Deve iniziare con https://.",
+                "PLACEHOLDER": "https://cal.com/your-team/intro"
+              },
+              "CALL_PURPOSES": {
+                "LABEL": "Che cosa sono chiamate per?",
+                "HELP": "L'agente dell'AI lo usa per descrivere la chiamata."
+              },
+              "OFFER_WHEN": {
+                "LABEL": "Quando l'agente dell'AI dovrebbe offrire una chiamata?",
+                "CUSTOM_PLACEHOLDER": "Aggiungere il proprio, come un reclamo su una consegna"
+              },
+              "ASK_FIRST": {
+                "LABEL": "Cosa dovrebbe chiedere prima di condividere il link?",
+                "HELP": "Opzionale. Tenere breve; la pagina di prenotazione chiede il resto."
+              },
+              "LABEL": {
+                "LABEL": "Quale etichetta segna queste chat?",
+                "HELP": "Scegli una delle tue etichette o digita una nuova."
+              }
+            }
+          },
+          "RETURNS_AND_WARRANTY": {
+            "TITLE": "Resi e garanzia",
+            "TAGLINE": "Dica di tornare dai difetti e raccogliere la prova per la tua squadra.",
+            "QUESTIONS": {
+              "RETURN_WINDOW": {
+                "LABEL": "Quanti giorni i clienti devono restituire un prodotto?",
+                "PLACEHOLDER": "30"
+              },
+              "WARRANTY_PERIOD": {
+                "LABEL": "Quanto dura la garanzia?",
+                "PLACEHOLDER": "2 anni"
+              },
+              "DETAILS": {
+                "LABEL": "Cosa dovrebbe raccogliere l'agente AI?",
+                "HELP": "Ne chiede uno alla volta e salta tutto ciò che il cliente ha già detto.",
+                "CUSTOM_PLACEHOLDER": "Aggiungere il proprio, come il packaging originale"
+              },
+              "LABEL": {
+                "LABEL": "Quale etichetta segna queste chat?",
+                "HELP": "Scegli una delle tue etichette o digita una nuova."
+              }
+            }
+          },
+          "PRODUCT_FINDER": {
+            "TITLE": "Ricerca prodotto",
+            "TAGLINE": "Fai due o tre domande e consiglia la soluzione migliore.",
+            "QUESTIONS": {
+              "CATEGORY": {
+                "LABEL": "Cosa aiuta i clienti a scegliere?",
+                "HELP": "Opzionale. Lascia vuoto per coprire tutto il catalogo.",
+                "PLACEHOLDER": "Scarpe da ginnastica"
+              },
+              "QUESTIONS_TO_ASK": {
+                "LABEL": "Cosa dovrebbe chiedere l'agente dell'AI?",
+                "HELP": "Due o tre domande funzionano meglio.",
+                "CUSTOM_PLACEHOLDER": "Aggiungere il proprio, come la dimensione della camera"
+              },
+              "RECOMMENDATION_COUNT": {
+                "LABEL": "Quanti prodotti dovrebbe raccomandare?"
+              }
+            }
+          },
+          "B2B_INQUIRY": {
+            "TITLE": "B 2 B e all'ingrosso",
+            "TAGLINE": "Qualifica gli acquirenti di affari e raccogliere i dettagli del volume e delle imposte.",
+            "QUESTIONS": {
+              "QUALIFICATION": {
+                "LABEL": "Chi conta come cliente d'affari?",
+                "PLACEHOLDER": "Aziende, rivenditori o ordini superiori a 20 unità"
+              },
+              "DETAILS": {
+                "LABEL": "Cosa dovrebbe raccogliere l'agente AI?",
+                "HELP": "Ne chiede uno alla volta e salta tutto ciò che il cliente ha già detto.",
+                "CUSTOM_PLACEHOLDER": "Aggiungere il proprio, come l'industria"
+              },
+              "REPLY_TIME": {
+                "LABEL": "Quando risponde il tuo team?",
+                "OTHER_PLACEHOLDER": "entro 3 ore nei giorni feriali"
+              },
+              "LABEL": {
+                "LABEL": "Quale etichetta segna queste chat?",
+                "HELP": "Scegli una delle tue etichette o digita una nuova."
+              }
+            }
+          },
+          "GROUPS": {
+            "ORDER": "Ordinanza",
+            "DELIVERY": "Consegna",
+            "CONTACT_AND_COMPANY": "Contatto e società",
+            "PROBLEM": "Problematiche",
+            "OUTCOME": "Risultato",
+            "COMPANY": "Società",
+            "CONTACT": "Contatto",
+            "TOPICS": "Argomenti",
+            "SITUATIONS": "Situazioni",
+            "NEEDS": "Necessiti",
+            "CUSTOM": "I vostri campi",
+            "EXTRA": "Aggiuntive"
+          },
+          "FIELDS": {
+            "PRODUCTS_AND_QUANTITIES": "Prodotti e quantità",
+            "VARIANT_OR_SPECS": "Variante, dimensioni o specifiche",
+            "CUSTOMISATION": "Personalizzazione o marcatura",
+            "RECURRING": "One-off o ricorrente",
+            "DELIVERY_COUNTRY_POSTCODE": "Paese di consegna e codice postale",
+            "NEEDED_BY": "Bisogno di data",
+            "DELIVERY_ADDRESS": "Consegna completa o indirizzo di installazione",
+            "SHIPPING_PREFERENCE": "Preferenze di spedizione",
+            "NAME_AND_EMAIL": "Nome e email",
+            "PHONE": "Numero di telefono",
+            "COMPANY_NAME": "Nome della Società",
+            "VAT_ID": "IVA o ID fiscale",
+            "COUNTRY": "Paese",
+            "WEBSITE": "Sito web",
+            "CONTACT_PERSON": "Persona di contatto",
+            "RESALE_OR_OWN_USE": "Rivendita o uso proprio",
+            "PRODUCTS_AND_VOLUME": "Prodotti e volume atteso",
+            "BUDGET": "Prezzo di bilancio o di destinazione",
+            "INTENDED_USE": "Uso intenzionato",
+            "FILES": "File, disegni o foto",
+            "EXISTING_CUSTOMER": "Numero di clienti o ordini esistenti",
+            "PAYMENT_TERMS": "Termini di pagamento",
+            "ORDER_NUMBER": "Numero d'ordine",
+            "CHECKOUT_EMAIL": "E-mail di checkout",
+            "PRODUCT": "Prodotto",
+            "REASON": "Ragione o difetto",
+            "PHOTOS": "Foto o video",
+            "SERIAL_NUMBER": "Numero di serie",
+            "DATE_RECEIVED": "Data di ricezione",
+            "CONDITION": "Inutilizzato o utilizzato",
+            "PREFERRED_OUTCOME": "Rimborso, sostituzione o riparazione",
+            "TOPIC": "Argomento",
+            "PREFERRED_TIME": "Giorno e fuso orario",
+            "MAIN_USE": "Uso principale",
+            "EXPERIENCE_LEVEL": "Livello di esperienza",
+            "COMPATIBILITY": "Compatibilità con ciò che possiedono",
+            "MUST_HAVE_FEATURES": "Caratteristiche must-have",
+            "PRODUCT_DEMO": "Demo del prodotto",
+            "ADVICE_BEFORE_BUYING": "Consigli prima di acquistare",
+            "TECHNICAL_HELP": "Aiuto tecnico",
+            "PARTNERSHIPS": "Partenariati",
+            "CUSTOMER_ASKS": "Il cliente chiede una chiamata",
+            "UNANSWERED_TECHNICAL": "Una domanda tecnica che la conoscenza non può rispondere",
+            "LARGE_ORDER": "Un ordine grande o personalizzato"
+          },
+          "OPTIONS": {
+            "WITHIN_1_BUSINESS_DAY": "Entro 1 giorno d'affari",
+            "WITHIN_24_HOURS": "Entro 24 ore",
+            "WITHIN_2_3_BUSINESS_DAYS": "Entro 2 – 3 giorni lavorativi",
+            "OTHER": "altro",
+            "HANDOFF": "Passa alla squadra",
+            "NOTE_ONLY": "Lascia un biglietto, tieni la chat con l'agente AI",
+            "1": "1",
+            "2": "2",
+            "3": "3"
+          },
+          "CAPTURE_BUSINESS_LEAD": {
+            "TITLE": "Acquisire una prospettiva di vendita aziendale",
+            "TAGLINE": "Rispondi prima, raccogliere dettagli aziendali facoltativi, quindi salvare una prospettiva di vendita per il follow-up e-mail."
+          },
+          "STEPS": "{count} passaggio | {count} passaggi"
+        },
+        "FILTER": {
+          "LABEL": "Filtra per stato",
+          "ALL": "Tutti · {count}",
+          "ACTIVE": "Attivo · {count}",
+          "PAUSED": "In pausa · {count}"
+        },
+        "EMPTY_TITLE": "Nessun scenario ancora",
+        "MENU": {
+          "LABEL": "Azioni di scenario",
+          "EDIT": "editare",
+          "DELETE": "Cancella"
+        },
+        "ACTIONS": {
+          "INSERT": "Inserto",
+          "CANCEL": "annulla",
+          "NEW_TEMPLATE": "Nuovo modello...",
+          "DELAY": {
+            "MINUTES": "{count} minuto | {count} minuti",
+            "HOURS": "{count} ora | {count} ore",
+            "DAYS": "{count} giorno | {count} giorni"
+          },
+          "CHIP": {
+            "SAVE": "Salva {name}",
+            "ASSIGN": "Assegnazione {name}",
+            "ASSIGN_NEXT": "Assegnare il prossimo agente disponibile",
+            "ASSIGN_NEXT_IN": "Assegnazione successiva disponibile in {name}",
+            "EMAIL_VISITOR": "Visitatore di posta elettronica: {name}",
+            "EMAIL_TEAM": "E-mail: {name}",
+            "FOLLOW_UP": "Seguire dopo {time}"
+          },
+          "FIELDS": {
+            "ATTRIBUTE": "Attribuzione",
+            "PICK_ATTRIBUTE": "Scegli un attributo",
+            "AGENT": "Agente",
+            "NEXT_AVAILABLE": "Il prossimo agente disponibile (rotonda robin)",
+            "FROM_TEAM": "Dalla squadra",
+            "ANY_TEAM": "Qualsiasi agente nella casella di posta",
+            "RECIPIENT": "Inviare a",
+            "ASSIGNEE": "L'agente assegnato",
+            "TEMPLATE": "Modello di e-mail",
+            "PICK": "Scegli uno",
+            "AI_WRITES": "Nessuno: l'AI lo scrive",
+            "AFTER": "Dopo che il visitatore è tranquillo per",
+            "KIND": "Seguici",
+            "KIND_MESSAGE": "Messaggi di chat",
+            "KIND_EMAIL": "e-mail",
+            "INSTRUCTIONS": "Che cosa dovrebbe fare il follow-up",
+            "INSTRUCTIONS_HINT": "Chiedi se hanno trovato utile il confronto del piano",
+            "TEAM": "Team"
+          },
+          "CREATE_ATTRIBUTE": {
+            "OPEN": "Creare attributo...",
+            "NAME": "nome",
+            "KEY": "Chiave",
+            "TYPE": "Tipologia",
+            "SAVE": "Creare",
+            "ERROR": "Non ho potuto creare l'attributo. Riprova."
+          }
+        },
+        "DESCRIBE": {
+          "ITEM": "Descrivi un'azione...",
+          "ITEM_DESCRIPTION": "Di' cosa dovrebbe succedere; scegliamo l'azione corrispondente",
+          "TITLE": "Descrivere un'azione",
+          "DESCRIPTION": "Ad esempio: memorizzare le dimensioni dell'azienda del visitatore, o inviare la chat a Vendite.",
+          "PLACEHOLDER": "Ricordate quale piano sono interessati",
+          "SUGGEST": "Suggerisci",
+          "PREVIEW": "Suggerito:",
+          "NO_MATCH": "Nessuna azione integrata si adatta. Creare un'azione personalizzata sulla pagina Strumenti & MCP.",
+          "CREATE_ATTRIBUTE": "Creare attributo {key} ({type} )?",
+          "CREATE": "Creare e inserire",
+          "ERROR": "Non posso suggerire un'azione. Riprova."
         }
-      }
+      },
+      "AVATAR": {
+        "SUCCESS_DELETE": "AI agente foto cancellata con successo",
+        "ERROR_DELETE": "C'è stato un errore cancellare la foto dell'agente dell'AI, si prega di riprovare."
+      },
+      "AI_AGENT_CHIP": "Agente IA"
     },
     "DOCUMENTS": {
       "HEADER": "Documenti",
       "ADD_NEW": "Crea un nuovo documento",
       "FAQ_COUNT": "{n} FAQ | {n} FAQs",
-      "USED_IN_CONVERSATIONS": "Used in {n} conversation | Used in {n} conversations",
+      "USED_IN_CONVERSATIONS": "Usato in {n} conversazione | Utilizzato in {n} conversazioni",
       "NO_USED_CONVERSATIONS": "No conversations found for this document.",
       "SELECTED": "{count} selezionate",
       "SELECT_ALL": "Seleziona tutto ({count})",
@@ -1053,21 +2433,25 @@
           "UPDATED": "Aggiornato",
           "NEEDS_UPDATE": "Richiede aggiornamento",
           "UPDATING": "Aggiornamento in corso",
-          "FAILED": "Non Riuscito"
+          "FAILED": "Non Riuscito",
+          "ON": "Incluso",
+          "OFF": "Escluso"
         },
         "SORT": {
           "RECENTLY_UPDATED": "Aggiornato di recente",
           "RECENTLY_CREATED": "Creato di recente",
-          "MOST_USED": "Most used in conversations"
+          "MOST_USED": "Più usato nelle conversazioni"
         },
-        "SEARCH_PLACEHOLDER": "Cerca..."
+        "SEARCH_PLACEHOLDER": "Cerca...",
+        "MOBILE": "Filtri"
       },
       "SYNC_STATUS": {
         "SYNCED": "ultimo aggiornamento {time}",
         "SYNCING": "aggiornamento...",
         "STALE_SYNC": "aggiornamento in stallo",
         "FAILED": "Sincronizzazione fallita",
-        "NEVER_SYNCED": "non ancora aggiornato"
+        "NEVER_SYNCED": "non ancora aggiornato",
+        "FAILED_REASON": "Rifiuti: {error}"
       },
       "SYNC_ERRORS": {
         "NOT_FOUND": "Pagina non trovata",
@@ -1076,7 +2460,15 @@
         "CONTENT_EMPTY": "La pagina ha restituito contenuto vuoto",
         "FETCH_FAILED": "Impossibile recuperare la pagina",
         "SYNC_ERROR": "Errore imprevisto",
-        "DEFAULT": "Errore di sincronizzazione"
+        "DEFAULT": "Errore di sincronizzazione",
+        "RENDERING_REQUIRED": "Questa pagina ha bisogno di rendering JavaScript. Configurare il renderer del sito web e riprovare.",
+        "ROBOTS_DISALLOWED": "Questa pagina è esclusa dal sito robots.txt.",
+        "THIN_CONTENT": "Troppo poco testo per essere conoscenza utile",
+        "DUPLICATE_CONTENT": "Stesso testo di un'altra pagina di questo agente AI",
+        "INDEXING_TIMEOUT": "La base di conoscenza ha richiesto troppo tempo per indicizzare questa pagina. Viene ricontrollato automaticamente.",
+        "INDEXING_FAILED": "La base di conoscenza non poteva indicizzare questo contenuto",
+        "KNOWLEDGE_NOT_CONFIGURED": "La base di conoscenza non è configurata per questo account",
+        "KNOWLEDGE_BASE_ERROR": "La base di conoscenza non ha accettato questo contenuto. Retry, o il supporto di contatto se continua a fallire."
       },
       "RELATED_RESPONSES": {
         "TITLE": "FAQ Correlate",
@@ -1085,23 +2477,26 @@
       "DETAILS": {
         "DESCRIPTION": "Review the crawled content and the FAQs generated from this source.",
         "SOURCE": "Source",
-        "GENERATED_FAQS": "Generated FAQs",
-        "USED_IN_CONVERSATIONS": "Used in conversations",
-        "LAST_UPDATED": "Last updated",
+        "GENERATED_FAQS": "Domande frequenti generate",
+        "USED_IN_CONVERSATIONS": "Usato in conversazioni",
+        "LAST_UPDATED": "Ultimo aggiornamento",
         "NOT_AVAILABLE": "Non disponibile",
         "CONTENT_TAB": "Crawled content",
         "PDF_TAB": "PDF details",
         "CONTENT_TITLE": "Crawled content",
         "PDF_TITLE": "PDF file",
-        "PDF_DESCRIPTION": "Review the original PDF source.",
-        "CHARACTER_COUNT": "{count} characters extracted",
+        "PDF_DESCRIPTION": "Rivedere la fonte originale PDF.",
+        "CHARACTER_COUNT": "{count} caratteri estratti",
         "COPY_CONTENT": "Copia",
         "COPY_SUCCESS": "Crawled content copied to clipboard",
         "COPY_ERROR": "Could not copy crawled content",
-        "VIEW_RAW": "View raw",
-        "VIEW_PREVIEW": "View preview",
+        "VIEW_RAW": "Visualizza crudo",
+        "VIEW_PREVIEW": "Visualizza anteprima",
         "UNREADABLE_CONTENT": "Readable content could not be extracted from this document. You can view the raw extracted content.",
-        "EMPTY_CONTENT": "No crawled content is available for this document yet."
+        "EMPTY_CONTENT": "No crawled content is available for this document yet.",
+        "STATUS": "Stato",
+        "VISIBILITY_SAVED": "Visibilità aggiornata",
+        "VISIBILITY_ERROR": "Non è possibile aggiornare la visibilità. Si prega di riprovare."
       },
       "FORM_DESCRIPTION": "Inserisci l'URL del documento per aggiungerlo come fonte e scegli l'assistente con cui associarlo.",
       "CREATE": {
@@ -1113,7 +2508,10 @@
         "TYPE": {
           "LABEL": "Tipo di Documento",
           "URL": "URL",
-          "PDF": "File PDF"
+          "PDF": "File PDF",
+          "WEBSITE": "Sito web",
+          "TEXT": "Testo",
+          "FILE": "File"
         },
         "URL": {
           "LABEL": "URL",
@@ -1130,7 +2528,33 @@
         },
         "NAME": {
           "LABEL": "Nome Documento (Opzionale)",
-          "PLACEHOLDER": "Inserisci un nome per il documento"
+          "PLACEHOLDER": "Inserisci un nome per il documento",
+          "REQUIRED_LABEL": "Titolo",
+          "ERROR": "Inserisci un titolo per questa fonte di testo"
+        },
+        "WEBSITE_MODE": {
+          "SCAN_LABEL": "Trova e scegli le pagine di questo sito",
+          "SCAN_HELP": "Scansiona il sito in modo da poter scegliere quali pagine importare, o deselezionare per importare solo questo URL."
+        },
+        "LINKED_PAGES": {
+          "LABEL": "Aggiungi anche pagine collegate da questa pagina",
+          "HELP": "Aggiunge le altre pagine dello stesso sito a cui questa pagina si collega.",
+          "STORE_HELP": "Off by default per il tuo negozio Shopify: i prodotti vengono già dal catalogo sincronia. Quando, vengono aggiunte solo pagine di contenuto (pagine, politiche, blog)."
+        },
+        "AGENTS_ONLY": {
+          "LABEL": "Agenti solo",
+          "HELP": "Il vostro agente AI non userà questa fonte, o le FAQ fatte da esso, per rispondere ai clienti. Copilota e suggerimenti di risposta possono ancora."
+        },
+        "TEXT": {
+          "LABEL": "Contenuto di testo",
+          "PLACEHOLDER": "Incolla testo politico, note interne o informazioni di riferimento per il tuo agente AI...",
+          "ERROR": "Inserisci il contenuto di testo per questa sorgente"
+        },
+        "SUBMIT": {
+          "FIND_PAGES": "Trova le pagine",
+          "ADD_PAGE": "Aggiungi pagina",
+          "ADD_FILE": "Aggiungi file",
+          "ADD_TEXT": "Aggiungi testo"
         }
       },
       "DELETE": {
@@ -1144,7 +2568,11 @@
         "VIEW_DETAILS": "Visualizza dettagli",
         "SYNC_NOW": "Aggiorna ora",
         "RETRY_SYNC": "Riprova ad aggiornare",
-        "DELETE_DOCUMENT": "Elimina Documento"
+        "DELETE_DOCUMENT": "Elimina Documento",
+        "GENERATE_FAQS": "Suggerisci FAQ",
+        "EXCLUDE": "Escludere dalle risposte",
+        "INCLUDE": "Includi le risposte",
+        "MORE": "Altre azioni"
       },
       "EMPTY_STATE": {
         "TITLE": "Nessun documento disponibile",
@@ -1155,7 +2583,41 @@
           "TITLE": "Documento Captain",
           "NOTE": "Un documento in Captain serve come risorsa di knowledge base per l'assistente. Collegando documenti help center e guide, Captain può analizzare il contenuto e fornire risposte accurate per le richieste dei clienti."
         }
-      }
+      },
+      "STATUS": {
+        "PAUSED": "Escluso"
+      },
+      "PAUSE": "Escludere dalle risposte",
+      "RESUME": "Includi le risposte",
+      "TOGGLE_ERROR": "Non è possibile aggiornare lo stato sorgente. Per favore, riprovate.",
+      "GENERATE_FAQS": {
+        "SUCCESS_MESSAGE": "Le FAQ vengono generate",
+        "ERROR_MESSAGE": "Non potrebbe generare FAQ. Si prega di riprovare."
+      },
+      "SHOPIFY_CATALOG": {
+        "LABEL": "Shopify catalogo",
+        "DESCRIPTION": "ricercato insieme ai vostri documenti e FAQ",
+        "LINK": "Integrazioni",
+        "VIEW_PRODUCTS": "Visualizza i prodotti",
+        "STATUS": {
+          "ON": "su",
+          "IMPORTING": "Importazione",
+          "NEEDS_RECONNECT": "Necessità di ricollegamento",
+          "OFF": "Fuori"
+        }
+      },
+      "KNOWLEDGE_STATE": {
+        "FINDING_PAGES": "Trovare pagine",
+        "SEARCHABLE": "Pronti",
+        "INDEXING": "Importazione",
+        "NOT_SEARCHABLE": "Fatta.",
+        "PAUSED": "Escluso",
+        "TOOLTIP": "L'agente AI cerca questa fonte direttamente. FAQ sezioni trovate sulla pagina sono importate come FAQ separate."
+      },
+      "LOAD_ERROR": "Non poteva caricare le fonti di conoscenza",
+      "IMPORT_REVIEW": "Selezione della pagina di revisione e progresso dell'importazione",
+      "IMPORT_FAILED": "Pagina scoperta interrotta. Gestisci le pagine per rivedere o riprovare.",
+      "IMPORT_PROGRESS": "{ready} di {total} pagine importate pronte · {failed} fallito"
     },
     "CUSTOM_TOOLS": {
       "HEADER": "Strumenti",
@@ -1230,7 +2692,7 @@
           "LABEL": "Nome Strumento",
           "PLACEHOLDER": "Ricerca Ordini",
           "ERROR": "Nome strumento richiesto",
-          "MAX_LENGTH_ERROR": "Tool name must be {max} characters or fewer"
+          "MAX_LENGTH_ERROR": "Il nome dello strumento deve essere {max} caratteri o meno"
         },
         "DESCRIPTION": {
           "LABEL": "Descrizione",
@@ -1249,12 +2711,12 @@
         },
         "AUTH_TYPES": {
           "NONE": "Nessuno",
-          "BEARER": "Bearer Token",
+          "BEARER": "Token del cuscinetto",
           "BASIC": "Autenticazione Base",
           "API_KEY": "Chiave API"
         },
         "AUTH_CONFIG": {
-          "BEARER_TOKEN": "Bearer Token",
+          "BEARER_TOKEN": "Token del cuscinetto",
           "BEARER_TOKEN_PLACEHOLDER": "Inserisci il tuo Bearer Token",
           "USERNAME": "Nome Utente",
           "USERNAME_PLACEHOLDER": "Inserisci il nome utente",
@@ -1300,12 +2762,155 @@
         "ERRORS": {
           "PARAM_NAME_REQUIRED": "Nome del parametro richiesto"
         }
+      },
+      "SECTION_TITLE": "Azioni",
+      "ACTION": {
+        "NEW_TITLE": "Nuovo API azione",
+        "EDIT_TITLE": "Modifica dell'articolo API",
+        "SAVE": "salvare",
+        "LEAVE": "Hai dei cambiamenti insoddisfatti. Lascia questa pagina?",
+        "LOAD_ERROR": "Non poteva caricare l'azione",
+        "NAME": {
+          "LABEL": "nome",
+          "PLACEHOLDER": "Annullare l'ordine"
+        },
+        "WHEN": {
+          "LABEL": "Quando dovrebbe {agent} usarlo?",
+          "PLACEHOLDER": "Quando il cliente chiede di annullare un ordine che non ha ancora spedito"
+        },
+        "INPUTS": {
+          "TITLE": "Richiede al cliente",
+          "ADD": "Aggiungi",
+          "EMPTY": "Niente. L'azione scorre senza chiedere.",
+          "NAME": "nome",
+          "DESCRIPTION": "Designazione",
+          "REMOVE": "Rimuovi"
+        },
+        "STEPS": {
+          "TITLE": "Passi",
+          "REQUEST": "Richiesta",
+          "ADD_REQUEST": "Richiesta",
+          "MOVE_UP": "Muovete un passo avanti",
+          "MOVE_DOWN": "Spostare il passo in avanti",
+          "REMOVE": "Rimuovere la fase",
+          "HEADERS": "Intestazioni",
+          "HEADER_NAME_PLACEHOLDER": "Intestazione",
+          "HEADER_VALUE_PLACEHOLDER": "Valore",
+          "ADD_HEADER": "Aggiungere l'intestazione",
+          "REMOVE_HEADER": "Rimuovere l'intestazione",
+          "BODY_TYPES": {
+            "TEXT": "Testo",
+            "JSON": "JSON"
+          },
+          "LEFT": "Valore",
+          "RIGHT": "Rispetto a",
+          "COMPARISONS": {
+            "EXACT": "è esattamente",
+            "NOT_EQUAL": "non è",
+            "CASE_INSENSITIVE": "partite, ignorando caso",
+            "CONTAINS": "contiene",
+            "NOT_CONTAINS": "non contiene",
+            "STARTS_WITH": "inizia con",
+            "ONE_OF": "è uno di",
+            "NOT_ONE_OF": "non è uno di",
+            "GREATER_THAN": "è più grande di",
+            "LESS_THAN": "è meno",
+            "PRESENT": "non è vuoto",
+            "EMAIL": "è la stessa email",
+            "PHONE": "è lo stesso numero di telefono"
+          },
+          "REQUIRE_VERIFIED": "Richiedere un contatto verificato",
+          "PANEL_TITLE": "Fase {number} · {type}",
+          "DONE": "Fatto",
+          "BODY": "Corpo",
+          "FAILURE_MESSAGE": "Rispondi quando non corrisponde (opzionale)",
+          "FAILURE_MESSAGE_PLACEHOLDER": "Questo ordine è già spedito, quindi non può essere cambiato.",
+          "LIST_PLACEHOLDER": "in attesa, on_hold",
+          "VERIFY": "Verifica",
+          "ADD_VERIFY": "Verifica",
+          "URL_PLACEHOLDER": "https://api.example.com/orders?number={'{{'} order_number {'}}'}",
+          "BODY_PLACEHOLDER": "{'{'} \"reason\": \"customer request\" {'}'}",
+          "NO_URL": "Nessun URL inserito",
+          "LEFT_PLACEHOLDER": "{'{{'} outputs.order_email {'}}'}",
+          "RIGHT_PLACEHOLDER": "{'{{'} email {'}}'}"
+        },
+        "VARIABLES": {
+          "INSERT": "Inserire una variabile",
+          "INPUTS": "Ingressi",
+          "OUTPUTS": "Risultati delle fasi precedenti",
+          "CONTACT": "Contatto",
+          "EMPTY": "Non c'è ancora niente qui."
+        },
+        "OUTPUTS": {
+          "TITLE": "Salvato da questo passaggio",
+          "EMPTY": "Eseguire un test e fare clic su un campo nella risposta per salvarlo.",
+          "KEY": "Chiave",
+          "TYPE": "Tipologia",
+          "AI_VISIBLE": "Visibile a {agent}",
+          "REQUIRED": "Obbligatorio",
+          "REMOVE": "Rimuovere l'output",
+          "SUMMARY_TITLE": "Dati di risposta",
+          "SUMMARY_EMPTY": "Ancora niente. Aprire un passo, eseguire un test e fare clic su un campo nella risposta.",
+          "TEMPLATE": "Modello di risposta",
+          "SAVE_TO_CONTACT": "Salva per contattare",
+          "NOT_SAVED": "Non salvare",
+          "VISIBLE_GROUP": "{agent} vede",
+          "HIDDEN_GROUP": "Utilizzato solo dai passaggi",
+          "NONE": "Niente.",
+          "TEMPLATE_PLACEHOLDER": "Ordine {'{{'} outputs.order_id {'}}'}: {'{{'} outputs.status {'}}'}"
+        },
+        "MODE": {
+          "TITLE": "Come funziona",
+          "BACKGROUND": "Sullo sfondo",
+          "BACKGROUND_HELP": "Corre senza chiedere, e {agent} utilizza il risultato nella sua risposta.",
+          "CONFIRM": "Chiedi di confermare",
+          "CONFIRM_HELP": "Il cliente prima si conferma. Usalo per qualsiasi cosa che cambi i dati.",
+          "CONFIRM_PROMPT": "Domanda di conferma",
+          "SUCCESS": "Messaggio quando ha funzionato",
+          "SUCCESS_PLACEHOLDER": "Il tuo ordine e' annullato.",
+          "FAILURE": "Messaggio quando non è riuscito",
+          "FAILURE_PLACEHOLDER": "Scusa, non potevo cancellarlo. Un compagno di squadra aiutera'.",
+          "DEFAULT_PROMPT": "Vuoi che mi porti a {title}?",
+          "THIS_ACTION": "eseguire questa azione",
+          "CONFIRM_BUTTON": "Conferma",
+          "CANCEL_BUTTON": "annulla",
+          "CHANNEL_NOTE": "La scheda funziona nel widget del sito web. Su canali senza pulsanti, {agent} non eseguirà questa azione.",
+          "CUSTOMIZE": "Personalizzare i messaggi",
+          "CONFIRM_PROMPT_PLACEHOLDER": "Annullare l’ordine #{'{{'} outputs.order_id {'}}'}?"
+        },
+        "TEST": {
+          "RUN": "Prova di esecuzione",
+          "CHANGE_WARNING": "Questi passaggi cambiano i dati nel reale API. Eseguili comunque?",
+          "RUN_ANYWAY": "Corri comunque.",
+          "ERROR": "Il test non poteva essere eseguito",
+          "PASSED": "passato",
+          "FAILED": "fallito",
+          "MISSING": "Uscite richieste mancanti: {keys}",
+          "COMPARED": "Rispetto al \"{left} \" con \" {right} \"",
+          "ARRAY_CHOICE": "Salvare questo articolo o il campo di ogni articolo?",
+          "THIS_ITEM": "Articolo {index}",
+          "EVERY_ITEM": "Tutti gli articoli [*]",
+          "VALUES": "Valori di prova",
+          "PICK_HINT": "Fare clic su un campo per salvarlo.",
+          "EARLIER_FAILED": "Un passo precedente fallì: {error}",
+          "TITLE": "Prova",
+          "DURATION": "{ms} ms"
+        },
+        "ADVANCED": "Avanzato",
+        "AGENT_FALLBACK": "il tuo agente AI",
+        "AUTH": {
+          "LABEL": "Autenticazione",
+          "SAME_AS": "Stesso passo {number}",
+          "SAVED": "Salvato",
+          "REPLACE": "Sostituire",
+          "KEY": "API chiave"
+        }
       }
     },
     "RESPONSES": {
       "HEADER": "FAQ",
       "ADD_NEW": "Crea nuova FAQ",
-      "NO_USED_CONVERSATIONS": "No conversations found for this FAQ.",
+      "NO_USED_CONVERSATIONS": "Nessuna conversazione trovata per questo FAQ.",
       "DOCUMENTABLE": {
         "CONVERSATION": "Conversazione #{id}"
       },
@@ -1314,7 +2919,7 @@
       "UNSELECT_ALL": "Deseleziona tutto ({count})",
       "SEARCH_PLACEHOLDER": "Cerca FAQ...",
       "ERRORS": {
-        "LOAD": "There was an error loading FAQs. Please try again."
+        "LOAD": "C'era una FAQ di caricamento di errore. Si prega di riprovare."
       },
       "BULK_DELETE_BUTTON": "Elimina",
       "BULK_DELETE": {
@@ -1333,7 +2938,7 @@
       },
       "SUGGESTIONS_BANNER": {
         "TITLE": "Captain grouped recurring customer questions into FAQ suggestions.",
-        "ACTION": "Review suggestions"
+        "ACTION": "Suggerimenti di recensione"
       },
       "FORM_DESCRIPTION": "Aggiungi una domanda e la sua risposta corrispondente alla knowledge base e seleziona l'assistente con cui dovrebbe essere associata.",
       "CREATE": {
@@ -1351,7 +2956,14 @@
           "LABEL": "Risposta",
           "PLACEHOLDER": "Inserisci qui la risposta",
           "ERROR": "Inserisci una risposta valida."
-        }
+        },
+        "AGENTS_ONLY": {
+          "LABEL": "Agenti solo",
+          "HELP": "Captain non utilizzerà questo FAQ per rispondere ai clienti. Copilota e suggerimenti di risposta possono ancora."
+        },
+        "SCOPE_LABEL": "Chi può usare questa risposta?",
+        "SCOPE_ALL": "Agente e squadra dell'AI",
+        "SCOPE_TEAM": "Solo Team"
       },
       "EDIT": {
         "TITLE": "Aggiorna FAQ",
@@ -1371,55 +2983,76 @@
         "FEATURE_SPOTLIGHT": {
           "TITLE": "Captain FAQ",
           "NOTE": "Captain FAQ rileva le domande più frequenti dei clienti, anche se mancano dalla tua knowledge base, e suggerisce delle FAQ per migliorare il supporto. È possibile rivedere ogni suggerimento e decidere se approvarlo o rifiutarlo."
-        }
+        },
+        "FILTERED_TITLE": "No FAQs corrispondono ai tuoi filtri",
+        "FILTERED_SUBTITLE": "Prova un'altra ricerca o cancella i filtri per vedere altre risposte."
+      },
+      "STATUS": {
+        "PAUSED": "In pausa"
+      },
+      "PAUSE": "Pausa FAQ",
+      "RESUME": "Ripresa FAQ",
+      "TOGGLE_ERROR": "Non potrebbe aggiornare lo stato FAQ. Si prega di riprovare.",
+      "FILTERS": {
+        "SOURCE": {
+          "ALL": "Tutte le fonti"
+        },
+        "FROM_SOURCE": "Da: {name}"
+      },
+      "ORIGIN": {
+        "PAGE_IMPORT": "Importato dalla pagina",
+        "AI_GENERATED": "AI generato",
+        "CONVERSATION": "Da una conversazione",
+        "HAND_TYPED": "Tipologia a mano"
       }
     },
     "FAQ_SUGGESTIONS": {
       "HEADER": "FAQ suggestions",
-      "SEARCH_PLACEHOLDER": "Search suggestions...",
-      "QUEUE_COUNT": "{count} suggestion to review | {count} suggestions to review",
-      "QUEUE_HINT": "Ranked by customer demand",
-      "SOURCE_COUNT": "{count} conversation | {count} conversations",
+      "SEARCH_PLACEHOLDER": "Suggerimenti di ricerca...",
+      "QUEUE_COUNT": "{count} suggerimento per la revisione | {count} suggerimenti per la revisione",
+      "QUEUE_HINT": "Classificato dalla domanda del cliente",
+      "SOURCE_COUNT": "{count} conversazione | {count} conversazioni",
       "REVIEW": "Review sources",
       "APPROVE": "Approva",
       "APPROVE_FAQ": "Approve FAQ",
       "DISMISS": "Ignora",
       "SAVE": "Salva modifiche",
       "DETAILS": {
-        "TITLE": "Review FAQ suggestion",
-        "DESCRIPTION": "Captain grouped {count} conversation into this suggestion. Review the evidence and refine the FAQ before approval. | Captain grouped {count} conversations into this suggestion. Review the evidence and refine the FAQ before approval.",
-        "SOURCES": "Source conversations",
+        "TITLE": "Commento FAQ suggerimento",
+        "DESCRIPTION": "Verificare le prove del cliente e affinare il FAQ prima dell'approvazione.",
+        "SOURCES": "Conversazioni di origine",
         "SOURCE_PROGRESS": "{visible} of {total}",
-        "NO_SOURCES": "No accessible source conversations were found.",
+        "NO_SOURCES": "Non sono state trovate conversazioni di origine accessibili.",
         "RETRY": "Riprova"
       },
       "EMPTY_STATE": {
-        "TITLE": "The review queue is clear",
-        "SUBTITLE": "New FAQ suggestions will appear here when they are ready to review.",
-        "CLEAR_SEARCH": "Clear search"
+        "TITLE": "La coda di revisione è chiara",
+        "SUBTITLE": "Nuovi FAQ suggerimenti verranno visualizzati qui quando sono pronti a rivedere.",
+        "CLEAR_SEARCH": "Cancella la ricerca"
       },
       "SUCCESS": {
-        "APPROVED": "FAQ approved and added to Captain's knowledge.",
-        "DISMISSED": "Suggestion dismissed.",
-        "SAVED": "Suggestion updated."
+        "APPROVED": "FAQ approvato e aggiunto alla conoscenza Captain '.",
+        "DISMISSED": "Suggerimento respinto.",
+        "SAVED": "Suggerimento aggiornato."
       },
       "ERRORS": {
-        "LOAD": "There was an error loading FAQ suggestions. Please try again.",
-        "LOAD_DETAILS": "There was an error loading the source conversations.",
-        "APPROVE": "There was an error approving the FAQ. Please try again.",
-        "DISMISS": "There was an error dismissing the suggestion. Please try again.",
-        "SAVE": "There was an error saving the suggestion. Please try again."
+        "LOAD": "C'è stato un errore di caricamento FAQ suggerimenti. Si prega di riprovare.",
+        "LOAD_DETAILS": "C'è stato un errore caricare le conversazioni di origine.",
+        "APPROVE": "C'è stato un errore approvando il FAQ. Si prega di riprovare.",
+        "DISMISS": "C'e' stato un errore respingere il suggerimento. Per favore, riprovate.",
+        "SAVE": "C'era un errore che salvava la suggestione. Per favore, riprovate."
       }
     },
     "INBOXES": {
       "HEADER": "Inbox Connesse",
       "ADD_NEW": "Collega una nuova inbox",
       "OPTIONS": {
-        "DISCONNECT": "Disconnetti"
+        "DISCONNECT": "Disconnetti",
+        "SETTINGS": "Impostazioni del canale"
       },
       "DELETE": {
         "TITLE": "Sei sicuro di voler disconnettere la inbox?",
-        "DESCRIPTION": "",
+        "DESCRIPTION": "Questo agente dell'AI smetterà di rispondere a conversazioni qui. Nuovi messaggi andranno direttamente alla tua squadra umana.",
         "CONFIRM": "Sì, elimina",
         "SUCCESS_MESSAGE": "Inbox disconnessa con successo.",
         "ERROR_MESSAGE": "Si è verificato un errore durante la disconnessione della inbox, riprova."
@@ -1428,7 +3061,12 @@
       "CREATE": {
         "TITLE": "Connetti una Inbox",
         "SUCCESS_MESSAGE": "Inbox connessa con successo.",
-        "ERROR_MESSAGE": "Si è verificato un errore durante la connessione della inbox. Riprova."
+        "ERROR_MESSAGE": "Si è verificato un errore durante la connessione della inbox. Riprova.",
+        "DESCRIPTION": "Scegliere su quali canali di comunicazione {name} risponde.",
+        "ALL_CONNECTED_TITLE": "Tutti i canali collegati",
+        "ALL_CONNECTED_DESC": "Tutti i canali di comunicazione nel vostro spazio di lavoro sono già collegati a {name}.",
+        "CREATE_NEW_INBOX": "Creare un nuovo canale in Impostazioni Canale",
+        "CONNECT_BUTTON": "Accendere l'agente AI"
       },
       "FORM": {
         "INBOX": {
@@ -1440,7 +3078,729 @@
       "EMPTY_STATE": {
         "TITLE": "Nessuna Inbox Connessa",
         "SUBTITLE": "Connettendo una inbox, l'assistente potrà gestire le richieste iniziali dei clienti, ed eventualmente trasferirle a voi."
+      },
+      "SUBHEADER": "I canali collegati ricevono conversazioni dei clienti nel Chatwoot. Accendere l'agente AI su un canale per rispondere automaticamente ai visitatori secondo le vostre ore di lavoro e le regole del pubblico.",
+      "REPLIES_FOLLOW": "Seguire le risposte:",
+      "STATUS": {
+        "ACTIVE": "Agente AI vivo",
+        "INACTIVE": "Agenti dell'AI disattivato"
+      },
+      "TYPES": {
+        "WEB": "Sito web live chat",
+        "EMAIL": "e-mail",
+        "CHANNEL": "Canale",
+        "WHATSAPP": "WhatsApp",
+        "SMS": "SMS"
       }
+    },
+    "AGENT_UX": {
+      "SECTIONS": {
+        "OVERVIEW": "Panoramica",
+        "KNOWLEDGE": "Conoscenze",
+        "BEHAVIOR": "Comportamento",
+        "HANDOFF": "Trasferimento",
+        "CHANNELS": "Canali",
+        "PROFILE": "Profilo",
+        "SCENARIOS": "Scenari",
+        "ACTIONS": "Azioni"
+      },
+      "TABS": {
+        "OVERVIEW": "Panoramica",
+        "SOURCES": "Fonti",
+        "FAQS": "Domande frequenti",
+        "SUGGESTIONS": "Suggerimenti",
+        "PRODUCTS": "Prodotti",
+        "REPLY_STYLE": "Stile di risposta",
+        "RULES": "Regole",
+        "CUSTOMER_DATA": "Dati del cliente",
+        "ROUTING": "Chi prende in carico la chat",
+        "CHAT_ENDS": "Quando una chat termina",
+        "SCENARIOS": "I tuoi scenari",
+        "LEADS": "Acquisizione di lead",
+        "CHANNELS": "Canali",
+        "HOURS": "Orari di lavoro",
+        "AUDIENCE": "Pubblico",
+        "PROFILE": "Profilo",
+        "BUILT_IN": "Azioni integrate",
+        "EMAIL_TEMPLATES": "Modelli di email",
+        "API_CALLS": "La tua API",
+        "MCP": "Server MCP"
+      },
+      "EDIT": "Modifica",
+      "CHANGE": "Cambia",
+      "DONE": "Fatto",
+      "CANCEL": "Annulla",
+      "ON": "Attivo",
+      "OFF": "Disattivato",
+      "NOT_SET": "Non impostato",
+      "UNSAVED_PREVIEW": "L'anteprima include le modifiche non salvate",
+      "STYLE": {
+        "LANGUAGES": {
+          "TITLE": "Lingue di risposta",
+          "DESCRIPTION": "Usa la lingua del visitatore quando puoi rilevarla. Imposta un fallback per le conversazioni in cui la lingua non è chiara.",
+          "DEFAULT": "Lingua predefinita",
+          "ACCOUNT_DEFAULT": "Usa la lingua dello spazio di lavoro",
+          "AUTOMATIC": "Automatico",
+          "RESTRICT": "Limita le lingue di risposta",
+          "RESTRICT_DESCRIPTION": "Se un visitatore utilizza una lingua al di fuori della tua lista, rispondi nella lingua predefinita.",
+          "ALLOWED": "Lingue consentite",
+          "RESTRICTED_SUMMARY": "{count} lingua consentita | {count} lingue consentite",
+          "MESSAGES": {
+            "TITLE": "Traduzioni dei messaggi",
+            "AUTO": "Generare traduzioni automaticamente",
+            "AUTO_DESCRIPTION": "Dopo aver salvato, genera le traduzioni per le lingue consentite o per la lingua predefinita. Puoi inserire il tuo testo per ogni lingua in qualsiasi momento.",
+            "LANGUAGE": "Lingua di traduzione",
+            "SOURCE": "Messaggio originale — {text}",
+            "PLACEHOLDER": "Inserisci la tua traduzione",
+            "GENERATED": "Tradotto automaticamente",
+            "PENDING": "Alcune traduzioni sono in preparazione. I visitatori vedranno il testo attuale fino a quando saranno disponibili.",
+            "HANDOFF_MESSAGE": "Messaggio di passaggio al team",
+            "OFFLINE_HANDOFF_MESSAGE": "Messaggio di passaggio con team non disponibile",
+            "NO_HANDOFF_MESSAGE": "Messaggio quando l'agente continua ad aiutare",
+            "HANDOFF_FORM_MESSAGE": "Messaggio del modulo di contatto per il passaggio al team",
+            "LEAD_FORM_MESSAGE": "Messaggio del modulo di follow-up aziendale",
+            "LEAD_FORM_SUBMIT": "Il pulsante di invio del follow-up aziendale",
+            "RESOLUTION_MESSAGE": "Messaggio di risoluzione dell'inattività"
+          }
+        },
+        "VOICE_TITLE": "Come parla {name}",
+        "TONE": "tono",
+        "LENGTH": "Lunghezza della risposta",
+        "CUSTOM_HINT": "La formulazione personalizzata è attiva. {name} segue le tue istruzioni per questo.",
+        "EXACT_TITLE": "Espressione esatta",
+        "EXACT_SUMMARY": "Vedi le istruzioni {name} per il tono e la lunghezza",
+        "EXACT_PANEL_TITLE": "Istruzioni esatte sul tono e sulla lunghezza",
+        "EXACT_PANEL_DESC": "Le impostazioni predefinite coprono la maggior parte delle attività. Scrivi le tue solo se non ti vanno bene.",
+        "BUSINESS_TITLE": "Tipo di attività",
+        "BUSINESS_PANEL_DESC": "{name} regola la forma della risposta e quando coinvolgere il tuo team per abbinarla.",
+        "BUSINESS_WHAT_CHANGES": "Cosa cambia questo",
+        "DETECTED_SUFFIX": "Rilevato automaticamente",
+        "CHOSEN_SUFFIX": "Scelto da te",
+        "EXTRAS_TITLE": "Risposte extra",
+        "EXTRAS_PANEL_DESC": "Piccole cose {name} che puoi aggiungere a una risposta. Le impostazioni predefinite sono adatte alla maggior parte dei negozi.",
+        "BUTTONS_SUMMARY": "Fino ai pulsanti {count}",
+        "BUTTONS_LABEL": "Pulsanti di risposta suggeriti",
+        "LINKS_LABEL": "Link utili",
+        "SOURCES_LABEL": "Carta delle fonti",
+        "FOLLOW_UP_LABEL": "Domanda di follow-up",
+        "PRODUCTS_LABEL": "Schede prodotti",
+        "FOLLOW_UP_EXAMPLE": "Lo stai cambiando sul sito web o nell'app?",
+        "PREVIEW_TITLE": "Come appare a un cliente",
+        "OPENER": {
+          "FRIENDLY": "Felice di aiutare! 🙂",
+          "PROFESSIONAL": "Certo."
+        }
+      },
+      "RULES": {
+        "ALWAYS_TITLE": "sempre",
+        "ALWAYS_DESC": "Le abitudini di lavoro {name} vengono seguite in ogni risposta.",
+        "NEVER_TITLE": "Non discutere mai",
+        "NEVER_DESC": "Argomenti {name} rifiuta educatamente.",
+        "CANT_TITLE": "Non posso farlo, offri invece",
+        "CANT_DESC": "Le richieste {name} non possono essere gestite e cosa offrire invece.",
+        "DECLINE_TITLE": "Come {name} dice di no",
+        "DECLINE_PANEL_DESC": "Da utilizzare quando un cliente chiede qualcosa nella sezione \"Non discutere mai\".",
+        "DEFAULT_DECLINE": "Testo predefinito",
+        "LIMIT_COUNT": "Nessun limite | 1 limite | {count} limiti",
+        "MANAGE_LIMITS": "gestire"
+      },
+      "CUSTOMER_DATA": {
+        "TITLE": "Cosa può utilizzare {name} su un cliente",
+        "DESC": "Entrambi sono disattivati per gli agenti nuovi. Attivali solo se l'informativa sulla privacy lo copre.",
+        "CONTACT_TITLE": "Leggi i dettagli di contatto",
+        "CONTACT_DESC": "Nome, indirizzo email, numero di telefono e attributi personalizzati che memorizzi sul contatto. Utilizzati per personalizzare le risposte e saltare le domande.",
+        "MEMORY_TITLE": "Ricordare i clienti ricorrenti",
+        "MEMORY_DESC": "Dopo una chat, {name} salva brevi appunti (ad esempio la dimensione dell'ordine o un problema passato) e li legge la prossima volta. Gli appunti sono visibili sul contatto.",
+        "CONTINUITY_HINT": "{inbox} non continua le chat via e-mail, quindi un cliente che se ne va non può essere riconosciuto tramite risposta via e-mail.",
+        "SAVED": "Salvato"
+      },
+      "HANDOFF": {
+        "MODEL_TITLE": "Quando {name} non può aiutare, chi prende in carico la chat?",
+        "MODEL_TEAM": "Il tuo team, in questa casella di posta",
+        "MODEL_TEAM_DESC": "{name} passa la chat a una persona. Fuori orario raccoglie i recapiti per permettere al team di rispondere più tardi.",
+        "MODEL_TEAM_HOURS": "Il tuo team, solo quando è online",
+        "MODEL_TEAM_HOURS_DESC": "{name} passa la chat al team durante gli orari di lavoro. Fuori orario continua ad aiutare e spiega quando il team tornerà.",
+        "MODEL_EMAIL": "Solo email",
+        "MODEL_EMAIL_DESC": "Se nessuno risponde nella casella di posta, {name} continua a gestire le chat e indirizza i clienti alla tua email di assistenza.",
+        "MODEL_CUSTOM": "Personalizzato",
+        "EMAIL_LABEL": "Email di supporto",
+        "DETAILS_TITLE": "Dettagli del passaggio di consegne",
+        "TRIGGERS": "Quando consegnare",
+        "TRIGGERS_SUMMARY": "Quando chiesto, più la regola {count} | Quando chiesto, più le regole {count}",
+        "TRIGGERS_NONE": "Solo quando il cliente chiede o {name} non può rispondere",
+        "TRIGGERS_PANEL_DESC": "{name} cede sempre il comando quando il cliente richiede una persona o non può rispondere. Aggiungi situazioni in cui dovrebbe cedere immediatamente.",
+        "MESSAGES": "Cosa dice {name}",
+        "MESSAGES_PANEL_DESC": "Ogni messaggio viene mostrato solo nella situazione corrispondente.",
+        "CONTACT": "Dettagli di contatto richiesti",
+        "CONTACT_PANEL_DESC": "Chiesto solo quando il cliente è anonimo e nessuno è online.",
+        "ASSIGN": "Assegnare a",
+        "ASSIGN_NONE": "Assegnazione predefinita della casella di",
+        "ASSIGN_PANEL_DESC": "Dove finiscono le chat consegnate quando non c'è ancora nessuno assegnato.",
+        "WAITING": "Mentre aspetto una persona",
+        "WAITING_QUIET": "{name} rimane in silenzio",
+        "WAITING_HELPS": "{name} continua a rispondere",
+        "SAFETY_ON": "Retta di sicurezza accesa",
+        "WAITING_PANEL_DESC": "Cosa succede tra il passaggio di consegne e la prima risposta umana.",
+        "NOTES": "Note private",
+        "NOTES_PANEL_DESC": "{name} mantiene un riepilogo in alto in ogni conversazione a cui partecipa. Può anche pubblicare quel riepilogo nel thread come nota privata. Gli scenari che utilizzano \"Aggiungi nota privata\" pubblicano sempre la loro.",
+        "NOTES_HANDOFF": "Inoltre pubblica il riassunto come nota privata",
+        "NOTES_HANDOFF_DESC": "Quando viene affidata una conversazione al tuo team, mantieni questa opzione attivata mentre il team utilizza l'app mobile, che non mostra ancora il riepilogo.",
+        "NOTES_LEAD": "Pubblica una nota quando un lead viene salvato",
+        "NOTES_ACTION": "Pubblica una nota quando un'azione viene eseguita o annullata",
+        "NOTES_HANDOFF_SHORT": "Riepilogo del passaggio di consegne",
+        "NOTES_LEAD_SHORT": "Guida",
+        "NOTES_ACTION_SHORT": "Azioni",
+        "NOTES_NONE": "Solo riassunto, nessuna nota",
+        "TEAM_LABEL": "Chat di mano con il team",
+        "PERSON_LABEL": "Oppure una persona specifica (facoltativa)",
+        "TEAM_HINT": "Lascia entrambi vuoti per utilizzare le regole di assegnazione proprie della casella di posta in arrivo.",
+        "MODEL_CUSTOM_DESC": "Online: {online}. Offline: {offline}."
+      },
+      "AFTER_CHAT": {
+        "LABELS_TITLE": "Etichette per la segnalazione",
+        "LABELS_SUMMARY_NONE": "Nessun'etichetta automatica",
+        "TOPIC": "Etichette dei temi",
+        "OUTCOME": "Etichette dei risultati",
+        "MOVED_TITLE": "Trasferito",
+        "MOVED_DESC": "Le domande frequenti suggerite ora sono disponibili in Conoscenza → Suggerimenti. Ricordare la vita dei clienti si trova in Comportamento → Dati del cliente."
+      },
+      "SUGGESTIONS": {
+        "LEARN_TITLE": "Suggerisci FAQ dai chat risolti",
+        "LEARN_DESC": "{name} redige le risposte dai messaggi che il tuo team ha risolto. Nulla viene utilizzato finché non lo approvi."
+      },
+      "LEADS": {
+        "CUSTOM_SCENARIO": "Esegue dal tuo scenario",
+        "NAME_EMAIL": "Nome, email",
+        "EMAIL_TO": "E-mail a {team}",
+        "HUBSPOT_ON": "Sincronizzato con HubSpot"
+      },
+      "TOOLS": {
+        "CATEGORIES": {
+          "ANSWERS": "Trova le risposte",
+          "CUSTOMER": "Dettagli del cliente",
+          "EMAIL": "Email e follow-up",
+          "CONVERSATION": "conversazione"
+        },
+        "INTRO": {
+          "BUILT_IN": "Le azioni sono singole azioni che il tuo agente IA può eseguire all'interno di uno scenario. Queste {count} funzionano immediatamente, non è necessaria alcuna configurazione.",
+          "EMAIL_TEMPLATES": "Invia gli e-mail che il tuo agente IA invia con l'e-mail al visitatore, invia l'e-mail al team e programma delle azioni di follow-up.",
+          "API_CALLS": "Azioni che chiamano il tuo sistema, ad esempio per verificare una prenotazione o creare un biglietto.",
+          "MCP": "Un server MCP fornisce al tuo agente IA azioni da un'altra app, come un sistema CRM o di prenotazione. Connettene uno, quindi scegli quale delle sue azioni l'agente può utilizzare."
+        },
+        "API_EMPTY": "Nessuna azione API ancora.",
+        "MCP_EMPTY": "Nessun server MCP ancora collegato.",
+        "NEW_TEMPLATE": "Nuovo modello"
+      },
+      "EMAIL": {
+        "VARIABLES_TITLE": "Dettagli che puoi aggiungere",
+        "VARIABLES_HINT": "Trascinane uno nel testo, fai clic per aggiungerlo dove stavi digitando, oppure digita {'@'} nel testo.",
+        "GROUPS": {
+          "CUSTOMER": "cliente",
+          "CHAT": "Chat",
+          "BUSINESS": "affari"
+        },
+        "VARIABLES": {
+          "CONTACT_FIRST_NAME": "nome di battesimo",
+          "CONTACT_LAST_NAME": "cognome",
+          "CONTACT_NAME": "nome per esteso",
+          "CONTACT_EMAIL": "e-mail",
+          "CONTACT_PHONE_NUMBER": "telefono",
+          "CONVERSATION_DISPLAY_ID": "Numero di chat",
+          "CONVERSATION_URL": "Link alla chat (per il tuo team)",
+          "SUMMARY": "Riepilogo della chat (e-mail del team)",
+          "ASSIGNEE_NAME": "Compagno di squadra assegnato",
+          "INBOX_NAME": "Nome del canale",
+          "BUSINESS_NAME": "Nome dell'attività commerciale",
+          "AGENT_NAME": "Nome dell'agente IA",
+          "TODAY": "La data di oggi"
+        },
+        "SAMPLE_VALUE": "Campione {name}",
+        "SUBJECT_PLACEHOLDER": "Ad esempio: circa il tuo ordine, quindi aggiungi il nome",
+        "BODY_PLACEHOLDER": "Scrivi l'e-mail. Digita {'@'} per aggiungere i dettagli del cliente o della chat.",
+        "FORMAT_LABEL": "Formato dell'e-mail",
+        "FORMAT_TEXT": "testo non codificato",
+        "TEXT_HINT": "Inviato come testo semplice. Funziona in ogni app di posta elettronica.",
+        "HTML_HINT": "Inviato come HTML con una copia in testo semplice. Script e moduli vengono rimossi; i dati del cliente vengono scappati.",
+        "FROM": "Da:",
+        "TO": "A:",
+        "NO_SUBJECT": "(nessun soggetto)",
+        "EMPTY_BODY": "Il tuo messaggio appare qui.",
+        "PREVIEW_TITLE": "Anteprima dell'e-mail",
+        "SAMPLE_NOTE": "Visualizza in anteprima con dati di esempio del cliente.",
+        "FORMAT_HTML": "HTML"
+      },
+      "API": {
+        "OPTIONAL": "opzionale",
+        "ABOUT_TITLE": "Cosa fa",
+        "ABOUT_DESC": "Un nome breve e quando {agent} dovrebbe usarlo. {agent} legge questo per decidere.",
+        "ASK_TITLE": "Cosa chiedere al cliente",
+        "ASK_DESC": "I dettagli {agent} vengono raccolti prima di chiamare il tuo API, come un numero d'ordine.",
+        "CALL_TITLE": "Chiama il tuo API",
+        "CALL_DESC": "La richiesta al tuo sistema. Aggiungi un passaggio di controllo se una seconda chiamata dovrebbe confermare il risultato.",
+        "CALL_HINT": "Apri un passaggio per impostare URL, accedere e il corpo, ed eseguire una chiamata di test.",
+        "RESPONSE_TITLE": "Cosa torna indietro",
+        "RESPONSE_DESC": "I campi della risposta {agent} possono essere utilizzati nella sua risposta. Esegua un test, quindi clicchi sui campi di cui ha bisogno.",
+        "RUN_TITLE": "Prima che funzioni",
+        "RUN_DESC": "Eseguitalo immediatamente, oppure chiedi al cliente di confermare prima. Chiedi prima qualsiasi cosa che modifichi un ordine o un account.",
+        "REPLY_TITLE": "Formulazione della risposta",
+        "REPLY_DESC": "Opzionale. Senza di esso, {agent} scrive la risposta dai campi di risposta.",
+        "AUTO_REPLY": "Scritto dal tuo agente IA dalla risposta",
+        "DEFAULT_MESSAGES": "Messaggi di conferma predefiniti, di successo e di fallimento",
+        "MESSAGES_DESC": "Cosa dice {agent} quando chiede di confermare, e dopo che la chiamata ha avuto successo o fallito."
+      }
+    },
+    "PRODUCTS": {
+      "HEADER": "Prodotti",
+      "DESCRIPTION": "Shopify prodotti nella conoscenza del vostro agente AI. I prezzi, le scorte e i collegamenti sono sempre recuperati dal vivo da Shopify.",
+      "SEARCH_PLACEHOLDER": "Ricerca prodotti",
+      "EMPTY": "Nessun prodotto trovato.",
+      "LOAD_ERROR": "Non poteva caricare i prodotti. Riprova in un momento.",
+      "FILTERS": {
+        "ALL": "Tutti"
+      },
+      "STATUS": {
+        "SYNCED": "Traduzione:",
+        "PENDING": "Finanziamenti",
+        "FAILED": "Fatta."
+      }
+    },
+    "KNOWLEDGE": {
+      "TITLE": "conoscenza",
+      "SUBTITLE": "Tutto il vostro agente AI può usare per rispondere. Aggiungi fonti; FAQ sono fatti da loro.",
+      "STATS": {
+        "SOURCES": "{count} sorgente | {count} fonti",
+        "PRODUCTS": "{count} prodotto | {count} prodotti",
+        "FAQS": "{count} FAQ | {count} FAQ"
+      },
+      "TABS": {
+        "SOURCES": "Fonti",
+        "FAQS": "Domande frequenti",
+        "PRODUCTS": "Prodotti"
+      },
+      "SHOPIFY_CARD": {
+        "TITLE": "Catalogo dei prodotti dal vivo",
+        "SYNCED_COUNT": "{count} prodotto sincronizzato | {count} prodotti sincronizzati",
+        "SYNCED_LABEL": "prodotto sincronizzato | prodotti sincronizzati",
+        "ON_DESCRIPTION": "Il tuo agente AI risponde con i prezzi dal vivo, i link e le immagini dei prodotti",
+        "FAILED_ATTENTION": "{count} ha bisogno di attenzione | {count} bisogno di attenzione",
+        "VIEW_PRODUCTS": "Visualizza i prodotti",
+        "SETTINGS": "Shopify impostazioni",
+        "RECONNECT": "Ricollegamento Shopify",
+        "IMPORTING_TITLE": "Importa il tuo catalogo...",
+        "IMPORTING_PROGRESS": "{synced} di {total} prodotti ({percent} %)",
+        "NEEDS_RECONNECT_DESCRIPTION": "Ricollegare Shopify per mantenere le risposte aggiornate",
+        "PAUSED_DESCRIPTION": "Sincronizzazione del catalogo è interrotta",
+        "RESUME": "Riprendi la sincronizzazione",
+        "RESUME_SUCCESS": "Sincronizzazione del catalogo ripresa",
+        "RESUME_ERROR": "Non poteva riprendere la sincronizzazione del catalogo. Per favore, riprovate.",
+        "STATUS": {
+          "IMPORTING": "Sincronizzazione",
+          "NEEDS_RECONNECT": "Necessità di ricollegamento",
+          "PAUSED": "In pausa",
+          "LIVE": "Attivo"
+        },
+        "UPSELL": {
+          "TITLE": "Collega il tuo negozio Shopify",
+          "BENEFITS": {
+            "PRICES_STOCK": "Prezzi e stock dal vivo",
+            "PRODUCT_CARDS": "Carte di prodotto in chat",
+            "ORDER_TRACKING": "Tracciamento dell'ordine"
+          },
+          "BUTTON": "Collegamento Shopify"
+        }
+      }
+    },
+    "MCP_SERVERS": {
+      "TITLE": "Server MCP",
+      "ADD": "Collegare il server MCP",
+      "ACTIONS": "Azioni del server",
+      "TOOLS_ON": "{enabled} di {total} strumenti su",
+      "NO_TOOLS": "Questo server non ha strumenti.",
+      "SCENARIO_HINT": "Gli strumenti che si attivano possono essere raccolti nelle istruzioni di uno scenario, quindi l'agente AI sa quando usarli.",
+      "REFRESH": "Strumenti di refrigerazione",
+      "EDIT": "Modifica della connessione",
+      "DELETE": "Rimuovi server",
+      "ERROR": "Non poteva raggiungere il server MCP. Controllare il URL e le credenziali.",
+      "STATUS": {
+        "PENDING": "Non controllato",
+        "CONNECTED": "connesso",
+        "FAILED": "Fatta."
+      },
+      "DELETE_CONFIRM": {
+        "TITLE": "Rimuovere {name}?",
+        "DESCRIPTION": "Gli scenari che utilizzano i suoi strumenti smetteranno di chiamarli."
+      },
+      "CONNECT": {
+        "TITLE": "Collegare un server MCP",
+        "EDIT_TITLE": "Modifica del server MCP",
+        "DESCRIPTION": "Collegare un server remoto MCP su HTTPS. Successivamente, si sceglie quale dei suoi strumenti il vostro agente AI può utilizzare.",
+        "TOOLS_DESCRIPTION": "{name} è collegato. Accendere gli strumenti che il vostro agente AI può utilizzare; tutti gli altri rimanere spento.",
+        "CONNECT_BUTTON": "Collegamento",
+        "SAVE_BUTTON": "Salvare gli strumenti",
+        "LATER": "Scegli più tardi",
+        "SUCCESS": "MCP server salvato",
+        "FAILED": "Non poteva connettersi:",
+        "STEPS": {
+          "CONNECT": "Collegamento",
+          "TOOLS": "Scegli gli strumenti"
+        }
+      },
+      "FORM": {
+        "NAME": "nome",
+        "NAME_PLACEHOLDER": "Sistema di fatturazione",
+        "URL_HINT": "HTTPS pubblico, MCP su HTTP",
+        "AUTH": "Autenticazione",
+        "AUTH_TYPES": {
+          "NONE": "Nessuno",
+          "BEARER": "Token del cuscinetto",
+          "HEADER": "Intestazione personalizzata"
+        },
+        "HEADER_NAME": "Nome dell'intestazione",
+        "HEADER_NAME_PLACEHOLDER": "X-API -Key",
+        "TOKEN_PLACEHOLDER": "Incolla il token",
+        "TOKEN_KEEP": "Lasciare vuoto per mantenere il token salvato",
+        "CANCEL": "annulla",
+        "URL": "URL del server",
+        "URL_PLACEHOLDER": "https://mcp.example.com/mcp",
+        "TOKEN": "Token"
+      }
+    },
+    "KNOWLEDGE_GAPS": {
+      "TABS": {
+        "UNANSWERED": "Non ha risposto",
+        "ANSWERED": "Risolti dal team"
+      },
+      "SUCCESS": {
+        "ANSWERED": "Risposta salvata alla conoscenza dell'agente dell'AI."
+      },
+      "ERRORS": {
+        "ANSWER": "C'era un errore che salvava la risposta. Per favore, riprovate.",
+        "DISMISS": "C'e' stato un errore respingere la domanda. Per favore, riprovate."
+      }
+    },
+    "SUGGESTIONS": {
+      "HINT": "Domande che il vostro agente AI non poteva rispondere, riscritto e raggruppato per argomento. Aggiungi una risposta una volta e l'agente lo usa da allora in poi.",
+      "CONVERSATIONS": "{count} conversazione | {count} conversazioni",
+      "ASKED_IN": "Chiesta in {count} conversazione | Chiesta in {count} conversazioni",
+      "NO_TOPIC": "Altre domande",
+      "NOT_RELEVANT": "Non pertinente",
+      "ANSWER_PLACEHOLDER": "Scrivere la risposta che il vostro agente AI dovrebbe dare",
+      "BULK": {
+        "SELECT": "Seleziona",
+        "CANCEL": "annulla",
+        "NOT_RELEVANT_COUNT": "Mark {count} come non pertinente"
+      },
+      "ACTIONS": {
+        "TITLE": "Richiede che il tuo agente non possa ancora fare",
+        "DESCRIPTION": "Queste non sono domande, quindi una risposta non ti aiuterà. Il tuo agente ha bisogno di un'azione per gestirli.",
+        "EXAMPLE": "ad esempio “{text} ”",
+        "INTENTS": {
+          "ORDER_STATUS": {
+            "TITLE": "Controllare lo stato di un ordine",
+            "CTA": "Impostare il tracciamento dell'ordine"
+          },
+          "CANCEL": {
+            "TITLE": "Annullare un ordine",
+            "CTA": "Creare un'azione"
+          },
+          "RETURN": {
+            "TITLE": "Ritorno o scambio di un oggetto",
+            "CTA": "Utilizzare il modello di restituzione"
+          },
+          "BOOKING": {
+            "TITLE": "Prenota una chiamata o un appuntamento",
+            "CTA": "Utilizzare il modello di prenotazione"
+          },
+          "OTHER": {
+            "TITLE": "Altre richieste",
+            "CTA": "Creare un'azione"
+          }
+        }
+      },
+      "EMPTY_STATE": {
+        "TITLE": "Nessun suggerimento in questo momento",
+        "SUBTITLE": "Quando i clienti chiedono qualcosa che il vostro agente AI non può rispondere, si presenta qui una volta che è stato chiesto in 2 conversazioni, o subito se la chat è stata consegnata alla vostra squadra.",
+        "ONLY_ACTIONS": "Nessun problema senza risposta in questo momento. I clienti hanno chiesto al vostro agente di fare alcune cose che non può ancora fare:"
+      },
+      "SUCCESS": {
+        "DISMISSED": "Segnato come non rilevante.",
+        "BULK_DISMISSED": "{count} domanda non rilevante. | {count} domande contrassegnate come non pertinenti."
+      },
+      "FOCUS": {
+        "MORE_QUOTES": "+ {count} più simile a questo",
+        "DRAFT": "Risposta consigliata, dalla risposta del vostro team",
+        "ADD": "Aggiungi una risposta",
+        "NEXT": "Il prossimo",
+        "LEFT": "{count} domanda di risposta | {count} domande a risposta",
+        "HAS_DRAFT": "Risposta consigliata pronta",
+        "EDIT": "editare",
+        "QUOTE": "“{text}”"
+      },
+      "ERROR": {
+        "TITLE": "Non ho potuto caricare i tuoi suggerimenti",
+        "DESCRIPTION": "Qualcosa e' andato storto dalla nostra parte. Riprova in un momento.",
+        "RETRY": "Prova ancora."
+      },
+      "DONE": {
+        "TITLE": "Tutti catturati",
+        "DESCRIPTION": "Ogni domanda ha una risposta o è stata messa da parte. Quelli nuovi vengono qui quando i clienti glielo chiedono."
+      }
+    },
+    "DOCUMENT_SECTIONS": {
+      "TITLE": "Sezioni ({count} )",
+      "DESCRIPTION": "Pagine raggruppate per sito web e sezione. Seleziona sezioni per interrompere, riprendere, riprovare o cancellarle in una sola volta.",
+      "FILES": "File e documenti singoli",
+      "COUNTS": "{ready} del {count} pronto",
+      "FAILED": "{count} guasto",
+      "PAUSED": "{count} in pausa",
+      "SHOW": "Mostra",
+      "SHOW_ALL": "Mostra tutto",
+      "SELECTED": "Selezionato: {sections} · {count} documenti",
+      "ACTIONS": {
+        "PAUSE": "Pausa.",
+        "RESUME": "riprendere",
+        "RETRY": "Recuperare fallì",
+        "SUGGEST_FAQS": "Suggerisci FAQ",
+        "DELETE": "Cancella"
+      },
+      "DONE": {
+        "PAUSE": "Paused {count} documenti",
+        "RESUME": "Resoconto {count} documenti",
+        "RETRY": "Rettifica {count} documenti",
+        "SUGGEST_FAQS": "Suggerire FAQ per {count} documenti",
+        "DELETE": "Cancellati {count} documenti"
+      },
+      "ERROR": "Non è possibile aggiornare queste sezioni. Per favore, riprovate.",
+      "DELETE_TITLE": "Eliminare queste sezioni?",
+      "DELETE_DESCRIPTION": "{count} documenti e le loro FAQ saranno cancellati. Le pagine del sito web sono anche rimossi dalla selezione del sito web."
+    },
+    "WEBSITES": {
+      "AUTO_ADD": "Aggiungere automaticamente nuove pagine consigliate",
+      "AUTO_ADD_HINT": "Quando il tuo sito web ottiene nuove pagine che aiutano i clienti, il tuo agente AI impara da loro senza aprire questa lista. Pagine che non hai controllato resta fuori.",
+      "AUTO_ADDED": "{count} nuova pagina consigliata è stato aggiunto automaticamente. | {count} nuove pagine consigliate sono state aggiunte automaticamente.",
+      "NEW_PAGE": "Nuovo",
+      "TITLE": "Fonti del sito web",
+      "ENTIRE_WEBSITE": "Sito web completo",
+      "DISCOVER": "Scopri le pagine",
+      "INCLUDE_SUBDOMAINS": "Scopri anche i sottodomini collegati",
+      "DISCOVERY_HELP": "Esplora le mappe dei siti e le pagine collegate prima. Scegli ciò che diventa conoscenza.",
+      "SELECTION_HELP": "Il tuo agente dell'IA impara dalle pagine controllate. Le pagine consigliate iniziano a controllare.",
+      "DISCOVERED": "{count} pagine trovate",
+      "LOAD_ERROR": "Non poteva caricare la scoperta del sito web. Per favore, riprovate.",
+      "SAVE_ERROR": "Non è possibile salvare la selezione della pagina. Per favore, riprovate.",
+      "DISCOVERY_FAILED": "La scansione non poteva finire. Prova a scansionare di nuovo.",
+      "REDISCOVER": "Scansione",
+      "SEARCH": "Pagine di ricerca",
+      "NO_PAGES": "Ancora nessuna pagina corrispondente.",
+      "PREVIEW_LOADING": "Caricamento in anteprima pagina...",
+      "PREVIEW_UNAVAILABLE": "Anteprima non disponibile: {reason}",
+      "PREVIEW_HELP": "Fare clic su una pagina per vedere il testo che diventa conoscenza.",
+      "SAVE_SELECTION": "salvare",
+      "SAVED": "Selezione salvata. Le pagine selezionate saranno importate e indicizzate.",
+      "SELECTED_COUNT": "{count} pagine selezionate",
+      "MANAGE": "Seleziona le pagine",
+      "EXPAND": "Espandi o collassi {name}",
+      "PAGE_STATUS": {
+        "searchable": "Pronti",
+        "indexing": "Indicizzazione",
+        "not_searchable": "Ha bisogno di attenzione",
+        "paused": "In pausa",
+        "syncing": "Sincronizzazione",
+        "synced": "Traduzione:",
+        "failed": "Fatta."
+      },
+      "HIDDEN_PAGES": "{count} pagina è stato lasciato fuori perché non è stato trovato o non ha testo. | {count} pagine sono state lasciate fuori perché non sono stati trovati o non hanno testo.",
+      "CLEAR_SELECTION": "Cancellazione",
+      "HOME_SECTION": "Pagine di livello superiore",
+      "SECTION_LABELS": {
+        "support": "Supporto",
+        "product": "Prodotto",
+        "pricing": "Prezzi",
+        "legal": "Politiche",
+        "company": "Società",
+        "news": "Notizie",
+        "events": "Eventi",
+        "careers": "Carriere",
+        "technical": "Tecnica",
+        "not_useful": "Non utile",
+        "docs": "Documentazione",
+        "marketing": "Marketing"
+      },
+      "REASONS": {
+        "technical_host": "Sito web tecnico",
+        "deprecated": "Documentazione deprecata",
+        "query": "Filtraggio URL",
+        "utility": "Pagina di account o utilità",
+        "listing": "Elenco dei link",
+        "not_html": "Non una pagina web",
+        "noindex": "Nascosto dalla ricerca",
+        "login": "Dietro il segno",
+        "duplicate": "Duplicare",
+        "thin": "Testo molto piccolo",
+        "other_language": "Altre lingue",
+        "not_useful": "Non utile",
+        "robots_disallowed": "Bloccato da robots.txt",
+        "managed_catalog": "Gestito dal catalogo dei prodotti",
+        "not_found": "Pagina non trovata",
+        "unchecked": "Non leggere ancora"
+      },
+      "UNCHECKED_HINT": "Elencato sul sito ma non ancora aperto. Discovery lo legge in un secondo round.",
+      "PREVIEW_WORDS": "{count} parole di conoscenza dopo la pulizia",
+      "PREVIEW_THIN": "Testo troppo piccolo: l'importazione salterà questa pagina.",
+      "SAVE_DURING_DISCOVERY": "Puoi risparmiare adesso. Pagine trovate in seguito aspettare la tua selezione.",
+      "QUOTA_EXCEEDED": "Questa selezione ha bisogno di {count} nuovi documenti, ma solo {available} sono disponibili sul vostro piano.",
+      "SELECTED_OF": "{selected} del {total} selezionato",
+      "SELECTION_SUMMARY": "{selected} selezionato · {new} nuovo",
+      "HIDDEN_COUNT": "{count} nascosto",
+      "STILL_FINDING": "Ancora trovare pagine · {count} finora",
+      "TABS": {
+        "RECOMMENDED": "Raccomandazioni",
+        "OTHER": "Altre pagine"
+      },
+      "TAB_HELP": {
+        "RECOMMENDED": "Come rispondere alle domande dei clienti. Controllato di default.",
+        "OTHER": "Pagine di accesso, liste di link, duplicati o altri siti. Puoi ancora aggiungerli."
+      },
+      "PAGES_FROM": "Pagine da {host}",
+      "SECTION_SUMMARY": "{label} · {reason}"
+    },
+    "KNOWLEDGE_BRIEF": {
+      "TITLE": "Brevetto d'affari generato",
+      "HELP": "Estratto dalla vostra conoscenza per aiutare il vostro agente AI rispondere a domande ampie su ciò che fate, vendere, e offrire.",
+      "STATUS": {
+        "DISABLED": "Off. Genera una bozza dalle tue conoscenze per iniziare.",
+        "DRAFT": "Si tratta di pronto. Verificare e pubblicare per accenderlo.",
+        "GENERATING": "Scegliere fonti e scrivere una bozza...",
+        "ENABLED": "Avanti. L'agente AI usa questo profilo.",
+        "SOURCES_CHANGED": "Su. Alcune fonti sono cambiate da quando hai pubblicato; rivedere il progetto aggiornato qui sotto e pubblicarlo.",
+        "UNAVAILABLE": "Paused: una fonte è stata cancellata, disabilitata o privata. Generare e pubblicare una nuova bozza.",
+        "FAILED": "Gli argomenti non potrebbero essere rinfrescati. Il testo salvato è invariato. Scegliere argomenti di aggiornamento per riprovare."
+      },
+      "GENERATE": "Generare dalla conoscenza",
+      "REGENERATE": "Rivestimento",
+      "CHOOSE_SOURCES": "Scegli le fonti a mano",
+      "SOURCES_HELP": "{count} fino a {max} fonti selezionate. Raccogli pagine che spiegano cosa fa l'azienda, i suoi prodotti, prezzi e politiche. Le pagine ancora indicizzate sono saltate.",
+      "GENERATE_SELECTED": "Generare da fonti selezionate",
+      "SUGGESTED_SOURCES": "Suggerito",
+      "SEARCH_SOURCES": "Fonti di ricerca",
+      "SELECT_SUGGESTED": "Selezionare suggerito",
+      "CLEAR_SOURCES": "Cancellazione",
+      "NO_MATCHING_SOURCES": "Nessuna fonte corrisponde a questa ricerca.",
+      "NO_SOURCES": "Importare documenti e attendere l'indicizzazione prima di generare un profilo.",
+      "OVERVIEW": "Panoramica delle imprese",
+      "TOPICS_TITLE": "Argomenti",
+      "TOPIC_NAME": "Nome dell'argomento",
+      "SUMMARY": "Riepilogo tematico",
+      "REMOVE_TOPIC": "Rimuovi argomento",
+      "PUBLISH": "Accendilo.",
+      "SAVE": "Salvare le modifiche",
+      "DISABLE": "Spegnilo.",
+      "ERROR": "Non poteva generare o salvare il profilo. Riprova.",
+      "PUBLISH_ERROR": "Non poteva pubblicare. Controllare che la panoramica e ogni argomento hanno testo, poi riprovare.",
+      "EDIT": "editare",
+      "DONE": "Fatto",
+      "SOURCE_COUNT": "{count} sorgente | {count} fonti",
+      "STATUS_PILL": {
+        "DISABLED": "Fuori",
+        "DRAFT": "Progetto",
+        "GENERATING": "Scrivere...",
+        "ENABLED": "su",
+        "SOURCES_CHANGED": "Ha bisogno di revisione",
+        "UNAVAILABLE": "In pausa",
+        "FAILED": "Non aggiornato"
+      },
+      "SUGGESTED_SUMMARY": "Suggerito “Sulla vostra attività”",
+      "SUGGESTED_SUMMARY_HELP": "Dalla tua conoscenza · il tuo testo rimane fino a quando non salvi",
+      "USE_SUMMARY": "Utilizzare questo testo",
+      "DISMISS": "Deliberazione",
+      "OFFERINGS_TITLE": "Prodotti e servizi",
+      "OFFERING_NAME": "Nome d'offerta",
+      "OFFERING_PURPOSE": "Descrizione dell'offerta",
+      "REJECT_OFFERING": "Rimuovere l'offerta",
+      "COVERAGE_SUMMARY": "{processed} di {eligible} fonti ammissibili analizzate ({pending} pendenti, {partial} parziali, {failed} non riuscita)",
+      "COVERAGE_DISCOVERED": "{discovered} pagine scoperte",
+      "COVERAGE_BUDGET_STOPPED": "Utilizzato al limite di bilancio di analisi",
+      "LENGTH": "{count} / {max}"
+    },
+    "BULK_SELECT": {
+      "CLEAR": "Selezione chiara"
+    },
+    "SCHEDULED_ACTIONS": {
+      "KIND": {
+        "FOLLOW_UP_MESSAGE": "Seguito programmato · {time}",
+        "FOLLOW_UP_EMAIL": "Seguire l'email in programma · {time}"
+      },
+      "CANCEL": "annulla",
+      "CANCEL_ERROR": "Non ho potuto cancellare il follow-up. Riprova."
+    },
+    "BUILT_IN_ACTIONS": {
+      "TITLE": "Azioni integrate",
+      "DESCRIPTION": "Le azioni sono cose che il vostro agente può fare. Le azioni integrate funzionano subito; aggiungere un'azione personalizzata per chiamare i vostri sistemi.",
+      "USE_IN_SCENARIO": "Utilizzare in uno scenario",
+      "CUSTOM_EMPTY": "Ancora nessuna azione personalizzata. Aggiungine una per chiamare i tuoi sistemi.",
+      "HELP": {
+        "TOGGLE": "Quando usare ciò",
+        "USE": "Usa...",
+        "WHEN": "Quando...",
+        "EXAMPLE": "Esempio",
+        "ROWS": {
+          "BEHAVIOUR": {
+            "USE": "Un ambiente di comportamento",
+            "WHEN": "dovrebbe applicarsi ad ogni conversazione",
+            "EXAMPLE": "Saluti visitatori di prima volta"
+          },
+          "LIMIT": {
+            "USE": "Un limite",
+            "WHEN": "c'e' qualcosa che l'agente non deve mai fare o promettere, piu' cosa offrire invece",
+            "EXAMPLE": "Non possono emettere rimborsi → offrire handoff"
+          },
+          "SCENARIO": {
+            "USE": "Uno scenario",
+            "WHEN": "una situazione ha bisogno di diversi passi, domande o azioni in ordine",
+            "EXAMPLE": "Demo richiesta: chiedere la dimensione della società, salvarla, quindi offrire il link di prenotazione"
+          },
+          "ACTION": {
+            "USE": "Un'azione",
+            "WHEN": "l'AI deve cambiare qualcosa o recuperare i dati dal vivo",
+            "EXAMPLE": "Salvare la dimensione dell'azienda al contatto"
+          },
+          "AUTOMATION": {
+            "USE": "Una regola di automazione",
+            "WHEN": "il grilletto è esatto e non ha bisogno di capire",
+            "EXAMPLE": "Nuova conversazione dalla pagina dei prezzi → etichetta pricing"
+          },
+          "KNOWLEDGE": {
+            "USE": "conoscenza",
+            "WHEN": "E' un fatto che l'agente dovrebbe essere in grado di spiegare",
+            "EXAMPLE": "Il nostro processo è 14 giorni"
+          }
+        }
+      }
+    },
+    "EMAIL_TEMPLATES": {
+      "TITLE": "Modelli di email",
+      "ADD": "Nuovo modello",
+      "EDIT": "Modifica modello",
+      "DELETE": "Eliminare il modello",
+      "EMPTY": "Non ci sono ancora modelli di posta elettronica.",
+      "SAVE": "Salva il modello",
+      "SAVED": "Template salvato",
+      "ERROR": "Non ho potuto salvare il modello. Riprova.",
+      "VARIABLES": "Inserimento:",
+      "PREVIEW": "Anteprima con valori del campione",
+      "FIELDS": {
+        "NAME": "nome",
+        "NAME_PLACEHOLDER": "Nuova richiesta demo",
+        "KEY": "Chiave",
+        "KEY_HELP": "Lettere minuscole, numeri e _. Scenarios si riferiscono al modello da questa chiave.",
+        "SUBJECT": "Oggetto",
+        "BODY": "Corpo"
+      },
+      "DESCRIPTION": "Usati per inviare email al visitatore, al team e per i ricontatti via email. Fino a 10 per agente."
+    },
+    "KNOWLEDGE_LOAD": {
+      "STALE": "Mostrando gli ultimi risultati caricati. Potrebbero non corrispondere ai filtri attuali. Cercate di rinfrescarli.",
+      "FAILED": "Non potevamo caricare questa lista. I tuoi filtri sono salvati. Riprova."
     }
   }
 }

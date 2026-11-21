@@ -65,6 +65,20 @@ RSpec.describe Captain::Conversation::LeadOfferService do
       expect(Captain::Leads::FollowupFormService.new(assistant, conversation).pending?).to be(true)
     end
 
+    {
+      it: ['Vorrei ricevere maggiori informazioni sul prodotto per la mia azienda.', 'Richiedi un ricontatto via email', 'Indirizzo email'],
+      es: ['Me gustaría recibir más información sobre el producto para mi empresa.', 'Solicitar seguimiento por correo', 'Correo electrónico']
+    }.each do |locale, (content, submit, email_label)|
+      it "posts the business follow-up form in #{locale}" do
+        create(:message, conversation: conversation, account: account, inbox: inbox, message_type: :incoming, content: content)
+        _, form = service.deliver!(proposal)
+
+        expect(form.content).to eq(I18n.t('captain.leads.followup_form', locale: locale))
+        expect(form.content_attributes).to include('contact_form_locale' => locale.to_s, 'button_label' => submit)
+        expect(form.items).to include(hash_including('name' => 'email', 'label' => email_label))
+      end
+    end
+
     it 'hands the conversation to the follow-up readiness check' do
       service.deliver!(proposal)
 

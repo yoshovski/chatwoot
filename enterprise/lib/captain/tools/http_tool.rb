@@ -70,13 +70,15 @@ class Captain::Tools::HttpTool < Captain::Tools::BasePublicTool
 
   def show_confirmation(state, params, outputs, start_at)
     conversation = find_conversation(state)
+    locale = state[Captain::Conversation::CustomerLocale::STATE_KEY] || @assistant.account.locale
+    values = { params: params, outputs: outputs }
     nonce = if conversation
-              Captain::Tools::ActionConfirmation.store!(conversation, tool: @custom_tool, params: params, outputs: outputs, start_at: start_at)
+              Captain::Tools::ActionConfirmation.store!(conversation, tool: @custom_tool, values: values, start_at: start_at, locale: locale)
             else
               SecureRandom.hex(16)
             end
-    content = Captain::Tools::ActionConfirmation.message(@custom_tool, 'confirm_prompt', params: params, outputs: outputs,
-                                                                                         locale: @assistant.account.locale)
+    content = Captain::Tools::ActionConfirmation.message(@custom_tool, 'confirm_prompt', values: values,
+                                                                                         locale: locale, assistant: @assistant)
     state[Captain::Tools::ActionConfirmation::STATE_KEY] = { 'nonce' => nonce, 'content' => content }
     CONFIRMATION_SHOWN
   end

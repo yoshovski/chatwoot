@@ -3,7 +3,7 @@
     "MODAL": {
       "TITLE": "Plantillas de Whatsapp",
       "SUBTITLE": "Seleccione la plantilla de Whatsapp que desea enviar",
-      "TEMPLATE_SELECTED_SUBTITLE": "Configure template: {templateName}"
+      "TEMPLATE_SELECTED_SUBTITLE": "Plantilla de configuración: {templateName}"
     },
     "PICKER": {
       "SEARCH_PLACEHOLDER": "Buscar plantillas",
@@ -13,12 +13,12 @@
       "FOOTER": "Footer",
       "BUTTONS": "Buttons",
       "CATEGORY": "Categoría",
-      "MEDIA_CONTENT": "Media Content",
-      "MEDIA_CONTENT_FALLBACK": "media content",
-      "NO_TEMPLATES_AVAILABLE": "No WhatsApp templates available. Click refresh to sync templates from WhatsApp.",
-      "REFRESH_BUTTON": "Refresh templates",
-      "REFRESH_SUCCESS": "Templates refresh initiated. It may take a couple of minutes to update.",
-      "REFRESH_ERROR": "Failed to refresh templates. Please try again.",
+      "MEDIA_CONTENT": "Contenido multimedia",
+      "MEDIA_CONTENT_FALLBACK": "contenido multimedia",
+      "NO_TEMPLATES_AVAILABLE": "No WhatsApp plantillas disponibles. Haga clic en refrescar plantillas de sincronización de WhatsApp.",
+      "REFRESH_BUTTON": "Plantillas de ajuste",
+      "REFRESH_SUCCESS": "Plantillas refrescante iniciadas. Puede tomar un par de minutos para actualizar.",
+      "REFRESH_ERROR": "Failed to refrescar plantillas. Por favor, intente de nuevo.",
       "LABELS": {
         "LANGUAGE": "Idioma",
         "TEMPLATE_BODY": "Cuerpo de plantilla",
@@ -35,14 +35,14 @@
       "SEND_MESSAGE_LABEL": "Enviar mensaje",
       "FORM_ERROR_MESSAGE": "Por favor, rellene todas las variables antes de enviar",
       "MEDIA_HEADER_LABEL": "{type} Header",
-      "OTP_CODE": "Enter 4-8 digit OTP",
-      "EXPIRY_MINUTES": "Enter expiry minutes",
-      "BUTTON_PARAMETERS": "Button Parameters",
+      "OTP_CODE": "Entrar 4-8 dígitos OTP",
+      "EXPIRY_MINUTES": "Ingrese minutos de caducidad",
+      "BUTTON_PARAMETERS": "Parámetros de botón",
       "BUTTON_LABEL": "Button {index}",
-      "COUPON_CODE": "Enter coupon code (max 15 chars)",
+      "COUPON_CODE": "Introduzca el código de cupón (max 15 chars)",
       "MEDIA_URL_LABEL": "Enter {type} URL",
-      "DOCUMENT_NAME_PLACEHOLDER": "Enter document filename (e.g., Invoice_2025.pdf)",
-      "BUTTON_PARAMETER": "Enter button parameter"
+      "DOCUMENT_NAME_PLACEHOLDER": "Introduzca el nombre de archivo del documento (por ejemplo, Invoice_2025.pdf)",
+      "BUTTON_PARAMETER": "Parámetro del botón"
     }
   }
 }

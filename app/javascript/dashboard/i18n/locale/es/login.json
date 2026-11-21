@@ -25,17 +25,18 @@
     "SUBMIT": "Iniciar sesión",
     "SAML": {
       "LABEL": "Login via SSO",
-      "TITLE": "Initiate Single Sign-on (SSO)",
-      "SUBTITLE": "Enter your work email to access your organization",
+      "TITLE": "Inicia sesión individual ( SSO )",
+      "SUBTITLE": "Introduzca su correo electrónico de trabajo para acceder a su organización",
       "BACK_TO_LOGIN": "Login via Password",
       "WORK_EMAIL": {
-        "LABEL": "Work Email",
-        "PLACEHOLDER": "Enter your work email"
+        "LABEL": "Correo electrónico de trabajo",
+        "PLACEHOLDER": "Introduzca su correo electrónico de trabajo"
       },
-      "SUBMIT": "Continue with SSO",
+      "SUBMIT": "Continuar con SSO",
       "API": {
-        "ERROR_MESSAGE": "SSO authentication failed. Please check your credentials and try again."
+        "ERROR_MESSAGE": "SSO la autenticación falló. Por favor, compruebe sus credenciales e inténtelo de nuevo."
       }
-    }
+    },
+    "NO_ACCOUNT": "¿No tienes una cuenta?"
   }
 }

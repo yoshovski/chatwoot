@@ -25,6 +25,11 @@ jobs:
           bundler-cache: true
       - name: Run Rubocop
         run: bundle exec rubocop --parallel
+      - name: Check localization coverage
+        run: |
+          ruby script/audit_localizations.rb --dashboard-prefix CAPTAIN.AGENT_UX.SECTIONS. --strict
+          ruby script/audit_localizations.rb --locales it,es --strict
+          ruby script/audit_localizations.rb --locales fr --dashboard-prefix CAPTAIN.AGENT_UX. --strict
 
   security-scan:
     runs-on: ubuntu-24.04

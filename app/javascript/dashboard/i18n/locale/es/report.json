@@ -3,7 +3,7 @@
     "HEADER": "Conversaciones",
     "LOADING_CHART": "Cargando datos del gráfico...",
     "NO_ENOUGH_DATA": "No hemos recibido suficientes puntos de datos para generar el informe. Inténtalo de nuevo más tarde.",
-    "DOWNLOAD_CONVERSATION_REPORTS": "Download conversation reports",
+    "DOWNLOAD_CONVERSATION_REPORTS": "Descargar informes de conversación",
     "DATA_FETCHING_FAILED": "Error al obtener datos, por favor intente nuevamente.",
     "SUMMARY_FETCHING_FAILED": "No se pudo obtener el resumen, por favor inténtalo de nuevo más tarde.",
     "METRICS": {
@@ -57,8 +57,8 @@
       "LAST_7_DAYS": "Últimos 7 días",
       "LAST_14_DAYS": "Últimos 14 días",
       "LAST_30_DAYS": "Últimos 30 días",
-      "THIS_MONTH": "This month",
-      "LAST_MONTH": "Last month",
+      "THIS_MONTH": "Este mes",
+      "LAST_MONTH": "Mes",
       "LAST_3_MONTHS": "Últimos 3 meses",
       "LAST_6_MONTHS": "Últimos 6 meses",
       "LAST_YEAR": "Último año",
@@ -151,7 +151,7 @@
   },
   "AGENT_REPORTS": {
     "HEADER": "Resumen de agentes",
-    "DESCRIPTION": "Easily track agent performance with key metrics such as conversations, response times, resolution times, and resolved cases. Click an agent's name to learn more.",
+    "DESCRIPTION": "Rastrea fácilmente el rendimiento del agente con métricas clave como conversaciones, tiempos de respuesta, tiempos de resolución y casos resueltos. Haga clic en el nombre de un agente para aprender más.",
     "LOADING_CHART": "Cargando datos del gráfico...",
     "NO_ENOUGH_DATA": "No hemos recibido suficientes puntos de datos para generar el informe. Inténtalo de nuevo más tarde.",
     "DOWNLOAD_AGENT_REPORTS": "Descargar reportes de agente",
@@ -224,7 +224,7 @@
   },
   "LABEL_REPORTS": {
     "HEADER": "Resumen de etiquetas",
-    "DESCRIPTION": "Track label performance with key metrics including conversations, response times, resolution times, and resolved cases. Click a label name for detailed insights.",
+    "DESCRIPTION": "Seguimiento de la etiqueta con métricas clave incluyendo conversaciones, tiempos de respuesta, tiempos de resolución y casos resueltos. Haga clic en un nombre de etiqueta para obtener información detallada.",
     "LOADING_CHART": "Cargando datos del gráfico...",
     "NO_ENOUGH_DATA": "No hemos recibido suficientes puntos de datos para generar el informe. Inténtalo de nuevo más tarde.",
     "DOWNLOAD_LABEL_REPORTS": "Descargar reportes de etiquetas",
@@ -297,16 +297,16 @@
   },
   "INBOX_REPORTS": {
     "HEADER": "Resumen de bandeja de entrada",
-    "DESCRIPTION": "Quickly view your inbox performance with key metrics like conversations, response times, resolution times, and resolved cases—all in one place. Click an inbox name for more details.",
+    "DESCRIPTION": "Vista rápidamente su rendimiento de la bandeja de entrada con métricas clave como conversaciones, tiempos de respuesta, tiempos de resolución y casos resueltos, todo en un solo lugar. Haga clic en un nombre de la bandeja de entrada para más detalles.",
     "LOADING_CHART": "Cargando datos del gráfico...",
     "NO_ENOUGH_DATA": "No hemos recibido suficientes puntos de datos para generar el informe. Inténtalo de nuevo más tarde.",
     "DOWNLOAD_INBOX_REPORTS": "Descargar reportes de bandeja de entrada",
     "FILTER_DROPDOWN_LABEL": "Seleccione una bandeja de entrada",
-    "ALL_INBOXES": "All Inboxes",
-    "SEARCH_INBOX": "Search Inbox",
+    "ALL_INBOXES": "Todas las entradas",
+    "SEARCH_INBOX": "Búsqueda Inbox",
     "FILTERS": {
       "INPUT_PLACEHOLDER": {
-        "INBOXES": "Search inboxes"
+        "INBOXES": "Búsqueda de buzones"
       }
     },
     "METRICS": {
@@ -372,7 +372,7 @@
   },
   "TEAM_REPORTS": {
     "HEADER": "Vista general del equipo",
-    "DESCRIPTION": "Get a snapshot of your team's performance with essential metrics, including conversations, response times, resolution times, and resolved cases. Click a team name for more details.",
+    "DESCRIPTION": "Obtenga una instantánea del rendimiento de su equipo con métricas esenciales, incluyendo conversaciones, tiempos de respuesta, tiempos de resolución y casos resueltos. Haga clic en el nombre de un equipo para más detalles.",
     "LOADING_CHART": "Cargando datos del gráfico...",
     "NO_ENOUGH_DATA": "No hemos recibido suficientes puntos de datos para generar el informe. Inténtalo de nuevo más tarde.",
     "DOWNLOAD_TEAM_REPORTS": "Descargar informes del equipo",
@@ -448,8 +448,8 @@
   },
   "CSAT_REPORTS": {
     "HEADER": "Reporte de encuestas de satisfacción",
-    "NO_RECORDS": "No responses yet",
-    "NO_RECORDS_DESCRIPTION": "CSAT survey responses will appear here once customers start providing feedback.",
+    "NO_RECORDS": "Aún no hay respuestas.",
+    "NO_RECORDS_DESCRIPTION": "CSAT respuestas de encuesta aparecerán aquí una vez que los clientes comiencen a proporcionar comentarios.",
     "DOWNLOAD": "Descargar reportes CSAT",
     "DOWNLOAD_FAILED": "Error al descargar los informes CSAT",
     "FILTERS": {
@@ -458,9 +458,9 @@
       "NO_FILTER": "No hay filtros disponibles",
       "INPUT_PLACEHOLDER": {
         "AGENTS": "Buscar agentes",
-        "INBOXES": "Search inboxes",
+        "INBOXES": "Búsqueda de buzones",
         "TEAMS": "Buscar equipos",
-        "RATINGS": "Search ratings"
+        "RATINGS": "Evaluaciones de búsqueda"
       },
       "AGENTS": {
         "LABEL": "Agente"
@@ -484,12 +484,12 @@
         "CONVERSATION": "Conversación",
         "CUSTOMER": "Customer",
         "RESPONSE": "Respuesta",
-        "HANDLED_BY": "Handled by"
+        "HANDLED_BY": "Manejado por"
       },
-      "UNKNOWN_CUSTOMER": "Unknown customer"
+      "UNKNOWN_CUSTOMER": "Cliente desconocido"
     },
-    "NO_AGENT": "No assigned agent",
-    "NO_FEEDBACK": "No feedback provided",
+    "NO_AGENT": "No hay agente asignado",
+    "NO_FEEDBACK": "No se ha proporcionado ninguna respuesta",
     "METRIC": {
       "TOTAL_RESPONSES": {
         "LABEL": "Total de respuestas",
@@ -503,22 +503,22 @@
         "LABEL": "Tasa de respuesta",
         "TOOLTIP": "Número total de respuestas / Número total de mensajes de la encuesta de satisfacción enviados * 100"
       },
-      "RATING_DISTRIBUTION": "Rating distribution"
+      "RATING_DISTRIBUTION": "Distribución de la clasificación"
     },
     "REVIEW_NOTES": {
-      "TITLE": "Review notes",
-      "PLACEHOLDER": "Add review notes about this rating...",
+      "TITLE": "Notas de examen",
+      "PLACEHOLDER": "Añada notas de revisión sobre esta calificación...",
       "SAVE": "Guardar",
       "CANCEL": "Cancelar",
       "SAVING": "Guardando...",
-      "SAVED": "Notes saved successfully",
-      "SAVE_ERROR": "Failed to save notes",
-      "UPDATED_BY": "Updated by {name} {time}",
-      "UPDATED_BY_LABEL": "Updated by",
+      "SAVED": "Notas guardadas con éxito",
+      "SAVE_ERROR": "Falló en guardar notas",
+      "UPDATED_BY": "Actualizado por {name} {time}",
+      "UPDATED_BY_LABEL": "Actualizado por",
       "PAYWALL": {
-        "TITLE": "Upgrade to add review notes",
-        "AVAILABLE_ON": "The review notes feature is only available in the Business and Enterprise plans.",
-        "UPGRADE_PROMPT": "Add internal context to every CSAT response with review notes. Capture what really happened, spot patterns faster, and make better decisions from your feedback.",
+        "TITLE": "Actualización para añadir notas de revisión",
+        "AVAILABLE_ON": "La función de notas de revisión sólo está disponible en los planes de Negocios y Empresa.",
+        "UPGRADE_PROMPT": "Añadir contexto interno a cada respuesta CSAT con notas de revisión. Capturar lo que realmente sucedió, marcar patrones más rápido, y tomar mejores decisiones de sus comentarios.",
         "UPGRADE_NOW": "Actualizar ahora",
         "CANCEL_ANYTIME": "Puede cambiar o cancelar su plan en cualquier momento"
       }
@@ -583,10 +583,10 @@
       }
     },
     "TEAM_CONVERSATIONS": {
-      "ALL_TEAMS": "All Teams",
-      "HEADER": "Conversations by teams",
-      "LOADING_MESSAGE": "Loading team metrics...",
-      "NO_TEAMS": "There is no data available",
+      "ALL_TEAMS": "Todos los equipos",
+      "HEADER": "Conversaciones de equipos",
+      "LOADING_MESSAGE": "Carga de métricas de equipo...",
+      "NO_TEAMS": "No hay datos disponibles",
       "TABLE_HEADER": {
         "TEAM": "Equipo",
         "OPEN": "Abrir",
@@ -612,7 +612,7 @@
   },
   "SLA_REPORTS": {
     "HEADER": "Informes de SLA",
-    "NO_RECORDS": "SLA applied conversations are not available.",
+    "NO_RECORDS": "SLA conversaciones aplicadas no están disponibles.",
     "LOADING": "Cargando datos de SLA...",
     "DOWNLOAD_SLA_REPORTS": "Descargar reportes de SLA",
     "DOWNLOAD_FAILED": "Error al descargar los informes de SLA",
@@ -640,15 +640,15 @@
     "METRICS": {
       "HIT_RATE": {
         "LABEL": "Tasa de Aciertos",
-        "TOOLTIP": "Percentage of SLAs created were completed successfully"
+        "TOOLTIP": "Porcentaje de SLA creados se completaron con éxito"
       },
       "NO_OF_MISSES": {
         "LABEL": "Número de Fallos",
-        "TOOLTIP": "Total SLA misses in a certain period"
+        "TOOLTIP": "Total SLA faltas en un determinado período"
       },
       "NO_OF_CONVERSATIONS": {
         "LABEL": "Número de conversaciones",
-        "TOOLTIP": "Total number of conversations with SLA"
+        "TOOLTIP": "Número total de conversaciones con SLA"
       }
     },
     "TABLE": {

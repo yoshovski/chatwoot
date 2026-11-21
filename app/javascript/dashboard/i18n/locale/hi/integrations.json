@@ -1441,6 +1441,18 @@
         "TITLE": "No Connected Inboxes",
         "SUBTITLE": "Connecting an inbox allows the assistant to handle initial questions from your customers before transferring them to you."
       }
+    },
+    "AGENT_UX": {
+      "SECTIONS": {
+        "OVERVIEW": "सारांश",
+        "KNOWLEDGE": "ज्ञान",
+        "BEHAVIOR": "व्यवहार",
+        "HANDOFF": "बातचीत का हस्तांतरण",
+        "CHANNELS": "चैनल",
+        "PROFILE": "प्रोफ़ाइल",
+        "SCENARIOS": "परिदृश्य",
+        "ACTIONS": "कार्रवाइयाँ"
+      }
     }
   }
 }

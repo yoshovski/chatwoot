@@ -420,6 +420,26 @@ pt_BR:
       short_description: 'Sincronize seus contatos e conversas com LeadSquared CRM.'
       description: 'Sincronize seus contatos e conversas com LeadSquared CRM. Essa integração cria automaticamente leads em LeadSquared quando novos contatos são adicionados, e registra a atividade de conversação para fornecer à sua equipe de vendas um contexto completo.'
   captain:
+    contact_form:
+      handoff_prompt: 'Deixe seus dados de contato para que nossa equipe possa falar com você se sair do chat.'
+      handoff_saved: 'Obrigado. Guardamos seus dados de contato. Alguém da nossa equipe vai continuar ajudando você aqui.'
+      submit: 'Enviar'
+      invalid_field: 'Verifique este campo.'
+      fields:
+        name:
+          label: 'Nome'
+          placeholder: 'Nome'
+        email:
+          label: 'Endereço de e-mail'
+          placeholder: 'Endereço de e-mail'
+        phone_number:
+          label: 'Número de telefone'
+          placeholder: '+34612345678'
+          title: 'Inclua o código do país, por exemplo +34612345678'
+    leads:
+      followup_form: 'Para qual endereço de e-mail nossa equipe pode enviar a resposta?'
+      followup_submit: 'Solicitar uma resposta por e-mail'
+      followup_saved: 'Obrigado, %{name}. Recebemos seu pedido de resposta por e-mail.'
     copilot_message_required: A mensagem é obrigatória
     copilot_error: 'Conecte com um assistente a esta caixa de entrada para usar Copilot'
     copilot_limit: 'Você está sem créditos de Copilot. Pode comprar mais créditos na seção de faturamento.'

@@ -280,6 +280,11 @@ fr:
     no_content: 'Aucun contenu'
   conversations:
     captain:
+      no_handoff: 'Notre équipe ne peut pas rejoindre le chat pour le moment. Je peux continuer à vous aider ici. Laissez-nous votre adresse e-mail et nous vous recontacterons.'
+      empty_response_catalog_empty: 'Je n’ai trouvé aucun produit correspondant dans le catalogue actuel.'
+      empty_response_attachments: 'Envoyez un court message pour préciser ce que vous souhaitez que je vérifie.'
+      empty_response_unusable: 'Pouvez-vous le dire autrement ?'
+      empty_response_handoff: 'Je n’ai pas pu traiter cette demande. Un membre de notre équipe continuera à vous aider dans ce chat.'
       handoff: 'Transfert vers un autre agent pour obtenir de l''aide.'
     messages:
       instagram_story_content: '%{story_sender} vous a mentionné dans la story: '
@@ -420,6 +425,41 @@ fr:
       short_description: 'Synchronisez vos contacts et conversations avec LeadSquared CRM.'
       description: 'Synchronisez vos contacts et conversations avec LeadSquared CRM. Cette intégration crée automatiquement des prospects dans LeadSquared lorsque de nouveaux contacts sont ajoutés, et enregistre l''activité des conversations pour fournir à votre équipe de vente un contexte complet.'
   captain:
+    product_card:
+      view_product: 'Voir le produit'
+      recommendation: 'Voici le produit :'
+      recommendations: 'Voici les produits recommandés :'
+    check_in:
+      default: 'Puis-je vous aider avec autre chose ?'
+    contact_form:
+      handoff_prompt: 'Laissez-nous vos coordonnées pour que notre équipe puisse vous recontacter si vous quittez le chat.'
+      handoff_saved: 'Merci, vos coordonnées ont été enregistrées. Un membre de notre équipe continuera à vous aider ici.'
+      submit: 'Envoyer'
+      invalid_field: 'Vérifiez ce champ.'
+      fields:
+        name:
+          label: 'Nom'
+          placeholder: 'Saisissez votre nom'
+        email:
+          label: 'Adresse e-mail'
+          placeholder: 'Saisissez votre adresse e-mail'
+        phone_number:
+          label: 'Numéro de téléphone'
+          placeholder: '+34612345678'
+          title: 'Indiquez l’indicatif du pays, par exemple +34612345678'
+    leads:
+      followup_form: 'À quelle adresse e-mail pouvons-nous vous recontacter ?'
+      followup_submit: 'Demander un suivi par e-mail'
+      followup_saved: 'Merci, %{name}. Nous avons reçu votre demande de suivi par e-mail.'
+    reply_languages:
+      retry: 'Pouvez-vous reformuler la question ?'
+    action_confirmation:
+      confirm_prompt: 'Voulez-vous que j’exécute cette action : %{title} ?'
+      success: 'Action terminée : %{title}.'
+      failure: 'Je n’ai pas pu terminer cette action (%{title}). Notre équipe peut vous aider.'
+      cancelled: 'D’accord, j’ai annulé l’action.'
+      confirm: 'Confirmer'
+      cancel: 'Annuler'
     copilot_message_required: Le message est obligatoire
     copilot_error: 'Veuillez connecter un assistant à cette boîte de réception pour utiliser Copilot'
     copilot_limit: 'Vous êtes à court de crédits Copilot. Vous pouvez acheter plus de crédits dans la section de facturation.'

@@ -29,7 +29,8 @@
     },
     "CONVERSATIONS": {
       "NO_RECORDS_FOUND": "Non ci sono precedenti conversazioni associate a questo contatto.",
-      "TITLE": "Conversazioni Precedenti"
+      "TITLE": "Conversazioni Precedenti",
+      "VIEW_ALL": "Vedi tutte le conversazioni"
     },
     "LABELS": {
       "CONTACT": {
@@ -60,6 +61,15 @@
       "CONTACT_LABELS": "Etichette di Contatto",
       "PREVIOUS_CONVERSATIONS": "Conversazioni Precedenti",
       "NO_RECORDS_FOUND": "Nessun attributo trovato"
+    },
+    "WEBSITE_ACTIVITY": {
+      "TITLE": "Attività del sito web",
+      "CURRENT_PAGE": "Pagina corrente (ultimo osservato)",
+      "LAST_SEEN": "Ultimo accesso: {time}",
+      "HISTORY": "Visite recenti ({count} )",
+      "LOADING": "Caricamento in corso delle visite...",
+      "RETRY": "Non ho potuto caricare visite alla pagina. Fare clic per riprovare.",
+      "EMPTY": "Non sono ancora registrate visite di pagina."
     }
   },
   "EDIT_CONTACT": {
@@ -168,7 +178,7 @@
         "LABEL": "A"
       },
       "INBOX": {
-        "LABEL": "Via Inbox",
+        "LABEL": "Via Posta in arrivo",
         "PLACEHOLDER": "Seleziona una inbox di origine",
         "ERROR": "Seleziona una Inbox"
       },
@@ -617,7 +627,7 @@
       "ERROR_MESSAGE": "Non siamo riusciti a completare la ricerca. Riprova."
     },
     "CONTACT_CREATE": {
-      "ERROR_MESSAGE": "We couldn’t create the contact. Please try again."
+      "ERROR_MESSAGE": "Non abbiamo potuto creare il contatto. Si prega di riprovare."
     },
     "FORM": {
       "GO_TO_CONVERSATION": "Visualizza",
@@ -670,5 +680,69 @@
         "SEND": "Invia ({keyCode})"
       }
     }
+  },
+  "CUSTOMERS": {
+    "TITLE": "Clienti",
+    "AI_AGENT": "Agente IA",
+    "NEW_SEGMENT": "Nuovo segmento",
+    "EDIT_SEGMENT": "Modifica segmento",
+    "SAVE_SEGMENT": "Salva segmento",
+    "ADD_CUSTOMER": "Aggiungere il cliente",
+    "SEGMENTS_LABEL": "Segmenti",
+    "SEGMENTS": {
+      "ALL": "Tutti",
+      "ONLINE": "Online ora",
+      "NEW": "Nuovo questa settimana",
+      "WAITING": "In attesa di risposta",
+      "LEADS": "Lead"
+    },
+    "COLUMNS": {
+      "NAME": "nome",
+      "EMAIL": "e-mail",
+      "LAST_SEEN": "Ultimo accesso",
+      "CONVERSATIONS": "Conversazioni",
+      "LABELS": "Etichette",
+      "SOURCE": "Fonte",
+      "CURRENT_PAGE": "Pagina corrente"
+    },
+    "COLUMNS_LABEL": "Colonne",
+    "SEARCH": "Ricerca di clienti",
+    "SELECT_PAGE": "Seleziona questa pagina",
+    "SELECT_CUSTOMER": "Seleziona {name}",
+    "VISITOR": "Visitatore # {id}",
+    "CREATE_SEGMENT": "Crea segmento",
+    "SEGMENT_NAME": "nome",
+    "SEGMENT_PLACEHOLDER": "ad esempio. Restituzione dei clienti",
+    "ADD_CONDITION": "Aggiungi condizione",
+    "SAVE_ERROR": "Non poteva salvare il segmento. Riprova.",
+    "PROFILE": "cliente",
+    "FULL_PROFILE": "Profilo completo",
+    "RECENT_CONVERSATIONS": "Conversazioni recenti",
+    "NO_CONVERSATIONS": "Ancora nessuna conversazione.",
+    "CONVERSATION_ID": "Conversazione # {id}",
+    "LOAD_ERROR": "Non poteva caricare i clienti.",
+    "RETRY": "Prova ancora.",
+    "ACTION_QUEUED": "Azione in coda. Le modifiche appaiono dopo l'elaborazione.",
+    "ACTION_ERROR": "Azione fallita. Riprova.",
+    "DELETE_SEGMENT": "Elimina segmento",
+    "DELETE_SEGMENT_WARNING": "I clienti rimangono nel tuo account. Le regole che utilizzano questo segmento smetteranno di abbinarsi.",
+    "IMPORT": "Importazioni",
+    "EXPORT": "Esportazione",
+    "MORE": "Altre azioni",
+    "REFRESH": "aggiornare",
+    "LOADING": "Caricamento clienti...",
+    "EMPTY": "Nessun cliente in questo segmento.",
+    "NO_RESULTS": "Nessun cliente corrispondente.",
+    "SHOWING": "Mostra {startItem} – {endItem} di {totalItems} clienti",
+    "DELETE_CUSTOMERS": "Elimina {count} clienti?",
+    "DELETE_WARNING": "Questo elimina definitivamente i clienti selezionati e le loro conversazioni. I clienti online non possono essere eliminati.",
+    "DELETE": "Cancella",
+    "AUDIENCE": "Segmento",
+    "RULE_AUDIENCE": "Segmento per: {rule}",
+    "EVERYONE": "Tutti",
+    "SEGMENT_LOAD_ERROR": "Non poteva caricare segmenti.",
+    "MISSING_SEGMENT": "segmento non disponibile",
+    "UNKNOWN": "—",
+    "CUSTOMER_ID": "#{id}"
   }
 }

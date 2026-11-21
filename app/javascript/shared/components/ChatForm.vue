@@ -1,4 +1,5 @@
 <script>
+import { useId } from 'vue';
 import { mapGetters } from 'vuex';
 import { shouldOutlineWidgetButton } from 'shared/helpers/colorHelper';
 
@@ -26,6 +27,9 @@ export default {
     },
   },
   emits: ['submit'],
+  setup() {
+    return { formId: useId() };
+  },
   data() {
     return {
       formValues: {},
@@ -68,7 +72,12 @@ export default {
     onSubmitClick() {
       this.hasSubmitted = true;
     },
-    onSubmit() {
+    onSubmit({ currentTarget: form }) {
+      this.hasSubmitted = true;
+      if (this.language && !form.checkValidity()) {
+        form.querySelector(':invalid')?.focus();
+        return;
+      }
       if (!this.isFormValid) {
         return;
       }
@@ -102,20 +111,21 @@ export default {
     <p v-if="title" class="mb-3 mt-0 text-n-slate-12">
       {{ title }}
     </p>
-    <form @submit.prevent="onSubmit">
+    <form :novalidate="!!language" @submit.prevent="onSubmit">
       <div
         v-for="item in items"
-        :key="item.key"
+        :key="item.name"
         class="pb-2 w-full"
         :class="{
           'has-submitted': hasSubmitted,
         }"
       >
-        <label class="text-n-slate-12">
+        <label :for="`${formId}-${item.name}`" class="text-n-slate-12">
           {{ item.label }}
         </label>
         <input
           v-if="item.type === 'email'"
+          :id="`${formId}-${item.name}`"
           v-model="formValues[item.name]"
           :type="item.type"
           :pattern="item.regex"
@@ -127,6 +137,7 @@ export default {
         />
         <input
           v-else-if="['text', 'tel'].includes(item.type)"
+          :id="`${formId}-${item.name}`"
           v-model="formValues[item.name]"
           :required="item.required && 'required'"
           :pattern="item.pattern"
@@ -138,6 +149,7 @@ export default {
         />
         <textarea
           v-else-if="item.type === 'text_area'"
+          :id="`${formId}-${item.name}`"
           v-model="formValues[item.name]"
           :required="item.required && 'required'"
           :title="item.title"
@@ -147,6 +159,7 @@ export default {
         />
         <select
           v-else-if="item.type === 'select'"
+          :id="`${formId}-${item.name}`"
           v-model="formValues[item.name]"
           :required="item.required && 'required'"
         >
@@ -198,11 +211,13 @@ export default {
 
   .has-submitted {
     input:invalid,
-    textarea:invalid {
+    textarea:invalid,
+    select:invalid {
       @apply outline-n-ruby-8 dark:outline-n-ruby-8 hover:outline-n-ruby-9 dark:hover:outline-n-ruby-9;
     }
     input:invalid + .error-message,
-    textarea:invalid + .error-message {
+    textarea:invalid + .error-message,
+    select:invalid + .error-message {
       display: block;
     }
   }

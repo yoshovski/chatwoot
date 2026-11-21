@@ -13,7 +13,10 @@ class Captain::LocalizedMessages
     captain.reply_languages.retry captain.check_in.default conversations.captain.handoff conversations.captain.no_handoff
     conversations.captain.empty_response_catalog_empty conversations.captain.empty_response_attachments
     conversations.captain.empty_response_unusable conversations.captain.empty_response_handoff
-    captain.action_confirmation.confirm captain.action_confirmation.cancel conversations.activity.auto_resolution_message
+    captain.product_card.view_product captain.product_card.recommendation captain.product_card.recommendations
+    captain.action_confirmation.confirm captain.action_confirmation.cancel captain.action_confirmation.confirm_prompt
+    captain.action_confirmation.success captain.action_confirmation.failure captain.action_confirmation.cancelled
+    conversations.activity.auto_resolution_message
   ]).freeze
   PROTECTED_TOKEN = %r{https?://[^\s)]+|%?\{[\w.]+\}|\{\{.*?\}\}|`[^`]+`|\+?\d[\d.,:/-]*}
   MAX_LENGTH = 2_000
@@ -63,7 +66,9 @@ class Captain::LocalizedMessages
   def self.catalog_text(key, locale)
     copy = I18n.t(key, locale: locale, fallback: false, default: nil, skip_interpolation: true)
     return copy if locale.to_s == 'en'
-    return copy if copy.present? && copy != I18n.t(key, locale: :en, skip_interpolation: true)
+    return if copy.blank?
+
+    copy unless copy.match?(/\p{L}/) && copy == I18n.t(key, locale: :en, skip_interpolation: true)
   end
 
   def self.valid_translation?(source, translation)

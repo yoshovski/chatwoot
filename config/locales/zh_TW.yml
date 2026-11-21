@@ -420,6 +420,26 @@ zh_TW:
       short_description: '將您的聯絡人和對話與 LeadSquared CRM 同步。'
       description: '將您的聯絡人和對話與 LeadSquared CRM 同步。此整合會在新增聯絡人時自動在 LeadSquared 中建立潛在客戶，並記錄對話活動，為您的銷售團隊提供完整的上下文。'
   captain:
+    contact_form:
+      handoff_prompt: '請留下聯絡資料，讓我們的團隊能在您離開聊天室後與您聯繫。'
+      handoff_saved: '謝謝，您的聯絡資料已儲存。我們的團隊成員會在這裡繼續協助您。'
+      submit: '送出'
+      invalid_field: '請檢查此欄位。'
+      fields:
+        name:
+          label: '姓名'
+          placeholder: '姓名'
+        email:
+          label: '電子郵件地址'
+          placeholder: '電子郵件地址'
+        phone_number:
+          label: '電話號碼'
+          placeholder: '+34612345678'
+          title: '請包含國碼，例如 +34612345678'
+    leads:
+      followup_form: '我們的團隊可以把回覆寄到哪個電子郵件地址？'
+      followup_submit: '要求以電子郵件回覆'
+      followup_saved: '謝謝，%{name}。我們已收到您要求以電子郵件回覆的請求。'
     copilot_message_required: 訊息為必填
     copilot_error: '請先為此收件匣連結助理以使用 Copilot'
     copilot_limit: '您的 Copilot 點數已用完。您可以在帳單區域購買更多點數。'

@@ -21,19 +21,24 @@
     },
     "EMAIL": {
       "LABEL": "E-mail",
-      "PLACEHOLDER": "Introduzca su dirección de correo electrónico de trabajo. Por ejemplo, bruce{'@'}wayne{'.'}empresas",
-      "ERROR": "Por favor, introduzca una dirección de correo válida"
+      "PLACEHOLDER": "usted {'@'} sushop.com",
+      "ERROR": "Introduzca una dirección de correo electrónico válida, por ejemplo {'@'} sushop.com.",
+      "PERSONAL": "Utilice su correo electrónico de trabajo. Gmail, Outlook y direcciones similares no son aceptadas.",
+      "TAKEN": "Una cuenta con este correo electrónico ya existe.",
+      "BLOCKED": "Este dominio de correo electrónico no es aceptado. Si usted piensa que esto es un error, soporte de contacto.",
+      "DISPOSABLE": "Utilice una dirección de correo electrónico permanente, no una de carácter temporal.",
+      "LOG_IN_INSTEAD": "Ingrese en su lugar"
     },
     "PASSWORD": {
       "LABEL": "Contraseña",
       "PLACEHOLDER": "Contraseña",
       "ERROR": "La contraseña es demasiado corta",
       "IS_INVALID_PASSWORD": "La contraseña debe contener al menos 1 letra mayúscula, 1 letra minúscula, 1 número y 1 carácter especial",
-      "REQUIREMENTS_LENGTH": "At least 6 characters long",
-      "REQUIREMENTS_UPPERCASE": "At least one uppercase letter",
-      "REQUIREMENTS_LOWERCASE": "At least one lowercase letter",
-      "REQUIREMENTS_NUMBER": "At least one number",
-      "REQUIREMENTS_SPECIAL": "At least one special character"
+      "REQUIREMENTS_LENGTH": "Al menos 6 caracteres largos",
+      "REQUIREMENTS_UPPERCASE": "Por lo menos una carta mayúscula",
+      "REQUIREMENTS_LOWERCASE": "Por lo menos una carta de minúscula",
+      "REQUIREMENTS_NUMBER": "Al menos un número",
+      "REQUIREMENTS_SPECIAL": "Al menos un personaje especial"
     },
     "CONFIRM_PASSWORD": {
       "LABEL": "Confirmar contraseña",
@@ -41,17 +46,48 @@
       "ERROR": "Las contraseñas no coinciden."
     },
     "API": {
-      "SUCCESS_MESSAGE": "Registration Successful",
+      "SUCCESS_MESSAGE": "Registro Suceso",
       "ERROR_MESSAGE": "No se pudo conectar al servidor Woot, por favor inténtalo de nuevo más tarde"
     },
     "SUBMIT": "Crear una cuenta",
     "HAVE_AN_ACCOUNT": "¿Ya tienes una cuenta?",
     "VERIFY_EMAIL": {
-      "TITLE": "Check your inbox",
+      "TITLE": "Comprueba tu buzón de entrada",
       "DESCRIPTION": "We sent a verification link to {email}. Click the link to verify your email and get started.",
       "RESEND": "Reenviar correo de verificación",
-      "RESEND_SUCCESS": "Verification email sent. Please check your inbox.",
-      "RESEND_ERROR": "Could not send verification email. Please try again."
-    }
+      "RESEND_SUCCESS": "E-mail de verificación enviado. Por favor, compruebe su bandeja de entrada.",
+      "RESEND_ERROR": "No podría enviar correo electrónico de verificación. Por favor, inténtelo de nuevo.",
+      "WRONG_ADDRESS": "¿Dirección incorrecta?",
+      "SIGN_UP_AGAIN": "Inscríbete de nuevo",
+      "SPAM_HINT": "¿No hay email después de unos minutos? Revise su carpeta de spam."
+    },
+    "DESCRIPTION": "Su agente AI responde a sus clientes de su propia tienda, en minutos.",
+    "PLAN_TRIAL": "{plan} juicio · 14 días · no tarjeta",
+    "PANEL": {
+      "TITLE": "Su agente de inteligencia artificial, vive en su sitio",
+      "DESCRIPTION": "Responde de sus productos y páginas, en el idioma, día y noche de su cliente."
+    },
+    "WEBSITE": {
+      "LABEL": "Dirección del sitio web",
+      "ERROR": "Introduzca su dirección web, por ejemplo sushop.com.",
+      "PLACEHOLDER": "tutienda.com"
+    },
+    "LOG_IN": "Iniciar sesión"
+  },
+  "AUTH_WIDGET_PREVIEW": {
+    "EXAMPLE": "Ejemplo",
+    "SHOP": "Tu tienda",
+    "REPLY_TIME": "Respondemos inmediatamente",
+    "TODAY": "Hoy",
+    "QUESTION": "¡Hola! ¿Es la chaqueta de tren del tamaño M, y puede llegar el viernes?",
+    "ANSWER": "Sí, la Chaqueta de Trail está en stock en M. Orden antes de 3 pm hoy y llega el jueves.",
+    "PRODUCT": {
+      "DESCRIPTION": "€ 129.00 · En stock",
+      "CTA": "Ver producto",
+      "TITLE": "Chaqueta de senderismo"
+    },
+    "AGENT": "Su agente de inteligencia artificial",
+    "COMPOSER": "Escriba su mensaje",
+    "POWERED_BY": "Con la tecnología de {name}"
   }
 }

@@ -89,6 +89,24 @@
         "YES": "Sì, elimina ",
         "NO": "No, mantieni "
       }
+    },
+    "PAGE": {
+      "SUBTITLE": "Oltre all'amministratore e all'agente, fai ruoli che vedono e fanno solo quello che ti permetti.",
+      "NEW": "Nuovo ruolo",
+      "SEARCH": "ruoli di ricerca",
+      "COUNT": "{n} ruolo | {n} ruoli",
+      "COLUMNS": {
+        "PERMISSIONS": "Può farlo.",
+        "ACTIONS": "Azioni",
+        "NAME": "Ruolo"
+      },
+      "LOADING": "Caricamento dei ruoli...",
+      "LOAD_ERROR": "Roles non poteva essere caricato.",
+      "RETRY": "Prova ancora.",
+      "EMPTY_TITLE": "Nessun ruolo del tuo ancora",
+      "EMPTY_DESCRIPTION": "Creare un ruolo quando Amministratore e Agente non si adattano a qualcuno.",
+      "NO_RESULTS": "Nessun ruolo corrisponde alla tua ricerca.",
+      "TITLE": "Ruoli"
     }
   }
 }

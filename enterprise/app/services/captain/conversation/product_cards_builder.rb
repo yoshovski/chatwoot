@@ -126,7 +126,12 @@ class Captain::Conversation::ProductCardsBuilder
   end
 
   def fallback_prose_text
-    shown_handles.size > 1 ? 'Here are the recommended products:' : 'Here is the product:'
+    product_copy(shown_handles.size > 1 ? 'recommendations' : 'recommendation')
+  end
+
+  def product_copy(key)
+    locale = @run_result&.context&.dig(:state, Captain::Conversation::CustomerLocale::STATE_KEY) || @assistant.account.locale
+    Captain::Conversation::CustomerLocale.translate("captain.product_card.#{key}", locale: locale, assistant: @assistant)
   end
 
   def build_message(content_type, items, additional_attrs)
@@ -239,7 +244,9 @@ class Captain::Conversation::ProductCardsBuilder
 
   def build_card_payload(title, description, image_url, product_url)
     actions = []
-    actions << { 'type' => 'link', 'text' => 'View product', 'uri' => product_url } if product_url.present? && allowed_link_url?(product_url)
+    if product_url.present? && allowed_link_url?(product_url)
+      actions << { 'type' => 'link', 'text' => product_copy('view_product'), 'uri' => product_url }
+    end
 
     {
       'title' => title,

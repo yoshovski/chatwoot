@@ -1,30 +1,30 @@
 {
   "WHATSAPP_TEMPLATE_MGMT": {
     "TITLE": "Templates",
-    "DESCRIPTION": "View the message templates synced from your WhatsApp inboxes. To create or edit a template, manage it with your provider.",
-    "COUNT": "{n} template | {n} templates",
-    "LEARN_MORE": "Learn more about WhatsApp templates",
-    "SYNC_TEMPLATES": "Sync templates",
-    "SYNC_SUCCESS": "Template sync started for all WhatsApp inboxes. Updates may take a couple of minutes.",
-    "PARTIAL_SYNC_ERROR": "Template sync started for some WhatsApp inboxes, but others could not be synced.",
-    "SYNC_ERROR": "Unable to start template sync. Please try again.",
-    "SEARCH_PLACEHOLDER": "Search by content or name...",
-    "MANAGE_IN_META": "Manage in Meta",
-    "MANAGE_IN_TWILIO": "Manage in Twilio",
-    "LOADING": "Loading WhatsApp templates...",
-    "EMPTY": "No WhatsApp templates found.",
-    "NO_RESULTS": "No templates match your filters.",
-    "FETCH_ERROR": "Unable to load WhatsApp templates. Please try again.",
-    "PARTIAL_FETCH_ERROR": "Some WhatsApp templates could not be loaded. Please try again.",
-    "LAST_SYNC_ATTEMPT": "Last sync attempt on {date}",
+    "DESCRIPTION": "Visualizza i modelli di messaggio sincronizzati dalle caselle di posta WhatsApp. Per creare o modificare un modello, gestirlo con il tuo fornitore.",
+    "COUNT": "{n} modello | {n} modelli",
+    "LEARN_MORE": "Maggiori informazioni su WhatsApp modelli",
+    "SYNC_TEMPLATES": "Modelli di sincronizzazione",
+    "SYNC_SUCCESS": "Sincronizzazione modello iniziato per tutte le caselle WhatsApp. Gli aggiornamenti possono richiedere un paio di minuti.",
+    "PARTIAL_SYNC_ERROR": "Sincronizzazione dei modelli è iniziata per circa WhatsApp caselle di posta, ma altri non potrebbero essere sincronizzati.",
+    "SYNC_ERROR": "Non è possibile avviare la sincronizzazione dei modelli. Per favore, riprovate.",
+    "SEARCH_PLACEHOLDER": "Cerca per contenuto o nome...",
+    "MANAGE_IN_META": "Gestire in Meta",
+    "MANAGE_IN_TWILIO": "Gestire in Twilio",
+    "LOADING": "Caricamento WhatsApp modelli...",
+    "EMPTY": "No WhatsApp modelli trovati.",
+    "NO_RESULTS": "Nessun modello corrisponde ai tuoi filtri.",
+    "FETCH_ERROR": "Non è possibile caricare WhatsApp modelli. Si prega di riprovare.",
+    "PARTIAL_FETCH_ERROR": "Alcuni modelli WhatsApp non potrebbero essere caricati. Si prega di riprovare.",
+    "LAST_SYNC_ATTEMPT": "Ultimo tentativo di sincronizzazione {date}",
     "MORE_INBOXES": "+{n}",
     "STATUSES": {
-      "UNSUBMITTED": "Not submitted for WhatsApp approval"
+      "UNSUBMITTED": "Non presentato per approvazione WhatsApp"
     },
     "FILTERS": {
       "ALL_INBOXES": "Tutte le caselle di posta",
-      "ALL_LANGUAGES": "All languages",
-      "ALL_TYPES": "All types"
+      "ALL_LANGUAGES": "Tutte le lingue",
+      "ALL_TYPES": "Tutti i tipi"
     },
     "TYPES": {
       "TEXT": "Testo",
@@ -32,19 +32,19 @@
       "VIDEO": "Video",
       "DOCUMENT": "Document",
       "MEDIA": "Media",
-      "QUICK_REPLY": "Quick reply",
-      "CALL_TO_ACTION": "Call to action",
+      "QUICK_REPLY": "Risposta rapida",
+      "CALL_TO_ACTION": "Chiamata all'azione",
       "CATALOG": "Catalog",
-      "COPY_CODE": "Copy code"
+      "COPY_CODE": "Codice copiato"
     },
     "PREVIEW": {
-      "TITLE": "Template preview",
-      "DESCRIPTION": "Preview how this template appears in WhatsApp.",
+      "TITLE": "Anteprima del modello",
+      "DESCRIPTION": "Anteprima come appare questo modello nel WhatsApp.",
       "OPEN": "Preview {name}",
-      "CLOSE": "Close preview",
-      "DETAILS": "Template details",
+      "CLOSE": "Anteprima",
+      "DETAILS": "Dettagli del modello",
       "STATUS": "Stato",
-      "TYPE": "Content type",
+      "TYPE": "Tipo di contenuto",
       "CATEGORY": "Categoria",
       "LANGUAGE": "Lingua",
       "INBOXES": "Inbox"

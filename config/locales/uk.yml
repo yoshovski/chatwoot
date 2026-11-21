@@ -420,6 +420,26 @@ uk:
       short_description: 'Sync your contacts and conversations with LeadSquared CRM.'
       description: 'Sync your contacts and conversations with LeadSquared CRM. This integration automatically creates leads in LeadSquared when new contacts are added, and logs conversation activity to provide your sales team with complete context.'
   captain:
+    contact_form:
+      handoff_prompt: 'Залиште контактні дані, щоб наша команда могла зв’язатися з вами, якщо ви вийдете з чату.'
+      handoff_saved: 'Дякуємо. Ми зберегли ваші контактні дані. Хтось із нашої команди й надалі допомагатиме вам тут.'
+      submit: 'Надіслати'
+      invalid_field: 'Перевірте це поле.'
+      fields:
+        name:
+          label: 'Ім’я'
+          placeholder: 'Ім’я'
+        email:
+          label: 'Адреса електронної пошти'
+          placeholder: 'Адреса електронної пошти'
+        phone_number:
+          label: 'Номер телефону'
+          placeholder: '+34612345678'
+          title: 'Вкажіть код країни, наприклад +34612345678'
+    leads:
+      followup_form: 'На яку адресу електронної пошти наша команда може надіслати відповідь?'
+      followup_submit: 'Запросити відповідь електронною поштою'
+      followup_saved: 'Дякуємо, %{name}. Ми отримали ваш запит на відповідь електронною поштою.'
     copilot_message_required: Необхідне повідомлення
     copilot_error: 'Please connect an assistant to this inbox to use Copilot'
     copilot_limit: 'You are out of Copilot credits. You can buy more credits from the billing section.'

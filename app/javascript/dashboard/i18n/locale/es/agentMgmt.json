@@ -9,7 +9,7 @@
       "ADMINISTRATOR": "Administrador",
       "AGENT": "Agente"
     },
-    "COUNT": "{n} agent | {n} agents",
+    "COUNT": "Agente {n} | {n} agentes",
     "LIST": {
       "404": "No hay agentes asociados a esta cuenta",
       "TITLE": "Administrar agentes en tu equipo",
@@ -98,7 +98,7 @@
       }
     },
     "SEARCH_PLACEHOLDER": "Buscar agentes...",
-    "NO_RESULTS": "No agents found matching your search",
+    "NO_RESULTS": "No hay agentes encontrados que coincidan con su búsqueda",
     "SEARCH": {
       "NO_RESULTS": "No se encontraron resultados."
     },
@@ -122,6 +122,28 @@
           "INPUT": "Búsqueda por agentes"
         }
       }
+    },
+    "PAGE": {
+      "TITLE": "Compañeros de equipo",
+      "SUBTITLE": "Las personas que responden a sus clientes. Invítelos por correo electrónico y elija su papel.",
+      "INVITE": "Invitar compañero de equipo",
+      "SEARCH": "Búsqueda por nombre o correo electrónico",
+      "COUNT": "{n} compañero de equipo | {n} compañeros de equipo",
+      "COLUMNS": {
+        "NAME": "Nombre",
+        "ROLE": "Función",
+        "STATUS": "Situación",
+        "ACTIONS": "Acciones"
+      },
+      "ACTIVE": "Activo",
+      "INVITED": "Invitado",
+      "YOU": "Tú.",
+      "LOADING": "Cargando compañeros de equipo...",
+      "LOAD_ERROR": "Los compañeros de equipo no podían ser cargados.",
+      "RETRY": "Inténtalo de nuevo.",
+      "EMPTY_TITLE": "Aún no hay compañeros de equipo.",
+      "EMPTY_DESCRIPTION": "Invita a la gente que responde a tus clientes.",
+      "NO_RESULTS": "Ningún compañero de equipo coincide con tu búsqueda."
     }
   }
 }

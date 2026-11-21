@@ -1,10 +1,10 @@
 {
   "GENERAL_SETTINGS": {
     "LIMIT_MESSAGES": {
-      "CONVERSATION": "You have exceeded the conversation limit. Hacker plan allows only 500 conversations.",
-      "INBOXES": "You have exceeded the inbox limit. Hacker plan only supports website live-chat. Additional inboxes like email, WhatsApp etc. require a paid plan.",
+      "CONVERSATION": "Has superado el límite de conversación. El plan Hacker permite sólo 500 conversaciones.",
+      "INBOXES": "Usted ha superado el límite de entrada. El plan Hacker sólo admite la cadena en vivo del sitio web. Las entradas adicionales como correo electrónico, WhatsApp etc. requieren un plan pagado.",
       "AGENTS": "Has superado el límite de agentes. Tu plan solo permite {allowedAgents} agentes.",
-      "NON_ADMIN": "Please contact your administrator to upgrade the plan and continue using all features."
+      "NON_ADMIN": "Por favor, contacte con su administrador para actualizar el plan y continuar utilizando todas las características."
     },
     "TITLE": "Configuración de la cuenta",
     "SUBMIT": "Actualizar ajustes",
@@ -15,23 +15,23 @@
       "SUCCESS": "Configuración de cuenta actualizada correctamente"
     },
     "ACCOUNT_DELETE_SECTION": {
-      "TITLE": "Delete your Account",
-      "NOTE": "Once you delete your account, all your data will be deleted.",
-      "BUTTON_TEXT": "Delete Your Account",
+      "TITLE": "Eliminar su Cuenta",
+      "NOTE": "Una vez que borre su cuenta, todos sus datos serán eliminados.",
+      "BUTTON_TEXT": "Eliminar su cuenta",
       "CONFIRM": {
-        "TITLE": "Delete Account",
-        "MESSAGE": "Deleting your Account is irreversible. Enter your account name below to confirm you want to permanently delete it.",
+        "TITLE": "Suprímase la Cuenta",
+        "MESSAGE": "Eliminar su Cuenta es irreversible. Introduzca el nombre de su cuenta a continuación para confirmar que desea eliminarla permanentemente.",
         "BUTTON_TEXT": "Eliminar",
         "DISMISS": "Cancelar",
         "PLACE_HOLDER": "Por favor escriba {accountName} para confirmar"
       },
-      "SUCCESS": "Account marked for deletion",
-      "FAILURE": "Could not delete account, try again!",
+      "SUCCESS": "Cuenta marcada para la supresión",
+      "FAILURE": "¡No podría borrar la cuenta, intentarlo de nuevo!",
       "SCHEDULED_DELETION": {
-        "TITLE": "Account Scheduled for Deletion",
-        "MESSAGE_MANUAL": "This account is scheduled for deletion on {deletionDate}. This was requested by an administrator. You can cancel the deletion before this date.",
+        "TITLE": "Cuenta programada para la eliminación",
+        "MESSAGE_MANUAL": "Esta cuenta está programada para su supresión el {deletionDate}. Esto fue solicitado por un administrador. Usted puede cancelar la eliminación antes de esta fecha.",
         "MESSAGE_INACTIVITY": "Esta cuenta se eliminará el {deletionDate} debido a inactividad. Puedes cancelar la eliminación antes de esta fecha.",
-        "CLEAR_BUTTON": "Cancel Scheduled Deletion"
+        "CLEAR_BUTTON": "Cancelación programada"
       }
     },
     "FORM": {
@@ -48,29 +48,29 @@
         "TITLE": "Auto-resolver conversaciones",
         "NOTE": "Esta configuración permite resolver automáticamente la conversación después de un período de inactividad.",
         "DURATION": {
-          "LABEL": "Inactivity duration",
-          "HELP": "Time period of inactivity after which conversation is auto-resolved",
+          "LABEL": "Duración de la inactividad",
+          "HELP": "Período de inactividad después de la cual la conversación es auto-resolvable",
           "PLACEHOLDER": "30",
-          "ERROR": "Auto resolve duration should be between 10 minutes and 999 days",
+          "ERROR": "La duración de la resolución automática debe ser entre 10 minutos y 999 días",
           "API": {
-            "SUCCESS": "Auto resolve settings updated successfully",
+            "SUCCESS": "Ajustes de resolución automática actualizados con éxito",
             "ERROR": "Failed to update auto resolve settings"
           }
         },
         "MESSAGE": {
-          "LABEL": "Custom auto-resolution message",
-          "PLACEHOLDER": "Conversation was marked resolved by system due to 15 days of inactivity",
-          "HELP": "Message sent to the customer after conversation is auto-resolved"
+          "LABEL": "Mensaje personalizado de auto-resolución",
+          "PLACEHOLDER": "La conversación fue marcada por el sistema debido a 15 días de inactividad",
+          "HELP": "Mensaje enviado al cliente después de la conversación es auto-resolvado"
         },
         "PREFERENCES": "Preferencias",
         "LABEL": {
-          "LABEL": "Add label after auto-resolution",
-          "PLACEHOLDER": "Select a label"
+          "LABEL": "Añadir etiqueta después de la resolución automática",
+          "PLACEHOLDER": "Seleccione una etiqueta"
         },
         "IGNORE_WAITING": {
-          "LABEL": "Skip conversations waiting for agent’s reply"
+          "LABEL": "Saltar conversaciones esperando la respuesta del agente"
         },
-        "UPDATE_BUTTON": "Save Changes"
+        "UPDATE_BUTTON": "Guardar cambios"
       },
       "NAME": {
         "LABEL": "Nombre de cuenta",
@@ -93,30 +93,30 @@
         "ERROR": ""
       },
       "AUTO_RESOLVE_IGNORE_WAITING": {
-        "LABEL": "Exclude unattended conversations",
-        "HELP": "When enabled, the system will skip resolving conversations that are still waiting for an agent's reply."
+        "LABEL": "Excluir conversaciones no enmendadas",
+        "HELP": "Cuando esté habilitado, el sistema evitará resolver conversaciones que todavía están esperando la respuesta de un agente."
       },
       "AUDIO_TRANSCRIPTION": {
         "TITLE": "Transcribir mensajes de audio",
         "NOTE": "Transcribe automáticamente los mensajes de audio en las conversaciones. Genera una transcripción de texto cada vez que se envía o recibe un mensaje de audio y la muestra junto al mensaje.",
         "API": {
-          "SUCCESS": "Audio transcription setting updated successfully",
+          "SUCCESS": "Configuración de transcripción de audio actualizada con éxito",
           "ERROR": "Failed to update audio transcription setting"
         }
       },
       "AUTO_RESOLVE_DURATION": {
-        "LABEL": "Inactivity duration for resolution",
-        "HELP": "Duration after a conversation should auto resolve if there is no activity",
+        "LABEL": "Duración de la inactividad para la resolución",
+        "HELP": "Duración después de una conversación debe autodeterminar si no hay actividad",
         "PLACEHOLDER": "30",
-        "ERROR": "Auto resolve duration should be between 10 minutes and 999 days",
+        "ERROR": "La duración de la resolución automática debe ser entre 10 minutos y 999 días",
         "API": {
-          "SUCCESS": "Auto resolve settings updated successfully",
+          "SUCCESS": "Ajustes de resolución automática actualizados con éxito",
           "ERROR": "Failed to update auto resolve settings"
         },
         "UPDATE_BUTTON": "Actualizar",
-        "MESSAGE_LABEL": "Custom resolution message",
-        "MESSAGE_PLACEHOLDER": "Conversation was marked resolved by system due to 15 days of inactivity",
-        "MESSAGE_HELP": "This message is sent to the customer when a conversation is automatically resolved by the system due to inactivity."
+        "MESSAGE_LABEL": "Mensaje de resolución personalizado",
+        "MESSAGE_PLACEHOLDER": "La conversación fue marcada por el sistema debido a 15 días de inactividad",
+        "MESSAGE_HELP": "Este mensaje se envía al cliente cuando el sistema resuelve automáticamente una conversación debido a la inactividad."
       },
       "FEATURES": {
         "INBOUND_EMAIL_ENABLED": "Continuidad de la conversación con emails está habilitada para su cuenta.",
@@ -126,7 +126,7 @@
     "UPDATE_CHATWOOT": "Hay una actualización {latestChatwootVersion} para Chatwoot disponible. Por favor, actualiza tu instancia.",
     "LEARN_MORE": "Más información",
     "PAYMENT_PENDING": "Tu pago está pendiente. Por favor actualiza tu información de pago para seguir usando Chatwoot",
-    "UPGRADE": "Upgrade to continue using Chatwoot",
+    "UPGRADE": "Actualización para continuar utilizando Chatwoot",
     "LIMITS_UPGRADE": "Su cuenta ha excedido los límites de uso, por favor actualice su plan para seguir usando Chatwoot",
     "OPEN_BILLING": "Abrir facturación"
   },
@@ -151,7 +151,7 @@
   },
   "COMMAND_BAR": {
     "SEARCH_PLACEHOLDER": "Buscar o saltar a",
-    "SNOOZE_PLACEHOLDER": "Type a time e.g. tomorrow, 2 hours, next friday, jan 15...",
+    "SNOOZE_PLACEHOLDER": "Escriba un tiempo, por ejemplo mañana, 2 horas, el próximo viernes, jan 15...",
     "SECTIONS": {
       "GENERAL": "General",
       "REPORTS": "Informes",
@@ -225,7 +225,8 @@
       "LIGHT_MODE": "Claro",
       "DARK_MODE": "Oscuro",
       "SYSTEM_MODE": "Sistema",
-      "SNOOZE_NOTIFICATION": "Posponer notificación"
+      "SNOOZE_NOTIFICATION": "Posponer notificación",
+      "NEW_MESSAGE": "Nuevo mensaje"
     }
   },
   "DASHBOARD_APPS": {

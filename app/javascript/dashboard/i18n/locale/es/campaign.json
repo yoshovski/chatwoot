@@ -66,6 +66,15 @@
           "API": {
             "SUCCESS_MESSAGE": "Campaña de Live Chat creada con éxito",
             "ERROR_MESSAGE": "Se presentó un error. Por favor intente nuevamente."
+          },
+          "SUGGESTIONS": {
+            "LABEL": "Respuestas sugeridas",
+            "HELP": "Añadir botones opcionales que los visitantes pueden usar para responder. Los botones habilitados aparecen en este orden.",
+            "EMPTY": "Aún no se han sugerido respuestas. La campaña enviará como mensaje regular.",
+            "PLACEHOLDER": "Ingrese una respuesta sugerida",
+            "DELETE": "Suprímase la respuesta propuesta",
+            "ADD": "Añadir respuesta",
+            "REORDER": "Reordenar respuesta sugerida"
           }
         }
       },
@@ -142,7 +151,7 @@
       "HEADER_TITLE": "WhatsApp campaigns",
       "NEW_CAMPAIGN": "Crear campaña",
       "EMPTY_STATE": {
-        "TITLE": "No WhatsApp campaigns are available",
+        "TITLE": "No hay WhatsApp campañas disponibles",
         "SUBTITLE": "Lanza una campaña de WhatsApp para conectar con tus clientes directamente. Envía ofertas o has anuncios fácilmente. Haz clic en 'Crear campaña' para comenzar."
       },
       "CARD": {
@@ -174,14 +183,14 @@
           },
           "TEMPLATE": {
             "LABEL": "WhatsApp Template",
-            "PLACEHOLDER": "Select a template",
-            "INFO": "Select a template to use for this campaign.",
-            "ERROR": "Template is required",
+            "PLACEHOLDER": "Seleccione una plantilla",
+            "INFO": "Seleccione una plantilla para usar para esta campaña.",
+            "ERROR": "La plantilla es necesaria",
             "PREVIEW_TITLE": "Procesar {templateName}",
             "LANGUAGE": "Idioma",
             "CATEGORY": "Categoría",
             "VARIABLES_LABEL": "Variables",
-            "VARIABLE_PLACEHOLDER": "Enter value for {variable}"
+            "VARIABLE_PLACEHOLDER": "Valor de entrada para {variable}"
           },
           "AUDIENCE": {
             "LABEL": "Audiencia",
@@ -198,7 +207,7 @@
             "CANCEL": "Cancelar"
           },
           "API": {
-            "SUCCESS_MESSAGE": "WhatsApp campaign created successfully",
+            "SUCCESS_MESSAGE": "La campaña WhatsApp creó con éxito",
             "ERROR_MESSAGE": "Se presentó un error. Por favor intente nuevamente."
           }
         }

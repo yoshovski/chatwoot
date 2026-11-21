@@ -31,6 +31,14 @@ const props = defineProps({
     type: String,
     required: true,
   },
+  localizedReplyCopy: {
+    type: Object,
+    default: () => ({}),
+  },
+  replyLocales: {
+    type: Array,
+    default: () => [],
+  },
   tools: {
     type: Array,
     default: () => [],
@@ -78,6 +86,7 @@ const state = reactive({
   title: '',
   description: '',
   instruction: '',
+  localized_reply_copy: {},
 });
 
 const scenarioFormRef = ref(null);
@@ -114,6 +123,7 @@ const startEdit = () => {
     title: props.title,
     description: props.description,
     instruction: props.instruction,
+    localized_reply_copy: props.localizedReplyCopy,
   });
   toggleEditing(true);
 };
@@ -242,6 +252,8 @@ const LINK_INSTRUCTION_CLASS =
         v-model:title="state.title"
         v-model:description="state.description"
         v-model:instruction="state.instruction"
+        v-model:localized-reply-copy="state.localized_reply_copy"
+        :reply-locales="replyLocales"
       />
       <div class="flex items-center gap-3">
         <Button

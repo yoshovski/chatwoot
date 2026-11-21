@@ -17,7 +17,7 @@
     },
     "OAUTH": {
       "GOOGLE_LOGIN": "Accedi tramite Google",
-      "BUSINESS_ACCOUNTS_ONLY": "You can't create a new account with a personal email address. Please sign up using your work email.",
+      "BUSINESS_ACCOUNTS_ONLY": "Non è possibile creare un nuovo account con un indirizzo email personale. Si prega di iscriversi utilizzando la tua email di lavoro.",
       "NO_ACCOUNT_FOUND": "Non siamo riusciti a trovare un account per il tuo indirizzo email."
     },
     "FORGOT_PASSWORD": "Password dimenticata?",
@@ -36,6 +36,7 @@
       "API": {
         "ERROR_MESSAGE": "Autenticazione SSO fallita. Verifica le credenziali e riprova."
       }
-    }
+    },
+    "NO_ACCOUNT": "Non hai un account?"
   }
 }

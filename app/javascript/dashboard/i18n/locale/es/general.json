@@ -7,10 +7,18 @@
     },
     "CLOSE": "Cerrar",
     "BETA": "Beta",
-    "BETA_DESCRIPTION": "This feature is in beta and may change as we improve it.",
+    "BETA_DESCRIPTION": "Esta característica está en beta y puede cambiar a medida que lo mejoremos.",
     "ACCEPT": "Accept",
     "DISCARD": "Descartar",
-    "PREFERRED": "Preferred"
+    "PREFERRED": "Preferred",
+    "CLEAR_SEARCH": "Búsqueda clara",
+    "METRIC_HELP": "Acerca de {metric}",
+    "FORM": {
+      "UNSAVED": "Cambios no salvos",
+      "LEAVE_DESCRIPTION": "Dejar esta página descartará sus ediciones.",
+      "KEEP_EDITING": "Sigue editando",
+      "DISCARD_AND_LEAVE": "Discresión y salida"
+    }
   },
   "CHOICE_TOGGLE": {
     "YES": "Si",

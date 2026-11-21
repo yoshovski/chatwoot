@@ -27,6 +27,20 @@ RSpec.describe Captain::Conversation::OrderCardBuilder do
     expect(item).not_to have_key('media_url')
   end
 
+  context 'when the visitor replies in Spanish' do
+    let(:run_result) do
+      instance_double(Agents::RunResult, context: {
+                        state: { Captain::Assistant::ORDER_STATE_KEY => order, Captain::Conversation::CustomerLocale::STATE_KEY => 'es' }
+                      })
+    end
+
+    it 'localizes the labels and keeps the order number and items' do
+      expect(card[:content]).to eq('Pedido SHOP_1001 · 09/10/2026')
+      expect(item['description']).to eq("Pagado · Aún sin enviar\n1× Parachute X200")
+      expect(item['actions'].first).to include('text' => 'Ver pedido', 'uri' => 'https://store.example/orders/abc')
+    end
+  end
+
   context 'when the order is on its way' do
     before do
       order.merge!(

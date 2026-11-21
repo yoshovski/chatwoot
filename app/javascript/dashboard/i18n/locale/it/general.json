@@ -10,7 +10,15 @@
     "BETA_DESCRIPTION": "Questa funzione è in beta e può subire variazioni mentre la miglioriamo.",
     "ACCEPT": "Accetta",
     "DISCARD": "Annulla",
-    "PREFERRED": "Preferito"
+    "PREFERRED": "Preferito",
+    "CLEAR_SEARCH": "Cancella la ricerca",
+    "METRIC_HELP": "A proposito di {metric}",
+    "FORM": {
+      "UNSAVED": "Cambiamenti non rilevati",
+      "LEAVE_DESCRIPTION": "Lasciando questa pagina scarterà le tue modifiche.",
+      "KEEP_EDITING": "Continua a modificare",
+      "DISCARD_AND_LEAVE": "Scatenare e lasciare"
+    }
   },
   "CHOICE_TOGGLE": {
     "YES": "Sì",

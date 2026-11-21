@@ -10,6 +10,10 @@
     "MESSAGE_BUBBLE": {
       "RETRY": "Renvoyer le message",
       "ERROR_MESSAGE": "Échec de l'envoi, veuillez réessayer"
+    },
+    "CARD_CAROUSEL": {
+      "PREVIOUS": "Produits précédents",
+      "NEXT": "Plus de produits"
     }
   },
   "THUMBNAIL": {
@@ -31,7 +35,8 @@
     "BACK_AT_TIME": "Nous serons de retour en ligne à {time}",
     "BACK_ON_DAY": "Nous serons de retour en ligne {day}",
     "BACK_TOMORROW": "Nous serons de retour en ligne demain",
-    "BACK_IN_SOME_TIME": "Nous serons de retours en ligne dans quelques instants"
+    "BACK_IN_SOME_TIME": "Nous serons de retours en ligne dans quelques instants",
+    "IMMEDIATELY": "Nous répondons immédiatement"
   },
   "DAY_NAMES": {
     "SUNDAY": "Dimanche",
@@ -150,9 +155,53 @@
     },
     "fallback": {
       "CONTENT": "a partagé une URL"
-    }
+    },
+    "REMOVE": "Supprimer la pièce jointe"
   },
   "FOOTER_REPLY_TO": {
     "REPLY_TO": "Répondre à:"
-  }
+  },
+  "WELCOME": {
+    "TITLE": "Bonjour 👋",
+    "DESCRIPTION": "Comment pouvons-nous vous aider ?",
+    "CHAT_DESCRIPTION": "Posez une question. Nous sommes là pour vous aider.",
+    "NAVIGATION": "Navigation de l’assistance",
+    "HOME": "Accueil",
+    "CHAT": "Chat"
+  },
+  "MESSAGE_VIDEO": {
+    "PLAY": "Lire la vidéo"
+  },
+  "MESSAGE_SOURCES": {
+    "LABEL": "Sources"
+  },
+  "ATTENTION": {
+    "CHECK_IN": "Puis-je vous aider avec autre chose ?",
+    "ALL_SET": "C’est tout pour moi",
+    "OPEN_CHAT": "Ouvrir le chat",
+    "NEW_REPLY": "Vous avez reçu une nouvelle réponse",
+    "MUTE": "Couper le son des notifications",
+    "UNMUTE": "Activer le son des notifications"
+  },
+  "PREVIEW": {
+    "COMPOSER_HINT": "Aperçu",
+    "SAMPLE": {
+      "AGENT_NAME": "Agent IA",
+      "GREETING": "Bonjour ! Je peux vous aider avec les commandes, les livraisons et les retours. Que puis-je faire pour vous ?",
+      "QUESTION": "Quel est le délai de livraison ?",
+      "ANSWER": "Les commandes arrivent généralement sous 2 à 4 jours ouvrés. Vous recevez un lien de suivi par e-mail dès que votre colis est expédié.",
+      "SOURCE_TITLE": "Livraison et expédition",
+      "SUGGESTIONS": {
+        "TRACK": {
+          "TITLE": "Suivre ma commande",
+          "VALUE": "Comment suivre ma commande ?"
+        },
+        "RETURNS": {
+          "TITLE": "Retours",
+          "VALUE": "Comment retourner un article ?"
+        }
+      }
+    }
+  },
+  "SEND_MESSAGE": "Envoyer un message"
 }

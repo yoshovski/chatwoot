@@ -11,6 +11,9 @@ RSpec.describe Captain::TranslateAssistantMessagesJob do
   end
 
   it 'prepares missing built-in form copy while keeping the manual title' do
+    allow(Captain::LocalizedMessages).to receive(:catalog_text).and_call_original
+    allow(Captain::LocalizedMessages).to receive(:catalog_text).with('captain.contact_form.submit', 'it').and_return(nil)
+    allow(Captain::LocalizedMessages).to receive(:catalog_text).with('captain.contact_form.fields.email.label', 'it').and_return(nil)
     translation = instance_double(Captain::Llm::MessageTranslationService, perform: {
                                     'captain.contact_form.submit' => 'Invia',
                                     'captain.contact_form.fields.email.label' => 'Indirizzo email'
@@ -25,6 +28,12 @@ RSpec.describe Captain::TranslateAssistantMessagesJob do
     expect(payload[:content]).to eq('Lascia i tuoi recapiti.')
     expect(payload[:content_attributes]).to include('button_label' => 'Invia', 'contact_form_locale' => 'it')
     expect(payload[:content_attributes]['items'].first).to include('name' => 'email', 'label' => 'Indirizzo email')
+  end
+
+  it 'does not request generation when the catalog and manual wording cover all inputs' do
+    expect(Captain::Llm::MessageTranslationService).not_to receive(:new)
+
+    described_class.perform_now(assistant.id)
   end
 
   it 'discards a translation if the source changes while it is being prepared' do

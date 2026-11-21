@@ -215,9 +215,10 @@ RSpec.describe 'Api::V1::Accounts::Captain::Assistants', type: :request do
         expect(assistant.reload.config).to include(handoff.stringify_keys)
       end
 
-      it 'saves reply languages and per-language copy and schedules generation' do
+      it 'saves reply languages and schedules generation for untranslated custom copy' do
         config = {
           default_reply_locale: 'en', allowed_reply_locales: %w[en it], auto_translate_messages: true,
+          offline_handoff_message: 'We can follow up tomorrow.',
           localized_messages: { handoff_form_message: { it: 'Lascia i tuoi recapiti.' } }
         }
 

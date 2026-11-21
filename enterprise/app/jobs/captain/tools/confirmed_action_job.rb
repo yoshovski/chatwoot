@@ -9,6 +9,7 @@ class Captain::Tools::ConfirmedActionJob < ApplicationJob
     @conversation = conversation
     @assistant = conversation.inbox.captain_assistant
     pending = Captain::Tools::ActionConfirmation.take!(conversation, nonce)
+    @reply_locale = reply_locale(pending)
     @tool = pending && conversation.account.captain_custom_tools.enabled.find_by(id: pending['tool_id'])
     return post_cancelled(:expired) if @assistant.blank? || @tool.blank? || Captain::Tools::ActionConfirmation.expired?(pending)
     return post_cancelled(:cancelled) unless choice == Captain::Tools::ActionConfirmation::CONFIRM
@@ -17,6 +18,10 @@ class Captain::Tools::ConfirmedActionJob < ApplicationJob
   end
 
   private
+
+  def reply_locale(pending)
+    pending&.fetch('locale', nil) || Captain::Conversation::CustomerLocale.resolve(conversation: @conversation, assistant: @assistant)
+  end
 
   def run_remaining_steps(pending)
     result = Captain::Tools::ActionRunner.new(@tool, state: tool_state).run(
@@ -29,11 +34,14 @@ class Captain::Tools::ConfirmedActionJob < ApplicationJob
 
   def outcome_message(result, pending)
     key = result.ok? ? 'success' : 'failure'
-    Captain::Tools::ActionConfirmation.message(@tool, key, params: pending['params'], outputs: result.outputs, locale: account_locale)
+    values = { params: pending['params'], outputs: result.outputs }
+    Captain::Tools::ActionConfirmation.message(@tool, key, values: values, locale: @reply_locale, assistant: @assistant)
   end
 
   def post_cancelled(outcome)
-    I18n.with_locale(account_locale) { post(I18n.t('captain.action_confirmation.cancelled')) } if @assistant
+    if @assistant
+      post(Captain::Conversation::CustomerLocale.translate('captain.action_confirmation.cancelled', locale: @reply_locale, assistant: @assistant))
+    end
     post_note(outcome) if @tool
   end
 

@@ -10,12 +10,16 @@ module Captain::OrderStatus
 
   def shipment(status) = label('shipment', status)
 
-  def cancelled = I18n.t('captain.order_status.cancelled')
+  def cancelled = translate('captain.order_status.cancelled')
 
   def label(group, status)
     return if status.blank?
 
     key = status.to_s.downcase
-    I18n.t("captain.order_status.#{group}.#{key}", default: key.humanize)
+    translate("captain.order_status.#{group}.#{key}", default: key.humanize)
+  end
+
+  def translate(key, default: nil)
+    I18n.t(key, default: nil) || I18n.t(key, locale: :en, default: default)
   end
 end

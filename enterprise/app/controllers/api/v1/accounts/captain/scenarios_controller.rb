@@ -82,6 +82,6 @@ class Api::V1::Accounts::Captain::ScenariosController < Api::V1::Accounts::BaseC
   end
 
   def scenario_params
-    params.require(:scenario).permit(:title, :description, :instruction, :enabled, tools: [])
+    params.require(:scenario).permit(:title, :description, :instruction, :enabled, tools: [], localized_reply_copy: {})
   end
 end

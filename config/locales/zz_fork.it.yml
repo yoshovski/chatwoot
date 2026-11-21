@@ -1,0 +1,728 @@
+it:
+  errors:
+    account_subscription:
+      ai_replies_paused: 'Le risposte AI sono sospese per questo account: il suo piano,
+        il processo o il pagamento non consente più conversazioni AI.'
+      unavailable: Il pagamento dell'account non è disponibile.
+      payment_failed: Non è possibile elaborare il pagamento. Si prega di
+        riprovare.
+      card_declined: La tua carta è stata rifiutata. Aggiorna il tuo metodo di
+        pagamento e riprova.
+    ai_knowledge:
+      invalid_bot_id: L'ID dell'agente bot dev'essere un intero positivo.
+      invalid_identifier: Identificazione della conoscenza non valida
+      unexpected_parameters: Parametri di conoscenza inaspettati
+      invalid_parameter_shape: Forma dei parametri di conoscenza non valida
+      unavailable: Servizio di conoscenza temporaneamente non disponibile
+    account:
+      not_authorized: Non sei autorizzato ad accedere a questo account
+      email_limit_exceeded: Il limite giornaliero di posta elettronica per
+        questo account è stato raggiunto
+    signup:
+      terms_not_accepted: Si prega di accettare i termini di servizio e la
+        politica sulla privacy per creare un account.
+    database:
+      query_canceled: La richiesta ha richiesto troppo tempo per completare. Per
+        favore, riprovate.
+    saml:
+      multi_account_invitation_not_allowed: Gli utenti associati a un altro
+        account non possono essere aggiunti mentre SAML è abilitato
+    conversations:
+      resolved: La conversazione viene risolta e non accetta nuovi messaggi
+    dyte:
+      realtimekit_credentials_required: Le credenziali Cloudflare RealtimeKit
+        sono richieste. Eliminare l'integrazione Dyte esistente e crearla di
+        nuovo con le credenziali Cloudflare RealtimeKit.
+    cloudflare:
+      realtimekit:
+        invalid_credentials: Le credenziali Cloudflare RealtimeKit non sono
+          valide. Si prega di controllare l'ID account, l'ID dell'app di
+          RealtimeKit e le autorizzazioni di token API.
+        missing_credentials: ID account Cloudflare, ID App RealtimeKit e token
+          API sono necessari.
+        invalid_api_token: Cloudflare API token non è valido o inattivo. Si
+          prega di creare un nuovo token con autorizzazioni di amministrazione
+          in tempo reale.
+        invalid_account_or_permissions: Cloudflare Account ID non è valido, o il
+          token API non ha accesso in tempo reale a questo account.
+        app_not_found: RealtimeKit App ID non è stato trovato in questo account
+          Cloudflare. Si prega di controllare l'app selezionata.
+        verification_failed: Non è possibile verificare le credenziali
+          Cloudflare RealtimeKit in questo momento. Per favore, riprovate.
+    whatsapp:
+      message_outside_messaging_window: Messaggio non inviato perché la finestra
+        di servizio clienti WhatsApp 24 -ora è chiusa e non sono stati forniti
+        parametri di modello. Invii invece un messaggio di modello approvato.
+      authentication_template_requires_phone: I modelli di autenticazione
+        richiedono un numero di telefono WhatsApp e non possono essere inviati a
+        un contatto solo BSUID.
+      template_category_required_for_bsuid: La categoria dei modelli non
+        potrebbe essere verificata per questo contatto solo BSUID.
+      contact_info_request:
+        unsupported_provider: Le richieste di informazioni di contatto sono
+          attualmente disponibili solo per WhatsApp Cloud inbox.
+        phone_already_available: Questo contatto ha già un numero di telefono.
+        invalid_identifier: Le informazioni di contatto possono essere richieste
+          solo da un utente business-scoped WhatsApp.
+        outside_messaging_window: Le informazioni di contatto possono essere
+          richieste solo all'interno della finestra di servizio clienti WhatsApp
+          24 -hour.
+        template_not_configured: Un modello WhatsApp approvato con un pulsante
+          Richiedi informazioni di contatto è richiesto al di fuori della
+          finestra di servizio clienti 24 -ora.
+        pending_request: Una richiesta di informazioni di contatto è già in
+          sospeso.
+      calls:
+        already_ended: Questa chiamata è già terminata
+        already_accepted: Chiamata già accettata da un altro agente
+        recording_disabled: La registrazione delle chiamate è disattivata per
+          questa casella di posta
+    billing:
+      currency_locked: La moneta di fatturazione non può essere cambiata dopo
+        che la fatturazione è stata impostata
+      provider_action_unavailable: Questa azione di fatturazione non è
+        disponibile per Shopify - conti pubblici
+      shopify_pricing_unavailable: Shopify App Prezzo non è disponibile in
+        questo momento
+      shopify_verification_failed: Shopify fatturazione non poteva essere
+        verificata in questo momento
+      invalid_currency: Valuta di fatturazione non valida
+    topup:
+      credits_unavailable: I piani di credito non sono disponibili. Ulteriori
+        conversazioni AI sono aggiunti nella pagina di fatturazione.
+  data_imports:
+    intercom:
+      activities:
+        assignment_with_target: '%{actor} ha assegnato la conversazione a %{target}'
+        assign_and_reopen: '%{actor} assegnato e riaperto la conversazione'
+        assign_and_reopen_with_target: '%{actor} ha assegnato la conversazione a %{target}
+          e riaperto'
+        ticket_state_updated: '%{actor} aggiornato lo stato del biglietto'
+        assignment: '%{actor} ha assegnato la conversazione'
+        open: '%{actor} ha aperto la conversazione'
+        close: '%{actor} ha chiuso la conversazione'
+        snoozed: '%{actor} ha snoozed la conversazione'
+        participant_added: '%{actor} aggiunto un partecipante'
+        participant_added_with_target: '%{actor} aggiunto %{target} come partecipante'
+        participant_removed: '%{actor} ha rimosso un partecipante'
+        participant_removed_with_target: '%{actor} rimosso %{target} come partecipante'
+        conversation_attribute_updated: '%{actor} attributi di conversazione aggiornati'
+        ticket_attribute_updated: '%{actor} attributi dei biglietti aggiornati'
+        custom_action_started: "%{actor} ha avviato un'azione personalizzata"
+        custom_action_finished: "%{actor} finito un'azione personalizzata"
+        quick_reply: '%{actor} usato per una risposta rapida'
+  profile_settings:
+    sessions:
+      cannot_revoke_current: Non puoi revocare la sessione corrente.
+  account_subscription:
+    setup_fee: Personalizzazione e configurazione
+    top_up:
+      pack_name: '%{count} conversazioni extra AI'
+  activerecord:
+    attributes:
+      billing_plan:
+        monthly_price: Prezzo mensile (es. 49, 00 )
+        ai_conversations_limit: Conversazioni AI al mese (blank = illimitato)
+        trial_ai_conversations_limit: Conversazioni AI durante l'intero processo
+          (lank = nessun tappo di prova)
+        trial_days: Lunghezza di prova (giorni)
+        agents_limit: Sedili (blank = illimitato)
+        inboxes_limit: Posti in arrivo (blank = illimitato)
+        documents_limit: Documenti di conoscenza (blank = illimitato)
+        features: Caratteristiche e componenti aggiuntivi
+        account_subscriptions: Conti
+        stripe_product_id: Stripe prezzi
+  helpers:
+    label:
+      billing_plan:
+        account_subscriptions: Conti
+  notifications:
+    ai_summary: 'Riepilogo AI: %{summary}'
+  conversations:
+    messages:
+      whatsapp:
+        request_contact_info: Vuoi condividere il tuo numero di telefono con
+          noi?
+        flow_response: Inviata una risposta di flusso
+    templates:
+      over_conversations_limit_message_body: Grazie per il vostro messaggio. Il
+        team risponderà via e-mail.
+  integration_apps:
+    hubspot:
+      invalid_sync_scope: Scegliere tutti i contatti o business lead catturati
+        per HubSpot sincronizzazione.
+      invalid_mapping: 'Queste proprietà HubSpot non esistono o sono in sola lettura:
+        %{properties}'
+      duplicate_mapping: Ogni proprietà HubSpot può essere mappata solo una
+        volta.
+      unreachable: Non poteva raggiungere HubSpot per controllare la mappatura.
+        Riprova in un momento.
+      invalid_mapping_source: Email deve mappare la proprietà HubSpot e-mail, e
+        solo i campi di contatto conosciuti possono essere mappati.
+      sources:
+        email: e-mail
+        firstname: nome di battesimo
+        lastname: cognome
+        phone: telefono
+        lead_source: Prospetto di vendita
+        lead_type: Tipo di lead
+        lead_summary: Riepilogo del lead
+      short_description: Sincronizza i contatti e le trascrizioni di
+        conversazione a HubSpot.
+      description: Connetti HubSpot per creare o aggiornare un contatto HubSpot
+        per ogni contatto con un'email, salva le trascrizioni di conversazione
+        come note, e vedi il contatto HubSpot accanto a ogni conversazione. I
+        contatti esistenti non sono riempiti di backup; sincronizzano la
+        prossima volta che cambiano.
+      name: HubSpot
+  captain:
+    built_in_actions:
+      update_contact_attribute:
+        title: Attributo di contatto di aggiornamento
+        description: Salva un valore sul profilo del visitatore
+      update_conversation_attribute:
+        title: Attributo di conversazione di aggiornamento
+        description: Salva un valore su questa conversazione
+      assign_team:
+        title: Squadra di assegnazioni
+        description: Assegna la conversazione a una squadra
+      assign_agent:
+        title: Agente di assegnazione
+        description: Assegna la conversazione a una persona o la prossima
+          disponibile
+      email_visitor:
+        title: Invia il tuo messaggio
+        description: Invia al visitatore uno dei tuoi modelli di posta
+          elettronica
+      email_team:
+        title: E-mail il team
+        description: E-mail l'assegnatore o una squadra con un breve riassunto
+      schedule_follow_up:
+        title: Pianifica un follow-up
+        description: Se il visitatore va in silenzio, si segue per messaggio o
+          e-mail
+    reply_languages:
+      invalid_settings: Scegli le lingue di risposta supportate e include il
+        default nelle lingue consentite.
+      invalid_translations: Scegli una lingua supportata e inserisci fino a 2,
+        000 caratteri per ogni traduzione.
+    leads:
+      scenario_title: Prospettive di vendita commerciale follow-up
+      followup_tool:
+        title: Richiedi il follow-up aziendale
+        description: Avvia il follow-up delle email aziendali utilizzando i
+          dettagli di contatto noti o un modulo di contatto, senza un
+          trasferimento dal vivo
+      question_limit_reply: Possiamo continuare ad esplorare la configurazione
+        giusta per il vostro business qui.
+      visitor_location_summary: 'Posizione del visitatore (detected): %{location}'
+      tool:
+        title: Salvare la prospettiva di vendite di affari
+        description: Salva i dettagli delle prospettive di vendita di affari
+          strutturati per il follow-up
+      invalid_settings: Scegli fino a 10 campi e tipi di prospettive di vendita
+        unici, e tra 0 e 5 domande facoltative. Almeno un tipo è richiesto
+        quando le prospettive di vendita sono abilitate.
+      attributes:
+        source: Prospetto di vendita
+        visitor_city: Città dei visitatori (detected)
+        visitor_country: Paese di visita (detected)
+        visitor_country_code: Codice paese visitatori (detected)
+        type: Tipo di lead
+        summary: Riepilogo del lead
+        status: Stato del lead
+      intake_review: "Ricontatto commerciale da verificare. Dati forniti dal cliente
+        (non verificati):\n%{details}"
+    guided_setup:
+      default_agent_name: Agente IA
+      default_description: Aiuta i clienti di %{business} con domande sui suoi
+        prodotti, servizi e ordini.
+      invalid_url: Inserisci un indirizzo del sito come example.com.
+      not_ready: Aggiungi la conoscenza prima di accendere l'agente AI.
+      inbox_taken: Un altro agente AI risponde già nella chat del sito web.
+        Scollegalo prima.
+    websites:
+      already_added: Questo sito è già elencato. Aprire la sua selezione di
+        pagina per scoprirlo di nuovo.
+      invalid_selection: Seleziona solo le pagine scoperte disponibili per
+        l'importazione.
+      invalid_subdomain_option: Scegliere se i sottodomini collegati devono
+        essere scoperti.
+      invalid_auto_add_option: Scegliere se nuove pagine consigliate devono
+        essere aggiunte automaticamente.
+    knowledge_briefs:
+      invalid_sources: Scegliere 1 a 60 pronto, documenti pubblici appartenenti
+        a questo agente.
+      invalid_draft: Controllare la panoramica, le lunghezze degli argomenti e i
+        riferimenti delle fonti prima di pubblicare.
+    dify_datasets:
+      faq:
+        label: Domande frequenti
+        description: "FAQs risposto dall'agente AI \"%{agent} \" di %{account} (Chatwoot
+          account %{account_id}, agente AI %{agent_id} ). Gestito da Chatwoot: aggiungere
+          o modificare FAQ lì; i cambiamenti fatti qui sono sovrascritti."
+      docs:
+        label: Documenti
+        description: "Siti web, file e pagine l'agente AI \"%{agent} \" di %{account}
+          impara da (Chatwoot account %{account_id}, agente AI %{agent_id} ). Gestito
+          da Chatwoot: aggiungere o modificare le fonti lì; i cambiamenti fatti qui
+          sono sovrascritti."
+    copilot:
+      reply_suggestion_discarded: La conversazione è cambiata mentre Copilot
+        stava preparando, quindi il suggerimento è stato scartato.
+      reply_suggestion_failed: Copilota non poteva generare una risposta. Per
+        favore, riprovate.
+    documents:
+      markdown_format_error: deve essere un file Markdown
+      markdown_size_error: deve contenere 10, 000 caratteri o meno
+      multiple_files_error: Un documento può contenere solo un file caricato
+      sync_not_supported_for_file: Sync non è supportato per i documenti
+        caricati
+      invalid_section_action: Scegli almeno una sezione e un'azione supportata
+    custom_tool:
+      test_throttled: Troppe prove. Aspetta un attimo e riprova.
+    action_confirmation:
+      note: 'Azione " %{title} ": %{outcome}.'
+      outcomes:
+        succeeded: confermato dal cliente e completato
+        failed: confermata dal cliente, ma fallita (%{error} )
+        cancelled: annullato dal cliente
+        expired: non eseguito, la conferma è scaduta o è stata sostituita
+    mcp_server:
+      limit_exceeded: È possibile collegare un massimo di %{limit} MCP server
+        per account
+  public_portal:
+    sidebar:
+      recommended_subtitle: Articoli selezionati a mano per iniziare.
+      help_center: Centro assistenza
+      recommended: Articoli consigliati
+      recommended_label: 'Argomenti consigliati:'
+    not_active:
+      description: Per ulteriori informazioni, contattare l'amministratore del
+        sito.
+      action: Se sei l'amministratore, si prega di aggiornare il piano per
+        ripristinare l'accesso.
+      title: Centro assistenza Non disponibile
+    header:
+      recommended: Articoli consigliati
+  crm:
+    hubspot:
+      transcript_title: Trascrizione di conversazione da %{brand_name}
+      transcript_inbox: 'Posta in arrivo: %{inbox}'
+      view_conversation: 'Vedere conversazione # %{display_id}'
+      transcript_truncated: 'Transcript abbreviato per adattarsi HubSpot: i primi
+        messaggi sono lasciati fuori.'
+      contact: Contatto
+      ai_agent: Agente IA
+      system: Sistema
+    no_content: '[Nessun contenuto]'
+  super_admin:
+    observability:
+      title: Osservazione dell'AI
+    account_subscription:
+      helper: Gestisci i prezzi del conto, quota mensile e prova. Inserisci i
+        prezzi nella valuta selezionata (ad esempio, 40, 00 o 40.00 ); le date
+        sono UTC. AI risponde fermarsi al limite di piano o di prova, quando il
+        processo termina, dopo 7 giorni di mancato pagamento, e quando
+        l'abbonamento viene sospeso o annullato; la conversazione poi va al
+        team.
+      enabled: Abilitare il pannello di fatturazione e utilizzo
+      manual_ai_access: "Account manuale: AI risponde senza un piano o un limite,
+        mentre non c'è abbonamento Stripe (invocato a mano)"
+      founder_plan: Tassetto piano fondatore (prezzi speciali anticipati)
+      custom_payment: Pagamento personalizzato una volta
+      custom_payment_description: Descrizione del pagamento personalizzata
+      new_custom_payment: Emettere una nuova richiesta di pagamento con lo
+        stesso importo
+      monthly_limit: Limite mensile di conversazione AI (blank utilizza il
+        piano, o illimitato senza un piano)
+      billing_plan_id: Piano
+      no_plan: Nessun piano (configurare questo account a mano)
+      add_ons: Componenti aggiuntivi acquistati
+      no_add_ons: Questo piano non ha componenti aggiuntivi.
+      plan_helper: Assegnare un piano si accende fatturazione. Il piano imposta
+        caratteristiche, componenti aggiuntivi e limiti; i valori sottostanti e
+        in Limiti sovrascriverlo quando compilato.
+      billing_interval: Intervallo di fatturazione
+      currency: Valuta
+      monthly_price: Prezzo mensile
+      annual_price: Prezzo annuale personalizzato (consiglio di utilizzo)
+      annual_discount_percent: Sconti annuali (%)
+      setup_fee: One-time personalizzazione / tassa di configurazione
+      trial_enabled: Abilitare il processo
+      trial_days: Durata del processo (giorni)
+      trial_ends_at: Fine della prova (UTC )
+      period_started_at: Periodo di fatturazione inizia a (UTC )
+      period_ends_at: Periodo di fatturazione termina a (UTC )
+      reset_usage: Rifiutare quota mensile ora (conserva la storia dell'uso)
+      usage: '%{consumed} / %{limit} conversazioni questo mese'
+      unlimited: Illimitata
+      extend_period: Estendere il rinnovo Stripe per la data di fine
+        fatturazione salvata (deve essere oltre 48 ore avanti)
+      period_extended: Stripe rinnovo esteso alla data salvata.
+      apply_pricing: Applicare i prezzi salvati a Stripe (ristrutturazioni di
+        carburante, nessuna prorazione)
+      pricing_applied: Prezzo scontato applicato a Stripe.
+    app_config:
+      signup_needs_captcha: Impostare i tasti Cloudflare Turnstile o hCaptcha
+        sotto Impostazioni → Captcha prima di accendere l'iscrizione
+        dell'account.
+    billing_overview:
+      title: Panoramica sulla fatturazione
+      refresh: Rifiuti ora
+      refresh_queued: Refresh in coda. Ricarica la pagina in un minuto.
+      empty: 'Non ancora calcolato. I numeri sono calcolati una volta al giorno al
+        03: 45 UTC; utilizzare Refresh ora per calcolarli prima.'
+      computed_at: Computed %{time}. La pagina mostra questa copia e non chiama
+        Stripe.
+      mrr: MORTE
+      paying: Conti di pagamento
+      trials: Procedimenti
+      trials_value: '%{count} (%{ending} fine entro 7 giorni)'
+      past_due: In ritardo
+      near_limit: Oltre il 80 % dell'indennità
+      none: Nessuno.
+      ai_cost_not_connected: non collegato
+      ai_cost_unavailable: LiteLLM non disponibile
+      footnote: MRR è il prezzo mensile di listino di conti attivi, passati e
+        fatturati a mano, prima di sconti e tasse; i prezzi annuali valgono come
+        dodicesimo. Il costo dell'AI è LiteLLM spende in USD dal periodo di
+        avvio del conto; ha bisogno di LITELLM_SPEND_URL e
+        LITELLM_SPEND_API_KEY.
+      cancel_state:
+        ended: Fine
+        scheduled: Termine programmato
+      sections:
+        trials_ending: Prove terminate entro 7 giorni
+        past_due_list: In ritardo
+        near_limit_list: Oltre il 80 % della loro indennità
+        cancellations: Cancellazioni questo mese
+        accounts: Costo AI contro le entrate, questo periodo
+      columns:
+        account: Conto
+        trial_ends_at: Finali di prova
+        plan: Piano
+        status: Stato
+        revenue: Entrate / mese
+        past_due_since: Passato da allora
+        ai_used: Conversazioni con l'IA
+        extra_left: Extra sinistra
+        state: Stato
+        at: Quando
+        reason: Motivazione
+        ai_cost: Costo AI
+    new_accounts:
+      title: Nuovi conti
+      help: 'Segnali pubblici, prima nuovi. Una bandiera è un accenno, non prova:
+        aprire il conto e dare il processo comunque quando è a posto.'
+      none: Ancora nessuna registrazione.
+      show_flagged: Bandiera solo
+      show_all: Tutte le iscrizioni
+      newer: Nuovo
+      older: Vecchio
+      deleted: Account cancellato
+      confirmed: email confermata
+      unconfirmed: email non confermata
+      columns:
+        at: Registrato
+        account: Conto
+        email: e-mail
+        domains: Dominio del sito
+        flags: Bandiere
+        ip: IP
+        trial: Prova
+      trial:
+        none: Nessun piano di prova
+        domain_used: 'Gratis: il dominio di posta elettronica ha avuto una prova'
+        website_used: 'Gratis: il sito web ha avuto un processo'
+        granted: Prova
+      flags:
+        same_domain: Stesso dominio del sito web
+        same_ip: Stesso IP
+        disposable_looking: Indirizzo dall'aspetto usa e getta
+    account_billing:
+      title: fatturazione
+      state: Stato %{status} · piano %{plan} · AI %{ai} · %{extra} conversazioni
+        AI extra lasciate
+      ai_on: su
+      no_subscription: Questo account non ha abbonamento, quindi le azioni di
+        fatturazione non sono disponibili.
+      signup: Firma pubblica
+      signup_state: 'Iscrizione %{at} con %{method} · prova: %{trial} · termini %{terms},
+        privacy %{privacy}'
+      signup_trial_granted: dato dato
+      grant_trial: Dare il processo in ogni caso
+      grant_trial_confirm: Avviare il processo del piano di iscrizione per
+        questo conto da oggi?
+      extend_trial: Estendere il processo
+      extend_trial_submit: Esame
+      add_extra: Aggiungi conversazioni AI aggiuntive
+      add_extra_help: Aggiunge molto all'equilibrio extra che scade in 12 mesi.
+        Dite perché; la nota e il vostro nome vanno nel registro.
+      add_extra_submit: Aggiungi
+      amount: Conversazioni
+      note: Motivo (richiesto)
+      apply_coupon: Applicare un coupon
+      apply_coupon_help: Stripe coupon ID. Stripe rimuove le successive fatture
+        dell'abbonamento.
+      apply_coupon_submit: Applicare
+      ai: AI risponde
+      ai_paused_since: Pausa dal %{time} (%{reason} ).
+      pause_ai_help: Smette di rispondere AI per questo account fino a quando
+        non li riprendi. Conversazioni andare alla squadra.
+      pause_ai: Pausa l'AI
+      pause_ai_confirm: Pause AI risponde per questo account?
+      resume_ai: Riprendi l'IA
+      timeline: Fatturazione timeline
+      timeline_help: 'Il più recente: Stripe eventi, extra-conversazione ledger, cambiamenti
+        di piano e stato, e le azioni prese qui. Le email di fatturazione non sono
+        ancora registrate.'
+      replay_confirm: Esegui di nuovo questo evento Stripe?
+      stripe_failed: 'Stripe rifiutato: %{error}'
+      kinds:
+        cancellation: Cancellazione
+        change: cambiare
+        stripe: Stripe
+        ledger: Registro contabile
+        action: Amministratore globale
+      columns:
+        at: Quando
+        kind: Fonte
+        what: Cosa?
+        detail: Dettaglio
+      done:
+        extend_trial: Il processo e' esteso.
+        grant_trial: E' iniziata la prova.
+        add_extra_conversations: Extra conversazioni AI aggiunto.
+        apply_coupon: Coupon applicato in Stripe.
+        pause_ai: L'intelligenza artificiale risponde in pausa.
+        resume_ai: Risponde l'IA.
+        replay_event: Stripe evento riprodotto.
+      refused:
+        days: Inserisci 1 a 90 giorni.
+        no_trial: Questo account non è in un processo che può essere esteso.
+        amount: Inserisci 1 a 10000 conversazioni.
+        note: Di' perche' li aggiungi.
+        coupon: Inserisci un ID coupon Stripe (lettere, cifre, - e _).
+        no_subscription: Questo account non ha un abbonamento live Stripe.
+        already_paused: Le risposte dell'IA sono già interrotte.
+        not_paused: Le risposte dell'IA non sono interrotte.
+        event: Questo Stripe evento non appartiene a questo account.
+        no_signup: Questo account non è venuto da un cartello pubblico.
+        trial_granted: Questo account ha già il suo processo di registrazione.
+        paid: Questo account ha un abbonamento live Stripe.
+      extend_trial_help: La prova termina il %{ends}. Se Stripe gestisce la
+        prova, la data viene aggiornata anche in Stripe.
+      days: Giorni
+      coupon: ID del coupon
+      replay_event: Rielabora
+    billing_plan:
+      helper: 'Scegliere per caratteristica: non nel piano, incluso, o un add-on pagato
+        con il suo prezzo mensile. Modificare le funzionalità aggiorna ogni account
+        su questo piano.'
+      not_included: Non incluso
+      included: Incluso
+      add_on: Add-on a pagamento
+      add_on_price: Prezzo aggiuntivo al mese
+      accounts: '%{count} contabilità'
+      stripe_prices_missing: Non nel Stripe ancora. I conti non possono comprare
+        questo piano fino a quando i suoi prezzi non esistono.
+      stripe_prices_ready: Mensile %{monthly} · Annuale %{annual} (2 mesi
+        gratis)
+      create_stripe_prices: Creare nel Stripe (prezzo mensile e annuale)
+      stripe_prices_created: Stripe prezzi creati. I conti possono ora
+        acquistare questo piano.
+      stripe_prices_failed: 'Stripe ha rifiutato i prezzi: %{error}'
+      features:
+        captain_integration: Agente IA
+        captain_integration_v2: Scenario e azioni
+        native_ai_knowledge: Biblioteca di conoscenze
+        help_center: Centro assistenza
+        campaigns: Campagne
+        reports: Rapporti
+        channel_voice: Canale vocale
+        calls: Pannello di controllo delle chiamate
+        crm_integration: Integrazione CRM
+        disable_branding: Rimuovere il marchio
+        shopify_integration: Shopify
+    dify_workspace:
+      title: Spazio di lavoro condiviso Dify
+      description: Configurare uno spazio di lavoro per tutti gli account. Ogni
+        account eredita questa connessione, e ogni assistente mantiene set di
+        dati di conoscenza separati.
+      enabled: Collegare automaticamente tutti gli account a questo spazio di
+        lavoro
+      inherited: Utilizza lo spazio di lavoro Dify condiviso
+      base_url: Dify base URL (senza /v 1 )
+      embedding_model_provider: Fornitore di Embedding
+      embedding_model: Modello Embedding per nuovi set di dati
+      reranking_model_provider: Fornitore di reranking
+      reranking_model: Modello di reranking
+      query_embedding_model_provider: Fornitore di inserimento query (opzionale)
+      query_embedding_model: Modello di incorporazione di query (opzionale, per
+        la ricerca asimmetrica)
+      model_hint: Le modifiche di riclassificazione si applicano alle ricerche
+        di assistente immediatamente. Le modifiche di incorporazione si
+        applicano ai nuovi set di dati creati, compresi i cataloghi Shopify
+        quando sono configurati gli strumenti Shopify; i set di dati esistenti
+        richiedono una migrazione separata.
+      saved: Spazio di lavoro Dify condiviso salvato.
+      sync_failed: Il servizio di conoscenza non potrebbe applicare questa
+        configurazione. Controllare la disponibilità del servizio e riprovare
+        per applicare le impostazioni ad ogni servizio.
+      save: Salva spazio di lavoro
+    dify_configuration:
+      helper_text: Collegare questo account al proprio spazio di lavoro Dify.
+        Utilizzare lo stesso modello e fornitore di incorporazione del suo
+        catalogo.
+      base_url: Base d'azione URL
+      embedding_model: Modello Embedding
+      embedding_model_provider: Fornitore di modelli Embedding
+      knowledge_api_key: Conoscenza API chiave
+      key_hint: Lasciare vuoto per mantenere la chiave esistente. La chiave
+        memorizzata non viene mai visualizzata.
+      configured: Configurato
+      not_configured: Non configurato
+    account_suspension:
+      form:
+        reason_hint: Inserisci una ragione fino a 256 caratteri.
+        category: Categoria di sospensione
+        reason: Motivo di sospensione
+      history:
+        empty: Nessuna storia delle sospensioni registrata.
+        suspended_at: Sospeso a
+      categories:
+        non_payment: Pagamento non obbligatorio
+    captain_model_overrides:
+      form:
+        helper_text: Lascia un modello vuoto per utilizzare il routing
+          predefinito per quella funzione AI.
+        customer_features: Caratteristiche del cliente
+        internal_features: Caratteristiche interne
+        use_default: 'Utilizzare predefinito: %{model} (%{model_id} )'
+        use_installation_model: 'Utilizzare il modello di installazione: %{model}
+          (%{model_id} )'
+      features:
+        conversation_completion: Evaluatore di completamento della conversazione
+          inattiva
+        scenario_builder: Scenario costruttore
+        help_center_article_generation: Generazione dell'articolo del centro di
+          aiuto
+        help_center_query_translation: Traduzione di query del centro di aiuto
+        label_suggestion: Suggerimento dell'etichetta
+        document_faq_generation: Documento FAQ generazione
+        conversation_faq_generation: Conversazione FAQ generazione
+        conversation_faq_matching: Conversazione FAQ corrispondente
+        onboarding_content_generation: generazione di contenuti onboarding
+        audio_transcription: Trascrizione audio
+        help_center_search: Aiuto centro di ricerca
+      show:
+        summary: Visualizza modello di routing
+      sources:
+        account_override: Sovrapposizione dell'account
+        installation_override: Impostazione dell'installazione
+    push_diagnostics:
+      subscriptions_deleted:
+        one: Cancellato %{count} abbonamento. Il dispositivo dell'utente
+          ri-registra sul prossimo lancio dell'app.
+        other: Eliminato %{count} abbonamenti. I dispositivi degli utenti
+          ri-registrano sul prossimo lancio dell'app.
+    users:
+      resend_confirmation:
+        already_confirmed: L'utente è già confermato.
+        button: Inviare email di conferma
+        sent: E-mail di conferma inviata.
+    shopify_requests:
+      credentials_required: ID cliente e Segreto cliente sono richiesti
+      approved: Shopify richiesta approvato e personalizzato app installare URL
+        generato.
+      status_synced: Stato rinfrescato da Shopify Agent Tools.
+      tool_key_rotated: Chiave di strumento ruotato con successo.
+      catalog_provisioned: Shopify catalogo dataset fornito e pieno importazione
+        coda.
+      catalog_imported: Shopify catalogo importazione in coda con successo.
+      catalog_paused: Shopify catalogo sincronizzazione interrotta.
+      catalog_resumed: Shopify catalogo sincronizzazione ripreso.
+    shopify_feature_description: Consente allo spazio di lavoro di collegare
+      Shopify e usare i dati dei prodotti e degli ordini. L’impostazione Shopify
+      deve essere attiva anche a livello di installazione.
+  secure_password:
+    character:
+      one: carattere
+      other: caratteri
+    types:
+      uppercase: maiuscolo
+      downcase: valigetta
+      lowercase: minuscolo
+      number: numero
+      special: speciale
+    password_has_required_content:
+      errors:
+        messages:
+          unknown_characters: contiene %{count} non valido %{subject}
+          minimum_characters: deve contenere almeno %{count} %{type} %{subject}
+          maximum_characters: deve contenere meno di %{count} %{type} %{subject}
+          minimum_length: deve contenere almeno %{count} %{subject}
+          maximum_length: deve contenere meno di %{count} %{subject}
+    password_disallows_frequent_reuse:
+      errors:
+        messages:
+          password_is_recent: Ultimi %{count} password non possono essere
+            riutilizzate
+    password_disallows_frequent_changes:
+      errors:
+        messages:
+          password_is_recent: La password non può essere cambiata più di una
+            volta per %{timeframe}
+    password_requires_regular_updates:
+      alerts:
+        messages:
+          password_updated: La tua password è stata aggiornata.
+      errors:
+        messages:
+          password_expired: La tua password è scaduta. Le password devono essere
+            modificate ogni %{timeframe}
+    datetime:
+      precise_distance_in_words:
+        half_a_minute: mezzo minuto
+        less_than_x_seconds:
+          one: 1 secondo
+          other: '%{count} secondi'
+        x_seconds:
+          one: 1 secondo
+          other: '%{count} secondi'
+        less_than_x_minutes:
+          one: Un minuto
+          other: '%{count} minuti'
+        x_minutes:
+          one: 1 minuto
+          other: '%{count} minuti'
+        about_x_hours:
+          one: 1 ora
+          other: '%{count} ore'
+        x_days:
+          one: 1 giorno
+          other: '%{count} giorni'
+        about_x_months:
+          one: 1 mese
+          other: '%{count} mesi'
+        x_months:
+          one: 1 mese
+          other: '%{count} mesi'
+        about_x_years:
+          one: 1 anno
+          other: '%{count} anni'
+        over_x_years:
+          one: 1 anno
+          other: '%{count} anni'
+        almost_x_years:
+          one: 1 anno
+          other: '%{count} anni'
+  hello: Ciao mondo
+  auto_assignment:
+    policy_actor: Sistema di automazione tramite %{policy_name}
+  automation:
+    system_name: Sistema di automazione
+  portals:
+    analytics:
+      invalid_configuration: Configurazione di analisi non valida

@@ -420,6 +420,26 @@ lv:
       short_description: 'Sync your contacts and conversations with LeadSquared CRM.'
       description: 'Sync your contacts and conversations with LeadSquared CRM. This integration automatically creates leads in LeadSquared when new contacts are added, and logs conversation activity to provide your sales team with complete context.'
   captain:
+    contact_form:
+      handoff_prompt: 'Norādiet kontaktinformāciju, lai mūsu komanda varētu ar jums sazināties, ja pametīsiet tērzēšanu.'
+      handoff_saved: 'Paldies. Mēs saglabājām jūsu kontaktinformāciju. Kāds no mūsu komandas turpinās jums palīdzēt šeit.'
+      submit: 'Nosūtīt'
+      invalid_field: 'Pārbaudiet šo lauku.'
+      fields:
+        name:
+          label: 'Vārds'
+          placeholder: 'Vārds'
+        email:
+          label: 'E-pasta adrese'
+          placeholder: 'E-pasta adrese'
+        phone_number:
+          label: 'Tālruņa numurs'
+          placeholder: '+34612345678'
+          title: 'Norādiet valsts kodu, piemēram, +34612345678'
+    leads:
+      followup_form: 'Uz kuru e-pasta adresi mūsu komanda var nosūtīt atbildi?'
+      followup_submit: 'Pieprasīt atbildi e-pastā'
+      followup_saved: 'Paldies, %{name}! Saņēmām jūsu lūgumu atbildēt e-pastā.'
     copilot_message_required: Nepieciešams ziņojums
     copilot_error: 'Lai izmantotu Copilot, lūdzu, pievienojiet šai iesūtnei palīgu'
     copilot_limit: 'Jums ir beigušies Copilot kredīti. Vairāk kredītu varat iegādāties norēķinu sadaļā.'

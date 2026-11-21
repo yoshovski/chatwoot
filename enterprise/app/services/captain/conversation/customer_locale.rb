@@ -4,19 +4,43 @@ class Captain::Conversation::CustomerLocale
   MINIMUM_LETTERS = 12
   MINIMUM_CONFIDENCE = 0.95
   STATE_KEY = :customer_reply_locale
-  COUNTRY_LOCALES = { 'IT' => 'it', 'ES' => 'es', 'FR' => 'fr' }.freeze
+  # A coarse fallback for visitors whose language cannot be inferred from their words or browser.
+  COUNTRY_LOCALES = {
+    'AR' => 'es', 'AT' => 'de', 'AU' => 'en', 'BG' => 'bg', 'BR' => 'pt_BR', 'CL' => 'es',
+    'CN' => 'zh_CN', 'CO' => 'es', 'CZ' => 'cs', 'DE' => 'de', 'DK' => 'da', 'EC' => 'es',
+    'EE' => 'et', 'ES' => 'es', 'FI' => 'fi', 'FR' => 'fr', 'GB' => 'en', 'GR' => 'el',
+    'HK' => 'zh_TW', 'HU' => 'hu', 'ID' => 'id', 'IL' => 'he', 'IR' => 'fa', 'IS' => 'is',
+    'IT' => 'it', 'JP' => 'ja', 'KR' => 'ko', 'LT' => 'lt', 'LV' => 'lv',
+    'MX' => 'es', 'NL' => 'nl', 'NO' => 'no', 'NZ' => 'en', 'PE' => 'es', 'PL' => 'pl',
+    'PT' => 'pt', 'RO' => 'ro', 'RS' => 'sr', 'RU' => 'ru', 'SA' => 'ar', 'SE' => 'sv',
+    'SI' => 'sl', 'SK' => 'sk', 'TH' => 'th', 'TR' => 'tr', 'TW' => 'zh_TW', 'UA' => 'uk',
+    'US' => 'en', 'UY' => 'es', 'UZ' => 'uz', 'VN' => 'vi'
+  }.freeze
+  REGIONAL_ALIASES = { 'zh' => 'zh_CN', 'zh_hans' => 'zh_CN', 'zh_hant' => 'zh_TW', 'nb' => 'no', 'nn' => 'no' }.freeze
   GREETING_LOCALES = { 'ciao' => 'it', 'buongiorno' => 'it', 'buonasera' => 'it', 'hola' => 'es', 'bonjour' => 'fr',
                        'hello' => 'en', 'hi' => 'en', 'hey' => 'en' }.freeze
   LANGUAGE_REQUESTS = {
     'en' => /english|inglese|inglés|anglais/,
     'it' => /italian[oa]?|italien/,
     'es' => /spanish|spagnolo|español|castellano|espagnol/,
-    'fr' => /french|francese|franc[eé]s|français/
+    'fr' => /french|francese|franc[eé]s|français/,
+    'ar' => /arabic|العربية/, 'nl' => /dutch|nederlands/, 'de' => /german|deutsch/,
+    'ja' => /japanese|日本語/, 'ko' => /korean|한국어/, 'pt' => /portuguese|português/,
+    'pt_BR' => /brazilian[ ]portuguese/, 'ru' => /russian|русский/, 'ml' => /malayalam|മലയാളം/,
+    'ca' => /catalan|català/, 'el' => /greek|ελληνικά/, 'ro' => /romanian|română/,
+    'ta' => /tamil|தமிழ்/, 'fa' => /persian|farsi|فارسی/, 'zh_CN' => /chinese|simplified[ ]chinese|中文/,
+    'zh_TW' => /traditional[ ]chinese/, 'vi' => /vietnamese|tiếng[ ]việt/, 'da' => /danish|dansk/,
+    'tr' => /turkish|türkçe/, 'cs' => /czech|čeština/, 'fi' => /finnish|suomi/,
+    'id' => /indonesian|bahasa[ ]indonesia/, 'sv' => /swedish|svenska/, 'hu' => /hungarian|magyar/,
+    'no' => /norwegian|norsk/, 'pl' => /polish|polski/, 'sk' => /slovak|slovenčina/,
+    'uk' => /ukrainian/, 'th' => /thai|ไทย/, 'lv' => /latvian|latviešu/, 'is' => /icelandic|íslenska/,
+    'he' => /hebrew|עברית/, 'lt' => /lithuanian|lietuvių/, 'sr' => /serbian|српски/,
+    'bg' => /bulgarian|български/, 'et' => /estonian|eesti/, 'uz' => /uzbek/, 'sl' => /slovenian|slovenščina/
   }.freeze
   REQUEST_VERB = /reply|respond|answer|speak|write|rispondi|parla|scrivi|responde|contesta|habla|escribe|réponds|parle|écris/i
   LANGUAGE_REQUEST = /
     \A\s*(?:(?:please|can\ you|could\ you|por\ favor|per\ favore)\s+)?
-    (?:#{REQUEST_VERB})\s+(?:to\ me\s+|me\s+)?(?:in|en)\s+(\p{L}+)
+    (?:#{REQUEST_VERB})\s+(?:to\ me\s+|me\s+)?(?:in|en)\s+
   /ix
 
   def self.resolve(conversation: nil, assistant: nil, customer_message: nil, history: nil)
@@ -140,9 +164,29 @@ class Captain::Conversation::CustomerLocale
   def requested_or_detected_locale(text)
     return unless text.is_a?(String)
 
+    requested = requested_language(text)
+    return requested if requested.to_s.include?('_')
+    return preferred_variant(requested) if requested
+
+    detected = normalized(self.class.detect(text))
+    preferred_variant(detected, browser: browser_locale) if detected
+  end
+
+  def requested_language(text)
     request = text.match(LANGUAGE_REQUEST)
-    requested = LANGUAGE_REQUESTS.find { |_locale, name| request && request[1].downcase.match?(/\A(?:#{name})\z/) }&.first
-    requested || normalized(self.class.detect(text))
+    return unless request
+
+    remaining = request.post_match.downcase
+    LANGUAGE_REQUESTS.find { |_locale, name| remaining.match?(/\A(?:#{name})(?![\p{L}\p{M}])/) }&.first
+  end
+
+  def preferred_variant(locale, browser: nil)
+    base = locale.split('_').first
+    return browser if browser.to_s.split('_').first == base && allowed?(browser)
+    return locale if allowed?(locale)
+
+    allowed_variant = Array(@config['allowed_reply_locales']).find { |candidate| candidate.split('_').first == base }
+    allowed_variant || locale
   end
 
   def greeting_locale
@@ -157,7 +201,7 @@ class Captain::Conversation::CustomerLocale
   end
 
   def location_locale
-    COUNTRY_LOCALES[@conversation&.contact&.additional_attributes&.dig('country_code')]
+    COUNTRY_LOCALES[@conversation&.contact&.additional_attributes&.dig('country_code').to_s.upcase]
   end
 
   def normalized(value)
@@ -165,6 +209,11 @@ class Captain::Conversation::CustomerLocale
 
     requested = value.to_s.tr('-', '_').downcase
     available = I18n.available_locales.map(&:to_s)
-    available.find { |locale| locale.casecmp?(requested) } || available.find { |locale| locale == requested.split('_').first }
+    available.find { |locale| locale.casecmp?(requested) } || regional_alias(requested, available)
+  end
+
+  def regional_alias(requested, available)
+    language, script = requested.split('_')
+    REGIONAL_ALIASES["#{language}_#{script}"] || REGIONAL_ALIASES[language] || available.find { |locale| locale == language }
   end
 end

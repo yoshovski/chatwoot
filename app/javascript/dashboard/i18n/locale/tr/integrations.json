@@ -1441,6 +1441,18 @@
         "TITLE": "Bağlı Gelen Kutusu Yok",
         "SUBTITLE": "Bir gelen kutusunu bağlamak, asistanın müşterilerinizden gelen ilk soruları size aktarmadan önce ele almasını sağlar."
       }
+    },
+    "AGENT_UX": {
+      "SECTIONS": {
+        "OVERVIEW": "Genel bakış",
+        "KNOWLEDGE": "Bilgi",
+        "BEHAVIOR": "Davranış",
+        "HANDOFF": "Devretme",
+        "CHANNELS": "Kanallar",
+        "PROFILE": "Profil",
+        "SCENARIOS": "Senaryolar",
+        "ACTIONS": "Eylemler"
+      }
     }
   }
 }

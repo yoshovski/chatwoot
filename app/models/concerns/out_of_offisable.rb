@@ -17,10 +17,22 @@ module OutOfOffisable
   included do
     has_many :working_hours, dependent: :destroy_async
     after_create :create_default_working_hours
+    validate :validate_out_of_office_message_translations
   end
 
   def out_of_office?
     working_hours_enabled? && working_hours.today.closed_now?
+  end
+
+  def out_of_office_message_configured?
+    out_of_office_message.present? || out_of_office_message_translations.present?
+  end
+
+  def out_of_office_message_for(locale)
+    requested = locale.to_s.tr('-', '_').downcase
+    variants = out_of_office_message_translations
+    matching_locale = variants.keys.find { |key| key.casecmp?(requested) }
+    variants[matching_locale].presence || variants[requested.split('_').first].presence || out_of_office_message
   end
 
   def working_now?
@@ -59,6 +71,17 @@ module OutOfOffisable
   end
 
   private
+
+  def validate_out_of_office_message_translations
+    variants = out_of_office_message_translations
+    return if variants.is_a?(Hash) && variants.all? { |locale, message| valid_out_of_office_translation?(locale, message) }
+
+    errors.add(:out_of_office_message_translations, :invalid)
+  end
+
+  def valid_out_of_office_translation?(locale, message)
+    I18n.locale_available?(locale) && message.is_a?(String) && message.present? && message.length <= Limits::OUT_OF_OFFICE_MESSAGE_MAX_LENGTH
+  end
 
   def create_default_working_hours
     DEFAULT_WORKING_HOURS.each { |attributes| working_hours.create!(attributes) }

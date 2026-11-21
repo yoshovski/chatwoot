@@ -420,6 +420,26 @@ ja:
       short_description: 'Sync your contacts and conversations with LeadSquared CRM.'
       description: 'Sync your contacts and conversations with LeadSquared CRM. This integration automatically creates leads in LeadSquared when new contacts are added, and logs conversation activity to provide your sales team with complete context.'
   captain:
+    contact_form:
+      handoff_prompt: 'チャットを離れた場合でも担当チームがご連絡できるよう、連絡先をご入力ください。'
+      handoff_saved: 'ありがとうございます。連絡先を保存しました。このチャットで担当者が引き続き対応します。'
+      submit: '送信'
+      invalid_field: 'この項目を確認してください。'
+      fields:
+        name:
+          label: 'お名前'
+          placeholder: 'お名前'
+        email:
+          label: 'メールアドレス'
+          placeholder: 'メールアドレス'
+        phone_number:
+          label: '電話番号'
+          placeholder: '+34612345678'
+          title: '国番号を含めて入力してください（例：+34612345678）'
+    leads:
+      followup_form: 'チームからの回答は、どのメールアドレスにお送りすればよいですか？'
+      followup_submit: 'メールでの回答を依頼する'
+      followup_saved: '%{name}さん、ありがとうございます。メールでの回答のご依頼を受け付けました。'
     copilot_message_required: メッセージは必須です
     copilot_error: 'この受信トレイにアシスタントを接続してCopilotを使用してください'
     copilot_limit: 'Copilot残高がありません。課金セクションからクレジットを追加購入することができます。'

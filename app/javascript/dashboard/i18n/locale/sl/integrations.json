@@ -1441,6 +1441,18 @@
         "TITLE": "Ni povezanih poštnih predalov",
         "SUBTITLE": "Povezava z nabiralnikom omogoča asistentu, da obravnava začetna vprašanja vaših strank, preden jih preusmeri k vam."
       }
+    },
+    "AGENT_UX": {
+      "SECTIONS": {
+        "OVERVIEW": "Pregled",
+        "KNOWLEDGE": "Znanje",
+        "BEHAVIOR": "Vedenje",
+        "HANDOFF": "Predaja pogovora",
+        "CHANNELS": "Kanali",
+        "PROFILE": "Profil",
+        "SCENARIOS": "Scenariji",
+        "ACTIONS": "Dejanja"
+      }
     }
   }
 }

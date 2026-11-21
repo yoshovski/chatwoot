@@ -1441,6 +1441,18 @@
         "TITLE": "Caixa de entrada não conectada",
         "SUBTITLE": "Conectar uma caixa de entrada permite ao assistente lidar com perguntas iniciais de seus clientes antes de transferi-las para você."
       }
+    },
+    "AGENT_UX": {
+      "SECTIONS": {
+        "OVERVIEW": "Visão geral",
+        "KNOWLEDGE": "Conhecimento",
+        "BEHAVIOR": "Comportamento",
+        "HANDOFF": "Transferência",
+        "CHANNELS": "Canais",
+        "PROFILE": "Perfil",
+        "SCENARIOS": "Cenários",
+        "ACTIONS": "Ações"
+      }
     }
   }
 }

@@ -2264,6 +2264,10 @@
             "LABEL": "Tools in this scenario:",
             "NONE": "None linked. Your AI agent can still use all of its tools.",
             "REMOVE": "Remove {tool} from the steps"
+          },
+          "REPLY_COPY": {
+            "TITLE": "Customer wording by language",
+            "HELP": "Add optional wording for this language. Leave it blank to have the agent phrase its reply automatically. The scenario still controls which actions it takes."
           }
         },
         "FILTER": {

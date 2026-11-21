@@ -56,7 +56,7 @@
       "HELP_CENTER_SETTING_UP_CATEGORIES": "Configurando categorías…",
       "HELP_CENTER_CURATING_ARTICLES": "Curando artículos…",
       "HELP_CENTER_ARTICLES": "Artículo {count} creado | Artículos {count} creados",
-      "HELP_CENTER_CATEGORIES": "{count} category | {count} categories",
+      "HELP_CENTER_CATEGORIES": "{count} categoría | {count} categorías",
       "HELP_CENTER_SUMMARY": "Artículo {count} creado a través de {categories} | Creado {count} artículos a través de {categories}"
     },
     "CHANNELS": {

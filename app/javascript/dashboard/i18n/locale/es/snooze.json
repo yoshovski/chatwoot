@@ -1,71 +1,71 @@
 {
   "SNOOZE_PARSER": {
     "UNITS": {
-      "MINUTE": "minute",
+      "MINUTE": "minuto",
       "MINUTES": "minutos",
-      "HOUR": "hour",
+      "HOUR": "hora",
       "HOURS": "horas",
       "DAY": "día",
       "DAYS": "días",
       "WEEK": "semana",
-      "WEEKS": "weeks",
+      "WEEKS": "semanas",
       "MONTH": "mes",
-      "MONTHS": "months",
-      "YEAR": "mes",
-      "YEARS": "years"
+      "MONTHS": "meses",
+      "YEAR": "año",
+      "YEARS": "años"
     },
-    "HALF": "half",
+    "HALF": "mitad",
     "NEXT": "siguiente",
-    "THIS": "this",
-    "AT": "at",
-    "IN": "in",
-    "FROM_NOW": "from now",
-    "NEXT_YEAR": "next year",
+    "THIS": "esto",
+    "AT": "a",
+    "IN": "en",
+    "FROM_NOW": "desde ahora",
+    "NEXT_YEAR": "el próximo año",
     "MERIDIEM": {
       "AM": "am",
       "PM": "pm"
     },
     "RELATIVE": {
       "TOMORROW": "mañana",
-      "DAY_AFTER_TOMORROW": "day after tomorrow",
-      "NEXT_WEEK": "próxima semana",
-      "NEXT_MONTH": "next month",
-      "THIS_WEEKEND": "this weekend",
-      "NEXT_WEEKEND": "next weekend"
+      "DAY_AFTER_TOMORROW": "día después de mañana",
+      "NEXT_WEEK": "la próxima semana",
+      "NEXT_MONTH": "próximo mes",
+      "THIS_WEEKEND": "este fin de semana",
+      "NEXT_WEEKEND": "el próximo fin de semana"
     },
     "TIME_OF_DAY": {
-      "MORNING": "morning",
-      "AFTERNOON": "afternoon",
-      "EVENING": "evening",
-      "NIGHT": "night",
-      "NOON": "noon",
-      "MIDNIGHT": "midnight"
+      "MORNING": "mañana",
+      "AFTERNOON": "tarde",
+      "EVENING": "noche",
+      "NIGHT": "noche",
+      "NOON": "mediodía",
+      "MIDNIGHT": "medianoche"
     },
     "WORD_NUMBERS": {
-      "ONE": "one",
-      "TWO": "two",
-      "THREE": "three",
+      "ONE": "uno",
+      "TWO": "dos.",
+      "THREE": "tres",
       "FOUR": "four",
       "FIVE": "five",
-      "SIX": "six",
+      "SIX": "seis.",
       "SEVEN": "seven",
       "EIGHT": "eight",
       "NINE": "nine",
-      "TEN": "ten",
-      "TWELVE": "twelve",
+      "TEN": "10",
+      "TWELVE": "doce.",
       "FIFTEEN": "fifteen",
-      "TWENTY": "twenty",
-      "THIRTY": "thirty"
+      "TWENTY": "20",
+      "THIRTY": "30"
     },
     "ORDINALS": {
-      "FIRST": "first",
-      "SECOND": "second",
-      "THIRD": "third",
-      "FOURTH": "fourth",
-      "FIFTH": "fifth"
+      "FIRST": "primero",
+      "SECOND": "segundo segundo",
+      "THIRD": "tercero",
+      "FOURTH": "cuarto",
+      "FIFTH": "quinta parte"
     },
-    "OF": "de",
-    "AFTER": "after",
+    "OF": "of of",
+    "AFTER": "después",
     "WEEK": "semana",
     "DAY": "día"
   }

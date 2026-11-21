@@ -1,0 +1,130 @@
+{
+  "ANALYTICS": {
+    "TITLE": "Análisis",
+    "SUBTITLE": "Los últimos {days} días, en comparación con los {days} días antes.",
+    "MORE": {
+      "LABEL": "Informes detallados",
+      "BACK": "Informes detallados",
+      "LIVE": "Ahora mismo.",
+      "CONVERSATIONS": "Conversaciones",
+      "AGENTS": "Personas",
+      "LABELS": "Etiquetas",
+      "INBOXES": "Canales",
+      "TEAMS": "Equipos",
+      "RATING": "Valoración del cliente",
+      "TARGETS": "Metas de respuesta a tiempo",
+      "AI_AGENT": "Agente de IA"
+    },
+    "PERIOD": {
+      "LABEL": "Período",
+      "DAYS": "{days} días"
+    },
+    "TABS": {
+      "OVERVIEW": "Visión general",
+      "AI_AGENT": "Agente de IA",
+      "TEAM": "Equipo",
+      "RATING": "Valoración del cliente"
+    },
+    "METRICS": {
+      "CONVERSATIONS": "Conversaciones",
+      "AI_CONVERSATIONS": "Respuesta del agente de AI",
+      "RESOLVED": "Tasa de resolución de la AI",
+      "HANDED": "Entregado a su equipo",
+      "FIRST_REPLY": "Hora de la primera respuesta",
+      "TEAM_SOLVED": "Resoluciones",
+      "RATING": "Valoración del cliente",
+      "PRODUCT_ANSWERS": "Respuestas del producto",
+      "RESOLUTION_TIME": "Tiempo para resolver",
+      "RATINGS_COUNT": "Calificaciones recibidas",
+      "HAPPY_SHARE": "Calificación 4 o 5",
+      "REPLY_SHARE": "Tasa de respuesta a la evaluación"
+    },
+    "CHART": {
+      "TITLE": "Conversaciones por día",
+      "AI": "Agente de IA",
+      "TEAM": "Tu equipo",
+      "EMPTY": "Todavía no hay conversaciones en este período.",
+      "LINK": "Informe de conversación",
+      "NOTE": "Cada bar cuenta las conversaciones que alguien respondió en ese día. Una conversación durante varios días cuenta con cada uno de ellos.",
+      "AI_TOTAL": "El agente de inteligencia respondió, día a día",
+      "TEAM_TOTAL": "Tu equipo respondió, día a día",
+      "DAY": "{date}: {values}"
+    },
+    "REPORTS": {
+      "TITLE": "Informes detallados",
+      "SUBTITLE": "Cada número completo, con filtros y descargas.",
+      "GROUPS": {
+        "NOW": "¿Qué está pasando?",
+        "WHO": "¿Quién y dónde",
+        "QUALITY": "¿Qué tan bien fue?"
+      },
+      "ITEMS": {
+        "LIVE": "Abrir conversaciones, quién está en línea y las horas más activas de la semana.",
+        "CONVERSATIONS": "Conversaciones, mensajes, respuestas y tiempos de solución en cualquier período.",
+        "AGENTS": "Cada persona: conversaciones, tiempo para responder y resolver.",
+        "TEAMS": "Los mismos números para cada equipo.",
+        "INBOXES": "Los mismos números para cada canal: chat, email, WhatsApp.",
+        "LABELS": "Conversaciones por etiqueta, para ver qué piden los clientes.",
+        "AI_AGENT": "Conversaciones su agente AI resuelto o entregado a su equipo, con el tiempo.",
+        "RATING": "Cada valoración del cliente con su comentario, por persona y canal.",
+        "TARGETS": "Conversaciones que perdieron un objetivo de respuesta y por qué."
+      }
+    },
+    "LINKS": {
+      "CONVERSATIONS": "Informe de conversación",
+      "TEAM": "Equipo",
+      "AI_AGENT": "Informe del agente de inteligencia",
+      "PEOPLE": "Informe de la gente",
+      "TEAMS": "Informe de los equipos",
+      "RATING": "Informe de evaluación",
+      "ALL_COMMENTS": "Todas las calificaciones"
+    },
+    "PEOPLE": {
+      "TITLE": "Tu equipo",
+      "EMPTY": "Nadie en su equipo respondió en este período.",
+      "ROW": "{conversations} conversaciones · primera respuesta {time}"
+    },
+    "AI": {
+      "CHART_TITLE": "Agente de inteligencia artificial por día",
+      "STAYED": "Permaneció con el agente de AI",
+      "STAYED_TOTAL": "Permaneció con el agente de AI, día a día",
+      "HANDED": "Entregado a su equipo",
+      "HANDED_TOTAL": "Entregado a su equipo, día a día",
+      "NOTE": "Cada bar cuenta las conversaciones que su agente de IA respondió en ese día; amber es la parte que entregó a su equipo.",
+      "EMPTY": "Su agente de inteligencia artificial no tuvo conversaciones en este período.",
+      "AGENTS_TITLE": "Sus agentes de inteligencia artificial",
+      "AGENT_ROW": "{conversations} conversaciones · {rate} % resuelta",
+      "NO_AGENTS": "Aún no hay agentes de IA."
+    },
+    "TEAM": {
+      "CHART_TITLE": "Su equipo por día",
+      "EMPTY": "Su equipo no respondió en ninguna conversación en este período.",
+      "TEAMS_TITLE": "Equipos",
+      "NO_TEAMS": "Ningún equipo tuvo conversaciones en este período."
+    },
+    "RATING": {
+      "SPLIT_TITLE": "Cómo valoraron los clientes",
+      "STARS": "{rating} estrella | {rating} estrellas",
+      "EMPTY": "Todavía no hay valoraciones en este período.",
+      "COMMENTS_TITLE": "Últimos comentarios",
+      "NO_COMMENTS": "No hay comentarios con las calificaciones en este período.",
+      "COMMENT_META": "{rating} de 5 · {name} · {time}",
+      "SOMEONE": "Un cliente",
+      "COUNT": "{count} · {share} %",
+      "QUOTE": "“{comment}”"
+    },
+    "VIEW_WORKSPACE_REPORT": "Ver informe del espacio de trabajo",
+    "CONTEXT": "Todos los agentes de IA · {since} – {until} ( {timezone} )",
+    "UNSUPPORTED_PERIOD": "Este rango de reportes no es compatible. Mostrando los últimos 7 días; elegir un rango apoyado arriba.",
+    "PARTIAL_ERROR": "Algunas métricas no se pueden cargar. Los valores indisponibles se muestran como un dash.",
+    "RETRY": "Intentar de nuevo",
+    "ESTIMATED_HOURS_SAVED": "Horas estimadas ahorradas",
+    "NO_COMPARISON": "No hay comparación entre períodos anteriores",
+    "DURATION": {
+      "SECONDS": "{count} s",
+      "MINUTES": "{count} min",
+      "HOURS": "{count} h",
+      "HOURS_MINUTES": "{hours} h {minutes} min"
+    }
+  }
+}

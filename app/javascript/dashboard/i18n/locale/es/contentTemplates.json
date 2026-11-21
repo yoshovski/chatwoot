@@ -1,33 +1,33 @@
 {
   "CONTENT_TEMPLATES": {
     "MODAL": {
-      "TITLE": "Twilio Templates",
-      "SUBTITLE": "Select the Twilio template you want to send",
-      "TEMPLATE_SELECTED_SUBTITLE": "Configure template: {templateName}"
+      "TITLE": "Twilio Plantillas",
+      "SUBTITLE": "Seleccione la plantilla Twilio que desea enviar",
+      "TEMPLATE_SELECTED_SUBTITLE": "Plantilla de configuración: {templateName}"
     },
     "PICKER": {
-      "SEARCH_PLACEHOLDER": "Buscar plantillas",
-      "NO_TEMPLATES_FOUND": "No se encontraron plantillas para",
-      "NO_CONTENT": "Sin contenido",
+      "SEARCH_PLACEHOLDER": "Plantillas de búsqueda",
+      "NO_TEMPLATES_FOUND": "No se han encontrado plantillas",
+      "NO_CONTENT": "No hay contenido",
       "HEADER": "Header",
-      "BODY": "Body",
+      "BODY": "Cuerpo",
       "FOOTER": "Footer",
-      "BUTTONS": "Buttons",
+      "BUTTONS": "Botones",
       "CATEGORY": "Categoría",
-      "MEDIA_CONTENT": "Media Content",
-      "MEDIA_CONTENT_FALLBACK": "media content",
-      "NO_TEMPLATES_AVAILABLE": "No Twilio templates available. Click refresh to sync templates from Twilio.",
-      "REFRESH_BUTTON": "Refresh templates",
-      "REFRESH_SUCCESS": "Templates refresh initiated. It may take a couple of minutes to update.",
-      "REFRESH_ERROR": "Failed to refresh templates. Please try again.",
+      "MEDIA_CONTENT": "Contenido multimedia",
+      "MEDIA_CONTENT_FALLBACK": "contenido multimedia",
+      "NO_TEMPLATES_AVAILABLE": "No hay plantillas Twilio disponibles. Haga clic en refrescos para sincronizar plantillas de Twilio.",
+      "REFRESH_BUTTON": "Plantillas de ajuste",
+      "REFRESH_SUCCESS": "Plantillas refrescante iniciadas. Puede tomar un par de minutos para actualizar.",
+      "REFRESH_ERROR": "Failed to refrescar plantillas. Por favor, intente de nuevo.",
       "LABELS": {
         "LANGUAGE": "Idioma",
         "TEMPLATE_BODY": "Cuerpo de plantilla",
         "CATEGORY": "Categoría"
       },
       "TYPES": {
-        "MEDIA": "Media",
-        "QUICK_REPLY": "Quick Reply",
+        "MEDIA": "Medios",
+        "QUICK_REPLY": "Respuesta rápida",
         "CALL_TO_ACTION": "Call to Action",
         "TEXT": "Texto"
       }
@@ -36,17 +36,17 @@
       "VARIABLES_LABEL": "Variables",
       "LANGUAGE": "Idioma",
       "CATEGORY": "Categoría",
-      "VARIABLE_PLACEHOLDER": "Introduzca el valor de {variable}",
-      "GO_BACK_LABEL": "Volver",
-      "SEND_MESSAGE_LABEL": "Enviar mensaje",
-      "FORM_ERROR_MESSAGE": "Por favor, rellene todas las variables antes de enviar",
+      "VARIABLE_PLACEHOLDER": "Introdúzcase el valor {variable}",
+      "GO_BACK_LABEL": "Regresa.",
+      "SEND_MESSAGE_LABEL": "Mensaje",
+      "FORM_ERROR_MESSAGE": "Rellene todas las variables antes de enviar",
       "MEDIA_HEADER_LABEL": "{type} Header",
-      "MEDIA_URL_LABEL": "Ingrese la URL completa",
+      "MEDIA_URL_LABEL": "Ingrese los medios de comunicación completos URL",
       "MEDIA_URL_PLACEHOLDER": "https://example.com/image.jpg"
     },
     "FORM": {
-      "BACK_BUTTON": "Atrás",
-      "SEND_MESSAGE_BUTTON": "Enviar mensaje"
+      "BACK_BUTTON": "Espalda",
+      "SEND_MESSAGE_BUTTON": "Mensaje"
     }
   }
 }

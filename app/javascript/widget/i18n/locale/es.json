@@ -10,6 +10,10 @@
     "MESSAGE_BUBBLE": {
       "RETRY": "Enviar mensaje de nuevo",
       "ERROR_MESSAGE": "¡No se pudo enviar! intente nuevamente"
+    },
+    "CARD_CAROUSEL": {
+      "PREVIOUS": "Productos anteriores",
+      "NEXT": "Más productos"
     }
   },
   "THUMBNAIL": {
@@ -31,7 +35,8 @@
     "BACK_AT_TIME": "Volveremos a estar en línea a las {time}",
     "BACK_ON_DAY": "Volveremos a estar en línea el {day}",
     "BACK_TOMORROW": "Volveremos a estar en línea mañana",
-    "BACK_IN_SOME_TIME": "Volveremos a estar en línea dentro de un rato"
+    "BACK_IN_SOME_TIME": "Volveremos a estar en línea dentro de un rato",
+    "IMMEDIATELY": "Respondemos de inmediato"
   },
   "DAY_NAMES": {
     "SUNDAY": "Domingo",
@@ -150,9 +155,53 @@
     },
     "fallback": {
       "CONTENT": "ha compartido una url"
-    }
+    },
+    "REMOVE": "Quitar adjunto"
   },
   "FOOTER_REPLY_TO": {
     "REPLY_TO": "Respondiendo a:"
-  }
+  },
+  "WELCOME": {
+    "TITLE": "Hola 👋",
+    "DESCRIPTION": "¿Cómo podemos ayudarte hoy?",
+    "CHAT_DESCRIPTION": "Haz una pregunta. Estamos aquí para ayudarte.",
+    "NAVIGATION": "Navegación de ayuda",
+    "HOME": "Inicio",
+    "CHAT": "Chat"
+  },
+  "MESSAGE_VIDEO": {
+    "PLAY": "Reproducir vídeo"
+  },
+  "MESSAGE_SOURCES": {
+    "LABEL": "Fuentes"
+  },
+  "ATTENTION": {
+    "CHECK_IN": "¿Puedo ayudarte con algo más?",
+    "ALL_SET": "Eso es todo",
+    "OPEN_CHAT": "Abrir el chat",
+    "NEW_REPLY": "Tienes una nueva respuesta",
+    "MUTE": "Silenciar las notificaciones",
+    "UNMUTE": "Activar el sonido de las notificaciones"
+  },
+  "PREVIEW": {
+    "COMPOSER_HINT": "Vista previa",
+    "SAMPLE": {
+      "AGENT_NAME": "Agente de IA",
+      "GREETING": "¡Hola! Puedo ayudarte con pedidos, entregas y devoluciones. ¿Qué necesitas?",
+      "QUESTION": "¿Cuánto tarda la entrega?",
+      "ANSWER": "Los pedidos suelen llegar en 2 a 4 días laborables. Te enviamos por correo un enlace de seguimiento en cuanto salga el paquete.",
+      "SOURCE_TITLE": "Entregas y envíos",
+      "SUGGESTIONS": {
+        "TRACK": {
+          "TITLE": "Seguir mi pedido",
+          "VALUE": "¿Cómo puedo seguir mi pedido?"
+        },
+        "RETURNS": {
+          "TITLE": "Devoluciones",
+          "VALUE": "¿Cómo devuelvo un artículo?"
+        }
+      }
+    }
+  },
+  "SEND_MESSAGE": "Enviar mensaje"
 }

@@ -35,7 +35,7 @@
     "ARIA_LABEL": "Breadcrumb"
   },
   "SWITCH": {
-    "TOGGLE": "Toggle switch"
+    "TOGGLE": "Interruttore di attivazione"
   },
   "LABEL": {
     "TAG_BUTTON": "tag"
@@ -51,7 +51,7 @@
     "PLACEHOLDER": "Inserisci durata"
   },
   "CHANNEL_SELECTOR": {
-    "COMING_SOON": "Coming Soon!"
+    "COMING_SOON": "Arrivo presto!"
   },
   "SLASH_COMMANDS": {
     "HEADING_1": "Heading 1",
@@ -61,22 +61,22 @@
     "ITALIC": "Italic",
     "STRIKETHROUGH": "Strikethrough",
     "CODE": "Code",
-    "BULLET_LIST": "Bullet List",
-    "ORDERED_LIST": "Ordered List",
+    "BULLET_LIST": "Elenco dei Bullet",
+    "ORDERED_LIST": "Elenco Ordinato",
     "TABLE": "Table",
     "IMAGE": "Immagine",
     "VIDEO": "Video",
     "DIVIDER": "Divider"
   },
   "VIDEO_EMBED": {
-    "TAB_EMBED": "Embed link",
+    "TAB_EMBED": "Collegamento incorporato",
     "TAB_UPLOAD": "Upload",
-    "PLACEHOLDER": "Paste a video link",
-    "HINT": "Works with YouTube, Vimeo, Loom, Wistia, Arcade, Bunny, CodePen, GuideJar and mp4 links",
-    "ERROR": "That doesn't look like a supported video link",
-    "UPLOAD_LABEL": "Choose a video file",
-    "UPLOAD_HINT": "MP4 · up to {size}MB · or drop it here",
-    "UPLOAD_ERROR": "Only MP4 files can be uploaded",
+    "PLACEHOLDER": "Incolla un link video",
+    "HINT": "Funziona con YouTube, Vimeo, Loom, Wistia, Arcade, Bunny, CodePen, GuideJar e mp 4 collegamenti",
+    "ERROR": "Questo non sembra un link video supportato",
+    "UPLOAD_LABEL": "Scegli un file video",
+    "UPLOAD_HINT": "MP 4 · fino a {size} MB · o rilasciarlo qui",
+    "UPLOAD_ERROR": "Solo i file MP 4 possono essere caricati",
     "ADD": "Embed",
     "CANCEL": "Annulla"
   }

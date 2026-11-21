@@ -130,7 +130,7 @@ class Captain::Tools::HandoffTool < Captain::Tools::BasePublicTool
     record_handoff_note(tool_context, note) if note.present?
     conversation.bot_handoff!
     emit_tool_handoff_event(conversation, reason_category)
-    send_out_of_office_message_if_applicable(conversation)
+    send_out_of_office_message_if_applicable(conversation, tool_context)
     :completed
   end
 
@@ -139,7 +139,7 @@ class Captain::Tools::HandoffTool < Captain::Tools::BasePublicTool
     tool_context.state[:captain_v2_handoff_tool_completed] = true
     conversation.dispatch_bot_handoff_event
     emit_tool_handoff_event(conversation, reason_category)
-    send_out_of_office_message_if_applicable(conversation)
+    send_out_of_office_message_if_applicable(conversation, tool_context)
   end
 
   def emit_tool_handoff_event(conversation, reason_category)
@@ -162,12 +162,13 @@ class Captain::Tools::HandoffTool < Captain::Tools::BasePublicTool
     metadata[:handoff_note_id] = note.id
   end
 
-  def send_out_of_office_message_if_applicable(conversation)
+  def send_out_of_office_message_if_applicable(conversation, tool_context)
     # Campaign conversations should never receive OOO templates — the campaign itself
     # serves as the initial outreach, and OOO would be confusing in that context.
     return if conversation.campaign.present?
 
-    ::MessageTemplates::Template::OutOfOffice.perform_if_applicable(conversation)
+    locale = tool_context.state[Captain::Conversation::CustomerLocale::STATE_KEY]
+    ::MessageTemplates::Template::OutOfOffice.perform_if_applicable(conversation, locale: locale)
   end
 
   # TODO: Future enhancement - Add team assignment capability

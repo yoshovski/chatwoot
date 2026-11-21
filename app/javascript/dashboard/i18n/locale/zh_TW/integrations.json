@@ -1441,6 +1441,18 @@
         "TITLE": "沒有已連接的收件匣",
         "SUBTITLE": "連接收件匣可讓助理在轉接給您之前，先處理客戶的初始問題。"
       }
+    },
+    "AGENT_UX": {
+      "SECTIONS": {
+        "OVERVIEW": "總覽",
+        "KNOWLEDGE": "知識庫",
+        "BEHAVIOR": "回覆行為",
+        "HANDOFF": "轉接",
+        "CHANNELS": "管道",
+        "PROFILE": "個人資料",
+        "SCENARIOS": "情境",
+        "ACTIONS": "操作"
+      }
     }
   }
 }

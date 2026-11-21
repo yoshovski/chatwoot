@@ -2,8 +2,8 @@
   "CONTACTS_FILTER": {
     "TITLE": "Filtra Contatti",
     "SUBTITLE": "Aggiungi filtri qui sotto e premi 'Invia' per filtrare i contatti.",
-    "EDIT_CUSTOM_SEGMENT": "Edit Segment",
-    "CUSTOM_VIEWS_SUBTITLE": "Add or remove filters and update your segment.",
+    "EDIT_CUSTOM_SEGMENT": "Modifica Segmento",
+    "CUSTOM_VIEWS_SUBTITLE": "Aggiungere o rimuovere filtri e aggiornare il segmento.",
     "ADD_NEW_FILTER": "Aggiungi filtro",
     "CLEAR_ALL_FILTERS": "Cancella tutti i filtri",
     "FILTER_DELETE_ERROR": "Dovresti avere almeno un filtro da salvare",

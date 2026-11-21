@@ -1,0 +1,287 @@
+{
+  "HOME": {
+    "TITLE": "Bentornato, {name}",
+    "SUBTITLE": "Un breve sguardo al vostro spazio di lavoro. Aprire qualsiasi scheda per i dettagli.",
+    "ERROR": "Non ho potuto caricare la tua panoramica.",
+    "RETRY": "Prova ancora.",
+    "DASHBOARD": {
+      "FINALIZE_SETUP": "Finalizzare la configurazione ChatOctave",
+      "FINALIZE_SETUP_HINT": "Finisci di impostare il tuo spazio di lavoro in modo da poter iniziare ad aiutare i clienti.",
+      "FINISH_SETUP": "Configurazione di finitura",
+      "TEST": "Test AI agente",
+      "AI_AGENT": "Agente IA",
+      "SET_UP_AI": "Impostare l'agente AI",
+      "QUICK_ACTIONS": "Azioni rapide",
+      "LIVE_CONVERSATIONS": "Conversazioni dal vivo",
+      "OPEN_COUNT": "{count} aperto",
+      "LIVE_VISITORS": "Visitatori dal vivo",
+      "ONLINE_COUNT": "{count} visitatore online | {count} visitatori online",
+      "LIVE_UNAVAILABLE": "L'attività dal vivo è temporaneamente non disponibile.",
+      "ANALYTICS": "Visualizza analisi",
+      "VIEW_UNASSIGNED": "Visualizza senza firma",
+      "MANAGE_CHANNELS": "Canali",
+      "INSTALL_UNCONFIRMED": "Installazione non confermata",
+      "MAILBOX_NOT_CONNECTED": "Non collegato",
+      "DOMAIN_NOT_CONFIGURED": "Non configurato",
+      "PERFORMANCE": "Prestazioni",
+      "CHART_TYPE": "Tipo di grafico",
+      "BAR_CHART": "Grafico della barra",
+      "LINE_CHART": "Grafico della linea",
+      "TODAY": "Oggi",
+      "LAST_WEEK": "La settimana scorsa",
+      "LAST_90_DAYS": "Ultimi 90 giorni",
+      "PREVIOUS_MONTH": "Mese precedente",
+      "NEXT_MONTH": "Il mese prossimo",
+      "CANCEL": "annulla",
+      "INVALID_RANGE": "Scegliere fino a 90 giorni che terminano oggi o prima.",
+      "CURRENT_USAGE": "Utilizzo attuale",
+      "TOTAL_CONVERSATIONS": "Totale conversazioni",
+      "AI_AGENT_CONVERSATIONS": "Conversazioni dell'agente dell'IA",
+      "BILLING_PERIOD": "Questo periodo di fatturazione",
+      "EXTRAS": "{count} conversazione extra disponibile | {count} conversazioni extra disponibili",
+      "REPLY_CHART": "Conversazioni con una risposta",
+      "REPLY_CHART_NOTE": "Una conversazione può apparire in entrambe le serie quando l'agente AI e una risposta del compagno di squadra lo stesso giorno.",
+      "HOME": "Panoramica",
+      "YESTERDAY": "Ieri"
+    },
+    "GETTING_STARTED": {
+      "TITLE": "Iniziare",
+      "DESCRIPTION": "Impostare il vostro agente AI e i canali che i vostri clienti useranno.",
+      "BACK": "Torna alla dashboard",
+      "FIRST_STEPS": "I primi passi",
+      "AI": "Il tuo agente AI",
+      "CHANNELS": "I canali di supporto",
+      "TEAM": "La tua squadra",
+      "NEXT": "Prossimo passo",
+      "OPTIONAL": "opzionale",
+      "CONTINUE": "Continua a configurare",
+      "COMPLETE": "Setup completo",
+      "COMPLETE_HINT": "Hai completato tutti i passaggi di configurazione per questo spazio di lavoro.",
+      "REVIEWED": "Checklist recensione",
+      "REVIEWED_HINT": "Puoi riaprire i passi saltati quando ne hai bisogno."
+    },
+    "SETUP": {
+      "TITLE": "Impostare il vostro spazio di lavoro",
+      "PROGRESS": "{done} del {total} fatto",
+      "GO": "Inizio",
+      "SKIP": "Salta!",
+      "STEPS": {
+        "KNOWLEDGE": {
+          "TITLE": "Aggiungi il tuo sito web",
+          "HINT": "Importa le sue pagine in modo che l'agente AI possa rispondere."
+        },
+        "TEST_AGENT": {
+          "TITLE": "Testare il vostro agente AI",
+          "HINT": "Fai qualche domanda ai tuoi clienti."
+        },
+        "AGENT_INBOX": {
+          "TITLE": "Accendere l'agente AI",
+          "HINT": "Lascia che risponda nella chat del tuo sito web."
+        },
+        "CHAT_WIDGET": {
+          "TITLE": "Aggiungi il widget di chat al tuo sito web",
+          "HINT": "Incolla lo script del widget nel tuo sito."
+        },
+        "MAILBOX": {
+          "TITLE": "Collegare una casella di posta",
+          "HINT": "Rispondi alle email dei clienti dallo stesso posto."
+        },
+        "TEAMMATE": {
+          "TITLE": "Invita un compagno di squadra",
+          "HINT": "Condividi le conversazioni che l'IA consegna."
+        }
+      },
+      "DONE": "Fatto",
+      "SKIPPED": "Asciugata",
+      "UNDO": "disfare"
+    },
+    "STATUS": {
+      "TITLE": "Situazione del progetto",
+      "WIDGET": "widget di Chat",
+      "DOMAIN": "Dominio del centro di aiuto",
+      "INSTALLED": "Installato",
+      "INSTALL": "Installazione",
+      "CONNECTED": "connesso",
+      "CONNECT": "Collegamento",
+      "DOMAIN_VERIFIED": "Verificato",
+      "DOMAIN_PENDING": "Finanziamenti",
+      "DOMAIN_NONE": "Impostazione",
+      "MAILBOX": "Casella di posta"
+    },
+    "USAGE": {
+      "TITLE": "uso",
+      "LINK": "fatturazione",
+      "AI_CONVERSATIONS": "Conversazioni con l'IA",
+      "SEATS": "Sedili",
+      "INBOXES": "Posti di lavoro",
+      "DOCUMENTS": "Documenti di conoscenza",
+      "RESETS": "Imposta a zero {date}",
+      "NO_LIMIT_SET": "Nessun limite impostato",
+      "TRIAL_ENDS": "Prova · termina {date}",
+      "TRIAL_ENDED": "Fine del processo",
+      "PAUSED": "AI in pausa",
+      "OF_LIMIT": "{used} / {limit}"
+    },
+    "GUIDED": {
+      "TITLE": "Impostare il vostro agente AI",
+      "STEP_OF": "Fase {current} del {total}",
+      "CLOSE": "Configurazione chiusa",
+      "BACK": "Indietro",
+      "CONTINUE": "Continua",
+      "SKIP": "Salta per ora",
+      "FINISH": "Finitura",
+      "ERROR": "Non ho potuto caricare il tuo setup.",
+      "RETRY": "Prova ancora.",
+      "STEP_NAMES": {
+        "KNOWLEDGE": "Il tuo sito web",
+        "TEST_AGENT": "Incontrare il tuo agente",
+        "AGENT_INBOX": "Vai a vivere",
+        "CHAT_WIDGET": "Aggiungi al tuo sito"
+      },
+      "WEBSITE": {
+        "TITLE": "Inizia con il tuo sito web",
+        "DESCRIPTION": "Il vostro agente AI lo legge e risponde ai vostri clienti da esso. Potete continuare subito.",
+        "LABEL": "Indirizzo del sito",
+        "PLACEHOLDER": "esempio.com",
+        "INVALID": "Inserisci un indirizzo del sito come example.com.",
+        "STAGES": {
+          "FIND": "Trova le tue pagine",
+          "PICK": "Scegli quelli utili",
+          "READ": "Leggili"
+        },
+        "FINDING": "{count} pagina trovata finora. Questo di solito richiede un minuto o due. | {count} pagine trovate finora. Questo di solito richiede un minuto o due.",
+        "READING": "{ready} di {total} pagine pronte. Potete continuare; il resto è letto in background.",
+        "DONE": "{ready} pagina importata. Il vostro agente AI risponde da esso. | {ready} pagine importate. Il vostro agente AI risponde da loro.",
+        "SOME_FAILED": "{count} pagina non poteva essere letta. | {count} pagine non potevano essere lette.",
+        "EMPTY_TITLE": "Nessuna pagina da importare automaticamente",
+        "EMPTY_BODY": "Scegli le pagine da te in Conoscenza, o prova un altro indirizzo.",
+        "FAILED_TITLE": "Non siamo riusciti a leggere questo sito web",
+        "FAILED_BODY": "Controllare che l'indirizzo è giusto e il sito è pubblico, poi riprovare.",
+        "IMPORT_FAILED": "Le pagine non potevano essere importate. Riprova.",
+        "REVIEW": "Pagine di revisione",
+        "OTHER_URL": "Utilizzare un altro indirizzo"
+      },
+      "TEST": {
+        "TITLE": "Incontra il tuo agente AI",
+        "DESCRIPTION": "Conosce già le pagine che ha letto. Chiedi cosa chiederebbe un cliente; niente digita qui raggiunge un cliente.",
+        "TRY": "Prova uno di questi",
+        "NO_AGENT": "Aggiungi il tuo sito web prima, quindi l'agente AI ha qualcosa da rispondere."
+      },
+      "LIVE": {
+        "TITLE": "Vai a vivere",
+        "DESCRIPTION": "Risponde ai visitatori nella chat del tuo sito web. Il tuo team può prendere il sopravvento di qualsiasi conversazione.",
+        "KNOWLEDGE_READY": "La conoscenza è pronta",
+        "KNOWLEDGE_IMPORTING": "Le pagine sono ancora in fase di lettura. Risponde a quelle pronte.",
+        "NO_KNOWLEDGE": "Ancora nessuna conoscenza. Aggiungi il tuo sito prima.",
+        "INBOX_READY": "Chat del sito: {name}",
+        "INBOX_NEW": "Una chat del sito sarà creata",
+        "TURN_ON": "Accendilo.",
+        "ON_TITLE": "Il tuo agente dell'AI è attivo",
+        "ON_BODY": "Risponde a nuove conversazioni nel {name}."
+      },
+      "INSTALL": {
+        "TITLE": "Aggiungi la chat al tuo sito web",
+        "DESCRIPTION": "Incolla questo codice prima che il tag del corpo di chiusura su ogni pagina, o nell'impostazione del codice personalizzato del costruttore del tuo sito.",
+        "COPY": "Codice copiato",
+        "COPIED": "Codice copiato",
+        "CHECK": "Controllare l'installazione",
+        "NO_INBOX": "Attivare l'agente AI in primo luogo. Questo crea la chat del tuo sito web.",
+        "SETTINGS": "Impostazioni di chat",
+        "RESULT": {
+          "INSTALLED": "La chat funziona sul tuo sito web.",
+          "SCRIPT_FOUND": "Trovato il codice su {site}. Viene visualizzato come installato dopo la prima visita.",
+          "NOT_FOUND": "Non abbiamo trovato il codice su {site}. Se lo aggiungi con un tag manager, apri il tuo sito una volta e controlla di nuovo.",
+          "UNREACHABLE": "Non potevamo aprire {site}. Controlla che sia pubblico.",
+          "ERROR": "L'assegno non e' finito. Riprova."
+        }
+      },
+      "LEARNED": "Imparare {learned} di {total} pagine",
+      "LEARNING_MORE": "Continua a leggere il resto sullo sfondo. Non devi aspettare.",
+      "FINDING": "Leggere il tuo sito web...",
+      "CHAT": {
+        "SHOP": "Il tuo negozio",
+        "REPLY_TIME": "Risposte in pochi secondi",
+        "COMPOSER": "Digitare il messaggio...",
+        "SEND": "Invia",
+        "TEST_ONLY": "Testare la chat. Qui non c'è niente che raggiunga un cliente.",
+        "ERROR": "Il tuo agente dell'AI non poteva rispondere proprio ora. Riprova.",
+        "EMPTY": "Chiedi al tuo agente dell'IA qualcosa che un cliente chiederebbe."
+      },
+      "LEARNED_SO_FAR": "Imparare {count} pagina finora | Imparare {count} pagine finora",
+      "LEARNED_ALL": "Pagina {count} | Imparare {count} pagine"
+    },
+    "V2": {
+      "SUBTITLE": "Ecco come ha fatto il tuo agente AI negli ultimi {days} giorni.",
+      "STATUS_PILL": {
+        "LIVE": "L'agente AI è vivo",
+        "LEARNING": "L'agente dell'AI sta imparando",
+        "PAUSED": "L'agente dell'IA è in pausa",
+        "LIMIT": "Limite di intelligenza raggiunto",
+        "ATTENTION": "L'agente dell'AI ha bisogno di te"
+      },
+      "METRICS": {
+        "AI_CONVERSATIONS": "Conversazioni con l'IA",
+        "RESOLVED": "Risolto da AI",
+        "HANDED": "Guidato alla squadra",
+        "RATING": "Valutazione del cliente",
+        "PRODUCT_ANSWERS": "Risponde al prodotto"
+      },
+      "NEEDS": {
+        "TITLE": "Hai bisogno di",
+        "TITLE_COUNT": "Necessità · {count}",
+        "EMPTY": "Non hai bisogno di te adesso.",
+        "SOMEONE": "Un cliente",
+        "HANDOFF": "{name} sta aspettando una persona",
+        "HANDOFF_HINT": "{inbox} · in attesa dal {time}",
+        "REPLY": "Rispondi",
+        "GAP_HINT": "Chiedi in {count} conversazione · nessuna risposta nella tua conoscenza | Chiedi in {count} conversazioni · nessuna risposta nella tua conoscenza",
+        "ADD_ANSWER": "Aggiungi una risposta",
+        "CONNECTION": "{name} non è collegato",
+        "FAILED_HINT": "Fascicolo {time}",
+        "FIX": "Fisso",
+        "FOLLOW_UP_MESSAGE": "Un messaggio di follow-up non potrebbe essere inviato",
+        "FOLLOW_UP_EMAIL": "Un'e-mail di follow-up non potrebbe essere inviata",
+        "CONVERSATION_HINT": "Conversazione # {id} · {time}",
+        "OPEN": "Aprire",
+        "SYNC": "{name} non poteva essere letto",
+        "SYNC_HINT": "Ultimo tentativo {time}",
+        "CHANNEL": "{name} ha perso la connessione",
+        "CHANNEL_HINT": "Ricollegalo per continuare a ricevere messaggi",
+        "RECONNECT": "Ricollegamento",
+        "GAP": "“{question}”"
+      },
+      "DAYS": {
+        "TITLE": "Conversazioni al giorno",
+        "AI": "Agente IA",
+        "TEAM": "La tua squadra",
+        "EMPTY": "Non ci sono ancora conversazioni in questo periodo."
+      },
+      "TOPICS": {
+        "TITLE": "Quali clienti hanno chiesto",
+        "EMPTY": "Aggiungi le etichette alle tue conversazioni per vedere gli argomenti qui."
+      },
+      "USAGE": {
+        "FORECAST": "A questo ritmo si raggiunge il limite su {date}"
+      },
+      "SUBTITLE_SITE": "Ecco come ha fatto il vostro agente AI su {site} negli ultimi {days} giorni.",
+      "PERIOD": {
+        "LABEL": "Periodo",
+        "DAYS": "{days} giorni"
+      },
+      "CHANGE": {
+        "SAME": "Nessun cambiamento",
+        "COMPARED": "Rispetto al {days} giorni prima",
+        "POINTS": "{amount} punto | {amount} punti",
+        "UP": "▲ {amount}",
+        "DOWN": "▼ {amount}",
+        "PERCENT": "{amount}%"
+      },
+      "LEADS": {
+        "TITLE": "Nuovi cavi",
+        "EMPTY": "Non ci sono ancora prospettive di vendita. Il vostro agente AI li raccoglie quando un cliente lascia i loro dettagli.",
+        "OPEN": "Aprire"
+      },
+      "CARD_ERROR": "Questo non potrebbe essere caricato."
+    }
+  }
+}
