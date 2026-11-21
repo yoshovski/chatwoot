@@ -1,4 +1,5 @@
 <script setup>
+import { ref } from 'vue';
 import Button from 'dashboard/components-next/button/Button.vue';
 import Icon from 'dashboard/components-next/icon/Icon.vue';
 import LearnedBanner from '../LearnedBanner.vue';
@@ -6,11 +7,21 @@ import StepIntro from './StepIntro.vue';
 
 // Meet your agent: what it has learned so far and the starter questions from the instant agent. The chat itself is
 // the widget next to the step.
-defineProps({
+const props = defineProps({
   guided: { type: Object, required: true },
 });
 
 defineEmits(['open', 'ask']);
+
+const isRetrying = ref(false);
+const retryImport = async () => {
+  isRetrying.value = true;
+  try {
+    await props.guided.retryImport();
+  } finally {
+    isRetrying.value = false;
+  }
+};
 </script>
 
 <template>
@@ -23,7 +34,46 @@ defineEmits(['open', 'ask']);
       <div
         class="rounded-card bg-n-solid-2 p-5 shadow-card outline outline-1 -outline-offset-1 outline-n-container"
       >
+        <div
+          v-if="guided.progress.phase === 'failed'"
+          role="alert"
+          class="flex items-start gap-3"
+        >
+          <Icon
+            icon="i-lucide-circle-alert"
+            class="mt-0.5 size-5 shrink-0 text-n-ruby-10"
+          />
+          <div class="flex min-w-0 flex-col gap-2">
+            <p class="mb-0 text-sm font-medium text-n-slate-12">
+              {{ $t('HOME.GUIDED.WEBSITE.FAILED_TITLE') }}
+            </p>
+            <p class="mb-0 text-sm text-n-slate-11">
+              {{ $t('HOME.GUIDED.WEBSITE.FAILED_BODY') }}
+            </p>
+            <div class="flex flex-wrap gap-2">
+              <Button
+                :label="$t('HOME.GUIDED.RETRY')"
+                :is-loading="isRetrying"
+                :disabled="isRetrying"
+                size="sm"
+                variant="faded"
+                @click="retryImport"
+              />
+              <Button
+                :label="$t('HOME.GUIDED.TEST.REVIEW_WEBSITE')"
+                size="sm"
+                variant="ghost"
+                color="slate"
+                @click="$emit('open', 'knowledge')"
+              />
+            </div>
+            <p v-if="guided.importError" class="mb-0 text-sm text-n-ruby-11">
+              {{ $t('HOME.GUIDED.WEBSITE.IMPORT_FAILED') }}
+            </p>
+          </div>
+        </div>
         <LearnedBanner
+          v-else
           :learned="guided.learned"
           :total="guided.total"
           :reading="guided.isLearning || guided.isImporting"

@@ -165,6 +165,7 @@
         "TITLE": "Meet your AI agent",
         "DESCRIPTION": "It already knows the pages it has read. Ask what a customer would ask; nothing you type here reaches a customer.",
         "TRY": "Try one of these",
+        "REVIEW_WEBSITE": "Review website",
         "NO_AGENT": "Add your website first, so the AI agent has something to answer from."
       },
       "LIVE": {
