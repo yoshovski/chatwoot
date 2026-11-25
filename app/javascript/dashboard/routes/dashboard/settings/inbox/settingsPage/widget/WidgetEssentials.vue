@@ -3,10 +3,9 @@ import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import Avatar from 'next/avatar/Avatar.vue';
 import Input from 'dashboard/components-next/input/Input.vue';
-import Editor from 'dashboard/components-next/Editor/Editor.vue';
-import ColorPicker from 'dashboard/components-next/colorpicker/ColorPicker.vue';
 import SelectInput from 'dashboard/components-next/select/Select.vue';
 import WidgetSection from './WidgetSection.vue';
+import WidgetColors from './WidgetColors.vue';
 
 defineProps({
   inboxIcon: { type: String, default: '' },
@@ -47,14 +46,11 @@ const bubbleTypeOptions = computed(() => [
 </script>
 
 <template>
-  <WidgetSection
-    :title="$t('INBOX_MGMT.WIDGET_SETTINGS.ESSENTIALS.TITLE')"
-    :description="$t('INBOX_MGMT.WIDGET_SETTINGS.ESSENTIALS.DESCRIPTION')"
-  >
-    <div class="flex items-center gap-4">
+  <WidgetSection :title="$t('INBOX_MGMT.WEBSITE_SETTINGS.BRAND')">
+    <div class="flex items-end gap-3 pb-3 border-b border-n-weak">
       <Avatar
         :src="form.avatarUrl"
-        :size="56"
+        :size="40"
         :icon-name="inboxIcon"
         name=""
         allow-upload
@@ -72,45 +68,36 @@ const bubbleTypeOptions = computed(() => [
       />
     </div>
 
-    <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
-      <div class="flex flex-col gap-1.5">
-        <label class="text-sm font-medium text-n-slate-12">
-          {{ $t('INBOX_MGMT.ADD.WEBSITE_CHANNEL.WIDGET_COLOR.LABEL') }}
-        </label>
-        <ColorPicker v-model="form.widgetColor" />
-      </div>
-      <div class="flex flex-col gap-1.5">
-        <label class="text-sm font-medium text-n-slate-12">
-          {{ $t('INBOX_MGMT.WIDGET_BUILDER.WIDGET_OPTIONS.WIDGET_TEXT_COLOR') }}
-        </label>
-        <ColorPicker
-          v-model="form.widgetTextColor"
-          @update:model-value="form.isWidgetTextColorCustom = true"
-        />
-      </div>
-      <div class="flex flex-col gap-1.5">
-        <label class="text-sm font-medium text-n-slate-12">
-          {{ $t('INBOX_MGMT.WIDGET_BUILDER.WIDGET_OPTIONS.WIDGET_ICON_COLOR') }}
-        </label>
-        <ColorPicker
-          v-model="form.widgetIconColor"
-          @update:model-value="form.isWidgetIconColorCustom = true"
-        />
-      </div>
-    </div>
-
+    <WidgetColors v-model:form="form" />
+  </WidgetSection>
+  <WidgetSection
+    :title="$t('INBOX_MGMT.WEBSITE_SETTINGS.LAUNCHER')"
+    :help="$t('INBOX_MGMT.WEBSITE_SETTINGS.LAUNCHER_HELP')"
+  >
     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-      <div class="flex flex-col gap-1.5">
+      <div class="flex min-w-0 flex-col gap-1.5">
         <label class="text-sm font-medium text-n-slate-12">
           {{ $t('INBOX_MGMT.WIDGET_SETTINGS.ESSENTIALS.POSITION') }}
         </label>
-        <SelectInput v-model="form.position" :options="positionOptions" />
+        <SelectInput
+          v-model="form.position"
+          stretch
+          :options="positionOptions"
+          :aria-label="$t('INBOX_MGMT.WIDGET_SETTINGS.ESSENTIALS.POSITION')"
+        />
       </div>
-      <div class="flex flex-col gap-1.5">
+      <div class="flex min-w-0 flex-col gap-1.5">
         <label class="text-sm font-medium text-n-slate-12">
           {{ $t('INBOX_MGMT.WIDGET_SETTINGS.ESSENTIALS.LAUNCHER_STYLE.LABEL') }}
         </label>
-        <SelectInput v-model="form.bubbleType" :options="bubbleTypeOptions" />
+        <SelectInput
+          v-model="form.bubbleType"
+          stretch
+          :options="bubbleTypeOptions"
+          :aria-label="
+            $t('INBOX_MGMT.WIDGET_SETTINGS.ESSENTIALS.LAUNCHER_STYLE.LABEL')
+          "
+        />
       </div>
     </div>
 
@@ -124,34 +111,5 @@ const bubbleTypeOptions = computed(() => [
         )
       "
     />
-
-    <div class="flex flex-col gap-4 border-t border-n-weak pt-4">
-      <Input
-        v-model="form.welcomeTitle"
-        :label="
-          $t('INBOX_MGMT.ADD.WEBSITE_CHANNEL.CHANNEL_WELCOME_TITLE.LABEL')
-        "
-        :placeholder="
-          $t('INBOX_MGMT.ADD.WEBSITE_CHANNEL.CHANNEL_WELCOME_TITLE.PLACEHOLDER')
-        "
-      />
-      <div class="flex flex-col gap-1.5">
-        <label class="text-sm font-medium text-n-slate-12">
-          {{
-            $t('INBOX_MGMT.ADD.WEBSITE_CHANNEL.CHANNEL_WELCOME_TAGLINE.LABEL')
-          }}
-        </label>
-        <Editor
-          v-model="form.welcomeTagline"
-          :placeholder="
-            $t(
-              'INBOX_MGMT.ADD.WEBSITE_CHANNEL.CHANNEL_WELCOME_TAGLINE.PLACEHOLDER'
-            )
-          "
-          :max-length="255"
-          channel-type="Context::InboxSettings"
-        />
-      </div>
-    </div>
   </WidgetSection>
 </template>

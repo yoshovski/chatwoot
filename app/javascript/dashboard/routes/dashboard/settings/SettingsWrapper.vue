@@ -4,6 +4,7 @@ import { useRoute } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import Icon from 'next/icon/Icon.vue';
 import { findSettingsPage } from './settingsSections';
+import { useWebsiteChannelNavigation } from 'dashboard/composables/useWebsiteChannelNavigation';
 
 defineProps({
   containScroll: { type: Boolean, default: false },
@@ -15,6 +16,7 @@ defineProps({
 
 const route = useRoute();
 const { t } = useI18n();
+const { isWebsiteSettings } = useWebsiteChannelNavigation();
 
 // Routes that manage filters/pagination via query params opt out of
 // query-keyed remounts, else every filter change rebuilds the page.
@@ -28,6 +30,7 @@ const routeKey = computed(() => {
 // Nested sub-pages (such as editing a team) link back to their parent settings page.
 // Top-level pages return to the searchable Settings home.
 const back = computed(() => {
+  if (isWebsiteSettings.value) return null;
   const page = findSettingsPage(route.name);
   if (!page) return null;
   if (page.route === route.name) {

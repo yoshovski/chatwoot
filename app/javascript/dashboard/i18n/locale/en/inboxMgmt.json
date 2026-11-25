@@ -1564,10 +1564,113 @@
       "AUTH_MECHANISM": "Authentication"
     },
     "NOTE": "Note: ",
+    "WEBSITE_SETTINGS": {
+      "CHANNEL_TYPE": "Website chat",
+      "NAVIGATION": "Channel settings",
+      "GROUPS": {
+        "WIDGET": "Chat widget",
+        "CONVERSATIONS": "Conversations",
+        "TEAM": "Team and coverage",
+        "WEBSITE": "Website setup"
+      },
+      "PAGES": {
+        "APPEARANCE": {
+          "TITLE": "Appearance",
+          "DESCRIPTION": "Choose the name, colors, and launcher visitors see."
+        },
+        "WELCOME": {
+          "TITLE": "Welcome screen",
+          "DESCRIPTION": "Decide where visitors land and what they can do first."
+        },
+        "CONVERSATION": {
+          "TITLE": "Chat behavior",
+          "DESCRIPTION": "Set how visitors are greeted, when to expect a reply, and what they can do in chat."
+        },
+        "PRE_CHAT": {
+          "TITLE": "Pre-chat form",
+          "DESCRIPTION": "Choose what to ask visitors before they start a conversation."
+        },
+        "RATING": {
+          "TITLE": "Customer rating",
+          "DESCRIPTION": "Ask customers for feedback when a conversation ends."
+        },
+        "COLLABORATORS": {
+          "TITLE": "Collaborators",
+          "DESCRIPTION": "Choose who can work in this inbox and how conversations are assigned."
+        },
+        "HOURS": {
+          "TITLE": "Business hours",
+          "DESCRIPTION": "Set when your team is available and what visitors see outside those hours."
+        },
+        "AGENT": {
+          "TITLE": "AI agent",
+          "DESCRIPTION": "Choose which AI agent can greet visitors and answer in this channel."
+        },
+        "INSTALL": {
+          "TITLE": "Install widget",
+          "DESCRIPTION": "Copy the embed code for your site and check the installation."
+        },
+        "SECURITY": {
+          "TITLE": "Security & advanced",
+          "DESCRIPTION": "Manage allowed websites, verify visitor identity, and access technical settings."
+        }
+      },
+      "BRAND": "Brand and color",
+      "LAUNCHER": "Launcher",
+      "LAUNCHER_HELP": "The launcher is the chat button visitors click on your site. Changes to its position, style, or label are applied through the embed code.",
+      "REPLIES": "Greeting and reply time",
+      "CHAT_OPTIONS": "Chat controls",
+      "SENDER": "Sender identity",
+      "BUSINESS_NAME": "Business name",
+      "SITE": "Website",
+      "EMBED_OPTIONS": "Embed options",
+      "ACCESS": "Allowed websites",
+      "IDENTITY": "Visitor verification",
+      "DEVELOPER_KEYS": "Developer keys and setup",
+      "TESTING": "Testing and sizing",
+      "DELETE_TITLE": "Delete this channel",
+      "DELETE_DESCRIPTION": "Deleting the channel also deletes its conversations. This action is permanent.",
+      "SAVE_SITE_FIRST": "Save the website address before checking the installation.",
+      "REVIEW_WIDGET": "Review widget changes",
+      "PRE_CHAT_REQUIRED": "Visitors complete required fields before sending their first message.",
+      "PRE_CHAT_INTRO": "Message above the form",
+      "SAVE_WIDGET": "Save widget changes",
+      "UNSAVED_WIDGET": "Unsaved widget changes",
+      "EMBED_CHANGED": "Save your edits, then replace the embed code on your website.",
+      "FIELD_OPTIONS": "Field options",
+      "FIELD_DETAILS": "Field details",
+      "FIELD_METADATA": "Key: {key}. Type: {type}.",
+      "FORM_FIELDS": "Visitor fields",
+      "FORM_ORDER_HELP": "Drag a field or use its arrow buttons to change the order visitors see.",
+      "MOVE_UP": "Move {field} up",
+      "MOVE_DOWN": "Move {field} down",
+      "SHOW_FIELD": "Show {field}",
+      "OFFLINE_MESSAGE": "Out-of-hours message",
+      "FROM_TIME": "{day} opening time",
+      "TO_TIME": "{day} closing time",
+      "SURVEY_RULES": "Limit which conversations receive the survey",
+      "SAVE_COLLABORATORS": "Save collaborators",
+      "SAVE_RATING": "Save customer rating",
+      "RATING_EMOJI": "Emoji",
+      "RATING_STARS": "Stars",
+      "AGENT_CONNECTION": "Agent connection",
+      "AGENT_CONNECTED": "Connected to this channel"
+    },
     "WIDGET_SETTINGS": {
+      "COLORS": {
+        "CUSTOMIZE": "Advanced colors",
+        "CUSTOM": "Custom",
+        "AUTOMATIC": "Use automatic color",
+        "PALETTE": {
+          "MINT": "Pearl Mint",
+          "NAVY": "Midnight",
+          "BLUE": "Deep Teal",
+          "VIOLET": "Iris",
+          "ROSE": "Mulberry",
+          "CHARCOAL": "Graphite"
+        }
+      },
       "ESSENTIALS": {
-        "TITLE": "Essentials",
-        "DESCRIPTION": "What visitors see first on your website.",
         "POSITION": "Launcher position",
         "LAUNCHER_STYLE": {
           "LABEL": "Launcher style",
@@ -1577,9 +1680,9 @@
         "LAUNCHER_TEXT": "Launcher text"
       },
       "INSTALLATION": {
-        "TITLE": "Installation",
+        "SCRIPT": "Installation code",
         "DESCRIPTION": "Paste this snippet before the closing body tag on every page where the chat should appear.",
-        "COPY": "Copy",
+        "COPY": "Copy code",
         "COPIED": "Snippet copied",
         "SNIPPET_CHANGED": "The launcher settings changed. Save, then copy the snippet again and replace it on your website.",
         "CHECK": "Check installation"
@@ -1590,7 +1693,6 @@
         "LINK": "Open Instructions"
       },
       "ADVANCED": {
-        "TITLE": "Advanced",
         "HOME_SCREEN": {
           "TITLE": "Show the home screen",
           "DESCRIPTION": "Visitors land on your welcome message and conversation starters. Turn it off to open straight into the conversation. Part of the install snippet."

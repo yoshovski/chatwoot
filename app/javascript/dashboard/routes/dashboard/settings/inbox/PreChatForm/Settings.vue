@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, watch, onMounted } from 'vue';
+import { ref, computed, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useStore } from 'vuex';
 import { useMapGetter } from 'dashboard/composables/store';
@@ -9,6 +9,8 @@ import { getPreChatFields } from 'dashboard/helper/preChat';
 import WootMessageEditor from 'dashboard/components/widgets/WootWriter/Editor.vue';
 import Button from 'dashboard/components-next/button/Button.vue';
 import SettingsToggleSection from 'dashboard/components-next/Settings/SettingsToggleSection.vue';
+import WidgetSection from '../settingsPage/widget/WidgetSection.vue';
+import ChannelFormActions from '../components/ChannelFormActions.vue';
 
 const props = defineProps({
   inbox: {
@@ -27,44 +29,48 @@ const preChatFormEnabled = ref(false);
 const preChatMessage = ref('');
 const preChatFields = ref([]);
 
-const preChatFieldOptions = computed(() => {
-  const { pre_chat_form_options: preChatFormOptions } = props.inbox;
-  return getPreChatFields({
-    preChatFormOptions,
-    customAttributes: customAttributes.value,
-  });
+const savedForm = computed(() => {
+  const {
+    id,
+    pre_chat_form_enabled: enabled,
+    pre_chat_form_options: options,
+  } = props.inbox;
+  return JSON.stringify({ id, enabled, options });
 });
 
-const tableHeaders = computed(() => [
-  '',
-  '',
-  t('INBOX_MGMT.PRE_CHAT_FORM.SET_FIELDS_HEADER.KEY'),
-  t('INBOX_MGMT.PRE_CHAT_FORM.SET_FIELDS_HEADER.TYPE'),
-  t('INBOX_MGMT.PRE_CHAT_FORM.SET_FIELDS_HEADER.REQUIRED'),
-  t('INBOX_MGMT.PRE_CHAT_FORM.SET_FIELDS_HEADER.LABEL'),
-  t('INBOX_MGMT.PRE_CHAT_FORM.SET_FIELDS_HEADER.PLACE_HOLDER'),
-]);
-
-const setDefaults = () => {
-  const { pre_chat_form_enabled: formEnabled } = props.inbox;
-  preChatFormEnabled.value = formEnabled;
-  const { pre_chat_message: message, pre_chat_fields: fields } =
-    preChatFieldOptions.value || {};
-  preChatMessage.value = message;
-  preChatFields.value = fields;
-};
-
-const handlePreChatFieldOptions = (event, type, item) => {
-  preChatFields.value.forEach((field, index) => {
-    if (field.name === item.name) {
-      preChatFields.value[index][type] = !item[type];
-    }
+const getFields = () => {
+  const { pre_chat_form_options: options } = props.inbox;
+  const parsed = getPreChatFields({
+    preChatFormOptions: { pre_chat_fields: [], ...options },
+    customAttributes: customAttributes.value || [],
+  });
+  const storedFields = options?.pre_chat_fields || [];
+  return parsed.pre_chat_fields.map(field => {
+    const stored = storedFields.find(({ name }) => name === field.name);
+    return {
+      ...field,
+      label: stored?.label || field.label,
+      placeholder: stored?.placeholder ?? field.placeholder,
+    };
   });
 };
 
-const changePreChatFieldFieldsOrder = updatedPreChatFieldOptions => {
-  preChatFields.value = updatedPreChatFieldOptions;
-};
+watch(
+  savedForm,
+  () => {
+    preChatFormEnabled.value = !!props.inbox.pre_chat_form_enabled;
+    preChatMessage.value =
+      props.inbox.pre_chat_form_options?.pre_chat_message || '';
+    preChatFields.value = getFields();
+  },
+  { immediate: true }
+);
+
+watch(customAttributes, () => {
+  const existing = new Set(preChatFields.value.map(({ name }) => name));
+  const additional = getFields().filter(({ name }) => !existing.has(name));
+  preChatFields.value = [...preChatFields.value, ...additional];
+});
 
 const updateInbox = async () => {
   try {
@@ -85,79 +91,46 @@ const updateInbox = async () => {
     useAlert(t('INBOX_MGMT.EDIT.API.ERROR_MESSAGE'));
   }
 };
-
-watch(() => props.inbox, setDefaults);
-
-onMounted(() => {
-  setDefaults();
-});
 </script>
 
 <template>
-  <div class="mx-6">
-    <SettingsToggleSection
-      v-model="preChatFormEnabled"
-      :header="$t('INBOX_MGMT.PRE_CHAT_FORM.ENABLE.LABEL')"
-      :description="$t('INBOX_MGMT.PRE_CHAT_FORM.DESCRIPTION')"
+  <form class="flex min-w-0 flex-col gap-4" @submit.prevent="updateInbox">
+    <WidgetSection>
+      <SettingsToggleSection
+        v-model="preChatFormEnabled"
+        inset
+        :header="$t('INBOX_MGMT.PRE_CHAT_FORM.ENABLE.LABEL')"
+        :description="$t('INBOX_MGMT.WEBSITE_SETTINGS.PRE_CHAT_REQUIRED')"
+      >
+        <template v-if="preChatFormEnabled" #editor>
+          <p class="m-0 mb-2 text-sm font-medium text-n-slate-12">
+            {{ $t('INBOX_MGMT.WEBSITE_SETTINGS.PRE_CHAT_INTRO') }}
+          </p>
+          <WootMessageEditor
+            v-model="preChatMessage"
+            :placeholder="
+              $t('INBOX_MGMT.PRE_CHAT_FORM.PRE_CHAT_MESSAGE.PLACEHOLDER')
+            "
+          />
+        </template>
+      </SettingsToggleSection>
+    </WidgetSection>
+
+    <WidgetSection
+      v-if="preChatFormEnabled"
+      :title="$t('INBOX_MGMT.WEBSITE_SETTINGS.FORM_FIELDS')"
+      :help="$t('INBOX_MGMT.WEBSITE_SETTINGS.FORM_ORDER_HELP')"
     >
-      <template v-if="preChatFormEnabled" #editor>
-        <WootMessageEditor
-          v-model="preChatMessage"
-          :placeholder="
-            $t('INBOX_MGMT.PRE_CHAT_FORM.PRE_CHAT_MESSAGE.PLACEHOLDER')
-          "
-        />
-      </template>
-    </SettingsToggleSection>
-    <div v-if="preChatFormEnabled" class="flex items-center my-8 py-1">
-      <div class="flex-1 h-px bg-n-weak" />
-      <span class="text-body-main text-n-slate-11 px-2">
-        {{ $t('INBOX_MGMT.PRE_CHAT_FORM.SET_FIELDS') }}
-      </span>
-      <div class="flex-1 h-px bg-n-weak" />
-    </div>
-    <form class="flex flex-col" @submit.prevent="updateInbox">
-      <div v-if="preChatFormEnabled">
-        <div class="w-full">
-          <table
-            class="min-w-full table-auto outline outline-1 -outline-offset-1 outline-n-weak rounded-xl"
-          >
-            <thead>
-              <tr class="border-b border-n-weak">
-                <th
-                  v-for="(header, index) in tableHeaders"
-                  :key="index"
-                  class="py-3 ltr:pr-4 rtl:pl-4 text-start text-heading-3 text-n-slate-12"
-                >
-                  {{ header }}
-                </th>
-              </tr>
-            </thead>
-            <PreChatFields
-              :pre-chat-fields="preChatFields"
-              @update="handlePreChatFieldOptions"
-              @drag-end="changePreChatFieldFieldsOrder"
-            />
-          </table>
-        </div>
-      </div>
-      <div class="w-full flex justify-end items-center py-4 mt-2">
-        <Button
-          type="submit"
-          :label="$t('INBOX_MGMT.SETTINGS_POPUP.UPDATE_PRE_CHAT_FORM_SETTINGS')"
-          :is-loading="uiFlags.isUpdating"
-        />
-      </div>
-    </form>
-  </div>
+      <PreChatFields v-model="preChatFields" />
+    </WidgetSection>
+
+    <ChannelFormActions>
+      <Button
+        type="submit"
+        size="sm"
+        :label="$t('INBOX_MGMT.SETTINGS_POPUP.UPDATE_PRE_CHAT_FORM_SETTINGS')"
+        :is-loading="uiFlags.isUpdating"
+      />
+    </ChannelFormActions>
+  </form>
 </template>
-
-<style scoped lang="scss">
-.message-editor {
-  @apply px-3;
-
-  :deep(.ProseMirror-menubar) {
-    @apply rounded-tl-[4px];
-  }
-}
-</style>

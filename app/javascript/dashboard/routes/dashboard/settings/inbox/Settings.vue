@@ -10,7 +10,6 @@ import SettingIntroBanner from 'dashboard/components/widgets/SettingIntroBanner.
 import SettingsToggleSection from 'dashboard/components-next/Settings/SettingsToggleSection.vue';
 import SettingsFieldSection from 'dashboard/components-next/Settings/SettingsFieldSection.vue';
 import SettingsAccordion from 'dashboard/components-next/Settings/SettingsAccordion.vue';
-import WidgetSettings from './settingsPage/widget/WidgetSettings.vue';
 import inboxMixin from 'shared/mixins/inboxMixin';
 import FacebookReauthorize from './facebook/Reauthorize.vue';
 import InstagramReauthorize from './channels/instagram/Reauthorize.vue';
@@ -81,7 +80,6 @@ export default {
     TwilioHealth,
     WhatsappManualMigrationDialog,
     WhatsappManualMigrationBanner,
-    WidgetSettings,
     AccessToken,
     Icon,
   },
@@ -789,16 +787,8 @@ export default {
             @start="openWhatsAppManualMigrationDialog"
           />
         </template>
-        <!-- Kept mounted on other tabs so unsaved widget edits survive a tab switch. -->
-        <WidgetSettings
-          v-if="isAWebWidgetInbox"
-          v-show="selectedTabKey === 'inbox-settings'"
-          :inbox="inbox"
-          :inbox-icon="inboxIcon"
-          @open-pre-chat-form="openTab('pre-chat-form')"
-        />
         <div
-          v-else-if="selectedTabKey === 'inbox-settings'"
+          v-if="selectedTabKey === 'inbox-settings'"
           class="flex flex-col mx-6"
         >
           <div class="flex flex-col min-w-0 max-w-4xl">

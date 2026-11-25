@@ -20,7 +20,7 @@ const props = defineProps({
 });
 
 // Test mode: a message the visitor sent, or an answer to a suggestion or form ({ messageId, submittedValues }).
-const emit = defineEmits(['send', 'submit']);
+const emit = defineEmits(['send', 'submit', 'viewChange']);
 
 const PREVIEW_MESSAGE = 'chatoctave:preview';
 const PREVIEW_READY = 'chatoctave:preview-ready';
@@ -87,6 +87,7 @@ useEventListener(window, 'message', event => {
     send();
   } else if (event.data?.type === PREVIEW_VIEW_CHANGED) {
     view.value = event.data.view;
+    emit('viewChange', view.value);
   } else if (event.data?.type === PREVIEW_SEND && props.testMode) {
     if (event.data.submitted) emit('submit', event.data.submitted);
     else emit('send', event.data.content);
@@ -110,11 +111,12 @@ watch(
 );
 
 // Start over: back to the welcome screen, as a new visitor sees it.
-const showHome = () => {
-  view.value = 'home';
+const setView = next => {
+  view.value = next;
   send();
 };
-defineExpose({ showHome });
+const showHome = () => setView('home');
+defineExpose({ showHome, setView });
 
 onMounted(fetchToken);
 onBeforeUnmount(() => clearTimeout(refreshTimer));

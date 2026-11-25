@@ -7,6 +7,8 @@ import SettingsToggleSection from 'dashboard/components-next/Settings/SettingsTo
 import SettingsFieldSection from 'dashboard/components-next/Settings/SettingsFieldSection.vue';
 import WootMessageEditor from 'dashboard/components/widgets/WootWriter/Editor.vue';
 import BusinessDay from './BusinessDay.vue';
+import WidgetSection from '../settingsPage/widget/WidgetSection.vue';
+import ChannelFormActions from './ChannelFormActions.vue';
 import {
   timeSlotParse,
   timeSlotTransform,
@@ -26,12 +28,15 @@ export default {
     SettingsToggleSection,
     SettingsFieldSection,
     BusinessDay,
+    WidgetSection,
+    ChannelFormActions,
     NextButton,
     WootMessageEditor,
     ComboBox,
   },
   mixins: [inboxMixin],
   props: {
+    website: { type: Boolean, default: false },
     inbox: {
       type: Object,
       default: () => ({}),
@@ -57,6 +62,16 @@ export default {
     };
   },
   computed: {
+    savedSchedule() {
+      return JSON.stringify([
+        this.inbox.id,
+        this.inbox.working_hours_enabled,
+        this.inbox.out_of_office_message,
+        this.inbox.out_of_office_message_translations,
+        this.inbox.working_hours,
+        this.inbox.timezone,
+      ]);
+    },
     ...mapGetters({ uiFlags: 'inboxes/getUIFlags' }),
     languageOptions() {
       const { enabledLanguages } = useConfig();
@@ -101,7 +116,7 @@ export default {
     },
   },
   watch: {
-    inbox() {
+    savedSchedule() {
       this.setDefaults();
     },
   },
@@ -158,13 +173,45 @@ export default {
 </script>
 
 <template>
-  <div class="mx-6">
-    <SettingsToggleSection
-      v-model="isBusinessHoursEnabled"
-      :header="$t('INBOX_MGMT.BUSINESS_HOURS.TOGGLE_AVAILABILITY')"
-      :description="$t('INBOX_MGMT.BUSINESS_HOURS.TOGGLE_HELP')"
-    >
-      <template v-if="isBusinessHoursEnabled" #editor>
+  <form
+    class="flex min-w-0 flex-col gap-4"
+    :class="{ 'mx-6': !website }"
+    @submit.prevent="updateInbox"
+  >
+    <WidgetSection>
+      <SettingsToggleSection
+        v-model="isBusinessHoursEnabled"
+        inset
+        :header="$t('INBOX_MGMT.BUSINESS_HOURS.TOGGLE_AVAILABILITY')"
+        :description="$t('INBOX_MGMT.BUSINESS_HOURS.TOGGLE_HELP')"
+      />
+    </WidgetSection>
+    <template v-if="isBusinessHoursEnabled">
+      <WidgetSection :title="$t('INBOX_MGMT.BUSINESS_HOURS.WEEKLY_TITLE')">
+        <SettingsFieldSection
+          :stacked="website"
+          :label="$t('INBOX_MGMT.BUSINESS_HOURS.TIMEZONE_LABEL')"
+        >
+          <ComboBox
+            v-model="timeZoneValue"
+            :options="timeZones"
+            :placeholder="$t('INBOX_MGMT.BUSINESS_HOURS.DAY.CHOOSE')"
+            :aria-label="$t('INBOX_MGMT.BUSINESS_HOURS.TIMEZONE_LABEL')"
+          />
+        </SettingsFieldSection>
+        <ul
+          class="m-0 list-none divide-y divide-n-weak rounded-xl border border-n-weak p-0"
+        >
+          <BusinessDay
+            v-for="timeSlot in timeSlots"
+            :key="timeSlot.day"
+            :day-name="dayNames[timeSlot.day]"
+            :time-slot="timeSlot"
+            @update="data => onSlotUpdate(timeSlot.day, data)"
+          />
+        </ul>
+      </WidgetSection>
+      <WidgetSection :title="$t('INBOX_MGMT.WEBSITE_SETTINGS.OFFLINE_MESSAGE')">
         <div class="mb-4">
           <WootMessageEditor
             v-if="isRichEditorEnabled"
@@ -210,76 +257,18 @@ export default {
             />
           </div>
         </details>
-      </template>
-    </SettingsToggleSection>
-
-    <div v-if="isBusinessHoursEnabled" class="flex items-center my-8 py-1">
-      <div class="flex-1 h-px bg-n-weak" />
-      <span class="text-body-main text-n-slate-11 px-2">
-        {{ $t('INBOX_MGMT.BUSINESS_HOURS.WEEKLY_TITLE') }}
-      </span>
-      <div class="flex-1 h-px bg-n-weak" />
-    </div>
-
-    <SettingsFieldSection
-      v-if="isBusinessHoursEnabled"
-      :label="$t('INBOX_MGMT.BUSINESS_HOURS.TIMEZONE_LABEL')"
-    >
-      <ComboBox
-        v-model="timeZoneValue"
-        :options="timeZones"
-        :placeholder="$t('INBOX_MGMT.BUSINESS_HOURS.DAY.CHOOSE')"
-        class="[&>div>button]:!bg-n-alpha-black2"
+      </WidgetSection>
+    </template>
+    <ChannelFormActions>
+      <NextButton
+        type="submit"
+        size="sm"
+        :label="$t('INBOX_MGMT.BUSINESS_HOURS.UPDATE')"
+        :is-loading="uiFlags.isUpdating"
+        :disabled="hasError"
       />
-    </SettingsFieldSection>
-
-    <form class="flex flex-col" @submit.prevent="updateInbox">
-      <div v-if="isBusinessHoursEnabled" class="mt-2">
-        <div class="w-full">
-          <table
-            class="min-w-full table-auto outline outline-1 -outline-offset-1 outline-n-weak rounded-xl"
-          >
-            <thead>
-              <tr class="border-b border-n-weak">
-                <th
-                  class="py-3 ltr:pl-4 ltr:pr-3 rtl:pl-3 rtl:pr-4 text-start text-heading-3 text-n-slate-12"
-                >
-                  {{ $t('INBOX_MGMT.BUSINESS_HOURS.DAY.DAY') }}
-                </th>
-                <th
-                  class="py-3 ltr:pr-3 rtl:pl-3 text-start text-heading-3 text-n-slate-12"
-                >
-                  {{ $t('INBOX_MGMT.BUSINESS_HOURS.DAY.AVAILABILITY') }}
-                </th>
-                <th
-                  class="py-3 ltr:pr-3 rtl:pl-3 text-start text-heading-3 text-n-slate-12"
-                >
-                  {{ $t('INBOX_MGMT.BUSINESS_HOURS.DAY.HOURS') }}
-                </th>
-              </tr>
-            </thead>
-            <tbody class="divide-y divide-n-weak">
-              <BusinessDay
-                v-for="timeSlot in timeSlots"
-                :key="timeSlot.day"
-                :day-name="dayNames[timeSlot.day]"
-                :time-slot="timeSlot"
-                @update="data => onSlotUpdate(timeSlot.day, data)"
-              />
-            </tbody>
-          </table>
-        </div>
-      </div>
-      <div class="w-full flex justify-end items-center py-4 mt-2">
-        <NextButton
-          type="submit"
-          :label="$t('INBOX_MGMT.BUSINESS_HOURS.UPDATE')"
-          :is-loading="uiFlags.isUpdating"
-          :disabled="hasError"
-        />
-      </div>
-    </form>
-  </div>
+    </ChannelFormActions>
+  </form>
 </template>
 
 <style lang="scss" scoped>

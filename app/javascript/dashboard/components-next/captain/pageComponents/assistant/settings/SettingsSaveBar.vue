@@ -4,6 +4,9 @@ import { useI18n } from 'vue-i18n';
 import Button from 'dashboard/components-next/button/Button.vue';
 
 const props = defineProps({
+  hideActions: { type: Boolean, default: false },
+  saveLabel: { type: String, default: '' },
+  unsavedLabel: { type: String, default: '' },
   isDirty: {
     type: Boolean,
     default: false,
@@ -33,14 +36,16 @@ onBeforeRouteLeave(() => {
     leave-active-class="transition duration-150"
   >
     <div
-      v-if="isDirty"
+      v-if="isDirty && !hideActions"
       class="sticky z-10 flex flex-wrap items-center justify-between gap-3 px-4 py-3 bottom-4 rounded-xl bg-n-solid-1 outline outline-1 outline-n-weak shadow-lg"
       role="region"
-      :aria-label="t('CAPTAIN.ASSISTANTS.SETTINGS.SAVE_BAR.UNSAVED')"
+      :aria-label="
+        unsavedLabel || t('CAPTAIN.ASSISTANTS.SETTINGS.SAVE_BAR.UNSAVED')
+      "
     >
       <span class="flex items-center gap-2 text-sm text-n-slate-12">
         <span class="rounded-full size-2 bg-n-amber-9" aria-hidden="true" />
-        {{ t('CAPTAIN.ASSISTANTS.SETTINGS.SAVE_BAR.UNSAVED') }}
+        {{ unsavedLabel || t('CAPTAIN.ASSISTANTS.SETTINGS.SAVE_BAR.UNSAVED') }}
       </span>
       <div class="flex items-center gap-2">
         <Button
@@ -54,7 +59,7 @@ onBeforeRouteLeave(() => {
         />
         <Button
           type="button"
-          :label="t('CAPTAIN.ASSISTANTS.SETTINGS.SAVE')"
+          :label="saveLabel || t('CAPTAIN.ASSISTANTS.SETTINGS.SAVE')"
           size="sm"
           :is-loading="isSaving"
           @click="emit('save')"

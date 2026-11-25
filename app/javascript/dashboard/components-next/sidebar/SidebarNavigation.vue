@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref, watch } from 'vue';
+import { computed, inject, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { useSidebarContext } from './provider';
@@ -14,6 +14,7 @@ import { useNavigationLayout } from './useNavigationLayout';
 import SidebarSubGroup from './SidebarSubGroup.vue';
 import SidebarGroupLeaf from './SidebarGroupLeaf.vue';
 import AssistantNavigation from './AssistantNavigation.vue';
+import { useWebsiteChannelNavigation } from 'dashboard/composables/useWebsiteChannelNavigation';
 
 const props = defineProps({ items: { type: Array, required: true } });
 const emit = defineEmits(['navigate']);
@@ -23,6 +24,15 @@ const router = useRouter();
 const { isAllowed, resolvePath } = useSidebarContext();
 const lastRoutes = ref({});
 const { isMobile, isCompact } = useNavigationLayout();
+const websitePanelTarget = inject('websiteChannelPanelTarget', ref(null));
+const {
+  activePage: activeWebsitePage,
+  isWebsiteSettings,
+  navigation: websiteNavigation,
+} = useWebsiteChannelNavigation();
+const websitePanel = computed(
+  () => isWebsiteSettings.value && !isMobile.value && !isCompact.value
+);
 // Responsive overrides never write to the user's saved desktop preference.
 const temporaryPanels = ref({});
 watch([isMobile, isCompact], () => {
@@ -80,17 +90,24 @@ const readCollapsed = () => {
 };
 const collapsed = ref(readCollapsed());
 
-const panelItems = computed(() => activeModule.value?.children || []);
+const panelItems = computed(() =>
+  websitePanel.value
+    ? websiteNavigation.value
+    : activeModule.value?.children || []
+);
 // A section without pages (Home) is the page itself: no panel, full width.
 const PANEL_LESS = ['Settings'];
 const hasPanel = item =>
-  Boolean(item?.children) && !PANEL_LESS.includes(item.name);
+  Boolean(item?.children) &&
+  (!PANEL_LESS.includes(item.name) ||
+    (item.name === 'Settings' && websitePanel.value));
 const showPanel = computed(
   () =>
-    hasPanel(activeModule.value) &&
-    (isMobile.value || isCompact.value
-      ? (temporaryPanels.value[activeModule.value.name] ?? isMobile.value)
-      : !collapsed.value[activeModule.value.name])
+    websitePanel.value ||
+    (hasPanel(activeModule.value) &&
+      (isMobile.value || isCompact.value
+        ? (temporaryPanels.value[activeModule.value.name] ?? isMobile.value)
+        : !collapsed.value[activeModule.value.name]))
 );
 
 const toggleCollapsed = name => {
@@ -156,6 +173,11 @@ const selectModule = item => {
   }
   // A section without a panel opens its home again, e.g. back to the
   // settings cards from a settings page.
+  if (isActive(item) && websitePanel.value && item.to) {
+    router.push(item.to);
+    emit('navigate');
+    return;
+  }
   if (isActive(item) && hasPanel(item)) return;
   openModule(item);
 };
@@ -236,12 +258,12 @@ watch(
       :aria-label="settingsModule.label"
       :aria-current="isActive(settingsModule) ? 'true' : undefined"
       :aria-expanded="
-        isActive(settingsModule) && hasPanel(settingsModule)
+        isActive(settingsModule) && hasPanel(settingsModule) && !websitePanel
           ? showPanel
           : undefined
       "
       :aria-controls="
-        isActive(settingsModule) && hasPanel(settingsModule)
+        isActive(settingsModule) && hasPanel(settingsModule) && !websitePanel
           ? 'co-section-panel'
           : undefined
       "
@@ -271,79 +293,96 @@ watch(
       <Icon icon="i-lucide-chevrons-right" class="size-4" />
     </button>
   </nav>
-  <div
-    v-if="hasPanel(activeModule)"
-    class="flex shrink-0 flex-col overflow-hidden bg-n-background transition-[width] duration-200 ease-out motion-reduce:transition-none"
-    :class="showPanel ? 'w-56 border-s border-n-weak' : 'w-0'"
+  <Teleport
+    :to="websitePanelTarget || 'body'"
+    :disabled="!websitePanel || !websitePanelTarget"
   >
     <div
-      v-if="showPanel"
-      class="flex h-16 w-56 shrink-0 items-center gap-1.5 ps-3 pe-3"
+      v-if="hasPanel(activeModule)"
+      class="flex shrink-0 flex-col overflow-hidden bg-n-background transition-[width] duration-200 ease-out motion-reduce:transition-none"
+      :class="[
+        showPanel ? 'w-56 border-n-weak' : 'w-0',
+        websitePanel ? 'border-e !bg-n-solid-2' : 'border-s',
+      ]"
     >
-      <button
-        v-tooltip.bottom="t('PLATFORM_NAV.HIDE_MENU')"
-        type="button"
-        :aria-label="t('PLATFORM_NAV.HIDE_MENU')"
-        aria-controls="co-section-panel"
-        aria-expanded="true"
-        class="grid size-8 shrink-0 place-items-center rounded-lg text-n-slate-11 hover:bg-n-alpha-2 hover:text-n-slate-12 focus-visible:outline focus-visible:outline-2 focus-visible:outline-n-brand"
-        @click="toggleCollapsed(activeModule.name)"
+      <div
+        v-if="showPanel && !websitePanel"
+        class="flex h-16 w-56 shrink-0 items-center gap-1.5 ps-3 pe-3"
       >
-        <Icon icon="i-lucide-panel-left-close" class="size-[1.125rem]" />
-      </button>
-      <h2
-        class="m-0 min-w-0 flex-1 truncate font-display text-lg font-semibold tracking-display text-n-slate-12"
-        :title="activeModule.label"
-      >
-        {{ activeModule.label }}
-      </h2>
-      <div class="flex shrink-0 items-center gap-0.5">
-        <slot
-          v-if="activeModule.name === 'Conversation'"
-          name="conversationTools"
-        />
+        <button
+          v-tooltip.bottom="t('PLATFORM_NAV.HIDE_MENU')"
+          type="button"
+          :aria-label="t('PLATFORM_NAV.HIDE_MENU')"
+          aria-controls="co-section-panel"
+          aria-expanded="true"
+          class="grid size-8 shrink-0 place-items-center rounded-lg text-n-slate-11 hover:bg-n-alpha-2 hover:text-n-slate-12 focus-visible:outline focus-visible:outline-2 focus-visible:outline-n-brand"
+          @click="toggleCollapsed(activeModule.name)"
+        >
+          <Icon icon="i-lucide-panel-left-close" class="size-[1.125rem]" />
+        </button>
+        <h2
+          class="m-0 min-w-0 flex-1 truncate font-display text-lg font-semibold tracking-display text-n-slate-12"
+          :title="activeModule.label"
+        >
+          {{ activeModule.label }}
+        </h2>
+        <div class="flex shrink-0 items-center gap-0.5">
+          <slot
+            v-if="activeModule.name === 'Conversation'"
+            name="conversationTools"
+          />
+        </div>
       </div>
-    </div>
-    <section
-      v-if="showPanel"
-      id="co-section-panel"
-      :aria-label="activeModule.label"
-      class="flex min-h-0 w-56 flex-1 flex-col"
-    >
-      <AssistantNavigation v-if="activeModule.name === 'Captain'" />
-      <nav
-        :aria-label="t('PLATFORM_NAV.SECTION_NAVIGATION')"
-        class="min-h-0 flex-1 overflow-y-auto px-3 pb-6"
+      <section
+        v-if="showPanel"
+        id="co-section-panel"
+        :aria-label="websitePanel ? t('CHANNELS.TITLE') : activeModule.label"
+        class="flex min-h-0 w-56 flex-1 flex-col"
+        :class="{ 'pt-3': websitePanel }"
       >
-        <ul class="m-0 flex list-none flex-col gap-0.5 p-0">
-          <template v-for="(child, index) in panelItems" :key="child.name">
-            <li
-              v-if="startsCluster(child, index)"
-              aria-hidden="true"
-              class="h-4 shrink-0 list-none"
-            />
-            <SidebarSubGroup
-              v-if="child.children"
-              :name="`${activeModule.name}:${child.name}`"
-              :label="child.label"
-              :children="child.children"
-              :active-child="
-                child.children.includes(activeLeaf) ? activeLeaf : undefined
-              "
-              is-expanded
-              collapsible
-              :sort-options="child.sortOptions"
-              :active-sort="child.activeSort"
-              @update-sort="child.onSortChange?.($event)"
-            />
-            <SidebarGroupLeaf
-              v-else
-              v-bind="child"
-              :active="activeLeaf === child"
-            />
-          </template>
-        </ul>
-      </nav>
-    </section>
-  </div>
+        <AssistantNavigation v-if="activeModule.name === 'Captain'" />
+        <nav
+          :aria-label="
+            websitePanel
+              ? t('CHANNELS.SETTINGS')
+              : t('PLATFORM_NAV.SECTION_NAVIGATION')
+          "
+          class="min-h-0 flex-1 overflow-y-auto px-3 pb-6"
+        >
+          <ul class="m-0 flex list-none flex-col gap-0.5 p-0">
+            <template v-for="(child, index) in panelItems" :key="child.name">
+              <li
+                v-if="startsCluster(child, index)"
+                aria-hidden="true"
+                class="h-4 shrink-0 list-none"
+              />
+              <SidebarSubGroup
+                v-if="child.children"
+                :name="`${activeModule.name}:${child.name}`"
+                :label="child.label"
+                :children="child.children"
+                :active-child="
+                  websitePanel
+                    ? activeWebsitePage
+                    : child.children.includes(activeLeaf)
+                      ? activeLeaf
+                      : undefined
+                "
+                is-expanded
+                collapsible
+                :sort-options="child.sortOptions"
+                :active-sort="child.activeSort"
+                @update-sort="child.onSortChange?.($event)"
+              />
+              <SidebarGroupLeaf
+                v-else
+                v-bind="child"
+                :active="activeLeaf === child"
+              />
+            </template>
+          </ul>
+        </nav>
+      </section>
+    </div>
+  </Teleport>
 </template>

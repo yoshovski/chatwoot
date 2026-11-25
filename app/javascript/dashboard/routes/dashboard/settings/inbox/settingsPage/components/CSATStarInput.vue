@@ -20,17 +20,23 @@ const selectionClass = computed(() => {
 
 <template>
   <button
-    class="flex items-center rounded-lg transition-all duration-300 cursor-pointer outline outline-1 px-4 py-2 gap-2 min-w-56"
+    type="button"
+    :aria-pressed="selected"
+    class="flex flex-col items-center rounded-lg transition-all duration-300 cursor-pointer outline outline-1 px-2 py-2.5 gap-2 min-w-0 w-full justify-center"
     :class="selectionClass"
     @click="emit('update', CSAT_DISPLAY_TYPES.STAR)"
   >
-    <div
-      v-for="n in 5"
-      :key="'star-' + n"
-      class="rounded-full p-1 transition-transform duration-150 focus:outline-none flex items-center flex-shrink-0"
-      :aria-label="`Star ${n}`"
-    >
-      <i class="i-ri-star-fill text-n-amber-9 text-2xl" />
-    </div>
+    <span class="flex items-center justify-center" aria-hidden="true">
+      <div
+        v-for="n in 5"
+        :key="'star-' + n"
+        class="rounded-full p-1 transition-transform duration-150 focus:outline-none flex items-center flex-shrink-0"
+      >
+        <i class="i-ri-star-fill text-n-amber-9 text-2xl" />
+      </div>
+    </span>
+    <span class="text-sm font-medium text-n-slate-12">{{
+      $t('INBOX_MGMT.WEBSITE_SETTINGS.RATING_STARS')
+    }}</span>
   </button>
 </template>
