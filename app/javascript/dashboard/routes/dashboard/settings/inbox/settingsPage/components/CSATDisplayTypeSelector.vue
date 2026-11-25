@@ -13,7 +13,7 @@ const emit = defineEmits(['update']);
 </script>
 
 <template>
-  <div class="flex flex-wrap gap-6 mt-2">
+  <div class="mt-1 grid gap-3 sm:grid-cols-2">
     <CSATEmojiInput
       :selected="props.selectedType === CSAT_DISPLAY_TYPES.EMOJI"
       @update="emit('update', $event)"

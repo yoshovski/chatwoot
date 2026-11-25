@@ -2,6 +2,7 @@
 import Icon from 'dashboard/components-next/icon/Icon.vue';
 
 defineProps({
+  stretch: { type: Boolean, default: false },
   options: {
     type: Array,
     default: () => [],
@@ -46,13 +47,14 @@ const modelValue = defineModel({
 </script>
 
 <template>
-  <div class="w-fit relative">
+  <div class="relative min-w-0" :class="stretch ? 'w-full' : 'w-fit'">
     <select
       v-model="modelValue"
       :disabled="disabled"
       :aria-label="ariaLabel || undefined"
       class="appearance-none bg-none rounded-lg border-0 outline-1 outline -outline-offset-1 transition-all duration-200 bg-n-surface-1 !mb-0 py-2 px-3 pr-10 text-sm"
       :class="{
+        'w-full min-h-10': stretch,
         'outline-n-weak hover:outline-n-slate-6 focus:outline-n-blue-9':
           !error && !disabled,
         'outline-n-red-9 focus:outline-n-red-9': error && !disabled,

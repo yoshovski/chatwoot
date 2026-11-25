@@ -20,6 +20,7 @@ import Button from 'next/button/Button.vue';
 import ChannelAgentConnection from 'next/Channels/ChannelAgentConnection.vue';
 import ChannelDelete from 'next/Channels/ChannelDelete.vue';
 import Settings from './Settings.vue';
+import WebsiteChannelSettings from './WebsiteChannelSettings.vue';
 import CollaboratorsPage from './settingsPage/CollaboratorsPage.vue';
 import WeeklyAvailability from './components/WeeklyAvailability.vue';
 import CustomerSatisfactionPage from './settingsPage/CustomerSatisfactionPage.vue';
@@ -108,6 +109,7 @@ onMounted(load);
 <template>
   <div class="flex w-full min-w-0 flex-col gap-5 py-4">
     <router-link
+      v-if="inbox.channel_type !== INBOX_TYPES.WEB"
       :to="{ name: 'settings_inbox_list' }"
       class="self-start text-sm font-medium text-n-blue-11"
     >
@@ -128,6 +130,10 @@ onMounted(load);
       <Button :label="t('CHANNELS.RETRY')" size="sm" @click="load" />
     </EmptyState>
     <EmptyState v-else-if="!inbox.id" :title="t('CHANNELS.NOT_FOUND')" />
+    <WebsiteChannelSettings
+      v-else-if="inbox.channel_type === INBOX_TYPES.WEB"
+      :inbox="inbox"
+    />
     <template v-else-if="modern">
       <PageHeader :title="inbox.name" :description="getInboxIdentifier(inbox)">
         <template #action>

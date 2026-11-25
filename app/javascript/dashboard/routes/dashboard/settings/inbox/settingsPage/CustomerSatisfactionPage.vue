@@ -9,6 +9,8 @@ import { CSAT_DISPLAY_TYPES } from 'shared/constants/messages';
 
 import Icon from 'dashboard/components-next/icon/Icon.vue';
 import WithLabel from 'v3/components/Form/WithLabel.vue';
+import SectionCard from 'next/kit/SectionCard.vue';
+import ChannelFormActions from '../components/ChannelFormActions.vue';
 import SettingsToggleSection from 'dashboard/components-next/Settings/SettingsToggleSection.vue';
 import CSATDisplayTypeSelector from './components/CSATDisplayTypeSelector.vue';
 import CSATTemplate from 'dashboard/components-next/template-preview/CSATTemplate.vue';
@@ -21,6 +23,7 @@ import languages from 'dashboard/components/widgets/conversation/advancedFilterI
 import ConfirmTemplateUpdateDialog from './components/ConfirmTemplateUpdateDialog.vue';
 
 const props = defineProps({
+  website: { type: Boolean, default: false },
   inbox: { type: Object, required: true },
 });
 
@@ -211,7 +214,16 @@ onMounted(() => {
   if (isAnyWhatsAppChannel.value) checkTemplateStatus();
 });
 
-watch(() => props.inbox, initializeState, { immediate: true });
+watch(
+  () =>
+    JSON.stringify([
+      props.inbox.id,
+      props.inbox.csat_survey_enabled,
+      props.inbox.csat_config,
+    ]),
+  initializeState,
+  { immediate: true }
+);
 
 const handleLabelSelect = value => {
   if (!value || selectedLabelValues.value.includes(value)) {
@@ -499,11 +511,12 @@ const handleConfirmTemplateUpdate = async () => {
 </script>
 
 <template>
-  <div class="mx-6">
+  <component :is="website ? SectionCard : 'div'" :class="{ 'mx-6': !website }">
     <SettingsToggleSection
       v-model="state.csatSurveyEnabled"
+      :inset="website"
       :header="$t('INBOX_MGMT.CSAT.TITLE')"
-      :description="$t('INBOX_MGMT.CSAT.SUBTITLE')"
+      :description="website ? '' : $t('INBOX_MGMT.CSAT.SUBTITLE')"
     >
       <template v-if="state.csatSurveyEnabled" #editor>
         <div class="grid gap-5">
@@ -675,48 +688,61 @@ const handleConfirmTemplateUpdate = async () => {
             </WithLabel>
           </template>
 
-          <WithLabel
-            :label="$t('INBOX_MGMT.CSAT.SURVEY_RULE.LABEL')"
-            name="survey_rule"
+          <component
+            :is="website ? 'details' : 'div'"
+            :class="{ 'border-t border-n-weak pt-3': website }"
           >
-            <div class="mb-4">
-              <span
-                class="inline-flex flex-wrap gap-1.5 items-center text-sm text-n-slate-12"
-              >
-                {{ $t('INBOX_MGMT.CSAT.SURVEY_RULE.DESCRIPTION_PREFIX') }}
-                <FilterSelect
-                  v-model="state.surveyRuleOperator"
-                  variant="faded"
-                  :options="filterTypes"
-                  class="inline-flex shrink-0"
-                  @update:model-value="updateSurveyRuleOperator"
-                />
-                {{ $t('INBOX_MGMT.CSAT.SURVEY_RULE.DESCRIPTION_SUFFIX') }}
+            <summary
+              v-if="website"
+              class="mb-3 w-fit cursor-pointer rounded text-sm font-medium text-n-blue-11"
+            >
+              {{ $t('INBOX_MGMT.WEBSITE_SETTINGS.SURVEY_RULES') }}
+            </summary>
+            <WithLabel
+              :label="$t('INBOX_MGMT.CSAT.SURVEY_RULE.LABEL')"
+              name="survey_rule"
+            >
+              <div class="mb-4">
+                <span
+                  class="inline-flex flex-wrap gap-1.5 items-center text-sm text-n-slate-12"
+                >
+                  {{ $t('INBOX_MGMT.CSAT.SURVEY_RULE.DESCRIPTION_PREFIX') }}
+                  <FilterSelect
+                    v-model="state.surveyRuleOperator"
+                    variant="faded"
+                    :options="filterTypes"
+                    class="inline-flex shrink-0"
+                    @update:model-value="updateSurveyRuleOperator"
+                  />
+                  {{ $t('INBOX_MGMT.CSAT.SURVEY_RULE.DESCRIPTION_SUFFIX') }}
 
-                <NextButton
-                  v-for="label in selectedLabelValues"
-                  :key="label"
-                  sm
-                  faded
-                  slate
-                  trailing-icon
-                  :label="label"
-                  icon="i-lucide-x"
-                  class="inline-flex shrink-0"
-                  @click="removeLabel(label)"
-                />
-                <FilterSelect
-                  v-model="currentLabel"
-                  :options="labelOptions"
-                  :label="$t('INBOX_MGMT.CSAT.SURVEY_RULE.SELECT_PLACEHOLDER')"
-                  hide-label
-                  variant="faded"
-                  class="inline-flex shrink-0"
-                  @update:model-value="handleLabelSelect"
-                />
-              </span>
-            </div>
-          </WithLabel>
+                  <NextButton
+                    v-for="label in selectedLabelValues"
+                    :key="label"
+                    sm
+                    faded
+                    slate
+                    trailing-icon
+                    :label="label"
+                    icon="i-lucide-x"
+                    class="inline-flex shrink-0"
+                    @click="removeLabel(label)"
+                  />
+                  <FilterSelect
+                    v-model="currentLabel"
+                    :options="labelOptions"
+                    :label="
+                      $t('INBOX_MGMT.CSAT.SURVEY_RULE.SELECT_PLACEHOLDER')
+                    "
+                    hide-label
+                    variant="faded"
+                    class="inline-flex shrink-0"
+                    @update:model-value="handleLabelSelect"
+                  />
+                </span>
+              </div>
+            </WithLabel>
+          </component>
           <p class="text-sm italic text-n-slate-11">
             {{
               isAnyWhatsAppChannel
@@ -728,19 +754,24 @@ const handleConfirmTemplateUpdate = async () => {
       </template>
     </SettingsToggleSection>
 
-    <div class="w-full flex justify-end items-center py-4 mt-2">
+    <ChannelFormActions>
       <NextButton
-        type="submit"
-        :label="$t('INBOX_MGMT.SETTINGS_POPUP.UPDATE')"
+        type="button"
+        size="sm"
+        :label="
+          website
+            ? $t('INBOX_MGMT.WEBSITE_SETTINGS.SAVE_RATING')
+            : $t('INBOX_MGMT.SETTINGS_POPUP.UPDATE')
+        "
         :is-loading="isUpdating"
         @click="saveSettings"
       />
-    </div>
+    </ChannelFormActions>
 
     <!-- Template Update Confirmation Dialog -->
     <ConfirmTemplateUpdateDialog
       ref="confirmDialog"
       @confirm="handleConfirmTemplateUpdate"
     />
-  </div>
+  </component>
 </template>

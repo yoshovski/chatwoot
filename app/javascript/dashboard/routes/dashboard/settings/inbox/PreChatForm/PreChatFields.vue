@@ -1,106 +1,125 @@
 <script setup>
-import { ref, watch } from 'vue';
 import Draggable from 'vuedraggable';
-import ToggleSwitch from 'dashboard/components-next/switch/Switch.vue';
 import Icon from 'dashboard/components-next/icon/Icon.vue';
+import ToggleSwitch from 'dashboard/components-next/switch/Switch.vue';
+import SettingsHelp from 'dashboard/components-next/captain/pageComponents/assistant/settings/SettingsHelp.vue';
 
-const props = defineProps({
-  preChatFields: {
-    type: Array,
-    default: () => [],
-  },
-});
+const fields = defineModel({ type: Array, required: true });
 
-const emit = defineEmits(['update', 'dragEnd']);
-
-const preChatFieldOptions = ref(props.preChatFields);
-
-const isFieldEditable = item => {
-  return !item.enabled;
+const moveField = (index, offset) => {
+  const next = [...fields.value];
+  const [field] = next.splice(index, 1);
+  next.splice(index + offset, 0, field);
+  fields.value = next;
 };
-
-const handlePreChatFieldOptions = (event, type, item) => {
-  emit('update', event, type, item);
-};
-
-const onDragEnd = () => {
-  emit('dragEnd', preChatFieldOptions.value);
-};
-
-watch(
-  () => props.preChatFields,
-  newFields => {
-    preChatFieldOptions.value = newFields;
-  }
-);
 </script>
 
 <template>
   <Draggable
-    v-model="preChatFieldOptions"
-    tag="tbody"
+    v-model="fields"
+    tag="ul"
     item-key="name"
-    @end="onDragEnd"
+    handle=".drag-handle"
+    class="m-0 list-none divide-y divide-n-weak rounded-lg border border-n-weak p-0"
   >
-    <template #item="{ element: item }">
-      <tr>
-        <td class="py-4 ltr:pl-4 ltr:pr-3 rtl:pl-3 rtl:pr-4 text-body-main">
+    <template #item="{ element: field, index }">
+      <li class="px-3 py-2.5 sm:px-4">
+        <div class="flex min-w-0 items-center gap-1.5 sm:gap-2">
           <Icon
-            icon="i-woot-drag-indicator"
-            class="size-4 text-n-slate-11 mt-1 cursor-move"
+            icon="i-lucide-grip-vertical"
+            class="drag-handle size-4 shrink-0 cursor-grab text-n-slate-10"
           />
-        </td>
-        <td class="py-4 ltr:pr-3 rtl:pl-3 text-body-main">
+          <span
+            class="min-w-0 flex-1 break-words text-sm font-medium text-n-slate-12"
+          >
+            {{ field.label || field.name }}
+          </span>
+          <button
+            type="button"
+            class="grid size-8 shrink-0 place-items-center rounded-lg text-n-slate-11 hover:bg-n-alpha-1 disabled:opacity-35"
+            :aria-label="
+              $t('INBOX_MGMT.WEBSITE_SETTINGS.MOVE_UP', {
+                field: field.label || field.name,
+              })
+            "
+            :disabled="index === 0"
+            @click="moveField(index, -1)"
+          >
+            <Icon icon="i-lucide-chevron-up" class="size-4" />
+          </button>
+          <button
+            type="button"
+            class="grid size-8 shrink-0 place-items-center rounded-lg text-n-slate-11 hover:bg-n-alpha-1 disabled:opacity-35"
+            :aria-label="
+              $t('INBOX_MGMT.WEBSITE_SETTINGS.MOVE_DOWN', {
+                field: field.label || field.name,
+              })
+            "
+            :disabled="index === fields.length - 1"
+            @click="moveField(index, 1)"
+          >
+            <Icon icon="i-lucide-chevron-down" class="size-4" />
+          </button>
           <ToggleSwitch
-            :model-value="item['enabled']"
-            @change="handlePreChatFieldOptions($event, 'enabled', item)"
+            v-model="field.enabled"
+            :aria-label="
+              $t('INBOX_MGMT.WEBSITE_SETTINGS.SHOW_FIELD', {
+                field: field.label || field.name,
+              })
+            "
           />
-        </td>
-        <td
-          class="py-4 ltr:pr-3 rtl:pl-3 text-body-main"
-          :class="{ 'text-n-slate-11': !item['enabled'] }"
-        >
-          {{ item.name }}
-        </td>
-        <td
-          class="py-4 ltr:pr-3 rtl:pl-3 text-body-main"
-          :class="{ 'text-n-slate-11': !item['enabled'] }"
-        >
-          {{ item.type }}
-        </td>
-        <td class="py-4 ltr:pr-3 rtl:pl-3 text-body-main">
-          <input
-            v-model="item['required']"
-            type="checkbox"
-            :value="`${item.name}-required`"
-            :disabled="!item['enabled']"
-            class="m-0"
-            @click="handlePreChatFieldOptions($event, 'required', item)"
-          />
-        </td>
-        <td
-          class="py-4 ltr:pr-3 rtl:pl-3 text-body-main"
-          :class="{ 'text-n-slate-11': !item['enabled'] }"
-        >
-          <input
-            v-model="item.label"
-            type="text"
-            :disabled="isFieldEditable(item)"
-            class="w-full text-sm !mb-0 px-2 py-1 border border-n-weak rounded"
-          />
-        </td>
-        <td
-          class="py-4 ltr:pr-4 rtl:pl-4 text-body-main"
-          :class="{ 'text-n-slate-11': !item['enabled'] }"
-        >
-          <input
-            v-model="item.placeholder"
-            type="text"
-            :disabled="isFieldEditable(item)"
-            class="w-full text-sm !mb-0 px-2 py-1 border border-n-weak rounded"
-          />
-        </td>
-      </tr>
+        </div>
+        <details v-if="field.enabled" class="mt-1 ps-6">
+          <summary
+            class="w-fit cursor-pointer rounded text-sm font-medium text-n-blue-11"
+          >
+            {{ $t('INBOX_MGMT.WEBSITE_SETTINGS.FIELD_OPTIONS') }}
+          </summary>
+          <div class="mt-3 flex flex-col gap-3">
+            <div class="grid min-w-0 gap-3 sm:grid-cols-2">
+              <label
+                class="flex min-w-0 flex-col gap-1 text-sm font-medium text-n-slate-12"
+              >
+                {{ $t('INBOX_MGMT.PRE_CHAT_FORM.SET_FIELDS_HEADER.LABEL') }}
+                <input
+                  v-model="field.label"
+                  type="text"
+                  class="!m-0 min-h-10 w-full !rounded-lg"
+                />
+              </label>
+              <label
+                class="flex min-w-0 flex-col gap-1 text-sm font-medium text-n-slate-12"
+              >
+                {{
+                  $t('INBOX_MGMT.PRE_CHAT_FORM.SET_FIELDS_HEADER.PLACE_HOLDER')
+                }}
+                <input
+                  v-model="field.placeholder"
+                  type="text"
+                  class="!m-0 min-h-10 w-full !rounded-lg"
+                />
+              </label>
+            </div>
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <label
+                class="m-0 flex items-center gap-2 text-sm text-n-slate-12"
+              >
+                <input v-model="field.required" type="checkbox" class="m-0" />
+                {{ $t('INBOX_MGMT.PRE_CHAT_FORM.SET_FIELDS_HEADER.REQUIRED') }}
+              </label>
+              <SettingsHelp
+                :label="$t('INBOX_MGMT.WEBSITE_SETTINGS.FIELD_DETAILS')"
+                :text="
+                  $t('INBOX_MGMT.WEBSITE_SETTINGS.FIELD_METADATA', {
+                    key: field.name,
+                    type: field.type,
+                  })
+                "
+              />
+            </div>
+          </div>
+        </details>
+      </li>
     </template>
   </Draggable>
 </template>

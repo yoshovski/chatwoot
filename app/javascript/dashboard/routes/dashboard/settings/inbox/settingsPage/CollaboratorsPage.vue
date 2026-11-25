@@ -16,8 +16,11 @@ import Icon from 'dashboard/components-next/icon/Icon.vue';
 import TagInput from 'dashboard/components-next/taginput/TagInput.vue';
 import assignmentPoliciesAPI from 'dashboard/api/assignmentPolicies';
 import { useI18n } from 'vue-i18n';
+import SectionCard from 'next/kit/SectionCard.vue';
+import ChannelFormActions from '../components/ChannelFormActions.vue';
 
 const props = defineProps({
+  website: { type: Boolean, default: false },
   inbox: {
     type: Object,
     default: () => ({}),
@@ -362,11 +365,20 @@ onMounted(() => {
 
 <template>
   <div>
-    <SettingsFieldSection
-      :label="$t('INBOX_MGMT.SETTINGS_POPUP.INBOX_AGENTS')"
-      :help-text="$t('INBOX_MGMT.SETTINGS_POPUP.INBOX_AGENTS_SUB_TEXT')"
-      class="[&>div]:!items-start"
+    <component
+      :is="website ? SectionCard : SettingsFieldSection"
+      v-bind="
+        website
+          ? { title: $t('INBOX_MGMT.SETTINGS_POPUP.INBOX_AGENTS') }
+          : {
+              label: $t('INBOX_MGMT.SETTINGS_POPUP.INBOX_AGENTS'),
+              helpText: $t('INBOX_MGMT.SETTINGS_POPUP.INBOX_AGENTS_SUB_TEXT'),
+            }
+      "
     >
+      <p v-if="website" class="m-0 text-sm text-n-slate-11">
+        {{ $t('INBOX_MGMT.SETTINGS_POPUP.INBOX_AGENTS_SUB_TEXT') }}
+      </p>
       <div
         class="rounded-xl outline outline-1 -outline-offset-1 outline-n-weak hover:outline-n-strong px-2 py-2"
       >
@@ -382,22 +394,28 @@ onMounted(() => {
         />
       </div>
 
+      <ChannelFormActions v-if="website">
+        <NextButton
+          size="sm"
+          :label="$t('INBOX_MGMT.WEBSITE_SETTINGS.SAVE_COLLABORATORS')"
+          :is-loading="isAgentListUpdating"
+          @click="updateAgents"
+        />
+      </ChannelFormActions>
       <template #extra>
-        <div class="grid grid-cols-1 lg:grid-cols-8">
-          <div class="col-span-1 lg:col-span-2" />
-          <div class="col-span-1 lg:col-span-6 mt-4 justify-self-end">
-            <NextButton
-              :label="$t('INBOX_MGMT.SETTINGS_POPUP.UPDATE')"
-              :is-loading="isAgentListUpdating"
-              @click="updateAgents"
-            />
-          </div>
+        <div class="mt-4 flex justify-end">
+          <NextButton
+            :label="$t('INBOX_MGMT.SETTINGS_POPUP.UPDATE')"
+            :is-loading="isAgentListUpdating"
+            @click="updateAgents"
+          />
         </div>
       </template>
-    </SettingsFieldSection>
+    </component>
     <SettingsAccordion
       :title="$t('INBOX_MGMT.SETTINGS_POPUP.AGENT_ASSIGNMENT')"
-      class="mt-6"
+      :default-open="!website"
+      class="mt-4"
     >
       <SettingsToggleSection
         v-model="enableAutoAssignment"

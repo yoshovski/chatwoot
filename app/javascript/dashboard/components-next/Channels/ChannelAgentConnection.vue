@@ -7,8 +7,13 @@ import AssistantsAPI from 'dashboard/api/captain/assistant';
 import CaptainInboxesAPI from 'dashboard/api/captain/inboxes';
 import Button from 'next/button/Button.vue';
 import SectionCard from 'next/kit/SectionCard.vue';
+import Avatar from 'next/avatar/Avatar.vue';
+import Select from 'next/select/Select.vue';
 
-const props = defineProps({ inbox: { type: Object, required: true } });
+const props = defineProps({
+  inbox: { type: Object, required: true },
+  website: { type: Boolean, default: false },
+});
 const { t } = useI18n();
 const store = useStore();
 const assistants = ref([]);
@@ -16,6 +21,9 @@ const selectedId = ref('');
 const loading = ref(false);
 const error = ref(false);
 const saving = ref(false);
+const agentOptions = computed(() =>
+  assistants.value.map(({ id, name }) => ({ value: id, label: name }))
+);
 const current = computed(() => props.inbox.captain_assistant);
 const load = async () => {
   loading.value = true;
@@ -61,8 +69,16 @@ onMounted(load);
 </script>
 
 <template>
-  <SectionCard :title="t('CHANNELS.AI_AGENT')">
-    <p class="m-0 text-sm text-n-slate-11">{{ t('CHANNELS.AGENT_HELP') }}</p>
+  <SectionCard
+    :title="
+      props.website
+        ? t('INBOX_MGMT.WEBSITE_SETTINGS.AGENT_CONNECTION')
+        : t('CHANNELS.AI_AGENT')
+    "
+  >
+    <p v-if="!props.website" class="m-0 text-sm text-n-slate-11">
+      {{ t('CHANNELS.AGENT_HELP') }}
+    </p>
     <p v-if="loading" class="m-0 text-sm text-n-slate-11" role="status">
       {{ t('CHANNELS.LOADING_AGENTS') }}
     </p>
@@ -77,9 +93,32 @@ onMounted(load);
       <Button :label="t('CHANNELS.RETRY')" size="sm" @click="load" />
     </div>
     <div v-else-if="current?.id" class="flex flex-wrap items-center gap-3">
-      <span class="me-auto text-sm font-medium text-n-slate-12">{{
-        current.name
-      }}</span>
+      <div class="me-auto flex min-w-0 items-center gap-3">
+        <Avatar
+          v-if="props.website"
+          :name="current.name"
+          :size="40"
+          rounded-full
+        />
+        <div class="min-w-0">
+          <p class="m-0 break-words text-sm font-semibold text-n-slate-12">
+            {{ current.name }}
+          </p>
+          <p v-if="props.website" class="m-0 mt-0.5 text-sm text-n-slate-11">
+            {{ t('INBOX_MGMT.WEBSITE_SETTINGS.AGENT_CONNECTED') }}
+          </p>
+        </div>
+      </div>
+      <RouterLink
+        v-if="props.website"
+        :to="{
+          name: 'captain_assistants_guidelines_index',
+          params: { assistantId: current.id },
+        }"
+        class="rounded-md px-2 py-1.5 text-sm font-medium text-n-blue-11 hover:underline"
+      >
+        {{ t('INBOX_MGMT.WIDGET_SETTINGS.AI_AGENT.LINK') }}
+      </RouterLink>
       <Button
         :label="t('CHANNELS.DISCONNECT')"
         color="ruby"
@@ -99,20 +138,18 @@ onMounted(load);
         class="m-0 flex min-w-0 flex-1 flex-col gap-2 text-sm text-n-slate-12"
       >
         {{ t('CHANNELS.AI_AGENT') }}
-        <select v-model="selectedId" class="!mb-0" :disabled="saving">
-          <option value="">{{ t('CHANNELS.SELECT_AGENT') }}</option>
-          <option
-            v-for="assistant in assistants"
-            :key="assistant.id"
-            :value="assistant.id"
-          >
-            {{ assistant.name }}
-          </option>
-        </select>
+        <Select
+          v-model="selectedId"
+          stretch
+          :options="agentOptions"
+          :aria-label="t('CHANNELS.AI_AGENT')"
+          :placeholder="t('CHANNELS.SELECT_AGENT')"
+          :disabled="saving"
+        />
       </label>
       <Button
         type="submit"
-        class="self-start sm:self-auto"
+        class="min-h-10 self-start whitespace-nowrap sm:self-auto"
         :label="t('CHANNELS.CONNECT')"
         size="sm"
         :disabled="!selectedId || saving"

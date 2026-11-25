@@ -64,7 +64,9 @@ const toggleSenderNameType = key => {
   <div
     class="flex flex-col items-start gap-4 mt-3 min-w-0"
     :class="
-      isWebsiteChannel ? 'sm:flex-row md:flex-col xl:flex-row' : 'sm:flex-row'
+      isWebsiteChannel
+        ? '!m-0 !grid items-stretch gap-3 sm:grid-cols-2'
+        : 'sm:flex-row'
     "
   >
     <RadioCard
@@ -74,13 +76,14 @@ const toggleSenderNameType = key => {
       :label="keyOption.heading"
       :description="keyOption.content"
       :is-active="keyOption.key === props.senderNameType"
-      class="flex-1 !gap-2"
+      name="sender-name-type"
+      class="min-w-0 flex-1 !gap-2"
       @select="toggleSenderNameType"
     >
-      <div class="flex items-center gap-3">
+      <div class="flex min-w-0 items-center gap-2">
         <Avatar :name="userName(keyOption)" :size="30" />
-        <div class="flex flex-col">
-          <div class="flex items-center gap-1">
+        <div class="flex min-w-0 flex-col">
+          <div class="flex flex-wrap items-center gap-1">
             <span
               v-if="isKeyOptionFriendly(keyOption.key)"
               class="text-body-main text-n-slate-12"
@@ -97,7 +100,7 @@ const toggleSenderNameType = key => {
               {{ props.businessName || keyOption.preview.businessName }}
             </span>
           </div>
-          <span class="text-label-small text-n-slate-11">
+          <span class="break-all text-label-small text-n-slate-11">
             {{ keyOption.preview.email }}
           </span>
         </div>

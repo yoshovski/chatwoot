@@ -50,6 +50,7 @@ const onClick = (item, index) => {
         <!-- The last breadcrumb item is plain text -->
         <span
           v-else
+          aria-current="page"
           class="inline-flex items-center gap-1 text-sm truncate min-w-0"
         >
           <EmojiIcon

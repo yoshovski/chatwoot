@@ -1,5 +1,5 @@
 <script>
-import { defineAsyncComponent, ref, computed } from 'vue';
+import { defineAsyncComponent, ref, computed, provide } from 'vue';
 
 import NextSidebar from 'next/sidebar/Sidebar.vue';
 import AccountBillingNotice from './settings/billing/AccountBillingNotice.vue';
@@ -8,6 +8,8 @@ import WootKeyShortcutModal from 'dashboard/components/widgets/modal/WootKeyShor
 import AddAccountModal from 'dashboard/components/app/AddAccountModal.vue';
 import UpgradePage from 'dashboard/routes/dashboard/upgrade/UpgradePage.vue';
 
+import { useWebsiteChannelNavigation } from 'dashboard/composables/useWebsiteChannelNavigation';
+import { useNavigationLayout } from 'dashboard/components-next/sidebar/useNavigationLayout';
 import { useUISettings } from 'dashboard/composables/useUISettings';
 import { useGuidedSetupAutoOpen } from 'dashboard/routes/dashboard/home/setup/useGuidedSetupAutoOpen';
 import { useAccount } from 'dashboard/composables/useAccount';
@@ -46,6 +48,13 @@ export default {
   },
   setup() {
     const upgradePageRef = ref(null);
+    const channelPanelTarget = ref(null);
+    provide('websiteChannelPanelTarget', channelPanelTarget);
+    const { isWebsiteSettings } = useWebsiteChannelNavigation();
+    const { isMobile, isCompact } = useNavigationLayout();
+    const showWebsiteChannelPanel = computed(
+      () => isWebsiteSettings.value && !isMobile.value && !isCompact.value
+    );
     const { uiSettings, updateUISettings } = useUISettings();
     const { accountId } = useAccount();
     const { width: windowWidth } = useWindowSize();
@@ -57,6 +66,8 @@ export default {
       updateUISettings,
       accountId,
       upgradePageRef,
+      channelPanelTarget,
+      showWebsiteChannelPanel,
       windowWidth,
       hasActiveCall: computed(() => callsStore.hasActiveCall),
       hasIncomingCall: computed(() => callsStore.hasIncomingCall),
@@ -72,6 +83,7 @@ export default {
   },
   computed: {
     pageTitle() {
+      if (this.showWebsiteChannelPanel) return this.$t('CHANNELS.TITLE');
       return this.$route.name === 'account_home'
         ? this.$t('HOME.DASHBOARD.HOME')
         : '';
@@ -156,31 +168,38 @@ export default {
     >
       <TopBarUsageIndicator :title="pageTitle" />
       <AccountBillingNotice />
-      <main
-        class="flex flex-1 w-full min-h-0 px-0 overflow-hidden bg-n-surface-1"
-      >
-        <UpgradePage
-          v-show="showUpgradePage"
-          ref="upgradePageRef"
-          :bypass-upgrade-page="bypassUpgradePage"
+      <div class="flex min-h-0 min-w-0 flex-1">
+        <div
+          v-if="showWebsiteChannelPanel"
+          ref="channelPanelTarget"
+          class="flex min-h-0 shrink-0"
         />
-        <template v-if="!showUpgradePage">
-          <router-view />
-          <CopilotLauncher />
-          <CopilotContainer />
-          <FloatingCallWidget v-if="hasActiveCall || hasIncomingCall" />
-        </template>
-        <CommandBar :is-paywalled="isAccountPaywalled" />
-        <AddAccountModal
-          :show="showCreateAccountModal"
-          @close-account-create-modal="closeCreateAccountModal"
-        />
-        <WootKeyShortcutModal
-          v-model:show="showShortcutModal"
-          @close="closeKeyShortcutModal"
-          @clickaway="closeKeyShortcutModal"
-        />
-      </main>
+        <main
+          class="flex flex-1 w-full min-w-0 min-h-0 px-0 overflow-hidden bg-n-surface-1"
+        >
+          <UpgradePage
+            v-show="showUpgradePage"
+            ref="upgradePageRef"
+            :bypass-upgrade-page="bypassUpgradePage"
+          />
+          <template v-if="!showUpgradePage">
+            <router-view />
+            <CopilotLauncher />
+            <CopilotContainer />
+            <FloatingCallWidget v-if="hasActiveCall || hasIncomingCall" />
+          </template>
+          <CommandBar :is-paywalled="isAccountPaywalled" />
+          <AddAccountModal
+            :show="showCreateAccountModal"
+            @close-account-create-modal="closeCreateAccountModal"
+          />
+          <WootKeyShortcutModal
+            v-model:show="showShortcutModal"
+            @close="closeKeyShortcutModal"
+            @clickaway="closeKeyShortcutModal"
+          />
+        </main>
+      </div>
       <MobileSidebarLauncher
         :is-mobile-sidebar-open="isMobileSidebarOpen"
         @toggle="toggleMobileSidebar"

@@ -1,24 +1,18 @@
 import { ref } from 'vue';
 import { flushPromises, mount } from '@vue/test-utils';
 import InboxesAPI from 'dashboard/api/inboxes';
-import CaptainAssistantAPI from 'dashboard/api/captain/assistant';
-import CaptainInboxesAPI from 'dashboard/api/captain/inboxes';
 import WidgetSettings from './WidgetSettings.vue';
 import WidgetAiAgentCard from './WidgetAiAgentCard.vue';
 import WidgetLivePreview from 'dashboard/components-next/Inbox/WidgetLivePreview.vue';
 
 const dispatch = vi.fn();
-const captainEnabled = ref(true);
 
-vi.mock('vue-router', () => ({ onBeforeRouteLeave: vi.fn() }));
+vi.mock('vue-router', () => ({
+  onBeforeRouteLeave: vi.fn(),
+  onBeforeRouteUpdate: vi.fn(),
+}));
 vi.mock('dashboard/api/inboxes', () => ({
   default: { getWidgetPreviewToken: vi.fn() },
-}));
-vi.mock('dashboard/api/captain/assistant', () => ({
-  default: { get: vi.fn() },
-}));
-vi.mock('dashboard/api/captain/inboxes', () => ({
-  default: { get: vi.fn() },
 }));
 vi.mock('dashboard/composables/store', () => ({
   useStore: () => ({ dispatch }),
@@ -33,7 +27,6 @@ vi.mock('dashboard/composables/store', () => ({
 vi.mock('dashboard/composables/useAccount', () => ({
   useAccount: () => ({
     currentAccount: ref({ id: 1, locale: 'en' }),
-    isCloudFeatureEnabled: () => captainEnabled.value,
   }),
 }));
 
@@ -56,21 +49,13 @@ const inbox = {
   sender_name_type: 'friendly',
 };
 
-const connectAiAgent = connected => {
-  CaptainAssistantAPI.get.mockResolvedValue({
-    data: { payload: [{ id: 3, name: 'Ava', avatar_url: '' }] },
-  });
-  CaptainInboxesAPI.get.mockResolvedValue({
-    data: { payload: connected ? [{ id: inbox.id }] : [{ id: 99 }] },
-  });
-};
-
-const mountSettings = async () => {
+const mountSettings = async (props = {}) => {
   const wrapper = mount(WidgetSettings, {
-    props: { inbox },
+    props: { inbox, ...props },
     global: {
       stubs: {
         Editor: true,
+        SettingsHelp: true,
         GreetingsEditor: true,
         SenderNameExamplePreview: true,
         HmacSecretKey: true,
@@ -94,7 +79,6 @@ const greetingToggle = wrapper =>
 
 describe('WidgetSettings', () => {
   beforeEach(() => {
-    captainEnabled.value = true;
     InboxesAPI.getWidgetPreviewToken.mockResolvedValue({
       data: { token: 'preview', expires_at: Date.now() / 1000 + 900 },
     });
@@ -105,9 +89,12 @@ describe('WidgetSettings', () => {
     document.body.innerHTML = '';
   });
 
-  it('shows the AI agent card instead of the greeting when an AI agent answers', async () => {
-    connectAiAgent(true);
-    const wrapper = await mountSettings();
+  it('shows the connected AI agent instead of the greeting', async () => {
+    const wrapper = await mountSettings({
+      section: 'conversation',
+      hasCaptain: true,
+      inbox: { ...inbox, captain_assistant: { id: 3, name: 'Ava' } },
+    });
 
     const card = wrapper.findComponent(WidgetAiAgentCard);
     expect(card.exists()).toBe(true);
@@ -116,45 +103,78 @@ describe('WidgetSettings', () => {
   });
 
   it('keeps the greeting for inboxes without an AI agent', async () => {
-    connectAiAgent(false);
-    const wrapper = await mountSettings();
+    const wrapper = await mountSettings({
+      section: 'conversation',
+      hasCaptain: true,
+    });
 
     expect(wrapper.findComponent(WidgetAiAgentCard).exists()).toBe(false);
     expect(greetingToggle(wrapper)).toBeDefined();
   });
 
-  it('keeps the greeting when the AI agent feature is off', async () => {
-    captainEnabled.value = false;
+  it('retains edits when navigating between widget sections', async () => {
     const wrapper = await mountSettings();
+    const mint = wrapper
+      .findAll('button[aria-pressed]')
+      .find(button => button.text().endsWith('PALETTE.MINT'));
+    await mint.trigger('click');
+    await wrapper.setProps({ section: 'installation' });
 
-    expect(CaptainAssistantAPI.get).not.toHaveBeenCalled();
-    expect(greetingToggle(wrapper)).toBeDefined();
+    expect(wrapper.text()).toContain(
+      'INBOX_MGMT.WIDGET_SETTINGS.INSTALLATION.SCRIPT'
+    );
+    expect(wrapper.text()).not.toContain('PALETTE.MINT');
+    expect(
+      wrapper.findComponent(WidgetLivePreview).props('config').widgetColor
+    ).toBe('#dcf4eb');
+
+    await wrapper.setProps({ section: 'appearance' });
+    expect(
+      wrapper
+        .findAll('button[aria-pressed="true"]')
+        .some(button => button.text().endsWith('PALETTE.MINT'))
+    ).toBe(true);
+    expect(wrapper.text()).toContain(
+      'INBOX_MGMT.WEBSITE_SETTINGS.UNSAVED_WIDGET'
+    );
   });
 
-  it('starts with Advanced collapsed', async () => {
-    connectAiAgent(false);
+  it('previews and saves a preset without adding a custom text or icon color', async () => {
     const wrapper = await mountSettings();
+    const mint = wrapper
+      .findAll('button[aria-pressed]')
+      .find(button => button.text().endsWith('PALETTE.MINT'));
+    expect(mint.attributes('aria-pressed')).toBe('false');
 
-    const advanced = wrapper
-      .findAll('button[aria-expanded]')
-      .find(button =>
-        button.text().includes('INBOX_MGMT.WIDGET_SETTINGS.ADVANCED.TITLE')
-      );
-    expect(advanced.attributes('aria-expanded')).toBe('false');
-    expect(wrapper.text()).not.toContain(
-      'INBOX_MGMT.WIDGET_SETTINGS.ADVANCED.HOME_SCREEN.TITLE'
-    );
-
-    await advanced.trigger('click');
-    expect(advanced.attributes('aria-expanded')).toBe('true');
-    expect(wrapper.text()).toContain(
-      'INBOX_MGMT.WIDGET_SETTINGS.ADVANCED.HOME_SCREEN.TITLE'
+    await mint.trigger('click');
+    expect(mint.attributes('aria-pressed')).toBe('true');
+    expect(
+      wrapper.findComponent(WidgetLivePreview).props('config')
+    ).toMatchObject({
+      widgetColor: '#dcf4eb',
+      widgetTextColor: '#37546d',
+      widgetIconColor: '#37546d',
+    });
+    await wrapper
+      .findAll('button')
+      .find(
+        button => button.text() === 'INBOX_MGMT.WEBSITE_SETTINGS.SAVE_WIDGET'
+      )
+      .trigger('click');
+    expect(dispatch).toHaveBeenCalledWith(
+      'inboxes/updateInbox',
+      expect.objectContaining({
+        channel: expect.objectContaining({
+          widget_color: '#dcf4eb',
+          widget_text_color: '',
+          widget_icon_color: '',
+        }),
+      })
     );
   });
 
   it('sends form changes to the preview after a short pause', async () => {
-    connectAiAgent(false);
-    const wrapper = await mountSettings();
+    const wrapper = await mountSettings({ section: 'welcome' });
     vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
 
     const frame = wrapper.find('iframe').element.contentWindow;
@@ -192,9 +212,8 @@ describe('WidgetSettings', () => {
   });
 
   it('saves the same request shape and shows the save bar only when dirty', async () => {
-    connectAiAgent(false);
-    const wrapper = await mountSettings();
-    const saveBarText = 'CAPTAIN.ASSISTANTS.SETTINGS.SAVE_BAR.UNSAVED';
+    const wrapper = await mountSettings({ section: 'welcome' });
+    const saveBarText = 'INBOX_MGMT.WEBSITE_SETTINGS.UNSAVED_WIDGET';
     expect(wrapper.text()).not.toContain(saveBarText);
 
     const titleInput = wrapper
@@ -205,7 +224,9 @@ describe('WidgetSettings', () => {
 
     await wrapper
       .findAll('button')
-      .find(button => button.text() === 'CAPTAIN.ASSISTANTS.SETTINGS.SAVE')
+      .find(
+        button => button.text() === 'INBOX_MGMT.WEBSITE_SETTINGS.SAVE_WIDGET'
+      )
       .trigger('click');
     await flushPromises();
 
@@ -226,7 +247,6 @@ describe('WidgetSettings', () => {
   });
 
   it('passes the inbox to the live preview', async () => {
-    connectAiAgent(false);
     const wrapper = await mountSettings();
 
     expect(wrapper.findComponent(WidgetLivePreview).props('inboxId')).toBe(7);
