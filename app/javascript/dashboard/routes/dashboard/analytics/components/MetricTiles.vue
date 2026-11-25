@@ -26,7 +26,10 @@ const emit = defineEmits(['retry']);
   >
     <CardError @retry="emit('retry')" />
   </div>
-  <div v-else class="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+  <div
+    v-else
+    class="workspace-widget-grid grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4"
+  >
     <MetricTile
       v-for="tile in tiles"
       :key="tile.key"

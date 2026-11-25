@@ -2,7 +2,9 @@
 import EmptyState from './kit/EmptyState.vue';
 import Policy from 'dashboard/components/policy.vue';
 
-defineProps({
+import { useSectionHeadingMatches } from 'dashboard/composables/useSectionHeading';
+
+const props = defineProps({
   title: {
     type: String,
     required: true,
@@ -26,6 +28,7 @@ defineProps({
     default: true,
   },
 });
+const titleInTopBar = useSectionHeadingMatches(() => props.title);
 </script>
 
 <template>
@@ -78,7 +81,10 @@ defineProps({
           }"
         >
           <div class="flex flex-col items-center justify-center gap-3">
-            <h2 class="text-3xl font-medium text-center text-n-slate-12">
+            <h2
+              v-if="!titleInTopBar"
+              class="text-3xl font-medium text-center text-n-slate-12"
+            >
               {{ title }}
             </h2>
             <p

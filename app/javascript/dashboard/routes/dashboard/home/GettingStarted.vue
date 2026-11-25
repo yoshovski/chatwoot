@@ -61,7 +61,7 @@ watch(
 </script>
 
 <template>
-  <PageFrame size="wide">
+  <PageFrame workspace size="wide">
     <template #header>
       <PageHeader
         :title="$t('HOME.GETTING_STARTED.TITLE')"

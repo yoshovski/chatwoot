@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref } from 'vue';
+import { computed } from 'vue';
 import { useRoute } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { dynamicTime } from 'shared/helpers/timeHelper';
@@ -15,6 +15,7 @@ import Icon from 'dashboard/components-next/icon/Icon.vue';
 import Button from 'dashboard/components-next/button/Button.vue';
 import Checkbox from 'dashboard/components-next/checkbox/Checkbox.vue';
 import Switch from 'dashboard/components-next/switch/Switch.vue';
+import DropdownContainer from 'dashboard/components-next/dropdown-menu/base/DropdownContainer.vue';
 import DropdownMenu from 'dashboard/components-next/dropdown-menu/DropdownMenu.vue';
 import { LIST_COLUMNS } from 'dashboard/components-next/captain/list/listColumns';
 import Policy from 'dashboard/components/policy.vue';
@@ -275,10 +276,8 @@ const displayLink = computed(() => {
 
   return getDocumentDisplayPath(props.externalLink);
 });
-const showMenu = ref(false);
 
 const handleAction = ({ action }) => {
-  showMenu.value = false;
   if (action === 'toggle') {
     emit('toggle', { id: props.id, enabled: !props.enabled });
     return;
@@ -428,26 +427,32 @@ const handleRetry = () => {
         />
       </Policy>
     </div>
-    <div
-      v-on-clickaway="() => (showMenu = false)"
-      class="relative !w-6 sm:!w-16"
-      :class="[LIST_COLUMNS.actions]"
-    >
-      <Button
-        v-if="menuItems.length"
-        :aria-label="$t('KNOWLEDGE_LIST.MORE_ACTIONS')"
-        icon="i-lucide-ellipsis-vertical"
-        color="slate"
-        variant="ghost"
-        size="xs"
-        @click="showMenu = !showMenu"
-      />
-      <DropdownMenu
-        v-if="showMenu"
-        :menu-items="menuItems"
-        class="z-30 mt-1 top-full ltr:right-0 rtl:left-0 w-52"
-        @action="handleAction"
-      />
+    <div class="relative !w-6 sm:!w-16" :class="[LIST_COLUMNS.actions]">
+      <DropdownContainer v-if="menuItems.length" floating align="end">
+        <template #trigger="{ toggle, isOpen }">
+          <Button
+            :aria-label="$t('KNOWLEDGE_LIST.MORE_ACTIONS')"
+            :aria-expanded="isOpen"
+            icon="i-lucide-ellipsis-vertical"
+            color="slate"
+            variant="ghost"
+            size="xs"
+            @click="toggle"
+          />
+        </template>
+        <template #default="{ close }">
+          <DropdownMenu
+            :menu-items="menuItems"
+            class="w-52"
+            @action="
+              action => {
+                close();
+                handleAction(action);
+              }
+            "
+          />
+        </template>
+      </DropdownContainer>
     </div>
   </div>
 </template>

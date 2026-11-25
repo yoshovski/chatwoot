@@ -7,7 +7,10 @@ import { usePolicy } from 'dashboard/composables/usePolicy';
 import { useAccountSubscription } from 'dashboard/composables/useAccountSubscription';
 import { useBillingView } from '../useBillingView';
 
-defineProps({ title: { type: String, default: '' } });
+defineProps({
+  title: { type: String, default: '' },
+  showPlanName: { type: Boolean, default: false },
+});
 
 const { t } = useI18n();
 const { accountScopedRoute } = useAccount();
@@ -117,12 +120,20 @@ const upgradeLabel = computed(() =>
     class="flex h-11 shrink-0 items-center justify-end border-b border-n-weak bg-n-solid-2"
     :class="title ? 'gap-1.5 px-2.5 sm:gap-2.5 sm:px-4' : 'gap-2.5 px-4'"
   >
+    <slot name="before-title" />
     <h1
       v-if="title"
-      class="m-0 me-auto min-w-0 truncate font-display text-base font-semibold text-n-slate-12"
+      :class="{ 'me-auto': !$slots['title-action'] }"
+      class="m-0 min-w-0 truncate font-display text-base font-semibold text-n-slate-12"
     >
       {{ title }}
     </h1>
+    <slot name="title-action" />
+    <span
+      v-if="showPlanName && showIndicator && planName !== pillLabel"
+      class="hidden sm:inline text-xs font-medium text-n-slate-11"
+      >{{ planName }}</span
+    >
     <div
       v-if="showIndicator"
       v-on-click-outside="() => (isOpen = false)"

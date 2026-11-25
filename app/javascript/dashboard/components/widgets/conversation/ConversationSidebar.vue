@@ -57,11 +57,12 @@ onBeforeUnmount(() => {
     :aria-label="$t('CONVERSATION.SIDEBAR.CONTACT')"
     tabindex="-1"
     class="flex flex-col h-full overflow-hidden outline-none"
-    :class="
-      isDrawer
-        ? 'absolute inset-y-0 end-0 z-40 w-full max-w-sm p-3 bg-n-background shadow-lg'
-        : 'w-[21rem] min-w-[21rem] xl:w-[22rem] xl:min-w-[22rem]'
-    "
+    :class="{
+      'absolute inset-y-0 end-0 z-40 w-full max-w-sm p-3 bg-n-background shadow-lg':
+        isDrawer,
+      'w-[calc(var(--inbox-inspector-width,19rem)-0.75rem)] shrink-0 min-w-0':
+        !isDrawer,
+    }"
     @keydown.esc.stop="isDrawer && emit('close')"
   >
     <div class="flex flex-col flex-1 min-h-0 overflow-hidden">

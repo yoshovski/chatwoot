@@ -1,11 +1,8 @@
 <script setup>
 import { computed } from 'vue';
-import { useUISettings } from 'dashboard/composables/useUISettings';
 import { formatNumber } from '@chatwoot/utils';
-import wootConstants from 'dashboard/constants/globals';
 
 import ConversationBasicFilter from './widgets/conversation/ConversationBasicFilter.vue';
-import SwitchLayout from 'dashboard/routes/dashboard/conversation/search/SwitchLayout.vue';
 import NextButton from 'dashboard/components-next/button/Button.vue';
 import ComposeConversation from 'dashboard/components-next/NewConversation/ComposeConversation.vue';
 
@@ -29,8 +26,6 @@ const emit = defineEmits([
   'basicFilterChange',
   'filtersModal',
 ]);
-
-const { uiSettings, updateUISettings } = useUISettings();
 
 const onBasicFilterChange = (value, type) => {
   emit('basicFilterChange', value, type);
@@ -56,26 +51,11 @@ const isContactScoped = computed(
 const title = computed(
   () => (isContactScoped.value && props.contactFilter.name) || props.pageTitle
 );
-
-const toggleConversationLayout = () => {
-  const { LAYOUT_TYPES } = wootConstants;
-  const {
-    conversation_display_type: conversationDisplayType = LAYOUT_TYPES.CONDENSED,
-  } = uiSettings.value;
-  const newViewType =
-    conversationDisplayType === LAYOUT_TYPES.CONDENSED
-      ? LAYOUT_TYPES.EXPANDED
-      : LAYOUT_TYPES.CONDENSED;
-  updateUISettings({
-    conversation_display_type: newViewType,
-    previously_used_conversation_display_type: newViewType,
-  });
-};
 </script>
 
 <template>
   <div
-    class="flex items-center justify-between gap-1.5 px-3 h-[3.25rem]"
+    class="queue-heading flex items-center justify-between gap-1.5 px-3 h-[3.25rem]"
     :class="{
       'border-b border-n-strong': hasAppliedFiltersOrActiveFolders,
     }"
@@ -180,10 +160,6 @@ const toggleConversationLayout = () => {
         :is-on-expanded-layout="isOnExpandedLayout"
         :show-status-filter="!hasAppliedFiltersOrActiveFolders && !lockStatus"
         @change-filter="onBasicFilterChange"
-      />
-      <SwitchLayout
-        :is-on-expanded-layout="isOnExpandedLayout"
-        @toggle="toggleConversationLayout"
       />
       <ComposeConversation align="start">
         <template #trigger>

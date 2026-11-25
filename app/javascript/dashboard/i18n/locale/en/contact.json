@@ -16,6 +16,9 @@
     "INITIATED_FROM": "Initiated from",
     "WEBSITE_ACTIVITY": {
       "TITLE": "Website activity",
+      "LAST_PAGE": "Last viewed page",
+      "HISTORY_COUNT": "History ({count})",
+      "EARLIER_VISITS": "Earlier visits ({count})",
       "CURRENT_PAGE": "Current page (last observed)",
       "LAST_SEEN": "Last seen: {time}",
       "HISTORY": "Recent page visits ({count})",

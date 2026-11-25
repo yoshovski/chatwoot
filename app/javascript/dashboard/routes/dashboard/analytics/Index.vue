@@ -54,9 +54,13 @@ const selectPeriod = days => {
 </script>
 
 <template>
-  <PageFrame>
+  <PageFrame workspace>
     <template #header>
-      <PageHeader :title="title" :description="description">
+      <PageHeader
+        class="workspace-widget workspace-inset"
+        :title="title"
+        :description="description"
+      >
         <template v-if="hasPeriod" #action>
           <RangeSelector
             :model-value="String(period)"

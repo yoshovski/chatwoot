@@ -27,6 +27,7 @@ const props = defineProps({
     type: Object,
     default: () => ({}),
   },
+  showContactSwitch: { type: Boolean, default: false },
   canSuggestReply: {
     type: Boolean,
     default: true,
@@ -103,22 +104,33 @@ const closeCopilotPanel = () => {
 const handleSidebarAction = action => {
   if (action === 'reset') {
     emit('reset');
+  } else if (action === 'contact') {
+    updateUISettings({
+      is_contact_sidebar_open: true,
+      is_copilot_panel_open: false,
+    });
   }
 };
 
 const hasAssistants = computed(() => props.assistants.length > 0);
 const hasMessages = computed(() => props.messages.length > 0);
 const copilotButtons = computed(() => {
-  if (hasMessages.value) {
-    return [
-      {
-        key: 'reset',
-        icon: 'i-lucide-refresh-ccw',
-        tooltip: t('CAPTAIN.COPILOT.RESET'),
-      },
-    ];
+  const buttons = [];
+  if (props.showContactSwitch) {
+    buttons.push({
+      key: 'contact',
+      icon: 'i-lucide-user-round',
+      tooltip: t('CONVERSATION.SIDEBAR.CONTACT'),
+    });
   }
-  return [];
+  if (hasMessages.value) {
+    buttons.push({
+      key: 'reset',
+      icon: 'i-lucide-refresh-ccw',
+      tooltip: t('CAPTAIN.COPILOT.RESET'),
+    });
+  }
+  return buttons;
 });
 watch(
   [() => props.messages],

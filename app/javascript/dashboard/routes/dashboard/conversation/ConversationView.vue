@@ -2,11 +2,11 @@
 import { computed, ref } from 'vue';
 import { mapGetters } from 'vuex';
 import { useUISettings } from 'dashboard/composables/useUISettings';
+import { useMediaQuery } from '@vueuse/core';
 import { useAccount } from 'dashboard/composables/useAccount';
 import { useConversationPaneLayout } from 'dashboard/composables/useConversationPaneLayout';
 import ChatList from '../../../components/ChatList.vue';
 import ConversationBox from '../../../components/widgets/conversation/ConversationBox.vue';
-import wootConstants from 'dashboard/constants/globals';
 import { BUS_EVENTS } from 'shared/constants/busEvents';
 import CmdBarConversationSnooze from 'dashboard/routes/dashboard/commands/CmdBarConversationSnooze.vue';
 import { emitter } from 'shared/helpers/mitt';
@@ -25,6 +25,7 @@ export default {
     return {
       conversationDetailsPanel: {
         isOpen: computed(() => this.isDetailsVisible),
+        isDrawer: computed(() => this.isDetailsDrawer),
         toggle: this.toggleDetails,
         close: this.closeDetails,
       },
@@ -72,28 +73,23 @@ export default {
     const { uiSettings, updateUISettings, isOnExpandedLayout } =
       useUISettings();
     const { accountId } = useAccount();
+    const desktopInspector = useMediaQuery('(min-width: 768px)');
     const sectionRef = ref(null);
-    const { isSinglePane, canDockDetails } = useConversationPaneLayout(
+    const { isSinglePane: useSinglePane } = useConversationPaneLayout(
       sectionRef,
       isOnExpandedLayout
     );
-
+    const isSinglePane = computed(
+      () => !desktopInspector.value && useSinglePane.value
+    );
     return {
+      desktopInspector,
       uiSettings,
       updateUISettings,
       isOnExpandedLayout,
       accountId,
       sectionRef,
       isSinglePane,
-      canDockDetails,
-    };
-  },
-  data() {
-    return {
-      showSearchModal: false,
-      // Opened where docking would squeeze the thread. Kept apart from the
-      // saved is_contact_sidebar_open preference, which only docks the panel.
-      isDetailsDrawerOpen: false,
     };
   },
   computed: {
@@ -111,21 +107,26 @@ export default {
       if (!this.currentChat.id) {
         return false;
       }
-      if (!this.canDockDetails) {
-        return this.isDetailsDrawerOpen;
-      }
       return (
-        !!this.uiSettings.is_contact_sidebar_open || this.isDetailsDrawerOpen
+        this.uiSettings.is_contact_sidebar_open &&
+        !this.uiSettings.is_copilot_panel_open
       );
     },
     isDetailsDrawer() {
-      return !this.canDockDetails;
+      return !this.desktopInspector;
     },
   },
   watch: {
     conversationId() {
       this.fetchConversationIfUnavailable();
-      this.isDetailsDrawerOpen = false;
+      if (this.isDetailsDrawer && this.isDetailsVisible) {
+        this.closeDetails();
+      }
+    },
+    isDetailsDrawer(drawer) {
+      if (drawer && this.isDetailsVisible) {
+        this.closeDetails();
+      }
     },
   },
 
@@ -156,21 +157,6 @@ export default {
     initialize() {
       this.$store.dispatch('setActiveInbox', this.inboxId);
       this.setActiveChat();
-    },
-    toggleConversationLayout() {
-      const { LAYOUT_TYPES } = wootConstants;
-      const {
-        conversation_display_type:
-          conversationDisplayType = LAYOUT_TYPES.CONDENSED,
-      } = this.uiSettings;
-      const newViewType =
-        conversationDisplayType === LAYOUT_TYPES.CONDENSED
-          ? LAYOUT_TYPES.EXPANDED
-          : LAYOUT_TYPES.CONDENSED;
-      this.updateUISettings({
-        conversation_display_type: newViewType,
-        previously_used_conversation_display_type: newViewType,
-      });
     },
     fetchConversationIfUnavailable() {
       if (!this.conversationId) {
@@ -211,12 +197,7 @@ export default {
       }
     },
     toggleDetails() {
-      if (this.isDetailsDrawer) {
-        this.isDetailsDrawerOpen = !this.isDetailsDrawerOpen;
-        return;
-      }
       const isVisible = this.isDetailsVisible;
-      this.isDetailsDrawerOpen = false;
       this.updateUISettings({
         is_contact_sidebar_open: !isVisible,
         is_copilot_panel_open: false,
@@ -224,12 +205,6 @@ export default {
     },
     closeDetails() {
       if (this.isDetailsVisible) this.toggleDetails();
-    },
-    onSearch() {
-      this.showSearchModal = true;
-    },
-    closeSearch() {
-      this.showSearchModal = false;
     },
   },
 };

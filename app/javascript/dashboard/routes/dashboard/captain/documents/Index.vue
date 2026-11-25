@@ -434,6 +434,7 @@ onUnmounted(() => {
 
 <template>
   <PageLayout
+    class="agent-knowledge"
     :header-title="$t('CAPTAIN.AGENT_UX.SECTIONS.KNOWLEDGE')"
     :button-label="isFirstUse ? '' : $t('CAPTAIN.DOCUMENTS.ADD_NEW')"
     :button-policy="['administrator']"
@@ -476,7 +477,7 @@ onUnmounted(() => {
         <Input
           v-model="searchQuery"
           :placeholder="$t('CAPTAIN.DOCUMENTS.FILTERS.SEARCH_PLACEHOLDER')"
-          class="min-w-0 flex-1 sm:max-w-64"
+          class="w-64 max-w-full min-w-0 shrink-0"
           size="sm"
           type="search"
           @input="debouncedSearch"

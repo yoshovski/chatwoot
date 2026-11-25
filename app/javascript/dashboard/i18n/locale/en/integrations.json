@@ -1139,6 +1139,7 @@
             "OUTSIDE_BUSINESS_HOURS": "Replies when your team is off"
           }
         },
+        "HELP_ABOUT": "About {label}",
         "IDENTITY": {
           "TITLE": "Public identity",
           "DESCRIPTION": "The name, photo, and company customers see in the chat widget.",

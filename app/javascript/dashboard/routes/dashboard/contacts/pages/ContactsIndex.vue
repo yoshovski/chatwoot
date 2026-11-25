@@ -2,6 +2,8 @@
 // Translation keys are selected from the fixed mappings in this screen.
 /* eslint-disable @intlify/vue-i18n/no-dynamic-keys */
 import { computed, onMounted, ref, watch, onBeforeUnmount } from 'vue';
+import { useSectionHeadingMatches } from 'dashboard/composables/useSectionHeading';
+import { createReusableTemplate } from '@vueuse/core';
 import { useRoute, useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { debounce } from '@chatwoot/utils';
@@ -32,6 +34,8 @@ import ContactExportDialog from 'dashboard/components-next/Contacts/ContactsForm
 import ContactsBulkActionBar from '../components/ContactsBulkActionBar.vue';
 
 const { t } = useI18n();
+const titleInTopBar = useSectionHeadingMatches(() => t('CUSTOMERS.TITLE'));
+const [DefineCustomerActions, CustomerActions] = createReusableTemplate();
 const route = useRoute();
 const router = useRouter();
 const store = useStore();
@@ -306,29 +310,30 @@ onMounted(() => {
 </script>
 
 <template>
-  <PageFrame size="wide">
+  <PageFrame workspace size="wide">
     <template #header>
-      <PageHeader :title="t('CUSTOMERS.TITLE')">
-        <template #action>
-          <Button
-            color="slate"
-            variant="ghost"
-            icon="i-lucide-user-plus"
-            :label="t('CUSTOMERS.ADD_CUSTOMER')"
-            @click="createDialog.dialogRef.open()"
-          />
-          <Button
-            icon="i-lucide-plus"
-            :label="t('CUSTOMERS.NEW_SEGMENT')"
-            @click="segmentEditor.open()"
-          />
-        </template>
+      <DefineCustomerActions>
+        <Button
+          color="slate"
+          variant="ghost"
+          icon="i-lucide-user-plus"
+          :label="t('CUSTOMERS.ADD_CUSTOMER')"
+          @click="createDialog.dialogRef.open()"
+        />
+        <Button
+          icon="i-lucide-plus"
+          :label="t('CUSTOMERS.NEW_SEGMENT')"
+          @click="segmentEditor.open()"
+        />
+      </DefineCustomerActions>
+      <PageHeader v-if="!titleInTopBar" :title="t('CUSTOMERS.TITLE')">
+        <template #action><CustomerActions /></template>
       </PageHeader>
     </template>
 
-    <SectionCard class="min-w-0 !gap-4">
+    <SectionCard class="workspace-widget workspace-inset min-w-0 !gap-4">
       <div
-        v-if="visibleSegments.length || segmentsError"
+        v-if="visibleSegments.length || segmentsError || titleInTopBar"
         class="flex flex-wrap items-center justify-between gap-2 border-b border-n-weak pb-3"
       >
         <nav
@@ -356,6 +361,12 @@ onMounted(() => {
             </span>
           </button>
         </nav>
+        <div
+          v-if="titleInTopBar"
+          class="ms-auto flex flex-wrap items-center gap-2"
+        >
+          <CustomerActions />
+        </div>
         <div
           v-if="segmentsError"
           role="alert"

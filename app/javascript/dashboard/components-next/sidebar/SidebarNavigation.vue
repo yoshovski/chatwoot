@@ -17,14 +17,15 @@ import AssistantNavigation from './AssistantNavigation.vue';
 import { useWebsiteChannelNavigation } from 'dashboard/composables/useWebsiteChannelNavigation';
 
 const props = defineProps({ items: { type: Array, required: true } });
-const emit = defineEmits(['navigate']);
+const emit = defineEmits(['navigate', 'sectionChange']);
 const { t } = useI18n();
+const sectionPanelTarget = inject('sectionPanelTarget', ref(null));
+const sectionToggleTarget = inject('sectionToggleTarget', ref(null));
 const route = useRoute();
 const router = useRouter();
 const { isAllowed, resolvePath } = useSidebarContext();
 const lastRoutes = ref({});
 const { isMobile, isCompact } = useNavigationLayout();
-const websitePanelTarget = inject('websiteChannelPanelTarget', ref(null));
 const {
   activePage: activeWebsitePage,
   isWebsiteSettings,
@@ -61,6 +62,10 @@ const activeModule = computed(
     ) ||
     moduleForArea(modules.value, route, resolvePath) ||
     modules.value[0]
+);
+
+const panelTitle = computed(() =>
+  websitePanel.value ? t('CHANNELS.TITLE') : activeModule.value.label
 );
 
 // The rail order is fixed: work tools, then the grow tools, then Settings.
@@ -101,13 +106,33 @@ const hasPanel = item =>
   Boolean(item?.children) &&
   (!PANEL_LESS.includes(item.name) ||
     (item.name === 'Settings' && websitePanel.value));
-const showPanel = computed(
+const conversationSection = computed(
+  () => activeModule.value?.name === 'Conversation'
+);
+const pinnedPanel = computed(
   () =>
     websitePanel.value ||
+    (hasPanel(activeModule.value) && !conversationSection.value)
+);
+const mobileSectionStrip = computed(() => pinnedPanel.value && isMobile.value);
+const showPanel = computed(
+  () =>
+    pinnedPanel.value ||
     (hasPanel(activeModule.value) &&
       (isMobile.value || isCompact.value
         ? (temporaryPanels.value[activeModule.value.name] ?? isMobile.value)
         : !collapsed.value[activeModule.value.name]))
+);
+const sectionTitle = computed(() =>
+  hasPanel(activeModule.value) ? panelTitle.value : ''
+);
+watch(
+  [sectionTitle, conversationSection],
+  ([title, conversation]) => emit('sectionChange', { title, conversation }),
+  { immediate: true }
+);
+const showConversationToggle = computed(
+  () => !isMobile.value && conversationSection.value
 );
 
 const toggleCollapsed = name => {
@@ -224,10 +249,12 @@ watch(
               :aria-label="item.label"
               :aria-current="isActive(item) ? 'true' : undefined"
               :aria-expanded="
-                isActive(item) && hasPanel(item) ? showPanel : undefined
+                isActive(item) && hasPanel(item) && !pinnedPanel
+                  ? showPanel
+                  : undefined
               "
               :aria-controls="
-                isActive(item) && hasPanel(item)
+                isActive(item) && hasPanel(item) && !pinnedPanel
                   ? 'co-section-panel'
                   : undefined
               "
@@ -258,12 +285,12 @@ watch(
       :aria-label="settingsModule.label"
       :aria-current="isActive(settingsModule) ? 'true' : undefined"
       :aria-expanded="
-        isActive(settingsModule) && hasPanel(settingsModule) && !websitePanel
+        isActive(settingsModule) && hasPanel(settingsModule)
           ? showPanel
           : undefined
       "
       :aria-controls="
-        isActive(settingsModule) && hasPanel(settingsModule) && !websitePanel
+        isActive(settingsModule) && hasPanel(settingsModule)
           ? 'co-section-panel'
           : undefined
       "
@@ -280,8 +307,35 @@ watch(
     <slot name="profile" />
     <!-- With the panel hidden, a small handle on the rail's edge, level with
     the panel title, shows it again; the page keeps the full width. -->
+    <Teleport
+      :to="sectionToggleTarget || 'body'"
+      :disabled="!sectionToggleTarget"
+    >
+      <button
+        v-if="showConversationToggle"
+        v-tooltip.right="
+          showPanel ? t('PLATFORM_NAV.HIDE_MENU') : t('PLATFORM_NAV.SHOW_MENU')
+        "
+        type="button"
+        :aria-label="
+          showPanel ? t('PLATFORM_NAV.HIDE_MENU') : t('PLATFORM_NAV.SHOW_MENU')
+        "
+        aria-controls="co-section-panel"
+        :aria-expanded="showPanel"
+        :class="{ 'absolute -end-4 top-4 z-30': !sectionToggleTarget }"
+        class="grid size-8 place-items-center rounded-lg bg-n-solid-2 text-n-slate-11 outline outline-1 -outline-offset-1 outline-n-container hover:text-n-slate-12 focus-visible:outline-2 focus-visible:outline-n-brand"
+        @click="toggleCollapsed(activeModule.name)"
+      >
+        <Icon
+          :icon="
+            showPanel ? 'i-lucide-panel-left-close' : 'i-lucide-panel-left-open'
+          "
+          class="size-4"
+        />
+      </button>
+    </Teleport>
     <button
-      v-if="hasPanel(activeModule) && !showPanel"
+      v-if="!showConversationToggle && hasPanel(activeModule) && !showPanel"
       v-tooltip.right="t('PLATFORM_NAV.SHOW_MENU')"
       type="button"
       :aria-label="t('PLATFORM_NAV.SHOW_MENU')"
@@ -293,23 +347,26 @@ watch(
       <Icon icon="i-lucide-chevrons-right" class="size-4" />
     </button>
   </nav>
-  <Teleport
-    :to="websitePanelTarget || 'body'"
-    :disabled="!websitePanel || !websitePanelTarget"
-  >
+  <Teleport :to="sectionPanelTarget || 'body'" :disabled="!sectionPanelTarget">
     <div
       v-if="hasPanel(activeModule)"
       class="flex shrink-0 flex-col overflow-hidden bg-n-background transition-[width] duration-200 ease-out motion-reduce:transition-none"
       :class="[
-        showPanel ? 'w-56 border-n-weak' : 'w-0',
-        websitePanel ? 'border-e !bg-n-solid-2' : 'border-s',
+        mobileSectionStrip
+          ? 'w-full border-b border-n-weak'
+          : showPanel
+            ? 'w-[var(--inbox-folder-width,14rem)] border-s border-n-weak'
+            : 'w-0',
+        { 'inbox-folders': sectionTitle },
       ]"
     >
       <div
-        v-if="showPanel && !websitePanel"
+        v-if="showPanel && !pinnedPanel && !(sectionTitle && !isMobile)"
         class="flex h-16 w-56 shrink-0 items-center gap-1.5 ps-3 pe-3"
+        :class="{ 'ps-7': showConversationToggle }"
       >
         <button
+          v-if="!showConversationToggle"
           v-tooltip.bottom="t('PLATFORM_NAV.HIDE_MENU')"
           type="button"
           :aria-label="t('PLATFORM_NAV.HIDE_MENU')"
@@ -336,12 +393,29 @@ watch(
       <section
         v-if="showPanel"
         id="co-section-panel"
-        :aria-label="websitePanel ? t('CHANNELS.TITLE') : activeModule.label"
-        class="flex min-h-0 w-56 flex-1 flex-col"
-        :class="{ 'pt-3': websitePanel }"
+        :class="{
+          'pt-3': sectionTitle && !isMobile,
+        }"
+        :aria-label="panelTitle"
+        class="flex min-h-0 min-w-0 w-full flex-1 flex-col"
       >
         <AssistantNavigation v-if="activeModule.name === 'Captain'" />
         <nav
+          v-if="mobileSectionStrip"
+          :aria-label="activeModule.label"
+          class="overflow-x-auto px-3 py-1"
+        >
+          <ul class="m-0 flex w-max list-none gap-1 p-0">
+            <SidebarGroupLeaf
+              v-for="child in navigationLeaves(activeModule)"
+              :key="child.name"
+              v-bind="child"
+              :active="activeLeaf === child"
+            />
+          </ul>
+        </nav>
+        <nav
+          v-else
           :aria-label="
             websitePanel
               ? t('CHANNELS.SETTINGS')
@@ -386,3 +460,35 @@ watch(
     </div>
   </Teleport>
 </template>
+
+<style scoped>
+.inbox-folders {
+  @apply bg-white dark:bg-n-solid-2;
+}
+.inbox-folders :deep(a[aria-current='page']) {
+  @apply bg-[#dceaff] font-semibold text-[#15375f] dark:bg-n-blue-4 dark:text-n-blue-12;
+}
+.inbox-folders :deep(a[aria-current='page'] > span) {
+  color: inherit;
+}
+.inbox-folders :deep(a:not([aria-current='page']):hover) {
+  @apply bg-[#f0f6ff] dark:bg-n-alpha-2;
+}
+@media (min-width: 768px) and (max-width: 1279px) {
+  .inbox-folders :deep(nav) {
+    padding-inline: 0.375rem;
+  }
+  .inbox-folders :deep(a[href]) {
+    gap: 0.5rem;
+    padding-inline: 0.5rem;
+  }
+  .inbox-folders :deep(a[href] > span.truncate) {
+    white-space: normal;
+    line-height: 1.1;
+    overflow-wrap: anywhere;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+}
+</style>
