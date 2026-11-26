@@ -69,7 +69,10 @@
       "HISTORY": "Visite recenti ({count} )",
       "LOADING": "Caricamento in corso delle visite...",
       "RETRY": "Non ho potuto caricare visite alla pagina. Fare clic per riprovare.",
-      "EMPTY": "Non sono ancora registrate visite di pagina."
+      "EMPTY": "Non sono ancora registrate visite di pagina.",
+      "LAST_PAGE": "Ultima pagina visitata",
+      "HISTORY_COUNT": "Cronologia ({count})",
+      "EARLIER_VISITS": "Visite precedenti ({count})"
     }
   },
   "EDIT_CONTACT": {

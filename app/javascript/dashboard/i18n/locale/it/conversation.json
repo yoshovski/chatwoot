@@ -180,7 +180,8 @@
         "RT": "RT {status}",
         "MISSED": "persa",
         "DUE": "in scadenza"
-      }
+      },
+      "COPY_ID": "Copia ID #{id}"
     },
     "RESOLVE_DROPDOWN": {
       "MARK_PENDING": "Segna come in sospeso",

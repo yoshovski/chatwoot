@@ -41,6 +41,12 @@
       "UNASSIGN_TEAM_CONFIRMATION_LABEL": "¿Estás seguro de que quieres desasignar {n} conversación? | ¿Estás seguro de que quieres desasignar las {n} conversaciones?",
       "ASSIGN_SUCCESFUL": "Equipos asignados correctamente.",
       "ASSIGN_FAILED": "Error al asignar equipo, inténtelo de nuevo."
-    }
+    },
+    "SELECT_LOADED": "Seleccionar las {count} conversaciones cargadas",
+    "SELECT_ROW": "Seleccionar la conversación con {name}",
+    "DELETE_COUNT": "¿Eliminar {count} conversación seleccionada? | ¿Eliminar {count} conversaciones seleccionadas?",
+    "DELETE_DESCRIPTION": "Las conversaciones seleccionadas y sus mensajes se eliminarán de forma permanente.",
+    "DELETE_QUEUED": "Se ha solicitado eliminar {count} conversación. | Se ha solicitado eliminar {count} conversaciones.",
+    "DELETE_FAILED": "No se han podido eliminar las conversaciones con estos ID: {ids}."
   }
 }

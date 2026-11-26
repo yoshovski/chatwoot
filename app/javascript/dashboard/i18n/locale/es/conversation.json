@@ -180,7 +180,8 @@
         "RT": "RT {status}",
         "MISSED": "perdido",
         "DUE": "vencido"
-      }
+      },
+      "COPY_ID": "Copiar ID #{id}"
     },
     "RESOLVE_DROPDOWN": {
       "MARK_PENDING": "Marcar como pendiente",

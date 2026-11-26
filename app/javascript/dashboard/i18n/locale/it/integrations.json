@@ -1810,7 +1810,8 @@
           "TYPE_NAME": "Tipo di lead",
           "EDIT_TYPE_TITLE": "Modifica tipo di lead",
           "KEY_PLACEHOLDER": "company_website"
-        }
+        },
+        "HELP_ABOUT": "Informazioni su {label}"
       },
       "OPTIONS": {
         "EDIT_ASSISTANT": "Modifica Assistente",
