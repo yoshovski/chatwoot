@@ -10,6 +10,7 @@ const props = defineProps({
     type: String,
     required: true,
   },
+  hideIdentifier: Boolean,
   active: {
     type: Boolean,
     default: false,
@@ -46,12 +47,12 @@ const rowTitle = computed(() =>
     :class="active ? 'text-n-blue-11' : 'text-n-slate-11'"
   />
   <div
-    :title="rowTitle"
+    :title="hideIdentifier ? undefined : rowTitle"
     class="flex-1 truncate min-w-0"
     data-test-id="channel-leaf-label"
   >
     {{ label }}
-    <template v-if="channelIdentifier">
+    <template v-if="channelIdentifier && !hideIdentifier">
       <span aria-hidden="true" class="text-n-slate-9 mx-0.5">
         {{ IDENTIFIER_SEPARATOR }}
       </span>

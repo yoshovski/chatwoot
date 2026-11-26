@@ -5,6 +5,10 @@ import { vOnClickOutside } from '@vueuse/components';
 import DropdownFloating from './DropdownFloating.vue';
 import { provideDropdownContext, useDropdownTeleport } from './provider.js';
 
+defineProps({
+  floating: Boolean,
+  align: { type: String, default: 'start' },
+});
 const emit = defineEmits(['close']);
 const [isOpen, toggle] = useToggle(false);
 
@@ -22,6 +26,11 @@ const closeMenu = () => {
   }
 };
 
+const closeFromKeyboard = () => {
+  closeMenu();
+  getTrigger()?.focus();
+};
+
 // A teleported menu sits outside the container, so clicks inside it read as clicks outside.
 const clickOutsideHandler = [closeMenu, { ignore: ['[data-dropdown-menu]'] }];
 
@@ -37,14 +46,20 @@ provideDropdownContext({
     ref="containerRef"
     v-on-click-outside="clickOutsideHandler"
     class="relative space-y-2"
+    @keydown.esc="isOpen && closeFromKeyboard()"
   >
     <slot name="trigger" :is-open :toggle="() => toggle()" />
     <template v-if="isOpen">
-      <DropdownFloating v-if="teleport" :trigger="getTrigger">
-        <slot />
+      <DropdownFloating
+        v-if="floating || teleport"
+        :trigger="getTrigger"
+        :align="align"
+        @escape="closeFromKeyboard"
+      >
+        <slot :close="closeMenu" />
       </DropdownFloating>
       <div v-else class="absolute">
-        <slot />
+        <slot :close="closeMenu" />
       </div>
     </template>
   </div>

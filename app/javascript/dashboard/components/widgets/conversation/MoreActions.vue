@@ -102,6 +102,8 @@ onUnmounted(() => {
     >
       <ButtonV4
         v-tooltip="$t('CONVERSATION.HEADER.MORE_ACTIONS')"
+        :aria-label="$t('CONVERSATION.HEADER.MORE_ACTIONS')"
+        :aria-expanded="showActionsDropdown"
         size="sm"
         variant="ghost"
         color="slate"
@@ -114,7 +116,11 @@ onUnmounted(() => {
         :menu-items="actionMenuItems"
         class="mt-1 ltr:right-0 rtl:left-0 top-full"
         @action="handleActionClick"
-      />
+      >
+        <template v-if="$slots.metadata" #footer>
+          <slot name="metadata" />
+        </template>
+      </DropdownMenu>
     </div>
     <EmailTranscriptModal
       v-if="showEmailActionsModal"

@@ -67,6 +67,13 @@ const mountCard = (props = {}) =>
         Policy: { template: '<div><slot /></div>' },
         CardLayout: { template: '<div><slot /></div>' },
         DocumentSyncStatus: true,
+        DropdownContainer: {
+          data: () => ({ open: false }),
+          template: `<div>
+            <slot name="trigger" :is-open="open" :toggle="() => open = !open" />
+            <slot v-if="open" :close="() => open = false" />
+          </div>`,
+        },
         DropdownMenu: true,
         Checkbox: true,
         Icon: true,

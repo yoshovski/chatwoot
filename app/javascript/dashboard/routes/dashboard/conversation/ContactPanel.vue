@@ -86,6 +86,12 @@ const isHubspotConnected = computed(
 );
 
 const { isCloudFeatureEnabled } = useAccount();
+const switchToCopilot = () => {
+  updateUISettings({
+    is_contact_sidebar_open: false,
+    is_copilot_panel_open: true,
+  });
+};
 
 const isLinearFeatureEnabled = computed(() =>
   isCloudFeatureEnabled(FEATURE_FLAGS.LINEAR)
@@ -105,6 +111,10 @@ const isLinearConnected = computed(
 );
 
 const store = useStore();
+const attributesByModel = useMapGetter('attributes/getAttributesByModel');
+const contactFields = computed(() =>
+  attributesByModel.value('contact_attribute')
+);
 const currentChat = useMapGetter('getSelectedChat');
 // A new message can cancel the AI agent's scheduled follow-ups, so the chip refreshes on it.
 const lastMessageId = computed(() => currentChat.value?.messages?.at(-1)?.id);
@@ -128,6 +138,12 @@ const contactAdditionalAttributes = computed(
   () => contact.value.additional_attributes || {}
 );
 
+const hasFilledContactFields = computed(() =>
+  contactFields.value.some(({ attribute_key: key }) => {
+    const value = contact.value?.custom_attributes?.[key];
+    return value != null && value !== '';
+  })
+);
 const appliedContactFilter = useMapGetter('getAppliedContactFilter');
 
 const isListScopedToContact = computed(
@@ -209,13 +225,26 @@ onMounted(() => {
     <div
       class="flex h-12 shrink-0 items-center justify-between gap-2 border-b border-n-weak px-4"
     >
-      <h2 class="mb-0 text-sm font-semibold text-n-slate-12">
+      <h2 class="mb-0 me-auto text-sm font-semibold text-n-slate-12">
         {{ $t('CONVERSATION_SIDEBAR.PANEL.CUSTOMER') }}
       </h2>
       <button
+        v-if="
+          detailsPanel?.isDrawer.value &&
+          isCloudFeatureEnabled(FEATURE_FLAGS.CAPTAIN)
+        "
+        type="button"
+        class="grid size-7 place-items-center rounded-lg text-n-slate-12 hover:bg-n-alpha-2"
+        :aria-label="$t('CONVERSATION.SIDEBAR.COPILOT')"
+        :title="$t('CONVERSATION.SIDEBAR.COPILOT')"
+        @click="switchToCopilot"
+      >
+        <Icon icon="i-woot-captain" class="size-4" />
+      </button>
+      <button
         type="button"
         class="grid size-7 place-items-center rounded-lg text-n-slate-11 hover:bg-n-alpha-2 hover:text-n-slate-12"
-        :aria-label="$t('CONVERSATION.SIDEBAR.CONTACT')"
+        :aria-label="$t('GENERAL.CLOSE')"
         @click="closeContactPanel"
       >
         <Icon icon="i-lucide-x" class="size-4" />
@@ -226,6 +255,11 @@ onMounted(() => {
         :contact="contact"
         :channel-type="channelType"
         class="border-b border-n-weak"
+      />
+      <WebsiteActivity
+        v-if="channelType === 'Channel::WebWidget'"
+        compact
+        :conversation-id="conversationId"
       />
       <div class="list-group">
         <Draggable
@@ -277,25 +311,19 @@ onMounted(() => {
                 />
               </AccordionItem>
             </div>
-            <div v-else-if="element.name === 'conversation_info'">
-              <AccordionItem
-                card
-                :title="$t('CONVERSATION_SIDEBAR.ACCORDION.CONVERSATION_INFO')"
-                :is-open="isSectionOpen('is_conv_details_open')"
-                compact
-                @toggle="toggleSection('is_conv_details_open')"
-              >
-                <ConversationInfo
-                  :conversation-attributes="conversationAdditionalAttributes"
-                  :contact-attributes="contactAdditionalAttributes"
-                />
-                <WebsiteActivity
-                  v-if="channelType === 'Channel::WebWidget'"
-                  :conversation-id="conversationId"
-                />
-              </AccordionItem>
-            </div>
-            <div v-else-if="element.name === 'contact_attributes'">
+            <ConversationInfo
+              v-else-if="element.name === 'conversation_info'"
+              :conversation-attributes="conversationAdditionalAttributes"
+              :contact-attributes="contactAdditionalAttributes"
+              hide-empty
+              :is-open="isSectionOpen('is_conv_details_open')"
+              @toggle="toggleSection('is_conv_details_open')"
+            />
+            <div
+              v-else-if="
+                element.name === 'contact_attributes' && hasFilledContactFields
+              "
+            >
               <AccordionItem
                 card
                 :title="$t('CONVERSATION_SIDEBAR.ACCORDION.CONTACT_ATTRIBUTES')"
@@ -411,17 +439,12 @@ onMounted(() => {
                 <ContactNotes :contact-id="contactId" />
               </AccordionItem>
             </div>
-            <div v-else-if="element.name === 'shared_files'">
-              <AccordionItem
-                card
-                :title="$t('CONVERSATION_SIDEBAR.ACCORDION.SHARED_FILES')"
-                :is-open="isSectionOpen('is_shared_files_open')"
-                compact
-                @toggle="toggleSection('is_shared_files_open')"
-              >
-                <SharedFiles />
-              </AccordionItem>
-            </div>
+            <SharedFiles
+              v-else-if="element.name === 'shared_files'"
+              hide-empty
+              :is-open="isSectionOpen('is_shared_files_open')"
+              @toggle="toggleSection('is_shared_files_open')"
+            />
           </template>
         </Draggable>
       </div>

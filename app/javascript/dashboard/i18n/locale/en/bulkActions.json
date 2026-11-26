@@ -1,5 +1,11 @@
 {
   "BULK_ACTION": {
+    "SELECT_LOADED": "Select all {count} loaded conversations",
+    "SELECT_ROW": "Select conversation with {name}",
+    "DELETE_COUNT": "Delete {count} selected conversation? | Delete {count} selected conversations?",
+    "DELETE_DESCRIPTION": "The selected conversations and their messages will be permanently deleted.",
+    "DELETE_QUEUED": "Deletion requested for {count} conversation. | Deletion requested for {count} conversations.",
+    "DELETE_FAILED": "Deletion failed for {ids}.",
     "CONVERSATIONS_SELECTED": "{conversationCount} selected",
     "NONE": "None",
     "CLEAR_SELECTION": "Clear",

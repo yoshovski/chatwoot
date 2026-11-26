@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref, watch } from 'vue';
+import { computed } from 'vue';
 import { getLastMessage } from 'dashboard/helper/conversationHelper';
 import Avatar from 'next/avatar/Avatar.vue';
 import Icon from 'dashboard/components-next/icon/Icon.vue';
@@ -12,11 +12,6 @@ import UnreadBadge from 'dashboard/components-next/Conversation/ConversationCard
 import SLACardLabel from './components/SLACardLabel.vue';
 import VoiceCallStatus from './VoiceCallStatus.vue';
 import Checkbox from 'dashboard/components-next/checkbox/Checkbox.vue';
-import AiSummaryLine from 'dashboard/components-next/captain/aiSummary/AiSummaryLine.vue';
-import {
-  readSummary,
-  summaryHeadline,
-} from 'dashboard/components-next/captain/aiSummary/aiSummary';
 
 const props = defineProps({
   chat: { type: Object, required: true },
@@ -49,17 +44,9 @@ const rowClass = computed(() => {
   return 'mx-2 mb-1 rounded-xl hover:bg-n-alpha-1 dark:hover:bg-n-alpha-1';
 });
 
-const hovered = ref(false);
-
 const unreadCount = computed(() => props.chat.unread_count);
 const hasUnread = computed(() => unreadCount.value > 0);
 const lastMessageInChat = computed(() => getLastMessage(props.chat));
-// The AI summary's one-line form; resolved conversations don't need it in the list.
-const aiSummary = computed(() => {
-  const summary = readSummary(props.chat);
-  if (!summary || summary.status === 'resolved') return null;
-  return summaryHeadline(summary) ? summary : null;
-});
 
 const voiceCallData = computed(() => {
   const last = lastMessageInChat.value;
@@ -100,14 +87,6 @@ const messagePreviewClass = computed(() => {
   ];
 });
 
-const onThumbnailHover = () => {
-  hovered.value = !props.hideThumbnail;
-};
-
-const onThumbnailLeave = () => {
-  hovered.value = false;
-};
-
 const onSelectConversation = checked => {
   if (checked) {
     emit('selectConversation', props.chat.id, props.inbox.id);
@@ -120,18 +99,11 @@ const selectedModel = computed({
   get: () => props.selected,
   set: value => onSelectConversation(value),
 });
-
-watch(
-  () => props.chat.id,
-  () => {
-    hovered.value = false;
-  }
-);
 </script>
 
 <template>
   <div
-    class="relative flex items-start flex-grow-0 flex-shrink-0 w-auto max-w-full py-0 cursor-pointer conversation group hover:z-[1]"
+    class="relative flex items-start flex-grow-0 flex-shrink-0 w-auto max-w-full py-0 cursor-pointer conversation group hover:z-[1] !mb-0.5"
     :class="[
       rowClass,
       {
@@ -145,33 +117,29 @@ watch(
     @click="$emit('click', $event)"
     @contextmenu="$emit('contextmenu', $event)"
   >
-    <div
-      class="relative"
-      @mouseenter="onThumbnailHover"
-      @mouseleave="onThumbnailLeave"
+    <label
+      class="me-1 self-center grid size-6 shrink-0 place-items-center cursor-pointer"
+      @click.stop
     >
+      <Checkbox
+        v-model="selectedModel"
+        :aria-label="
+          $t('BULK_ACTION.SELECT_ROW', { name: currentContact.name })
+        "
+      />
+    </label>
+    <div class="relative">
       <Avatar
         v-if="!hideThumbnail"
         :name="currentContact.name"
         :src="currentContact.thumbnail"
         :size="32"
         :status="currentContact.availability_status"
-        :class="!showInboxName ? 'mt-4' : 'mt-8'"
+        class="mt-2.5"
         hide-offline-status
-      >
-        <template #overlay="{ size }">
-          <label
-            v-if="hovered || selected"
-            class="flex items-center justify-center rounded-full cursor-pointer absolute inset-0 z-10 backdrop-blur-[2px]"
-            :style="{ width: `${size}px`, height: `${size}px` }"
-            @click.stop
-          >
-            <Checkbox v-model="selectedModel" />
-          </label>
-        </template>
-      </Avatar>
+      />
     </div>
-    <div class="px-0 py-3 flex-1 min-w-0 border-line">
+    <div class="px-0 py-1.5 flex-1 min-w-0 border-line">
       <div
         v-if="showMetaSection"
         class="flex items-center min-w-0 gap-1"
@@ -238,14 +206,9 @@ watch(
           {{ $t(`CHAT_LIST.NO_MESSAGES`) }}
         </span>
       </p>
-      <AiSummaryLine
-        v-if="aiSummary"
-        :summary="aiSummary"
-        class="ltr:pr-6 rtl:pl-6"
-      />
       <div
         class="absolute flex flex-col ltr:right-3 rtl:left-3"
-        :class="showMetaSection ? 'top-8' : 'top-4'"
+        :class="showMetaSection ? 'top-6' : 'top-2'"
       >
         <span class="ml-auto font-normal leading-4 text-xxs">
           <TimeAgo

@@ -1,5 +1,6 @@
 <script setup>
 import { ref, useId } from 'vue';
+import SettingsHelp from 'dashboard/components-next/captain/pageComponents/assistant/settings/SettingsHelp.vue';
 import Icon from 'dashboard/components-next/icon/Icon.vue';
 
 // A KPI metric tile: icon badge + label, tabular metric value, and optional comparison delta.
@@ -10,6 +11,7 @@ defineProps({
   tone: { type: String, default: 'blue' },
   change: { type: String, default: '' },
   changeTone: { type: String, default: 'neutral' },
+  hoverHint: Boolean,
   hint: { type: String, default: '' },
   clickable: { type: Boolean, default: false },
   isLoading: { type: Boolean, default: false },
@@ -92,7 +94,13 @@ const dismissHint = event => {
         </span>
       </span>
     </div>
-    <template v-if="hint">
+    <div
+      v-if="hint && hoverHint"
+      class="absolute end-2 top-2 sm:end-3 sm:top-5"
+    >
+      <SettingsHelp :label="label" :text="hint" />
+    </div>
+    <template v-else-if="hint">
       <button
         type="button"
         class="absolute end-2 top-2 grid size-11 place-items-center rounded-lg text-n-slate-11 hover:bg-n-alpha-2 focus-visible:outline-n-brand sm:end-3 sm:top-5 sm:size-8"

@@ -1,5 +1,7 @@
 <script setup>
 import { computed } from 'vue';
+import AccordionItem from 'dashboard/components/Accordion/AccordionItem.vue';
+import { useMapGetter } from 'dashboard/composables/store';
 import { getUnixTime } from 'date-fns';
 import { getLanguageName } from 'dashboard/components/widgets/conversation/advancedFilterItems/languages';
 import { useExactTimestamp } from 'shared/composables/useExactTimestamp';
@@ -8,6 +10,8 @@ import ContactDetailsItem from './ContactDetailsItem.vue';
 import CustomAttributes from './customAttributes/CustomAttributes.vue';
 
 const props = defineProps({
+  isOpen: Boolean,
+  hideEmpty: Boolean,
   conversationAttributes: {
     type: Object,
     default: () => ({}),
@@ -18,6 +22,17 @@ const props = defineProps({
   },
 });
 
+const emit = defineEmits(['toggle']);
+const selectedChat = useMapGetter('getSelectedChat');
+const attributesByModel = useMapGetter('attributes/getAttributesByModel');
+const hasCustomValues = computed(() =>
+  attributesByModel
+    .value('conversation_attribute')
+    .some(({ attribute_key: key }) => {
+      const value = selectedChat.value?.custom_attributes?.[key];
+      return value != null && String(value).trim() !== '';
+    })
+);
 const referer = computed(() => props.conversationAttributes.referer);
 
 const exactTimestamp = useExactTimestamp({ showTimeZone: true });
@@ -41,7 +56,7 @@ const browserName = computed(() => {
   if (!browserInfo.value) return '';
   const { browser_name: name = '', browser_version: version = '' } =
     browserInfo.value;
-  return `${name} ${version}`;
+  return [name, version].filter(Boolean).join(' ').trim();
 });
 
 const browserLanguage = computed(() =>
@@ -52,7 +67,7 @@ const platformName = computed(() => {
   if (!browserInfo.value) return '';
   const { platform_name: name = '', platform_version: version = '' } =
     browserInfo.value;
-  return `${name} ${version}`;
+  return [name, version].filter(Boolean).join(' ').trim();
 });
 
 const createdAtIp = computed(
@@ -70,8 +85,8 @@ const location = computed(() => {
   const resolvedCountry =
     countries.find(
       item =>
-        item.id === countryCode.toUpperCase() ||
-        item.id === country.toUpperCase()
+        item.id === (countryCode || '').toUpperCase() ||
+        item.id === (country || '').toUpperCase()
     )?.name || country;
   return [city, resolvedCountry].filter(Boolean).join(', ');
 });
@@ -120,35 +135,45 @@ const staticElements = computed(() =>
       key: 'static-ip-address',
       type: 'static_attribute',
     },
-  ].filter(attribute => !!attribute.content.value)
+  ].filter(attribute => String(attribute.content.value ?? '').trim() !== '')
 );
 </script>
 
 <template>
-  <div class="conversation--details">
-    <CustomAttributes
-      :static-elements="staticElements"
-      attribute-class="conversation--attribute"
-      attribute-from="conversation_panel"
-      attribute-type="conversation_attribute"
-    >
-      <template #staticItem="{ element }">
-        <ContactDetailsItem
-          :key="element.title"
-          :title="$t(element.title)"
-          :value="element.content.value"
-        >
-          <a
-            v-if="element.key === 'static-referer'"
-            :href="element.content.value"
-            rel="noopener noreferrer nofollow"
-            target="_blank"
-            class="text-n-brand"
+  <AccordionItem
+    v-if="!hideEmpty || staticElements.length || hasCustomValues"
+    card
+    compact
+    :is-open="isOpen"
+    :title="$t('CONVERSATION_SIDEBAR.ACCORDION.CONVERSATION_INFO')"
+    @toggle="emit('toggle')"
+  >
+    <div class="conversation--details">
+      <CustomAttributes
+        :static-elements="staticElements"
+        attribute-class="conversation--attribute"
+        attribute-from="conversation_panel"
+        attribute-type="conversation_attribute"
+      >
+        <template #staticItem="{ element }">
+          <ContactDetailsItem
+            :key="element.title"
+            :title="$t(element.title)"
+            :value="element.content.value"
           >
-            {{ element.content.value }}
-          </a>
-        </ContactDetailsItem>
-      </template>
-    </CustomAttributes>
-  </div>
+            <a
+              v-if="element.key === 'static-referer'"
+              :href="element.content.value"
+              rel="noopener noreferrer nofollow"
+              target="_blank"
+              class="text-n-brand"
+            >
+              {{ element.content.value }}
+            </a>
+          </ContactDetailsItem>
+        </template>
+      </CustomAttributes>
+    </div>
+    <slot />
+  </AccordionItem>
 </template>

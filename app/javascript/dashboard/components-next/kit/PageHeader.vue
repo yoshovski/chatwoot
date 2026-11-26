@@ -1,15 +1,19 @@
 <script setup>
 // Title, one help line and the page's primary action on the right. `band` turns it into the gradient
 // welcome band used by Home.
-defineProps({
+import { useSectionHeadingMatches } from 'dashboard/composables/useSectionHeading';
+
+const props = defineProps({
   title: { type: String, required: true },
   description: { type: String, default: '' },
   band: { type: Boolean, default: false },
 });
+const titleInTopBar = useSectionHeadingMatches(() => props.title);
 </script>
 
 <template>
   <header
+    v-if="!titleInTopBar || description || $slots.action"
     class="flex flex-wrap items-center gap-4"
     :class="
       band
@@ -17,8 +21,12 @@ defineProps({
         : 'pb-1'
     "
   >
-    <div class="me-auto flex min-w-0 flex-col gap-1">
+    <div
+      v-if="!titleInTopBar || description"
+      class="me-auto flex min-w-0 flex-col gap-1"
+    >
       <h1
+        v-if="!titleInTopBar"
         class="mb-0 font-display text-2xl font-semibold tracking-display"
         :class="band ? 'text-white' : 'text-n-slate-12'"
       >
@@ -32,8 +40,12 @@ defineProps({
         {{ description }}
       </p>
     </div>
-    <div v-if="$slots.action" class="flex min-w-0 flex-wrap items-center gap-2">
+    <div
+      v-if="$slots.action"
+      class="ms-auto flex min-w-0 flex-wrap items-center gap-2"
+    >
       <slot name="action" />
     </div>
   </header>
+  <template v-else />
 </template>

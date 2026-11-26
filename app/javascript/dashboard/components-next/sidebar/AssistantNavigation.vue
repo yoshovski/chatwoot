@@ -59,7 +59,7 @@ watch(
 
 <template>
   <div class="flex flex-col gap-2 px-4 pb-3 pt-1">
-    <DropdownContainer v-if="assistants.length">
+    <DropdownContainer v-if="assistants.length" floating>
       <template #trigger="{ toggle, isOpen }">
         <button
           type="button"

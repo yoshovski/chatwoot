@@ -301,6 +301,7 @@ onUnmounted(() => {
 
 <template>
   <PageLayout
+    class="agent-knowledge"
     :total-count="listMeta.totalCount"
     :current-page="listMeta.page"
     :header-title="$t('CAPTAIN.AGENT_UX.SECTIONS.KNOWLEDGE')"
@@ -317,20 +318,16 @@ onUnmounted(() => {
       <TestAgentButton :assistant-id="selectedAssistantId" />
     </template>
 
-    <template #search>
-      <Input
-        v-model="searchQuery"
-        :placeholder="$t('CAPTAIN.FAQ_SUGGESTIONS.SEARCH_PLACEHOLDER')"
-        class="w-64"
-        size="sm"
-        type="search"
-        autofocus
-        @input="handleSearchInput"
-      />
-    </template>
-
     <template #controls>
-      <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
+      <div class="mb-3 flex flex-wrap items-center gap-2">
+        <Input
+          v-model="searchQuery"
+          :placeholder="$t('CAPTAIN.FAQ_SUGGESTIONS.SEARCH_PLACEHOLDER')"
+          class="w-64 max-w-full min-w-0 shrink-0"
+          size="sm"
+          type="search"
+          @input="handleSearchInput"
+        />
         <TabBar
           :tabs="tabs"
           :initial-active-tab="activeTabIndex"

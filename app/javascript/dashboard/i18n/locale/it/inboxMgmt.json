@@ -1718,7 +1718,8 @@
         "COPY": "Copia",
         "COPIED": "Snippet copiato",
         "SNIPPET_CHANGED": "Le impostazioni del lanciatore sono cambiate. Salvare, quindi copiare nuovamente lo snippet e sostituirlo sul tuo sito.",
-        "CHECK": "Controllare l'installazione"
+        "CHECK": "Controllare l'installazione",
+        "SCRIPT": "Codice di installazione"
       },
       "AI_AGENT": {
         "TITLE": "Agente IA",
@@ -1740,6 +1741,19 @@
       "PREVIEW_TOGGLE": {
         "SHOW": "Anteprima",
         "HIDE": "Nascondi l'anteprima"
+      },
+      "COLORS": {
+        "CUSTOMIZE": "Colori avanzati",
+        "CUSTOM": "Personalizzato",
+        "AUTOMATIC": "Usa il colore automatico",
+        "PALETTE": {
+          "MINT": "Menta perlata",
+          "NAVY": "Blu notte",
+          "BLUE": "Verde petrolio",
+          "VIOLET": "Iris",
+          "ROSE": "Mora",
+          "CHARCOAL": "Grafite"
+        }
       }
     },
     "WIDGET_PREVIEW": {
@@ -1756,6 +1770,98 @@
       "MOBILE": "Mostra alla larghezza mobile",
       "DESKTOP": "Mostra alla larghezza del desktop",
       "ERROR": "L'anteprima non poteva caricare. Ricaricare la pagina per riprovare."
+    },
+    "WEBSITE_SETTINGS": {
+      "CHANNEL_TYPE": "Chat del sito web",
+      "NAVIGATION": "Impostazioni del canale",
+      "GROUPS": {
+        "WIDGET": "Widget di chat",
+        "CONVERSATIONS": "Conversazioni",
+        "TEAM": "Team e copertura oraria",
+        "WEBSITE": "Configurazione del sito web"
+      },
+      "PAGES": {
+        "APPEARANCE": {
+          "TITLE": "Aspetto",
+          "DESCRIPTION": "Scegli il nome, i colori e il pulsante di chat visibili ai visitatori."
+        },
+        "WELCOME": {
+          "TITLE": "Schermata di benvenuto",
+          "DESCRIPTION": "Scegli quale schermata vedono per prima i visitatori e quali azioni possono eseguire."
+        },
+        "CONVERSATION": {
+          "TITLE": "Comportamento della chat",
+          "DESCRIPTION": "Configura il saluto, il tempo di risposta indicato e le azioni disponibili in chat."
+        },
+        "PRE_CHAT": {
+          "TITLE": "Modulo prima della chat",
+          "DESCRIPTION": "Scegli cosa chiedere ai visitatori prima che inizino una conversazione."
+        },
+        "RATING": {
+          "TITLE": "Valutazione dei clienti",
+          "DESCRIPTION": "Chiedi ai clienti una valutazione al termine della conversazione."
+        },
+        "COLLABORATORS": {
+          "TITLE": "Collaboratori",
+          "DESCRIPTION": "Scegli chi può lavorare in questa casella di posta e come assegnare le conversazioni."
+        },
+        "HOURS": {
+          "TITLE": "Orari di lavoro",
+          "DESCRIPTION": "Imposta gli orari di disponibilità del team e ciò che i visitatori vedono fuori orario."
+        },
+        "AGENT": {
+          "TITLE": "Agente IA",
+          "DESCRIPTION": "Scegli l’agente IA che accoglie i visitatori e risponde in questo canale."
+        },
+        "INSTALL": {
+          "TITLE": "Installa il widget",
+          "DESCRIPTION": "Copia il codice da incorporare nel sito e verifica l’installazione."
+        },
+        "SECURITY": {
+          "TITLE": "Sicurezza e impostazioni avanzate",
+          "DESCRIPTION": "Gestisci i siti autorizzati, verifica l’identità dei visitatori e accedi alle impostazioni tecniche."
+        }
+      },
+      "BRAND": "Marchio e colore",
+      "LAUNCHER": "Pulsante di chat",
+      "LAUNCHER_HELP": "I visitatori aprono la chat con questo pulsante sul tuo sito. Per cambiarne la posizione, lo stile o il testo, aggiorna il codice di incorporamento.",
+      "REPLIES": "Saluto e tempo di risposta",
+      "CHAT_OPTIONS": "Controlli della chat",
+      "SENDER": "Identità del mittente",
+      "BUSINESS_NAME": "Nome dell’azienda",
+      "SITE": "Sito web",
+      "EMBED_OPTIONS": "Opzioni di incorporamento",
+      "ACCESS": "Siti web autorizzati",
+      "IDENTITY": "Verifica dei visitatori",
+      "DEVELOPER_KEYS": "Chiavi e configurazione per sviluppatori",
+      "TESTING": "Test e dimensioni",
+      "DELETE_TITLE": "Elimina questo canale",
+      "DELETE_DESCRIPTION": "Eliminando il canale verranno eliminate anche le relative conversazioni. L’azione è definitiva.",
+      "SAVE_SITE_FIRST": "Salva l’indirizzo del sito prima di verificare l’installazione.",
+      "REVIEW_WIDGET": "Rivedi le modifiche al widget",
+      "PRE_CHAT_REQUIRED": "I visitatori devono compilare i campi obbligatori prima di inviare il primo messaggio.",
+      "PRE_CHAT_INTRO": "Messaggio sopra il modulo",
+      "SAVE_WIDGET": "Salva le modifiche al widget",
+      "UNSAVED_WIDGET": "Modifiche al widget non salvate",
+      "EMBED_CHANGED": "Salva le modifiche, poi sostituisci il codice di incorporamento sul tuo sito.",
+      "FIELD_OPTIONS": "Opzioni del campo",
+      "FIELD_DETAILS": "Dettagli del campo",
+      "FIELD_METADATA": "Chiave: {key}. Tipo: {type}.",
+      "FORM_FIELDS": "Campi per i visitatori",
+      "FORM_ORDER_HELP": "Trascina i campi o usa le frecce per cambiare l’ordine in cui appaiono ai visitatori.",
+      "MOVE_UP": "Sposta {field} in alto",
+      "MOVE_DOWN": "Sposta {field} in basso",
+      "SHOW_FIELD": "Mostra {field}",
+      "OFFLINE_MESSAGE": "Messaggio fuori orario",
+      "FROM_TIME": "Orario di apertura ({day})",
+      "TO_TIME": "Orario di chiusura ({day})",
+      "SURVEY_RULES": "Scegli quali conversazioni ricevono il sondaggio",
+      "SAVE_COLLABORATORS": "Salva i collaboratori",
+      "SAVE_RATING": "Salva le impostazioni di valutazione",
+      "RATING_EMOJI": "Emoji",
+      "RATING_STARS": "Stelle",
+      "AGENT_CONNECTION": "Collegamento dell’agente",
+      "AGENT_CONNECTED": "Collegato a questo canale"
     }
   }
 }

@@ -86,7 +86,12 @@ describe('SidebarNavigation', () => {
   it('opens the panel of the current section with its pages', () => {
     const wrapper = mountNavigation();
 
-    expect(wrapper.find('h2').text()).toBe('Conversations');
+    expect(wrapper.emitted('sectionChange').at(-1)).toEqual([
+      { title: 'Conversations', conversation: true },
+    ]);
+    expect(wrapper.get('#co-section-panel').attributes('aria-label')).toBe(
+      'Conversations'
+    );
     expect(wrapper.findAll('.leaf').map(leaf => leaf.text())).toEqual([
       'My open',
       'Mentions',

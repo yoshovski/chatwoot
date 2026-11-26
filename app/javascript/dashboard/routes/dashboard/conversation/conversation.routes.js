@@ -282,5 +282,8 @@ export default {
         conversationType: 'bot',
       }),
     },
-  ],
+  ].map(route => ({
+    ...route,
+    meta: { ...route.meta, conversationWorkspace: true },
+  })),
 };

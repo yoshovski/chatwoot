@@ -1,7 +1,5 @@
 <script setup>
 import { computed, ref } from 'vue';
-import ConversationStatePill from 'dashboard/components-next/Conversation/ConversationStatePill.vue';
-import { conversationState } from 'dashboard/components-next/Conversation/conversationState';
 import { useRoute } from 'vue-router';
 import { useStore } from 'vuex';
 import { useElementSize } from '@vueuse/core';
@@ -92,10 +90,6 @@ const inbox = computed(() => {
   return store.getters['inboxes/getInbox'](inboxId);
 });
 
-const hasMultipleInboxes = computed(
-  () => store.getters['inboxes/getInboxes'].length > 1
-);
-
 const hasSlaPolicyId = computed(
   () => props.chat?.applied_sla?.id && !currentContact.value?.blocked
 );
@@ -113,11 +107,9 @@ const copyConversationId = async () => {
 <template>
   <div
     ref="conversationHeader"
-    class="flex flex-col gap-3 items-center justify-between flex-1 w-full min-w-0 xl:flex-row px-3 pt-3 pb-2 h-24 xl:h-12"
+    class="flex items-center justify-between w-full min-w-0 px-3 pb-2 flex-wrap gap-x-2 gap-y-1 shrink-0 py-2 min-h-12"
   >
-    <div
-      class="flex items-center justify-start w-full xl:w-auto max-w-full min-w-0 xl:flex-1"
-    >
+    <div class="flex items-center justify-start max-w-full min-w-0 flex-auto">
       <BackButton
         v-if="showBackButton"
         :back-url="backButtonUrl"
@@ -144,33 +136,15 @@ const copyConversationId = async () => {
             class="text-n-amber-10 my-0 mx-0 min-w-[14px] flex-shrink-0"
             icon="warning"
           />
-          <ConversationStatePill
-            :state="conversationState(chat)"
-            class="ms-1"
-          />
         </div>
 
-        <div
-          class="flex items-center gap-1 overflow-hidden text-xs conversation--header--actions text-n-slate-11 text-ellipsis whitespace-nowrap"
-        >
-          <button
-            type="button"
-            class="truncate text-label-small text-n-slate-11 hover:text-n-slate-12 !p-0 cucursor-pointer"
-            @click="copyConversationId"
-          >
-            {{ `#${chat.id}` }}
-          </button>
-          <span v-if="hasMultipleInboxes">•</span>
-          <InboxName v-if="hasMultipleInboxes" :inbox="inbox" class="!mx-0" />
-          <span v-if="isSnoozed">•</span>
-          <span v-if="isSnoozed" class="font-medium text-n-amber-10">
-            {{ snoozedDisplayText }}
-          </span>
-        </div>
+        <span v-if="isSnoozed" class="text-xs text-n-amber-10">{{
+          snoozedDisplayText
+        }}</span>
       </div>
     </div>
     <div
-      class="flex flex-row items-center justify-start xl:justify-end flex-shrink-0 gap-2 w-full xl:w-auto header-actions-wrap"
+      class="flex flex-row items-center flex-shrink-0 gap-2 header-actions-wrap ms-auto justify-end"
     >
       <SLACardLabel
         v-if="hasSlaPolicyId"
@@ -180,7 +154,23 @@ const copyConversationId = async () => {
         class="hidden md:flex"
       />
       <ConversationCallButton :inbox="inbox" :chat="currentChat" />
-      <MoreActions :conversation-id="currentChat.id" />
+      <MoreActions :conversation-id="currentChat.id">
+        <template #metadata>
+          <div
+            class="flex flex-col items-start gap-1.5 border-t border-n-weak p-2.5 text-xs text-n-slate-11"
+          >
+            <InboxName v-if="inbox" :inbox="inbox" />
+            <button
+              type="button"
+              class="flex items-center gap-1.5 rounded hover:text-n-slate-12"
+              @click="copyConversationId"
+            >
+              <span class="i-lucide-copy size-3.5" aria-hidden="true" />
+              {{ $t('CONVERSATION.HEADER.COPY_ID', { id: chat.id }) }}
+            </button>
+          </div>
+        </template>
+      </MoreActions>
     </div>
   </div>
 </template>

@@ -21,6 +21,7 @@ import { useSettingsSections } from 'dashboard/routes/dashboard/settings/useSett
 import SidebarNavigation from './SidebarNavigation.vue';
 import SidebarProfileMenu from './SidebarProfileMenu.vue';
 import ChannelLeaf from './ChannelLeaf.vue';
+import { getInboxIdentifier, INBOX_TYPES } from 'dashboard/helper/inbox';
 import ChannelIcon from 'next/icon/ChannelIcon.vue';
 import EmojiIcon from 'next/emoji-icon-picker/EmojiIcon.vue';
 import SidebarAccountSwitcher from './SidebarAccountSwitcher.vue';
@@ -44,6 +45,7 @@ const emit = defineEmits([
   'openKeyShortcutModal',
   'showCreateAccountModal',
   'closeMobileSidebar',
+  'sectionChange',
 ]);
 
 const {
@@ -449,12 +451,17 @@ const menuItems = computed(() => {
           children: sortedInboxes.value.map(inbox => ({
             name: `${inbox.name}-${inbox.id}`,
             label: inbox.name,
+            detailTooltip:
+              inbox.channel_type === INBOX_TYPES.WEB
+                ? getInboxIdentifier(inbox)
+                : '',
             badgeCount: getInboxUnreadCount.value(inbox.id),
             icon: h(ChannelIcon, { inbox, class: 'size-[16px]' }),
             to: accountScopedRoute('inbox_dashboard', { inbox_id: inbox.id }),
             component: leafProps =>
               h(ChannelLeaf, {
                 label: leafProps.label,
+                hideIdentifier: Boolean(leafProps.detailTooltip),
                 active: leafProps.active,
                 inbox,
                 badgeCount: leafProps.badgeCount,
@@ -808,7 +815,11 @@ const menuItems = computed(() => {
     @keydown.esc="closeMobileSidebar"
     @keydown="trapDrawerFocus"
   >
-    <SidebarNavigation :items="menuItems" @navigate="closeMobileSidebar">
+    <SidebarNavigation
+      :items="menuItems"
+      @navigate="closeMobileSidebar"
+      @section-change="emit('sectionChange', $event)"
+    >
       <template #account>
         <button
           v-if="isMobile"

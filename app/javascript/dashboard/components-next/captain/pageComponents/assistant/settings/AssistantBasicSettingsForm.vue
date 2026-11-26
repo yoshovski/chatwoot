@@ -137,6 +137,7 @@ const setDescription = text => {
 <template>
   <SettingsSplit>
     <SettingsCard
+      :help-note="t('CAPTAIN.ASSISTANTS.FORM.NAME.AI_BADGE_NOTE')"
       :title="
         t('CAPTAIN.ASSISTANTS.SETTINGS.IDENTITY.TITLE', { name: state.name })
       "
@@ -174,10 +175,7 @@ const setDescription = text => {
               v-model="state.name"
               :label="t('CAPTAIN.ASSISTANTS.FORM.NAME.LABEL')"
               :placeholder="t('CAPTAIN.ASSISTANTS.FORM.NAME.PLACEHOLDER')"
-              :message="
-                formErrors.name ||
-                t('CAPTAIN.ASSISTANTS.FORM.NAME.AI_BADGE_NOTE')
-              "
+              :message="formErrors.name"
               :message-type="formErrors.name ? 'error' : 'info'"
             />
             <Input

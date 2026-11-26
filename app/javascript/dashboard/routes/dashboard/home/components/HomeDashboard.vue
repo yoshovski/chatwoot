@@ -144,14 +144,14 @@ const quickActions = computed(() => {
 <template>
   <section class="flex h-full w-full flex-col overflow-y-auto bg-n-background">
     <div
-      class="mx-auto flex w-full max-w-[90rem] flex-col gap-4 px-4 py-4 sm:px-5 lg:px-6"
+      class="workspace-content mx-auto flex w-full max-w-[90rem] flex-col gap-4 px-4 py-4 sm:px-5 lg:px-6"
     >
       <CardError v-if="hasError && !summary" @retry="emit('retry')" />
       <div
         v-else
-        class="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(17rem,27%)]"
+        class="workspace-widget-grid grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(17rem,27%)]"
       >
-        <div class="grid min-w-0 gap-4">
+        <div class="workspace-widget-grid grid min-w-0 gap-4">
           <SetupReminder
             v-if="showReminder"
             :progress="setupProgress"
@@ -160,10 +160,12 @@ const quickActions = computed(() => {
           />
           <HomeQuickActions
             v-if="quickActions.length || liveUnavailable"
+            class="workspace-widget workspace-inset"
             :items="quickActions"
             :unavailable="liveUnavailable"
           />
           <HomePerformance
+            class="workspace-widget workspace-inset"
             :period="period"
             :date-range="dateRange"
             :metrics="metrics"
@@ -184,7 +186,7 @@ const quickActions = computed(() => {
             @action="router.push($event.to)"
           />
         </div>
-        <aside class="grid min-w-0 gap-4">
+        <aside class="workspace-widget-grid grid min-w-0 gap-4">
           <HomeProjectStatus
             v-if="summary"
             :items="projectStatus"

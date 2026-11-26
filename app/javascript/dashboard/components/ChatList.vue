@@ -131,7 +131,6 @@ const getConversationById = useMapGetter('getConversationById');
 
 const {
   selectedConversations,
-  selectedInboxes,
   selectConversation,
   deSelectConversation,
   selectAllConversations,
@@ -396,6 +395,17 @@ const showEndOfListMessage = computed(() => {
   );
 });
 
+// Selection follows the loaded queue when a conversation leaves this view.
+watch([conversationList, chatListLoading], ([list, loading]) => {
+  if (loading || !selectedConversations.value.length) return;
+  const loadedIds = new Set(list.map(chat => chat.id));
+  selectedConversations.value
+    .filter(id => !loadedIds.has(id))
+    .forEach(id =>
+      deSelectConversation(id, getConversationById.value(id)?.inbox_id)
+    );
+});
+
 const allConversationsSelected = computed(() => {
   return (
     conversationList.value.length === selectedConversations.value.length &&
@@ -406,7 +416,10 @@ const allConversationsSelected = computed(() => {
 });
 
 const uniqueInboxes = computed(() => {
-  return [...new Set(selectedInboxes.value)];
+  const ids = selectedConversations.value
+    .map(id => getConversationById.value(id)?.inbox_id)
+    .filter(Boolean);
+  return [...new Set(ids)];
 });
 
 // ---------------------- Methods -----------------------
@@ -865,6 +878,11 @@ onMounted(() => {
 const deleteConversationDialogRef = ref(null);
 const selectedConversationId = ref(null);
 
+function handleBulkDeleted(ids) {
+  const openId = route.params.conversationId ?? route.params.conversation_id;
+  if (ids.includes(Number(openId))) redirectToConversationList();
+}
+
 async function deleteConversation() {
   try {
     await store.dispatch('deleteConversation', selectedConversationId.value);
@@ -962,15 +980,16 @@ watch(appliedFilters, () => resetBulkActions());
 <template>
   <div
     class="flex flex-col flex-shrink-0 conversations-list-wrap bg-n-solid-2 relative"
-    :class="[
-      { hidden: !showConversationList },
-      isSinglePane
-        ? 'basis-full'
-        : 'w-[21.5rem] xl:w-[22.5rem] border-e border-n-weak',
-    ]"
+    :class="{
+      hidden: !showConversationList,
+      'basis-full': isSinglePane,
+      'border-e border-n-weak': !isSinglePane,
+      'w-[var(--inbox-queue-width,19rem)]': !isSinglePane,
+    }"
   >
     <slot />
     <ChatListHeader
+      v-if="!selectedConversations.length"
       :page-title="pageTitle"
       :contact-filter="appliedContactFilter"
       :has-applied-filters="hasAppliedFilters"
@@ -1010,6 +1029,7 @@ watch(appliedFilters, () => resetBulkActions());
 
     <ChatTypeTabs
       v-if="
+        !selectedConversations.length &&
         !isTopLevelView &&
         !hasAppliedFiltersOrActiveFolders &&
         conversationType !== wootConstants.CONVERSATION_TYPE.BOT
@@ -1033,7 +1053,11 @@ watch(appliedFilters, () => resetBulkActions());
       :show-open-action="allSelectedConversationsStatus('open')"
       :show-resolved-action="allSelectedConversationsStatus('resolved')"
       :show-snoozed-action="allSelectedConversationsStatus('snoozed')"
-      :class="isOnExpandedLayout && 'sm:!w-[24rem] !w-full'"
+      :loaded-count="conversationList.length"
+      :class="{
+        'lg:[--selection-inset:0.75rem]': isOnExpandedLayout && isSinglePane,
+      }"
+      @deleted="handleBulkDeleted"
       @select-all-conversations="toggleSelectAll"
     />
     <ConversationList
@@ -1045,7 +1069,7 @@ watch(appliedFilters, () => resetBulkActions());
       :folders-id="foldersId"
       :conversation-type="conversationType"
       :show-assignee="showAssigneeInConversationCard"
-      :is-on-expanded-layout="isOnExpandedLayout"
+      :is-on-expanded-layout="isOnExpandedLayout && isSinglePane"
       @load-more="loadMoreConversations"
     />
     <Dialog

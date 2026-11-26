@@ -1,5 +1,6 @@
 <script setup>
 import { computed } from 'vue';
+import { useSectionHeadingMatches } from 'dashboard/composables/useSectionHeading';
 import { usePolicy } from 'dashboard/composables/usePolicy';
 import Button from 'dashboard/components-next/button/Button.vue';
 import BackButton from 'dashboard/components/widgets/BackButton.vue';
@@ -64,6 +65,7 @@ const props = defineProps({
 });
 
 const emit = defineEmits(['click', 'close', 'update:currentPage']);
+const titleInTopBar = useSectionHeadingMatches(() => props.headerTitle);
 
 const { shouldShowPaywall } = usePolicy();
 
@@ -81,18 +83,33 @@ const handlePageChange = event => {
 </script>
 
 <template>
-  <section class="flex flex-col w-full h-full overflow-hidden bg-n-background">
+  <section
+    class="workspace-content agent-workspace flex flex-col w-full h-full overflow-hidden bg-n-background"
+  >
     <!-- Above positioned content of the page (tab bars use z-10), so header dropdowns open over it. -->
-    <header class="sticky top-0 z-20 bg-n-background/90 backdrop-blur-md px-6">
-      <div class="w-full mx-auto" :class="containerClass">
+    <header
+      class="workspace-widget workspace-inset sticky top-0 z-20 bg-n-background/90 backdrop-blur-md px-6"
+    >
+      <div
+        class="w-full mx-auto"
+        :class="[
+          containerClass,
+          { 'agent-overview-width': containerClass === 'max-w-[64rem]' },
+        ]"
+      >
         <div
-          class="flex items-start lg:items-center justify-between w-full py-6 lg:py-0 lg:h-20 gap-4 lg:gap-2 flex-col lg:flex-row"
+          class="agent-toolbar flex w-full justify-between"
+          :class="
+            titleInTopBar
+              ? 'flex-wrap items-center gap-2 py-2'
+              : 'flex-col items-start gap-4 py-6 lg:h-20 lg:flex-row lg:items-center lg:gap-2 lg:py-0'
+          "
         >
           <div class="flex gap-3 items-center">
             <BackButton v-if="backUrl" :back-url="backUrl" />
             <div class="flex items-center gap-4">
               <h1
-                v-if="headerTitle"
+                v-if="headerTitle && !titleInTopBar"
                 class="mb-0 font-display text-2xl font-semibold tracking-display text-n-slate-12"
               >
                 {{ headerTitle }}
@@ -101,7 +118,10 @@ const handlePageChange = event => {
                 v-if="!isEmpty && showKnowMore"
                 class="flex items-center gap-2"
               >
-                <div class="w-0.5 h-4 rounded-2xl bg-n-weak" />
+                <div
+                  v-if="!titleInTopBar"
+                  class="w-0.5 h-4 rounded-2xl bg-n-weak"
+                />
                 <slot name="knowMore" />
               </div>
             </div>
@@ -133,7 +153,13 @@ const handlePageChange = event => {
       </div>
     </header>
     <main class="flex-1 px-6 overflow-y-auto">
-      <div class="w-full h-full py-4 mx-auto" :class="containerClass">
+      <div
+        class="w-full h-full py-4 mx-auto"
+        :class="[
+          containerClass,
+          { 'agent-overview-width': containerClass === 'max-w-[64rem]' },
+        ]"
+      >
         <slot v-if="!showPaywall" name="controls" />
         <div
           v-if="isFetching"

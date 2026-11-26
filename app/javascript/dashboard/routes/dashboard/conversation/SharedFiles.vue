@@ -1,5 +1,6 @@
 <script setup>
 import { computed, ref } from 'vue';
+import AccordionItem from 'dashboard/components/Accordion/AccordionItem.vue';
 import { useI18n } from 'vue-i18n';
 import { useMapGetter } from 'dashboard/composables/store';
 import {
@@ -11,6 +12,9 @@ import GalleryView from 'dashboard/components/widgets/conversation/components/Ga
 import Media from 'dashboard/components-next/SharedAttachments/Media.vue';
 import Files from 'dashboard/components-next/SharedAttachments/Files.vue';
 import Spinner from 'dashboard/components-next/spinner/Spinner.vue';
+
+defineProps({ hideEmpty: Boolean, isOpen: Boolean });
+const emit = defineEmits(['toggle']);
 
 const MEDIA_PEEK_LIMIT = 6;
 const FILES_PEEK_LIMIT = 3;
@@ -47,32 +51,44 @@ const onFileSelect = attachment => {
 </script>
 
 <template>
-  <div class="p-2">
-    <div v-if="!attachmentsLoaded" class="flex justify-center p-3">
-      <Spinner class="size-5" />
-    </div>
-    <p v-else-if="!hasContent" class="p-3 text-sm text-center text-n-slate-11">
-      {{ t('CONVERSATION_SIDEBAR.SHARED_FILES.EMPTY') }}
-    </p>
-    <div v-else class="flex flex-col gap-5">
-      <Media
-        :attachments="allAttachments"
-        :peek-limit="MEDIA_PEEK_LIMIT"
-        @select="onMediaSelect"
+  <AccordionItem
+    v-if="!hideEmpty || hasContent"
+    card
+    compact
+    :is-open="isOpen"
+    :title="t('CONVERSATION_SIDEBAR.ACCORDION.SHARED_FILES')"
+    @toggle="emit('toggle')"
+  >
+    <div class="p-2">
+      <div v-if="!attachmentsLoaded" class="flex justify-center p-3">
+        <Spinner class="size-5" />
+      </div>
+      <p
+        v-else-if="!hasContent"
+        class="p-3 text-sm text-center text-n-slate-11"
+      >
+        {{ t('CONVERSATION_SIDEBAR.SHARED_FILES.EMPTY') }}
+      </p>
+      <div v-else class="flex flex-col gap-5">
+        <Media
+          :attachments="allAttachments"
+          :peek-limit="MEDIA_PEEK_LIMIT"
+          @select="onMediaSelect"
+        />
+        <Files
+          :attachments="allAttachments"
+          :peek-limit="FILES_PEEK_LIMIT"
+          @select="onFileSelect"
+        />
+      </div>
+      <GalleryView
+        v-if="showGallery && selectedAttachment"
+        v-model:show="showGallery"
+        :attachment="selectedAttachment"
+        :all-attachments="mediaAttachments"
+        auto-play
+        @close="showGallery = false"
       />
-      <Files
-        :attachments="allAttachments"
-        :peek-limit="FILES_PEEK_LIMIT"
-        @select="onFileSelect"
-      />
     </div>
-    <GalleryView
-      v-if="showGallery && selectedAttachment"
-      v-model:show="showGallery"
-      :attachment="selectedAttachment"
-      :all-attachments="mediaAttachments"
-      auto-play
-      @close="showGallery = false"
-    />
-  </div>
+  </AccordionItem>
 </template>

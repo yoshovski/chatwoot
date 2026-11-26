@@ -654,6 +654,7 @@ const closeDrilldown = () => {
                     : 'neutral'
               "
               :hint="metric.hint"
+              hover-hint
               :is-loading="isFetchingMetrics"
               :clickable="
                 canDrilldown && Boolean(metric.metric) && !isFetchingMetrics
@@ -664,6 +665,9 @@ const closeDrilldown = () => {
 
           <!-- Short Needs attention list -->
           <section
+            v-if="
+              isFetchingFaqStats || !attentionItems || attentionItems.length
+            "
             class="overflow-hidden rounded-card bg-n-solid-2 shadow-card outline outline-1 -outline-offset-1 outline-n-container"
           >
             <div class="px-5 py-3.5 border-b border-n-weak">
@@ -712,18 +716,6 @@ const closeDrilldown = () => {
                 :label="$t('CAPTAIN.OVERVIEW.RETRY')"
                 @click="fetchFaqStats"
               />
-            </div>
-
-            <div
-              v-else-if="attentionItems.length === 0"
-              class="flex items-center gap-2.5 px-5 py-4 text-sm text-n-slate-11"
-            >
-              <span
-                class="shrink-0 size-4 i-lucide-check-circle-2 text-n-teal-11"
-              />
-              <span>{{
-                $t('CAPTAIN.OVERVIEW.NEEDS_ATTENTION.ALL_CLEAR')
-              }}</span>
             </div>
 
             <div v-else class="divide-y divide-n-weak">

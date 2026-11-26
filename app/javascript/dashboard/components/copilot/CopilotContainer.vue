@@ -22,6 +22,7 @@ const assistants = useMapGetter('captainAssistants/getRecords');
 const uiFlags = useMapGetter('captainAssistants/getUIFlags');
 const inboxAssistant = useMapGetter('getCopilotAssistant');
 const currentChat = useMapGetter('getSelectedChat');
+const compactPanel = computed(() => Boolean(currentChat.value?.id));
 const lastPublicMessage = useMapGetter('getLastEmailInSelectedChat');
 
 const canSuggestReply = computed(
@@ -147,6 +148,8 @@ onMounted(() => {
     class="bg-n-background h-full overflow-hidden flex-col fixed top-0 ltr:right-0 rtl:left-0 z-40 w-full max-w-sm p-3 transition-transform duration-300 ease-in-out md:static md:w-[21.75rem] md:min-w-[21.75rem] xl:w-[22.75rem] xl:min-w-[22.75rem] md:py-3 md:pe-3 md:ps-0 shadow-lg md:shadow-none"
     :class="[
       {
+        'md:!w-[var(--inbox-inspector-width,19rem)] md:!min-w-0 md:shrink-0':
+          compactPanel,
         'md:flex': shouldShowCopilotPanel,
         'md:hidden': !shouldShowCopilotPanel,
       },
@@ -161,6 +164,7 @@ onMounted(() => {
         :assistants="assistants"
         :active-assistant="activeAssistant"
         :can-suggest-reply="canSuggestReply"
+        :show-contact-switch="!!currentChat?.id && isSmallScreen"
         :on-send-message="sendMessage"
         @set-assistant="setAssistant"
         @reset="handleReset"

@@ -392,6 +392,7 @@ onUnmounted(() => {
 
 <template>
   <PageLayout
+    class="agent-knowledge"
     :total-count="responseMeta.totalCount"
     :current-page="responseMeta.page"
     :button-policy="['administrator']"
@@ -415,7 +416,7 @@ onUnmounted(() => {
         <Input
           v-model="searchQuery"
           :placeholder="$t('CAPTAIN.RESPONSES.SEARCH_PLACEHOLDER')"
-          class="max-w-64 min-w-0 w-full"
+          class="w-64 max-w-full min-w-0 shrink-0"
           size="sm"
           type="search"
           @input="handleSearchInput"

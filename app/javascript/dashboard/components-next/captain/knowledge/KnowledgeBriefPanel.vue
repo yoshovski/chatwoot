@@ -1,4 +1,5 @@
 <script setup>
+import SettingsHelp from '../pageComponents/assistant/settings/SettingsHelp.vue';
 import { computed, ref, watch } from 'vue';
 import { useTimeoutPoll } from '@vueuse/core';
 import { useI18n } from 'vue-i18n';
@@ -252,6 +253,10 @@ const disable = async () => {
           <h3 class="m-0 text-sm font-semibold text-n-slate-12">
             {{ $t('CAPTAIN.KNOWLEDGE_BRIEF.TITLE') }}
           </h3>
+          <SettingsHelp
+            :label="$t('CAPTAIN.KNOWLEDGE_BRIEF.TITLE')"
+            :text="$t('CAPTAIN.KNOWLEDGE_BRIEF.HELP')"
+          />
           <span
             v-if="brief"
             v-tooltip.top="$t(`CAPTAIN.KNOWLEDGE_BRIEF.STATUS.${statusKey}`)"
@@ -262,9 +267,6 @@ const disable = async () => {
             {{ $t(`CAPTAIN.KNOWLEDGE_BRIEF.STATUS_PILL.${statusKey}`) }}
           </span>
         </div>
-        <p class="m-0 text-sm text-n-slate-11">
-          {{ $t('CAPTAIN.KNOWLEDGE_BRIEF.HELP') }}
-        </p>
       </div>
       <div class="flex items-center gap-1">
         <Button

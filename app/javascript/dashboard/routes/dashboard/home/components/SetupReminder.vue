@@ -13,7 +13,7 @@ const percent = computed(
 
 <template>
   <section
-    class="flex flex-wrap items-center gap-x-4 gap-y-3 rounded-card border border-n-container bg-n-slate-2 px-4 py-4 sm:px-5"
+    class="workspace-widget workspace-inset flex flex-wrap items-center gap-x-4 gap-y-3 rounded-card border border-n-container bg-n-slate-2 px-4 py-4 sm:px-5"
   >
     <div
       class="relative grid size-12 shrink-0 place-items-center sm:size-14"

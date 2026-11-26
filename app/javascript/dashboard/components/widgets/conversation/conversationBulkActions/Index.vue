@@ -1,7 +1,11 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted, useAttrs } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { useMapGetter } from 'dashboard/composables/store.js';
+import ConversationApi from 'dashboard/api/conversations';
+import { useAdmin } from 'dashboard/composables/useAdmin';
+import { useAlert } from 'dashboard/composables';
+import Dialog from 'dashboard/components-next/dialog/Dialog.vue';
+import { useMapGetter, useStore } from 'dashboard/composables/store.js';
 import { getUnixTime } from 'date-fns';
 import { findSnoozeTime } from 'dashboard/helper/snoozeHelpers';
 import { emitter } from 'shared/helpers/mitt';
@@ -22,6 +26,7 @@ import BulkTeamActions from './BulkTeamActions.vue';
 import CustomSnoozeModal from 'dashboard/components/CustomSnoozeModal.vue';
 
 const props = defineProps({
+  loadedCount: { type: Number, default: 0 },
   conversations: {
     type: Array,
     default: () => [],
@@ -48,7 +53,7 @@ const props = defineProps({
   },
 });
 
-const emit = defineEmits(['selectAllConversations']);
+const emit = defineEmits(['selectAllConversations', 'deleted']);
 
 defineOptions({
   inheritAttrs: false,
@@ -65,6 +70,56 @@ const {
   onAssignTeamsForBulk: onAssignTeam,
   onUpdateConversations,
 } = useBulkActions();
+
+const { isAdmin } = useAdmin();
+const store = useStore();
+const deleteDialog = ref(null);
+const deleteIds = ref([]);
+const isDeleting = ref(false);
+const deletionAccount = ref(null);
+
+function confirmDelete() {
+  if (!isAdmin.value || isDeleting.value) return;
+  deletionAccount.value = ConversationApi.accountIdFromRoute;
+  deleteIds.value = [...props.conversations];
+  deleteDialog.value.open();
+}
+
+async function deleteSelected() {
+  if (!isAdmin.value || isDeleting.value) return;
+  isDeleting.value = true;
+  const deleted = [];
+  const failed = [];
+  await deleteIds.value.reduce(async (previous, id) => {
+    await previous;
+    if (
+      !deletionAccount.value ||
+      deletionAccount.value !== ConversationApi.accountIdFromRoute
+    ) {
+      failed.push(id);
+      return;
+    }
+    try {
+      // Each request goes through the existing account and role checks.
+      await store.dispatch('deleteConversation', id);
+      await store.dispatch('bulkActions/removeSelectedConversationIds', id);
+      deleted.push(id);
+    } catch {
+      failed.push(id);
+    }
+  }, Promise.resolve());
+  isDeleting.value = false;
+  deleteDialog.value?.close();
+  emit('deleted', deleted);
+  if (deleted.length)
+    useAlert(t('BULK_ACTION.DELETE_QUEUED', { count: deleted.length }));
+  if (failed.length)
+    useAlert(
+      t('BULK_ACTION.DELETE_FAILED', {
+        ids: failed.map(id => '#' + id).join(', '),
+      })
+    );
+}
 
 const getConversationById = useMapGetter('getConversationById');
 
@@ -136,74 +191,86 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <Transition
-    enter-active-class="transition-all duration-200 ease-out origin-bottom"
-    enter-from-class="opacity-0 scale-95 translate-y-2"
-    enter-to-class="opacity-100 scale-100 translate-y-0"
-    leave-active-class="transition-all duration-150 ease-in origin-bottom"
-    leave-from-class="opacity-100 scale-100 translate-y-0"
-    leave-to-class="opacity-0 scale-95 translate-y-2"
+  <div
+    v-if="conversations.length > 0"
+    v-bind="attrs"
+    class="relative z-30 w-full shrink-0 border-b border-n-weak bg-n-solid-2"
   >
     <div
-      v-if="conversations.length > 0"
-      v-bind="attrs"
-      class="px-2 absolute bottom-20 sm:bottom-4 left-1/2 -translate-x-1/2 z-30 w-full origin-bottom"
+      class="flex items-center justify-between gap-2 p-2 queue-selection-heading flex-wrap text-sm !gap-1 !ps-[var(--selection-inset,1.5rem)] pe-2 min-h-[calc(3.25rem-1px)]"
     >
-      <div
-        v-if="allConversationsSelected"
-        class="bg-n-amber-2 outline -outline-offset-1 outline-1 outline-n-amber-5 rounded-lg text-sm mb-2 py-1.5 px-2 text-n-amber-text"
-      >
-        {{ $t('BULK_ACTION.ALL_CONVERSATIONS_SELECTED_ALERT') }}
+      <div class="flex items-center gap-1 min-w-0">
+        <label class="cursor-pointer flex items-center gap-1.5 min-w-0">
+          <Checkbox
+            v-model="allSelected"
+            :aria-label="
+              $t('BULK_ACTION.SELECT_LOADED', { count: loadedCount })
+            "
+            :indeterminate="!allConversationsSelected"
+            class="flex-shrink-0"
+          />
+          <span :title="selectedLabel" class="cursor-pointer truncate">
+            {{ selectedLabel }}
+          </span>
+        </label>
+        <NextButton
+          v-tooltip="$t('BULK_ACTION.CLEAR_SELECTION')"
+          icon="i-lucide-x"
+          :aria-label="$t('BULK_ACTION.CLEAR_SELECTION')"
+          ghost
+          class="!px-1 !h-6 flex-shrink-0 !w-5 !text-n-slate-11"
+          sm
+          @click="allSelected = false"
+        />
       </div>
       <div
-        class="flex items-center justify-between gap-2 p-2 bg-n-button-color outline outline-1 -outline-offset-1 rounded-[10px] outline-n-weak shadow-[0_0_12px_0_rgba(27,40,59,0.08)]"
+        class="flex items-center shrink-0 gap-0 [&>div]:!static [&>div>.absolute]:!top-full [&>div>.absolute]:!bottom-auto [&>div>.absolute]:!start-auto [&>div>.absolute]:!end-2"
       >
-        <div class="ms-0.5 flex items-center gap-1 min-w-0">
-          <label class="cursor-pointer flex items-center gap-1.5 min-w-0">
-            <Checkbox
-              v-model="allSelected"
-              :indeterminate="!allConversationsSelected"
-              class="flex-shrink-0"
-            />
-            <span :title="selectedLabel" class="cursor-pointer truncate">
-              {{ selectedLabel }}
-            </span>
-          </label>
-          <div class="w-px h-3 bg-n-weak rounded-lg ms-1 flex-shrink-0" />
-          <NextButton
-            :label="$t('BULK_ACTION.CLEAR_SELECTION')"
-            ghost
-            class="!text-n-blue-11 !px-1 !h-6 flex-shrink-0"
-            sm
-            @click="allSelected = false"
-          />
-        </div>
-        <div class="flex items-center gap-2 flex-shrink-0">
-          <BulkLabelActions @assign="onAssignLabels" />
-          <BulkLabelActions
-            action="remove"
-            :applied-labels="appliedLabelsForSelection"
-            @remove="onRemoveLabels"
-          />
-          <BulkUpdateActions
-            :show-resolve="!showResolvedAction"
-            :show-reopen="!showOpenAction"
-            :show-snooze="!showSnoozedAction"
-            @update="onUpdateConversations"
-          />
-          <BulkAgentActions
-            :selected-inboxes="selectedInboxes"
-            :conversation-count="conversations.length"
-            @select="onAssignAgent"
-          />
-          <BulkTeamActions
-            :conversation-count="conversations.length"
-            @select="onAssignTeam"
-          />
-        </div>
+        <BulkLabelActions @assign="onAssignLabels" />
+        <BulkLabelActions
+          action="remove"
+          :applied-labels="appliedLabelsForSelection"
+          @remove="onRemoveLabels"
+        />
+        <BulkUpdateActions
+          :show-resolve="!showResolvedAction"
+          :show-reopen="!showOpenAction"
+          :show-snooze="!showSnoozedAction"
+          @update="onUpdateConversations"
+        />
+        <BulkAgentActions
+          :selected-inboxes="selectedInboxes"
+          :conversation-count="conversations.length"
+          @select="onAssignAgent"
+        />
+        <BulkTeamActions
+          :conversation-count="conversations.length"
+          @select="onAssignTeam"
+        />
+        <NextButton
+          v-if="isAdmin"
+          v-tooltip="$t('CONVERSATION.DELETE_CONVERSATION.CONFIRM')"
+          :aria-label="$t('CONVERSATION.DELETE_CONVERSATION.CONFIRM')"
+          icon="i-lucide-trash-2"
+          size="xs"
+          slate
+          ghost
+          :disabled="isDeleting"
+          @click="confirmDelete"
+        />
       </div>
     </div>
-  </Transition>
+  </div>
+  <Dialog
+    v-if="isAdmin"
+    ref="deleteDialog"
+    type="alert"
+    :title="$t('BULK_ACTION.DELETE_COUNT', { count: deleteIds.length })"
+    :description="$t('BULK_ACTION.DELETE_DESCRIPTION')"
+    :confirm-button-label="$t('CONVERSATION.DELETE_CONVERSATION.CONFIRM')"
+    :is-loading="isDeleting"
+    @confirm="deleteSelected"
+  />
   <woot-modal
     v-model:show="showCustomTimeSnoozeModal"
     :on-close="hideCustomSnoozeModal"

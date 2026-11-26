@@ -40,7 +40,7 @@ useMutationObserver(body, scrollToEnd, {
 </script>
 
 <template>
-  <div class="flex flex-col gap-2">
+  <div class="settings-chat-preview flex flex-col gap-2">
     <span class="text-xs font-medium text-n-slate-11">
       {{ label || t('CAPTAIN.ASSISTANTS.SETTINGS.PREVIEW.LABEL') }}
     </span>
